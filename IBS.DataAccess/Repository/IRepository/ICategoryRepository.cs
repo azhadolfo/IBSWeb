@@ -11,6 +11,6 @@ namespace IBS.DataAccess.Repository.IRepository
     {
         void Update(Category model);
 
-        void Save();
+        Task SaveAsync();
     }
 }

@@ -22,32 +22,32 @@ namespace IBS.DataAccess.Repository
             //_db.Categories == dbSet
         }
 
-        public void Add(T entity)
+        public async Task<IEnumerable<T>> GetAllAsync()
+        {
+            return await dbSet.ToListAsync();
+        }
+
+        public async Task<T> GetAsync(Expression<Func<T, bool>> filter)
+        {
+            return await dbSet.Where(filter).FirstOrDefaultAsync();
+        }
+
+        public async Task AddAsync(T entity)
         {
             dbSet.Add(entity);
+            await _db.SaveChangesAsync();
         }
 
-        public T Get(Expression<Func<T, bool>> filter)
-        {
-            IQueryable<T> query = dbSet;
-            query = query.Where(filter);
-            return query.FirstOrDefault();
-        }
-
-        public IEnumerable<T> GetAll()
-        {
-            IQueryable<T> query = dbSet;
-            return query.ToList();
-        }
-
-        public void Remove(T entity)
+        public async Task RemoveAsync(T entity)
         {
             dbSet.Remove(entity);
+            await _db.SaveChangesAsync();
         }
 
-        public void RemoveRange(IEnumerable<T> entity)
+        public async Task RemoveRangeAsync(IEnumerable<T> entities)
         {
-            dbSet.RemoveRange(entity);
+            dbSet.RemoveRange(entities);
+            await _db.SaveChangesAsync();
         }
     }
 }
