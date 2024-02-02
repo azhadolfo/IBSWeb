@@ -33,6 +33,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+//Postgre date and time behaviour
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 

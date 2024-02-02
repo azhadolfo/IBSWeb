@@ -18,5 +18,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+        public DbSet<Fuel> Fuels { get; set; }
+        public DbSet<Lube> Lubes { get; set; }
+        public DbSet<SafeDrop> SafeDrops { get; set; }
     }
 }
