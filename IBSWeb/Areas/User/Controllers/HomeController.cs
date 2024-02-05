@@ -19,9 +19,23 @@ namespace IBSWeb.Areas.User.Controllers
             return View();
         }
 
-        public IActionResult Privacy()
+        [HttpGet]
+        public IActionResult ImportCsv()
         {
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ImportCsv(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("Please select a CSV file to upload.");
+            }
+            else
+            {
+                return Ok(file);
+            }
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

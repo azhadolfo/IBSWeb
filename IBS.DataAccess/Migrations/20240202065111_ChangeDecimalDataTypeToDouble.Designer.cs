@@ -218,7 +218,7 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("DatetimeStamp")
+                    b.Property<string>("DateTimeStamp")
                         .IsRequired()
                         .HasColumnType("varchar(200)");
 
