@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240205074454_ChangeTheNameOfFieldsInFuels")]
+    partial class ChangeTheNameOfFieldsInFuels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,7 +43,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("IBS.Models.ChartOfAccount", b =>
@@ -81,7 +84,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ChartOfAccounts", (string)null);
+                    b.ToTable("ChartOfAccounts");
                 });
 
             modelBuilder.Entity("IBS.Models.Company", b =>
@@ -125,7 +128,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Companies", (string)null);
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("IBS.Models.Customer", b =>
@@ -183,7 +186,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Customers", (string)null);
+                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("IBS.Models.Fuel", b =>
@@ -318,7 +321,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Fuels", (string)null);
+                    b.ToTable("Fuels");
                 });
 
             modelBuilder.Entity("IBS.Models.Lube", b =>
@@ -341,9 +344,16 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Cashier")
+                    b.Property<string>("CashierId")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("CashierName")
                         .IsRequired()
                         .HasColumnType("varchar(20)");
+
+                    b.Property<int>("CorpCode")
+                        .HasColumnType("integer");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)");
@@ -351,25 +361,32 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DatetimeStamp")
+                        .IsRequired()
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("Day")
+                        .HasColumnType("integer");
+
                     b.Property<string>("EditedBy")
                         .HasColumnType("varchar(50)");
 
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("INV_DATE")
+                    b.Property<DateTime>("InvoiceDate")
                         .HasColumnType("date");
 
                     b.Property<string>("ItemCode")
                         .IsRequired()
                         .HasColumnType("varchar(16)");
 
-                    b.Property<decimal>("LubesQty")
-                        .HasColumnType("numeric(18,2)");
+                    b.Property<int>("Month")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Particulars")
                         .IsRequired()
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("varchar(32)");
 
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)");
@@ -383,41 +400,27 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int>("Shift")
                         .HasColumnType("integer");
 
+                    b.Property<int>("SiteCode")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("Transaction")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)");
 
                     b.Property<DateTime?>("VoidedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("xCORPCODE")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Volume")
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<int>("xDAY")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("xMONTH")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("xOID")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<int>("xSITECODE")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("xStamp")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<long>("xTRANSACTION")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("xYEAR")
+                    b.Property<int>("Year")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Lubes", (string)null);
+                    b.ToTable("Lubes");
                 });
 
             modelBuilder.Entity("IBS.Models.Product", b =>
@@ -454,7 +457,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("IBS.Models.SafeDrop", b =>
@@ -477,11 +480,28 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CashierId")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("CashierName")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int>("CorpCode")
+                        .HasColumnType("integer");
+
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateTimeStamp")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("Day")
+                        .HasColumnType("integer");
 
                     b.Property<string>("EditedBy")
                         .HasColumnType("varchar(50)");
@@ -489,8 +509,11 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("INV_DATE")
+                    b.Property<DateTime>("InvoiceDate")
                         .HasColumnType("date");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer");
 
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)");
@@ -501,8 +524,11 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int>("Shift")
                         .HasColumnType("integer");
 
-                    b.Property<TimeOnly>("TTime")
-                        .HasColumnType("time without time zone");
+                    b.Property<int>("SiteCode")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("TransactionTime")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)");
@@ -510,36 +536,12 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("VoidedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("xCORPCODE")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("xDAY")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("xMONTH")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("xOID")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<string>("xONAME")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<int>("xSITECODE")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("xSTAMP")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<int>("xYEAR")
+                    b.Property<int>("Year")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.ToTable("SafeDrops", (string)null);
+                    b.ToTable("SafeDrops");
                 });
 
             modelBuilder.Entity("IBS.Models.Supplier", b =>
@@ -600,7 +602,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Suppliers", (string)null);
+                    b.ToTable("Suppliers");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

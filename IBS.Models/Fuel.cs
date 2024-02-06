@@ -16,25 +16,25 @@ namespace IBS.Models
         public TimeOnly End { get; set; }
 
         [Column(TypeName = "date")]
-        public DateTime InvoiceDate { get; set; }
+        public DateTime INV_DATE { get; set; }
 
-        public int CorpCode { get; set; }
+        public int xCORPCODE { get; set; }
 
-        public int SiteCode { get; set; }
+        public int xSITECODE { get; set; }
 
-        public int Tank { get; set; }
+        public int xTANK { get; set; }
 
-        public int Pump { get; set; }
+        public int xPUMP { get; set; }
 
-        public int Nozzle { get; set; }
+        public int xNOZZLE { get; set; }
 
-        public int Year { get; set; }
+        public int xYEAR { get; set; }
 
-        public int Month { get; set; }
+        public int xMONTH { get; set; }
 
-        public int Day { get; set; }
+        public int xDAY { get; set; }
 
-        public int Transaction { get; set; }
+        public int xTRANSACTION { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         public decimal Price { get; set; }
@@ -60,7 +60,7 @@ namespace IBS.Models
         public double Closing { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string NozDown { get; set; }
+        public string nozdown { get; set; }
 
         [Column(TypeName = "time without time zone")]
         public TimeOnly InTime { get; set; }
@@ -71,11 +71,11 @@ namespace IBS.Models
         //Liters = Opening - Closing
         public double Liters { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
-        public string CashierId { get; set; }
+        [Column(TypeName = "varchar(20)")]
+        public string xOID { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string CashierName { get; set; }
+        public string xONAME { get; set; }
 
         public int Shift { get; set; }
 

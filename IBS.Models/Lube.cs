@@ -10,17 +10,17 @@ namespace IBS.Models
     public class Lube : BaseEntity
     {
         [Column(TypeName = "date")]
-        public DateTime InvoiceDate { get; set; }
+        public DateTime INV_DATE { get; set; }
 
-        public int Year { get; set; }
+        public int xYEAR { get; set; }
 
-        public int Month { get; set; }
+        public int xMONTH { get; set; }
 
-        public int Day { get; set; }
+        public int xDAY { get; set; }
 
-        public int CorpCode { get; set; }
+        public int xCORPCODE { get; set; }
 
-        public int SiteCode { get; set; }
+        public int xSITECODE { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         public decimal Price { get; set; }
@@ -34,25 +34,25 @@ namespace IBS.Models
 
         //Volume = Amount / Price
         [Column(TypeName = "numeric(18,2)")]
-        public decimal Volume { get; set; }
+        public decimal LubesQty { get; set; }
 
         [Column(TypeName = "varchar(16)")]
         public string ItemCode { get; set; }
 
-        [Column(TypeName = "varchar(32)")]
+        [Column(TypeName = "varchar(100)")]
         public string Particulars { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string CashierId { get; set; }
+        public string xOID { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string CashierName { get; set; }
+        public string Cashier { get; set; }
 
         public int Shift { get; set; }
 
-        public long Transaction { get; set; }
+        public long xTRANSACTION { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
-        public string DatetimeStamp { get; set; }
+        [Column(TypeName = "varchar(50)")]
+        public string xStamp { get; set; }
     }
 }
