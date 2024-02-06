@@ -11,7 +11,16 @@ namespace IBS.DataAccess.Data
         {
         }
 
-        protected override void OnModelCreating(ModelBuilder builder) => base.OnModelCreating(builder);
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<ChartOfAccount>(coa =>
+            {
+                coa.HasIndex(c => c.AccountNumber).IsUnique();
+                coa.HasIndex(c => c.AccountName);
+            });
+        }
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
@@ -26,6 +35,7 @@ namespace IBS.DataAccess.Data
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
+        public DbSet<Station> Stations { get; set; }
 
         #endregion --Master File Entities
     }

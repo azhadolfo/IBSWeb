@@ -12,23 +12,23 @@ namespace IBS.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int SupplierId { get; set; }
 
         [Display(Name = "Supplier Code")]
-        public int Code { get; set; }
+        public int SupplierCode { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string Name { get; set; }
+        public string SupplierName { get; set; }
 
         [Column(TypeName = "varchar(200)")]
-        public string Address { get; set; }
+        public string SupplierAddress { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         [Display(Name = "Tin No")]
-        public string TinNo { get; set; }
+        public string SupplierTin { get; set; }
 
         [Column(TypeName = "varchar(3)")]
-        public string Terms { get; set; }
+        public string SupplierTerms { get; set; }
 
         [Column(TypeName = "varchar(10)")]
         [Display(Name = "VAT Type")]
