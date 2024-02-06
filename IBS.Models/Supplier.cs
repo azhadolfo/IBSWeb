@@ -29,7 +29,6 @@ namespace IBS.Models
 
         [Column(TypeName = "varchar(3)")]
         public string SupplierTerms { get; set; }
-
         [Column(TypeName = "varchar(10)")]
         [Display(Name = "VAT Type")]
         public string VatType { get; set; }
