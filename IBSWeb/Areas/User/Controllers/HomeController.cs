@@ -4,6 +4,7 @@ using IBS.DataAccess.Data;
 using IBS.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.Scaffolding.Shared.Project;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Diagnostics;
 using System.Globalization;
@@ -34,55 +35,117 @@ namespace IBSWeb.Areas.User.Controllers
             return View();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> ImportCsv(IFormFile[] files)
+        [HttpPost, ActionName("ImportCsv")]
+        public async Task<IActionResult> ImportFiles()
         {
-            if (ModelState.IsValid)
+            var importFolder = Path.Combine("D:", "AzhNewPC", "RealPos", "Feb 5");
+            var yesterday = DateTime.Now.AddDays(-1).ToString("yyyyMMdd");
+
+            try
             {
-                foreach (IFormFile file in files)
+                var files = Directory.GetFiles(importFolder, "*.csv")
+                                    .Where(f =>
+                                        (f.Contains("fuels", StringComparison.CurrentCultureIgnoreCase) ||
+                                         f.Contains("lubes", StringComparison.CurrentCultureIgnoreCase) ||
+                                         f.Contains("safedrops", StringComparison.CurrentCultureIgnoreCase))
+                                        && Path.GetFileNameWithoutExtension(f).Contains(yesterday)
+                                    );
+
+                if (files.Any())
                 {
-                    if (file == null || file.Length == 0)
+                    int fuelsCount = 0;
+                    int lubesCount = 0;
+                    int safedropsCount = 0;
+
+                    foreach (var file in files)
                     {
-                        return BadRequest("Please select a CSV file to upload.");
+                        using (var stream = new FileStream(file, FileMode.Open))
+                        {
+                            using (var reader = new StreamReader(stream))
+                            using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+                            {
+                                HeaderValidated = null,
+                                MissingFieldFound = null,
+                            }))
+                            {
+                                string fileName = Path.GetFileName(file).ToLower();
+                                var newRecords = new List<object>();
+
+                                if (fileName.Contains("fuels"))
+                                {
+                                    var records = csv.GetRecords<Fuel>();
+                                    var existingRecords = await _dbContext.Set<Fuel>().ToListAsync();
+                                    foreach (var record in records)
+                                    {
+                                        if (!existingRecords.Any(existingRecord => existingRecord.nozdown == record.nozdown))
+                                        {
+                                            newRecords.Add(record);
+                                            fuelsCount++;
+                                        }
+                                    }
+                                }
+                                else if (fileName.Contains("lubes"))
+                                {
+                                    var records = csv.GetRecords<Lube>();
+                                    var existingRecords = await _dbContext.Set<Lube>().ToListAsync();
+                                    foreach (var record in records)
+                                    {
+                                        if (!existingRecords.Any(existingRecord => existingRecord.xStamp == record.xStamp))
+                                        {
+                                            newRecords.Add(record);
+                                            lubesCount++;
+                                        }
+                                    }
+                                }
+                                else if (fileName.Contains("safedrops"))
+                                {
+                                    var records = csv.GetRecords<SafeDrop>();
+                                    var existingRecords = await _dbContext.Set<SafeDrop>().ToListAsync();
+                                    foreach (var record in records)
+                                    {
+                                        if (!existingRecords.Any(existingRecord => existingRecord.xSTAMP == record.xSTAMP))
+                                        {
+                                            newRecords.Add(record);
+                                            safedropsCount++;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    // Handle invalid file types
+                                    continue;
+                                }
+
+                                await _dbContext.AddRangeAsync(newRecords);
+                                await _dbContext.SaveChangesAsync();
+                            }
+                        }
                     }
 
-                    using (var reader = new StreamReader(file.OpenReadStream()))
-                    using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+                    if (fuelsCount == 0 && lubesCount == 0 && safedropsCount == 0)
                     {
-                        HeaderValidated = null,
-                        MissingFieldFound = null,
-                    }))
-                    {
-                        IEnumerable<object> records = null;
-                        string fileName = file.FileName.ToLowerInvariant();
-
-                        if (fileName.Contains("fuels"))
+                        return Json(new
                         {
-                            records = csv.GetRecords<Fuel>();
-                        }
-                        else if (fileName.Contains("lubes"))
-                        {
-                            records = csv.GetRecords<Lube>();
-                        }
-                        else if (fileName.Contains("safedrops"))
-                        {
-                            records = csv.GetRecords<SafeDrop>();
-                        }
-                        else
-                        {
-                            TempData["error"] = "CSV file is not valid.";
-                            return View(records);
-                        }
-
-                        await _dbContext.AddRangeAsync(records);
-                        await _dbContext.SaveChangesAsync();
+                            success = true,
+                            message = $"You're record is up to date."
+                        });
                     }
+
+                    return Json(new
+                    {
+                        success = true,
+                        message = $"CSV files imported successfully.(Fuels: {fuelsCount} records, Lubes: {lubesCount} records, Safedrops: {safedropsCount} records.)"
+                    });
                 }
-                TempData["success"] = "CSV imported successfully.";
-                return RedirectToAction(nameof(ImportCsv));
+                else
+                {
+                    return Json(new { success = false, message = "No csv file found." });
+                }
             }
-
-            return View(files);
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
