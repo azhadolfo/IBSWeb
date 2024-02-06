@@ -10,32 +10,32 @@ namespace IBS.Models
     public class SafeDrop : BaseEntity
     {
         [Column(TypeName = "date")]
-        public DateTime InvoiceDate { get; set; }
+        public DateTime INV_DATE { get; set; }
 
         [Column(TypeName = "date")]
         public DateTime BDate { get; set; }
 
-        public int Year { get; set; }
+        public int xYEAR { get; set; }
 
-        public int Month { get; set; }
+        public int xMONTH { get; set; }
 
-        public int Day { get; set; }
+        public int xDAY { get; set; }
 
-        public int CorpCode { get; set; }
+        public int xCORPCODE { get; set; }
 
-        public int SiteCode { get; set; }
+        public int xSITECODE { get; set; }
 
-        [Column(TypeName = "timestamp without time zone")]
-        public DateTime TransactionTime { get; set; }
+        [Column(TypeName = "time without time zone")]
+        public TimeOnly TTime { get; set; }
 
-        [Column(TypeName = "timestamp without time zone")]
-        public DateTime DateTimeStamp { get; set; }
+        [Column(TypeName = "varchar(50)")]
+        public string xSTAMP { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string CashierId { get; set; }
+        public string xOID { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string CashierName { get; set; }
+        public string xONAME { get; set; }
 
         public int Shift { get; set; }
 

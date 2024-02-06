@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240205093303_ExtendTheParticularDataValues")]
+    partial class ExtendTheParticularDataValues
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,7 +43,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("IBS.Models.ChartOfAccount", b =>
@@ -81,7 +84,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ChartOfAccounts", (string)null);
+                    b.ToTable("ChartOfAccounts");
                 });
 
             modelBuilder.Entity("IBS.Models.Company", b =>
@@ -125,7 +128,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Companies", (string)null);
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("IBS.Models.Customer", b =>
@@ -183,7 +186,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Customers", (string)null);
+                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("IBS.Models.Fuel", b =>
@@ -318,7 +321,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Fuels", (string)null);
+                    b.ToTable("Fuels");
                 });
 
             modelBuilder.Entity("IBS.Models.Lube", b =>
@@ -417,7 +420,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Lubes", (string)null);
+                    b.ToTable("Lubes");
                 });
 
             modelBuilder.Entity("IBS.Models.Product", b =>
@@ -454,7 +457,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("IBS.Models.SafeDrop", b =>
@@ -539,7 +542,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SafeDrops", (string)null);
+                    b.ToTable("SafeDrops");
                 });
 
             modelBuilder.Entity("IBS.Models.Supplier", b =>
@@ -600,7 +603,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Suppliers", (string)null);
+                    b.ToTable("Suppliers");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
