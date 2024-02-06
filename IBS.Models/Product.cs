@@ -12,16 +12,16 @@ namespace IBS.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int ProductId { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string Code { get; set; }
+        public string ProductCode { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string Name { get; set; }
+        public string ProductName { get; set; }
 
         [Column(TypeName = "varchar(2)")]
-        public string Unit { get; set; }
+        public string ProductUnit { get; set; }
 
         [Display(Name = "Created By")]
         [Column(TypeName = "varchar(50)")]

@@ -12,25 +12,25 @@ namespace IBS.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int CompanyId { get; set; }
 
         [Display(Name = "Company Code")]
-        public int Code { get; set; }
+        public int CompanyCode { get; set; }
 
         [Required]
         [Display(Name = "Company Name")]
         [Column(TypeName = "varchar(50)")]
-        public string Name { get; set; }
+        public string CompanyName { get; set; }
 
         [Required]
-        [Display(Name = "Customer Address")]
+        [Display(Name = "Company Address")]
         [Column(TypeName = "varchar(200)")]
-        public string Address { get; set; }
+        public string CompanyAddress { get; set; }
 
         [Required]
         [Display(Name = "TIN No")]
         [Column(TypeName = "varchar(20)")]
-        public string TinNo { get; set; }
+        public string CompanyTin { get; set; }
 
         [Required]
         [Display(Name = "Business Style")]

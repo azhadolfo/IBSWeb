@@ -12,25 +12,25 @@ namespace IBS.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int CustomerId { get; set; }
 
         [Display(Name = "Customer Code")]
-        public int Code { get; set; }
+        public int CustomerCode { get; set; }
 
         [Required]
         [Display(Name = "Customer Name")]
         [Column(TypeName = "varchar(50)")]
-        public string Name { get; set; }
+        public string CustomerName { get; set; }
 
         [Required]
         [Display(Name = "Customer Address")]
         [Column(TypeName = "varchar(200)")]
-        public string Address { get; set; }
+        public string CustomerAddress { get; set; }
 
         [Required]
         [Display(Name = "TIN No")]
         [Column(TypeName = "varchar(20)")]
-        public string TinNo { get; set; }
+        public string CustomerTin { get; set; }
 
         [Required]
         [Display(Name = "Business Style")]
@@ -40,7 +40,7 @@ namespace IBS.Models
         [Required]
         [Display(Name = "Payment Terms")]
         [Column(TypeName = "varchar(3)")]
-        public string Terms { get; set; }
+        public string CustomerTerms { get; set; }
 
         [Required]
         [Display(Name = "Customer Type")]
