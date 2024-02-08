@@ -14,12 +14,15 @@ namespace IBS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ProductId { get; set; }
 
+        [Display(Name = "Product Code")]
         [Column(TypeName = "varchar(10)")]
         public string ProductCode { get; set; }
 
+        [Display(Name = "Product Name")]
         [Column(TypeName = "varchar(50)")]
         public string ProductName { get; set; }
 
+        [Display(Name = "Product Unit")]
         [Column(TypeName = "varchar(2)")]
         public string ProductUnit { get; set; }
 
