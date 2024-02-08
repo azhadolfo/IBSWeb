@@ -15,7 +15,8 @@ namespace IBS.Models
         public int SupplierId { get; set; }
 
         [Display(Name = "Supplier Code")]
-        public int SupplierCode { get; set; }
+        [Column(TypeName = "varchar(7)")]
+        public string SupplierCode { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string SupplierName { get; set; }
@@ -29,6 +30,7 @@ namespace IBS.Models
 
         [Column(TypeName = "varchar(3)")]
         public string SupplierTerms { get; set; }
+
         [Column(TypeName = "varchar(10)")]
         [Display(Name = "VAT Type")]
         public string VatType { get; set; }
@@ -53,6 +55,15 @@ namespace IBS.Models
 
         [Column(TypeName = "varchar(200)")]
         public string? ProofOfExemptionFilePath { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        [Display(Name = "Created By")]
+        [Column(TypeName = "varchar(50)")]
+        public string? CreatedBy { get; set; }
+
+        [Display(Name = "Created Date")]
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         [Display(Name = "Edited By")]
         [Column(TypeName = "varchar(50)")]

@@ -18,11 +18,27 @@ namespace IBS.Models
         public int PosCode { get; set; }
 
         [Display(Name = "Customer Address")]
-        [Column(TypeName = "varchar(5)")]
+        [Column(TypeName = "varchar(3)")]
         public string StationCode { get; set; }
 
         [Display(Name = "Station Name")]
         [Column(TypeName = "varchar(50)")]
         public string StationName { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        [Display(Name = "Created By")]
+        [Column(TypeName = "varchar(50)")]
+        public string? CreatedBy { get; set; }
+
+        [Display(Name = "Created Date")]
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+
+        [Display(Name = "Edited By")]
+        [Column(TypeName = "varchar(50)")]
+        public string? EditedBy { get; set; }
+
+        [Display(Name = "Edited Date")]
+        public DateTime EditedDate { get; set; }
     }
 }

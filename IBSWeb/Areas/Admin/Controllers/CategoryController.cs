@@ -10,16 +10,17 @@ namespace IBSWeb.Areas.Admin.Controllers
     [Authorize]
     public class CategoryController : Controller
     {
-        private readonly ICategoryRepository _categoryRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CategoryController(ICategoryRepository categoryRepo)
+        public CategoryController(IUnitOfWork unitOfWork)
         {
-            _categoryRepo = categoryRepo;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<IActionResult> Index()
         {
-            IEnumerable<Category> category = await _categoryRepo
+            IEnumerable<Category> category = await _unitOfWork
+                .Category
                 .GetAllAsync();
             return View(category);
         }
@@ -40,8 +41,8 @@ namespace IBSWeb.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
-                await _categoryRepo.AddAsync(model);
-                await _categoryRepo.SaveAsync();
+                await _unitOfWork.Category.AddAsync(model);
+                await _unitOfWork.SaveAsync();
                 TempData["success"] = "Category created successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -58,7 +59,7 @@ namespace IBSWeb.Areas.Admin.Controllers
             {
                 return NotFound();
             }
-            Category category = await _categoryRepo.GetAsync(u => u.Id == id);
+            Category category = await _unitOfWork.Category.GetAsync(u => u.Id == id);
 
             if (category == null)
             {
@@ -73,8 +74,8 @@ namespace IBSWeb.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                _categoryRepo.Update(model);
-                await _categoryRepo.SaveAsync();
+                _unitOfWork.Category.Update(model);
+                await _unitOfWork.SaveAsync();
                 TempData["success"] = "Category updated successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -88,7 +89,7 @@ namespace IBSWeb.Areas.Admin.Controllers
             {
                 return NotFound();
             }
-            Category category = await _categoryRepo.GetAsync(u => u.Id == id);
+            Category category = await _unitOfWork.Category.GetAsync(u => u.Id == id);
 
             if (category == null)
             {
@@ -101,15 +102,15 @@ namespace IBSWeb.Areas.Admin.Controllers
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeletePost(int? id)
         {
-            Category? obj = await _categoryRepo.GetAsync(u => u.Id == id);
+            Category? obj = await _unitOfWork.Category.GetAsync(u => u.Id == id);
 
             if (obj == null)
             {
                 return NotFound();
             }
 
-            await _categoryRepo.RemoveAsync(obj);
-            await _categoryRepo.SaveAsync();
+            await _unitOfWork.Category.RemoveAsync(obj);
+            await _unitOfWork.SaveAsync();
             TempData["success"] = "Category deleted successfully";
             return RedirectToAction(nameof(Index));
         }

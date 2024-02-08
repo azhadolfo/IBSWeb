@@ -17,8 +17,14 @@ namespace IBS.DataAccess.Data
 
             modelBuilder.Entity<ChartOfAccount>(coa =>
             {
-                coa.HasIndex(c => c.AccountNumber).IsUnique();
-                coa.HasIndex(c => c.AccountName);
+                coa.HasIndex(coa => coa.AccountNumber).IsUnique();
+                coa.HasIndex(coa => coa.AccountName);
+            });
+
+            modelBuilder.Entity<Customer>(c =>
+            {
+                c.HasIndex(c => c.CustomerId).IsUnique();
+                c.HasIndex(c => c.CustomerCode).IsUnique();
             });
         }
 
