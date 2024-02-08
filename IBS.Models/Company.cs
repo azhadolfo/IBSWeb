@@ -15,7 +15,8 @@ namespace IBS.Models
         public int CompanyId { get; set; }
 
         [Display(Name = "Company Code")]
-        public int CompanyCode { get; set; }
+        [Column(TypeName = "varchar(3)")]
+        public string CompanyCode { get; set; }
 
         [Required]
         [Display(Name = "Company Name")]
@@ -36,6 +37,8 @@ namespace IBS.Models
         [Display(Name = "Business Style")]
         [Column(TypeName = "varchar(20)")]
         public string BusinessStyle { get; set; }
+
+        public bool IsActive { get; set; } = true;
 
         [Display(Name = "Created By")]
         [Column(TypeName = "varchar(50)")]

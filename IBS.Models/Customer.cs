@@ -15,7 +15,8 @@ namespace IBS.Models
         public int CustomerId { get; set; }
 
         [Display(Name = "Customer Code")]
-        public int CustomerCode { get; set; }
+        [Column(TypeName = "varchar(7)")]
+        public string? CustomerCode { get; set; }
 
         [Required]
         [Display(Name = "Customer Name")]
@@ -44,8 +45,13 @@ namespace IBS.Models
 
         [Required]
         [Display(Name = "Customer Type")]
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(20)")]
         public string CustomerType { get; set; }
+
+        [Required]
+        [Display(Name = "Vat Type")]
+        [Column(TypeName = "varchar(10)")]
+        public string VatType { get; set; }
 
         [Required]
         [Display(Name = "Creditable Withholding VAT 2306 ")]
@@ -54,6 +60,8 @@ namespace IBS.Models
         [Required]
         [Display(Name = "Creditable Withholding Tax 2307")]
         public bool WithHoldingTax { get; set; }
+
+        public bool IsActive { get; set; } = true;
 
         [Display(Name = "Created By")]
         [Column(TypeName = "varchar(50)")]

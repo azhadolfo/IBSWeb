@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240207025051_ChangeTheDataTypeOfSomeMasterFile")]
+    partial class ChangeTheDataTypeOfSomeMasterFile
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -129,9 +132,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime>("EditedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
                     b.HasKey("CompanyId");
 
                     b.ToTable("Companies");
@@ -160,6 +160,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(200)");
 
                     b.Property<string>("CustomerCode")
+                        .IsRequired()
                         .HasColumnType("varchar(7)");
 
                     b.Property<string>("CustomerName")
@@ -176,20 +177,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerType")
                         .IsRequired()
-                        .HasColumnType("varchar(20)");
+                        .HasColumnType("varchar(10)");
 
                     b.Property<string>("EditedBy")
                         .HasColumnType("varchar(50)");
 
                     b.Property<DateTime>("EditedDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("VatType")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
 
                     b.Property<bool>("WithHoldingTax")
                         .HasColumnType("boolean");
@@ -198,12 +192,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean");
 
                     b.HasKey("CustomerId");
-
-                    b.HasIndex("CustomerCode")
-                        .IsUnique();
-
-                    b.HasIndex("CustomerId")
-                        .IsUnique();
 
                     b.ToTable("Customers");
                 });
@@ -572,21 +560,6 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("StationId"));
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime>("EditedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
                     b.Property<int>("PosCode")
                         .HasColumnType("integer");
 
@@ -611,20 +584,11 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SupplierId"));
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("EditedBy")
                         .HasColumnType("varchar(50)");
 
                     b.Property<DateTime>("EditedDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("ProofOfExemptionFilePath")
                         .HasColumnType("varchar(200)");

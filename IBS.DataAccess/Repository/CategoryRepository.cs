@@ -19,11 +19,6 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task SaveAsync()
-        {
-            await _db.SaveChangesAsync();
-        }
-
         public void Update(Category model)
         {
             _db.Categories.Update(model);
