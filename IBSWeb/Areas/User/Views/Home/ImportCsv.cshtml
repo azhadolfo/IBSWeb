@@ -18,7 +18,7 @@
                     <button type="button" class="btn btn-primary form-control" id="importButton">Import Files</button>
                 </div>
                 <div class="col-6 col-md-3">
-                    <a asp-asp-area="Admin" asp-controller="Category" asp-action="Index" class="btn btn-outline-primary border form-control">Back to List</a>
+                    <a asp-asp-area="User" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary border form-control">Back to Homepage</a>
                 </div>
             </div>
         </div>
@@ -32,7 +32,7 @@
                 $("#importStatus").text("Importing files...");
 
                 $.ajax({
-                    url: "", // Assuming your controller action is named "ImportFiles"
+                    url: "",
                     type: "POST",
                     success: function (response) {
                         $("#importStatus").text(response.message);

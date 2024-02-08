@@ -2,9 +2,9 @@
 using IBS.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace IBSWeb.Areas.Admin.Controllers
+namespace IBSWeb.Areas.User.Controllers
 {
-    [Area("Admin")]
+    [Area("User")]
     public class CustomerController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -34,19 +34,19 @@ namespace IBSWeb.Areas.Admin.Controllers
             {
                 bool IsTinExist = await _unitOfWork.Customer.IsTinNoExistAsync(model.CustomerTin);
 
-                if (IsTinExist)
+                if (!IsTinExist)
                 {
-                    ModelState.AddModelError("CustomerTin", "Tin No already exist.");
-                    return View(model);
+                    model.CustomerCode = await _unitOfWork.Customer.GenerateCustomerCodeAsync(model.CustomerType);
+                    await _unitOfWork.Customer.AddAsync(model);
+                    await _unitOfWork.SaveAsync();
+                    TempData["success"] = "Customer created successfully";
+                    return RedirectToAction(nameof(Index));
                 }
 
-                model.CustomerCode = await _unitOfWork.Customer.GenerateCodeAsync(model.CustomerType);
-                await _unitOfWork.Customer.AddAsync(model);
-                await _unitOfWork.SaveAsync();
-                TempData["success"] = "Customer created successfully";
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError("CustomerTin", "Tin No already exist.");
+                return View(model);
             }
-            ModelState.AddModelError("", "");
+            ModelState.AddModelError("", "Make sure to fill all the required details.");
             return View(model);
         }
 
