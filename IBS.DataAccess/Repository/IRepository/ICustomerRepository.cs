@@ -11,7 +11,7 @@ namespace IBS.DataAccess.Repository.IRepository
     {
         Task<bool> IsTinNoExistAsync(string tin);
 
-        Task<string> GenerateCustomerCodeAsync(string customerType);
+        Task<string> GenerateCodeAsync(string customerType);
 
         Task UpdateAsync(Customer model);
     }

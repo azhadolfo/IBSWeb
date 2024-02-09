@@ -14,6 +14,7 @@ namespace IBS.DataAccess.Repository
         public ICustomerRepository Customer { get; private set; }
         public ICategoryRepository Category { get; private set; }
         public IProductRepository Product { get; private set; }
+        public ICompanyRepository Company { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -21,6 +22,7 @@ namespace IBS.DataAccess.Repository
             Customer = new CustomerRepository(_db);
             Category = new CategoryRepository(_db);
             Product = new ProductRepository(_db);
+            Company = new CompanyRepository(_db);
         }
 
         public async Task SaveAsync()

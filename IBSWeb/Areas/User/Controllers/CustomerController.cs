@@ -36,7 +36,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (!IsTinExist)
                 {
-                    model.CustomerCode = await _unitOfWork.Customer.GenerateCustomerCodeAsync(model.CustomerType);
+                    model.CustomerCode = await _unitOfWork.Customer.GenerateCodeAsync(model.CustomerType);
                     await _unitOfWork.Customer.AddAsync(model);
                     await _unitOfWork.SaveAsync();
                     TempData["success"] = "Customer created successfully";

@@ -16,7 +16,7 @@ namespace IBS.Models
 
         [Display(Name = "Company Code")]
         [Column(TypeName = "varchar(3)")]
-        public string CompanyCode { get; set; }
+        public string? CompanyCode { get; set; }
 
         [Required]
         [Display(Name = "Company Name")]
