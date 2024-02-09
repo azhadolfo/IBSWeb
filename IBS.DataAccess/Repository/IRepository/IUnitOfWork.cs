@@ -14,6 +14,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IProductRepository Product { get; }
 
+        ICompanyRepository Company { get; }
+
         Task SaveAsync();
     }
 }

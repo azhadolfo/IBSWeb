@@ -20,7 +20,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task<string> GenerateCustomerCodeAsync(string customerType)
+        public async Task<string> GenerateCodeAsync(string customerType)
         {
             Customer? lastCustomer = await _db
                 .Customers
