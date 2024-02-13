@@ -16,6 +16,10 @@ namespace IBS.DataAccess.Repository.IRepository
 
         ICompanyRepository Company { get; }
 
+        ISalesHeaderRepository SalesHeader { get; }
+
+        ISalesDetailRepository SalesDetail { get; }
+
         Task SaveAsync();
     }
 }

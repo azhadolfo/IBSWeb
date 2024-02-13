@@ -1,6 +1,7 @@
 using CsvHelper;
 using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.Scaffolding.Shared.Project;
@@ -18,10 +19,13 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext dbContext)
+        private readonly IUnitOfWork _unitOfWork;
+
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext dbContext, IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _dbContext = dbContext;
+            _unitOfWork = unitOfWork;
         }
 
         public IActionResult Index()
@@ -39,7 +43,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> ImportFiles()
         {
             var importFolder = Path.Combine("D:", "AzhNewPC", "RealPos", "Feb 5");
-            var yesterday = DateTime.Now.AddDays(-1).ToString("yyyyMMdd");
+            var yesterday = DateTime.Now.AddDays(-1);
 
             try
             {
@@ -48,7 +52,7 @@ namespace IBSWeb.Areas.User.Controllers
                                         (f.Contains("fuels", StringComparison.CurrentCultureIgnoreCase) ||
                                          f.Contains("lubes", StringComparison.CurrentCultureIgnoreCase) ||
                                          f.Contains("safedrops", StringComparison.CurrentCultureIgnoreCase))
-                                        && Path.GetFileNameWithoutExtension(f).Contains(yesterday)
+                                        && Path.GetFileNameWithoutExtension(f).Contains(yesterday.ToString("yyyyMMdd"))
                                     );
 
                 if (files.Any())
@@ -117,12 +121,16 @@ namespace IBSWeb.Areas.User.Controllers
                                 }
 
                                 await _dbContext.AddRangeAsync(newRecords);
-                                await _dbContext.SaveChangesAsync();
+                                await _unitOfWork.SaveAsync();
                             }
                         }
                     }
 
-                    if (fuelsCount == 0 && lubesCount == 0 && safedropsCount == 0)
+                    if (fuelsCount != 0 && lubesCount != 0 && safedropsCount != 0)
+                    {
+                        await _unitOfWork.SalesHeader.ComputeSalesPerCashier(yesterday);
+                    }
+                    else
                     {
                         return Json(new
                         {

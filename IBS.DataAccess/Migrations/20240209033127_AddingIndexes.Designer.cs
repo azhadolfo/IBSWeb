@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240209033127_AddingIndexes")]
+    partial class AddingIndexes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -232,8 +235,8 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("AmountDB")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("Calibration")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Calibration")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("CanceledBy")
                         .HasColumnType("varchar(50)");
@@ -589,125 +592,6 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("SafeDrops");
                 });
 
-            modelBuilder.Entity("IBS.Models.SalesDetail", b =>
-                {
-                    b.Property<int>("SalesDetailId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SalesDetailId"));
-
-                    b.Property<int>("Calibration")
-                        .HasColumnType("integer");
-
-                    b.Property<double>("Closing")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("Liters")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("LitersSold")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("Opening")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("Particular")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal>("Sale")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<int>("SalesHeaderId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SalesNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(25)");
-
-                    b.Property<int>("TransactionCount")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Value")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.HasKey("SalesDetailId");
-
-                    b.HasIndex("SalesHeaderId");
-
-                    b.ToTable("SalesDetails");
-                });
-
-            modelBuilder.Entity("IBS.Models.SalesHeader", b =>
-                {
-                    b.Property<int>("SalesHeaderId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SalesHeaderId"));
-
-                    b.Property<string>("CanceledBy")
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime?>("CanceledDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Cashier")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime?>("EditedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("LubesTotalAmount")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<string>("PostedBy")
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime?>("PostedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("SafeDropTotalAmount")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<string>("SalesNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(25)");
-
-                    b.Property<int>("Shift")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("StationPosCode")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("VoidedBy")
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime?>("VoidedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("SalesHeaderId");
-
-                    b.ToTable("SalesHeaders");
-                });
-
             modelBuilder.Entity("IBS.Models.Station", b =>
                 {
                     b.Property<int>("StationId")
@@ -1040,17 +924,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text");
 
                     b.HasDiscriminator().HasValue("ApplicationUser");
-                });
-
-            modelBuilder.Entity("IBS.Models.SalesDetail", b =>
-                {
-                    b.HasOne("IBS.Models.SalesHeader", "SalesHeader")
-                        .WithMany()
-                        .HasForeignKey("SalesHeaderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SalesHeader");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

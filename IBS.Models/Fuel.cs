@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,10 @@ namespace IBS.Models
 {
     public class Fuel : BaseEntity
     {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
+
         [Column(TypeName = "time without time zone")]
         public TimeOnly Start { get; set; }
 
@@ -44,7 +49,7 @@ namespace IBS.Models
 
         public decimal Amount { get; set; }
 
-        public decimal Calibration { get; set; }
+        public int Calibration { get; set; }
 
         //Volume = Amount / Price
         public double Volume { get; set; }
