@@ -22,9 +22,15 @@ namespace IBS.DataAccess.Repository
             //_db.Categories == dbSet
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter)
         {
-            return await dbSet.ToListAsync();
+            IQueryable<T> query = dbSet;
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync();
         }
 
         public async Task<T> GetAsync(Expression<Func<T, bool>> filter)

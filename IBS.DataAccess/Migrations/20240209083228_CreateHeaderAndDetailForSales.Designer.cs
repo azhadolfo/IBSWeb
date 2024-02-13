@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240209083228_CreateHeaderAndDetailForSales")]
+    partial class CreateHeaderAndDetailForSales
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -232,8 +235,8 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("AmountDB")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("Calibration")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Calibration")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("CanceledBy")
                         .HasColumnType("varchar(50)");
@@ -612,10 +615,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<double>("Opening")
                         .HasColumnType("double precision");
 
-                    b.Property<string>("Particular")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric(18,2)");
 
@@ -684,7 +683,7 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("PostedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("SafeDropTotalAmount")
+                    b.Property<decimal>("SalesDropTotalAmount")
                         .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("SalesNo")
@@ -692,9 +691,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(25)");
 
                     b.Property<int>("Shift")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("StationPosCode")
                         .HasColumnType("integer");
 
                     b.Property<string>("VoidedBy")
