@@ -126,7 +126,7 @@ namespace IBSWeb.Areas.User.Controllers
                         }
                     }
 
-                    if (fuelsCount != 0 && lubesCount != 0 && safedropsCount != 0)
+                    if (fuelsCount != 0 || lubesCount != 0 || safedropsCount != 0)
                     {
                         await _unitOfWork.SalesHeader.ComputeSalesPerCashier(yesterday);
                     }

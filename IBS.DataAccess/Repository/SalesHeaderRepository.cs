@@ -65,6 +65,7 @@ namespace IBS.DataAccess.Repository
                         Cashier = fuel.xONAME,
                         Shift = fuel.Shift,
                         CreatedBy = "Ako",
+                        FuelSalesTotalAmount = fuel.Sale,
                         LubesTotalAmount = lubeSales.Where(l => l.Cashier == fuel.xONAME).Sum(l => l.Amount),
                         SafeDropTotalAmount = safeDropDeposits.Where(s => s.xONAME == fuel.xONAME).Sum(s => s.Amount)
                     })
@@ -75,6 +76,7 @@ namespace IBS.DataAccess.Repository
                         StationPosCode = g.Key.StationPosCode,
                         Cashier = g.Key.Cashier,
                         Shift = g.Key.Shift,
+                        FuelSalesTotalAmount = g.Sum(g => g.FuelSalesTotalAmount),
                         LubesTotalAmount = g.Key.LubesTotalAmount,
                         SafeDropTotalAmount = g.Key.SafeDropTotalAmount,
                         CreatedBy = g.Key.CreatedBy,
@@ -93,6 +95,7 @@ namespace IBS.DataAccess.Repository
                     {
                         SalesHeaderId = salesHeader.SalesHeaderId,
                         SalesNo = salesHeader.SalesNo,
+                        Product = fuel.Particulars,
                         Particular = $"{fuel.Particulars} (P{fuel.xPUMP})",
                         Closing = fuel.Closing,
                         Opening = fuel.Opening,

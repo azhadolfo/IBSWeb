@@ -9,22 +9,9 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <div class="row pb-3">
-            <div class="col-6">
-            </div>
-            <div class="col-6 text-end">
-                <a asp-area="User" asp-controller="Company" asp-action="Create" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Generate New Cashier Report
-                </a>
-            </div>
-        </div>
-
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th>
-                        @Html.DisplayNameFor(model => model.SalesNo)
-                    </th>
                     <th>
                         @Html.DisplayNameFor(model => model.StationPosCode)
                     </th>
@@ -45,13 +32,10 @@
                 {
                     <tr>
                         <td>
-                            @obj.SalesNo
-                        </td>
-                        <td>
                             @obj.StationPosCode
                         </td>
                         <td>
-                            @obj.Date
+                            @obj.Date.ToString("MMMM dd, yyyy")
                         </td>
                         <td>
                             @obj.Cashier
@@ -61,16 +45,12 @@
                         </td>
                         <td>
                             <div class="w-75 btn-group" role="group">
-                                <a asp-area="User" asp-controller="Company" asp-action="Edit" asp-route-id="@obj.SalesHeaderId" class="btn btn-primary mx-2">
+                                <a asp-area="User" asp-controller="CashierReport" asp-action="Edit" asp-route-id="@obj.SalesHeaderId" class="btn btn-primary mx-2">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
-                                @* @if (obj.IsActive)
-                                {
-                                    <a asp-area="User" asp-controller="Company" asp-action="Deactivate" asp-route-id="@obj.CompanyId" class="btn btn-danger mx-2">
-                                        <i class="bi bi-person-fill-slash"></i> Deactivate
-                                    </a>
-                                } *@
-
+                                <a asp-area="User" asp-controller="CashierReport" asp-action="Generate" asp-route-id="@obj.SalesHeaderId" class="btn btn-primary mx-2">
+                                    <i class="bi bi-printer-fill"></i> Generate
+                                </a>
                             </div>
                         </td>
                     </tr>

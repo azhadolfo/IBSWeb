@@ -49,7 +49,7 @@ namespace IBS.Models
 
         public decimal Amount { get; set; }
 
-        public int Calibration { get; set; }
+        public decimal Calibration { get; set; }
 
         //Volume = Amount / Price
         public double Volume { get; set; }

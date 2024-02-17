@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240213075130_CreateIndexForSomeFields")]
+    partial class CreateIndexForSomeFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -232,8 +235,8 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("AmountDB")
                         .HasColumnType("numeric");
 
-                    b.Property<decimal>("Calibration")
-                        .HasColumnType("numeric");
+                    b.Property<int>("Calibration")
+                        .HasColumnType("integer");
 
                     b.Property<string>("CanceledBy")
                         .HasColumnType("varchar(50)");
@@ -350,9 +353,11 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("INV_DATE");
+                    b.HasIndex("INV_DATE")
+                        .HasDatabaseName("IX_Fuel_INV_DATE");
 
-                    b.HasIndex("xONAME");
+                    b.HasIndex("xONAME")
+                        .HasDatabaseName("IX_Fuel_xONAME");
 
                     b.ToTable("Fuels");
                 });
@@ -453,9 +458,11 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Cashier");
+                    b.HasIndex("Cashier")
+                        .HasDatabaseName("IX_Lube_Cashier");
 
-                    b.HasIndex("INV_DATE");
+                    b.HasIndex("INV_DATE")
+                        .HasDatabaseName("IX_Lube_INV_DATE");
 
                     b.ToTable("Lubes");
                 });
@@ -588,9 +595,11 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("INV_DATE");
+                    b.HasIndex("INV_DATE")
+                        .HasDatabaseName("IX_SafeDrop_INV_DATE");
 
-                    b.HasIndex("xONAME");
+                    b.HasIndex("xONAME")
+                        .HasDatabaseName("IX_SafeDrop_xONAME");
 
                     b.ToTable("SafeDrops");
                 });
@@ -603,8 +612,8 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SalesDetailId"));
 
-                    b.Property<decimal>("Calibration")
-                        .HasColumnType("numeric");
+                    b.Property<int>("Calibration")
+                        .HasColumnType("integer");
 
                     b.Property<double>("Closing")
                         .HasColumnType("double precision");
@@ -624,10 +633,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric(18,2)");
-
-                    b.Property<string>("Product")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)");
 
                     b.Property<decimal>("Sale")
                         .HasColumnType("numeric(18,2)");
@@ -687,9 +692,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("FuelSalesTotalAmount")
-                        .HasColumnType("numeric(18,2)");
-
                     b.Property<decimal>("LubesTotalAmount")
                         .HasColumnType("numeric(18,2)");
 
@@ -720,7 +722,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("SalesHeaderId");
 
-                    b.HasIndex("Cashier");
+                    b.HasIndex("Cashier")
+                        .HasDatabaseName("IX_SalesHeader_Cashier");
 
                     b.HasIndex("SalesHeaderId")
                         .IsUnique();

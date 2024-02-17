@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240213092534_RechangeTheIndexName")]
+    partial class RechangeTheIndexName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -232,8 +235,8 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("AmountDB")
                         .HasColumnType("numeric");
 
-                    b.Property<decimal>("Calibration")
-                        .HasColumnType("numeric");
+                    b.Property<int>("Calibration")
+                        .HasColumnType("integer");
 
                     b.Property<string>("CanceledBy")
                         .HasColumnType("varchar(50)");
@@ -603,8 +606,8 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SalesDetailId"));
 
-                    b.Property<decimal>("Calibration")
-                        .HasColumnType("numeric");
+                    b.Property<int>("Calibration")
+                        .HasColumnType("integer");
 
                     b.Property<double>("Closing")
                         .HasColumnType("double precision");
@@ -624,10 +627,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric(18,2)");
-
-                    b.Property<string>("Product")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)");
 
                     b.Property<decimal>("Sale")
                         .HasColumnType("numeric(18,2)");
@@ -686,9 +685,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("FuelSalesTotalAmount")
-                        .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal>("LubesTotalAmount")
                         .HasColumnType("numeric(18,2)");

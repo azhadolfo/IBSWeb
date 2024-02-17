@@ -28,9 +28,15 @@ namespace IBS.Models
         public int Shift { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal FuelSalesTotalAmount { get; set; }
+
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal SafeDropTotalAmount { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal LubesTotalAmount { get; set; }
     }
 }
