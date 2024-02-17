@@ -34,12 +34,14 @@ namespace IBS.DataAccess.Data
         {
             base.OnModelCreating(builder);
 
+            // ChartOfAccount
             builder.Entity<ChartOfAccount>(coa =>
             {
                 coa.HasIndex(coa => coa.AccountNumber).IsUnique();
                 coa.HasIndex(coa => coa.AccountName);
             });
 
+            // Customer
             builder.Entity<Customer>(c =>
             {
                 c.HasIndex(c => c.CustomerId).IsUnique();
@@ -47,6 +49,7 @@ namespace IBS.DataAccess.Data
                 c.HasIndex(c => c.CustomerName);
             });
 
+            // Company
             builder.Entity<Company>(c =>
             {
                 c.HasIndex(c => c.CompanyId).IsUnique();
@@ -54,6 +57,7 @@ namespace IBS.DataAccess.Data
                 c.HasIndex(c => c.CompanyName).IsUnique();
             });
 
+            // Product
             builder.Entity<Product>(p =>
             {
                 p.HasIndex(p => p.ProductId).IsUnique();
@@ -61,19 +65,40 @@ namespace IBS.DataAccess.Data
                 p.HasIndex(p => p.ProductName).IsUnique();
             });
 
+            // Fuel
             builder.Entity<Fuel>(f =>
             {
                 f.HasIndex(f => f.xONAME);
+                f.HasIndex(f => f.INV_DATE);
             });
 
+            // Lube
             builder.Entity<Lube>(l =>
             {
                 l.HasIndex(l => l.Cashier);
+                l.HasIndex(l => l.INV_DATE);
             });
 
+            // SafeDrop
             builder.Entity<SafeDrop>(s =>
             {
                 s.HasIndex(s => s.xONAME);
+                s.HasIndex(s => s.INV_DATE);
+            });
+
+            // SalesHeader
+            builder.Entity<SalesHeader>(s =>
+            {
+                s.HasIndex(s => s.SalesHeaderId).IsUnique();
+                s.HasIndex(s => s.SalesNo).IsUnique();
+                s.HasIndex(s => s.Cashier);
+            });
+
+            // SalesDetail
+            builder.Entity<SalesDetail>(s =>
+            {
+                s.HasIndex(s => s.SalesHeaderId);
+                s.HasIndex(s => s.SalesNo);
             });
         }
     }

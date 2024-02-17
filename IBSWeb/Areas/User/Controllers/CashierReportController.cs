@@ -28,9 +28,20 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public IActionResult Generate()
+        public async Task<IActionResult> Generate(int? id)
         {
-            return View();
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            SalesVM = new SalesVM
+            {
+                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesHeaderId == id),
+                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesHeaderId == id)
+            };
+
+            return View(SalesVM);
         }
 
         //[HttpPost]
