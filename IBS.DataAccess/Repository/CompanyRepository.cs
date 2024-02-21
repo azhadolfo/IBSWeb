@@ -19,12 +19,12 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync()
+        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
         {
             Company? lastCompany = await _db
                 .Companies
                 .OrderBy(c => c.CompanyId)
-                .LastOrDefaultAsync();
+                .LastOrDefaultAsync(cancellationToken);
 
             if (lastCompany != null)
             {
@@ -46,22 +46,22 @@ namespace IBS.DataAccess.Repository
             }
         }
 
-        public async Task<bool> IsCompanyExistAsync(string companyName)
+        public async Task<bool> IsCompanyExistAsync(string companyName, CancellationToken cancellationToken = default)
         {
             return await _db.Companies
-                .AnyAsync(c => c.CompanyName == companyName);
+                .AnyAsync(c => c.CompanyName == companyName, cancellationToken);
         }
 
-        public async Task<bool> IsTinNoExistAsync(string tinNo)
+        public async Task<bool> IsTinNoExistAsync(string tinNo, CancellationToken cancellationToken = default)
         {
             return await _db.Companies
-                .AnyAsync(c => c.CompanyTin == tinNo);
+                .AnyAsync(c => c.CompanyTin == tinNo, cancellationToken);
         }
 
-        public async Task UpdateAsync(Company model)
+        public async Task UpdateAsync(Company model, CancellationToken cancellationToken = default)
         {
             Company? existingCompany = await _db.Companies
-                .FindAsync(model.CompanyId);
+                .FindAsync(model.CompanyId, cancellationToken);
 
             existingCompany!.CompanyName = model.CompanyName;
             existingCompany!.CompanyAddress = model.CompanyAddress;

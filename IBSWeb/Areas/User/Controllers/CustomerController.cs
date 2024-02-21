@@ -28,17 +28,17 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Customer model)
+        public async Task<IActionResult> Create(Customer model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
-                bool IsTinExist = await _unitOfWork.Customer.IsTinNoExistAsync(model.CustomerTin);
+                bool IsTinExist = await _unitOfWork.Customer.IsTinNoExistAsync(model.CustomerTin, cancellationToken);
 
                 if (!IsTinExist)
                 {
-                    model.CustomerCode = await _unitOfWork.Customer.GenerateCodeAsync(model.CustomerType);
-                    await _unitOfWork.Customer.AddAsync(model);
-                    await _unitOfWork.SaveAsync();
+                    model.CustomerCode = await _unitOfWork.Customer.GenerateCodeAsync(model.CustomerType, cancellationToken);
+                    await _unitOfWork.Customer.AddAsync(model, cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Customer created successfully";
                     return RedirectToAction(nameof(Index));
                 }
@@ -51,14 +51,14 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
             {
                 return NotFound();
             }
 
-            Customer customer = await _unitOfWork.Customer.GetAsync(c => c.CustomerId == id);
+            Customer customer = await _unitOfWork.Customer.GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
             {
@@ -69,12 +69,12 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Customer model)
+        public async Task<IActionResult> Edit(Customer model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
-                await _unitOfWork.Customer.UpdateAsync(model);
-                await _unitOfWork.SaveAsync();
+                await _unitOfWork.Customer.UpdateAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Customer updated successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -83,7 +83,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Activate(int? id)
+        public async Task<IActionResult> Activate(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
             {
@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             Customer customer = await _unitOfWork
                 .Customer
-                .GetAsync(c => c.CustomerId == id);
+                .GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
             {
@@ -103,7 +103,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost, ActionName("Activate")]
-        public async Task<IActionResult> ActivatePost(int? id)
+        public async Task<IActionResult> ActivatePost(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
             {
@@ -112,12 +112,12 @@ namespace IBSWeb.Areas.User.Controllers
 
             Customer customer = await _unitOfWork
                 .Customer
-                .GetAsync(c => c.CustomerId == id);
+                .GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
             {
                 customer.IsActive = true;
-                await _unitOfWork.SaveAsync();
+                await _unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Customer has been activated";
                 return RedirectToAction(nameof(Index));
             }
@@ -126,7 +126,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Deactivate(int? id)
+        public async Task<IActionResult> Deactivate(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
             {
@@ -135,7 +135,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             Customer customer = await _unitOfWork
                 .Customer
-                .GetAsync(c => c.CustomerId == id);
+                .GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
             {
@@ -146,7 +146,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost, ActionName("Deactivate")]
-        public async Task<IActionResult> DeactivatePost(int? id)
+        public async Task<IActionResult> DeactivatePost(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
             {
@@ -155,7 +155,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             Customer customer = await _unitOfWork
                 .Customer
-                .GetAsync(c => c.CustomerId == id);
+                .GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
             {

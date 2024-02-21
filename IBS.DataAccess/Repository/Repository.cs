@@ -22,7 +22,7 @@ namespace IBS.DataAccess.Repository
             //_db.Categories == dbSet
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter)
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<T> query = dbSet;
             if (filter != null)
@@ -30,30 +30,30 @@ namespace IBS.DataAccess.Repository
                 query = query.Where(filter);
             }
 
-            return await query.ToListAsync();
+            return await query.ToListAsync(cancellationToken);
         }
 
-        public async Task<T> GetAsync(Expression<Func<T, bool>> filter)
+        public async Task<T> GetAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
         {
-            return await dbSet.Where(filter).FirstOrDefaultAsync();
+            return await dbSet.Where(filter).FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task AddAsync(T entity)
+        public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
         {
             dbSet.Add(entity);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task RemoveAsync(T entity)
+        public async Task RemoveAsync(T entity, CancellationToken cancellationToken = default)
         {
             dbSet.Remove(entity);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task RemoveRangeAsync(IEnumerable<T> entities)
+        public async Task RemoveRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
         {
             dbSet.RemoveRange(entities);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }

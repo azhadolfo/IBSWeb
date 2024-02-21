@@ -40,7 +40,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost, ActionName("ImportCsv")]
-        public async Task<IActionResult> ImportFiles()
+        public async Task<IActionResult> ImportFiles(CancellationToken cancellationToken)
         {
             var importFolder = Path.Combine("D:", "AzhNewPC", "RealPos", "Feb 5");
             var yesterday = DateTime.Now.AddDays(-1);
@@ -78,7 +78,7 @@ namespace IBSWeb.Areas.User.Controllers
                                 if (fileName.Contains("fuels"))
                                 {
                                     var records = csv.GetRecords<Fuel>();
-                                    var existingRecords = await _dbContext.Set<Fuel>().ToListAsync();
+                                    var existingRecords = await _dbContext.Set<Fuel>().ToListAsync(cancellationToken);
                                     foreach (var record in records)
                                     {
                                         if (!existingRecords.Any(existingRecord => existingRecord.nozdown == record.nozdown))
@@ -120,15 +120,15 @@ namespace IBSWeb.Areas.User.Controllers
                                     continue;
                                 }
 
-                                await _dbContext.AddRangeAsync(newRecords);
-                                await _unitOfWork.SaveAsync();
+                                await _dbContext.AddRangeAsync(newRecords, cancellationToken);
+                                await _unitOfWork.SaveAsync(cancellationToken);
                             }
                         }
                     }
 
                     if (fuelsCount != 0 || lubesCount != 0 || safedropsCount != 0)
                     {
-                        await _unitOfWork.SalesHeader.ComputeSalesPerCashier(yesterday);
+                        await _unitOfWork.SalesHeader.ComputeSalesPerCashier(yesterday, cancellationToken);
                     }
                     else
                     {

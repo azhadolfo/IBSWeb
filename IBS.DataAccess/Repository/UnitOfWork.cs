@@ -29,9 +29,9 @@ namespace IBS.DataAccess.Repository
             SalesDetail = new SalesDetailRepository(_db);
         }
 
-        public async Task SaveAsync()
+        public async Task SaveAsync(CancellationToken cancellationToken = default)
         {
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }
