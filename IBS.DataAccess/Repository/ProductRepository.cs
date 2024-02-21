@@ -19,17 +19,17 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task<bool> IsProductExist(string product)
+        public async Task<bool> IsProductExist(string product, CancellationToken cancellationToken = default)
         {
             return await _db.Products
-                .AnyAsync(p => p.ProductName == product);
+                .AnyAsync(p => p.ProductName == product,cancellationToken);
         }
 
-        public async Task UpdateAsync(Product model)
+        public async Task UpdateAsync(Product model, CancellationToken cancellationToken = default)
         {
             Product? existingProduct = await _db
                 .Products
-                .FindAsync(model.ProductId);
+                .FindAsync(model.ProductId, cancellationToken);
 
             existingProduct!.ProductCode = model.ProductCode;
             existingProduct!.ProductName = model.ProductName;

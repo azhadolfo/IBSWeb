@@ -28,7 +28,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Generate(int? id)
+        public async Task<IActionResult> Generate(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
             {
@@ -37,8 +37,8 @@ namespace IBSWeb.Areas.User.Controllers
 
             SalesVM = new SalesVM
             {
-                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesHeaderId == id),
-                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesHeaderId == id)
+                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesHeaderId == id, cancellationToken),
+                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesHeaderId == id, cancellationToken)
             };
 
             return View(SalesVM);

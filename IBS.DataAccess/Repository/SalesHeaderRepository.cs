@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IBS.DataAccess.Repository
@@ -19,11 +20,11 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task ComputeSalesPerCashier(DateTime yesterday)
+        public async Task ComputeSalesPerCashier(DateTime yesterday, CancellationToken cancellationToken = default)
         {
             try
             {
-                var fuelSales = _db.Fuels
+                var fuelSales = await _db.Fuels
                     .Where(f => f.INV_DATE == yesterday)
                     .GroupBy(f => new { f.xSITECODE, f.xONAME, f.INV_DATE, f.xPUMP, f.Particulars, f.Price, f.Shift, f.Calibration })
                     .Select(g => new
@@ -47,14 +48,15 @@ namespace IBS.DataAccess.Repository
                     .OrderBy(g => g.Shift)
                     .ThenBy(g => g.xSITECODE)
                     .ThenBy(g => g.Particulars)
-                    .ThenBy(g => g.xPUMP)
-                    .ToList();
+                    .ToListAsync(cancellationToken);
 
-                var lubeSales = _db.Lubes
-                    .Where(f => f.INV_DATE == yesterday);
+                var lubeSales = await _db.Lubes
+                    .Where(f => f.INV_DATE == yesterday)
+                    .ToListAsync(cancellationToken);
 
-                var safeDropDeposits = _db.SafeDrops
-                    .Where(f => f.INV_DATE == yesterday);
+                var safeDropDeposits = await _db.SafeDrops
+                    .Where(f => f.INV_DATE == yesterday)
+                    .ToListAsync(cancellationToken);
 
                 var salesHeaders = fuelSales
                     .Select(fuel => new SalesHeader
@@ -84,8 +86,8 @@ namespace IBS.DataAccess.Repository
                     })
                     .ToList();
 
-                await _db.SalesHeaders.AddRangeAsync(salesHeaders);
-                await _db.SaveChangesAsync();
+                await _db.SalesHeaders.AddRangeAsync(salesHeaders, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
 
                 foreach (var fuel in fuelSales)
                 {
@@ -108,10 +110,10 @@ namespace IBS.DataAccess.Repository
                         Value = (decimal)fuel.Liters * fuel.Price
                     };
 
-                    await _db.SalesDetails.AddAsync(salesDetail);
+                    await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
                 }
 
-                await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex)
             {

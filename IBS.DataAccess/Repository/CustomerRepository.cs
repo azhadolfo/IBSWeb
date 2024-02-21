@@ -20,13 +20,13 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string customerType)
+        public async Task<string> GenerateCodeAsync(string customerType, CancellationToken cancellationToken = default)
         {
             Customer? lastCustomer = await _db
                 .Customers
                 .Where(c => c.CustomerType == customerType)
                 .OrderBy(c => c.CustomerId)
-                .LastOrDefaultAsync();
+                .LastOrDefaultAsync(cancellationToken);
 
             if (lastCustomer != null)
             {
@@ -57,16 +57,16 @@ namespace IBS.DataAccess.Repository
             }
         }
 
-        public async Task<bool> IsTinNoExistAsync(string tin)
+        public async Task<bool> IsTinNoExistAsync(string tin, CancellationToken cancellationToken = default)
         {
             return await _db.Customers
-                .AnyAsync(c => c.CustomerTin == tin);
+                .AnyAsync(c => c.CustomerTin == tin, cancellationToken);
         }
 
-        public async Task UpdateAsync(Customer model)
+        public async Task UpdateAsync(Customer model, CancellationToken cancellationToken = default)
         {
             Customer? existingCustomer = await _db.Customers
-                .FindAsync(model.CustomerId);
+                .FindAsync(model.CustomerId, cancellationToken);
 
             existingCustomer!.CustomerName = model.CustomerName;
             existingCustomer!.CustomerAddress = model.CustomerAddress;

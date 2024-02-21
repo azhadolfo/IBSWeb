@@ -30,18 +30,18 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Product model)
+        public async Task<IActionResult> Create(Product model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
                 bool IsProductExist = await _unitOfWork
                     .Product
-                    .IsProductExist(model.ProductName);
+                    .IsProductExist(model.ProductName, cancellationToken);
 
                 if (!IsProductExist)
                 {
-                    await _unitOfWork.Product.AddAsync(model);
-                    await _unitOfWork.SaveAsync();
+                    await _unitOfWork.Product.AddAsync(model, cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Product created successfully";
                     return RedirectToAction(nameof(Index));
                 }
@@ -55,14 +55,14 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
             {
                 return NotFound();
             }
 
-            Product product = await _unitOfWork.Product.GetAsync(c => c.ProductId == id);
+            Product product = await _unitOfWork.Product.GetAsync(c => c.ProductId == id, cancellationToken);
 
             if (product != null)
             {
@@ -73,12 +73,12 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Product model)
+        public async Task<IActionResult> Edit(Product model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
-                await _unitOfWork.Product.UpdateAsync(model);
-                await _unitOfWork.SaveAsync();
+                await _unitOfWork.Product.UpdateAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Product updated successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -87,7 +87,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
             {
@@ -96,7 +96,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             Product product = await _unitOfWork
                 .Product
-                .GetAsync(u => u.ProductId == id);
+                .GetAsync(u => u.ProductId == id, cancellationToken);
 
             if (product != null)
             {
@@ -107,16 +107,16 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
-        public async Task<IActionResult> DeletePost(int? id)
+        public async Task<IActionResult> DeletePost(int? id, CancellationToken cancellationToken)
         {
             Product? product = await _unitOfWork
                 .Product
-                .GetAsync(u => u.ProductId == id);
+                .GetAsync(u => u.ProductId == id, cancellationToken);
 
             if (product != null)
             {
-                await _unitOfWork.Product.RemoveAsync(product);
-                await _unitOfWork.SaveAsync();
+                await _unitOfWork.Product.RemoveAsync(product, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Product deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
