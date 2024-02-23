@@ -5,25 +5,24 @@ using Microsoft.AspNetCore.Mvc;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    public class CompanyController : Controller
+    public class StationController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly ILogger<CompanyController> _logger;
+        private readonly ILogger<StationController> _logger;
 
-        public CompanyController(IUnitOfWork unitOfWork, ILogger<CompanyController> logger)
+        public StationController(IUnitOfWork unitOfWork, ILogger<StationController> logger)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
-
         }
 
         public async Task<IActionResult> Index()
         {
-            IEnumerable<Company> companies = await _unitOfWork
-                .Company
+            IEnumerable<Station> stations = await _unitOfWork
+                .Station
                 .GetAllAsync();
-            return View(companies);
+            return View(stations);
         }
 
         [HttpGet]
@@ -33,40 +32,33 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Company model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(Station model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
-                bool companyExist = await _unitOfWork
-                    .Company
-                    .IsCompanyExistAsync(model.CompanyName, cancellationToken);
-
-                if (companyExist)
+                if (await _unitOfWork.Station.IsPosCodeExistAsync(model.PosCode,cancellationToken))
                 {
-                    ModelState.AddModelError("CompanyName", "Company already exist.");
+                    ModelState.AddModelError("PosCode", "Station POS Code already exist.");
                     return View(model);
                 }
 
-                bool tinNoExist = await _unitOfWork
-                    .Company
-                    .IsTinNoExistAsync(model.CompanyTin, cancellationToken);
-
-                if (tinNoExist)
+                if (await _unitOfWork.Station.IsStationCodeExistAsync(model.StationCode, cancellationToken))
                 {
-                    ModelState.AddModelError("CompanyTin", "Tin number already exist.");
+                    ModelState.AddModelError("StationCode", "Station Code already exist.");
                     return View(model);
                 }
 
-                model.CompanyCode = await _unitOfWork
-                    .Company
-                    .GenerateCodeAsync(cancellationToken);
+                if (await _unitOfWork.Station.IsStationNameExistAsync(model.StationName, cancellationToken))
+                {
+                    ModelState.AddModelError("StationName", "Station Name already exist.");
+                    return View(model);
+                }
 
-                await _unitOfWork.Company.AddAsync(model, cancellationToken);
+                await _unitOfWork.Station.AddAsync(model, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Company created successfully";
+                TempData["success"] = "Station created successfully";
                 return RedirectToAction("Index");
             }
-
             ModelState.AddModelError("", "Make sure to fill all the required details.");
             return View(model);
         }
@@ -79,32 +71,32 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Company company = await _unitOfWork
-                .Company
-                .GetAsync(c => c.CompanyId == id, cancellationToken);
+            Station station = await _unitOfWork
+                .Station
+                .GetAsync(c => c.StationId == id, cancellationToken);
 
-            if (company != null)
+            if (station != null)
             {
-                return View(company);
+                return View(station);
             }
 
             return NotFound();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Company model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(Station model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await _unitOfWork.Company.UpdateAsync(model, cancellationToken);
-                    TempData["success"] = "Company updated successfully";
+                    await _unitOfWork.Station.UpdateAsync(model, cancellationToken);
+                    TempData["success"] = "Station updated successfully";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error in updating company");
+                    _logger.LogError(ex, "Error in updating station");
                     TempData["error"] = ex.Message;
                 }
             }
@@ -120,13 +112,13 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Company company = await _unitOfWork
-                .Company
-                .GetAsync(c => c.CompanyId == id, cancellationToken);
+            Station station = await _unitOfWork
+                .Station
+                .GetAsync(c => c.StationId == id, cancellationToken);
 
-            if (company != null)
+            if (station != null)
             {
-                return View(company);
+                return View(station);
             }
 
             return NotFound();
@@ -140,15 +132,15 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Company company = await _unitOfWork
-                .Company
-                .GetAsync(c => c.CompanyId == id, cancellationToken);
+            Station station = await _unitOfWork
+                .Station
+                .GetAsync(c => c.StationId == id, cancellationToken);
 
-            if (company != null)
+            if (station != null)
             {
-                company.IsActive = true;
+                station.IsActive = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Company activated successfully";
+                TempData["success"] = "Station activated successfully";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -163,13 +155,13 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Company company = await _unitOfWork
-                .Company
-                .GetAsync(c => c.CompanyId == id, cancellationToken);
+            Station station = await _unitOfWork
+                .Station
+                .GetAsync(c => c.StationId == id, cancellationToken);
 
-            if (company != null)
+            if (station != null)
             {
-                return View(company);
+                return View(station);
             }
 
             return NotFound();
@@ -183,15 +175,15 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Company company = await _unitOfWork
-                .Company
-                .GetAsync(c => c.CompanyId == id, cancellationToken);
+            Station station = await _unitOfWork
+                .Station
+                .GetAsync(c => c.StationId == id, cancellationToken);
 
-            if (company != null)
+            if (station != null)
             {
-                company.IsActive = false;
+                station.IsActive = false;
                 await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Company deactivated successfully";
+                TempData["success"] = "Station deactivated successfully";
                 return RedirectToAction(nameof(Index));
             }
 

@@ -19,6 +19,13 @@ namespace IBS.DataAccess.Data
         public DbSet<SalesHeader> SalesHeaders { get; set; }
         public DbSet<SalesDetail> SalesDetails { get; set; }
 
+        #region --Book Entities
+
+        public DbSet<GeneralLedger> GeneralLedgers { get; set; }
+
+        #endregion
+
+
         #region --Master File Entities
 
         public DbSet<Company> Companies { get; set; }

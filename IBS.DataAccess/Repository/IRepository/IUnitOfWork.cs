@@ -20,6 +20,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         ISalesDetailRepository SalesDetail { get; }
 
+        IStationRepository Station { get; }
+
         Task SaveAsync(CancellationToken cancellationToken = default);
     }
 }

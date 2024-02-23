@@ -10,9 +10,13 @@ namespace IBSWeb.Areas.User.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        public ProductController(IUnitOfWork unitOfWork)
+        private readonly ILogger<ProductController> _logger;
+
+        public ProductController(IUnitOfWork unitOfWork, ILogger<ProductController> logger)
         {
             _unitOfWork = unitOfWork;
+            _logger = logger;
+
         }
 
         public async Task<IActionResult> Index()
@@ -77,10 +81,17 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (ModelState.IsValid)
             {
-                await _unitOfWork.Product.UpdateAsync(model, cancellationToken);
-                await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Product updated successfully";
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    await _unitOfWork.Product.UpdateAsync(model, cancellationToken);
+                    TempData["success"] = "Product updated successfully";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in updating product.");
+                    TempData["error"] = ex.Message;
+                }
             }
 
             return View(model);

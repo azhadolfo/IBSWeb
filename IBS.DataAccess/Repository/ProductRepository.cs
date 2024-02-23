@@ -34,8 +34,17 @@ namespace IBS.DataAccess.Repository
             existingProduct!.ProductCode = model.ProductCode;
             existingProduct!.ProductName = model.ProductName;
             existingProduct!.ProductUnit = model.ProductUnit;
-            existingProduct!.EditedBy = "Ako";
-            existingProduct!.EditedDate = DateTime.Now;
+
+            if (_db.ChangeTracker.HasChanges())
+            {
+                existingProduct!.EditedBy = "Ako";
+                existingProduct!.EditedDate = DateTime.Now;
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new ArgumentException("No data changes!");
+            }
         }
     }
 }

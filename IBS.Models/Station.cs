@@ -17,13 +17,16 @@ namespace IBS.Models
         [Display(Name = "POS Code")]
         public int PosCode { get; set; }
 
-        [Display(Name = "Customer Address")]
+        [Display(Name = "Station Code")]
         [Column(TypeName = "varchar(3)")]
         public string StationCode { get; set; }
 
         [Display(Name = "Station Name")]
         [Column(TypeName = "varchar(50)")]
         public string StationName { get; set; }
+
+        [Column(TypeName = "varchar(5)")]
+        public string Initial { get; set; }
 
         public bool IsActive { get; set; } = true;
 

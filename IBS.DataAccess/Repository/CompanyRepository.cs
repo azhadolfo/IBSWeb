@@ -67,8 +67,17 @@ namespace IBS.DataAccess.Repository
             existingCompany!.CompanyAddress = model.CompanyAddress;
             existingCompany!.CompanyTin = model.CompanyTin;
             existingCompany!.BusinessStyle = model.BusinessStyle;
-            existingCompany!.EditedBy = "Ako";
-            existingCompany!.EditedDate = DateTime.Now;
+
+            if (_db.ChangeTracker.HasChanges())
+            {
+                existingCompany!.EditedBy = "Ako";
+                existingCompany!.EditedDate = DateTime.Now;
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new ArgumentException("No data changes!");
+            }
         }
     }
 }
