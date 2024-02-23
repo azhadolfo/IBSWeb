@@ -44,13 +44,20 @@
                             @obj.Shift
                         </td>
                         <td>
-                            <div class="w-75 btn-group" role="group">
+                            <div class="w-100 btn-group" role="group">
                                 <a asp-area="User" asp-controller="CashierReport" asp-action="Edit" asp-route-id="@obj.SalesHeaderId" class="btn btn-primary mx-2">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
                                 <a asp-area="User" asp-controller="CashierReport" asp-action="Generate" asp-route-id="@obj.SalesHeaderId" class="btn btn-primary mx-2">
                                     <i class="bi bi-printer-fill"></i> Generate
                                 </a>
+                                <a asp-area="User" asp-controller="CashierReport" asp-action="Post" asp-route-id="@obj.SalesHeaderId" class="btn btn-primary mx-2">
+                                    <i class="bi bi-journal-check"></i> Post
+                                </a>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#PostCashierReport-@obj.SalesHeaderId">
+                                    Launch demo modal
+                                </button>
+                                @await Html.PartialAsync("_PostCashierReport",Model)
                             </div>
                         </td>
                     </tr>
@@ -61,3 +68,4 @@
 
     </div>
 </div>
+

@@ -1,0 +1,132 @@
+﻿@model IBS.Models.SalesHeader
+
+@{
+    decimal totalSales = Model.Header.FuelSalesTotalAmount + Model.Header.LubesTotalAmount;
+    decimal overOrShort = Model.Header.SafeDropTotalAmount - totalSales;
+}
+
+<!-- Modal -->
+<div class="modal fade" id="PostCashierReport-@Model.Header.SalesHeaderId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h2 class="text-center">CASHIER REPORT</h2>
+                    <h6 class="text-end px-2">Date: @Model.Header.Date.ToShortDateString()</h6>
+                    <h6 class="px-2">Cashier: @Model.Header.Cashier</h6>
+                    <h6 class="px-2">Shift: @Model.Header.Shift</h6>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th colspan="10" class="text-center">Fuels</th>
+                            </tr>
+                            <tr class="table-primary text-center">
+                                <th>Particular</th>
+                                <th>Closing</th>
+                                <th>Opening</th>
+                                <th>Liters</th>
+                                <th>Calibration</th>
+                                <th>Liters Sold</th>
+                                <th>Trans Count</th>
+                                <th>Price</th>
+                                <th>Sale</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var group in Model.Details.GroupBy(d => d.Product))
+                            {
+                                foreach (var item in group)
+                                {
+                                    <tr>
+                                        <td>@item.Particular</td>
+                                        <td class="text-end">@Html.DisplayFor(model => item.Closing)</td>
+                                        <td class="text-end">@Html.DisplayFor(model => item.Opening)</td>
+                                        <td class="text-end">@Html.DisplayFor(model => item.Liters)</td>
+                                        <td class="text-end">@Html.DisplayFor(model => item.Calibration)</td>
+                                        <td class="text-end">@Html.DisplayFor(model => item.LitersSold)</td>
+                                        <td class="text-end">@Html.DisplayFor(model => item.TransactionCount)</td>
+                                        <td class="text-end">@Html.DisplayFor(model => item.Price)</td>
+                                        <td class="text-end">@Html.DisplayFor(model => item.Sale)</td>
+                                        <td class="text-end">@Html.DisplayFor(model => item.Value)</td>
+                                    </tr>
+                                }
+                                <tr class="table-secondary fw-medium">
+                                    <td colspan="3" class="text-center">Total for @group.Key</td>
+                                    <td class="text-end">@group.Sum(d => d.Liters).ToString("N3")</td>
+                                    <td class="text-end">@group.Sum(d => d.Calibration).ToString("N2")</td>
+                                    <td class="text-end">@group.Sum(d => d.LitersSold).ToString("N3")</td>
+                                    <td class="text-end">@group.Sum(d => d.TransactionCount).ToString("N2")</td>
+                                    <td class="text-end"></td>
+                                    <td class="text-end">@group.Sum(d => d.Sale).ToString("N2")</td>
+                                    <td class="text-end">@group.Sum(d => d.Value).ToString("N2")</td>
+                                </tr>
+                            }
+                            <tr class="table-primary fw-semibold">
+                                <td colspan="3" class="text-center">Total</td>
+                                <td class="text-end">@Model.Details.Sum(d => d.Liters).ToString("N3")</td>
+                                <td class="text-end">@Model.Details.Sum(d => d.Calibration).ToString("N2")</td>
+                                <td class="text-end">@Model.Details.Sum(d => d.LitersSold).ToString("N3")</td>
+                                <td class="text-end">@Model.Details.Sum(d => d.TransactionCount).ToString("N2")</td>
+                                <td class="text-end"></td>
+                                <td class="text-end">@Model.Details.Sum(d => d.Sale).ToString("N2")</td>
+                                <td class="text-end">@Model.Details.Sum(d => d.Value).ToString("N2")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <table class="table table-borderless">
+                    <thead>
+                        <tr class="table-primary">
+                            <th colspan="2" class="text-center">Summary</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-center">Fuel</td>
+                            <td class="text-end">@Html.DisplayFor(model => Model.Header.FuelSalesTotalAmount)</td>
+                        </tr>
+                        <tr>
+                            <td class="text-center">Lubes</td>
+                            <td class="text-end" style="border-bottom: double">@Html.DisplayFor(model => Model.Header.LubesTotalAmount)</td>
+                        </tr>
+                        <tr>
+                            <td class="text-center">Total Sales</td>
+                            <td class="text-end">@totalSales.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td class="text-center">Cash on Hand(Total Drops)</td>
+                            <td class="text-end" style="border-bottom: double">@Html.DisplayFor(model => Model.Header.SafeDropTotalAmount)</td>
+                        </tr>
+                        <tr>
+                            <td class="text-center">Over(Short)</td>
+                            <td class="text-end">@overOrShort.ToString("0.00;(#0.00)")</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="User" asp-controller="CashierReport" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
