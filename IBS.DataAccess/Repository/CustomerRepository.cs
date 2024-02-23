@@ -76,8 +76,17 @@ namespace IBS.DataAccess.Repository
             existingCustomer!.CustomerType = model.CustomerType;
             existingCustomer!.WithHoldingVat = model.WithHoldingVat;
             existingCustomer!.WithHoldingTax = model.WithHoldingTax;
-            existingCustomer!.EditedBy = "Ako";
-            existingCustomer!.EditedDate = DateTime.Now;
+
+            if (_db.ChangeTracker.HasChanges())
+            {
+                existingCustomer!.EditedBy = "Ako";
+                existingCustomer!.EditedDate = DateTime.Now;
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new ArgumentException("No data changes!");
+            }
         }
     }
 }
