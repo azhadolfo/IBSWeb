@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -120,6 +121,67 @@ namespace IBS.DataAccess.Repository
                 // Handle exceptions appropriately
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
+        }
+
+        public async Task PostAsync(int id, CancellationToken cancellationToken = default)
+        {
+            if (id != 0)
+            {
+                SalesVM? salesVM = new SalesVM
+                {
+                    Header = await _db.SalesHeaders.FindAsync(id, cancellationToken),
+                    Details = await _db.SalesDetails.Where(sd => sd.SalesHeaderId == id).ToListAsync(cancellationToken),
+                };
+
+                salesVM.Header.PostedBy = "Ako";
+                salesVM.Header.PostedDate = DateTime.Now;
+
+                var journal = new List<GeneralLedger>();
+
+                journal.Add(new GeneralLedger
+                {
+                    TransactionDate = salesVM.Header.Date,
+                    Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
+                    Particular = $"{salesVM.Header.Cashier},{salesVM.Header.Shift}",
+                    AccountNumber = 10100005,
+                    AccountTitle = "Cash-on-Hand",
+                    Debit = salesVM.Header.SafeDropTotalAmount,
+                    Credit = 0
+                });
+
+                foreach(var product in salesVM.Details.GroupBy(d => d.Product))
+                {
+                    journal.Add(new GeneralLedger
+                    {
+                        TransactionDate = salesVM.Header.Date,
+                        Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
+                        Particular = $"{salesVM.Header.Cashier},{salesVM.Header.Shift}",
+                        AccountNumber = 40100005,
+                        AccountTitle = product.Key == "BIODIESEL" ? "Sales-Bio" : product.Key == "ECONOGAS" ? "Sales-Econo" : "Sales-Enviro",
+                        Debit = 0,
+                        Credit = product.Sum(p => p.Sale) / 1.12m
+                    });
+
+                    journal.Add(new GeneralLedger
+                    {
+                        TransactionDate = salesVM.Header.Date,
+                        Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
+                        Particular = $"{salesVM.Header.Cashier},{salesVM.Header.Shift}",
+                        AccountNumber = 20100065,
+                        AccountTitle = "Output VAT",
+                        Debit = 0,
+                        Credit = (product.Sum(p => p.Sale) / 1.12m) * 0.12m
+                    });
+                }
+                await _db.GeneralLedgers.AddRangeAsync(journal);
+                await _db.SaveChangesAsync();
+
+            }
+            else
+            {
+                throw new KeyNotFoundException("Record not found");
+            }
+
         }
     }
 }

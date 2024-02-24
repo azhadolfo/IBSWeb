@@ -28,7 +28,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Generate(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
             {
@@ -44,12 +44,15 @@ namespace IBSWeb.Areas.User.Controllers
             return View(SalesVM);
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> Generate(SalesHeader model)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //    }
-        //}
+        public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
+        {
+            if (id != 0)
+            {
+                await _unitOfWork.SalesHeader.PostAsync(id, cancellationToken);
+
+            }
+
+            return BadRequest();
+        }
     }
 }

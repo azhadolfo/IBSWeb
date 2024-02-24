@@ -48,16 +48,9 @@
                                 <a asp-area="User" asp-controller="CashierReport" asp-action="Edit" asp-route-id="@obj.SalesHeaderId" class="btn btn-primary mx-2">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
-                                <a asp-area="User" asp-controller="CashierReport" asp-action="Generate" asp-route-id="@obj.SalesHeaderId" class="btn btn-primary mx-2">
-                                    <i class="bi bi-printer-fill"></i> Generate
+                                <a asp-area="User" asp-controller="CashierReport" asp-action="Preview" asp-route-id="@obj.SalesHeaderId" class="btn btn-primary mx-2">
+                                    <i class="bi bi-printer-fill"></i> Preview
                                 </a>
-                                <a asp-area="User" asp-controller="CashierReport" asp-action="Post" asp-route-id="@obj.SalesHeaderId" class="btn btn-primary mx-2">
-                                    <i class="bi bi-journal-check"></i> Post
-                                </a>
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#PostCashierReport-@obj.SalesHeaderId">
-                                    Launch demo modal
-                                </button>
-                                @await Html.PartialAsync("_PostCashierReport",Model)
                             </div>
                         </td>
                     </tr>
