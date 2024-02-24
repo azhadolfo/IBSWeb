@@ -106,9 +106,21 @@
 </table>
 
 <div class="row pt-2">
-    <div class="col-6 col-md-3">
-        <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
-    </div>
+    @{
+        if (Model.Header.PostedBy == null)
+        {
+            <div class="col-6 col-md-3">
+                <a asp-area="User" asp-controller="CashierReport" asp-action="Post" asp-route-id="@Model.Header.SalesHeaderId" class="btn btn-primary form-control buttons">Post</a>
+            </div>
+        }
+        else
+        {
+            <div class="col-6 col-md-3">
+                <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+            </div>
+        }
+    }
+
     <div class="col-6 col-md-3">
         <a asp-area="User" asp-controller="CashierReport" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
     </div>

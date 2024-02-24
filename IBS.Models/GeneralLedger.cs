@@ -21,6 +21,9 @@ namespace IBS.Models
         [Column(TypeName = "varchar(100)")]
         public string Reference { get; set; }
 
+        [Column(TypeName = "varchar(200)")]
+        public string Particular { get; set; }
+
         [Display(Name = "Account Number")]
         public long AccountNumber { get; set; }
 
