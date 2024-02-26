@@ -43,7 +43,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> ImportFiles(CancellationToken cancellationToken)
         {
             var importFolder = Path.Combine("D:", "AzhNewPC", "RealPos", "Feb 5");
-            var yesterday = DateTime.Now.AddDays(-1);
+            DateTime yesterday = DateTime.Now.AddDays(-1);
 
             try
             {
@@ -81,7 +81,7 @@ namespace IBSWeb.Areas.User.Controllers
                                     var existingRecords = await _dbContext.Set<Fuel>().ToListAsync(cancellationToken);
                                     foreach (var record in records)
                                     {
-                                        if (!existingRecords.Any(existingRecord => existingRecord.nozdown == record.nozdown))
+                                        if (!existingRecords.Exists(existingRecord => existingRecord.nozdown == record.nozdown))
                                         {
                                             newRecords.Add(record);
                                             fuelsCount++;
@@ -94,7 +94,7 @@ namespace IBSWeb.Areas.User.Controllers
                                     var existingRecords = await _dbContext.Set<Lube>().ToListAsync();
                                     foreach (var record in records)
                                     {
-                                        if (!existingRecords.Any(existingRecord => existingRecord.xStamp == record.xStamp))
+                                        if (!existingRecords.Exists(existingRecord => existingRecord.xStamp == record.xStamp))
                                         {
                                             newRecords.Add(record);
                                             lubesCount++;
@@ -107,7 +107,7 @@ namespace IBSWeb.Areas.User.Controllers
                                     var existingRecords = await _dbContext.Set<SafeDrop>().ToListAsync();
                                     foreach (var record in records)
                                     {
-                                        if (!existingRecords.Any(existingRecord => existingRecord.xSTAMP == record.xSTAMP))
+                                        if (!existingRecords.Exists(existingRecord => existingRecord.xSTAMP == record.xSTAMP))
                                         {
                                             newRecords.Add(record);
                                             safedropsCount++;
@@ -126,9 +126,10 @@ namespace IBSWeb.Areas.User.Controllers
                         }
                     }
 
+
                     if (fuelsCount != 0 || lubesCount != 0 || safedropsCount != 0)
                     {
-                        await _unitOfWork.SalesHeader.ComputeSalesPerCashier(yesterday, cancellationToken);
+                        await _unitOfWork.SalesHeader.ComputeSalesPerCashier(DateOnly.FromDateTime(yesterday), cancellationToken);
                     }
                     else
                     {
@@ -142,7 +143,7 @@ namespace IBSWeb.Areas.User.Controllers
                     return Json(new
                     {
                         success = true,
-                        message = $"CSV files imported successfully.(Fuels: {fuelsCount} records, Lubes: {lubesCount} records, Safedrops: {safedropsCount} records.)"
+                        message = $"CSV files imported successfully.(Fuels: {fuelsCount} records, Lubes: {lubesCount} records, Safe drops: {safedropsCount} records.)"
                     });
                 }
                 else

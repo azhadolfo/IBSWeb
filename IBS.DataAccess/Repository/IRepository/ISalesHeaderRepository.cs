@@ -10,7 +10,7 @@ namespace IBS.DataAccess.Repository.IRepository
 {
     public interface ISalesHeaderRepository : IRepository<SalesHeader>
     {
-        Task ComputeSalesPerCashier(DateTime yesterday, CancellationToken cancellationToken = default);
+        Task ComputeSalesPerCashier(DateOnly yesterday, CancellationToken cancellationToken = default);
 
         Task PostAsync(int id, CancellationToken cancellationToken = default);
     }

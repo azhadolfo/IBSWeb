@@ -21,7 +21,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task ComputeSalesPerCashier(DateTime yesterday, CancellationToken cancellationToken = default)
+        public async Task ComputeSalesPerCashier(DateOnly yesterday, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -60,6 +60,7 @@ namespace IBS.DataAccess.Repository
                     .Where(f => f.INV_DATE == yesterday)
                     .ToListAsync(cancellationToken);
 
+#pragma warning disable CS8601 // Possible null reference assignment.
                 var salesHeaders = fuelSales
                     .Select(fuel => new SalesHeader
                     {
@@ -89,6 +90,7 @@ namespace IBS.DataAccess.Repository
                         CreatedBy = g.Key.CreatedBy,
                     })
                     .ToList();
+#pragma warning restore CS8601 // Possible null reference assignment.
 
                 await _db.SalesHeaders.AddRangeAsync(salesHeaders, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
@@ -97,6 +99,7 @@ namespace IBS.DataAccess.Repository
                 {
                     var salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME);
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                     var salesDetail = new SalesDetail
                     {
                         SalesHeaderId = salesHeader.SalesHeaderId,
@@ -113,6 +116,7 @@ namespace IBS.DataAccess.Repository
                         Sale = fuel.Sale,
                         Value = (decimal)fuel.Liters * fuel.Price
                     };
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
                     await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
                 }
@@ -130,13 +134,17 @@ namespace IBS.DataAccess.Repository
         {
             if (id != 0)
             {
+#pragma warning disable CS8601 // Possible null reference assignment.
                 SalesVM? salesVM = new SalesVM
                 {
                     Header = await _db.SalesHeaders.FindAsync(id, cancellationToken),
                     Details = await _db.SalesDetails.Where(sd => sd.SalesHeaderId == id).ToListAsync(cancellationToken),
                 };
+#pragma warning restore CS8601 // Possible null reference assignment.
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                 salesVM.Header.PostedBy = "Ako";
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                 salesVM.Header.PostedDate = DateTime.Now;
 
                 var journal = new List<GeneralLedger>();

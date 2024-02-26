@@ -20,7 +20,7 @@ namespace IBS.Models
         public int StationPosCode { get; set; }
 
         [Column(TypeName = "date")]
-        public DateTime Date { get; set; }
+        public DateOnly Date { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string Cashier { get; set; }
