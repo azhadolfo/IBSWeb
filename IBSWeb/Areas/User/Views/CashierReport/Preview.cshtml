@@ -1,11 +1,6 @@
 ﻿@using IBS.Models.ViewModels
 @model SalesVM
 
-@{
-    decimal totalSales = Model.Header.FuelSalesTotalAmount + Model.Header.LubesTotalAmount;
-    decimal overOrShort = Model.Header.SafeDropTotalAmount - totalSales;
-}
-
 <div class="mb-3">
     <h2 class="text-center">CASHIER REPORT</h2>
     <h6 class="text-end px-2">Date: @Model.Header.Date.ToShortDateString()</h6>
@@ -92,7 +87,7 @@
         </tr>
         <tr>
             <td class="text-center">Total Sales</td>
-            <td class="text-end">@totalSales.ToString("N2")</td>
+            <td class="text-end">@Html.DisplayFor(model => Model.Header.TotalSales)</td>
         </tr>
         <tr>
             <td class="text-center">Cash on Hand(Total Drops)</td>
@@ -100,7 +95,7 @@
         </tr>
         <tr>
             <td class="text-center">Over(Short)</td>
-            <td class="text-end">@overOrShort.ToString("0.00;(#0.00)")</td>
+            <td class="text-end">@Model.Header.GainOrLoss.ToString("0.00;(#0.00)")</td>
         </tr>
     </tbody>
 </table>

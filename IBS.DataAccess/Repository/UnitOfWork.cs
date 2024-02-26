@@ -18,6 +18,7 @@ namespace IBS.DataAccess.Repository
         public ISalesHeaderRepository SalesHeader { get; private set; }
         public ISalesDetailRepository SalesDetail { get; private set; }
         public IStationRepository Station { get; private set; }
+        public IGeneralLedgerRepository GeneralLedger { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -29,6 +30,7 @@ namespace IBS.DataAccess.Repository
             SalesHeader = new SalesHeaderRepository(_db);
             SalesDetail = new SalesDetailRepository(_db);
             Station = new StationRepository(_db);
+            GeneralLedger = new GeneralLedgerRepository(_db);
         }
 
         public async Task SaveAsync(CancellationToken cancellationToken = default)

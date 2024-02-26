@@ -1,0 +1,33 @@
+﻿@model IEnumerable<GeneralLedger>
+
+<div class="mb-3">
+    <h2 class="text-center">GENERAL LEDGER</h2>
+</div>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr class="table-primary">
+                <th>Date</th>
+                <th>Particular</th>
+                <th>Account Number</th>
+                <th>Account Title</th>
+                <th class="text-center">Debit</th>
+                <th class="text-center">Credit</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var journal in Model)
+            {
+                <tr>
+                    <td>@journal.TransactionDate.ToShortDateString()</td>
+                    <td>@journal.Particular</td>
+                    <td>@journal.AccountNumber</td>
+                    <td>@journal.AccountTitle</td>
+                    <td class="text-end">@journal.Debit.ToString("N2")</td>
+                    <td class="text-end">@journal.Credit.ToString("0.00;(#0.00)")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
