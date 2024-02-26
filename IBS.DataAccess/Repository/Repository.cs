@@ -35,7 +35,9 @@ namespace IBS.DataAccess.Repository
 
         public async Task<T> GetAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
         {
+#pragma warning disable CS8603 // Possible null reference return.
             return await dbSet.Where(filter).FirstOrDefaultAsync(cancellationToken);
+#pragma warning restore CS8603 // Possible null reference return.
         }
 
         public async Task AddAsync(T entity, CancellationToken cancellationToken = default)

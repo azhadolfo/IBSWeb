@@ -29,10 +29,14 @@ namespace IBS.DataAccess.Repository
             if (lastCompany != null)
             {
                 // Extract the last company code
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 string lastCode = lastCompany.CompanyCode;
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
 
                 // Extract the numeric part of the code
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                 string numericPart = lastCode.Substring(1); // Assuming code format starts with a letter followed by numeric part
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
                 // Parse the numeric part and increment it by one
                 int incrementedNumber = int.Parse(numericPart) + 1;

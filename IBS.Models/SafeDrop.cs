@@ -15,10 +15,10 @@ namespace IBS.Models
         public int Id { get; set; }
 
         [Column(TypeName = "date")]
-        public DateTime INV_DATE { get; set; }
+        public DateOnly INV_DATE { get; set; }
 
         [Column(TypeName = "date")]
-        public DateTime BDate { get; set; }
+        public DateOnly BDate { get; set; }
 
         public int xYEAR { get; set; }
 

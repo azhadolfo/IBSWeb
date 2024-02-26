@@ -16,7 +16,7 @@ namespace IBS.Models
 
         [Column(TypeName = "date")]
         [Display(Name = "Transaction Date")]
-        public DateTime TransactionDate { get; set; }
+        public DateOnly TransactionDate { get; set; }
 
         [Column(TypeName = "varchar(100)")]
         public string Reference { get; set; }

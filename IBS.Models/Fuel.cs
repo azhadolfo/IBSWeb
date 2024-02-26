@@ -21,7 +21,7 @@ namespace IBS.Models
         public TimeOnly End { get; set; }
 
         [Column(TypeName = "date")]
-        public DateTime INV_DATE { get; set; }
+        public DateOnly INV_DATE { get; set; }
 
         public int xCORPCODE { get; set; }
 

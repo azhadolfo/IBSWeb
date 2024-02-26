@@ -13,20 +13,26 @@ namespace IBS.DataAccess.Data
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+
+        #region--Sales Entity
         public DbSet<Fuel> Fuels { get; set; }
         public DbSet<Lube> Lubes { get; set; }
         public DbSet<SafeDrop> SafeDrops { get; set; }
         public DbSet<SalesHeader> SalesHeaders { get; set; }
         public DbSet<SalesDetail> SalesDetails { get; set; }
+        #endregion
 
-        #region --Book Entities
+        #region--Purchase Entity
+        public DbSet<FuelDelivery> FuelDeliveries { get; set; }
+        #endregion
+
+        #region --Book Entity
 
         public DbSet<GeneralLedger> GeneralLedgers { get; set; }
 
         #endregion
 
-
-        #region --Master File Entities
+        #region --Master File Entity
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
@@ -37,6 +43,7 @@ namespace IBS.DataAccess.Data
 
         #endregion --Master File Entities
 
+        #region--Fluent API Implementation
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -108,5 +115,6 @@ namespace IBS.DataAccess.Data
                 s.HasIndex(s => s.SalesNo);
             });
         }
+        #endregion
     }
 }
