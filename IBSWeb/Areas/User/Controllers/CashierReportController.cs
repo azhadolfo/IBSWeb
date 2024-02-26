@@ -10,12 +10,15 @@ namespace IBSWeb.Areas.User.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
 
+        private readonly ILogger<CashierReportController> _logger;
+
         [BindProperty]
         public SalesVM SalesVM { get; set; }
 
-        public CashierReportController(IUnitOfWork unitOfWork)
+        public CashierReportController(IUnitOfWork unitOfWork, ILogger<CashierReportController> logger)
         {
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -48,8 +51,19 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (id != 0)
             {
-                await _unitOfWork.SalesHeader.PostAsync(id, cancellationToken);
+                try
+                {
+                    await _unitOfWork.SalesHeader.PostAsync(id, cancellationToken);
+                    TempData["success"] = "Cashier report posted successfully.";
+                    return Redirect($"/User/CashierReport/Preview/{id}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error on posting cashier report.");
+                    TempData["error"] = ex.Message;
+                }
 
+                return RedirectToAction("Preview",id);
             }
 
             return BadRequest();

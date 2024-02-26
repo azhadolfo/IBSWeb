@@ -22,6 +22,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IStationRepository Station { get; }
 
+        IGeneralLedgerRepository GeneralLedger { get; }
+
         Task SaveAsync(CancellationToken cancellationToken = default);
     }
 }

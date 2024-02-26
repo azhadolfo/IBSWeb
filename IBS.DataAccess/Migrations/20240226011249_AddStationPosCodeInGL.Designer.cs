@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240226011249_AddStationPosCodeInGL")]
+    partial class AddStationPosCodeInGL
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -730,9 +733,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("FuelSalesTotalAmount")
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<decimal>("GainOrLoss")
-                        .HasColumnType("numeric(18,2)");
-
                     b.Property<decimal>("LubesTotalAmount")
                         .HasColumnType("numeric(18,2)");
 
@@ -754,9 +754,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<int>("StationPosCode")
                         .HasColumnType("integer");
-
-                    b.Property<decimal>("TotalSales")
-                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)");

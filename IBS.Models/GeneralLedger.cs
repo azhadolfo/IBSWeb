@@ -36,5 +36,7 @@ namespace IBS.Models
 
         [Column(TypeName = "numeric(18,2)")]
         public decimal Credit { get; set; }
+
+        public int StationPosCode { get; set; }
     }
 }

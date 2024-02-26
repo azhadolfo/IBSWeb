@@ -49,6 +49,7 @@ namespace IBS.DataAccess.Repository
                     .OrderBy(g => g.Shift)
                     .ThenBy(g => g.xSITECODE)
                     .ThenBy(g => g.Particulars)
+                    .ThenBy(g => g.xPUMP)
                     .ToListAsync(cancellationToken);
 
                 var lubeSales = await _db.Lubes
@@ -69,12 +70,13 @@ namespace IBS.DataAccess.Repository
                         Shift = fuel.Shift,
                         CreatedBy = "Ako",
                         FuelSalesTotalAmount = fuel.Sale,
-                        LubesTotalAmount = lubeSales.Where(l => l.Cashier == fuel.xONAME).Sum(l => l.Amount),
-                        SafeDropTotalAmount = safeDropDeposits.Where(s => s.xONAME == fuel.xONAME).Sum(s => s.Amount)
+                        LubesTotalAmount = lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount),
+                        SafeDropTotalAmount = safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount)
                     })
                     .GroupBy(s => new { s.Date, s.StationPosCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.CreatedBy })
                     .Select(g => new SalesHeader
                     {
+                        SalesNo = g.Min(s => s.SalesNo),
                         Date = g.Key.Date,
                         StationPosCode = g.Key.StationPosCode,
                         Cashier = g.Key.Cashier,
@@ -82,8 +84,9 @@ namespace IBS.DataAccess.Repository
                         FuelSalesTotalAmount = g.Sum(g => g.FuelSalesTotalAmount),
                         LubesTotalAmount = g.Key.LubesTotalAmount,
                         SafeDropTotalAmount = g.Key.SafeDropTotalAmount,
+                        TotalSales = g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount,
+                        GainOrLoss = g.Key.SafeDropTotalAmount - (g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount),
                         CreatedBy = g.Key.CreatedBy,
-                        SalesNo = g.Min(s => s.SalesNo)
                     })
                     .ToList();
 
@@ -142,11 +145,12 @@ namespace IBS.DataAccess.Repository
                 {
                     TransactionDate = salesVM.Header.Date,
                     Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
-                    Particular = $"{salesVM.Header.Cashier},{salesVM.Header.Shift}",
+                    Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                     AccountNumber = 10100005,
                     AccountTitle = "Cash-on-Hand",
                     Debit = salesVM.Header.SafeDropTotalAmount,
-                    Credit = 0
+                    Credit = 0,
+                    StationPosCode = salesVM.Header.StationPosCode
                 });
 
                 foreach(var product in salesVM.Details.GroupBy(d => d.Product))
@@ -155,24 +159,42 @@ namespace IBS.DataAccess.Repository
                     {
                         TransactionDate = salesVM.Header.Date,
                         Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
-                        Particular = $"{salesVM.Header.Cashier},{salesVM.Header.Shift}",
+                        Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = 40100005,
                         AccountTitle = product.Key == "BIODIESEL" ? "Sales-Bio" : product.Key == "ECONOGAS" ? "Sales-Econo" : "Sales-Enviro",
                         Debit = 0,
-                        Credit = product.Sum(p => p.Sale) / 1.12m
+                        Credit = product.Sum(p => p.Sale) / 1.12m,
+                        StationPosCode = salesVM.Header.StationPosCode
                     });
 
                     journal.Add(new GeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
                         Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
-                        Particular = $"{salesVM.Header.Cashier},{salesVM.Header.Shift}",
+                        Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = 20100065,
                         AccountTitle = "Output VAT",
                         Debit = 0,
-                        Credit = (product.Sum(p => p.Sale) / 1.12m) * 0.12m
+                        Credit = (product.Sum(p => p.Sale) / 1.12m) * 0.12m,
+                        StationPosCode = salesVM.Header.StationPosCode
                     });
                 }
+
+                if (salesVM.Header.GainOrLoss != 0)
+                {
+                    journal.Add(new GeneralLedger
+                    {
+                        TransactionDate = salesVM.Header.Date,
+                        Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
+                        Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        AccountNumber = 45300013,
+                        AccountTitle = "Cash Short/(Over) - Handling",
+                        Debit = 0,
+                        Credit = salesVM.Header.GainOrLoss,
+                        StationPosCode = salesVM.Header.StationPosCode
+                    });
+                }
+
                 await _db.GeneralLedgers.AddRangeAsync(journal);
                 await _db.SaveChangesAsync();
 
