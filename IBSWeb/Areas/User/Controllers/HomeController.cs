@@ -63,67 +63,64 @@ namespace IBSWeb.Areas.User.Controllers
 
                     foreach (var file in files)
                     {
-                        using (var stream = new FileStream(file, FileMode.Open))
+                        await using var stream = new FileStream(file, FileMode.Open);
+                        using var reader = new StreamReader(stream);
+                        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
                         {
-                            using (var reader = new StreamReader(stream))
-                            using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
-                            {
-                                HeaderValidated = null,
-                                MissingFieldFound = null,
-                            }))
-                            {
-                                string fileName = Path.GetFileName(file).ToLower();
-                                var newRecords = new List<object>();
+                            HeaderValidated = null,
+                            MissingFieldFound = null,
+                        });
 
-                                if (fileName.Contains("fuels"))
-                                {
-                                    var records = csv.GetRecords<Fuel>();
-                                    var existingRecords = await _dbContext.Set<Fuel>().ToListAsync(cancellationToken);
-                                    foreach (var record in records)
-                                    {
-                                        if (!existingRecords.Exists(existingRecord => existingRecord.nozdown == record.nozdown))
-                                        {
-                                            newRecords.Add(record);
-                                            fuelsCount++;
-                                        }
-                                    }
-                                }
-                                else if (fileName.Contains("lubes"))
-                                {
-                                    var records = csv.GetRecords<Lube>();
-                                    var existingRecords = await _dbContext.Set<Lube>().ToListAsync();
-                                    foreach (var record in records)
-                                    {
-                                        if (!existingRecords.Exists(existingRecord => existingRecord.xStamp == record.xStamp))
-                                        {
-                                            newRecords.Add(record);
-                                            lubesCount++;
-                                        }
-                                    }
-                                }
-                                else if (fileName.Contains("safedrops"))
-                                {
-                                    var records = csv.GetRecords<SafeDrop>();
-                                    var existingRecords = await _dbContext.Set<SafeDrop>().ToListAsync();
-                                    foreach (var record in records)
-                                    {
-                                        if (!existingRecords.Exists(existingRecord => existingRecord.xSTAMP == record.xSTAMP))
-                                        {
-                                            newRecords.Add(record);
-                                            safedropsCount++;
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    // Handle invalid file types
-                                    continue;
-                                }
+                        string fileName = Path.GetFileName(file).ToLower();
+                        var newRecords = new List<object>();
 
-                                await _dbContext.AddRangeAsync(newRecords, cancellationToken);
-                                await _unitOfWork.SaveAsync(cancellationToken);
+                        if (fileName.Contains("fuels"))
+                        {
+                            var records = csv.GetRecords<Fuel>();
+                            var existingRecords = await _dbContext.Set<Fuel>().ToListAsync(cancellationToken);
+                            foreach (var record in records)
+                            {
+                                if (!existingRecords.Exists(existingRecord => existingRecord.nozdown == record.nozdown))
+                                {
+                                    newRecords.Add(record);
+                                    fuelsCount++;
+                                }
                             }
                         }
+                        else if (fileName.Contains("lubes"))
+                        {
+                            var records = csv.GetRecords<Lube>();
+                            var existingRecords = await _dbContext.Set<Lube>().ToListAsync();
+                            foreach (var record in records)
+                            {
+                                if (!existingRecords.Exists(existingRecord => existingRecord.xStamp == record.xStamp))
+                                {
+                                    newRecords.Add(record);
+                                    lubesCount++;
+                                }
+                            }
+                        }
+                        else if (fileName.Contains("safedrops"))
+                        {
+                            var records = csv.GetRecords<SafeDrop>();
+                            var existingRecords = await _dbContext.Set<SafeDrop>().ToListAsync();
+                            foreach (var record in records)
+                            {
+                                if (!existingRecords.Exists(existingRecord => existingRecord.xSTAMP == record.xSTAMP))
+                                {
+                                    newRecords.Add(record);
+                                    safedropsCount++;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Handle invalid file types
+                            continue;
+                        }
+
+                        await _dbContext.AddRangeAsync(newRecords, cancellationToken);
+                        await _unitOfWork.SaveAsync(cancellationToken);
                     }
 
 

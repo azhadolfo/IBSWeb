@@ -13,7 +13,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<bool> IsStationNameExistAsync(string stationName, CancellationToken cancellationToken = default);
 
-        Task<bool> IsPosCodeExistAsync(int posCode, CancellationToken cancellationToken = default);
+        Task<bool> IsPosCodeExistAsync(string posCode, CancellationToken cancellationToken = default);
 
         Task UpdateAsync(Station model, CancellationToken cancellationToken = default);
 

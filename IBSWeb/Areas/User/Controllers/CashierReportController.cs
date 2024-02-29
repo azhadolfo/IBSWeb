@@ -54,7 +54,7 @@ namespace IBSWeb.Areas.User.Controllers
                 try
                 {
                     await _unitOfWork.SalesHeader.PostAsync(id, cancellationToken);
-                    TempData["success"] = "Cashier report posted successfully.";
+                    TempData["success"] = "Cashier report approved successfully.";
                     return Redirect($"/User/CashierReport/Preview/{id}");
                 }
                 catch (Exception ex)

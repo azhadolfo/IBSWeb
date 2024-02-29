@@ -19,7 +19,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task<bool> IsPosCodeExistAsync(int posCode, CancellationToken cancellationToken = default)
+        public async Task<bool> IsPosCodeExistAsync(string posCode, CancellationToken cancellationToken = default)
         {
             return await _db.Stations
                 .AnyAsync(s => s.PosCode == posCode, cancellationToken);

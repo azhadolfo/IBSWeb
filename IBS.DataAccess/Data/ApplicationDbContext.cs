@@ -23,7 +23,11 @@ namespace IBS.DataAccess.Data
         #endregion
 
         #region--Purchase Entity
+        public DbSet<FuelPurchase> FuelPurchase { get; set; }
         public DbSet<FuelDelivery> FuelDeliveries { get; set; }
+        public DbSet<LubeDelivery> LubeDeliveries { get; set; }
+        public DbSet<LubePurchaseHeader> LubePurchaseHeaders { get; set; }
+        public DbSet<LubePurchaseDetail> LubePurchaseDetails { get; set; }
         #endregion
 
         #region --Book Entity

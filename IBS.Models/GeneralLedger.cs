@@ -37,6 +37,7 @@ namespace IBS.Models
         [Column(TypeName = "numeric(18,2)")]
         public decimal Credit { get; set; }
 
-        public int StationPosCode { get; set; }
+        [Column(TypeName = "varchar(5)")]
+        public string StationPosCode { get; set; }
     }
 }
