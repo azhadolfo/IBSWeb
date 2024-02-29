@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace IBS.Models
 {
@@ -46,5 +47,17 @@ namespace IBS.Models
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal GainOrLoss { get; set; }
+
+
+        #region --Added properties for editing purposes
+
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal ActualCashOnHand { get; set; }
+
+        [Column(TypeName = "varchar(200)")]
+        public string? Particular { get; set; }
+
+        #endregion
     }
 }

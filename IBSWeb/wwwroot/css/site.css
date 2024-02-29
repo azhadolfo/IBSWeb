@@ -463,3 +463,8 @@ bg-success {
         visibility: hidden;
     }
 }
+
+.required {
+    color: red;
+    margin-left: 2px;
+}

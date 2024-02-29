@@ -17,7 +17,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var journal in Model)
+            @foreach (var journal in Model.OrderBy(j => j.AccountNumber))
             {
                 <tr>
                     <td>@journal.TransactionDate</td>
@@ -25,7 +25,7 @@
                     <td>@journal.AccountNumber</td>
                     <td>@journal.AccountTitle</td>
                     <td class="text-end">@journal.Debit.ToString("N2")</td>
-                    <td class="text-end">@journal.Credit.ToString("0.00;(#0.00)")</td>
+                    <td class="text-end">@journal.Credit.ToString("N2")</td>
                 </tr>
             }
         </tbody>

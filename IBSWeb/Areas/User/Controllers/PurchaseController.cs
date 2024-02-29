@@ -56,11 +56,11 @@ namespace IBSWeb.Areas.User.Controllers
 
                         if (fileName.Contains("fuel"))
                         {
-                            fuelsCount = await _unitOfWork.FuelDelivery.ProcessFuelDelivery(file, cancellationToken);
+                            fuelsCount = await _unitOfWork.FuelPurchase.ProcessFuelDelivery(file, cancellationToken);
                         }
                         else if (fileName.Contains("lube"))
                         {
-                            lubesCount = await _unitOfWork.LubeDelivery.ProcessLubeDelivery(file, cancellationToken);
+                            lubesCount = await _unitOfWork.LubePurchase.ProcessLubeDelivery(file, cancellationToken);
                         }
 
                     }
@@ -87,12 +87,36 @@ namespace IBSWeb.Areas.User.Controllers
                     return Json(new { success = false, message = "No xls file found." });
                 }
 
-                return View();
             }
             catch (Exception ex)
             {
                 return Json(new { success = false, message = $"Error: {ex.Message}" });
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Fuel()
+        {
+            IEnumerable<FuelPurchase> fuelPurchaseList = await _unitOfWork
+                .FuelPurchase
+                .GetAllAsync();
+
+            return View(fuelPurchaseList);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
+        {
+            if (id != null)
+            {
+                FuelPurchase? fuelPurchase = await _unitOfWork
+                    .FuelPurchase
+                    .GetAsync(f => f.FuelPurchaseId == id);
+
+                return PartialView("_FuelPreviewPartial", fuelPurchase);
+            }
+
+            return NotFound();
         }
 
     }

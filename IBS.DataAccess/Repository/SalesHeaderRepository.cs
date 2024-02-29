@@ -149,7 +149,7 @@ namespace IBS.DataAccess.Repository
                     Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                     AccountNumber = 10100005,
                     AccountTitle = "Cash-on-Hand",
-                    Debit = salesVM.Header.SafeDropTotalAmount,
+                    Debit = salesVM.Header.ActualCashOnHand > 0 ? salesVM.Header.ActualCashOnHand : salesVM.Header.SafeDropTotalAmount,
                     Credit = 0,
                     StationPosCode = salesVM.Header.StationPosCode
                 });
@@ -162,10 +162,11 @@ namespace IBS.DataAccess.Repository
                         Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = 40100005,
-                        AccountTitle = product.Key == "BIODIESEL" ? "Sales-Bio" : product.Key == "ECONOGAS" ? "Sales-Econo" : "Sales-Enviro",
+                        AccountTitle = product.Key == "PET001" ? "Sales-Bio" : product.Key == "PET002" ? "Sales-Econo" : "Sales-Enviro",
                         Debit = 0,
                         Credit = product.Sum(p => p.Sale) / 1.12m,
-                        StationPosCode = salesVM.Header.StationPosCode
+                        StationPosCode = salesVM.Header.StationPosCode,
+                        ProductCode = product.Key
                     });
 
                     journal.Add(new GeneralLedger
@@ -190,8 +191,8 @@ namespace IBS.DataAccess.Repository
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = 45300013,
                         AccountTitle = "Cash Short/(Over) - Handling",
-                        Debit = 0,
-                        Credit = salesVM.Header.GainOrLoss,
+                        Debit = salesVM.Header.GainOrLoss < 0 ? Math.Abs(salesVM.Header.GainOrLoss) : 0,
+                        Credit = salesVM.Header.GainOrLoss > 0 ? salesVM.Header.GainOrLoss : 0,
                         StationPosCode = salesVM.Header.StationPosCode
                     });
                 }
@@ -205,6 +206,28 @@ namespace IBS.DataAccess.Repository
                 throw new KeyNotFoundException("Record not found");
             }
 
+        }
+
+        public async Task UpdateAsync(SalesHeader model, CancellationToken cancellationToken = default)
+        {
+            SalesHeader? existingSalesHeader = await _db
+                .SalesHeaders
+                .FindAsync(model.SalesHeaderId, cancellationToken);
+
+            existingSalesHeader!.ActualCashOnHand = model.ActualCashOnHand;
+            existingSalesHeader!.Particular = model.Particular;
+
+            if (_db.ChangeTracker.HasChanges())
+            {
+                existingSalesHeader!.GainOrLoss = model.ActualCashOnHand - existingSalesHeader.TotalSales;
+                existingSalesHeader.EditedBy = "Ako";
+                existingSalesHeader.EditedDate = DateTime.Now;
+                await _db.SaveChangesAsync();
+            }
+            else
+            {
+                throw new ArgumentException("No data changes!");
+            }
         }
     }
 }

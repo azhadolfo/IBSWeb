@@ -19,8 +19,8 @@ namespace IBS.DataAccess.Repository
         public ISalesDetailRepository SalesDetail { get; private set; }
         public IStationRepository Station { get; private set; }
         public IGeneralLedgerRepository GeneralLedger { get; private set; }
-        public IFuelPurchaseRepository FuelDelivery { get; private set; }
-        public ILubePurchaseRepository LubeDelivery { get; private set; }
+        public IFuelPurchaseRepository FuelPurchase { get; private set; }
+        public ILubePurchaseRepository LubePurchase { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -33,8 +33,8 @@ namespace IBS.DataAccess.Repository
             SalesDetail = new SalesDetailRepository(_db);
             Station = new StationRepository(_db);
             GeneralLedger = new GeneralLedgerRepository(_db);
-            FuelDelivery = new FuelPurchaseRepository(_db);
-            LubeDelivery = new LubePurchaseRepository(_db);
+            FuelPurchase = new FuelPurchaseRepository(_db);
+            LubePurchase = new LubePurchaseRepository(_db);
         }
 
         public async Task SaveAsync(CancellationToken cancellationToken = default)
