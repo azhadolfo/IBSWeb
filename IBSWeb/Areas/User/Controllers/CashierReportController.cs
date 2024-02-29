@@ -68,5 +68,55 @@ namespace IBSWeb.Areas.User.Controllers
 
             return BadRequest();
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            SalesHeader salesHeader = await _unitOfWork
+                .SalesHeader
+                .GetAsync(s => s.SalesHeaderId == id, cancellationToken);
+
+            if (salesHeader != null)
+            {
+                return View(salesHeader);
+            }
+
+            return NotFound();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(SalesHeader model, CancellationToken cancellationToken)
+        {
+
+            if (model.ActualCashOnHand < 0)
+            {
+                ModelState.AddModelError("ActualCashOnHand", "Please enter a value bigger than 0");
+                return View(model);
+            }
+
+            if (String.IsNullOrEmpty(model.Particular))
+            {
+                ModelState.AddModelError("Particular", "Indicate the reason of this changes.");
+                return View(model);
+            }
+
+            try
+            {
+                await _unitOfWork.SalesHeader.UpdateAsync(model, cancellationToken);
+                TempData["success"] = "Cashier Report updated successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in updating cashier report.");
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
+        }
     }
 }

@@ -1,0 +1,66 @@
+﻿@model IEnumerable<FuelPurchase>
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Fuel Delivery</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.StationCode)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.DeliveryDate)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.ProductCode)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.ReceivedBy)
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var obj in Model.OrderBy(u => u.FuelPurchaseId))
+                {
+                    <tr>
+                        <td>
+                            @obj.StationCode
+                        </td>
+                        <td>
+                            @obj.DeliveryDate.ToString("MMMM dd, yyyy")
+                        </td>
+                        <td>
+                            @obj.ProductCode
+                        </td>
+                        <td>
+                            @obj.ReceivedBy
+                        </td>
+                        <td>
+                            <div class="w-100 btn-group" role="group">
+                                <a asp-area="User" asp-controller="Purchase" asp-action="Edit" asp-route-id="@obj.FuelPurchaseId" class="btn btn-primary mx-2">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                <a class="btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#FuelPreview-@obj.FuelPurchaseId" data-bs-url="@Url.Action($"Preview/{obj.FuelPurchaseId}")">
+                                    <i class="bi bi-printer-fill"></i> Preview
+                                </a>
+                                @await Html.PartialAsync("_FuelPreviewPartial", obj);
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+
+    </div>
+</div>
+
+

@@ -39,5 +39,8 @@ namespace IBS.Models
 
         [Column(TypeName = "varchar(5)")]
         public string StationPosCode { get; set; }
+
+        [Column(TypeName = "varchar(20)")]
+        public string? ProductCode { get; set; }
     }
 }

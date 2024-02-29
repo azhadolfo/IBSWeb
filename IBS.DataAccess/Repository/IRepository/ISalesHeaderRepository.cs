@@ -13,5 +13,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task ComputeSalesPerCashier(DateOnly yesterday, CancellationToken cancellationToken = default);
 
         Task PostAsync(int id, CancellationToken cancellationToken = default);
+
+        Task UpdateAsync(SalesHeader model, CancellationToken cancellationToken = default);
     }
 }

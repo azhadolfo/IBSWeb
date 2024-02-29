@@ -89,13 +89,27 @@
             <td class="text-center">Total Sales</td>
             <td class="text-end">@Html.DisplayFor(model => Model.Header.TotalSales)</td>
         </tr>
-        <tr>
-            <td class="text-center">Cash on Hand(Total Drops)</td>
-            <td class="text-end" style="border-bottom: double">@Html.DisplayFor(model => Model.Header.SafeDropTotalAmount)</td>
-        </tr>
+        @if (Model.Header.ActualCashOnHand > 0)
+        {
+            <tr>
+                <td class="text-center">Cash on Hand(Total Drops)</td>
+                <td class="text-end">@Html.DisplayFor(model => Model.Header.SafeDropTotalAmount)</td>
+            </tr>
+            <tr>
+                <td class="text-center">Actual Cash on Hand(Audit)</td>
+                <td class="text-end" style="border-bottom: double">@Html.DisplayFor(model => Model.Header.ActualCashOnHand)</td>
+            </tr>
+        }
+        else
+        {
+            <tr>
+                <td class="text-center">Cash on Hand(Total Drops)</td>
+                <td class="text-end" style="border-bottom: double">@Html.DisplayFor(model => Model.Header.SafeDropTotalAmount)</td>
+            </tr>
+        }
         <tr>
             <td class="text-center">Over(Short)</td>
-            <td class="text-end">@Model.Header.GainOrLoss.ToString("0.00;(#0.00)")</td>
+            <td class="text-end">@string.Format("{0:#,0.00;(#,0.00)}", Model.Header.GainOrLoss)</td>
         </tr>
     </tbody>
 </table>
