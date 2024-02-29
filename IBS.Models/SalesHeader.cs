@@ -17,7 +17,7 @@ namespace IBS.Models
         [Column(TypeName = "varchar(25)")]
         public string SalesNo { get; set; }
 
-        public int StationPosCode { get; set; }
+        public string StationPosCode { get; set; }
 
         [Column(TypeName = "date")]
         public DateOnly Date { get; set; }

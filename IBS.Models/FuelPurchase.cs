@@ -1,85 +1,89 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace IBS.Models
 {
-    public class FuelDelivery
+    public class FuelPurchase : BaseEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int FuelDeliveryId { get; set; }
+        public int FuelPurchaseId { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string shiftrecid { get; set; }
+        public string ShiftRecId { get; set; }
 
         [Column(TypeName = "varchar(5)")]
-        public string stncode { get; set; }
+        public string StationCode { get; set; }
 
-        public string empno { get; set; } //remove the "E" when saving in actual database
+        [Column(TypeName = "varchar(5)")]
+        public string EmployeeNo { get; set; }
 
-        public int shiftnumber { get; set; }
+        public int ShiftNo { get; set; }
 
         [Column(TypeName = "date")]
-        public DateOnly deliverydate { get; set; }
+        public DateOnly DeliveryDate { get; set; }
 
         [Column(TypeName = "time without time zone")]
-        public TimeOnly timein { get; set; }
+        public TimeOnly TimeIn { get; set; }
 
         [Column(TypeName = "time without time zone")]
-        public TimeOnly timeout { get; set; }
+        public TimeOnly TimeOut { get; set; }
 
         [Column(TypeName = "varchar(100)")]
-        public string driver { get; set; }
+        public string Driver { get; set; }
 
         [Column(TypeName = "varchar(100)")]
-        public string hauler { get; set; }
+        public string Hauler { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string platenumber { get; set; }
+        public string PlateNo { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string drnumber { get; set; } //it should be int in actual database so remove the "DR"
+        public string DrNo { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string wcnumber { get; set; }
+        public string WcNo { get; set; }
 
-        public int tanknumber { get; set; }
+        public int TankNo { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string productcode { get; set; }
+        public string ProductCode { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal quantity { get; set; }
+        public decimal PurchasePrice { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal purchaseprice { get; set; }
+        public decimal SellingPrice { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal sellprice { get; set; }
+        public decimal Quantity { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal volumebefore { get; set; }
+        public decimal QuantityBefore { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal volumeafter { get; set; }
+        public decimal QuantityAfter { get; set; }
+
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal ShouldBe { get; set; }
+
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal GainOrLoss { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string receivedby { get; set; }
+        public string ReceivedBy { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
-        public string createdby { get; set; } //remove the "E" when saving in actual database
-
-        [Column(TypeName = "timestamp without time zone")]
-        public DateTime createddate { get; set; }
     }
 }

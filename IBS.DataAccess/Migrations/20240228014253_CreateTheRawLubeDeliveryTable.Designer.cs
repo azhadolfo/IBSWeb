@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240228014253_CreateTheRawLubeDeliveryTable")]
+    partial class CreateTheRawLubeDeliveryTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -365,96 +368,6 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FuelDeliveryId"));
 
-                    b.Property<string>("createdby")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime>("createddate")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateOnly>("deliverydate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("driver")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("drnumber")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<string>("empno")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("hauler")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("platenumber")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<string>("productcode")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<decimal>("purchaseprice")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal>("quantity")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<string>("receivedby")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<decimal>("sellprice")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<int>("shiftnumber")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("shiftrecid")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<string>("stncode")
-                        .IsRequired()
-                        .HasColumnType("varchar(5)");
-
-                    b.Property<int>("tanknumber")
-                        .HasColumnType("integer");
-
-                    b.Property<TimeOnly>("timein")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<TimeOnly>("timeout")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<decimal>("volumeafter")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal>("volumebefore")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<string>("wcnumber")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
-
-                    b.HasKey("FuelDeliveryId");
-
-                    b.ToTable("FuelDeliveries");
-                });
-
-            modelBuilder.Entity("IBS.Models.FuelPurchase", b =>
-                {
-                    b.Property<int>("FuelPurchaseId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FuelPurchaseId"));
-
                     b.Property<string>("CanceledBy")
                         .HasColumnType("varchar(50)");
 
@@ -484,10 +397,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("EmployeeNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(5)");
-
                     b.Property<decimal>("GainOrLoss")
                         .HasColumnType("numeric(18,2)");
 
@@ -505,12 +414,16 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("PostedDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<string>("ProductCode")
                         .IsRequired()
                         .HasColumnType("varchar(10)");
 
-                    b.Property<decimal>("PurchasePrice")
-                        .HasColumnType("numeric(18,2)");
+                    b.Property<string>("ProductDescription")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)");
 
                     b.Property<decimal>("Quantity")
                         .HasColumnType("numeric(18,2)");
@@ -523,16 +436,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("ReceivedBy")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<decimal>("SellingPrice")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<int>("ShiftNo")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ShiftRecId")
-                        .IsRequired()
                         .HasColumnType("varchar(20)");
 
                     b.Property<decimal>("ShouldBe")
@@ -540,7 +443,10 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("StationCode")
                         .IsRequired()
-                        .HasColumnType("varchar(5)");
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<int>("StationPosCode")
+                        .HasColumnType("integer");
 
                     b.Property<int>("TankNo")
                         .HasColumnType("integer");
@@ -561,9 +467,9 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(10)");
 
-                    b.HasKey("FuelPurchaseId");
+                    b.HasKey("FuelDeliveryId");
 
-                    b.ToTable("FuelPurchase");
+                    b.ToTable("FuelDeliveries");
                 });
 
             modelBuilder.Entity("IBS.Models.GeneralLedger", b =>
@@ -595,9 +501,8 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(100)");
 
-                    b.Property<string>("StationPosCode")
-                        .IsRequired()
-                        .HasColumnType("varchar(5)");
+                    b.Property<int>("StationPosCode")
+                        .HasColumnType("integer");
 
                     b.Property<DateOnly>("TransactionDate")
                         .HasColumnType("date");
@@ -718,81 +623,99 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LubeDeliveryId"));
 
-                    b.Property<decimal>("amount")
+                    b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<string>("createdby")
-                        .IsRequired()
+                    b.Property<string>("CanceledBy")
                         .HasColumnType("varchar(50)");
 
-                    b.Property<DateTime>("createddate")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateTime?>("CanceledDate")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateOnly>("deliverydate")
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("DeliveryDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("description")
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("varchar(200)");
 
-                    b.Property<string>("drno")
+                    b.Property<string>("DrNo")
                         .IsRequired()
                         .HasColumnType("varchar(10)");
 
-                    b.Property<string>("empno")
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EmpNo")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Piece")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PoNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("PostedBy")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime?>("PostedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProductCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReceivedBy")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("invoiceno")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<int>("piece")
+                    b.Property<int>("ShiftNumber")
                         .HasColumnType("integer");
 
-                    b.Property<string>("pono")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<string>("productcode")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<int>("quantity")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("rcvdby")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<int>("shiftnumber")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("shiftrecid")
+                    b.Property<string>("ShiftRecId")
                         .IsRequired()
                         .HasColumnType("varchar(20)");
 
-                    b.Property<string>("stncode")
+                    b.Property<string>("StnCode")
                         .IsRequired()
                         .HasColumnType("varchar(5)");
 
-                    b.Property<string>("suppliercode")
+                    b.Property<string>("SupplierCode")
                         .IsRequired()
                         .HasColumnType("varchar(10)");
 
-                    b.Property<string>("unit")
+                    b.Property<string>("Unit")
                         .IsRequired()
                         .HasColumnType("varchar(10)");
 
-                    b.Property<decimal>("unitprice")
+                    b.Property<decimal>("UnitPrice")
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("VoidedBy")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime?>("VoidedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("LubeDeliveryId");
 
                     b.ToTable("LubeDeliveries");
                 });
 
-            modelBuilder.Entity("IBS.Models.LubePurchaseDetail", b =>
+            modelBuilder.Entity("IBS.Models.LubeDeliveryDetail", b =>
                 {
                     b.Property<int>("LubeDeliveryDetailId")
                         .ValueGeneratedOnAdd()
@@ -800,19 +723,15 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LubeDeliveryDetailId"));
 
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("varchar(200)");
 
                     b.Property<int>("LubeDeliveryHeaderId")
                         .HasColumnType("integer");
-
-                    b.Property<int>("Piece")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ProductCode")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
@@ -828,10 +747,10 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("LubeDeliveryHeaderId");
 
-                    b.ToTable("LubePurchaseDetails");
+                    b.ToTable("LubeDeliveryDetails");
                 });
 
-            modelBuilder.Entity("IBS.Models.LubePurchaseHeader", b =>
+            modelBuilder.Entity("IBS.Models.LubeDeliveryHeader", b =>
                 {
                     b.Property<int>("LubeDeliveryHeaderId")
                         .ValueGeneratedOnAdd()
@@ -867,10 +786,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("EmployeeNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(5)");
-
                     b.Property<string>("PoNo")
                         .IsRequired()
                         .HasColumnType("varchar(10)");
@@ -881,28 +796,17 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("PostedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ReceivedBy")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
                     b.Property<string>("SalesInvoice")
                         .IsRequired()
                         .HasColumnType("varchar(10)");
 
-                    b.Property<int>("ShiftNo")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ShiftRecId")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<string>("StationCode")
-                        .IsRequired()
-                        .HasColumnType("varchar(5)");
-
                     b.Property<string>("SupplierCode")
                         .IsRequired()
                         .HasColumnType("varchar(10)");
+
+                    b.Property<string>("SupplierName")
+                        .IsRequired()
+                        .HasColumnType("varchar(200)");
 
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)");
@@ -912,7 +816,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("LubeDeliveryHeaderId");
 
-                    b.ToTable("LubePurchaseHeaders");
+                    b.ToTable("LubeDeliveryHeaders");
                 });
 
             modelBuilder.Entity("IBS.Models.Product", b =>
@@ -1167,9 +1071,8 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int>("Shift")
                         .HasColumnType("integer");
 
-                    b.Property<string>("StationPosCode")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("StationPosCode")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("TotalSales")
                         .HasColumnType("numeric(18,2)");
@@ -1220,9 +1123,8 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("PosCode")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("PosCode")
+                        .HasColumnType("integer");
 
                     b.Property<string>("StationCode")
                         .IsRequired()
@@ -1532,9 +1434,9 @@ namespace IBS.DataAccess.Migrations
                     b.HasDiscriminator().HasValue("ApplicationUser");
                 });
 
-            modelBuilder.Entity("IBS.Models.LubePurchaseDetail", b =>
+            modelBuilder.Entity("IBS.Models.LubeDeliveryDetail", b =>
                 {
-                    b.HasOne("IBS.Models.LubePurchaseHeader", "LubeDeliveryHeader")
+                    b.HasOne("IBS.Models.LubeDeliveryHeader", "LubeDeliveryHeader")
                         .WithMany()
                         .HasForeignKey("LubeDeliveryHeaderId")
                         .OnDelete(DeleteBehavior.Cascade)

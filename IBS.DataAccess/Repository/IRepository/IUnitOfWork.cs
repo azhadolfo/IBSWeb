@@ -24,6 +24,10 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IGeneralLedgerRepository GeneralLedger { get; }
 
+        IFuelPurchaseRepository FuelDelivery { get; }
+
+        ILubePurchaseRepository LubeDelivery { get; }
+
         Task SaveAsync(CancellationToken cancellationToken = default);
     }
 }

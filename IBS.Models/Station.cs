@@ -15,7 +15,7 @@ namespace IBS.Models
         public int StationId { get; set; }
 
         [Display(Name = "POS Code")]
-        public int PosCode { get; set; }
+        public string PosCode { get; set; }
 
         [Display(Name = "Station Code")]
         [Column(TypeName = "varchar(3)")]
