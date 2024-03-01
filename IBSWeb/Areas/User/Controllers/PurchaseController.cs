@@ -150,5 +150,48 @@ namespace IBSWeb.Areas.User.Controllers
             return BadRequest();
         }
 
+        [HttpGet]
+        public async Task<IActionResult> EditFuel(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            FuelPurchase fuelPurchase = await _unitOfWork
+                .FuelPurchase
+                .GetAsync(s => s.FuelPurchaseId == id, cancellationToken);
+
+            if (fuelPurchase != null)
+            {
+                return View(fuelPurchase);
+            }
+
+            return NotFound();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditFuel(FuelPurchase model, CancellationToken cancellationToken)
+        {
+            if (model.PurchasePrice < 0)
+            {
+                ModelState.AddModelError("PurchasePrice", "Please enter a value bigger than 0");
+                return View(model);
+            }
+
+            try
+            {
+                await _unitOfWork.FuelPurchase.UpdateAsync(model, cancellationToken);
+                TempData["success"] = "Fuel delivery updated successfully.";
+                return RedirectToAction(nameof(Fuel));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in updating fuel delivery.");
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
+        }
+
     }
 }

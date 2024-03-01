@@ -1,5 +1,4 @@
 ﻿@model SalesHeader
-@using IBS.Utility
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
@@ -15,22 +14,22 @@
             <div class="border p-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Date" class="form-control border-0 shadow" placeholder="" readonly/>
+                    <input asp-for="Date" class="form-control border-0 shadow" placeholder="" disabled readonly />
                     <label asp-for="Date" class="ms-2"></label>
                     <span asp-validation-for="Date" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Cashier" class="form-control border-0 shadow" placeholder="" readonly />
+                    <input asp-for="Cashier" class="form-control border-0 shadow" placeholder="" disabled readonly />
                     <label asp-for="Cashier" class="ms-2"></label>
                     <span asp-validation-for="Cashier" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Shift" class="form-control border-0 shadow" placeholder="" readonly />
+                    <input asp-for="Shift" class="form-control border-0 shadow" placeholder="" disabled readonly />
                     <label asp-for="Shift" class="ms-2"></label>
                     <span asp-validation-for="Shift" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="SafeDropTotalAmount" class="form-control border-0 shadow" placeholder="" readonly />
+                    <input asp-for="SafeDropTotalAmount" class="form-control border-0 shadow" placeholder="" disabled readonly />
                     <label asp-for="SafeDropTotalAmount" class="ms-2">Cash On Hand</label>
                     <span asp-validation-for="SafeDropTotalAmount" class="text-danger"></span>
                 </div>
