@@ -3,6 +3,7 @@ using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.ViewModels;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -21,6 +22,69 @@ namespace IBS.DataAccess.Repository
         public FuelPurchaseRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
+        }
+
+        public async Task PostAsync(int id, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                FuelPurchase? fuelPurchase = await _db
+                    .FuelPurchase
+                    .FindAsync(id, cancellationToken);
+
+                Product? product = await _db
+                    .Products
+                    .FirstOrDefaultAsync(p => p.ProductCode == fuelPurchase.ProductCode, cancellationToken);
+
+                fuelPurchase.PostedBy = "Ako";
+                fuelPurchase.PostedDate = DateTime.Now;
+
+                var journal = new List<GeneralLedger>();
+
+                journal.Add(new GeneralLedger
+                {
+                    TransactionDate = fuelPurchase.DeliveryDate,
+                    Reference = $"{fuelPurchase.ShiftRecId}{fuelPurchase.StationCode}",
+                    Particular = $"{fuelPurchase.Quantity} Lit {product.ProductName} @ {fuelPurchase.SellingPrice}, DR {fuelPurchase.DrNo}",
+                    AccountNumber = 10100033,
+                    AccountTitle = "Merchandise Inventory",
+                    Debit = (fuelPurchase.Quantity * fuelPurchase.SellingPrice)/1.12m,
+                    Credit = 0,
+                    StationCode = fuelPurchase.StationCode,
+                    ProductCode = fuelPurchase.ProductCode
+                });
+
+                journal.Add(new GeneralLedger
+                {
+                    TransactionDate = fuelPurchase.DeliveryDate,
+                    Reference = $"{fuelPurchase.ShiftRecId}{fuelPurchase.StationCode}",
+                    Particular = $"{fuelPurchase.Quantity} Lit {product.ProductName} @ {fuelPurchase.SellingPrice}, DR {fuelPurchase.DrNo}",
+                    AccountNumber = 10100085,
+                    AccountTitle = "Input Tax",
+                    Debit = ((fuelPurchase.Quantity * fuelPurchase.SellingPrice) / 1.12m) * 0.12m,
+                    Credit = 0,
+                    StationCode = fuelPurchase.StationCode
+                });
+
+                journal.Add(new GeneralLedger
+                {
+                    TransactionDate = fuelPurchase.DeliveryDate,
+                    Reference = $"{fuelPurchase.ShiftRecId}{fuelPurchase.StationCode}",
+                    Particular = $"{fuelPurchase.Quantity} Lit {product.ProductName} @ {fuelPurchase.SellingPrice}, DR {fuelPurchase.DrNo}",
+                    AccountNumber = 20100005,
+                    AccountTitle = "Accounts Payable",
+                    Debit = 0,
+                    Credit = fuelPurchase.Quantity * fuelPurchase.SellingPrice,
+                    StationCode = fuelPurchase.StationCode
+                });
+
+                await _db.GeneralLedgers.AddRangeAsync(journal);
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new KeyNotFoundException(ex.Message);
+            }
         }
 
         public async Task<int> ProcessFuelDelivery(string file, CancellationToken cancellationToken = default)

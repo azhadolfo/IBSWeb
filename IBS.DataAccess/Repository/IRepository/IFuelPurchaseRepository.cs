@@ -12,5 +12,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task RecordTheDeliveryToPurchase(IEnumerable<FuelDelivery> fuelDeliveries, CancellationToken cancellationToken = default);
 
         Task<int> ProcessFuelDelivery(string file, CancellationToken cancellationToken = default);
+
+        Task PostAsync(int id, CancellationToken cancellationToken = default);
     }
 }

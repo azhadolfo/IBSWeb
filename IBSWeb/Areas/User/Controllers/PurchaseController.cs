@@ -105,18 +105,49 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetProductName(string productCode, CancellationToken cancellationToken)
         {
-            if (id != null)
+            try
             {
-                FuelPurchase? fuelPurchase = await _unitOfWork
-                    .FuelPurchase
-                    .GetAsync(f => f.FuelPurchaseId == id);
+                Product product = await _unitOfWork.Product.GetAsync(p => p.ProductCode == productCode, cancellationToken);
 
-                return PartialView("_FuelPreviewPartial", fuelPurchase);
+                if (product != null)
+                {
+                    return Json(new
+                    {
+                        ProductName = product.ProductName
+                    });
+                }
+
+                return NotFound("Product not found.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get product name for code {ProductCode}", productCode);
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+
+
+
+        public async Task<IActionResult> PostFuel(int id, CancellationToken cancellationToken)
+        {
+            if (id != 0)
+            {
+                try
+                {
+                    await _unitOfWork.FuelPurchase.PostAsync(id, cancellationToken);
+                    TempData["success"] = "Fuel delivery approved successfully.";
+                    return RedirectToAction(nameof(Fuel));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error on posting fuel delivery.");
+                    TempData["error"] = ex.Message;
+                }
             }
 
-            return NotFound();
+            return BadRequest();
         }
 
     }

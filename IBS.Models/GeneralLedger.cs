@@ -38,9 +38,15 @@ namespace IBS.Models
         public decimal Credit { get; set; }
 
         [Column(TypeName = "varchar(5)")]
-        public string StationPosCode { get; set; }
+        public string StationCode { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string? ProductCode { get; set; }
+
+        [Column(TypeName = "varchar(200)")]
+        public string? SupplierCode { get; set; }
+
+        [Column(TypeName = "varchar(200)")]
+        public string? CustomerCode { get; set; }
     }
 }
