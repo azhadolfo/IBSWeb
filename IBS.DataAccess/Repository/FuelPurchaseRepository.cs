@@ -70,7 +70,7 @@ namespace IBS.DataAccess.Repository
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
                     Reference = $"{fuelPurchase.ShiftRecId}{fuelPurchase.StationCode}",
-                    Particular = $"{fuelPurchase.Quantity} Lit {product.ProductName} @ {fuelPurchase.SellingPrice}, DR {fuelPurchase.DrNo}",
+                    Particular = $"{fuelPurchase.Quantity} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice}, DR {fuelPurchase.DrNo}",
                     AccountNumber = 20100005,
                     AccountTitle = "Accounts Payable",
                     Debit = 0,
@@ -157,5 +157,24 @@ namespace IBS.DataAccess.Repository
 
         }
 
+        public async Task UpdateAsync(FuelPurchase model, CancellationToken cancellationToken = default)
+        {
+            FuelPurchase? existingFuelPurchase = await _db
+                .FuelPurchase
+                .FindAsync(model.FuelPurchaseId, cancellationToken);
+
+            existingFuelPurchase!.PurchasePrice = model.PurchasePrice;
+
+            if (_db.ChangeTracker.HasChanges())
+            {
+                existingFuelPurchase.EditedBy = "Ako";
+                existingFuelPurchase.EditedDate = DateTime.Now;
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new ArgumentException("No data changes!");
+            }
+        }
     }
 }

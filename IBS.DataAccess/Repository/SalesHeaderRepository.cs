@@ -202,8 +202,8 @@ namespace IBS.DataAccess.Repository
                     });
                 }
 
-                await _db.GeneralLedgers.AddRangeAsync(journal);
-                await _db.SaveChangesAsync();
+                await _db.GeneralLedgers.AddRangeAsync(journal, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
 
             }
             catch (Exception ex)
@@ -227,7 +227,7 @@ namespace IBS.DataAccess.Repository
                 existingSalesHeader!.GainOrLoss = model.ActualCashOnHand - existingSalesHeader.TotalSales;
                 existingSalesHeader.EditedBy = "Ako";
                 existingSalesHeader.EditedDate = DateTime.Now;
-                await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync(cancellationToken);
             }
             else
             {

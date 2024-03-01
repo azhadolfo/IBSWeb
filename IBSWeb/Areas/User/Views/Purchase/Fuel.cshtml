@@ -45,7 +45,7 @@
                         </td>
                         <td>
                             <div class="w-100 btn-group" role="group">
-                                <a asp-area="User" asp-controller="Purchase" asp-action="Edit" asp-route-id="@obj.FuelPurchaseId" class="btn btn-primary mx-2">
+                                <a asp-area="User" asp-controller="Purchase" asp-action="EditFuel" asp-route-id="@obj.FuelPurchaseId" class="btn btn-primary mx-2">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
                                 <a class="btn btn-primary mx-2 preview-btn" data-product-code="@obj.ProductCode" data-bs-toggle="modal" data-bs-target="#FuelPreview-@obj.FuelPurchaseId" data-bs-url="@Url.Action($"Preview/{obj.FuelPurchaseId}")">
