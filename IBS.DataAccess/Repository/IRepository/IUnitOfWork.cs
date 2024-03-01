@@ -26,7 +26,11 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IFuelPurchaseRepository FuelPurchase { get; }
 
-        ILubePurchaseRepository LubePurchase { get; }
+        ILubePurchaseHeaderRepository LubePurchaseHeader { get; }
+
+        ILubePurchaseDetailRepository LubePurchaseDetail { get; }
+
+        ISupplierRepository Supplier { get; }
 
         Task SaveAsync(CancellationToken cancellationToken = default);
     }

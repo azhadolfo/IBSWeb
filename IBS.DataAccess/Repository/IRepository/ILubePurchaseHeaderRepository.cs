@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace IBS.DataAccess.Repository.IRepository
 {
-    public interface ILubePurchaseRepository : IRepository<LubePurchaseHeader>
+    public interface ILubePurchaseHeaderRepository : IRepository<LubePurchaseHeader>
     {
         Task<int> ProcessLubeDelivery(string file, CancellationToken cancellationToken = default);
 

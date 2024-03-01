@@ -12,11 +12,11 @@ using System.Threading.Tasks;
 
 namespace IBS.DataAccess.Repository
 {
-    public class LubePurchaseRepository : Repository<LubePurchaseHeader>, ILubePurchaseRepository
+    public class LubePurchaseHeaderRepository : Repository<LubePurchaseHeader>, ILubePurchaseHeaderRepository
     {
         private ApplicationDbContext _db;
 
-        public LubePurchaseRepository(ApplicationDbContext db) : base(db)
+        public LubePurchaseHeaderRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
         }
