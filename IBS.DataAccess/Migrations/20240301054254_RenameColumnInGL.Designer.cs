@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240301054254_RenameColumnInGL")]
+    partial class RenameColumnInGL
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -584,9 +587,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("Credit")
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<string>("CustomerCode")
-                        .HasColumnType("varchar(200)");
-
                     b.Property<decimal>("Debit")
                         .HasColumnType("numeric(18,2)");
 
@@ -604,9 +604,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("StationCode")
                         .IsRequired()
                         .HasColumnType("varchar(5)");
-
-                    b.Property<string>("SupplierCode")
-                        .HasColumnType("varchar(200)");
 
                     b.Property<DateOnly>("TransactionDate")
                         .HasColumnType("date");

@@ -129,13 +129,18 @@ namespace IBS.DataAccess.Repository
 
         public async Task PostAsync(int id, CancellationToken cancellationToken = default)
         {
-            if (id != 0)
+            try
             {
+
                 SalesVM? salesVM = new SalesVM
                 {
                     Header = await _db.SalesHeaders.FindAsync(id, cancellationToken),
                     Details = await _db.SalesDetails.Where(sd => sd.SalesHeaderId == id).ToListAsync(cancellationToken),
                 };
+
+                Station? station = await _db
+                    .Stations
+                    .FirstOrDefaultAsync(s => s.PosCode == salesVM.Header.StationPosCode);
 
                 salesVM.Header.PostedBy = "Ako";
                 salesVM.Header.PostedDate = DateTime.Now;
@@ -151,7 +156,7 @@ namespace IBS.DataAccess.Repository
                     AccountTitle = "Cash-on-Hand",
                     Debit = salesVM.Header.ActualCashOnHand > 0 ? salesVM.Header.ActualCashOnHand : salesVM.Header.SafeDropTotalAmount,
                     Credit = 0,
-                    StationPosCode = salesVM.Header.StationPosCode
+                    StationCode = station.StationCode
                 });
 
                 foreach(var product in salesVM.Details.GroupBy(d => d.Product))
@@ -165,7 +170,7 @@ namespace IBS.DataAccess.Repository
                         AccountTitle = product.Key == "PET001" ? "Sales-Bio" : product.Key == "PET002" ? "Sales-Econo" : "Sales-Enviro",
                         Debit = 0,
                         Credit = product.Sum(p => p.Sale) / 1.12m,
-                        StationPosCode = salesVM.Header.StationPosCode,
+                        StationCode = station.StationCode,
                         ProductCode = product.Key
                     });
 
@@ -178,7 +183,7 @@ namespace IBS.DataAccess.Repository
                         AccountTitle = "Output VAT",
                         Debit = 0,
                         Credit = (product.Sum(p => p.Sale) / 1.12m) * 0.12m,
-                        StationPosCode = salesVM.Header.StationPosCode
+                        StationCode = station.StationCode
                     });
                 }
 
@@ -193,7 +198,7 @@ namespace IBS.DataAccess.Repository
                         AccountTitle = "Cash Short/(Over) - Handling",
                         Debit = salesVM.Header.GainOrLoss < 0 ? Math.Abs(salesVM.Header.GainOrLoss) : 0,
                         Credit = salesVM.Header.GainOrLoss > 0 ? salesVM.Header.GainOrLoss : 0,
-                        StationPosCode = salesVM.Header.StationPosCode
+                        StationCode = station.StationCode
                     });
                 }
 
@@ -201,9 +206,9 @@ namespace IBS.DataAccess.Repository
                 await _db.SaveChangesAsync();
 
             }
-            else
+            catch (Exception ex)
             {
-                throw new KeyNotFoundException("Record not found");
+                throw new KeyNotFoundException(ex.Message);
             }
 
         }
