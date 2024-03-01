@@ -20,7 +20,9 @@ namespace IBS.DataAccess.Repository
         public IStationRepository Station { get; private set; }
         public IGeneralLedgerRepository GeneralLedger { get; private set; }
         public IFuelPurchaseRepository FuelPurchase { get; private set; }
-        public ILubePurchaseRepository LubePurchase { get; private set; }
+        public ILubePurchaseHeaderRepository LubePurchaseHeader { get; private set; }
+        public ILubePurchaseDetailRepository LubePurchaseDetail { get; private set; }
+        public ISupplierRepository Supplier { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -34,7 +36,9 @@ namespace IBS.DataAccess.Repository
             Station = new StationRepository(_db);
             GeneralLedger = new GeneralLedgerRepository(_db);
             FuelPurchase = new FuelPurchaseRepository(_db);
-            LubePurchase = new LubePurchaseRepository(_db);
+            LubePurchaseHeader = new LubePurchaseHeaderRepository(_db);
+            LubePurchaseDetail = new LubePurchaseDetailRepository(_db);
+            Supplier = new SupplierRepository(_db);
         }
 
         public async Task SaveAsync(CancellationToken cancellationToken = default)

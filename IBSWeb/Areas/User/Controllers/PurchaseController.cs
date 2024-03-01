@@ -3,6 +3,7 @@ using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
@@ -16,13 +17,13 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly ILogger<PurchaseController> _logger;
 
-        private readonly ApplicationDbContext _dbContext;
+        [BindProperty]
+        public LubeDeliveryVM LubeDeliveryVM { get; set; }
 
-        public PurchaseController(IUnitOfWork unitOfWork, ILogger<PurchaseController> logger, ApplicationDbContext dbContext)
+        public PurchaseController(IUnitOfWork unitOfWork, ILogger<PurchaseController> logger)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
-            _dbContext = dbContext;
         }
 
         [HttpGet]
@@ -60,7 +61,7 @@ namespace IBSWeb.Areas.User.Controllers
                         }
                         else if (fileName.Contains("lube"))
                         {
-                            lubesCount = await _unitOfWork.LubePurchase.ProcessLubeDelivery(file, cancellationToken);
+                            lubesCount = await _unitOfWork.LubePurchaseHeader.ProcessLubeDelivery(file, cancellationToken);
                         }
 
                     }
@@ -128,8 +129,6 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-
-
         public async Task<IActionResult> PostFuel(int id, CancellationToken cancellationToken)
         {
             if (id != 0)
@@ -193,5 +192,35 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Lube()
+        {
+            IEnumerable<LubePurchaseHeader> lubePurchaseHeaders = await _unitOfWork
+                .LubePurchaseHeader
+                .GetAllAsync();
+
+            return View(lubePurchaseHeaders);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PreviewLube(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            LubeDeliveryVM = new LubeDeliveryVM
+            {
+                Header = await _unitOfWork.LubePurchaseHeader.GetAsync(lh => lh.LubeDeliveryHeaderId == id, cancellationToken),
+                Details = await _unitOfWork.LubePurchaseDetail.GetAllAsync(sd => sd.LubeDeliveryHeaderId == id, cancellationToken)
+            };
+
+            Supplier? supplier = await _unitOfWork.Supplier.GetAsync(s => s.SupplierCode == LubeDeliveryVM.Header.SupplierCode);
+
+            ViewData["SupplierName"] = supplier.SupplierName;
+
+            return View(LubeDeliveryVM);
+        }
     }
 }
