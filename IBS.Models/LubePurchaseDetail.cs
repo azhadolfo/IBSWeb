@@ -36,6 +36,9 @@ namespace IBS.Models
 
         public int Piece { get; set; }
 
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal Amount { get; set; }
 
     }
 }

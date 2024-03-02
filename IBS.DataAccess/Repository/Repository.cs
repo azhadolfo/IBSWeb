@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -35,9 +36,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task<T> GetAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
         {
-#pragma warning disable CS8603 // Possible null reference return.
             return await dbSet.Where(filter).FirstOrDefaultAsync(cancellationToken);
-#pragma warning restore CS8603 // Possible null reference return.
         }
 
         public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
@@ -56,6 +55,21 @@ namespace IBS.DataAccess.Repository
         {
             dbSet.RemoveRange(entities);
             await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        public bool IsJournalEntriesBalance(IEnumerable<GeneralLedger> journals)
+        {
+            try
+            {
+                decimal totalDebit = journals.Sum(j => j.Debit);
+                decimal totalCredit = journals.Sum(j => j.Credit);
+
+                return totalDebit == totalCredit;
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
         }
     }
 }

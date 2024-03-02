@@ -145,9 +145,9 @@ namespace IBS.DataAccess.Repository
                 salesVM.Header.PostedBy = "Ako";
                 salesVM.Header.PostedDate = DateTime.Now;
 
-                var journal = new List<GeneralLedger>();
+                var journals = new List<GeneralLedger>();
 
-                journal.Add(new GeneralLedger
+                journals.Add(new GeneralLedger
                 {
                     TransactionDate = salesVM.Header.Date,
                     Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
@@ -161,7 +161,7 @@ namespace IBS.DataAccess.Repository
 
                 foreach(var product in salesVM.Details.GroupBy(d => d.Product))
                 {
-                    journal.Add(new GeneralLedger
+                    journals.Add(new GeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
                         Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
@@ -174,7 +174,7 @@ namespace IBS.DataAccess.Repository
                         ProductCode = product.Key
                     });
 
-                    journal.Add(new GeneralLedger
+                    journals.Add(new GeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
                         Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
@@ -189,7 +189,7 @@ namespace IBS.DataAccess.Repository
 
                 if (salesVM.Header.GainOrLoss != 0)
                 {
-                    journal.Add(new GeneralLedger
+                    journals.Add(new GeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
                         Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
@@ -202,8 +202,15 @@ namespace IBS.DataAccess.Repository
                     });
                 }
 
-                await _db.GeneralLedgers.AddRangeAsync(journal, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                if (IsJournalEntriesBalance(journals))
+                {
+                    await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
+                else
+                {
+                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                }
 
             }
             catch (Exception ex)

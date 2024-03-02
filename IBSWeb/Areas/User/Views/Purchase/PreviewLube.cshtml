@@ -1,18 +1,18 @@
 ﻿@using IBS.Models.ViewModels
 @model LubeDeliveryVM
 
-<div class="mb-3">
+<div class="mb-5">
     <h2 class="text-center">Delivery Details</h2>
         <div class="row">
             <div class="col-10">
-            <h6 class="px-2">@Html.DisplayNameFor(model => model.Header.SalesInvoice): @Model.Header.SalesInvoice</h6>
-            <h6 class="px-2">@Html.DisplayNameFor(model => model.Header.SupplierCode): @Model.Header.SupplierCode</h6>
-            <h6 class="px-2">Supplier Name: @ViewData["SupplierName"]</h6>
+            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.SalesInvoice):</b> @Model.Header.SalesInvoice</h6>
+            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.SupplierCode):</b> @Model.Header.SupplierCode</h6>
+            <h6 class="px-2"><b>Supplier Name:</b> @ViewData["SupplierName"]</h6>
             </div>
             <div class="col-2">
-            <h6 class="px-2">Date: @Model.Header.DeliveryDate.ToString("MMMM dd, yyyy")</h6>
-            <h6 class="px-2">@Html.DisplayNameFor(model => model.Header.DrNo): @Model.Header.DrNo</h6>
-            <h6 class="px-2">@Html.DisplayNameFor(model => model.Header.PoNo): @Model.Header.PoNo</h6>
+            <h6 class="px-2"><b>Date:</b> @Model.Header.DeliveryDate.ToString("MMMM dd, yyyy")</h6>
+            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.DrNo):</b> @Model.Header.DrNo</h6>
+            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.PoNo):</b> @Model.Header.PoNo</h6>
             </div>
         </div>
 </div>
@@ -24,8 +24,8 @@
                 <th>Quantity</th>
                 <th>Unit</th>
                 <th>Description</th>
-                <th>Unit Price</th>
-                <th>Amount</th>
+                <th class="text-end">Unit Price</th>
+                <th class="text-end">Amount</th>
             </tr>
         </thead>
         <tbody>
@@ -35,10 +35,38 @@
                     <td>@Html.DisplayFor(d => obj.Quantity)</td>
                     <td>@Html.DisplayFor(d => obj.Unit)</td>
                     <td>@Html.DisplayFor(d => obj.Description)</td>
-                    <td>@Html.DisplayFor(d => obj.UnitPrice)</td>
-                    @* <td>@Html.DisplayFor(d => obj.Amount)</td> *@
+                    <td class="text-end">@Html.DisplayFor(d => obj.UnitPrice)</td>
+                    <td class="text-end">@Html.DisplayFor(d => obj.Amount)</td>
                 </tr>
             }
+            <tr style="border-top: double">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="fw-medium text-end">Total:</td>
+                <td class="text-end">@Html.DisplayFor(model => model.Header.Amount)</td>
+            </tr>
         </tbody>
     </table>
+</div>
+
+<div class="row mt-5">
+    @{
+        if (Model.Header.PostedBy == null)
+        {
+            <div class="col-6 col-md-3">
+                <a asp-area="User" asp-controller="Purchase" asp-action="PostLube" asp-route-id="@Model.Header.LubeDeliveryHeaderId" class="btn btn-primary form-control buttons">Approve</a>
+            </div>
+        }
+        else
+        {
+            <div class="col-6 col-md-3">
+                <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+            </div>
+        }
+    }
+
+    <div class="col-6 col-md-3">
+        <a asp-area="User" asp-controller="Purchase" asp-action="Lube" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+    </div>
 </div>

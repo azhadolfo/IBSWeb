@@ -2,6 +2,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,77 @@ namespace IBS.DataAccess.Repository
         public LubePurchaseHeaderRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
+        }
+
+        public async Task PostAsync(int id, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                LubeDeliveryVM lubeDeliveryVM = new LubeDeliveryVM
+                {
+                    Header = await _db.LubePurchaseHeaders.FindAsync(id, cancellationToken),
+                    Details = await _db.LubePurchaseDetails.Where(l => l.LubeDeliveryHeaderId == id).ToListAsync(cancellationToken)
+                };
+
+                Supplier? supplier = await _db.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == lubeDeliveryVM.Header.SupplierCode, cancellationToken);
+
+                lubeDeliveryVM.Header.PostedBy = "Ako";
+                lubeDeliveryVM.Header.PostedDate = DateTime.Now;
+
+                var journals = new List<GeneralLedger>();
+
+                journals.Add(new GeneralLedger
+                {
+                    TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
+                    Reference = $"{lubeDeliveryVM.Header.ShiftRecId}{lubeDeliveryVM.Header.StationCode}",
+                    Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
+                    AccountNumber = 10100033,
+                    AccountTitle = "Merchandise Inventory",
+                    Debit = lubeDeliveryVM.Header.Amount / 1.12m,
+                    Credit = 0,
+                    StationCode = lubeDeliveryVM.Header.StationCode
+                });
+
+                journals.Add(new GeneralLedger
+                {
+                    TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
+                    Reference = $"{lubeDeliveryVM.Header.ShiftRecId}{lubeDeliveryVM.Header.StationCode}",
+                    Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
+                    AccountNumber = 10100085,
+                    AccountTitle = "Input Tax",
+                    Debit = (lubeDeliveryVM.Header.Amount / 1.12m) * 0.12m,
+                    Credit = 0,
+                    StationCode = lubeDeliveryVM.Header.StationCode
+                });
+
+                journals.Add(new GeneralLedger
+                {
+                    TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
+                    Reference = $"{lubeDeliveryVM.Header.ShiftRecId}{lubeDeliveryVM.Header.StationCode}",
+                    Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
+                    AccountNumber = 20100005,
+                    AccountTitle = "Accounts Payable",
+                    Debit = 0,
+                    Credit = lubeDeliveryVM.Header.Amount,
+                    StationCode = lubeDeliveryVM.Header.StationCode,
+                    SupplierCode = supplier.SupplierName
+                });
+
+                if (IsJournalEntriesBalance(journals))
+                {
+                    await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
+                else
+                {
+                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw new KeyNotFoundException(ex.Message);
+            }
         }
 
         public async Task<int> ProcessLubeDelivery(string file, CancellationToken cancellationToken = default)
@@ -89,7 +161,8 @@ namespace IBS.DataAccess.Repository
                         Description = lubeDelivery.description,
                         UnitPrice = lubeDelivery.unitprice,
                         ProductCode = lubeDelivery.productcode,
-                        Piece = lubeDelivery.piece
+                        Piece = lubeDelivery.piece,
+                        Amount = lubeDelivery.quantity * lubeDelivery.unitprice
                     };
 
                     await _db.LubePurchaseDetails.AddAsync(lubesPurchaseDetail, cancellationToken);
