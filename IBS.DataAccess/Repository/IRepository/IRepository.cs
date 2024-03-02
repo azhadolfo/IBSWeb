@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IBS.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -18,5 +19,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task RemoveAsync(T entity, CancellationToken cancellationToken = default);
 
         Task RemoveRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+
+        bool IsJournalEntriesBalance(IEnumerable<GeneralLedger> journals);
     }
 }

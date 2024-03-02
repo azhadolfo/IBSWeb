@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

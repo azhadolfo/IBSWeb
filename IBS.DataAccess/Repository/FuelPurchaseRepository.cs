@@ -39,9 +39,9 @@ namespace IBS.DataAccess.Repository
                 fuelPurchase.PostedBy = "Ako";
                 fuelPurchase.PostedDate = DateTime.Now;
 
-                var journal = new List<GeneralLedger>();
+                var journals = new List<GeneralLedger>();
 
-                journal.Add(new GeneralLedger
+                journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
                     Reference = $"{fuelPurchase.ShiftRecId}{fuelPurchase.StationCode}",
@@ -54,7 +54,7 @@ namespace IBS.DataAccess.Repository
                     ProductCode = fuelPurchase.ProductCode
                 });
 
-                journal.Add(new GeneralLedger
+                journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
                     Reference = $"{fuelPurchase.ShiftRecId}{fuelPurchase.StationCode}",
@@ -66,7 +66,7 @@ namespace IBS.DataAccess.Repository
                     StationCode = fuelPurchase.StationCode
                 });
 
-                journal.Add(new GeneralLedger
+                journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
                     Reference = $"{fuelPurchase.ShiftRecId}{fuelPurchase.StationCode}",
@@ -78,8 +78,15 @@ namespace IBS.DataAccess.Repository
                     StationCode = fuelPurchase.StationCode
                 });
 
-                await _db.GeneralLedgers.AddRangeAsync(journal);
-                await _db.SaveChangesAsync();
+                if (IsJournalEntriesBalance(journals))
+                {
+                    await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
+                else
+                {
+                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                }
             }
             catch (Exception ex)
             {

@@ -61,9 +61,8 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     _logger.LogError(ex, "Error on posting cashier report.");
                     TempData["error"] = ex.Message;
+                    return Redirect($"/User/CashierReport/Preview/{id}");
                 }
-
-                return RedirectToAction("Preview",id);
             }
 
             return BadRequest();

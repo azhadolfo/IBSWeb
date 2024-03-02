@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IBS.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,5 +34,6 @@ namespace IBS.DataAccess.Repository.IRepository
         ISupplierRepository Supplier { get; }
 
         Task SaveAsync(CancellationToken cancellationToken = default);
+
     }
 }

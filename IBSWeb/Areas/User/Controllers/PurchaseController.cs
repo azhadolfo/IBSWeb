@@ -7,6 +7,7 @@ using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Threading;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -143,6 +144,7 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     _logger.LogError(ex, "Error on posting fuel delivery.");
                     TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(Fuel));
                 }
             }
 
@@ -221,6 +223,27 @@ namespace IBSWeb.Areas.User.Controllers
             ViewData["SupplierName"] = supplier.SupplierName;
 
             return View(LubeDeliveryVM);
+        }
+
+        public async Task<IActionResult> PostLube(int id, CancellationToken cancellationToken)
+        {
+            if (id != 0)
+            {
+                try
+                {
+                    await _unitOfWork.LubePurchaseHeader.PostAsync(id, cancellationToken);
+                    TempData["success"] = "Lube delivery approved successfully.";
+                    return Redirect($"/User/Purchase/PreviewLube/{id}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error on posting lube delivery.");
+                    TempData["error"] = ex.Message;
+                    return Redirect($"/User/Purchase/PreviewLube/{id}");
+                }
+            }
+
+            return BadRequest();
         }
     }
 }
