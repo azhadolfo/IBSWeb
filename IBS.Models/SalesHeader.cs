@@ -28,6 +28,12 @@ namespace IBS.Models
 
         public int Shift { get; set; }
 
+        [Column(TypeName = "time without time zone")]
+        public TimeOnly TimeIn { get; set; }
+
+        [Column(TypeName = "time without time zone")]
+        public TimeOnly TimeOut { get; set; }
+
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal FuelSalesTotalAmount { get; set; }

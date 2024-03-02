@@ -45,7 +45,9 @@ namespace IBS.DataAccess.Repository
                         Liters = g.Sum(f => f.Liters),
                         TransactionCount = g.Sum(f => f.TransCount),
                         Closing = g.Max(f => f.Closing),
-                        Opening = g.Min(f => f.Opening)
+                        Opening = g.Min(f => f.Opening),
+                        TimeIn = g.Min(f => f.InTime),
+                        TimeOut = g.Max(f => f.OutTime)
                     })
                     .OrderBy(g => g.Shift)
                     .ThenBy(g => g.xSITECODE)
@@ -72,7 +74,9 @@ namespace IBS.DataAccess.Repository
                         CreatedBy = "Ako",
                         FuelSalesTotalAmount = fuel.Sale,
                         LubesTotalAmount = lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount),
-                        SafeDropTotalAmount = safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount)
+                        SafeDropTotalAmount = safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount),
+                        TimeIn = fuel.TimeIn,
+                        TimeOut = fuel.TimeOut
                     })
                     .GroupBy(s => new { s.Date, s.StationPosCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.CreatedBy })
                     .Select(g => new SalesHeader
@@ -88,6 +92,8 @@ namespace IBS.DataAccess.Repository
                         TotalSales = g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount,
                         GainOrLoss = g.Key.SafeDropTotalAmount - (g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount),
                         CreatedBy = g.Key.CreatedBy,
+                        TimeIn = g.Min(s => s.TimeIn),
+                        TimeOut = g.Max(s => s.TimeOut)
                     })
                     .ToList();
 
