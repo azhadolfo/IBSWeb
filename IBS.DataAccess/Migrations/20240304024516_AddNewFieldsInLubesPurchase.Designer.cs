@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240304024516_AddNewFieldsInLubesPurchase")]
+    partial class AddNewFieldsInLubesPurchase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -590,13 +593,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("Debit")
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<bool>("IsValidated")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("JournalReference")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
                     b.Property<string>("Particular")
                         .IsRequired()
                         .HasColumnType("varchar(200)");
@@ -621,61 +617,6 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("GeneralLedgerId");
 
                     b.ToTable("GeneralLedgers");
-                });
-
-            modelBuilder.Entity("IBS.Models.Inventory", b =>
-                {
-                    b.Property<int>("InventoryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("InventoryId"));
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<decimal>("InventoryBalance")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal>("InventoryValue")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<string>("Particulars")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("ProductCode")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<string>("Reference")
-                        .IsRequired()
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<decimal>("RunningCost")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal>("TotalCost")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal>("UnitCost")
-                        .HasColumnType("numeric(18,4)");
-
-                    b.Property<decimal>("UnitCostAverage")
-                        .HasColumnType("numeric(18,4)");
-
-                    b.Property<string>("ValidatedBy")
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime?>("ValidatedDate")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("InventoryId");
-
-                    b.ToTable("Inventories");
                 });
 
             modelBuilder.Entity("IBS.Models.Lube", b =>

@@ -36,6 +36,11 @@ namespace IBS.DataAccess.Repository
                     .Products
                     .FirstOrDefaultAsync(p => p.ProductCode == fuelPurchase.ProductCode, cancellationToken);
 
+                Inventory? previousInventory = await _db
+                    .Inventories
+                    .OrderByDescending(i => i.Date)
+                    .FirstOrDefaultAsync(cancellationToken);
+
                 fuelPurchase.PostedBy = "Ako";
                 fuelPurchase.PostedDate = DateTime.Now;
 
@@ -44,42 +49,66 @@ namespace IBS.DataAccess.Repository
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
-                    Reference = $"{fuelPurchase.ShiftRecId}{fuelPurchase.StationCode}",
-                    Particular = $"{fuelPurchase.Quantity} Lit {product.ProductName} @ {fuelPurchase.SellingPrice}, DR {fuelPurchase.DrNo}",
+                    Reference = fuelPurchase.ShiftRecId,
+                    Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = 10100033,
                     AccountTitle = "Merchandise Inventory",
-                    Debit = (fuelPurchase.Quantity * fuelPurchase.SellingPrice)/1.12m,
+                    Debit = (fuelPurchase.Quantity * fuelPurchase.SellingPrice) / 1.12m,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
-                    ProductCode = fuelPurchase.ProductCode
+                    ProductCode = fuelPurchase.ProductCode,
+                    JournalReference = "PURCHASE"
                 });
 
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
-                    Reference = $"{fuelPurchase.ShiftRecId}{fuelPurchase.StationCode}",
-                    Particular = $"{fuelPurchase.Quantity} Lit {product.ProductName} @ {fuelPurchase.SellingPrice}, DR {fuelPurchase.DrNo}",
+                    Reference = fuelPurchase.ShiftRecId,
+                    Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = 10100085,
                     AccountTitle = "Input Tax",
                     Debit = ((fuelPurchase.Quantity * fuelPurchase.SellingPrice) / 1.12m) * 0.12m,
                     Credit = 0,
-                    StationCode = fuelPurchase.StationCode
+                    StationCode = fuelPurchase.StationCode,
+                    JournalReference = "PURCHASE"
                 });
 
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
-                    Reference = $"{fuelPurchase.ShiftRecId}{fuelPurchase.StationCode}",
-                    Particular = $"{fuelPurchase.Quantity} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice}, DR {fuelPurchase.DrNo}",
+                    Reference = fuelPurchase.ShiftRecId,
+                    Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = 20100005,
                     AccountTitle = "Accounts Payable",
                     Debit = 0,
                     Credit = fuelPurchase.Quantity * fuelPurchase.SellingPrice,
-                    StationCode = fuelPurchase.StationCode
+                    StationCode = fuelPurchase.StationCode,
+                    JournalReference = "PURCHASE"
                 });
+
+                var totalCost = fuelPurchase.Quantity * previousInventory.UnitCost;
+                var runningCost = previousInventory.RunningCost + totalCost;
+                var inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
+                var unitCostAverage = runningCost / inventoryBalance;
+
+                var inventory = new Inventory
+                {
+                    Particulars = "Purchases",
+                    Date = fuelPurchase.DeliveryDate,
+                    Reference = $"DR#{fuelPurchase.DrNo}",
+                    ProductCode = fuelPurchase.ProductCode,
+                    Quantity = fuelPurchase.Quantity,
+                    UnitCost = fuelPurchase.PurchasePrice,
+                    TotalCost = totalCost,
+                    InventoryBalance = inventoryBalance,
+                    RunningCost = runningCost,
+                    UnitCostAverage = unitCostAverage,
+                    InventoryValue = runningCost
+                };
 
                 if (IsJournalEntriesBalance(journals))
                 {
+                    await _db.AddAsync(inventory, cancellationToken);
                     await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                 }
@@ -107,7 +136,7 @@ namespace IBS.DataAccess.Repository
             var records = csv.GetRecords<FuelDelivery>();
             var existingRecords = await _db.Set<FuelDelivery>().ToListAsync(cancellationToken);
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
-                existingRecord.shiftrecid == record.shiftrecid || existingRecord.stncode == record.stncode)).ToList();
+                existingRecord.shiftrecid == record.shiftrecid && existingRecord.stncode == record.stncode && existingRecord.productcode == record.productcode)).ToList();
 
             if (recordsToInsert.Count != 0)
             {
