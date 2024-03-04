@@ -34,6 +34,11 @@ namespace IBS.DataAccess.Repository
 
                 Supplier? supplier = await _db.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == lubeDeliveryVM.Header.SupplierCode, cancellationToken);
 
+                Inventory? previousInventory = await _db
+                    .Inventories
+                    .OrderByDescending(i => i.Date)
+                    .FirstOrDefaultAsync(cancellationToken);
+
                 lubeDeliveryVM.Header.PostedBy = "Ako";
                 lubeDeliveryVM.Header.PostedDate = DateTime.Now;
 
@@ -42,39 +47,63 @@ namespace IBS.DataAccess.Repository
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                    Reference = $"{lubeDeliveryVM.Header.ShiftRecId}{lubeDeliveryVM.Header.StationCode}",
+                    Reference = lubeDeliveryVM.Header.ShiftRecId,
                     Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
                     AccountNumber = 10100033,
                     AccountTitle = "Merchandise Inventory",
                     Debit = lubeDeliveryVM.Header.Amount / 1.12m,
                     Credit = 0,
-                    StationCode = lubeDeliveryVM.Header.StationCode
+                    StationCode = lubeDeliveryVM.Header.StationCode,
+                    JournalReference = "PURCHASE",
+                    ProductCode = "LUBES"
                 });
 
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                    Reference = $"{lubeDeliveryVM.Header.ShiftRecId}{lubeDeliveryVM.Header.StationCode}",
+                    Reference = lubeDeliveryVM.Header.ShiftRecId,
                     Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
                     AccountNumber = 10100085,
                     AccountTitle = "Input Tax",
                     Debit = (lubeDeliveryVM.Header.Amount / 1.12m) * 0.12m,
                     Credit = 0,
-                    StationCode = lubeDeliveryVM.Header.StationCode
+                    StationCode = lubeDeliveryVM.Header.StationCode,
+                    JournalReference = "PURCHASE"
                 });
 
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                    Reference = $"{lubeDeliveryVM.Header.ShiftRecId}{lubeDeliveryVM.Header.StationCode}",
+                    Reference = lubeDeliveryVM.Header.ShiftRecId,
                     Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
                     AccountNumber = 20100005,
                     AccountTitle = "Accounts Payable",
                     Debit = 0,
                     Credit = lubeDeliveryVM.Header.Amount,
                     StationCode = lubeDeliveryVM.Header.StationCode,
-                    SupplierCode = supplier.SupplierName
+                    SupplierCode = supplier.SupplierName.ToUpper(),
+                    JournalReference = "PURCHASE"
                 });
+
+                //var totalCost = fuelPurchase.Quantity * previousInventory.UnitCost;
+                //var runningCost = previousInventory.RunningCost + totalCost;
+                //var inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
+                //var unitCostAverage = runningCost / inventoryBalance;
+
+                //var inventory = new Inventory
+                //{
+                //    Particulars = "Purchases",
+                //    Date = fuelPurchase.DeliveryDate,
+                //    Reference = $"DR#{fuelPurchase.DrNo}",
+                //    ProductCode = fuelPurchase.ProductCode,
+                //    Quantity = fuelPurchase.Quantity,
+                //    UnitCost = fuelPurchase.PurchasePrice,
+                //    TotalCost = totalCost,
+                //    InventoryBalance = inventoryBalance,
+                //    RunningCost = runningCost,
+                //    UnitCostAverage = unitCostAverage,
+                //    InventoryValue = runningCost
+                //};
 
                 if (IsJournalEntriesBalance(journals))
                 {
@@ -106,7 +135,7 @@ namespace IBS.DataAccess.Repository
             var records = csv.GetRecords<LubeDelivery>();
             var existingRecords = await _db.Set<LubeDelivery>().ToListAsync(cancellationToken);
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
-                existingRecord.shiftrecid == record.shiftrecid || existingRecord.stncode == record.stncode)).ToList();
+                existingRecord.shiftrecid == record.shiftrecid && existingRecord.stncode == record.stncode)).ToList();
 
             if (recordsToInsert.Count != 0)
             {
@@ -140,6 +169,8 @@ namespace IBS.DataAccess.Repository
                         DrNo = g.Key.drno.Substring(2),
                         PoNo = g.Key.pono.Substring(2),
                         Amount = g.Key.amount,
+                        VatableSales = g.Key.amount / 1.12m,
+                        VatAmount = (g.Key.amount / 1.12m) * .12m,
                         ReceivedBy = g.Key.rcvdby,
                         CreatedBy = g.Key.createdby.Substring(1),
                         CreatedDate = g.Key.createddate
@@ -159,7 +190,8 @@ namespace IBS.DataAccess.Repository
                         Quantity = lubeDelivery.quantity,
                         Unit = lubeDelivery.unit,
                         Description = lubeDelivery.description,
-                        UnitPrice = lubeDelivery.unitprice,
+                        CostPerCase = lubeDelivery.unitprice,
+                        CostPerPiece = lubeDelivery.unitprice / lubeDelivery.piece,
                         ProductCode = lubeDelivery.productcode,
                         Piece = lubeDelivery.piece,
                         Amount = lubeDelivery.quantity * lubeDelivery.unitprice

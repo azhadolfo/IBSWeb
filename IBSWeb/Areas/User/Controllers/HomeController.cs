@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost, ActionName("ImportCsv")]
         public async Task<IActionResult> ImportFiles(CancellationToken cancellationToken)
         {
-            var importFolder = Path.Combine("D:", "AzhNewPC", "RealPos", "Feb 5");
+            var importFolder = Path.Combine("G:", "Other computers", "COMMONWEALTH", "SALESTEXT");
             DateTime yesterday = DateTime.Now.AddDays(-1);
 
             try

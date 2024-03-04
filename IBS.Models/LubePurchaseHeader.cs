@@ -51,6 +51,14 @@ namespace IBS.Models
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
 
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal VatableSales { get; set; }
+
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal VatAmount { get; set; }
+
         [Column(TypeName = "varchar(50)")]
         [Display(Name = "Received By")]
         public string ReceivedBy { get; set; }

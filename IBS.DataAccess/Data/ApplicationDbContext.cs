@@ -30,6 +30,10 @@ namespace IBS.DataAccess.Data
         public DbSet<LubePurchaseDetail> LubePurchaseDetails { get; set; }
         #endregion
 
+        #region --Inventory Entity
+        public DbSet<Inventory> Inventories { get; set; }
+        #endregion
+
         #region --Book Entity
 
         public DbSet<GeneralLedger> GeneralLedgers { get; set; }

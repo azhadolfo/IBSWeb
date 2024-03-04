@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240304072726_CreateInventoryTable")]
+    partial class CreateInventoryTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -590,13 +593,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("Debit")
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<bool>("IsValidated")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("JournalReference")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
                     b.Property<string>("Particular")
                         .IsRequired()
                         .HasColumnType("varchar(200)");
@@ -644,9 +640,8 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(50)");
 
-                    b.Property<string>("ProductCode")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)");
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("Quantity")
                         .HasColumnType("numeric(18,2)");
@@ -662,10 +657,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal>("UnitCost")
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal>("UnitCostAverage")
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("ValidatedBy")
                         .HasColumnType("varchar(50)");
@@ -674,6 +669,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.HasKey("InventoryId");
+
+                    b.HasIndex("ProductId");
 
                     b.ToTable("Inventories");
                 });
@@ -1625,6 +1622,17 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text");
 
                     b.HasDiscriminator().HasValue("ApplicationUser");
+                });
+
+            modelBuilder.Entity("IBS.Models.Inventory", b =>
+                {
+                    b.HasOne("IBS.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("IBS.Models.LubePurchaseDetail", b =>

@@ -29,7 +29,11 @@ namespace IBS.Models
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal UnitPrice { get; set; }
+        public decimal CostPerCase { get; set; }
+
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal CostPerPiece { get; set; }
 
         [Column(TypeName = "varchar(10)")]
         public string ProductCode { get; set; }

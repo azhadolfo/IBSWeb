@@ -46,7 +46,22 @@
                     </tr>
                 }
                 <tr class="table-secondary fw-medium">
-                    <td colspan="3" class="text-center">Total for @group.Key</td>
+                    @{
+                        string displayName;
+                        switch (group.Key)
+                        {
+                            case "PET001":
+                                displayName = "BIODIESEL";
+                                break;
+                            case "PET002":
+                                displayName = "ECONOGAS";
+                                break;
+                            default:
+                                displayName = "ENVIROGAS";
+                                break;
+                        }
+                    }
+                    <td colspan="3" class="text-center">Total for @displayName</td>
                     <td class="text-end">@group.Sum(d => d.Liters).ToString("N3")</td>
                     <td class="text-end">@group.Sum(d => d.Calibration).ToString("N2")</td>
                     <td class="text-end">@group.Sum(d => d.LitersSold).ToString("N3")</td>

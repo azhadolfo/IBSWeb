@@ -48,5 +48,10 @@ namespace IBS.Models
 
         [Column(TypeName = "varchar(200)")]
         public string? CustomerCode { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string JournalReference { get; set; }
+
+        public bool IsValidated { get; set; }
     }
 }

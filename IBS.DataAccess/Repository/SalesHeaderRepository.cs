@@ -138,7 +138,7 @@ namespace IBS.DataAccess.Repository
             try
             {
 
-                SalesVM? salesVM = new SalesVM
+                SalesVM? salesVM = new()
                 {
                     Header = await _db.SalesHeaders.FindAsync(id, cancellationToken),
                     Details = await _db.SalesDetails.Where(sd => sd.SalesHeaderId == id).ToListAsync(cancellationToken),
@@ -148,21 +148,29 @@ namespace IBS.DataAccess.Repository
                     .Stations
                     .FirstOrDefaultAsync(s => s.PosCode == salesVM.Header.StationPosCode);
 
+                Inventory? previousInventory = await _db
+                    .Inventories
+                    .OrderByDescending(i => i.Date)
+                    .FirstOrDefaultAsync(cancellationToken);
+
                 salesVM.Header.PostedBy = "Ako";
                 salesVM.Header.PostedDate = DateTime.Now;
 
                 var journals = new List<GeneralLedger>();
+                var inventories = new List<Inventory>();
 
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = salesVM.Header.Date,
-                    Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
+                    Reference = salesVM.Header.SalesNo,
                     Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                     AccountNumber = 10100005,
                     AccountTitle = "Cash-on-Hand",
                     Debit = salesVM.Header.ActualCashOnHand > 0 ? salesVM.Header.ActualCashOnHand : salesVM.Header.SafeDropTotalAmount,
                     Credit = 0,
-                    StationCode = station.StationCode
+                    StationCode = station.StationCode,
+                    JournalReference = "SALES",
+                    IsValidated = true
                 });
 
                 foreach(var product in salesVM.Details.GroupBy(d => d.Product))
@@ -170,26 +178,53 @@ namespace IBS.DataAccess.Repository
                     journals.Add(new GeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
-                        Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
+                        Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = 40100005,
                         AccountTitle = product.Key == "PET001" ? "Sales-Bio" : product.Key == "PET002" ? "Sales-Econo" : "Sales-Enviro",
                         Debit = 0,
                         Credit = product.Sum(p => p.Sale) / 1.12m,
                         StationCode = station.StationCode,
-                        ProductCode = product.Key
+                        ProductCode = product.Key,
+                        JournalReference = "SALES",
+                        IsValidated = true
                     });
 
                     journals.Add(new GeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
-                        Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
+                        Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = 20100065,
                         AccountTitle = "Output VAT",
                         Debit = 0,
                         Credit = (product.Sum(p => p.Sale) / 1.12m) * 0.12m,
-                        StationCode = station.StationCode
+                        StationCode = station.StationCode,
+                        JournalReference = "SALES",
+                        IsValidated = true
+                    });
+
+                    var quantity = (decimal)product.Sum(p => p.Liters);
+                    var totalCost = quantity * previousInventory.UnitCost;
+                    var runningCost = previousInventory.RunningCost - totalCost;
+                    var inventoryBalance = previousInventory.InventoryBalance - quantity;
+                    var unitCostAverage = runningCost / inventoryBalance;
+
+                    inventories.Add(new Inventory
+                    {
+                        Particulars = "Sales",
+                        Date = salesVM.Header.Date,
+                        Reference = $"POS Sales Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        ProductCode = product.Key,
+                        Quantity = quantity,
+                        UnitCost = previousInventory.UnitCost,
+                        TotalCost = totalCost,
+                        InventoryBalance = inventoryBalance,
+                        RunningCost = runningCost,
+                        UnitCostAverage = unitCostAverage,
+                        InventoryValue = runningCost,
+                        ValidatedBy = salesVM.Header.PostedBy,
+                        ValidatedDate = salesVM.Header.PostedDate
                     });
                 }
 
@@ -198,18 +233,21 @@ namespace IBS.DataAccess.Repository
                     journals.Add(new GeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
-                        Reference = $"{salesVM.Header.SalesNo}{salesVM.Header.StationPosCode}",
+                        Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = 45300013,
                         AccountTitle = "Cash Short/(Over) - Handling",
                         Debit = salesVM.Header.GainOrLoss < 0 ? Math.Abs(salesVM.Header.GainOrLoss) : 0,
                         Credit = salesVM.Header.GainOrLoss > 0 ? salesVM.Header.GainOrLoss : 0,
-                        StationCode = station.StationCode
+                        StationCode = station.StationCode,
+                        JournalReference = "SALES",
+                        IsValidated = true
                     });
                 }
 
                 if (IsJournalEntriesBalance(journals))
                 {
+                    await _db.Inventories.AddRangeAsync(inventories, cancellationToken);
                     await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                 }
