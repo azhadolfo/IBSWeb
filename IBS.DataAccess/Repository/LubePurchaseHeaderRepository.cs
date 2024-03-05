@@ -36,7 +36,7 @@ namespace IBS.DataAccess.Repository
 
                 Inventory? previousInventory = await _db
                     .Inventories
-                    .OrderByDescending(i => i.Date)
+                    .OrderByDescending(i => i.InventoryId)
                     .FirstOrDefaultAsync(cancellationToken);
 
                 lubeDeliveryVM.Header.PostedBy = "Ako";

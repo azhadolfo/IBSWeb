@@ -47,7 +47,7 @@
                 </div>
 
                 <div class="row mt-2">
-                    @if (Model.PostedBy == null)
+                    @if (Model.PostedBy == null && Model.PurchasePrice != 0)
                     {
                         <div class="col-12 col-md-auto">
                             <a asp-area="User" asp-controller="Purchase" asp-action="PostFuel" asp-route-id="@Model.FuelPurchaseId" class="btn btn-primary">Approve</a>
