@@ -216,6 +216,7 @@ namespace IBS.DataAccess.Repository
                         Date = salesVM.Header.Date,
                         Reference = $"POS Sales Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         ProductCode = product.Key,
+                        StationCode = station.StationCode,
                         Quantity = quantity,
                         UnitCost = previousInventory.UnitCostAverage,
                         TotalCost = totalCost,

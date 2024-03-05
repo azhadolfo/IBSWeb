@@ -1,0 +1,69 @@
+﻿@model IEnumerable<Inventory>
+
+<style>
+    .container {
+        max-width: none;
+    }
+</style>
+
+<div class="mb-2">
+    <h5>STATION: @ViewData["Station"]</h5>
+    <h5>PRODUCT: @ViewData["Product"]</h5>
+</div>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan="11" class="text-center table-primary">INVENTORY COSTING</th>
+            </tr>
+            <tr>
+                <th>Particulars</th>
+                <th>Date</th>
+                <th>Ref</th>
+                <th class="text-end">Quantity</th>
+                <th class="text-end">Unit Cost</th>
+                <th class="text-end">Total Cost</th>
+                <th class="text-end">Inventory Balance</th>
+                <th class="text-end">Running Cost</th>
+                <th class="text-end">Unit Cost</th>
+                <th class="text-end">Inventory Value</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var obj in Model.OrderBy(i => i.InventoryId))
+            {
+                <tr>
+                    <td>@Html.DisplayFor(model => obj.Particulars)</td>
+                    <td>@Html.DisplayFor(model => obj.Date)</td>
+                    <td>@Html.DisplayFor(model => obj.Reference)</td>
+                    <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
+                    <td class="text-end">@Html.DisplayFor(model => obj.UnitCost)</td>
+                    <td class="text-end">@Html.DisplayFor(model => obj.TotalCost)</td>
+                    <td class="text-end">@Html.DisplayFor(model => obj.InventoryBalance)</td>
+                    <td class="text-end">@Html.DisplayFor(model => obj.RunningCost)</td>
+                    <td class="text-end">@Html.DisplayFor(model => obj.UnitCost)</td>
+                    <td class="text-end">@Html.DisplayFor(model => obj.InventoryValue)</td>
+                    @if (obj.ValidatedBy != null)
+                    {
+                        <td><span class="badge text-bg-primary">Validated</span></td>
+                    }
+                    else
+                    {
+                        <td><a asp-area="User" asp-controller="Inventory" asp-action="ValidatePurchases" class="badge text-bg-warning" title="Click this link to validate.">Unvalidated</a></td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="row mt-5">
+    <div class="col-6 col-md-3">
+        <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a asp-area="User" asp-controller="Inventory" asp-action="GenerateInventoryCosting" class="btn btn-outline-primary border form-control buttons">Back</a>
+    </div>
+</div>
