@@ -97,6 +97,7 @@ namespace IBS.DataAccess.Repository
                     Date = fuelPurchase.DeliveryDate,
                     Reference = $"DR#{fuelPurchase.DrNo}",
                     ProductCode = fuelPurchase.ProductCode,
+                    StationCode = fuelPurchase.StationCode,
                     Quantity = fuelPurchase.Quantity,
                     UnitCost = fuelPurchase.PurchasePrice,
                     TotalCost = totalCost,

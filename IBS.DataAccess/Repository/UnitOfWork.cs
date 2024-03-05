@@ -24,6 +24,7 @@ namespace IBS.DataAccess.Repository
         public ILubePurchaseHeaderRepository LubePurchaseHeader { get; private set; }
         public ILubePurchaseDetailRepository LubePurchaseDetail { get; private set; }
         public ISupplierRepository Supplier { get; private set; }
+        public IInventoryRepository Inventory { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -40,6 +41,7 @@ namespace IBS.DataAccess.Repository
             LubePurchaseHeader = new LubePurchaseHeaderRepository(_db);
             LubePurchaseDetail = new LubePurchaseDetailRepository(_db);
             Supplier = new SupplierRepository(_db);
+            Inventory = new InventoryRepository(_db);
         }
 
         public async Task SaveAsync(CancellationToken cancellationToken = default)

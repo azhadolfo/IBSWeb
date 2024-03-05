@@ -12,4 +12,11 @@ namespace IBS.Utility
         Industrial,
         Government
     }
+
+    public enum ProductCode
+    {
+        PET001,
+        PET002,
+        PET003
+    }
 }

@@ -33,6 +33,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         ISupplierRepository Supplier { get; }
 
+        IInventoryRepository Inventory { get; }
+
         Task SaveAsync(CancellationToken cancellationToken = default);
 
     }

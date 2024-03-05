@@ -26,6 +26,9 @@ namespace IBS.Models
         [Column(TypeName = "varchar(10)")]
         public string ProductCode { get; set; }
 
+        [Column(TypeName = "varchar(10)")]
+        public string StationCode { get; set; }
+
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal Quantity { get; set; }
