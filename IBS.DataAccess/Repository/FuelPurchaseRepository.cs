@@ -38,8 +38,8 @@ namespace IBS.DataAccess.Repository
 
                 Inventory? previousInventory = await _db
                     .Inventories
-                    .OrderByDescending(i => i.Date)
-                    .FirstOrDefaultAsync(cancellationToken);
+                    .OrderByDescending(i => i.InventoryId)
+                    .FirstOrDefaultAsync(i => i.ProductCode == fuelPurchase.ProductCode,cancellationToken);
 
                 fuelPurchase.PostedBy = "Ako";
                 fuelPurchase.PostedDate = DateTime.Now;
@@ -86,7 +86,7 @@ namespace IBS.DataAccess.Repository
                     JournalReference = "PURCHASE"
                 });
 
-                var totalCost = fuelPurchase.Quantity * previousInventory.UnitCost;
+                var totalCost = fuelPurchase.Quantity * fuelPurchase.PurchasePrice;
                 var runningCost = previousInventory.RunningCost + totalCost;
                 var inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
                 var unitCostAverage = runningCost / inventoryBalance;

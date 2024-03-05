@@ -148,11 +148,6 @@ namespace IBS.DataAccess.Repository
                     .Stations
                     .FirstOrDefaultAsync(s => s.PosCode == salesVM.Header.StationPosCode);
 
-                Inventory? previousInventory = await _db
-                    .Inventories
-                    .OrderByDescending(i => i.Date)
-                    .FirstOrDefaultAsync(cancellationToken);
-
                 salesVM.Header.PostedBy = "Ako";
                 salesVM.Header.PostedDate = DateTime.Now;
 
@@ -204,8 +199,13 @@ namespace IBS.DataAccess.Repository
                         IsValidated = true
                     });
 
+                    Inventory? previousInventory = await _db
+                    .Inventories
+                    .OrderByDescending(i => i.InventoryId)
+                    .FirstOrDefaultAsync(i => i.ProductCode == product.Key,cancellationToken);
+
                     var quantity = (decimal)product.Sum(p => p.Liters);
-                    var totalCost = quantity * previousInventory.UnitCost;
+                    var totalCost = quantity * previousInventory.UnitCostAverage;
                     var runningCost = previousInventory.RunningCost - totalCost;
                     var inventoryBalance = previousInventory.InventoryBalance - quantity;
                     var unitCostAverage = runningCost / inventoryBalance;
@@ -217,7 +217,7 @@ namespace IBS.DataAccess.Repository
                         Reference = $"POS Sales Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         ProductCode = product.Key,
                         Quantity = quantity,
-                        UnitCost = previousInventory.UnitCost,
+                        UnitCost = previousInventory.UnitCostAverage,
                         TotalCost = totalCost,
                         InventoryBalance = inventoryBalance,
                         RunningCost = runningCost,
