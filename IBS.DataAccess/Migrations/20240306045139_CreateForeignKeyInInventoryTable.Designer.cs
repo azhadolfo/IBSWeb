@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240306045139_CreateForeignKeyInInventoryTable")]
+    partial class CreateForeignKeyInInventoryTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -136,6 +139,9 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("CompanyCode")
                         .IsUnique();
 
+                    b.HasIndex("CompanyId")
+                        .IsUnique();
+
                     b.HasIndex("CompanyName")
                         .IsUnique();
 
@@ -205,6 +211,9 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("CustomerId");
 
                     b.HasIndex("CustomerCode")
+                        .IsUnique();
+
+                    b.HasIndex("CustomerId")
                         .IsUnique();
 
                     b.HasIndex("CustomerName");
@@ -656,6 +665,9 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(10)");
 
+                    b.Property<int>("StationId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("TotalCost")
                         .HasColumnType("numeric(18,2)");
 
@@ -672,6 +684,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.HasKey("InventoryId");
+
+                    b.HasIndex("StationId");
 
                     b.ToTable("Inventories");
                 });
@@ -1033,6 +1047,9 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("ProductCode")
                         .IsUnique();
 
+                    b.HasIndex("ProductId")
+                        .IsUnique();
+
                     b.HasIndex("ProductName")
                         .IsUnique();
 
@@ -1273,6 +1290,9 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("SalesHeaderId");
 
                     b.HasIndex("Cashier");
+
+                    b.HasIndex("SalesHeaderId")
+                        .IsUnique();
 
                     b.HasIndex("SalesNo")
                         .IsUnique();
@@ -1619,12 +1639,23 @@ namespace IBS.DataAccess.Migrations
                     b.HasDiscriminator().HasValue("ApplicationUser");
                 });
 
+            modelBuilder.Entity("IBS.Models.Inventory", b =>
+                {
+                    b.HasOne("IBS.Models.Station", "Station")
+                        .WithMany()
+                        .HasForeignKey("StationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Station");
+                });
+
             modelBuilder.Entity("IBS.Models.LubePurchaseDetail", b =>
                 {
                     b.HasOne("IBS.Models.LubePurchaseHeader", "LubeDeliveryHeader")
                         .WithMany()
                         .HasForeignKey("LubeDeliveryHeaderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("LubeDeliveryHeader");
@@ -1635,7 +1666,7 @@ namespace IBS.DataAccess.Migrations
                     b.HasOne("IBS.Models.SalesHeader", "SalesHeader")
                         .WithMany()
                         .HasForeignKey("SalesHeaderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("SalesHeader");

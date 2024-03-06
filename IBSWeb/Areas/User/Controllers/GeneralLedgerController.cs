@@ -25,5 +25,10 @@ namespace IBSWeb.Areas.User.Controllers
 
             return View(ledgers);
         }
+
+        public IActionResult PerJournal()
+        {
+            return View();
+        }
     }
 }

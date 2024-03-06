@@ -66,7 +66,6 @@ namespace IBS.DataAccess.Data
             // Customer
             builder.Entity<Customer>(c =>
             {
-                c.HasIndex(c => c.CustomerId).IsUnique();
                 c.HasIndex(c => c.CustomerCode).IsUnique();
                 c.HasIndex(c => c.CustomerName);
             });
@@ -74,7 +73,6 @@ namespace IBS.DataAccess.Data
             // Company
             builder.Entity<Company>(c =>
             {
-                c.HasIndex(c => c.CompanyId).IsUnique();
                 c.HasIndex(c => c.CompanyCode).IsUnique();
                 c.HasIndex(c => c.CompanyName).IsUnique();
             });
@@ -82,7 +80,6 @@ namespace IBS.DataAccess.Data
             // Product
             builder.Entity<Product>(p =>
             {
-                p.HasIndex(p => p.ProductId).IsUnique();
                 p.HasIndex(p => p.ProductCode).IsUnique();
                 p.HasIndex(p => p.ProductName).IsUnique();
             });
@@ -111,7 +108,6 @@ namespace IBS.DataAccess.Data
             // SalesHeader
             builder.Entity<SalesHeader>(s =>
             {
-                s.HasIndex(s => s.SalesHeaderId).IsUnique();
                 s.HasIndex(s => s.SalesNo).IsUnique();
                 s.HasIndex(s => s.Cashier);
             });
@@ -119,9 +115,21 @@ namespace IBS.DataAccess.Data
             // SalesDetail
             builder.Entity<SalesDetail>(s =>
             {
-                s.HasIndex(s => s.SalesHeaderId);
                 s.HasIndex(s => s.SalesNo);
             });
+
+            builder.Entity<SalesDetail>()
+                .HasOne(s => s.SalesHeader)
+                .WithMany()
+                .HasForeignKey(s => s.SalesHeaderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // LubePurchaseDetail
+            builder.Entity<LubePurchaseDetail>()
+                .HasOne(l => l.LubeDeliveryHeader)
+                .WithMany()
+                .HasForeignKey(l => l.LubeDeliveryHeaderId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
         #endregion
     }

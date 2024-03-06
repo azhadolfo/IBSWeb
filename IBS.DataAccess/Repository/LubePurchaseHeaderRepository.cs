@@ -34,15 +34,11 @@ namespace IBS.DataAccess.Repository
 
                 Supplier? supplier = await _db.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == lubeDeliveryVM.Header.SupplierCode, cancellationToken);
 
-                Inventory? previousInventory = await _db
-                    .Inventories
-                    .OrderByDescending(i => i.InventoryId)
-                    .FirstOrDefaultAsync(cancellationToken);
-
                 lubeDeliveryVM.Header.PostedBy = "Ako";
                 lubeDeliveryVM.Header.PostedDate = DateTime.Now;
 
                 var journals = new List<GeneralLedger>();
+                var inventories = new List<Inventory>();
 
                 journals.Add(new GeneralLedger
                 {
@@ -85,28 +81,38 @@ namespace IBS.DataAccess.Repository
                     JournalReference = "PURCHASE"
                 });
 
-                //var totalCost = fuelPurchase.Quantity * previousInventory.UnitCost;
-                //var runningCost = previousInventory.RunningCost + totalCost;
-                //var inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
-                //var unitCostAverage = runningCost / inventoryBalance;
+                foreach (var lube in lubeDeliveryVM.Details)
+                {
+                    Inventory? previousInventory = await _db
+                   .Inventories
+                   .OrderByDescending(i => i.InventoryId)
+                   .FirstOrDefaultAsync(i => i.ProductCode == lube.ProductCode, cancellationToken);
 
-                //var inventory = new Inventory
-                //{
-                //    Particulars = "Purchases",
-                //    Date = fuelPurchase.DeliveryDate,
-                //    Reference = $"DR#{fuelPurchase.DrNo}",
-                //    ProductCode = fuelPurchase.ProductCode,
-                //    Quantity = fuelPurchase.Quantity,
-                //    UnitCost = fuelPurchase.PurchasePrice,
-                //    TotalCost = totalCost,
-                //    InventoryBalance = inventoryBalance,
-                //    RunningCost = runningCost,
-                //    UnitCostAverage = unitCostAverage,
-                //    InventoryValue = runningCost
-                //};
+                    var totalCost = lube.Piece * lube.CostPerPiece;
+                    var runningCost = previousInventory.RunningCost + totalCost;
+                    var inventoryBalance = previousInventory.InventoryBalance + lube.Piece;
+                    var unitCostAverage = runningCost / inventoryBalance;
+
+                    inventories.Add(new Inventory
+                    {
+                        Particulars = "Purchases",
+                        Date = lubeDeliveryVM.Header.DeliveryDate,
+                        Reference = $"DR#{lubeDeliveryVM.Header.DrNo}",
+                        ProductCode = lube.ProductCode,
+                        StationCode = lubeDeliveryVM.Header.StationCode,
+                        Quantity = lube.Piece,
+                        UnitCost = lube.CostPerPiece,
+                        TotalCost = totalCost,
+                        InventoryBalance = inventoryBalance,
+                        RunningCost = runningCost,
+                        UnitCostAverage = unitCostAverage,
+                        InventoryValue = runningCost
+                    });
+                }
 
                 if (IsJournalEntriesBalance(journals))
                 {
+                    await _db.Inventories.AddRangeAsync(inventories, cancellationToken);
                     await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                 }
