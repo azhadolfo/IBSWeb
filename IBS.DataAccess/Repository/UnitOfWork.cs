@@ -1,6 +1,8 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,6 +49,66 @@ namespace IBS.DataAccess.Repository
         public async Task SaveAsync(CancellationToken cancellationToken = default)
         {
             await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetCustomersAsync()
+        {
+            return await _db.Customers
+                .OrderBy(c => c.CustomerId)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CustomerId.ToString(),
+                    Text = c.CustomerName
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<SelectListItem>> GetProductsAsyncByCode()
+        {
+            return await _db.Products
+                .OrderBy(p => p.ProductId)
+                .Select(p => new SelectListItem
+                {
+                    Value = p.ProductCode,
+                    Text = p.ProductCode + " " + p.ProductName
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<SelectListItem>> GetProductsAsyncById()
+        {
+            return await _db.Products
+                .OrderBy(p => p.ProductId)
+                .Select(p => new SelectListItem
+                {
+                    Value = p.ProductId.ToString(),
+                    Text = p.ProductCode + " " + p.ProductName
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<SelectListItem>> GetStationAsyncByCode()
+        {
+            return await _db.Stations
+                .OrderBy(s => s.StationId)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.StationCode,
+                    Text = s.StationCode + " " + s.StationName
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<SelectListItem>> GetStationAsyncById()
+        {
+            return await _db.Stations
+                .OrderBy(s => s.StationId)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.StationId.ToString(),
+                    Text = s.StationCode + " " + s.StationName
+                })
+                .ToListAsync();
         }
     }
 }

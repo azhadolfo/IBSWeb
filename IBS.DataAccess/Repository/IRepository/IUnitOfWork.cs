@@ -1,4 +1,5 @@
 ﻿using IBS.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,6 +37,16 @@ namespace IBS.DataAccess.Repository.IRepository
         IInventoryRepository Inventory { get; }
 
         Task SaveAsync(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetCustomersAsync();
+
+        Task<List<SelectListItem>> GetProductsAsyncByCode();
+
+        Task<List<SelectListItem>> GetProductsAsyncById();
+
+        Task<List<SelectListItem>> GetStationAsyncByCode();
+
+        Task<List<SelectListItem>> GetStationAsyncById();
 
     }
 }

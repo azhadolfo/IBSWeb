@@ -8,3 +8,7 @@ $(document).ready(function () {
         theme: "classic"
     });
 });
+
+$(document).ready(function () {
+    $('#dataTable').DataTable();
+});

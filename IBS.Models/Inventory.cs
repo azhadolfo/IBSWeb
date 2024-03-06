@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models
 {
@@ -26,6 +27,12 @@ namespace IBS.Models
         [Column(TypeName = "varchar(10)")]
         public string ProductCode { get; set; }
 
+        [NotMapped]
+        public List<SelectListItem>? Products { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Stations { get; set; }
+
         [Column(TypeName = "varchar(10)")]
         public string StationCode { get; set; }
 
@@ -46,19 +53,19 @@ namespace IBS.Models
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal TotalCost { get; set; }
 
-        // To compute InventoryBalance
-        // If purchase previous balance + Quantity
-        // If sales previous balance - Quantity
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal InventoryBalance {  get; set; }
-
         // To compute RunningCost
         // If purchase previous balance + TotalCost
         // If sales previous balance - TotalCost
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal RunningCost { get; set; }
+
+        // To compute InventoryBalance
+        // If purchase previous balance + Quantity
+        // If sales previous balance - Quantity
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal InventoryBalance {  get; set; }
 
         // To compute UnitCostAverage(COGS)
         // RunningCost / InventoryBalance
