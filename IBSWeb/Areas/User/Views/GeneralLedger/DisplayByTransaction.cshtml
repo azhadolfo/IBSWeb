@@ -1,0 +1,48 @@
+﻿@model IEnumerable<GeneralLedger>
+
+<style>
+    .container {
+        max-width: none;
+    }
+</style>
+
+<div class="mb-3">
+    <h4>GENERAL LEDGER BY TRANSACTION</h4>
+</div>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr class="table-primary">
+                    <th>Date</th>
+                    <th>Journal</th>
+                    <th>Particular</th>
+                    <th>Account Number</th>
+                    <th>Account Title</th>
+                    <th class="text-center">Debit</th>
+                    <th class="text-center">Credit</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var journal in Model.OrderBy(j => j.TransactionDate))
+                {
+                    <tr>
+                        <td>@journal.TransactionDate</td>
+                        <td>@journal.JournalReference</td>
+                        <td>@journal.Particular</td>
+                        <td>@journal.AccountNumber</td>
+                        <td>@journal.AccountTitle</td>
+                        <td class="text-end">@journal.Debit.ToString("N2")</td>
+                        <td class="text-end">@journal.Credit.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p><i>No ledger entries found for the specified criteria.</i></p>
+}

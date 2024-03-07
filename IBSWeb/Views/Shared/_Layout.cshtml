@@ -97,8 +97,23 @@
                                 <li><hr class="dropdown-divider"></li>
                             </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="User" asp-controller="GeneralLedger" asp-action="Index">General Ledger</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                General Ledger
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li class="nav-item">
+                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="DisplayByTransaction">By Transaction</a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li class="nav-item">
+                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetJournal">By Journal</a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li class="nav-item">
+                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetAccountNo">By Account No</a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                     <partial name="_LoginPartial" />
