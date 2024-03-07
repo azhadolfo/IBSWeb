@@ -1,0 +1,55 @@
+﻿@model IEnumerable<GeneralLedger>
+
+@{
+    string currencyFormat = "N2";
+    decimal balance = 0;
+}
+
+<style>
+    .container {
+        max-width: none;
+    }
+</style>
+
+<div class="mb-3">
+    <h5>GENERAL LEDGER BY ACCOUNT NUMBER</h5>
+    <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
+    <h6>Account No.: @ViewData["AccountNo"]</h6>
+    <h6>Account Title: @ViewData["AccountName"]</h6>
+    <h6>Product Code: @ViewData["ProductCode"]</h6>
+</div>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr class="table-primary">
+                    <th>Date</th>
+                    <th>Particular</th>
+                    <th class="text-end">Debit</th>
+                    <th class="text-end">Credit</th>
+                    <th class="text-end">Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var journal in Model.OrderBy(j => j.AccountNumber))
+                {
+                    balance += journal.Debit + journal.Credit;
+
+                    <tr>
+                        <td>@journal.TransactionDate</td>
+                        <td>@journal.Particular</td>
+                        <td class="text-end">@journal.Debit.ToString(currencyFormat)</td>
+                        <td class="text-end">@journal.Credit.ToString(currencyFormat)</td>
+                        <td class="text-end">@balance.ToString(currencyFormat)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p><i>No ledger entries found for the specified criteria.</i></p>
+}

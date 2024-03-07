@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models
 {
@@ -24,8 +25,9 @@ namespace IBS.Models
         [Column(TypeName = "varchar(200)")]
         public string Particular { get; set; }
 
+        [Column(TypeName = "varchar(15)")]
         [Display(Name = "Account Number")]
-        public long AccountNumber { get; set; }
+        public string AccountNumber { get; set; }
 
         [Column(TypeName = "varchar(200)")]
         [Display(Name = "Account Title")]
@@ -53,5 +55,15 @@ namespace IBS.Models
         public string JournalReference { get; set; }
 
         public bool IsValidated { get; set; }
+
+        #region-- Select List Object
+
+        [NotMapped]
+        public List<SelectListItem>? ChartOfAccounts { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Products { get; set; }
+
+        #endregion
     }
 }

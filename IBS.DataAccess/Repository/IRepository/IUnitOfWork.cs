@@ -36,6 +36,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IInventoryRepository Inventory { get; }
 
+        IChartOfAccountRepository ChartOfAccount { get; }
+
         Task SaveAsync(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetCustomersAsync();
@@ -47,6 +49,10 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<List<SelectListItem>> GetStationAsyncByCode();
 
         Task<List<SelectListItem>> GetStationAsyncById();
+
+        Task<List<SelectListItem>> GetChartOfAccountAsyncByNo();
+
+        Task<List<SelectListItem>> GetChartOfAccountAsyncById();
 
     }
 }

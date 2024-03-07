@@ -27,6 +27,7 @@ namespace IBS.DataAccess.Repository
         public ILubePurchaseDetailRepository LubePurchaseDetail { get; private set; }
         public ISupplierRepository Supplier { get; private set; }
         public IInventoryRepository Inventory { get; private set; }
+        public IChartOfAccountRepository ChartOfAccount { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -44,6 +45,7 @@ namespace IBS.DataAccess.Repository
             LubePurchaseDetail = new LubePurchaseDetailRepository(_db);
             Supplier = new SupplierRepository(_db);
             Inventory = new InventoryRepository(_db);
+            ChartOfAccount = new ChartOfAccountRepository(_db);
         }
 
         public async Task SaveAsync(CancellationToken cancellationToken = default)
@@ -110,5 +112,32 @@ namespace IBS.DataAccess.Repository
                 })
                 .ToListAsync();
         }
+
+        public async Task<List<SelectListItem>> GetChartOfAccountAsyncById()
+        {
+            return await _db.ChartOfAccounts
+                .OrderBy(c => c.AccountId)
+                .Where(c => c.Level == 3)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.AccountId.ToString(),
+                    Text = c.AccountNumber + " " + c.AccountName
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<SelectListItem>> GetChartOfAccountAsyncByNo()
+        {
+            return await _db.ChartOfAccounts
+                .OrderBy(c => c.AccountNumber)
+                .Where(c => c.Level == 3)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.AccountNumber,
+                    Text = c.AccountNumber + " " + c.AccountName
+                })
+                .ToListAsync();
+        }
+
     }
 }

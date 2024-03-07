@@ -13,10 +13,9 @@ namespace IBS.Utility
         Government
     }
 
-    public enum ProductCode
+    public enum Journal
     {
-        PET001,
-        PET002,
-        PET003
+        Sales,
+        Purchase
     }
 }
