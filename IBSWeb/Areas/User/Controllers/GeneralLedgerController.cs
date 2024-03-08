@@ -65,10 +65,10 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> DisplayByAccountNumber(string accountNo, string productCode, DateOnly dateFrom, DateOnly dateTo, bool exportToExcel, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(accountNo))
+            if (string.IsNullOrEmpty(accountNo) || string.IsNullOrEmpty(productCode))
             {
-                TempData["error"] = "Please select account number.";
-                return View();
+                TempData["error"] = "Please select account and product.";
+                return RedirectToAction(nameof(GetAccountNo));
             }
 
             ChartOfAccount chartOfAccount = await _unitOfWork.ChartOfAccount.GetAsync(c => c.AccountNumber == accountNo);
@@ -76,7 +76,7 @@ namespace IBSWeb.Areas.User.Controllers
             if (chartOfAccount == null)
             {
                 TempData["error"] = "Invalid account number.";
-                return View();
+                return RedirectToAction(nameof(GetAccountNo));
             }
 
             ViewData["AccountNo"] = chartOfAccount.AccountNumber;
@@ -91,45 +91,20 @@ namespace IBSWeb.Areas.User.Controllers
 
             IEnumerable<GeneralLedger> ledgers = await _unitOfWork.GeneralLedger.GetAllAsync(filter, cancellationToken);
 
-            if (exportToExcel)
+            if (exportToExcel && ledgers.Any())
             {
-                // Create the Excel package
-                using (var package = new ExcelPackage())
+                try
                 {
-                    // Add a new worksheet to the Excel package
-                    var worksheet = package.Workbook.Worksheets.Add("GeneralLedger");
-
-                    // Set the column headers
-                    worksheet.Cells["A1"].Value = "Date";
-                    worksheet.Cells["B1"].Value = "Particular";
-                    worksheet.Cells["C1"].Value = "Debit";
-                    worksheet.Cells["D1"].Value = "Credit";
-                    worksheet.Cells["E1"].Value = "Balance";
-
-                    // Populate the data rows
-                    int row = 2;
-                    decimal balance = 0;
-                    foreach (var journal in ledgers.OrderBy(j => j.AccountNumber))
-                    {
-                        balance += journal.Debit + journal.Credit;
-
-                        worksheet.Cells[row, 1].Value = journal.TransactionDate;
-                        worksheet.Cells[row, 2].Value = journal.Particular;
-                        worksheet.Cells[row, 3].Value = journal.Debit;
-                        worksheet.Cells[row, 4].Value = journal.Credit;
-                        worksheet.Cells[row, 5].Value = balance;
-
-                        row++;
-                    }
-
-                    // Auto-fit columns for better readability
-                    worksheet.Cells.AutoFitColumns();
-
-                    // Convert the Excel package to a byte array
-                    var excelBytes = package.GetAsByteArray();
+                    var excelBytes = _unitOfWork.GeneralLedger.ExportToExcel(ledgers, dateTo, dateFrom, accountNo, chartOfAccount.AccountName, productCode);
 
                     // Return the Excel file as a download
                     return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "GeneralLedger.xlsx");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in exporting excel.");
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(GetAccountNo));
                 }
             }
             else
