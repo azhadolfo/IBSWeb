@@ -1,4 +1,5 @@
 ﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Migrations;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.ViewModels;
@@ -265,25 +266,41 @@ namespace IBS.DataAccess.Repository
 
         }
 
-        public async Task UpdateAsync(SalesHeader model, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken = default)
         {
             SalesHeader? existingSalesHeader = await _db
                 .SalesHeaders
-                .FindAsync(model.SalesHeaderId, cancellationToken);
+                .FindAsync(model.Header.SalesHeaderId, cancellationToken);
 
-            existingSalesHeader!.ActualCashOnHand = model.ActualCashOnHand;
-            existingSalesHeader!.Particular = model.Particular;
+            IEnumerable<SalesDetail> existingSalesDetail = await _db
+                .SalesDetails
+                .Where(s => s.SalesHeaderId == model.Header.SalesHeaderId)
+                .ToListAsync(cancellationToken);
+
+            for(int i = 0; i < existingSalesDetail.Count(); i++)
+            {
+                SalesDetail existingDetail = existingSalesDetail.ElementAt(i);
+
+                if (existingDetail.Closing != closing[i] || existingDetail.Opening != opening[i])
+                {
+                    existingSalesHeader!.IsModified = true;
+                    existingDetail.Closing = closing[i];
+                    existingDetail.Opening = opening[i];
+                    existingDetail.Liters = existingDetail.Closing - existingDetail.Opening;
+                    existingDetail.Value = (decimal)existingDetail.Liters * existingDetail.Price;
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
+            }
+
+            existingSalesHeader!.ActualCashOnHand = model.Header.ActualCashOnHand;
+            existingSalesHeader!.Particular = model.Header.Particular;
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingSalesHeader!.GainOrLoss = model.ActualCashOnHand - existingSalesHeader.TotalSales;
+                existingSalesHeader!.GainOrLoss = model.Header.ActualCashOnHand - existingSalesHeader.TotalSales;
                 existingSalesHeader.EditedBy = "Ako";
                 existingSalesHeader.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
-            }
-            else
-            {
-                throw new ArgumentException("No data changes!");
             }
         }
     }

@@ -64,6 +64,8 @@ namespace IBS.Models
         [Column(TypeName = "varchar(200)")]
         public string? Particular { get; set; }
 
+        public bool IsModified { get; set; }
+
         #endregion
     }
 }

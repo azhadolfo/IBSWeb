@@ -76,37 +76,44 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            SalesHeader salesHeader = await _unitOfWork
-                .SalesHeader
-                .GetAsync(s => s.SalesHeaderId == id, cancellationToken);
-
-            if (salesHeader != null)
+            SalesVM = new SalesVM
             {
-                return View(salesHeader);
+                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesHeaderId == id, cancellationToken),
+                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesHeaderId == id, cancellationToken)
+            };
+
+            if (SalesVM != null)
+            {
+                return View(SalesVM);
             }
 
             return NotFound();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(SalesHeader model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken)
         {
+            SalesVM = new SalesVM
+            {
+                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId, cancellationToken),
+                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesHeaderId == model.Header.SalesHeaderId, cancellationToken)
+            };
 
-            if (model.ActualCashOnHand < 0)
+            if (model.Header.ActualCashOnHand < 0)
             {
                 ModelState.AddModelError("ActualCashOnHand", "Please enter a value bigger than 0");
-                return View(model);
+                return View(SalesVM);
             }
 
-            if (String.IsNullOrEmpty(model.Particular))
+            if (String.IsNullOrEmpty(model.Header.Particular))
             {
                 ModelState.AddModelError("Particular", "Indicate the reason of this changes.");
-                return View(model);
+                return View(SalesVM);
             }
 
             try
             {
-                await _unitOfWork.SalesHeader.UpdateAsync(model, cancellationToken);
+                await _unitOfWork.SalesHeader.UpdateAsync(model, closing, opening, cancellationToken);
                 TempData["success"] = "Cashier Report updated successfully.";
                 return RedirectToAction(nameof(Index));
             }
@@ -114,7 +121,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 _logger.LogError(ex, "Error in updating cashier report.");
                 TempData["error"] = ex.Message;
-                return View(model);
+                return View(SalesVM);
             }
         }
     }
