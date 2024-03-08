@@ -17,5 +17,6 @@ namespace IBS.DataAccess.Repository
         {
             _db = db;
         }
+
     }
 }

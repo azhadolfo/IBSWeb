@@ -1,4 +1,5 @@
-﻿@model SalesHeader
+﻿@using IBS.Models.ViewModels
+@model SalesVM
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
@@ -10,38 +11,61 @@
     </div>
     <div class="card-body p-4">
         <form method="post" class="row">
-            <input asp-for="SalesHeaderId" hidden />
+            <input asp-for="Header.SalesHeaderId" hidden />
             <div class="border p-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Date" class="form-control border-0 shadow" placeholder="" disabled readonly />
-                    <label asp-for="Date" class="ms-2"></label>
-                    <span asp-validation-for="Date" class="text-danger"></span>
+                    <input asp-for="Header.Date" class="form-control border-0 shadow" placeholder="" readonly />
+                    <label asp-for="Header.Date" class="ms-2"></label>
+                    <span asp-validation-for="Header.Date" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Cashier" class="form-control border-0 shadow" placeholder="" disabled readonly />
-                    <label asp-for="Cashier" class="ms-2"></label>
-                    <span asp-validation-for="Cashier" class="text-danger"></span>
+                    <input asp-for="Header.Cashier" class="form-control border-0 shadow" placeholder="" readonly />
+                    <label asp-for="Header.Cashier" class="ms-2"></label>
+                    <span asp-validation-for="Header.Cashier" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Shift" class="form-control border-0 shadow" placeholder="" disabled readonly />
-                    <label asp-for="Shift" class="ms-2"></label>
-                    <span asp-validation-for="Shift" class="text-danger"></span>
+                    <input asp-for="Header.Shift" class="form-control border-0 shadow" placeholder="" readonly />
+                    <label asp-for="Header.Shift" class="ms-2"></label>
+                    <span asp-validation-for="Header.Shift" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="SafeDropTotalAmount" class="form-control border-0 shadow" placeholder="" disabled readonly />
-                    <label asp-for="SafeDropTotalAmount" class="ms-2">Cash On Hand</label>
-                    <span asp-validation-for="SafeDropTotalAmount" class="text-danger"></span>
+                    <input asp-for="Header.SafeDropTotalAmount" class="form-control border-0 shadow" placeholder="" readonly />
+                    <label asp-for="Header.SafeDropTotalAmount" class="ms-2">Cash On Hand</label>
+                    <span asp-validation-for="Header.SafeDropTotalAmount" class="text-danger"></span>
+                </div>
+                @foreach (var obj in Model.Details.OrderBy(d => d.Particular))
+                {
+                    <div class="row py-2 m-2 border border-secondary-subtle p-2 border-opacity-50">
+                        <div class="col-12">
+                            <h6>@obj.Particular</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input name="closing" value="@obj.Closing" class="form-control border-0 shadow" placeholder="" />
+                                <label asp-for="@obj.Closing"></label>
+                                <span asp-validation-for="@obj.Closing" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input name="opening" value="@obj.Opening" class="form-control border-0 shadow" placeholder="" />
+                                <label asp-for="@obj.Opening"></label>
+                                <span asp-validation-for="@obj.Opening" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Header.ActualCashOnHand" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="Header.ActualCashOnHand" class="ms-2">Actual Cash On Hand<span class="required">*</span></label>
+                    <span asp-validation-for="Header.ActualCashOnHand" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="ActualCashOnHand" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="ActualCashOnHand" class="ms-2">Actual Cash On Hand<span class="required">*</span></label>
-                    <span asp-validation-for="ActualCashOnHand" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <textarea asp-for="Particular" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
-                    <label asp-for="Particular" class="control-label">Particular<span class="required">*</span></label>
-                    <span asp-validation-for="Particular" class="text-danger"></span>
+                    <textarea asp-for="Header.Particular" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
+                    <label asp-for="Header.Particular" class="control-label">Particular<span class="required">*</span></label>
+                    <span asp-validation-for="Header.Particular" class="text-danger"></span>
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">

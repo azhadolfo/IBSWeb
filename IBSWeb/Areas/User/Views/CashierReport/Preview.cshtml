@@ -30,7 +30,7 @@
         <tbody>
             @foreach (var group in Model.Details.GroupBy(d => d.Product))
             {
-                foreach (var item in group)
+                foreach (var item in group.OrderBy(g => g.Particular))
                 {
                     <tr>
                         <td>@item.Particular</td>
@@ -94,7 +94,14 @@
     <tbody>
         <tr>
             <td class="text-center">Fuel</td>
-            <td class="text-end">@Html.DisplayFor(model => Model.Header.FuelSalesTotalAmount)</td>
+            @if (!Model.Header.IsModified)
+            {
+                <td class="text-end">@Html.DisplayFor(model => Model.Header.FuelSalesTotalAmount)</td>
+            }
+            else
+            {
+                <td class="text-end">@Model.Details.Sum(d => d.Value).ToString("N2")</td>
+            }
         </tr>
         <tr>
             <td class="text-center">Lubes</td>
