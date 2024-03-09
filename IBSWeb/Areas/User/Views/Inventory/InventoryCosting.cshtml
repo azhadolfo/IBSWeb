@@ -45,7 +45,14 @@
                         <td>@Html.DisplayFor(model => obj.StationCode)</td>
                     }
                     <td>@Html.DisplayFor(model => obj.Date)</td>
-                    <td>@Html.DisplayFor(model => obj.Reference)</td>
+                    @if (obj.ValidatedBy != "N/A")
+                    {
+                        <td><a asp-area="User" asp-controller="Inventory" asp-action="ViewPurchase" asp-route-transactionId="@obj.TransactionId" asp-route-productCode="@obj.ProductCode" title="Click this link to preview." target="_blank">@Html.DisplayFor(model => obj.Reference)</a></td>
+                    }
+                    else
+                    {
+                        <td>@Html.DisplayFor(model => obj.Reference)</td>
+                    }
                     <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
                     <td class="text-end">@Html.DisplayFor(model => obj.UnitCost)</td>
                     <td class="text-end">@Html.DisplayFor(model => obj.TotalCost)</td>
@@ -63,7 +70,7 @@
                     }
                     else
                     {
-                        <td><a asp-area="User" asp-controller="Inventory" asp-action="ValidatePurchases" class="badge text-bg-warning" title="Click this link to validate.">Unvalidated</a></td>
+                        <td><a asp-area="User" asp-controller="Inventory" asp-action="ValidatePurchases" asp-route-id="@obj.InventoryId" class="badge text-bg-warning" title="Click this to validate.">Unvalidated</a></td>
                     }
                 </tr>
             }

@@ -85,5 +85,9 @@ namespace IBS.Models
 
         [Column(TypeName = "timestamp without time zone")]
         public DateTime? ValidatedDate { get; set; }
+
+        // This property handle
+        // the transaction Id which table this comes from.
+        public int TransactionId { get; set; }
     }
 }

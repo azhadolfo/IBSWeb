@@ -48,10 +48,9 @@
                                 <a asp-area="User" asp-controller="Purchase" asp-action="EditFuel" asp-route-id="@obj.FuelPurchaseId" class="btn btn-primary mx-2">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
-                                <a class="btn btn-primary mx-2 preview-btn" data-product-code="@obj.ProductCode" data-bs-toggle="modal" data-bs-target="#FuelPreview-@obj.FuelPurchaseId" data-bs-url="@Url.Action($"Preview/{obj.FuelPurchaseId}")">
+                                <a class="btn btn-primary mx-2 preview-btn" asp-area="User" asp-controller="Purchase" asp-action="PreviewFuel" asp-route-id="@obj.FuelPurchaseId">
                                     <i class="bi bi-printer-fill"></i> Preview
                                 </a>
-                                @await Html.PartialAsync("_FuelPreviewPartial", obj)
                             </div>
                         </td>
                     </tr>
@@ -62,25 +61,4 @@
 
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            $('.preview-btn').click(function () {
-                var productCode = $(this).data('product-code');
-                $.ajax({
-                    type: "GET",
-                    url: "/User/Purchase/GetProductName",
-                    data: { productCode: productCode },
-                    success: function (data) {
-                        $(".product-name").text(data.productName);
-                    },
-                    error: function () {
-                        alert("Error fetching product name.");
-                    }
-                });
-            });
-        });
-    </script>
-}
 

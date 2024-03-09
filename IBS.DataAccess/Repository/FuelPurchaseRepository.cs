@@ -104,7 +104,8 @@ namespace IBS.DataAccess.Repository
                     InventoryBalance = inventoryBalance,
                     RunningCost = runningCost,
                     UnitCostAverage = unitCostAverage,
-                    InventoryValue = runningCost
+                    InventoryValue = runningCost,
+                    TransactionId = fuelPurchase.FuelPurchaseId
                 };
 
                 if (IsJournalEntriesBalance(journals))

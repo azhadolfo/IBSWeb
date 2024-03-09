@@ -96,7 +96,6 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        [HttpGet]
         public async Task<IActionResult> Fuel()
         {
             IEnumerable<FuelPurchase> fuelPurchaseList = await _unitOfWork
@@ -106,28 +105,20 @@ namespace IBSWeb.Areas.User.Controllers
             return View(fuelPurchaseList);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetProductName(string productCode, CancellationToken cancellationToken)
+        public async Task<IActionResult> PreviewFuel(int? id, CancellationToken cancellationToken)
         {
-            try
+            if (id == null || id == 0)
             {
-                Product product = await _unitOfWork.Product.GetAsync(p => p.ProductCode == productCode, cancellationToken);
-
-                if (product != null)
-                {
-                    return Json(new
-                    {
-                        ProductName = product.ProductName
-                    });
-                }
-
-                return NotFound("Product not found.");
+                return NotFound();
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to get product name for code {ProductCode}", productCode);
-                return StatusCode(500, "An error occurred while processing your request.");
-            }
+
+            FuelPurchase? fuelPurchase = await _unitOfWork.FuelPurchase.GetAsync(f => f.FuelPurchaseId == id, cancellationToken);
+
+            Product product = await _unitOfWork.Product.GetAsync(p => p.ProductCode == fuelPurchase.ProductCode, cancellationToken);
+
+            ViewData["ProductName"] = product.ProductName;
+
+            return View(fuelPurchase);
         }
 
         public async Task<IActionResult> PostFuel(int id, CancellationToken cancellationToken)
@@ -194,7 +185,6 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        [HttpGet]
         public async Task<IActionResult> Lube()
         {
             IEnumerable<LubePurchaseHeader> lubePurchaseHeaders = await _unitOfWork
@@ -204,7 +194,6 @@ namespace IBSWeb.Areas.User.Controllers
             return View(lubePurchaseHeaders);
         }
 
-        [HttpGet]
         public async Task<IActionResult> PreviewLube(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)

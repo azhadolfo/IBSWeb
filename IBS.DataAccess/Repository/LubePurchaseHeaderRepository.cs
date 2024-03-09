@@ -106,7 +106,8 @@ namespace IBS.DataAccess.Repository
                         InventoryBalance = inventoryBalance,
                         RunningCost = runningCost,
                         UnitCostAverage = unitCostAverage,
-                        InventoryValue = runningCost
+                        InventoryValue = runningCost,
+                        TransactionId = lubeDeliveryVM.Header.LubeDeliveryHeaderId
                     });
                 }
 
