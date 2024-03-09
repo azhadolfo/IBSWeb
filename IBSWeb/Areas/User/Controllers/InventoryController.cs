@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -85,5 +86,25 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
         }
+
+        public async Task<IActionResult> ViewPurchase(int transactionId, string productCode, CancellationToken cancellationToken)
+        {
+            if (productCode == null || transactionId == 0)
+            {
+                return NotFound();
+            }
+
+
+            if (productCode.Contains("PET"))
+            {
+                return Redirect($"/User/Purchase/");
+            }
+            else
+            {
+                return Redirect($"/User/Purchase/PreviewLube/{transactionId}");
+            }
+        }
+
+
     }
 }

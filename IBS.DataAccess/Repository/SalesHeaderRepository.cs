@@ -226,7 +226,8 @@ namespace IBS.DataAccess.Repository
                         UnitCostAverage = unitCostAverage,
                         InventoryValue = runningCost,
                         ValidatedBy = salesVM.Header.PostedBy,
-                        ValidatedDate = salesVM.Header.PostedDate
+                        ValidatedDate = salesVM.Header.PostedDate,
+                        TransactionId = salesVM.Header.SalesHeaderId
                     });
                 }
 
