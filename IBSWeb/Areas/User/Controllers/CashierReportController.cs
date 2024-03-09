@@ -99,15 +99,9 @@ namespace IBSWeb.Areas.User.Controllers
                 Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesHeaderId == model.Header.SalesHeaderId, cancellationToken)
             };
 
-            if (model.Header.ActualCashOnHand < 0)
-            {
-                ModelState.AddModelError("ActualCashOnHand", "Please enter a value bigger than 0");
-                return View(SalesVM);
-            }
-
             if (String.IsNullOrEmpty(model.Header.Particular))
             {
-                ModelState.AddModelError("Particular", "Indicate the reason of this changes.");
+                ModelState.AddModelError("Header.Particular", "Indicate the reason of this changes.");
                 return View(SalesVM);
             }
 

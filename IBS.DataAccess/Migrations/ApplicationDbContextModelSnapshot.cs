@@ -40,7 +40,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.ChartOfAccount", b =>
@@ -86,7 +86,7 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("AccountNumber")
                         .IsUnique();
 
-                    b.ToTable("ChartOfAccounts");
+                    b.ToTable("ChartOfAccounts", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Company", b =>
@@ -139,7 +139,7 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("CompanyName")
                         .IsUnique();
 
-                    b.ToTable("Companies");
+                    b.ToTable("Companies", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Customer", b =>
@@ -209,7 +209,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("CustomerName");
 
-                    b.ToTable("Customers");
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Fuel", b =>
@@ -348,7 +348,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("xONAME");
 
-                    b.ToTable("Fuels");
+                    b.ToTable("Fuels", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.FuelDelivery", b =>
@@ -438,7 +438,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("FuelDeliveryId");
 
-                    b.ToTable("FuelDeliveries");
+                    b.ToTable("FuelDeliveries", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.FuelPurchase", b =>
@@ -557,7 +557,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("FuelPurchaseId");
 
-                    b.ToTable("FuelPurchase");
+                    b.ToTable("FuelPurchase", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.GeneralLedger", b =>
@@ -615,7 +615,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("GeneralLedgerId");
 
-                    b.ToTable("GeneralLedgers");
+                    b.ToTable("GeneralLedgers", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Inventory", b =>
@@ -674,7 +674,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("InventoryId");
 
-                    b.ToTable("Inventories");
+                    b.ToTable("Inventories", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Lube", b =>
@@ -777,7 +777,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("INV_DATE");
 
-                    b.ToTable("Lubes");
+                    b.ToTable("Lubes", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.LubeDelivery", b =>
@@ -859,7 +859,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("LubeDeliveryId");
 
-                    b.ToTable("LubeDeliveries");
+                    b.ToTable("LubeDeliveries", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.LubePurchaseDetail", b =>
@@ -904,7 +904,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("LubeDeliveryHeaderId");
 
-                    b.ToTable("LubePurchaseDetails");
+                    b.ToTable("LubePurchaseDetails", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.LubePurchaseHeader", b =>
@@ -994,7 +994,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("LubeDeliveryHeaderId");
 
-                    b.ToTable("LubePurchaseHeaders");
+                    b.ToTable("LubePurchaseHeaders", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Product", b =>
@@ -1037,7 +1037,7 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("ProductName")
                         .IsUnique();
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.SafeDrop", b =>
@@ -1126,7 +1126,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("xONAME");
 
-                    b.ToTable("SafeDrops");
+                    b.ToTable("SafeDrops", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.SalesDetail", b =>
@@ -1185,7 +1185,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("SalesNo");
 
-                    b.ToTable("SalesDetails");
+                    b.ToTable("SalesDetails", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.SalesHeader", b =>
@@ -1229,9 +1229,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<decimal>("GainOrLoss")
                         .HasColumnType("numeric(18,2)");
-
-                    b.Property<bool>("IsModified")
-                        .HasColumnType("boolean");
 
                     b.Property<decimal>("LubesTotalAmount")
                         .HasColumnType("numeric(18,2)");
@@ -1281,7 +1278,7 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("SalesNo")
                         .IsUnique();
 
-                    b.ToTable("SalesHeaders");
+                    b.ToTable("SalesHeaders", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Station", b =>
@@ -1325,7 +1322,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("StationId");
 
-                    b.ToTable("Stations");
+                    b.ToTable("Stations", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Supplier", b =>
@@ -1396,7 +1393,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("SupplierId");
 
-                    b.ToTable("Suppliers");
+                    b.ToTable("Suppliers", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

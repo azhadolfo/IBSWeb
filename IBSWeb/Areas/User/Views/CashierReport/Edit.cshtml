@@ -34,7 +34,7 @@
                     <label asp-for="Header.SafeDropTotalAmount" class="ms-2">Cash On Hand</label>
                     <span asp-validation-for="Header.SafeDropTotalAmount" class="text-danger"></span>
                 </div>
-                @foreach (var obj in Model.Details.OrderBy(d => d.Particular))
+                @foreach (var obj in Model.Details.OrderBy(d => d.SalesDetailId))
                 {
                     <div class="row py-2 m-2 border border-secondary-subtle p-2 border-opacity-50">
                         <div class="col-12">

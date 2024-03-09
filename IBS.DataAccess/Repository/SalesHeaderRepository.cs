@@ -268,22 +268,27 @@ namespace IBS.DataAccess.Repository
 
         public async Task UpdateAsync(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken = default)
         {
-            SalesHeader? existingSalesHeader = await _db
-                .SalesHeaders
-                .FindAsync(model.Header.SalesHeaderId, cancellationToken);
+            SalesHeader? existingSalesHeader = await _db.SalesHeaders.FindAsync(model.Header.SalesHeaderId, cancellationToken);
 
-            IEnumerable<SalesDetail> existingSalesDetail = await _db
-                .SalesDetails
+            if (existingSalesHeader == null)
+            {
+                throw new ArgumentException("Sales header not found!");
+            }
+
+            IEnumerable<SalesDetail> existingSalesDetail = await _db.SalesDetails
                 .Where(s => s.SalesHeaderId == model.Header.SalesHeaderId)
+                .OrderBy(s => s.SalesDetailId)
                 .ToListAsync(cancellationToken);
 
-            for(int i = 0; i < existingSalesDetail.Count(); i++)
+            bool headerModified = false;
+
+            for (int i = 0; i < existingSalesDetail.Count(); i++)
             {
                 SalesDetail existingDetail = existingSalesDetail.ElementAt(i);
 
                 if (existingDetail.Closing != closing[i] || existingDetail.Opening != opening[i])
                 {
-                    existingSalesHeader!.IsModified = true;
+                    headerModified = true;
                     existingDetail.Closing = closing[i];
                     existingDetail.Opening = opening[i];
                     existingDetail.Liters = existingDetail.Closing - existingDetail.Opening;
@@ -292,15 +297,30 @@ namespace IBS.DataAccess.Repository
                 }
             }
 
-            existingSalesHeader!.ActualCashOnHand = model.Header.ActualCashOnHand;
+            if (headerModified)
+            {
+                existingSalesHeader!.FuelSalesTotalAmount = existingSalesDetail.Sum(d => d.Value);
+                existingSalesHeader!.TotalSales = existingSalesHeader.FuelSalesTotalAmount + existingSalesHeader.LubesTotalAmount;
+                existingSalesHeader!.GainOrLoss = existingSalesHeader.TotalSales - existingSalesHeader.SafeDropTotalAmount;
+            }
+
             existingSalesHeader!.Particular = model.Header.Particular;
+
+            if (existingSalesHeader.ActualCashOnHand != model.Header.ActualCashOnHand)
+            {
+                existingSalesHeader!.ActualCashOnHand = model.Header.ActualCashOnHand;
+                existingSalesHeader!.GainOrLoss = model.Header.ActualCashOnHand - existingSalesHeader.TotalSales;
+            }
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingSalesHeader!.GainOrLoss = model.Header.ActualCashOnHand - existingSalesHeader.TotalSales;
                 existingSalesHeader.EditedBy = "Ako";
                 existingSalesHeader.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new ArgumentException("No data changes!");
             }
         }
     }

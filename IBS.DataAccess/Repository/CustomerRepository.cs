@@ -82,7 +82,7 @@ namespace IBS.DataAccess.Repository
             }
             else
             {
-                throw new ArgumentException("No data changes!");
+                throw new InvalidOperationException("No data changes!");
             }
         }
     }
