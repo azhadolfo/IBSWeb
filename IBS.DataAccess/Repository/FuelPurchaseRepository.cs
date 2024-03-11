@@ -13,6 +13,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace IBS.DataAccess.Repository
 {
@@ -113,6 +114,34 @@ namespace IBS.DataAccess.Repository
                     InventoryValue = runningCost,
                     TransactionId = fuelPurchase.FuelPurchaseId
                 };
+
+                journals.Add(new GeneralLedger
+                {
+                    TransactionDate = fuelPurchase.DeliveryDate,
+                    Reference = fuelPurchase.ShiftRecId,
+                    Particular = $"COGS:{product.ProductCode} {fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
+                    AccountNumber = "50100005",
+                    AccountTitle = "Cost of Goods Sold",
+                    Debit = runningCost,
+                    Credit = 0,
+                    StationCode = fuelPurchase.StationCode,
+                    ProductCode = product.ProductCode,
+                    JournalReference = nameof(JournalType.Purchase)
+                });
+
+                journals.Add(new GeneralLedger
+                {
+                    TransactionDate = fuelPurchase.DeliveryDate,
+                    Reference = fuelPurchase.ShiftRecId,
+                    Particular = $"COGS:{product.ProductCode} {fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
+                    AccountNumber = "10100033",
+                    AccountTitle = "Merchandise Inventory",
+                    Debit = 0,
+                    Credit = runningCost,
+                    StationCode = fuelPurchase.StationCode,
+                    ProductCode = product.ProductCode,
+                    JournalReference = nameof(JournalType.Purchase)
+                });
 
                 if (IsJournalEntriesBalance(journals))
                 {
