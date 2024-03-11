@@ -21,6 +21,9 @@
     <table class="table">
         <thead>
             <tr>
+                <th colspan="6" class="text-center table-primary">Lube</th>
+            </tr>
+            <tr>
                 <th>Quantity</th>
                 <th>Unit</th>
                 <th>Description</th>
@@ -71,6 +74,14 @@
 
         </tbody>
     </table>
+</div>
+
+<div class="signature-section mt-5">
+    <hr class="signature-line">
+    <p class="text-center mb-2">Received By:</p>
+    <div class="signature-block">
+    </div>
+    <p class="small text-muted text-center">@Html.DisplayFor(model => model.Header.ReceivedBy)</p>
 </div>
 
 <div class="row mt-5">

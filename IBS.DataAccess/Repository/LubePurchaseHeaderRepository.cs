@@ -3,6 +3,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.ViewModels;
+using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -86,7 +87,12 @@ namespace IBS.DataAccess.Repository
                     Inventory? previousInventory = await _db
                    .Inventories
                    .OrderByDescending(i => i.InventoryId)
-                   .FirstOrDefaultAsync(i => i.ProductCode == lube.ProductCode, cancellationToken);
+                   .FirstOrDefaultAsync(i => i.ProductCode == lube.ProductCode && i.StationCode == lubeDeliveryVM.Header.StationCode, cancellationToken);
+
+                    if (previousInventory == null)
+                    {
+                        throw new ColumnNotFoundException($"Beginning inventory for {lube.ProductCode} in station {lubeDeliveryVM.Header.StationCode} not found!");
+                    }
 
                     var totalCost = lube.Piece * lube.CostPerPiece;
                     var runningCost = previousInventory.RunningCost + totalCost;

@@ -87,17 +87,16 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        public async Task<IActionResult> ViewPurchase(int transactionId, string productCode, CancellationToken cancellationToken)
+        public IActionResult ViewPurchase(int transactionId, string productCode)
         {
             if (productCode == null || transactionId == 0)
             {
                 return NotFound();
             }
 
-
             if (productCode.Contains("PET"))
             {
-                return Redirect($"/User/Purchase/");
+                return Redirect($"/User/Purchase/PreviewFuel/{transactionId}");
             }
             else
             {
