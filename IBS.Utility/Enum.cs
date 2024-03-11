@@ -13,7 +13,7 @@ namespace IBS.Utility
         Government
     }
 
-    public enum Journal
+    public enum JournalType
     {
         Sales,
         Purchase

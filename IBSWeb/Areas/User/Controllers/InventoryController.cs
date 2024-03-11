@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.ViewModels;
+using IBS.Utility;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -18,7 +19,6 @@ namespace IBSWeb.Areas.User.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
         public async Task<IActionResult> GenerateInventoryCosting()
         {
             Inventory? inventory = new()
@@ -30,7 +30,6 @@ namespace IBSWeb.Areas.User.Controllers
             return View(inventory);
         }
 
-        [HttpGet]
         public async Task<IActionResult> InventoryCosting(Inventory model, CancellationToken cancellationToken)
         {
 
@@ -87,14 +86,18 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        public IActionResult ViewPurchase(int transactionId, string productCode)
+        public IActionResult ViewDetail(int transactionId, string productCode, string typeOfTransaction)
         {
             if (productCode == null || transactionId == 0)
             {
                 return NotFound();
             }
 
-            if (productCode.Contains("PET"))
+            if (productCode.Contains("PET") && typeOfTransaction == nameof(JournalType.Sales))
+            {
+                return Redirect($"/User/CashierReport/Preview/{transactionId}");
+            }
+            else if (!productCode.Contains("PET") && typeOfTransaction == nameof(JournalType.Purchase))
             {
                 return Redirect($"/User/Purchase/PreviewFuel/{transactionId}");
             }
@@ -103,6 +106,32 @@ namespace IBSWeb.Areas.User.Controllers
                 return Redirect($"/User/Purchase/PreviewLube/{transactionId}");
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ValidatePurchases(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            Inventory? inventory = await _unitOfWork.Inventory
+                .GetAsync(i => i.InventoryId == id, cancellationToken);
+
+            if (inventory != null)
+            {
+                inventory.ValidatedBy = "Ako";
+                inventory.ValidatedDate = DateTime.Now;
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                return Ok();
+            }
+            else
+            {
+                return BadRequest();
+            }
+        }
+
 
 
     }
