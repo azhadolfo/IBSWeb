@@ -156,6 +156,7 @@ namespace IBS.DataAccess.Repository
 
                 var journals = new List<GeneralLedger>();
                 var inventories = new List<Inventory>();
+                var cogsJournals = new List<GeneralLedger>();
 
                 journals.Add(new GeneralLedger
                 {
@@ -173,6 +174,9 @@ namespace IBS.DataAccess.Repository
 
                 foreach(var product in salesVM.Details.GroupBy(d => d.Product))
                 {
+                    Product? productDetails = await _db.Products
+                        .FirstOrDefaultAsync(p => p.ProductCode == product.Key);
+
                     journals.Add(new GeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
@@ -236,6 +240,36 @@ namespace IBS.DataAccess.Repository
                         ValidatedDate = salesVM.Header.PostedDate,
                         TransactionId = salesVM.Header.SalesHeaderId
                     });
+
+                    cogsJournals.Add(new GeneralLedger
+                    {
+                        TransactionDate = salesVM.Header.Date,
+                        Reference = salesVM.Header.SalesNo,
+                        Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        AccountNumber = "50100005",
+                        AccountTitle = "Cost of Goods Sold",
+                        Debit = runningCost,
+                        Credit = 0,
+                        StationCode = station.StationCode,
+                        ProductCode = product.Key,
+                        JournalReference = nameof(JournalType.Sales),
+                        IsValidated = true
+                    });
+
+                    cogsJournals.Add(new GeneralLedger
+                    {
+                        TransactionDate = salesVM.Header.Date,
+                        Reference = salesVM.Header.SalesNo,
+                        Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        AccountNumber = "10100033",
+                        AccountTitle = "Merchandise Inventory",
+                        Debit = 0,
+                        Credit = runningCost,
+                        StationCode = station.StationCode,
+                        ProductCode = product.Key,
+                        JournalReference = nameof(JournalType.Sales),
+                        IsValidated = true
+                    });
                 }
 
                 if (salesVM.Header.GainOrLoss != 0)
@@ -254,6 +288,8 @@ namespace IBS.DataAccess.Repository
                         IsValidated = true
                     });
                 }
+
+                journals.AddRange(cogsJournals);
 
                 if (IsJournalEntriesBalance(journals))
                 {

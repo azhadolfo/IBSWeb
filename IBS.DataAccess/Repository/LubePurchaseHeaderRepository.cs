@@ -102,7 +102,7 @@ namespace IBS.DataAccess.Repository
 
                     inventories.Add(new Inventory
                     {
-                        Particulars = "Purchases",
+                        Particulars = nameof(JournalType.Purchase),
                         Date = lubeDeliveryVM.Header.DeliveryDate,
                         Reference = $"DR#{lubeDeliveryVM.Header.DrNo}",
                         ProductCode = lube.ProductCode,
@@ -115,6 +115,32 @@ namespace IBS.DataAccess.Repository
                         UnitCostAverage = unitCostAverage,
                         InventoryValue = runningCost,
                         TransactionId = lubeDeliveryVM.Header.LubeDeliveryHeaderId
+                    });
+
+                    journals.Add(new GeneralLedger
+                    {
+                        TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
+                        Reference = lubeDeliveryVM.Header.ShiftRecId,
+                        Particular = $"COGS:{lube.ProductCode} SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
+                        AccountNumber = "50100005",
+                        AccountTitle = "Cost of Goods Sold",
+                        Debit = runningCost,
+                        Credit = 0,
+                        StationCode = lubeDeliveryVM.Header.StationCode,
+                        JournalReference = nameof(JournalType.Purchase)
+                    });
+
+                    journals.Add(new GeneralLedger
+                    {
+                        TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
+                        Reference = lubeDeliveryVM.Header.ShiftRecId,
+                        Particular = $"COGS:{lube.ProductCode} SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
+                        AccountNumber = "10100033",
+                        AccountTitle = "Merchandise Inventory",
+                        Debit = 0,
+                        Credit = runningCost,
+                        StationCode = lubeDeliveryVM.Header.StationCode,
+                        JournalReference = nameof(JournalType.Purchase)
                     });
                 }
 
