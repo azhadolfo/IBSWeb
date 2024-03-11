@@ -11,7 +11,7 @@
     <h5>PRODUCT: @ViewData["Product"]</h5>
 </div>
 
-<div class="table-responsive">
+<div id="inventory-table" class="table-responsive">
     <table class="table">
         <thead>
             <tr>
@@ -47,7 +47,7 @@
                     <td>@Html.DisplayFor(model => obj.Date)</td>
                     @if (obj.ValidatedBy != "N/A")
                     {
-                        <td><a asp-area="User" asp-controller="Inventory" asp-action="ViewPurchase" asp-route-transactionId="@obj.TransactionId" asp-route-productCode="@obj.ProductCode" title="Click this link to preview." target="_blank">@Html.DisplayFor(model => obj.Reference)</a></td>
+                        <td><a asp-area="User" asp-controller="Inventory" asp-action="ViewDetail" asp-route-transactionId="@obj.TransactionId" asp-route-productCode="@obj.ProductCode" asp-route-typeOfTransaction="@obj.Particulars" title="Click this link to preview." target="_blank">@Html.DisplayFor(model => obj.Reference)</a></td>
                     }
                     else
                     {
@@ -70,7 +70,7 @@
                     }
                     else
                     {
-                        <td><a asp-area="User" asp-controller="Inventory" asp-action="ValidatePurchases" asp-route-id="@obj.InventoryId" class="badge text-bg-warning" title="Click this to validate.">Unvalidated</a></td>
+                        <td><a href="#" onclick="confirmValidation(@obj.InventoryId)" class="badge text-bg-warning" title="Click this to validate.">Validate</a></td>
                     }
                 </tr>
             }
@@ -86,3 +86,51 @@
         <a asp-area="User" asp-controller="Inventory" asp-action="GenerateInventoryCosting" class="btn btn-outline-primary border form-control buttons">Back</a>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function confirmValidation(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You are about to validate this inventory.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    validateInventory(id);
+                }
+            });
+        }
+
+        function validateInventory(id) {
+            $.ajax({
+                url: '@Url.Action("ValidatePurchases", "Inventory")',
+                type: 'POST',
+                data: { id: id },
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'The record was validated successfully.',
+                        showConfirmButton: false,
+                        timer: 1500 // Close the alert after 1.5 seconds
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to validate inventory.',
+                        showConfirmButton: false,
+                        timer: 1500 // Close the alert after 1.5 seconds
+                    });
+                }
+            });
+        }
+    </script>
+}

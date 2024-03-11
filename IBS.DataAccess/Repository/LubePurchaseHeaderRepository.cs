@@ -3,6 +3,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.ViewModels;
+using IBS.Utility;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -51,7 +52,7 @@ namespace IBS.DataAccess.Repository
                     Debit = lubeDeliveryVM.Header.Amount / 1.12m,
                     Credit = 0,
                     StationCode = lubeDeliveryVM.Header.StationCode,
-                    JournalReference = "PURCHASE",
+                    JournalReference = nameof(JournalType.Purchase),
                     ProductCode = "LUBES"
                 });
 
@@ -65,7 +66,7 @@ namespace IBS.DataAccess.Repository
                     Debit = (lubeDeliveryVM.Header.Amount / 1.12m) * 0.12m,
                     Credit = 0,
                     StationCode = lubeDeliveryVM.Header.StationCode,
-                    JournalReference = "PURCHASE"
+                    JournalReference = nameof(JournalType.Purchase)
                 });
 
                 journals.Add(new GeneralLedger
@@ -79,7 +80,7 @@ namespace IBS.DataAccess.Repository
                     Credit = lubeDeliveryVM.Header.Amount,
                     StationCode = lubeDeliveryVM.Header.StationCode,
                     SupplierCode = supplier.SupplierName.ToUpper(),
-                    JournalReference = "PURCHASE"
+                    JournalReference = nameof(JournalType.Purchase)
                 });
 
                 foreach (var lube in lubeDeliveryVM.Details)

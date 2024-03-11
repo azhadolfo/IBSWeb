@@ -3,6 +3,7 @@ using IBS.DataAccess.Migrations;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.ViewModels;
+using IBS.Utility;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -166,7 +167,7 @@ namespace IBS.DataAccess.Repository
                     Debit = salesVM.Header.ActualCashOnHand > 0 ? salesVM.Header.ActualCashOnHand : salesVM.Header.SafeDropTotalAmount,
                     Credit = 0,
                     StationCode = station.StationCode,
-                    JournalReference = "SALES",
+                    JournalReference = nameof(JournalType.Sales),
                     IsValidated = true
                 });
 
@@ -180,10 +181,10 @@ namespace IBS.DataAccess.Repository
                         AccountNumber = "40100005",
                         AccountTitle = product.Key == "PET001" ? "Sales-Bio" : product.Key == "PET002" ? "Sales-Econo" : "Sales-Enviro",
                         Debit = 0,
-                        Credit = product.Sum(p => p.Sale) / 1.12m,
+                        Credit = !salesVM.Header.IsModified ? product.Sum(p => p.Sale) / 1.12m : product.Sum(p => p.Value) / 1.12m,
                         StationCode = station.StationCode,
                         ProductCode = product.Key,
-                        JournalReference = "SALES",
+                        JournalReference = nameof(JournalType.Sales),
                         IsValidated = true
                     });
 
@@ -195,9 +196,9 @@ namespace IBS.DataAccess.Repository
                         AccountNumber = "20100065",
                         AccountTitle = "Output VAT",
                         Debit = 0,
-                        Credit = (product.Sum(p => p.Sale) / 1.12m) * 0.12m,
+                        Credit = !salesVM.Header.IsModified ? (product.Sum(p => p.Sale) / 1.12m) * 0.12m : (product.Sum(p => p.Value) / 1.12m) * 0.12m,
                         StationCode = station.StationCode,
-                        JournalReference = "SALES",
+                        JournalReference = nameof(JournalType.Sales),
                         IsValidated = true
                     });
 
@@ -219,7 +220,7 @@ namespace IBS.DataAccess.Repository
 
                     inventories.Add(new Inventory
                     {
-                        Particulars = "Sales",
+                        Particulars = nameof(JournalType.Sales),
                         Date = salesVM.Header.Date,
                         Reference = $"POS Sales Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         ProductCode = product.Key,
@@ -249,7 +250,7 @@ namespace IBS.DataAccess.Repository
                         Debit = salesVM.Header.GainOrLoss < 0 ? Math.Abs(salesVM.Header.GainOrLoss) : 0,
                         Credit = salesVM.Header.GainOrLoss > 0 ? salesVM.Header.GainOrLoss : 0,
                         StationCode = station.StationCode,
-                        JournalReference = "SALES",
+                        JournalReference = nameof(JournalType.Sales),
                         IsValidated = true
                     });
                 }
@@ -296,6 +297,7 @@ namespace IBS.DataAccess.Repository
                 if (existingDetail.Closing != closing[i] || existingDetail.Opening != opening[i])
                 {
                     headerModified = true;
+                    existingSalesHeader.IsModified = true;
                     existingDetail.Closing = closing[i];
                     existingDetail.Opening = opening[i];
                     existingDetail.Liters = existingDetail.Closing - existingDetail.Opening;

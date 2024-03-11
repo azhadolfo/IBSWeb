@@ -4,6 +4,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.ViewModels;
+using IBS.Utility;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -62,7 +63,7 @@ namespace IBS.DataAccess.Repository
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
                     ProductCode = fuelPurchase.ProductCode,
-                    JournalReference = "PURCHASE"
+                    JournalReference = nameof(JournalType.Purchase)
                 });
 
                 journals.Add(new GeneralLedger
@@ -75,7 +76,7 @@ namespace IBS.DataAccess.Repository
                     Debit = ((fuelPurchase.Quantity * fuelPurchase.SellingPrice) / 1.12m) * 0.12m,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
-                    JournalReference = "PURCHASE"
+                    JournalReference = nameof(JournalType.Purchase)
                 });
 
                 journals.Add(new GeneralLedger
@@ -88,7 +89,7 @@ namespace IBS.DataAccess.Repository
                     Debit = 0,
                     Credit = fuelPurchase.Quantity * fuelPurchase.SellingPrice,
                     StationCode = fuelPurchase.StationCode,
-                    JournalReference = "PURCHASE"
+                    JournalReference = nameof(JournalType.Purchase)
                 });
 
                 var totalCost = fuelPurchase.Quantity * fuelPurchase.PurchasePrice;
@@ -98,7 +99,7 @@ namespace IBS.DataAccess.Repository
 
                 var inventory = new Inventory
                 {
-                    Particulars = "Purchases",
+                    Particulars = nameof(JournalType.Purchase),
                     Date = fuelPurchase.DeliveryDate,
                     Reference = $"DR#{fuelPurchase.DrNo}",
                     ProductCode = fuelPurchase.ProductCode,
