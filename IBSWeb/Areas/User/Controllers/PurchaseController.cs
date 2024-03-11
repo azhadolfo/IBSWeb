@@ -129,13 +129,13 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     await _unitOfWork.FuelPurchase.PostAsync(id, cancellationToken);
                     TempData["success"] = "Fuel delivery approved successfully.";
-                    return RedirectToAction(nameof(Fuel));
+                    return Redirect($"/User/Purchase/PreviewFuel/{id}");
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting fuel delivery.");
                     TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Fuel));
+                    return Redirect($"/User/Purchase/PreviewFuel/{id}");
                 }
             }
 

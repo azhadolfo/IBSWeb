@@ -39,7 +39,12 @@ namespace IBS.DataAccess.Repository
                 Inventory? previousInventory = await _db
                     .Inventories
                     .OrderByDescending(i => i.InventoryId)
-                    .FirstOrDefaultAsync(i => i.ProductCode == fuelPurchase.ProductCode,cancellationToken);
+                    .FirstOrDefaultAsync(i => i.ProductCode == fuelPurchase.ProductCode && i.StationCode == fuelPurchase.StationCode,cancellationToken);
+
+                if (previousInventory == null)
+                {
+                    throw new ColumnNotFoundException($"Beginning inventory for {fuelPurchase.ProductCode} in station {fuelPurchase.StationCode} not found!");
+                }
 
                 fuelPurchase.PostedBy = "Ako";
                 fuelPurchase.PostedDate = DateTime.Now;

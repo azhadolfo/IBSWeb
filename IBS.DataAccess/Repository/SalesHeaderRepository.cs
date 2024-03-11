@@ -3,6 +3,7 @@ using IBS.DataAccess.Migrations;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.ViewModels;
+using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -203,7 +204,12 @@ namespace IBS.DataAccess.Repository
                     Inventory? previousInventory = await _db
                     .Inventories
                     .OrderByDescending(i => i.InventoryId)
-                    .FirstOrDefaultAsync(i => i.ProductCode == product.Key,cancellationToken);
+                    .FirstOrDefaultAsync(i => i.ProductCode == product.Key && i.StationCode == station.StationCode, cancellationToken);
+
+                    if (previousInventory == null)
+                    {
+                        throw new ColumnNotFoundException($"Beginning inventory for {product.Key} in station {station.StationCode} not found!");
+                    }
 
                     var quantity = (decimal)product.Sum(p => p.Liters);
                     var totalCost = quantity * previousInventory.UnitCostAverage;
