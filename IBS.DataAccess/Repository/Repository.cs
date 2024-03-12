@@ -57,7 +57,7 @@ namespace IBS.DataAccess.Repository
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public bool IsJournalEntriesBalance(IEnumerable<GeneralLedger> journals)
+        public bool IsJournalEntriesBalanced(IEnumerable<GeneralLedger> journals)
         {
             try
             {

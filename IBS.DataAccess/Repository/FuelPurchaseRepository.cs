@@ -143,7 +143,7 @@ namespace IBS.DataAccess.Repository
                     JournalReference = nameof(JournalType.Purchase)
                 });
 
-                if (IsJournalEntriesBalance(journals))
+                if (IsJournalEntriesBalanced(journals))
                 {
                     await _db.AddAsync(inventory, cancellationToken);
                     await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
