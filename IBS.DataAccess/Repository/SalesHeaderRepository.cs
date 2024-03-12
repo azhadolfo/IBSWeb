@@ -291,7 +291,7 @@ namespace IBS.DataAccess.Repository
 
                 journals.AddRange(cogsJournals);
 
-                if (IsJournalEntriesBalance(journals))
+                if (IsJournalEntriesBalanced(journals))
                 {
                     await _db.Inventories.AddRangeAsync(inventories, cancellationToken);
                     await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
