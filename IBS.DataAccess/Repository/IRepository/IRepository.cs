@@ -20,6 +20,6 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task RemoveRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
 
-        bool IsJournalEntriesBalance(IEnumerable<GeneralLedger> journals);
+        bool IsJournalEntriesBalanced(IEnumerable<GeneralLedger> journals);
     }
 }
