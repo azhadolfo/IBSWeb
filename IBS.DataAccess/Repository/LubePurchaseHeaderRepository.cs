@@ -45,7 +45,7 @@ namespace IBS.DataAccess.Repository
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                    Reference = lubeDeliveryVM.Header.ShiftRecId,
+                    Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
                     Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
                     AccountNumber = "10100033",
                     AccountTitle = "Merchandise Inventory",
@@ -59,7 +59,7 @@ namespace IBS.DataAccess.Repository
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                    Reference = lubeDeliveryVM.Header.ShiftRecId,
+                    Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
                     Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
                     AccountNumber = "10100085",
                     AccountTitle = "Input Tax",
@@ -72,7 +72,7 @@ namespace IBS.DataAccess.Repository
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                    Reference = lubeDeliveryVM.Header.ShiftRecId,
+                    Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
                     Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
                     AccountNumber = "20100005",
                     AccountTitle = "Accounts Payable",
@@ -122,7 +122,7 @@ namespace IBS.DataAccess.Repository
                     journals.Add(new GeneralLedger
                     {
                         TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                        Reference = lubeDeliveryVM.Header.ShiftRecId,
+                        Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
                         Particular = $"COGS:{lube.ProductCode} SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
                         AccountNumber = "50100005",
                         AccountTitle = "Cost of Goods Sold",
@@ -135,7 +135,7 @@ namespace IBS.DataAccess.Repository
                     journals.Add(new GeneralLedger
                     {
                         TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                        Reference = lubeDeliveryVM.Header.ShiftRecId,
+                        Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
                         Particular = $"COGS:{lube.ProductCode} SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
                         AccountNumber = "10100033",
                         AccountTitle = "Merchandise Inventory",

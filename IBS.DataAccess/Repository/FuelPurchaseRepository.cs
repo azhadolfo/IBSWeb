@@ -61,7 +61,7 @@ namespace IBS.DataAccess.Repository
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
-                    Reference = fuelPurchase.ShiftRecId,
+                    Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = "10100033",
                     AccountTitle = "Merchandise Inventory",
@@ -75,7 +75,7 @@ namespace IBS.DataAccess.Repository
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
-                    Reference = fuelPurchase.ShiftRecId,
+                    Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = "10100085",
                     AccountTitle = "Input Tax",
@@ -88,7 +88,7 @@ namespace IBS.DataAccess.Repository
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
-                    Reference = fuelPurchase.ShiftRecId,
+                    Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = "20100005",
                     AccountTitle = "Accounts Payable",
@@ -125,7 +125,7 @@ namespace IBS.DataAccess.Repository
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
-                    Reference = fuelPurchase.ShiftRecId,
+                    Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"COGS:{product.ProductCode} {fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = "50100005",
                     AccountTitle = "Cost of Goods Sold",
@@ -139,7 +139,7 @@ namespace IBS.DataAccess.Repository
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
-                    Reference = fuelPurchase.ShiftRecId,
+                    Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"COGS:{product.ProductCode} {fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = "10100033",
                     AccountTitle = "Merchandise Inventory",
