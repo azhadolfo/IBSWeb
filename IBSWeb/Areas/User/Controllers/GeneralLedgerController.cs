@@ -20,11 +20,11 @@ namespace IBSWeb.Areas.User.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> DisplayByTransaction()
+        public async Task<IActionResult> DisplayByTransaction(CancellationToken cancellationToken)
         {
             IEnumerable<GeneralLedger> ledgers = await _unitOfWork
                 .GeneralLedger
-                .GetAllAsync();
+                .GetAllAsync(g => g.IsValidated, cancellationToken);
 
             return View(ledgers);
         }
@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 IEnumerable<GeneralLedger> ledgers = await _unitOfWork
                     .GeneralLedger
-                    .GetAllAsync(g => g.JournalReference == journal, cancellationToken);
+                    .GetAllAsync(g => g.JournalReference == journal && g.IsValidated, cancellationToken);
 
                 ViewData["Journal"] = journal;
                 return View(ledgers);
@@ -87,7 +87,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             Expression<Func<GeneralLedger, bool>> filter = g =>
                 g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo &&
-                g.AccountNumber == accountNo && (productCode == "ALL" || g.ProductCode == productCode);
+                g.AccountNumber == accountNo && g.IsValidated && (productCode == "ALL" || g.ProductCode == productCode);
 
             IEnumerable<GeneralLedger> ledgers = await _unitOfWork.GeneralLedger.GetAllAsync(filter, cancellationToken);
 

@@ -118,8 +118,16 @@ namespace IBSWeb.Areas.User.Controllers
             Inventory? inventory = await _unitOfWork.Inventory
                 .GetAsync(i => i.InventoryId == id, cancellationToken);
 
-            if (inventory != null)
+            IEnumerable<GeneralLedger> ledgerEntries = await _unitOfWork.GeneralLedger
+                .GetAllAsync(l => l.Reference == inventory.TransactionNo, cancellationToken);
+
+            if (inventory != null || ledgerEntries != null)
             {
+                foreach (var entry in ledgerEntries)
+                {
+                    entry.IsValidated = true;
+                }
+
                 inventory.ValidatedBy = "Ako";
                 inventory.ValidatedDate = DateTime.Now;
                 await _unitOfWork.SaveAsync(cancellationToken);
