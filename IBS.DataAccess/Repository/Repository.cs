@@ -20,7 +20,6 @@ namespace IBS.DataAccess.Repository
         {
             _db = db;
             this.dbSet = _db.Set<T>();
-            //_db.Categories == dbSet
         }
 
         public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken = default)

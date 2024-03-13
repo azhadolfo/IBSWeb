@@ -74,25 +74,25 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(string id, CancellationToken cancellationToken)
         {
-            if (id == null || id == 0)
+            if (String.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
 
             SalesVM = new SalesVM
             {
-                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesHeaderId == id, cancellationToken),
-                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesHeaderId == id, cancellationToken)
+                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesNo == id, cancellationToken),
+                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesNo == id, cancellationToken)
             };
 
-            if (SalesVM != null)
+            if (SalesVM.Header != null || SalesVM.Details != null)
             {
                 return View(SalesVM);
             }
 
-            return NotFound();
+            return BadRequest();
         }
 
         [HttpPost]
