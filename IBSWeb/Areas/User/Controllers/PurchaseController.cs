@@ -148,23 +148,23 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> EditFuel(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditFuel(string id, CancellationToken cancellationToken)
         {
-            if (id == null || id == 0)
+            if (String.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
 
             FuelPurchase fuelPurchase = await _unitOfWork
                 .FuelPurchase
-                .GetAsync(s => s.FuelPurchaseId == id, cancellationToken);
+                .GetAsync(s => s.FuelPurchaseNo == id, cancellationToken);
 
             if (fuelPurchase != null)
             {
                 return View(fuelPurchase);
             }
 
-            return NotFound();
+            return BadRequest();
         }
 
         [HttpPost]
