@@ -140,15 +140,19 @@ namespace IBS.DataAccess.Repository
             try
             {
 
-                SalesVM? salesVM = new()
+                SalesVM salesVM = new()
                 {
                     Header = await _db.SalesHeaders.FirstOrDefaultAsync(sd => sd.SalesNo == id, cancellationToken),
                     Details = await _db.SalesDetails.Where(sd => sd.SalesNo == id).ToListAsync(cancellationToken),
                 };
 
-                Station? station = await _db
-                    .Stations
-                    .FirstOrDefaultAsync(s => s.PosCode == salesVM.Header.StationPosCode);
+                if (salesVM.Header == null || salesVM.Details == null)
+                {
+                    throw new InvalidOperationException($"Sales with id '{id}' not found.");
+                }
+
+                Station station = await _db.Stations
+                    .FirstOrDefaultAsync(s => s.PosCode == salesVM.Header.StationPosCode, cancellationToken) ?? throw new InvalidOperationException($"Station with POS code {salesVM.Header.StationPosCode} not found.");
 
                 salesVM.Header.PostedBy = "Ako";
                 salesVM.Header.PostedDate = DateTime.Now;
@@ -173,8 +177,8 @@ namespace IBS.DataAccess.Repository
 
                 foreach(var product in salesVM.Details.GroupBy(d => d.Product))
                 {
-                    Product? productDetails = await _db.Products
-                        .FirstOrDefaultAsync(p => p.ProductCode == product.Key);
+                    Product productDetails = await _db.Products
+                        .FirstOrDefaultAsync(p => p.ProductCode == product.Key, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{product.Key}' not found.");
 
                     journals.Add(new GeneralLedger
                     {
@@ -205,15 +209,10 @@ namespace IBS.DataAccess.Repository
                         IsValidated = true
                     });
 
-                    Inventory? previousInventory = await _db
+                    Inventory previousInventory = await _db
                     .Inventories
                     .OrderByDescending(i => i.InventoryId)
-                    .FirstOrDefaultAsync(i => i.ProductCode == product.Key && i.StationCode == station.StationCode, cancellationToken);
-
-                    if (previousInventory == null)
-                    {
-                        throw new ColumnNotFoundException($"Beginning inventory for {product.Key} in station {station.StationCode} not found!");
-                    }
+                    .FirstOrDefaultAsync(i => i.ProductCode == product.Key && i.StationCode == station.StationCode, cancellationToken) ?? throw new ArgumentException($"Beginning inventory for {product.Key} in station {station.StationCode} not found!");
 
                     decimal quantity = (decimal)product.Sum(p => p.Liters);
                     decimal totalCost = quantity * previousInventory.UnitCostAverage;
@@ -313,12 +312,8 @@ namespace IBS.DataAccess.Repository
 
         public async Task UpdateAsync(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken = default)
         {
-            SalesHeader? existingSalesHeader = await _db.SalesHeaders.FindAsync(model.Header.SalesHeaderId, cancellationToken);
-
-            if (existingSalesHeader == null)
-            {
-                throw new ArgumentException("Sales header not found!");
-            }
+            SalesHeader existingSalesHeader = await _db.SalesHeaders
+                .FindAsync(model.Header.SalesHeaderId, cancellationToken) ?? throw new InvalidOperationException($"Sales header with id '{model.Header.SalesHeaderId}' not found.");
 
             IEnumerable<SalesDetail> existingSalesDetail = await _db.SalesDetails
                 .Where(s => s.SalesHeaderId == model.Header.SalesHeaderId)

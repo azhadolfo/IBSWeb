@@ -62,22 +62,22 @@ namespace IBS.DataAccess.Repository
 
         public async Task UpdateAsync(Customer model, CancellationToken cancellationToken = default)
         {
-            Customer? existingCustomer = await _db.Customers
-                .FindAsync(model.CustomerId, cancellationToken);
+            Customer existingCustomer = await _db.Customers
+                .FindAsync(model.CustomerId, cancellationToken) ?? throw new InvalidOperationException($"Customer with id '{model.CustomerId}' not found.");
 
-            existingCustomer!.CustomerName = model.CustomerName;
-            existingCustomer!.CustomerAddress = model.CustomerAddress;
-            existingCustomer!.CustomerTin = model.CustomerTin;
-            existingCustomer!.BusinessStyle = model.BusinessStyle;
-            existingCustomer!.CustomerTerms = model.CustomerTerms;
-            existingCustomer!.CustomerType = model.CustomerType;
-            existingCustomer!.WithHoldingVat = model.WithHoldingVat;
-            existingCustomer!.WithHoldingTax = model.WithHoldingTax;
+            existingCustomer.CustomerName = model.CustomerName;
+            existingCustomer.CustomerAddress = model.CustomerAddress;
+            existingCustomer.CustomerTin = model.CustomerTin;
+            existingCustomer.BusinessStyle = model.BusinessStyle;
+            existingCustomer.CustomerTerms = model.CustomerTerms;
+            existingCustomer.CustomerType = model.CustomerType;
+            existingCustomer.WithHoldingVat = model.WithHoldingVat;
+            existingCustomer.WithHoldingTax = model.WithHoldingTax;
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingCustomer!.EditedBy = "Ako";
-                existingCustomer!.EditedDate = DateTime.Now;
+                existingCustomer.EditedBy = "Ako";
+                existingCustomer.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

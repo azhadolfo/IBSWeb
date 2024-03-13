@@ -57,18 +57,18 @@ namespace IBS.DataAccess.Repository
 
         public async Task UpdateAsync(Company model, CancellationToken cancellationToken = default)
         {
-            Company? existingCompany = await _db.Companies
-                .FindAsync(model.CompanyId, cancellationToken);
+            Company existingCompany = await _db.Companies
+                .FindAsync(model.CompanyId, cancellationToken) ?? throw new InvalidOperationException($"Company with id '{model.CompanyId}' not found.");
 
-            existingCompany!.CompanyName = model.CompanyName;
-            existingCompany!.CompanyAddress = model.CompanyAddress;
-            existingCompany!.CompanyTin = model.CompanyTin;
-            existingCompany!.BusinessStyle = model.BusinessStyle;
+            existingCompany.CompanyName = model.CompanyName;
+            existingCompany.CompanyAddress = model.CompanyAddress;
+            existingCompany.CompanyTin = model.CompanyTin;
+            existingCompany.BusinessStyle = model.BusinessStyle;
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingCompany!.EditedBy = "Ako";
-                existingCompany!.EditedDate = DateTime.Now;
+                existingCompany.EditedBy = "Ako";
+                existingCompany.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

@@ -34,13 +34,19 @@ namespace IBS.DataAccess.Repository
                     Details = await _db.LubePurchaseDetails.Where(l => l.LubePurchaseHeaderNo == id).ToListAsync(cancellationToken)
                 };
 
-                Supplier? supplier = await _db.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == lubeDeliveryVM.Header.SupplierCode, cancellationToken);
+                if (lubeDeliveryVM.Header == null || lubeDeliveryVM.Details == null)
+                {
+                    throw new InvalidOperationException($"Lube purchase header/detail with id '{id}' not found.");
+                }
+
+                Supplier supplier = await _db.Suppliers
+                    .FirstOrDefaultAsync(s => s.SupplierCode == lubeDeliveryVM.Header.SupplierCode, cancellationToken) ?? throw new InvalidOperationException($"Supplier with code '{lubeDeliveryVM.Header.SupplierCode}' not found.");
 
                 lubeDeliveryVM.Header.PostedBy = "Ako";
                 lubeDeliveryVM.Header.PostedDate = DateTime.Now;
 
-                var journals = new List<GeneralLedger>();
-                var inventories = new List<Inventory>();
+                List<GeneralLedger> journals = new();
+                List<Inventory> inventories = new();
 
                 journals.Add(new GeneralLedger
                 {
@@ -88,12 +94,7 @@ namespace IBS.DataAccess.Repository
                     Inventory? previousInventory = await _db
                    .Inventories
                    .OrderByDescending(i => i.InventoryId)
-                   .FirstOrDefaultAsync(i => i.ProductCode == lube.ProductCode && i.StationCode == lubeDeliveryVM.Header.StationCode, cancellationToken);
-
-                    if (previousInventory == null)
-                    {
-                        throw new ColumnNotFoundException($"Beginning inventory for {lube.ProductCode} in station {lubeDeliveryVM.Header.StationCode} not found!");
-                    }
+                   .FirstOrDefaultAsync(i => i.ProductCode == lube.ProductCode && i.StationCode == lubeDeliveryVM.Header.StationCode, cancellationToken) ?? throw new ArgumentException($"Beginning inventory for {lube.ProductCode} in station {lubeDeliveryVM.Header.StationCode} not found!");
 
                     decimal totalCost = lube.Piece * lube.CostPerPiece;
                     decimal runningCost = previousInventory.RunningCost + totalCost;
@@ -248,7 +249,7 @@ namespace IBS.DataAccess.Repository
             }
             catch (Exception ex)
             {
-                // Log exception
+                throw new InvalidOperationException(ex.Message);
             }
         }
     }
