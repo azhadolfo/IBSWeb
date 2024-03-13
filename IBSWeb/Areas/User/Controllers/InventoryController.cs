@@ -115,7 +115,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Inventory? inventory = await _unitOfWork.Inventory
+            Inventory inventory = await _unitOfWork.Inventory
                 .GetAsync(i => i.InventoryId == id, cancellationToken);
 
             IEnumerable<GeneralLedger> ledgerEntries = await _unitOfWork.GeneralLedger

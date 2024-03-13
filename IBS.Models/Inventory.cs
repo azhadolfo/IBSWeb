@@ -19,7 +19,7 @@ namespace IBS.Models
         public string Particulars { get; set; }
 
         [Column(TypeName = "date")]
-        public DateOnly Date { get; set; }
+        public DateOnly? Date { get; set; }
 
         [Column(TypeName = "varchar(200)")]
         public string Reference { get; set; }

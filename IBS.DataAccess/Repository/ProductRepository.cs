@@ -27,18 +27,18 @@ namespace IBS.DataAccess.Repository
 
         public async Task UpdateAsync(Product model, CancellationToken cancellationToken = default)
         {
-            Product? existingProduct = await _db
+            Product existingProduct = await _db
                 .Products
-                .FindAsync(model.ProductId, cancellationToken);
+                .FindAsync(model.ProductId, cancellationToken) ?? throw new InvalidOperationException($"Product with id '{model.ProductId}' not found.");
 
-            existingProduct!.ProductCode = model.ProductCode;
-            existingProduct!.ProductName = model.ProductName;
-            existingProduct!.ProductUnit = model.ProductUnit;
+            existingProduct.ProductCode = model.ProductCode;
+            existingProduct.ProductName = model.ProductName;
+            existingProduct.ProductUnit = model.ProductUnit;
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingProduct!.EditedBy = "Ako";
-                existingProduct!.EditedDate = DateTime.Now;
+                existingProduct.EditedBy = "Ako";
+                existingProduct.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

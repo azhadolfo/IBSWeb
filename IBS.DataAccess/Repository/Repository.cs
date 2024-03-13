@@ -45,18 +45,6 @@ namespace IBS.DataAccess.Repository
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task RemoveAsync(T entity, CancellationToken cancellationToken = default)
-        {
-            dbSet.Remove(entity);
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-
-        public async Task RemoveRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
-        {
-            dbSet.RemoveRange(entities);
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-
         public bool IsJournalEntriesBalanced(IEnumerable<GeneralLedger> journals)
         {
             try
@@ -71,5 +59,18 @@ namespace IBS.DataAccess.Repository
                 throw new ArgumentException(ex.Message);
             }
         }
+
+        public async Task RemoveAsync(T entity, CancellationToken cancellationToken = default)
+        {
+            dbSet.Remove(entity);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task RemoveRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
+        {
+            dbSet.RemoveRange(entities);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
     }
 }

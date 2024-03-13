@@ -21,9 +21,14 @@ namespace IBS.DataAccess.Repository
 
         public async Task CalculateTheBeginningInventory(Inventory model, CancellationToken cancellationToken = default)
         {
+            if (model.Quantity <= 0 || model.UnitCost <= 0)
+            {
+                throw new ArgumentException("Quantity and Unit Cost must be greater than zero.");
+            }
+
             if (await _db.Inventories.AnyAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode, cancellationToken))
             {
-                throw new ArgumentException($"{model.ProductCode} in {model.StationCode} had already beginning inventory.");
+                throw new InvalidOperationException($"{model.ProductCode} in {model.StationCode} had already beginning inventory.");
             }
 
             model.Particulars = "Beginning Inventory";

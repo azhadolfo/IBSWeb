@@ -30,33 +30,28 @@ namespace IBS.DataAccess.Repository
         {
             try
             {
-                FuelPurchase? fuelPurchase = await _db
+                FuelPurchase fuelPurchase = await _db
                     .FuelPurchase
-                    .FirstOrDefaultAsync(f => f.FuelPurchaseNo == id, cancellationToken);
+                    .FirstOrDefaultAsync(f => f.FuelPurchaseNo == id, cancellationToken) ?? throw new InvalidOperationException($"Fuel purchase with id '{id}' not found.");
 
                 if (fuelPurchase.PurchasePrice == 0)
                 {
                     throw new ArgumentException("Encode first the buying price for this purchase!");
                 }
 
-                Product? product = await _db
+                Product product = await _db
                     .Products
-                    .FirstOrDefaultAsync(p => p.ProductCode == fuelPurchase.ProductCode, cancellationToken);
+                    .FirstOrDefaultAsync(p => p.ProductCode == fuelPurchase.ProductCode, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{fuelPurchase.ProductCode}' not found.");
 
-                Inventory? previousInventory = await _db
+                Inventory previousInventory = await _db
                     .Inventories
                     .OrderByDescending(i => i.InventoryId)
-                    .FirstOrDefaultAsync(i => i.ProductCode == fuelPurchase.ProductCode && i.StationCode == fuelPurchase.StationCode,cancellationToken);
-
-                if (previousInventory == null)
-                {
-                    throw new ColumnNotFoundException($"Beginning inventory for {fuelPurchase.ProductCode} in station {fuelPurchase.StationCode} not found!");
-                }
+                    .FirstOrDefaultAsync(i => i.ProductCode == fuelPurchase.ProductCode && i.StationCode == fuelPurchase.StationCode,cancellationToken) ?? throw new ArgumentException($"Beginning inventory for {fuelPurchase.ProductCode} in station {fuelPurchase.StationCode} not found!");
 
                 fuelPurchase.PostedBy = "Ako";
                 fuelPurchase.PostedDate = DateTime.Now;
 
-                var journals = new List<GeneralLedger>();
+                List<GeneralLedger> journals = new();
 
                 journals.Add(new GeneralLedger
                 {
@@ -240,11 +235,11 @@ namespace IBS.DataAccess.Repository
 
         public async Task UpdateAsync(FuelPurchase model, CancellationToken cancellationToken = default)
         {
-            FuelPurchase? existingFuelPurchase = await _db
+            FuelPurchase existingFuelPurchase = await _db
                 .FuelPurchase
-                .FindAsync(model.FuelPurchaseId, cancellationToken);
+                .FindAsync(model.FuelPurchaseId, cancellationToken) ?? throw new InvalidOperationException($"Fuel purchase with id '{model.FuelPurchaseId}' not found.");
 
-            existingFuelPurchase!.PurchasePrice = model.PurchasePrice;
+            existingFuelPurchase.PurchasePrice = model.PurchasePrice;
 
             if (_db.ChangeTracker.HasChanges())
             {
