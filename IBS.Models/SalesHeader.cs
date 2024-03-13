@@ -15,7 +15,7 @@ namespace IBS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int SalesHeaderId { get; set; }
 
-        [Column(TypeName = "varchar(25)")]
+        [Column(TypeName = "varchar(50)")]
         public string SalesNo { get; set; }
 
         public string StationPosCode { get; set; }

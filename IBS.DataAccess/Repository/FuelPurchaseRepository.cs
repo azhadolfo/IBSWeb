@@ -26,13 +26,18 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task PostAsync(int id, CancellationToken cancellationToken = default)
+        public async Task PostAsync(string id, CancellationToken cancellationToken = default)
         {
             try
             {
                 FuelPurchase? fuelPurchase = await _db
                     .FuelPurchase
-                    .FindAsync(id, cancellationToken);
+                    .FirstOrDefaultAsync(f => f.FuelPurchaseNo == id, cancellationToken);
+
+                if (fuelPurchase.PurchasePrice == 0)
+                {
+                    throw new ArgumentException("Encode first the buying price for this purchase!");
+                }
 
                 Product? product = await _db
                     .Products
@@ -93,10 +98,11 @@ namespace IBS.DataAccess.Repository
                     JournalReference = nameof(JournalType.Purchase)
                 });
 
-                var totalCost = fuelPurchase.Quantity * fuelPurchase.PurchasePrice;
-                var runningCost = previousInventory.RunningCost + totalCost;
-                var inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
-                var unitCostAverage = runningCost / inventoryBalance;
+                decimal totalCost = fuelPurchase.Quantity * fuelPurchase.PurchasePrice;
+                decimal runningCost = previousInventory.RunningCost + totalCost;
+                decimal inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
+                decimal unitCostAverage = runningCost / inventoryBalance;
+                decimal cogs = unitCostAverage * fuelPurchase.Quantity;
 
                 var inventory = new Inventory
                 {
@@ -111,8 +117,9 @@ namespace IBS.DataAccess.Repository
                     InventoryBalance = inventoryBalance,
                     RunningCost = runningCost,
                     UnitCostAverage = unitCostAverage,
+                    CostOfGoodsSold = cogs,
                     InventoryValue = runningCost,
-                    TransactionId = fuelPurchase.FuelPurchaseId
+                    TransactionNo = fuelPurchase.FuelPurchaseNo
                 };
 
                 journals.Add(new GeneralLedger
@@ -122,7 +129,7 @@ namespace IBS.DataAccess.Repository
                     Particular = $"COGS:{product.ProductCode} {fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = "50100005",
                     AccountTitle = "Cost of Goods Sold",
-                    Debit = runningCost,
+                    Debit = cogs,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
                     ProductCode = product.ProductCode,
@@ -137,7 +144,7 @@ namespace IBS.DataAccess.Repository
                     AccountNumber = "10100033",
                     AccountTitle = "Merchandise Inventory",
                     Debit = 0,
-                    Credit = runningCost,
+                    Credit = cogs,
                     StationCode = fuelPurchase.StationCode,
                     ProductCode = product.ProductCode,
                     JournalReference = nameof(JournalType.Purchase)
@@ -198,6 +205,7 @@ namespace IBS.DataAccess.Repository
             {
                 fuelPurchase.Add(new FuelPurchase
                 {
+                    FuelPurchaseNo = Guid.NewGuid().ToString(),
                     ShiftRecId = fuelDelivery.shiftrecid,
                     StationCode = fuelDelivery.stncode,
                     EmployeeNo = fuelDelivery.empno.Substring(1),

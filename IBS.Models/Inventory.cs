@@ -67,18 +67,24 @@ namespace IBS.Models
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal InventoryBalance {  get; set; }
 
-        // To compute UnitCostAverage(COGS)
+        // To compute UnitCostAverage
         // RunningCost / InventoryBalance
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal UnitCostAverage { get; set; }
 
-        // To compute Inventory(COG)
+        // To compute Inventory
         // It's same with the RunningCost
         // it means InventoryValue == RunningCost
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal InventoryValue { get; set; }
+
+        // To compute COGS
+        // UnitCostAverage * Quantity
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal CostOfGoodsSold { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string? ValidatedBy { get; set; }
@@ -87,7 +93,8 @@ namespace IBS.Models
         public DateTime? ValidatedDate { get; set; }
 
         // This property handle
-        // the transaction Id which table this comes from.
-        public int TransactionId { get; set; }
+        // the transaction No which table this comes from.
+        [Column(TypeName = "varchar(50)")]
+        public string TransactionNo { get; set; }
     }
 }

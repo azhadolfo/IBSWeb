@@ -86,24 +86,24 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        public IActionResult ViewDetail(int transactionId, string productCode, string typeOfTransaction)
+        public IActionResult ViewDetail(string transactionNo, string productCode, string typeOfTransaction)
         {
-            if (productCode == null || transactionId == 0)
+            if (productCode == null || transactionNo == null)
             {
                 return NotFound();
             }
 
             if (productCode.Contains("PET") && typeOfTransaction == nameof(JournalType.Sales))
             {
-                return Redirect($"/User/CashierReport/Preview/{transactionId}");
+                return Redirect($"/User/CashierReport/Preview/{transactionNo}");
             }
             else if (!productCode.Contains("PET") && typeOfTransaction == nameof(JournalType.Purchase))
             {
-                return Redirect($"/User/Purchase/PreviewFuel/{transactionId}");
+                return Redirect($"/User/Purchase/PreviewFuel/{transactionNo}");
             }
             else
             {
-                return Redirect($"/User/Purchase/PreviewLube/{transactionId}");
+                return Redirect($"/User/Purchase/PreviewLube/{transactionNo}");
             }
         }
 

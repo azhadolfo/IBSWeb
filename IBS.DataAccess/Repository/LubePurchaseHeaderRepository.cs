@@ -24,14 +24,14 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task PostAsync(int id, CancellationToken cancellationToken = default)
+        public async Task PostAsync(string id, CancellationToken cancellationToken = default)
         {
             try
             {
                 LubeDeliveryVM lubeDeliveryVM = new LubeDeliveryVM
                 {
-                    Header = await _db.LubePurchaseHeaders.FindAsync(id, cancellationToken),
-                    Details = await _db.LubePurchaseDetails.Where(l => l.LubeDeliveryHeaderId == id).ToListAsync(cancellationToken)
+                    Header = await _db.LubePurchaseHeaders.FirstOrDefaultAsync(l => l.LubePurchaseHeaderNo == id, cancellationToken),
+                    Details = await _db.LubePurchaseDetails.Where(l => l.LubePurchaseHeaderNo == id).ToListAsync(cancellationToken)
                 };
 
                 Supplier? supplier = await _db.Suppliers.FirstOrDefaultAsync(s => s.SupplierCode == lubeDeliveryVM.Header.SupplierCode, cancellationToken);
@@ -95,10 +95,11 @@ namespace IBS.DataAccess.Repository
                         throw new ColumnNotFoundException($"Beginning inventory for {lube.ProductCode} in station {lubeDeliveryVM.Header.StationCode} not found!");
                     }
 
-                    var totalCost = lube.Piece * lube.CostPerPiece;
-                    var runningCost = previousInventory.RunningCost + totalCost;
-                    var inventoryBalance = previousInventory.InventoryBalance + lube.Piece;
-                    var unitCostAverage = runningCost / inventoryBalance;
+                    decimal totalCost = lube.Piece * lube.CostPerPiece;
+                    decimal runningCost = previousInventory.RunningCost + totalCost;
+                    decimal inventoryBalance = previousInventory.InventoryBalance + lube.Piece;
+                    decimal unitCostAverage = runningCost / inventoryBalance;
+                    decimal cogs = unitCostAverage * lube.Piece;
 
                     inventories.Add(new Inventory
                     {
@@ -112,9 +113,10 @@ namespace IBS.DataAccess.Repository
                         TotalCost = totalCost,
                         InventoryBalance = inventoryBalance,
                         RunningCost = runningCost,
+                        CostOfGoodsSold = cogs,
                         UnitCostAverage = unitCostAverage,
                         InventoryValue = runningCost,
-                        TransactionId = lubeDeliveryVM.Header.LubeDeliveryHeaderId
+                        TransactionNo = lubeDeliveryVM.Header.LubePurchaseHeaderNo
                     });
 
                     journals.Add(new GeneralLedger
@@ -124,7 +126,7 @@ namespace IBS.DataAccess.Repository
                         Particular = $"COGS:{lube.ProductCode} SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
                         AccountNumber = "50100005",
                         AccountTitle = "Cost of Goods Sold",
-                        Debit = runningCost,
+                        Debit = cogs,
                         Credit = 0,
                         StationCode = lubeDeliveryVM.Header.StationCode,
                         JournalReference = nameof(JournalType.Purchase)
@@ -138,7 +140,7 @@ namespace IBS.DataAccess.Repository
                         AccountNumber = "10100033",
                         AccountTitle = "Merchandise Inventory",
                         Debit = 0,
-                        Credit = runningCost,
+                        Credit = cogs,
                         StationCode = lubeDeliveryVM.Header.StationCode,
                         JournalReference = nameof(JournalType.Purchase)
                     });
@@ -199,6 +201,7 @@ namespace IBS.DataAccess.Repository
                     .GroupBy(l => new { l.shiftrecid, l.stncode, l.empno, l.shiftnumber, l.deliverydate, l.suppliercode, l.invoiceno, l.drno, l.pono, l.amount, l.rcvdby, l.createdby, l.createddate })
                     .Select(g => new LubePurchaseHeader
                     {
+                        LubePurchaseHeaderNo = Guid.NewGuid().ToString(),
                         ShiftRecId = g.Key.shiftrecid,
                         StationCode = g.Key.stncode,
                         EmployeeNo = g.Key.empno.Substring(1),
@@ -226,7 +229,8 @@ namespace IBS.DataAccess.Repository
 
                     var lubesPurchaseDetail = new LubePurchaseDetail
                     {
-                        LubeDeliveryHeaderId = lubeHeader.LubeDeliveryHeaderId,
+                        LubePurchaseHeaderId = lubeHeader.LubePurchaseHeaderId,
+                        LubePurchaseHeaderNo = lubeHeader.LubePurchaseHeaderNo,
                         Quantity = lubeDelivery.quantity,
                         Unit = lubeDelivery.unit,
                         Description = lubeDelivery.description,

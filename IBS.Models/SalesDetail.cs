@@ -19,7 +19,7 @@ namespace IBS.Models
         [ForeignKey("SalesHeaderId")]
         public SalesHeader? SalesHeader { get; set; }
 
-        [Column(TypeName = "varchar(25)")]
+        [Column(TypeName = "varchar(50)")]
         public string SalesNo { get; set; }
 
         [Column(TypeName = "varchar(20)")]

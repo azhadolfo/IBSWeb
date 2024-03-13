@@ -69,7 +69,6 @@ namespace IBS.DataAccess.Repository
                 var salesHeaders = fuelSales
                     .Select(fuel => new SalesHeader
                     {
-                        SalesNo = DateTime.Now.ToString("yyyyMMddHHmmssfffffff"),
                         Date = fuel.INV_DATE,
                         StationPosCode = fuel.xSITECODE.ToString(),
                         Cashier = fuel.xONAME,
@@ -84,7 +83,7 @@ namespace IBS.DataAccess.Repository
                     .GroupBy(s => new { s.Date, s.StationPosCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.CreatedBy })
                     .Select(g => new SalesHeader
                     {
-                        SalesNo = g.Min(s => s.SalesNo),
+                        SalesNo = Guid.NewGuid().ToString(),
                         Date = g.Key.Date,
                         StationPosCode = g.Key.StationPosCode,
                         Cashier = g.Key.Cashier,
@@ -136,15 +135,15 @@ namespace IBS.DataAccess.Repository
             }
         }
 
-        public async Task PostAsync(int id, CancellationToken cancellationToken = default)
+        public async Task PostAsync(string id, CancellationToken cancellationToken = default)
         {
             try
             {
 
                 SalesVM? salesVM = new()
                 {
-                    Header = await _db.SalesHeaders.FindAsync(id, cancellationToken),
-                    Details = await _db.SalesDetails.Where(sd => sd.SalesHeaderId == id).ToListAsync(cancellationToken),
+                    Header = await _db.SalesHeaders.FirstOrDefaultAsync(sd => sd.SalesNo == id, cancellationToken),
+                    Details = await _db.SalesDetails.Where(sd => sd.SalesNo == id).ToListAsync(cancellationToken),
                 };
 
                 Station? station = await _db
@@ -216,11 +215,12 @@ namespace IBS.DataAccess.Repository
                         throw new ColumnNotFoundException($"Beginning inventory for {product.Key} in station {station.StationCode} not found!");
                     }
 
-                    var quantity = (decimal)product.Sum(p => p.Liters);
-                    var totalCost = quantity * previousInventory.UnitCostAverage;
-                    var runningCost = previousInventory.RunningCost - totalCost;
-                    var inventoryBalance = previousInventory.InventoryBalance - quantity;
-                    var unitCostAverage = runningCost / inventoryBalance;
+                    decimal quantity = (decimal)product.Sum(p => p.Liters);
+                    decimal totalCost = quantity * previousInventory.UnitCostAverage;
+                    decimal runningCost = previousInventory.RunningCost - totalCost;
+                    decimal inventoryBalance = previousInventory.InventoryBalance - quantity;
+                    decimal unitCostAverage = runningCost / inventoryBalance;
+                    decimal cogs = unitCostAverage * quantity;
 
                     inventories.Add(new Inventory
                     {
@@ -236,9 +236,10 @@ namespace IBS.DataAccess.Repository
                         RunningCost = runningCost,
                         UnitCostAverage = unitCostAverage,
                         InventoryValue = runningCost,
+                        CostOfGoodsSold = cogs,
                         ValidatedBy = salesVM.Header.PostedBy,
                         ValidatedDate = salesVM.Header.PostedDate,
-                        TransactionId = salesVM.Header.SalesHeaderId
+                        TransactionNo = salesVM.Header.SalesNo
                     });
 
                     cogsJournals.Add(new GeneralLedger
@@ -248,7 +249,7 @@ namespace IBS.DataAccess.Repository
                         Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = "50100005",
                         AccountTitle = "Cost of Goods Sold",
-                        Debit = runningCost,
+                        Debit = cogs,
                         Credit = 0,
                         StationCode = station.StationCode,
                         ProductCode = product.Key,
@@ -264,7 +265,7 @@ namespace IBS.DataAccess.Repository
                         AccountNumber = "10100033",
                         AccountTitle = "Merchandise Inventory",
                         Debit = 0,
-                        Credit = runningCost,
+                        Credit = cogs,
                         StationCode = station.StationCode,
                         ProductCode = product.Key,
                         JournalReference = nameof(JournalType.Sales),

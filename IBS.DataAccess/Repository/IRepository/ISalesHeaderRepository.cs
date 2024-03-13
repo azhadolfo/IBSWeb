@@ -12,7 +12,7 @@ namespace IBS.DataAccess.Repository.IRepository
     {
         Task ComputeSalesPerCashier(DateOnly yesterday, CancellationToken cancellationToken = default);
 
-        Task PostAsync(int id, CancellationToken cancellationToken = default);
+        Task PostAsync(string id, CancellationToken cancellationToken = default);
 
         Task UpdateAsync(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken = default);
     }
