@@ -24,6 +24,12 @@
                     <th>
                         @Html.DisplayNameFor(model => model.Shift)
                     </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.TimeIn)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.TimeOut)
+                    </th>
                     <th></th>
                 </tr>
             </thead>
@@ -42,6 +48,12 @@
                         </td>
                         <td>
                             @obj.Shift
+                        </td>
+                        <td>
+                            @obj.TimeIn
+                        </td>
+                        <td>
+                            @obj.TimeOut
                         </td>
                         <td>
                             <div class="w-100 btn-group" role="group">

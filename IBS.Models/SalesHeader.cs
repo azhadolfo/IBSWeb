@@ -29,9 +29,11 @@ namespace IBS.Models
         public int Shift { get; set; }
 
         [Column(TypeName = "time without time zone")]
+        [Display(Name = "Time In")]
         public TimeOnly TimeIn { get; set; }
 
         [Column(TypeName = "time without time zone")]
+        [Display(Name = "Time Out")]
         public TimeOnly TimeOut { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
