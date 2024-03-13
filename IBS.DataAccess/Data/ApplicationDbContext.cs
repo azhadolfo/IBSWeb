@@ -56,12 +56,7 @@ namespace IBS.DataAccess.Data
         {
             base.OnModelCreating(builder);
 
-            // ChartOfAccount
-            builder.Entity<ChartOfAccount>(coa =>
-            {
-                coa.HasIndex(coa => coa.AccountNumber).IsUnique();
-                coa.HasIndex(coa => coa.AccountName);
-            });
+            #region-- Master File
 
             // Customer
             builder.Entity<Customer>(c =>
@@ -83,6 +78,25 @@ namespace IBS.DataAccess.Data
                 p.HasIndex(p => p.ProductCode).IsUnique();
                 p.HasIndex(p => p.ProductName).IsUnique();
             });
+
+            // Station
+            builder.Entity<Station>(s =>
+            {
+                s.HasIndex(s => s.PosCode).IsUnique();
+                s.HasIndex(s => s.StationCode).IsUnique();
+                s.HasIndex(s => s.StationName).IsUnique();
+            });
+
+            // Supplier
+            builder.Entity<Supplier>(s =>
+            {
+                s.HasIndex(s => s.SupplierCode).IsUnique();
+                s.HasIndex(s => s.SupplierName).IsUnique();
+            });
+
+            #endregion
+
+            #region-- Sales
 
             // Fuel
             builder.Entity<Fuel>(f =>
@@ -113,10 +127,8 @@ namespace IBS.DataAccess.Data
             });
 
             // SalesDetail
-            builder.Entity<SalesDetail>(s =>
-            {
-                s.HasIndex(s => s.SalesNo);
-            });
+            builder.Entity<SalesDetail>(s => s
+                .HasIndex(s => s.SalesNo));
 
             builder.Entity<SalesDetail>()
                 .HasOne(s => s.SalesHeader)
@@ -124,12 +136,57 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(s => s.SalesHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            #endregion
+
+            #region--Purchase
+
+            // FuelPurchase
+            builder.Entity<FuelPurchase>(f => f
+                .HasIndex(f => f.FuelPurchaseNo)
+                .IsUnique());
+
+            // LubePurchaseHeader
+            builder.Entity<LubePurchaseHeader>(lh => lh
+                .HasIndex(lh => lh.LubePurchaseHeaderNo)
+                .IsUnique());
+
             // LubePurchaseDetail
             builder.Entity<LubePurchaseDetail>()
-                .HasOne(l => l.LubePurchaseHeader)
+                .HasOne(ld => ld.LubePurchaseHeader)
                 .WithMany()
-                .HasForeignKey(l => l.LubePurchaseHeaderId)
+                .HasForeignKey(ld => ld.LubePurchaseHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<LubePurchaseDetail>(ld => ld
+                .HasIndex(ld => ld.LubePurchaseHeaderNo));
+
+            #endregion
+
+            // ChartOfAccount
+            builder.Entity<ChartOfAccount>(coa =>
+            {
+                coa.HasIndex(coa => coa.AccountNumber).IsUnique();
+                coa.HasIndex(coa => coa.AccountName);
+            });
+
+            // GeneralLedger
+            builder.Entity<GeneralLedger>(g =>
+            {
+                g.HasIndex(g => g.TransactionDate);
+                g.HasIndex(g => g.Reference);
+                g.HasIndex(g => g.AccountNumber);
+                g.HasIndex(g => g.AccountTitle);
+                g.HasIndex(g => g.ProductCode);
+                g.HasIndex(g => g.JournalReference);
+            });
+
+            // Inventory
+            builder.Entity<Inventory>(i =>
+            {
+                i.HasIndex(i => i.ProductCode);
+                i.HasIndex(i => i.StationCode);
+                i.HasIndex(i => i.TransactionNo);
+            });
         }
         #endregion
     }
