@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240312081536_CreateFieldTransactionNo")]
+    partial class CreateFieldTransactionNo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -484,7 +487,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("FuelPurchaseNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(25)");
 
                     b.Property<decimal>("GainOrLoss")
                         .HasColumnType("numeric(18,2)");
@@ -630,9 +633,6 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("InventoryId"));
 
-                    b.Property<decimal>("CostOfGoodsSold")
-                        .HasColumnType("numeric(18,2)");
-
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
@@ -669,7 +669,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("TransactionNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(25)");
 
                     b.Property<decimal>("UnitCost")
                         .HasColumnType("numeric(18,4)");
@@ -875,11 +875,11 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.LubePurchaseDetail", b =>
                 {
-                    b.Property<int>("LubePurchaseDetailId")
+                    b.Property<int>("LubeDeliveryDetailId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LubePurchaseDetailId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LubeDeliveryDetailId"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18,2)");
@@ -894,12 +894,8 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(200)");
 
-                    b.Property<int>("LubePurchaseHeaderId")
+                    b.Property<int>("LubeDeliveryHeaderId")
                         .HasColumnType("integer");
-
-                    b.Property<string>("LubePurchaseHeaderNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
 
                     b.Property<int>("Piece")
                         .HasColumnType("integer");
@@ -915,20 +911,20 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(10)");
 
-                    b.HasKey("LubePurchaseDetailId");
+                    b.HasKey("LubeDeliveryDetailId");
 
-                    b.HasIndex("LubePurchaseHeaderId");
+                    b.HasIndex("LubeDeliveryHeaderId");
 
                     b.ToTable("LubePurchaseDetails");
                 });
 
             modelBuilder.Entity("IBS.Models.LubePurchaseHeader", b =>
                 {
-                    b.Property<int>("LubePurchaseHeaderId")
+                    b.Property<int>("LubeDeliveryHeaderId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LubePurchaseHeaderId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LubeDeliveryHeaderId"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18,2)");
@@ -962,9 +958,9 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(5)");
 
-                    b.Property<string>("LubePurchaseHeaderNo")
+                    b.Property<string>("LubePurchaseNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(25)");
 
                     b.Property<string>("PoNo")
                         .IsRequired()
@@ -1011,7 +1007,7 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("VoidedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("LubePurchaseHeaderId");
+                    b.HasKey("LubeDeliveryHeaderId");
 
                     b.ToTable("LubePurchaseHeaders");
                 });
@@ -1190,7 +1186,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("SalesNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(25)");
 
                     b.Property<int>("TransactionCount")
                         .HasColumnType("integer");
@@ -1269,7 +1265,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("SalesNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(25)");
 
                     b.Property<int>("Shift")
                         .HasColumnType("integer");
@@ -1644,13 +1640,13 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.LubePurchaseDetail", b =>
                 {
-                    b.HasOne("IBS.Models.LubePurchaseHeader", "LubePurchaseHeader")
+                    b.HasOne("IBS.Models.LubePurchaseHeader", "LubeDeliveryHeader")
                         .WithMany()
-                        .HasForeignKey("LubePurchaseHeaderId")
+                        .HasForeignKey("LubeDeliveryHeaderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("LubePurchaseHeader");
+                    b.Navigation("LubeDeliveryHeader");
                 });
 
             modelBuilder.Entity("IBS.Models.SalesDetail", b =>

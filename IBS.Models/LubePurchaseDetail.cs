@@ -12,12 +12,15 @@ namespace IBS.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int LubeDeliveryDetailId { get; set; }
+        public int LubePurchaseDetailId { get; set; }
 
-        public int LubeDeliveryHeaderId { get; set; }
+        public int LubePurchaseHeaderId { get; set; }
 
-        [ForeignKey("LubeDeliveryHeaderId")]
-        public LubePurchaseHeader? LubeDeliveryHeader { get; set; }
+        [ForeignKey("LubePurchaseHeaderId")]
+        public LubePurchaseHeader? LubePurchaseHeader { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string LubePurchaseHeaderNo { get; set; }
 
         public int Quantity { get; set; }
 

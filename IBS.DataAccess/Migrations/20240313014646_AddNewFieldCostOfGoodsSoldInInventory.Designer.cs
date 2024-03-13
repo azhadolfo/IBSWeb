@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240313014646_AddNewFieldCostOfGoodsSoldInInventory")]
+    partial class AddNewFieldCostOfGoodsSoldInInventory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -484,7 +487,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("FuelPurchaseNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(25)");
 
                     b.Property<decimal>("GainOrLoss")
                         .HasColumnType("numeric(18,2)");
@@ -669,7 +672,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("TransactionNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(25)");
 
                     b.Property<decimal>("UnitCost")
                         .HasColumnType("numeric(18,4)");
@@ -899,7 +902,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("LubePurchaseHeaderNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(25)");
 
                     b.Property<int>("Piece")
                         .HasColumnType("integer");
@@ -964,7 +967,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("LubePurchaseHeaderNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(25)");
 
                     b.Property<string>("PoNo")
                         .IsRequired()
@@ -1190,7 +1193,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("SalesNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(25)");
 
                     b.Property<int>("TransactionCount")
                         .HasColumnType("integer");
@@ -1269,7 +1272,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("SalesNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(25)");
 
                     b.Property<int>("Shift")
                         .HasColumnType("integer");

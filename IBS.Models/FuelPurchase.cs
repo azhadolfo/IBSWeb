@@ -14,6 +14,9 @@ namespace IBS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int FuelPurchaseId { get; set; }
 
+        [Column(TypeName = "varchar(50)")]
+        public string FuelPurchaseNo { get; set; }
+
         [Column(TypeName = "varchar(20)")]
         public string ShiftRecId { get; set; }
 

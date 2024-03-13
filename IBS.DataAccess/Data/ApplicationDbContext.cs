@@ -126,9 +126,9 @@ namespace IBS.DataAccess.Data
 
             // LubePurchaseDetail
             builder.Entity<LubePurchaseDetail>()
-                .HasOne(l => l.LubeDeliveryHeader)
+                .HasOne(l => l.LubePurchaseHeader)
                 .WithMany()
-                .HasForeignKey(l => l.LubeDeliveryHeaderId)
+                .HasForeignKey(l => l.LubePurchaseHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
         #endregion

@@ -32,6 +32,7 @@
                 <th class="text-end">Inventory Balance</th>
                 <th class="text-end">Unit Cost</th>
                 <th class="text-end">Inventory Value</th>
+                <th class="text-end">COGS</th>
                 <th>Status</th>
             </tr>
         </thead>
@@ -47,7 +48,7 @@
                     <td>@Html.DisplayFor(model => obj.Date)</td>
                     @if (obj.ValidatedBy != "N/A")
                     {
-                        <td><a asp-area="User" asp-controller="Inventory" asp-action="ViewDetail" asp-route-transactionId="@obj.TransactionId" asp-route-productCode="@obj.ProductCode" asp-route-typeOfTransaction="@obj.Particulars" title="Click this link to preview." target="_blank">@Html.DisplayFor(model => obj.Reference)</a></td>
+                        <td><a asp-area="User" asp-controller="Inventory" asp-action="ViewDetail" asp-route-transactionNo="@obj.TransactionNo" asp-route-productCode="@obj.ProductCode" asp-route-typeOfTransaction="@obj.Particulars" title="Click this link to preview." target="_blank">@Html.DisplayFor(model => obj.Reference)</a></td>
                     }
                     else
                     {
@@ -60,6 +61,14 @@
                     <td class="text-end">@Html.DisplayFor(model => obj.InventoryBalance)</td>
                     <td class="text-end">@Html.DisplayFor(model => obj.UnitCostAverage)</td>
                     <td class="text-end">@Html.DisplayFor(model => obj.InventoryValue)</td>
+                    @if (obj.CostOfGoodsSold > 0)
+                    {
+                        <td class="text-end">@Html.DisplayFor(model => obj.CostOfGoodsSold)</td>
+                    }
+                    else
+                    {
+                        <td></td>
+                    }
                     @if (obj.ValidatedBy == "N/A")
                     {
                         <td></td>

@@ -13,6 +13,6 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task RecordTheDeliveryToPurchase(IEnumerable<LubeDelivery> lubeDeliveries, CancellationToken cancellationToken = default);
 
-        Task PostAsync(int id, CancellationToken cancellationToken = default);
+        Task PostAsync(string id, CancellationToken cancellationToken = default);
     }
 }

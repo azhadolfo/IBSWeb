@@ -12,7 +12,10 @@ namespace IBS.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int LubeDeliveryHeaderId { get; set; }
+        public int LubePurchaseHeaderId { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string LubePurchaseHeaderNo { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string ShiftRecId { get; set; }

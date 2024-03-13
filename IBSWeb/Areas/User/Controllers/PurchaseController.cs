@@ -105,14 +105,19 @@ namespace IBSWeb.Areas.User.Controllers
             return View(fuelPurchaseList);
         }
 
-        public async Task<IActionResult> PreviewFuel(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> PreviewFuel(string? id, CancellationToken cancellationToken)
         {
-            if (id == null || id == 0)
+            if (String.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
 
-            FuelPurchase? fuelPurchase = await _unitOfWork.FuelPurchase.GetAsync(f => f.FuelPurchaseId == id, cancellationToken);
+            FuelPurchase? fuelPurchase = await _unitOfWork.FuelPurchase.GetAsync(f => f.FuelPurchaseNo == id, cancellationToken);
+
+            if (fuelPurchase == null)
+            {
+                return BadRequest();
+            }
 
             Product product = await _unitOfWork.Product.GetAsync(p => p.ProductCode == fuelPurchase.ProductCode, cancellationToken);
 
@@ -121,9 +126,9 @@ namespace IBSWeb.Areas.User.Controllers
             return View(fuelPurchase);
         }
 
-        public async Task<IActionResult> PostFuel(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostFuel(string id, CancellationToken cancellationToken)
         {
-            if (id != 0)
+            if (!String.IsNullOrEmpty(id))
             {
                 try
                 {
@@ -194,18 +199,23 @@ namespace IBSWeb.Areas.User.Controllers
             return View(lubePurchaseHeaders);
         }
 
-        public async Task<IActionResult> PreviewLube(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> PreviewLube(string? id, CancellationToken cancellationToken)
         {
-            if (id == null || id == 0)
+            if (String.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
 
             LubeDeliveryVM = new LubeDeliveryVM
             {
-                Header = await _unitOfWork.LubePurchaseHeader.GetAsync(lh => lh.LubeDeliveryHeaderId == id, cancellationToken),
-                Details = await _unitOfWork.LubePurchaseDetail.GetAllAsync(sd => sd.LubeDeliveryHeaderId == id, cancellationToken)
+                Header = await _unitOfWork.LubePurchaseHeader.GetAsync(lh => lh.LubePurchaseHeaderNo == id, cancellationToken),
+                Details = await _unitOfWork.LubePurchaseDetail.GetAllAsync(sd => sd.LubePurchaseHeaderNo == id, cancellationToken)
             };
+
+            if (LubeDeliveryVM.Header == null || LubeDeliveryVM.Details == null)
+            {
+                return BadRequest();
+            }
 
             Supplier? supplier = await _unitOfWork.Supplier.GetAsync(s => s.SupplierCode == LubeDeliveryVM.Header.SupplierCode);
 
@@ -214,9 +224,9 @@ namespace IBSWeb.Areas.User.Controllers
             return View(LubeDeliveryVM);
         }
 
-        public async Task<IActionResult> PostLube(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostLube(string id, CancellationToken cancellationToken)
         {
-            if (id != 0)
+            if (!String.IsNullOrEmpty(id))
             {
                 try
                 {
