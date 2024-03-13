@@ -27,12 +27,6 @@ namespace IBS.Models
         [Column(TypeName = "varchar(10)")]
         public string ProductCode { get; set; }
 
-        [NotMapped]
-        public List<SelectListItem>? Products { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Stations { get; set; }
-
         [Column(TypeName = "varchar(10)")]
         public string StationCode { get; set; }
 
@@ -96,5 +90,13 @@ namespace IBS.Models
         // the transaction No which table this comes from.
         [Column(TypeName = "varchar(50)")]
         public string TransactionNo { get; set; }
+
+        #region-- Select List
+        [NotMapped]
+        public List<SelectListItem>? Products { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Stations { get; set; }
+        #endregion
     }
 }
