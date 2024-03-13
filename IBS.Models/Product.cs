@@ -26,6 +26,8 @@ namespace IBS.Models
         [Column(TypeName = "varchar(2)")]
         public string ProductUnit { get; set; }
 
+        public bool IsActive { get; set; } = true;
+
         [Display(Name = "Created By")]
         [Column(TypeName = "varchar(50)")]
         public string? CreatedBy { get; set; }

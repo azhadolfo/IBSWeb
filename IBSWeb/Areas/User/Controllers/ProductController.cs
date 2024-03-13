@@ -98,7 +98,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Delete(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Activate(int? id, CancellationToken cancellationToken)
         {
             if (id == null || id == 0)
             {
@@ -107,7 +107,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             Product product = await _unitOfWork
                 .Product
-                .GetAsync(u => u.ProductId == id, cancellationToken);
+                .GetAsync(c => c.ProductId == id, cancellationToken);
 
             if (product != null)
             {
@@ -117,18 +117,66 @@ namespace IBSWeb.Areas.User.Controllers
             return NotFound();
         }
 
-        [HttpPost, ActionName("Delete")]
-        public async Task<IActionResult> DeletePost(int? id, CancellationToken cancellationToken)
+        [HttpPost, ActionName("Activate")]
+        public async Task<IActionResult> ActivatePost(int? id, CancellationToken cancellationToken)
         {
-            Product? product = await _unitOfWork
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            Product product = await _unitOfWork
                 .Product
-                .GetAsync(u => u.ProductId == id, cancellationToken);
+                .GetAsync(c => c.ProductId == id, cancellationToken);
 
             if (product != null)
             {
-                await _unitOfWork.Product.RemoveAsync(product, cancellationToken);
+                product.IsActive = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Product deleted successfully";
+                TempData["success"] = "Product activated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return NotFound();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Deactivate(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            Product product = await _unitOfWork
+                .Product
+                .GetAsync(c => c.ProductId == id, cancellationToken);
+
+            if (product != null)
+            {
+                return View(product);
+            }
+
+            return NotFound();
+        }
+
+        [HttpPost, ActionName("Deactivate")]
+        public async Task<IActionResult> DeactivatePost(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+
+            Product product = await _unitOfWork
+                .Product
+                .GetAsync(c => c.ProductId == id, cancellationToken);
+
+            if (product != null)
+            {
+                product.IsActive = false;
+                await _unitOfWork.SaveAsync(cancellationToken);
+                TempData["success"] = "Product deactivated successfully";
                 return RedirectToAction(nameof(Index));
             }
 
