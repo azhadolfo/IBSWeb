@@ -16,7 +16,7 @@ namespace IBS.Models
 
         [Display(Name = "Supplier Code")]
         [Column(TypeName = "varchar(7)")]
-        public string SupplierCode { get; set; }
+        public string? SupplierCode { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string SupplierName { get; set; }
@@ -41,20 +41,6 @@ namespace IBS.Models
 
         [Column(TypeName = "varchar(200)")]
         public string? ProofOfRegistrationFilePath { get; set; }
-
-        [Display(Name = "Reason")]
-        [Column(TypeName = "varchar(100)")]
-        public string? ReasonOfExemption { get; set; }
-
-        [Column(TypeName = "varchar(20)")]
-        public string? Validity { get; set; }
-
-        [Display(Name = "Validity Date")]
-        [Column(TypeName = "date")]
-        public DateTime? ValidityDate { get; set; }
-
-        [Column(TypeName = "varchar(200)")]
-        public string? ProofOfExemptionFilePath { get; set; }
 
         public bool IsActive { get; set; } = true;
 
