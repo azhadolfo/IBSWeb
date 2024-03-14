@@ -97,7 +97,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 return Redirect($"/User/CashierReport/Preview/{transactionNo}");
             }
-            else if (!productCode.Contains("PET") && typeOfTransaction == nameof(JournalType.Purchase))
+            else if (productCode.Contains("PET") && typeOfTransaction == nameof(JournalType.Purchase))
             {
                 return Redirect($"/User/Purchase/PreviewFuel/{transactionNo}");
             }
