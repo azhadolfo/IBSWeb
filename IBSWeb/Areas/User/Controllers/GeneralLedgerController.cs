@@ -44,7 +44,7 @@ namespace IBSWeb.Areas.User.Controllers
                     .GeneralLedger
                     .GetAllAsync(g => g.JournalReference == journal && g.IsValidated, cancellationToken);
 
-                ViewData["Journal"] = journal;
+                ViewData["Journal"] = journal.ToUpper();
                 return View(ledgers);
             }
 
