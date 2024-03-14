@@ -18,9 +18,11 @@ namespace IBS.Models
         [Column(TypeName = "varchar(7)")]
         public string? SupplierCode { get; set; }
 
+        [Display(Name = "Supplier Name")]
         [Column(TypeName = "varchar(50)")]
         public string SupplierName { get; set; }
 
+        [Display(Name = "Supplier Address")]
         [Column(TypeName = "varchar(200)")]
         public string SupplierAddress { get; set; }
 
@@ -29,6 +31,7 @@ namespace IBS.Models
         public string SupplierTin { get; set; }
 
         [Column(TypeName = "varchar(3)")]
+        [Display(Name = "Supplier Terms")]
         public string SupplierTerms { get; set; }
 
         [Column(TypeName = "varchar(10)")]

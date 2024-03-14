@@ -58,18 +58,6 @@
                     </select>
                     <span asp-validation-for="VatType" class="text-danger"></span>
                 </div>
-                <div class="form-floating py-2 col-12">
-                    @if (Model.ProofOfRegistrationFilePath != null)
-                    {
-                        <h6>BIR Registration Form <span class="badge rounded-pill bg-success">&check;</span></h6>
-                    }
-                    else
-                    {
-                        <input class="form-control border-0 shadow" name="file" type='file' required>
-                        <label for="file" class="ms-2">Upload the proof of BIR registration</label>
-                        <span asp-validation-for="ProofOfRegistrationFilePath" class="text-danger"></span>
-                    }
-                </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
                         <button type="submit" class="btn btn-primary form-control">Save</button>
