@@ -215,6 +215,12 @@ namespace IBS.DataAccess.Repository
                     .FirstOrDefaultAsync(i => i.ProductCode == product.Key && i.StationCode == station.StationCode, cancellationToken) ?? throw new ArgumentException($"Beginning inventory for {product.Key} in station {station.StationCode} not found!");
 
                     decimal quantity = (decimal)product.Sum(p => p.Liters);
+
+                    if (quantity > previousInventory.InventoryBalance)
+                    {
+                        throw new InvalidOperationException("The quantity exceeds the available inventory.");
+                    }
+
                     decimal totalCost = quantity * previousInventory.UnitCostAverage;
                     decimal runningCost = previousInventory.RunningCost - totalCost;
                     decimal inventoryBalance = previousInventory.InventoryBalance - quantity;
@@ -342,7 +348,7 @@ namespace IBS.DataAccess.Repository
             {
                 existingSalesHeader!.FuelSalesTotalAmount = existingSalesDetail.Sum(d => d.Value);
                 existingSalesHeader!.TotalSales = existingSalesHeader.FuelSalesTotalAmount + existingSalesHeader.LubesTotalAmount;
-                existingSalesHeader!.GainOrLoss = existingSalesHeader.TotalSales - existingSalesHeader.SafeDropTotalAmount;
+                existingSalesHeader!.GainOrLoss = existingSalesHeader.SafeDropTotalAmount - existingSalesHeader.TotalSales;
             }
 
             existingSalesHeader!.Particular = model.Header.Particular;

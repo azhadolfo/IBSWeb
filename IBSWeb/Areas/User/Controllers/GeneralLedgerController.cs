@@ -38,8 +38,6 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!String.IsNullOrEmpty(journal))
             {
-                journal = journal.ToUpper();
-
                 IEnumerable<GeneralLedger> ledgers = await _unitOfWork
                     .GeneralLedger
                     .GetAllAsync(g => g.JournalReference == journal && g.IsValidated, cancellationToken);
