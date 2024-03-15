@@ -20,7 +20,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public byte[] ExportToExcel(IEnumerable<GeneralLedger> ledgers, DateOnly dateTo, DateOnly dateFrom, string accountNo, string accountName, string productCode)
+        public byte[] ExportToExcel(IEnumerable<GeneralLedger> ledgers, DateOnly dateTo, DateOnly dateFrom, object accountNo, object accountName, string productCode)
         {
             // Create the Excel package
             using (var package = new ExcelPackage())
@@ -46,9 +46,32 @@ namespace IBS.DataAccess.Repository
 
                 worksheet.Cells["A7"].Value = "Date";
                 worksheet.Cells["B7"].Value = "Particulars";
-                worksheet.Cells["C7"].Value = "Debit";
-                worksheet.Cells["D7"].Value = "Credit";
-                worksheet.Cells["E7"].Value = "Balance";
+
+                // Find the position to insert additional columns
+                int columnOffset = 2; // Start after "Particulars" column
+                if (worksheet.Cells["B7"].Value.ToString() == "Particulars")
+                {
+                    columnOffset++;
+                }
+
+                // Insert additional columns if needed
+                if (accountNo.ToString().ToUpper() == "ALL")
+                {
+                    worksheet.InsertColumn(columnOffset, 1);
+                    worksheet.Cells[7, columnOffset].Value = "Account Code";
+                    columnOffset++;
+                }
+
+                if (productCode.ToUpper() == "ALL")
+                {
+                    worksheet.InsertColumn(columnOffset, 1);
+                    worksheet.Cells[7, columnOffset].Value = "Product Code";
+                }
+
+                // Set the remaining column headers
+                worksheet.Cells[7, columnOffset].Value = "Debit";
+                worksheet.Cells[7, columnOffset + 1].Value = "Credit";
+                worksheet.Cells[7, columnOffset + 2].Value = "Balance";
 
                 // Populate the data rows
                 int row = 8;
@@ -59,14 +82,26 @@ namespace IBS.DataAccess.Repository
 
                     worksheet.Cells[row, 1].Value = journal.TransactionDate;
                     worksheet.Cells[row, 2].Value = journal.Particular;
-                    worksheet.Cells[row, 3].Value = journal.Debit;
-                    worksheet.Cells[row, 4].Value = journal.Credit;
-                    worksheet.Cells[row, 5].Value = balance;
+
+                    // Populate additional columns if needed
+                    if (accountNo.ToString().ToUpper() == "ALL")
+                    {
+                        worksheet.Cells[row, 3].Value = journal.AccountNumber;
+                    }
+
+                    if (productCode.ToUpper() == "ALL")
+                    {
+                        worksheet.Cells[row, 4].Value = journal.ProductCode;
+                    }
+
+                    worksheet.Cells[row, columnOffset].Value = journal.Debit;
+                    worksheet.Cells[row, columnOffset + 1].Value = journal.Credit;
+                    worksheet.Cells[row, columnOffset + 2].Value = balance;
 
                     // Format Debit, Credit, and Balance columns with commas
-                    worksheet.Cells[row, 3].Style.Numberformat.Format = "#,##0.00";
-                    worksheet.Cells[row, 4].Style.Numberformat.Format = "#,##0.00";
-                    worksheet.Cells[row, 5].Style.Numberformat.Format = "#,##0.00";
+                    worksheet.Cells[row, columnOffset].Style.Numberformat.Format = "#,##0.00";
+                    worksheet.Cells[row, columnOffset + 1].Style.Numberformat.Format = "#,##0.00";
+                    worksheet.Cells[row, columnOffset + 2].Style.Numberformat.Format = "#,##0.00";
 
                     row++;
                 }
