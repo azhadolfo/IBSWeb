@@ -69,23 +69,17 @@ namespace IBSWeb.Areas.User.Controllers
                 return RedirectToAction(nameof(GetAccountNo));
             }
 
-            ChartOfAccount chartOfAccount = await _unitOfWork.ChartOfAccount.GetAsync(c => c.AccountNumber == accountNo);
+            ChartOfAccount chartOfAccount = await _unitOfWork.ChartOfAccount.GetAsync(c => c.AccountNumber == accountNo, cancellationToken);
 
-            if (chartOfAccount == null)
-            {
-                TempData["error"] = "Invalid account number.";
-                return RedirectToAction(nameof(GetAccountNo));
-            }
-
-            ViewData["AccountNo"] = chartOfAccount.AccountNumber;
-            ViewData["AccountName"] = chartOfAccount.AccountName;
+            ViewData["AccountNo"] = chartOfAccount != null ? chartOfAccount.AccountNumber : accountNo;
+            ViewData["AccountName"] = chartOfAccount != null ? chartOfAccount.AccountName : accountNo;
             ViewData["ProductCode"] = productCode;
             ViewData["DateFrom"] = dateFrom;
             ViewData["DateTo"] = dateTo;
 
             Expression<Func<GeneralLedger, bool>> filter = g =>
                 g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo &&
-                g.AccountNumber == accountNo && g.IsValidated && (productCode == "ALL" || g.ProductCode == productCode);
+                (accountNo == "ALL" || g.AccountNumber == accountNo) && g.IsValidated && (productCode == "ALL" || g.ProductCode == productCode);
 
             IEnumerable<GeneralLedger> ledgers = await _unitOfWork.GeneralLedger.GetAllAsync(filter, cancellationToken);
 
@@ -93,7 +87,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 try
                 {
-                    var excelBytes = _unitOfWork.GeneralLedger.ExportToExcel(ledgers, dateTo, dateFrom, accountNo, chartOfAccount.AccountName, productCode);
+                    var excelBytes = _unitOfWork.GeneralLedger.ExportToExcel(ledgers, dateTo, dateFrom, ViewData["AccountNo"], ViewData["AccountName"], productCode);
 
                     // Return the Excel file as a download
                     return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "GeneralLedger.xlsx");

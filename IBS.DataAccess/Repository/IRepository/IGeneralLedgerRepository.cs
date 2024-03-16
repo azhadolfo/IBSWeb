@@ -9,6 +9,6 @@ namespace IBS.DataAccess.Repository.IRepository
 {
     public interface IGeneralLedgerRepository : IRepository<GeneralLedger>
     {
-        byte[] ExportToExcel(IEnumerable<GeneralLedger> ledgers, DateOnly dateTo, DateOnly dateFrom, string accountNo, string accountName, string productCode);
+        byte[] ExportToExcel(IEnumerable<GeneralLedger> ledgers, DateOnly dateTo, DateOnly dateFrom, object accountNo, object accountName, string productCode);
     }
 }
