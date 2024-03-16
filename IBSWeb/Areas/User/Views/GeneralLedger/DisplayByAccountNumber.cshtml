@@ -27,6 +27,15 @@
                 <tr class="table-primary">
                     <th>Date</th>
                     <th>Particular</th>
+                    @if (@ViewData["AccountNo"].ToString() == "ALL")
+                    {
+                        <th>Account No</th>
+                        <th>Account Title</th>
+                    }
+                    @if (@ViewData["ProductCode"].ToString() == "ALL")
+                    {
+                        <th>Product Code</th>
+                    }
                     <th class="text-end">Debit</th>
                     <th class="text-end">Credit</th>
                     <th class="text-end">Balance</th>
@@ -40,6 +49,15 @@
                     <tr>
                         <td>@journal.TransactionDate</td>
                         <td>@journal.Particular</td>
+                        @if (@ViewData["AccountNo"].ToString() == "ALL")
+                        {
+                        <td>@journal.AccountNumber</td>
+                        <td>@journal.AccountTitle</td>
+                        }
+                        @if (@ViewData["ProductCode"].ToString() == "ALL")
+                        {
+                        <td>@journal.ProductCode</td>
+                        }
                         <td class="text-end">@journal.Debit.ToString(currencyFormat)</td>
                         <td class="text-end">@journal.Credit.ToString(currencyFormat)</td>
                         <td class="text-end">@balance.ToString(currencyFormat)</td>

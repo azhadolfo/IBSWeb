@@ -2,8 +2,10 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -57,21 +59,35 @@ namespace IBS.DataAccess.Repository
                 // Insert additional columns if needed
                 if (accountNo.ToString().ToUpper() == "ALL")
                 {
-                    worksheet.InsertColumn(columnOffset, 1);
-                    worksheet.Cells[7, columnOffset].Value = "Account Code";
-                    columnOffset++;
+                    worksheet.InsertColumn(columnOffset, 2);
+                    worksheet.Cells[7, columnOffset].Value = "Account No";
+                    worksheet.Cells[7, columnOffset + 1].Value = "Account Title";
+                    columnOffset += 2;
                 }
 
                 if (productCode.ToUpper() == "ALL")
                 {
                     worksheet.InsertColumn(columnOffset, 1);
                     worksheet.Cells[7, columnOffset].Value = "Product Code";
+                    columnOffset++;
                 }
 
                 // Set the remaining column headers
                 worksheet.Cells[7, columnOffset].Value = "Debit";
                 worksheet.Cells[7, columnOffset + 1].Value = "Credit";
                 worksheet.Cells[7, columnOffset + 2].Value = "Balance";
+
+                // Apply styling to the header row
+                using (var range = worksheet.Cells["A7"].Offset(0, 0, 1, columnOffset + 2))
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
 
                 // Populate the data rows
                 int row = 8;
@@ -87,11 +103,15 @@ namespace IBS.DataAccess.Repository
                     if (accountNo.ToString().ToUpper() == "ALL")
                     {
                         worksheet.Cells[row, 3].Value = journal.AccountNumber;
+                        worksheet.Cells[row, 4].Value = journal.AccountTitle;
                     }
 
                     if (productCode.ToUpper() == "ALL")
                     {
-                        worksheet.Cells[row, 4].Value = journal.ProductCode;
+                        if (worksheet.Cells[7, 3].Value.ToString() == "Account No")
+                            worksheet.Cells[row, 5].Value = journal.ProductCode;
+                        else if (worksheet.Cells[7, 3].Value.ToString() == "Product Code")
+                            worksheet.Cells[row, 3].Value = journal.ProductCode;
                     }
 
                     worksheet.Cells[row, columnOffset].Value = journal.Debit;
