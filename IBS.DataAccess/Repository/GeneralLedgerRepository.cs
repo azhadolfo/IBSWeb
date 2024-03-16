@@ -72,7 +72,7 @@ namespace IBS.DataAccess.Repository
                 worksheet.Cells[7, columnOffset].Value = "Debit";
                 worksheet.Cells[7, columnOffset + 1].Value = "Credit";
                 worksheet.Cells[7, columnOffset + 2].Value = "Balance";
-
+                
                 // Populate the data rows
                 int row = 8;
                 decimal balance = 0;
