@@ -1,6 +1,12 @@
 ﻿@using IBS.Models.ViewModels
 @model LubeDeliveryVM
 
+<style>
+    @@page {
+        size: letter portrait;
+    }
+</style>
+
 <div class="mb-5">
     <h2 class="text-center">Delivery Details</h2>
         <div class="row">
@@ -10,7 +16,7 @@
             <h6 class="px-2"><b>Supplier Name:</b> @ViewData["SupplierName"]</h6>
             </div>
             <div class="col-2">
-            <h6 class="px-2"><b>Date:</b> @Model.Header.DeliveryDate.ToString("MMMM dd, yyyy")</h6>
+            <h6 class="px-2"><b>Date:</b> @Model.Header.DeliveryDate.ToString("MM/dd/yyyy")</h6>
             <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.DrNo):</b> @Model.Header.DrNo</h6>
             <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.PoNo):</b> @Model.Header.PoNo</h6>
             </div>

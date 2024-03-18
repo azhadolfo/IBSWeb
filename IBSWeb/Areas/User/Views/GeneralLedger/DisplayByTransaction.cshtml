@@ -4,6 +4,10 @@
     .container {
         max-width: none;
     }
+
+    @@page {
+        size: landscape;
+    }
 </style>
 
 <div class="mb-3">
@@ -46,3 +50,12 @@ else
 {
     <p><i>No ledger entries found for the specified criteria.</i></p>
 }
+
+<div class="row mt-5">
+    <div class="col-6 col-md-3">
+        <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a asp-area="User" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to Homepage</a>
+    </div>
+</div>

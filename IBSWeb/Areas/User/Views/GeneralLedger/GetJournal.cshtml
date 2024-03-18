@@ -10,9 +10,9 @@
     </div>
     <div class="card-body p-4">
         <div class="border p-3">
-            <form asp-area="User" asp-controller="GeneralLedger" asp-action="DisplayByJournal" >
+            <form asp-area="User" asp-controller="GeneralLedger" asp-action="DisplayByJournal" target="_blank">
                 <div class="form-group py-2 col-12">
-                    <select name="journal" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                    <select name="journal" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" required>
                         <option value="" selected disabled>Select journal</option>
                         @foreach (JournalType journals in Enum.GetValues<JournalType>())
                         {
