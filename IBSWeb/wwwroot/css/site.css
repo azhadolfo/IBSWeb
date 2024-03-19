@@ -453,6 +453,11 @@ bg-success {
         visibility: hidden;
     }
 
+    .dropdown {
+        display: none;
+        visibility: hidden;
+    }
+
     header {
         display: none;
         visibility: hidden;
@@ -467,4 +472,9 @@ bg-success {
 .required {
     color: red;
     margin-left: 2px;
+}
+
+.selected-sort {
+    float: right;
+    color: green;
 }
