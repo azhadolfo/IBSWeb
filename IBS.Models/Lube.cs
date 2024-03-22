@@ -59,5 +59,14 @@ namespace IBS.Models
 
         [Column(TypeName = "varchar(50)")]
         public string xStamp { get; set; }
+
+        [Column(TypeName = "varchar(20)")]
+        public string? plateno { get; set; }
+
+        [Column(TypeName = "varchar(20)")]
+        public string? pono { get; set; }
+
+        [Column(TypeName = "varchar(20)")]
+        public string? cust { get; set; }
     }
 }

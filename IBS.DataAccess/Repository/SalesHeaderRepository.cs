@@ -24,7 +24,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task ComputeSalesPerCashier(DateOnly yesterday, CancellationToken cancellationToken = default)
+        public async Task ComputeSalesPerCashier(DateOnly yesterday, bool HasPoSales, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -66,6 +66,20 @@ namespace IBS.DataAccess.Repository
                     .Where(f => f.INV_DATE == yesterday)
                     .ToListAsync(cancellationToken);
 
+                var fuelPoSales = Enumerable.Empty<Fuel>();
+                var lubePoSales = Enumerable.Empty<Lube>();
+
+                if (HasPoSales)
+                {
+                    fuelPoSales = await _db.Fuels
+                        .Where(f => f.INV_DATE == yesterday && (!String.IsNullOrEmpty(f.cust) || !String.IsNullOrEmpty(f.pono) || !String.IsNullOrEmpty(f.plateno)))
+                        .ToListAsync(cancellationToken);
+
+                    lubePoSales = await _db.Lubes
+                        .Where(f => f.INV_DATE == yesterday && (!String.IsNullOrEmpty(f.cust) || !String.IsNullOrEmpty(f.pono) || !String.IsNullOrEmpty(f.plateno)))
+                        .ToListAsync(cancellationToken);
+                }
+
                 var salesHeaders = fuelSales
                     .Select(fuel => new SalesHeader
                     {
@@ -77,10 +91,11 @@ namespace IBS.DataAccess.Repository
                         FuelSalesTotalAmount = fuel.Sale,
                         LubesTotalAmount = lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount),
                         SafeDropTotalAmount = safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount),
+                        POSalesAmount = HasPoSales ? fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount) : 0,
                         TimeIn = fuel.TimeIn,
                         TimeOut = fuel.TimeOut
                     })
-                    .GroupBy(s => new { s.Date, s.StationPosCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.CreatedBy })
+                    .GroupBy(s => new { s.Date, s.StationPosCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.POSalesAmount, s.CreatedBy })
                     .Select(g => new SalesHeader
                     {
                         SalesNo = Guid.NewGuid().ToString(),
@@ -91,8 +106,9 @@ namespace IBS.DataAccess.Repository
                         FuelSalesTotalAmount = g.Sum(g => g.FuelSalesTotalAmount),
                         LubesTotalAmount = g.Key.LubesTotalAmount,
                         SafeDropTotalAmount = g.Key.SafeDropTotalAmount,
-                        TotalSales = g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount,
-                        GainOrLoss = g.Key.SafeDropTotalAmount - (g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount),
+                        POSalesAmount = g.Key.POSalesAmount,
+                        TotalSales = (g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount) - g.Key.POSalesAmount ,
+                        GainOrLoss = g.Key.SafeDropTotalAmount - ((g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount) - g.Key.POSalesAmount),
                         CreatedBy = g.Key.CreatedBy,
                         TimeIn = g.Min(s => s.TimeIn),
                         TimeOut = g.Max(s => s.TimeOut)

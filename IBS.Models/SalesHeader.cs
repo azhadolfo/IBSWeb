@@ -50,6 +50,10 @@ namespace IBS.Models
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal POSalesAmount { get; set; }
+
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal TotalSales { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]

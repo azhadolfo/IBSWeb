@@ -84,6 +84,15 @@ namespace IBS.Models
 
         public int Shift { get; set; }
 
+        [Column(TypeName = "varchar(20)")]
+        public string? plateno { get; set; }
+
+        [Column(TypeName = "varchar(20)")]
+        public string? pono { get; set; }
+
+        [Column(TypeName = "varchar(20)")]
+        public string? cust { get; set; }
+
         public int TransCount { get; set; }
     }
 }

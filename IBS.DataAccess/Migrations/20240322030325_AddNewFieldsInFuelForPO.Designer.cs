@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240322030325_AddNewFieldsInFuelForPO")]
+    partial class AddNewFieldsInFuelForPO
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -304,6 +307,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("double precision");
 
                     b.Property<string>("cust")
+                        .IsRequired()
                         .HasColumnType("varchar(20)");
 
                     b.Property<string>("nozdown")
@@ -311,9 +315,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(20)");
 
                     b.Property<string>("plateno")
+                        .IsRequired()
                         .HasColumnType("varchar(20)");
 
                     b.Property<string>("pono")
+                        .IsRequired()
                         .HasColumnType("varchar(20)");
 
                     b.Property<int>("xCORPCODE")
@@ -785,15 +791,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<DateTime?>("VoidedDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("cust")
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<string>("plateno")
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<string>("pono")
-                        .HasColumnType("varchar(20)");
 
                     b.Property<int>("xCORPCODE")
                         .HasColumnType("integer");
@@ -1304,9 +1301,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<decimal>("LubesTotalAmount")
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal>("POSalesAmount")
                         .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Particular")

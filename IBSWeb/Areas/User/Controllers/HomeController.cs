@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost, ActionName("ImportCsv")]
         public async Task<IActionResult> ImportFiles(CancellationToken cancellationToken)
         {
-            var importFolder = Path.Combine("G:", "Other computers", "COMMONWEALTH", "SALESTEXT");
+            var importFolder = Path.Combine("I:", "Other computers", "TARLAC", "SALESTEXT");
             DateTime yesterday = DateTime.Now.AddDays(-1);
 
             try
@@ -60,6 +60,7 @@ namespace IBSWeb.Areas.User.Controllers
                     int fuelsCount = 0;
                     int lubesCount = 0;
                     int safedropsCount = 0;
+                    bool HasPoSales = false;
 
                     foreach (var file in files)
                     {
@@ -82,6 +83,11 @@ namespace IBSWeb.Areas.User.Controllers
                             {
                                 if (!existingRecords.Exists(existingRecord => existingRecord.nozdown == record.nozdown))
                                 {
+                                    if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
+                                    {
+                                        HasPoSales = true;
+                                    }
+
                                     newRecords.Add(record);
                                     fuelsCount++;
                                 }
@@ -95,6 +101,11 @@ namespace IBSWeb.Areas.User.Controllers
                             {
                                 if (!existingRecords.Exists(existingRecord => existingRecord.xStamp == record.xStamp))
                                 {
+                                    if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
+                                    {
+                                        HasPoSales = true;
+                                    }
+
                                     newRecords.Add(record);
                                     lubesCount++;
                                 }
@@ -126,7 +137,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                     if (fuelsCount != 0 || lubesCount != 0 || safedropsCount != 0)
                     {
-                        await _unitOfWork.SalesHeader.ComputeSalesPerCashier(DateOnly.FromDateTime(yesterday), cancellationToken);
+                        await _unitOfWork.SalesHeader.ComputeSalesPerCashier(DateOnly.FromDateTime(yesterday), HasPoSales, cancellationToken);
                     }
                     else
                     {

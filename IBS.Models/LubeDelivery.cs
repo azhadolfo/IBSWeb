@@ -52,6 +52,9 @@ namespace IBS.Models
         [Column(TypeName = "timestamp without time zone")]
         public DateTime createddate { get; set; }
 
+        [Column(TypeName = "varchar(10)")]
+        public string dtllink { get; set; }
+
         public int quantity { get; set; }
 
         [Column(TypeName = "varchar(10)")]
