@@ -87,12 +87,12 @@ namespace IBSWeb.Areas.User.Controllers
                 Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesNo == id, cancellationToken)
             };
 
-            if (SalesVM.Header != null || SalesVM.Details != null)
+            if (SalesVM.Header == null)
             {
-                return View(SalesVM);
+                return BadRequest();
             }
 
-            return BadRequest();
+            return View(SalesVM);
         }
 
         [HttpPost]

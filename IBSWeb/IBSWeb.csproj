@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="Areas\User\Views\CashierReport\Edit.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
     <None Include="Areas\User\Views\CashierReport\Edit.cshtml" />
   </ItemGroup>
@@ -35,14 +31,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\IBS.DataAccess\IBS.DataAccess.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Areas\User\Views\CashierReport\Edit.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <_ContentIncludedByDefault Remove="Areas\User\Views\CashierReport\Edit.cshtml" />
   </ItemGroup>
 
 </Project>
