@@ -20,7 +20,7 @@ namespace IBS.Models
         [Column(TypeName = "varchar(5)")]
         public string stncode { get; set; }
 
-        public string empno { get; set; } //remove the "E" when saving in actual database
+        public string cashiercode { get; set; } //remove the "E" when saving in actual database
 
         public int shiftnumber { get; set; }
 
@@ -39,13 +39,13 @@ namespace IBS.Models
         [Column(TypeName = "varchar(100)")]
         public string hauler { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(50)")]
         public string platenumber { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(50)")]
         public string drnumber { get; set; } //it should be int in actual database so remove the "DR"
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(50)")]
         public string wcnumber { get; set; }
 
         public int tanknumber { get; set; }

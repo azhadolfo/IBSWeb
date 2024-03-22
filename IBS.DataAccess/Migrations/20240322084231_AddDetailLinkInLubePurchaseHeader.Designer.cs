@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240322084231_AddDetailLinkInLubePurchaseHeader")]
+    partial class AddDetailLinkInLubePurchaseHeader
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -368,10 +371,6 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FuelDeliveryId"));
 
-                    b.Property<string>("cashiercode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("createdby")
                         .IsRequired()
                         .HasColumnType("varchar(50)");
@@ -388,7 +387,11 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("drnumber")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("empno")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("hauler")
                         .IsRequired()
@@ -396,7 +399,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("platenumber")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(20)");
 
                     b.Property<string>("productcode")
                         .IsRequired()
@@ -443,7 +446,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("wcnumber")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
 
                     b.HasKey("FuelDeliveryId");
 
@@ -475,7 +478,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("DrNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
 
                     b.Property<string>("Driver")
                         .IsRequired()
@@ -504,7 +507,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("PlateNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(20)");
 
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)");
@@ -566,7 +569,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("WcNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
 
                     b.HasKey("FuelPurchaseId");
 
@@ -841,10 +844,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("amount")
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<string>("cashiercode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("createdby")
                         .IsRequired()
                         .HasColumnType("varchar(50)");
@@ -861,22 +860,26 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("drno")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
 
                     b.Property<string>("dtllink")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("empno")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("invoiceno")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
 
                     b.Property<int>("piece")
                         .HasColumnType("integer");
 
                     b.Property<string>("pono")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
 
                     b.Property<string>("productcode")
                         .IsRequired()
@@ -995,11 +998,11 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("DetailLink")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
 
                     b.Property<string>("DrNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
 
                     b.Property<string>("EditedBy")
                         .HasColumnType("varchar(50)");
@@ -1017,7 +1020,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("PoNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
 
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)");
@@ -1031,7 +1034,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("SalesInvoice")
                         .IsRequired()
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(10)");
 
                     b.Property<int>("ShiftNo")
                         .HasColumnType("integer");

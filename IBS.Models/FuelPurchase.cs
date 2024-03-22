@@ -47,13 +47,13 @@ namespace IBS.Models
         [Column(TypeName = "varchar(100)")]
         public string Hauler { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(50)")]
         public string PlateNo { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(50)")]
         public string DrNo { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(50)")]
         public string WcNo { get; set; }
 
         public int TankNo { get; set; }

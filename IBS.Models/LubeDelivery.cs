@@ -20,7 +20,7 @@ namespace IBS.Models
         [Column(TypeName = "varchar(5)")]
         public string stncode { get; set; }
 
-        public string empno { get; set; } //remove the "E" when saving in actual database
+        public string cashiercode { get; set; } //remove the "E" when saving in actual database
 
         public int shiftnumber { get; set; }
 
@@ -30,13 +30,13 @@ namespace IBS.Models
         [Column(TypeName = "varchar(10)")]
         public string suppliercode { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(50)")]
         public string invoiceno { get; set; } //remove the "SI" when saving in actual database
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(50)")]
         public string drno { get; set; } //remove the "DR" when saving in actual database
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(50)")]
         public string pono { get; set; } //remove the "PO" when saving in actual database
 
         [Column(TypeName = "numeric(18,2)")]
@@ -52,7 +52,7 @@ namespace IBS.Models
         [Column(TypeName = "timestamp without time zone")]
         public DateTime createddate { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(50)")]
         public string dtllink { get; set; }
 
         public int quantity { get; set; }

@@ -203,7 +203,7 @@ namespace IBS.DataAccess.Repository
                     FuelPurchaseNo = Guid.NewGuid().ToString(),
                     ShiftRecId = fuelDelivery.shiftrecid,
                     StationCode = fuelDelivery.stncode,
-                    EmployeeNo = fuelDelivery.empno.Substring(1),
+                    EmployeeNo = fuelDelivery.cashiercode.Substring(1),
                     ShiftNo = fuelDelivery.shiftnumber,
                     DeliveryDate = fuelDelivery.deliverydate,
                     TimeIn = fuelDelivery.timein,

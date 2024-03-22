@@ -178,7 +178,7 @@ namespace IBS.DataAccess.Repository
             var records = csv.GetRecords<LubeDelivery>();
             var existingRecords = await _db.Set<LubeDelivery>().ToListAsync(cancellationToken);
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
-                existingRecord.shiftrecid == record.shiftrecid && existingRecord.stncode == record.stncode)).ToList();
+                existingRecord.shiftrecid == record.shiftrecid && existingRecord.stncode == record.stncode && existingRecord.dtllink == record.dtllink)).ToList();
 
             if (recordsToInsert.Count != 0)
             {
@@ -199,13 +199,14 @@ namespace IBS.DataAccess.Repository
             try
             {
                 var lubePurchaseHeaders = lubeDeliveries
-                    .GroupBy(l => new { l.shiftrecid, l.stncode, l.empno, l.shiftnumber, l.deliverydate, l.suppliercode, l.invoiceno, l.drno, l.pono, l.amount, l.rcvdby, l.createdby, l.createddate })
+                    .GroupBy(l => new { l.shiftrecid, l.dtllink, l.stncode, l.cashiercode, l.shiftnumber, l.deliverydate, l.suppliercode, l.invoiceno, l.drno, l.pono, l.amount, l.rcvdby, l.createdby, l.createddate })
                     .Select(g => new LubePurchaseHeader
                     {
                         LubePurchaseHeaderNo = Guid.NewGuid().ToString(),
                         ShiftRecId = g.Key.shiftrecid,
+                        DetailLink = g.Key.dtllink,
                         StationCode = g.Key.stncode,
-                        EmployeeNo = g.Key.empno.Substring(1),
+                        EmployeeNo = g.Key.cashiercode.Substring(1),
                         ShiftNo = g.Key.shiftnumber,
                         DeliveryDate = g.Key.deliverydate,
                         SalesInvoice = g.Key.invoiceno.Substring(2),

@@ -20,6 +20,9 @@ namespace IBS.Models
         [Column(TypeName = "varchar(20)")]
         public string ShiftRecId { get; set; }
 
+        [Column(TypeName = "varchar(50)")]
+        public string DetailLink { get; set; }
+
         [Column(TypeName = "varchar(5)")]
         [Display(Name = "Station Code")]
         public string StationCode { get; set; }
@@ -34,7 +37,7 @@ namespace IBS.Models
         [Display(Name = "Delivery Date")]
         public DateOnly DeliveryDate { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(50)")]
         [Display(Name = "Sales Invoice")]
         public string SalesInvoice { get; set; }
 
@@ -42,11 +45,11 @@ namespace IBS.Models
         [Display(Name = "Supplier Code")]
         public string SupplierCode { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(50)")]
         [Display(Name = "DR#")]
         public string DrNo { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
+        [Column(TypeName = "varchar(50)")]
         [Display(Name = "PO#")]
         public string PoNo { get; set; }
 
