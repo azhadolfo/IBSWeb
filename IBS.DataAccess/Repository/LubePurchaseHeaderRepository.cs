@@ -206,7 +206,7 @@ namespace IBS.DataAccess.Repository
                         ShiftRecId = g.Key.shiftrecid,
                         DetailLink = g.Key.dtllink,
                         StationCode = g.Key.stncode,
-                        EmployeeNo = g.Key.cashiercode.Substring(1),
+                        CashierCode = g.Key.cashiercode.Substring(1),
                         ShiftNo = g.Key.shiftnumber,
                         DeliveryDate = g.Key.deliverydate,
                         SalesInvoice = g.Key.invoiceno.Substring(2),

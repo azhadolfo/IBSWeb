@@ -25,8 +25,8 @@ namespace IBS.Models
         public string StationCode { get; set; }
 
         [Column(TypeName = "varchar(5)")]
-        [Display(Name = "Employee No")]
-        public string EmployeeNo { get; set; }
+        [Display(Name = "Cashier Code")]
+        public string CashierCode { get; set; }
 
         [Display(Name = "Shift No")]
         public int ShiftNo { get; set; }
