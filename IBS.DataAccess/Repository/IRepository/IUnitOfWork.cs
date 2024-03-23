@@ -38,6 +38,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IChartOfAccountRepository ChartOfAccount { get; }
 
+        IPurchaseOrderRepository PurchaseOrder { get; }
+
         Task SaveAsync(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetCustomersAsync();

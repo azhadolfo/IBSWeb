@@ -28,6 +28,7 @@ namespace IBS.DataAccess.Repository
         public ISupplierRepository Supplier { get; private set; }
         public IInventoryRepository Inventory { get; private set; }
         public IChartOfAccountRepository ChartOfAccount { get; private set; }
+        public IPurchaseOrderRepository PurchaseOrder { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -46,6 +47,7 @@ namespace IBS.DataAccess.Repository
             Supplier = new SupplierRepository(_db);
             Inventory = new InventoryRepository(_db);
             ChartOfAccount = new ChartOfAccountRepository(_db);
+            PurchaseOrder = new PurchaseOrderRepository(_db);
         }
 
         public async Task SaveAsync(CancellationToken cancellationToken = default)

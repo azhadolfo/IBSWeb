@@ -34,13 +34,13 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public IActionResult ImportCsv()
+        public IActionResult ImportSales()
         {
             return View();
         }
 
-        [HttpPost, ActionName("ImportCsv")]
-        public async Task<IActionResult> ImportFiles(CancellationToken cancellationToken)
+        [HttpPost]
+        public async Task<IActionResult> ImportSales(CancellationToken cancellationToken)
         {
             var importFolder = Path.Combine("I:", "Other computers", "TARLAC", "SALESTEXT");
             DateTime yesterday = DateTime.Now.AddDays(-1);

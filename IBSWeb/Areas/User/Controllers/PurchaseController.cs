@@ -28,13 +28,13 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public IActionResult ImportDelivery()
+        public IActionResult ImportPurchase()
         {
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> ImportDelivery(CancellationToken cancellationToken)
+        public async Task<IActionResult> ImportPurchase(CancellationToken cancellationToken)
         {
             string importFolder = Path.Combine("D:", "AzhNewPC", "RealPos", "Feb 5");
             int yearToday = DateTime.Now.Year;
@@ -43,14 +43,16 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 var files = Directory.GetFiles(importFolder, "*.csv")
                                      .Where(f =>
-                                     (f.Contains("FUEL", StringComparison.CurrentCulture) ||
-                                     f.Contains("LUBE", StringComparison.CurrentCulture))
-                                     && Path.GetFileNameWithoutExtension(f).Contains(yearToday.ToString()));
+                                     f.Contains("FUEL_DELIVERY", StringComparison.CurrentCulture) ||
+                                     f.Contains("LUBE_DELIVERY", StringComparison.CurrentCulture) ||
+                                     f.Contains("PO_SALES", StringComparison.CurrentCulture) &&
+                                     Path.GetFileNameWithoutExtension(f).Contains(yearToday.ToString()));
 
                 if (files.Any())
                 {
                     int fuelsCount = 0;
                     int lubesCount = 0;
+                    int poSalesCount = 0;
 
                     foreach (var file in files)
                     {
@@ -64,15 +66,19 @@ namespace IBSWeb.Areas.User.Controllers
                         {
                             lubesCount = await _unitOfWork.LubePurchaseHeader.ProcessLubeDelivery(file, cancellationToken);
                         }
+                        else if (fileName.Contains("po_sales"))
+                        {
+                            poSalesCount = await _unitOfWork.PurchaseOrder.ProcessPOSales(file, cancellationToken);
+                        }
 
                     }
 
-                    if (fuelsCount != 0 || lubesCount != 0)
+                    if (fuelsCount != 0 || lubesCount != 0 || poSalesCount != 0)
                    {
                         return Json(new
                         {
                             success = true,
-                            message = $"Import successfully. Fuel Delivery: {fuelsCount} records, Lube Delivery: {lubesCount} records."
+                            message = $"Import successfully. Fuel Delivery: {fuelsCount} record(s), Lube Delivery: {lubesCount} record(s), PO Sales: {poSalesCount} record(s)."
                         });
                     }
                     else
@@ -80,13 +86,13 @@ namespace IBSWeb.Areas.User.Controllers
                         return Json(new
                         {
                             success = true,
-                            message = $"You're record is up to date."
+                            message = "You're record is up to date."
                         });
                     }
                 }
                 else
                 {
-                    return Json(new { success = false, message = "No xls file found." });
+                    return Json(new { success = false, message = "No CSV file found." });
                 }
 
             }

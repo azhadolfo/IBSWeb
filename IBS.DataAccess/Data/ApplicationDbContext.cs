@@ -28,6 +28,8 @@ namespace IBS.DataAccess.Data
         public DbSet<LubeDelivery> LubeDeliveries { get; set; }
         public DbSet<LubePurchaseHeader> LubePurchaseHeaders { get; set; }
         public DbSet<LubePurchaseDetail> LubePurchaseDetails { get; set; }
+        public DbSet<POSales> POSales { get; set; }
+        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
         #endregion
 
         #region --Inventory Entity
@@ -140,10 +142,25 @@ namespace IBS.DataAccess.Data
 
             #region--Purchase
 
+            // FuelDelivery
+            builder.Entity<FuelDelivery>(f =>
+            {
+                f.HasIndex(f => f.shiftrecid);
+                f.HasIndex(f => f.stncode);
+            });
+
             // FuelPurchase
             builder.Entity<FuelPurchase>(f => f
                 .HasIndex(f => f.FuelPurchaseNo)
                 .IsUnique());
+
+            // LubeDelivery
+            builder.Entity<LubeDelivery>(l =>
+            {
+                l.HasIndex(l => l.shiftrecid);
+                l.HasIndex(l => l.stncode);
+                l.HasIndex(l => l.dtllink);
+            });
 
             // LubePurchaseHeader
             builder.Entity<LubePurchaseHeader>(lh => lh
@@ -159,6 +176,18 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<LubePurchaseDetail>(ld => ld
                 .HasIndex(ld => ld.LubePurchaseHeaderNo));
+
+            // POSales
+            builder.Entity<POSales>(po =>
+            {
+                po.HasIndex(po => po.shiftrecid);
+                po.HasIndex(po => po.stncode);
+                po.HasIndex(po => po.tripticket);
+            });
+
+            builder.Entity<PurchaseOrder>(po => po
+                .HasIndex(po => po.PurchaseOrderNo)
+                .IsUnique());
 
             #endregion
 
