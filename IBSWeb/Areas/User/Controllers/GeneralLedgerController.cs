@@ -20,11 +20,16 @@ namespace IBSWeb.Areas.User.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> DisplayByTransaction(CancellationToken cancellationToken)
+        public IActionResult GetTransaction()
+        {
+            return View();
+        }
+
+        public async Task<IActionResult> DisplayByTransaction(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken)
         {
             IEnumerable<GeneralLedger> ledgers = await _unitOfWork
                 .GeneralLedger
-                .GetAllAsync(g => g.IsValidated, cancellationToken);
+                .GetAllAsync(g => g.IsValidated && g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo, cancellationToken);
 
             return View(ledgers);
         }

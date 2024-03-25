@@ -19,8 +19,8 @@
             Sort By <i class="bi bi-funnel-fill"></i>
         </button>
         <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-            <li><button type="button" class="dropdown-item" data-sortby="Date">Date<span class="selected-sort" style="display:none;">&#10003;</span></button></li>
-            <li><button type="button" class="dropdown-item" data-sortby="AccountNo">Account No<span class="selected-sort">&#10003;</span></button></li>
+            <li><button type="button" class="dropdown-item" data-sortby="Date">Date<span class="selected-sort">&#10003;</span></button></li>
+            <li><button type="button" class="dropdown-item" data-sortby="AccountNo">Account No<span class="selected-sort" style="display:none;">&#10003;</span></button></li>
             <li><button type="button" class="dropdown-item" data-sortby="AccountName">Account Title<span class="selected-sort" style="display:none;">&#10003;</span></button></li>
         </ul>
     </div>
@@ -41,7 +41,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var journal in Model.OrderBy(j => j.AccountNumber))
+                @foreach (var journal in Model.OrderBy(j => j.TransactionDate))
                 {
                     <tr>
                         <td>@journal.TransactionDate</td>
