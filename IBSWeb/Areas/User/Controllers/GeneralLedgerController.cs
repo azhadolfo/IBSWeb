@@ -68,23 +68,12 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> DisplayByAccountNumber(string accountNo, string productCode, DateOnly dateFrom, DateOnly dateTo, bool exportToExcel, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(accountNo))
-            {
-                accountNo = "ALL";
-            }
-
-            if (string.IsNullOrEmpty(productCode))
-            {
-                productCode = "ALL";
-            }
+            accountNo = string.IsNullOrEmpty(accountNo) ? "ALL" : accountNo;
+            productCode = string.IsNullOrEmpty(productCode) ? "ALL" : productCode;
 
             ChartOfAccount chartOfAccount = await _unitOfWork.ChartOfAccount.GetAsync(c => c.AccountNumber == accountNo, cancellationToken);
 
-            ViewData["AccountNo"] = chartOfAccount != null ? chartOfAccount.AccountNumber : accountNo;
-            ViewData["AccountName"] = chartOfAccount != null ? chartOfAccount.AccountName : accountNo;
-            ViewData["ProductCode"] = productCode;
-            ViewData["DateFrom"] = dateFrom.ToString("MMM/dd/yyyy");
-            ViewData["DateTo"] = dateTo.ToString("MMM/dd/yyyy");
+            SetViewData(chartOfAccount, accountNo, productCode, dateFrom, dateTo);
 
             Expression<Func<GeneralLedger, bool>> filter = g =>
                 g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo &&
@@ -112,6 +101,15 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 return View(ledgers);
             }
+        }
+
+        private void SetViewData(ChartOfAccount chartOfAccount, string accountNo, string productCode, DateOnly dateFrom, DateOnly dateTo)
+        {
+            ViewData["AccountNo"] = chartOfAccount?.AccountNumber ?? accountNo;
+            ViewData["AccountName"] = chartOfAccount?.AccountName ?? accountNo;
+            ViewData["ProductCode"] = productCode;
+            ViewData["DateFrom"] = dateFrom.ToString("MMM/dd/yyyy");
+            ViewData["DateTo"] = dateTo.ToString("MMM/dd/yyyy");
         }
 
     }
