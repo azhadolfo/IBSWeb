@@ -80,6 +80,11 @@
                         <td class="text-end">@balance.ToString(currencyFormat)</td>
                     </tr>
                 }
+                <tr class="table-primary">
+                    <td colspan="6" class="text-center">TOTAL</td>
+                    <td class="text-end">@Model.Sum(j => j.Debit).ToString("N2")</td>
+                    <td class="text-end">@Model.Sum(j => j.Credit).ToString("N2")</td>
+                </tr>
             </tbody>
         </table>
     </div>

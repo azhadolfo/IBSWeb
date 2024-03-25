@@ -79,8 +79,8 @@ namespace IBSWeb.Areas.User.Controllers
             ViewData["AccountNo"] = chartOfAccount != null ? chartOfAccount.AccountNumber : accountNo;
             ViewData["AccountName"] = chartOfAccount != null ? chartOfAccount.AccountName : accountNo;
             ViewData["ProductCode"] = productCode;
-            ViewData["DateFrom"] = dateFrom;
-            ViewData["DateTo"] = dateTo;
+            ViewData["DateFrom"] = dateFrom.ToString("MMM/dd/yyyy");
+            ViewData["DateTo"] = dateTo.ToString("MMM/dd/yyyy");
 
             Expression<Func<GeneralLedger, bool>> filter = g =>
                 g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo &&
