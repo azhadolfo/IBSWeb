@@ -230,7 +230,7 @@ namespace IBS.DataAccess.Repository
                     .OrderByDescending(i => i.InventoryId)
                     .FirstOrDefaultAsync(i => i.ProductCode == product.Key && i.StationCode == station.StationCode, cancellationToken) ?? throw new ArgumentException($"Beginning inventory for {product.Key} in station {station.StationCode} not found!");
 
-                    decimal quantity = (decimal)product.Sum(p => p.Liters);
+                    decimal quantity = salesVM.Header.IsModified ? (decimal)product.Sum(p => p.Liters) : (decimal)product.Sum(p => p.LitersSold);
 
                     if (quantity > previousInventory.InventoryBalance)
                     {
