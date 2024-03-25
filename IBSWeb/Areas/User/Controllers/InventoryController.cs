@@ -30,7 +30,7 @@ namespace IBSWeb.Areas.User.Controllers
             return View(inventory);
         }
 
-        public async Task<IActionResult> InventoryCosting(Inventory model, CancellationToken cancellationToken)
+        public async Task<IActionResult> InventoryCosting(Inventory model, DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken)
         {
 
             IEnumerable<Inventory> inventories;
@@ -38,12 +38,12 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (model.StationCode == "ALL")
             {
-                inventories = await _unitOfWork.Inventory.GetAllAsync(i => i.ProductCode == model.ProductCode, cancellationToken);
+                inventories = await _unitOfWork.Inventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
                 ViewData["Station"] = model.StationCode;
             }
             else
             {
-                inventories = await _unitOfWork.Inventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode, cancellationToken);
+                inventories = await _unitOfWork.Inventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
                 Station stationDetails = await _unitOfWork.Station.GetAsync(p => p.StationCode == model.StationCode, cancellationToken);
                 ViewData["Station"] = $"{stationDetails.StationCode} {stationDetails.StationName.ToUpper()}";
             }
