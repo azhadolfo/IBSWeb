@@ -38,7 +38,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IChartOfAccountRepository ChartOfAccount { get; }
 
-        IPurchaseOrderRepository PurchaseOrder { get; }
+        IPOSalesRepository PurchaseOrder { get; }
 
         Task SaveAsync(CancellationToken cancellationToken = default);
 

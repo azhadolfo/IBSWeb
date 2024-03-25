@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240325093626_ChangeTheNamingOfPOSalesTables")]
+    partial class ChangeTheNamingOfPOSalesTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1080,11 +1083,11 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.POSales", b =>
                 {
-                    b.Property<int>("POSalesId")
+                    b.Property<int>("PurchaseOrderId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("POSalesId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PurchaseOrderId"));
 
                     b.Property<string>("CanceledBy")
                         .HasColumnType("varchar(50)");
@@ -1123,16 +1126,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateOnly>("POSalesDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("POSalesNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<TimeOnly?>("POSalesTime")
-                        .HasColumnType("time without time zone");
-
                     b.Property<string>("PlateNo")
                         .IsRequired()
                         .HasColumnType("varchar(50)");
@@ -1149,6 +1142,16 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("ProductCode")
                         .IsRequired()
                         .HasColumnType("varchar(10)");
+
+                    b.Property<DateOnly>("PurchaseOrderDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("PurchaseOrderNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<TimeOnly?>("PurchaseOrderTime")
+                        .HasColumnType("time without time zone");
 
                     b.Property<decimal>("Quantity")
                         .HasColumnType("numeric(18,2)");
@@ -1174,9 +1177,9 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("VoidedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("POSalesId");
+                    b.HasKey("PurchaseOrderId");
 
-                    b.HasIndex("POSalesNo")
+                    b.HasIndex("PurchaseOrderNo")
                         .IsUnique();
 
                     b.ToTable("POSales");
@@ -1184,11 +1187,11 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.PoSalesRaw", b =>
                 {
-                    b.Property<int>("POSalesRawId")
+                    b.Property<int>("POSalesId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("POSalesRawId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("POSalesId"));
 
                     b.Property<string>("cashiercode")
                         .IsRequired()
@@ -1251,7 +1254,7 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("POSalesRawId");
+                    b.HasKey("POSalesId");
 
                     b.HasIndex("shiftrecid");
 

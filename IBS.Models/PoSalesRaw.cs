@@ -8,60 +8,61 @@ using System.Threading.Tasks;
 
 namespace IBS.Models
 {
-    public class PurchaseOrder : BaseEntity
+    public class PoSalesRaw
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int PurchaseOrderId { get; set; }
-
-        [Column(TypeName = "varchar(50)")]
-        public string PurchaseOrderNo { get; set; }
+        public int POSalesRawId { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string ShiftRecId { get; set; }
+        public string shiftrecid { get; set; }
 
         [Column(TypeName = "varchar(5)")]
-        public string StationCode { get; set; }
+        public string stncode { get; set; }
 
-        [Column(TypeName = "varchar(5)")]
-        public string CashierCode { get; set; }
+        public string cashiercode { get; set; } //remove the "E" when saving in actual database
 
-        public int ShiftNo { get; set; }
+        public int shiftnumber { get; set; }
 
         [Column(TypeName = "date")]
-        public DateOnly PurchaseOrderDate { get; set; }
+        public DateOnly podate { get; set; }
 
         [Column(TypeName = "time without time zone")]
-        public TimeOnly? PurchaseOrderTime { get; set; }
+        public TimeOnly? potime { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string CustomerCode { get; set; }
+        public string customercode { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string Driver { get; set; }
+        public string driver { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string PlateNo { get; set; }
+        public string plateno { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string DrNo { get; set; }
+        public string drnumber { get; set; } //remove the "DR" when saving in actual database
 
-        [Column(TypeName = "varchar(20)")]
-        public string TripTicket { get; set; }
+        public string tripticket { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string ProductCode { get; set; }
+        public string productcode { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal Quantity { get; set; }
+        public decimal quantity { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal Price { get; set; }
+        public decimal price { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal ContractPrice { get; set; }
+        public decimal contractprice { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string createdby { get; set; } //remove the "E" when saving in actual database
+
+        [Column(TypeName = "timestamp without time zone")]
+        public DateTime createddate { get; set; }
     }
 }

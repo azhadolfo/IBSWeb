@@ -20,6 +20,8 @@ namespace IBS.DataAccess.Data
         public DbSet<SafeDrop> SafeDrops { get; set; }
         public DbSet<SalesHeader> SalesHeaders { get; set; }
         public DbSet<SalesDetail> SalesDetails { get; set; }
+        public DbSet<PoSalesRaw> PoSalesRaw { get; set; }
+        public DbSet<POSales> POSales { get; set; }
         #endregion
 
         #region--Purchase Entity
@@ -28,8 +30,6 @@ namespace IBS.DataAccess.Data
         public DbSet<LubeDelivery> LubeDeliveries { get; set; }
         public DbSet<LubePurchaseHeader> LubePurchaseHeaders { get; set; }
         public DbSet<LubePurchaseDetail> LubePurchaseDetails { get; set; }
-        public DbSet<POSales> POSales { get; set; }
-        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
         #endregion
 
         #region --Inventory Entity
@@ -138,6 +138,18 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(s => s.SalesHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // POSales
+            builder.Entity<PoSalesRaw>(po =>
+            {
+                po.HasIndex(po => po.shiftrecid);
+                po.HasIndex(po => po.stncode);
+                po.HasIndex(po => po.tripticket);
+            });
+
+            builder.Entity<POSales>(po => po
+                .HasIndex(po => po.POSalesNo)
+                .IsUnique());
+
             #endregion
 
             #region--Purchase
@@ -176,18 +188,6 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<LubePurchaseDetail>(ld => ld
                 .HasIndex(ld => ld.LubePurchaseHeaderNo));
-
-            // POSales
-            builder.Entity<POSales>(po =>
-            {
-                po.HasIndex(po => po.shiftrecid);
-                po.HasIndex(po => po.stncode);
-                po.HasIndex(po => po.tripticket);
-            });
-
-            builder.Entity<PurchaseOrder>(po => po
-                .HasIndex(po => po.PurchaseOrderNo)
-                .IsUnique());
 
             #endregion
 

@@ -12,11 +12,11 @@ using System.Threading.Tasks;
 
 namespace IBS.DataAccess.Repository
 {
-    public class PurchaseOrderRepository : Repository<PurchaseOrder>, IPurchaseOrderRepository
+    public class POSalesRepository : Repository<POSales>, IPOSalesRepository
     {
         private ApplicationDbContext _db;
 
-        public PurchaseOrderRepository(ApplicationDbContext db) : base(db)
+        public POSalesRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
         }
@@ -31,8 +31,8 @@ namespace IBS.DataAccess.Repository
                 MissingFieldFound = null,
             });
 
-            var records = csv.GetRecords<POSales>();
-            var existingRecords = await _db.Set<POSales>().ToListAsync(cancellationToken);
+            var records = csv.GetRecords<PoSalesRaw>();
+            var existingRecords = await _db.Set<PoSalesRaw>().ToListAsync(cancellationToken);
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
                 existingRecord.shiftrecid == record.shiftrecid && existingRecord.stncode == record.stncode && existingRecord.tripticket == record.tripticket)).ToList();
 
@@ -50,26 +50,26 @@ namespace IBS.DataAccess.Repository
             }
         }
 
-        public async Task RecordThePurchaseOrder(IEnumerable<POSales> poSales, CancellationToken cancellationToken = default)
+        public async Task RecordThePurchaseOrder(IEnumerable<PoSalesRaw> poSales, CancellationToken cancellationToken = default)
         {
-            var purchaseOrders = new List<PurchaseOrder>();
+            var purchaseOrders = new List<POSales>();
 
             foreach (var po in poSales)
             {
-                purchaseOrders.Add(new PurchaseOrder
+                purchaseOrders.Add(new POSales
                 {
-                    PurchaseOrderNo = Guid.NewGuid().ToString(),
+                    POSalesNo = Guid.NewGuid().ToString(),
                     ShiftRecId = po.shiftrecid,
                     StationCode = po.stncode,
                     CashierCode = po.cashiercode.Substring(1),
                     ShiftNo = po.shiftnumber,
-                    PurchaseOrderDate = po.podate,
-                    PurchaseOrderTime = po.potime,
+                    POSalesDate = po.podate,
+                    POSalesTime = po.potime,
                     CustomerCode = po.customercode,
                     Driver = po.driver,
                     PlateNo = po.plateno,
                     DrNo = po.drnumber.Substring(2),
-                    TripTicket = po.tripticket,
+                    TripTicket = po.tripticket.Substring(1),
                     ProductCode = po.productcode,
                     Quantity = po.quantity,
                     Price = po.price,
