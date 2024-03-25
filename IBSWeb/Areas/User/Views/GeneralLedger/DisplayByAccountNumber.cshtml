@@ -3,6 +3,16 @@
 @{
     string currencyFormat = "N2";
     decimal balance = 0;
+
+    int colspan = 3;
+    if (ViewData["AccountNo"].ToString() == "ALL")
+    {
+        colspan += 2;
+    }
+    if (ViewData["ProductCode"].ToString() == "ALL")
+    {
+        colspan++;
+    }
 }
 
 <style>
@@ -19,7 +29,7 @@
     <div class="col-11">
         <h5>GENERAL LEDGER BY ACCOUNT NUMBER</h5>
         <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
-        <h6>Account No.: @ViewData["AccountNo"]</h6>
+        <h6>Account No: @ViewData["AccountNo"]</h6>
         <h6>Account Title: @ViewData["AccountName"]</h6>
         <h6>Product Code: @ViewData["ProductCode"]</h6>
     </div>
@@ -81,7 +91,7 @@
                     </tr>
                 }
                 <tr class="table-primary">
-                    <td colspan="6" class="text-center">TOTAL</td>
+                    <td colspan="@colspan" class="text-center">TOTAL</td>
                     <td class="text-end">@Model.Sum(j => j.Debit).ToString("N2")</td>
                     <td class="text-end">@Model.Sum(j => j.Credit).ToString("N2")</td>
                 </tr>

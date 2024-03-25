@@ -12,25 +12,23 @@
         <div class="border p-3">
             <form asp-area="User" asp-controller="GeneralLedger" asp-action="DisplayByAccountNumber" target="_blank">
                 <div class="form-floating py-2 col-12">
-                    <input type="date" value="mm/dd/yyyy" name="dateFrom" class="form-control border-0 shadow" placeholder="" />
+                    <input type="date" value="mm/dd/yyyy" name="dateFrom" class="form-control border-0 shadow" placeholder="" required/>
                     <label class="ms-2">Date From<span class="required">*</span></label>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input type="date" value="mm/dd/yyyy" name="dateTo" class="form-control border-0 shadow" placeholder="" />
+                    <input type="date" value="mm/dd/yyyy" name="dateTo" class="form-control border-0 shadow" placeholder="" required />
                     <label class="ms-2">Date To<span class="required">*</span></label>
                 </div>
                 <div class="form-group py-2 col-12">
-                    <label class="control-label">Account List<span class="required">*</span></label>
+                    <label class="control-label">Account List</label>
                     <select name="accountNo" asp-items="@Model.ChartOfAccounts" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected disabled>Select account</option>
-                        <option value="ALL">ALL</option>
+                        <option value="" selected>Select account</option>
                     </select>
                 </div>
                 <div class="form-group py-2 col-12">
-                    <label class="control-label">Product List<span class="required">*</span></label>
+                    <label class="control-label">Product List</label>
                     <select name="productCode" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected disabled>Select product</option>
-                        <option value="ALL">ALL</option>
+                        <option value="" selected>Select product</option>
                     </select>
                 </div>
 

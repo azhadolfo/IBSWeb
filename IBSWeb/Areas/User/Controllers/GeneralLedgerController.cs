@@ -68,10 +68,14 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> DisplayByAccountNumber(string accountNo, string productCode, DateOnly dateFrom, DateOnly dateTo, bool exportToExcel, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(accountNo) || string.IsNullOrEmpty(productCode))
+            if (string.IsNullOrEmpty(accountNo))
             {
-                TempData["error"] = "Please select account and product.";
-                return RedirectToAction(nameof(GetAccountNo));
+                accountNo = "ALL";
+            }
+
+            if (string.IsNullOrEmpty(productCode))
+            {
+                productCode = "ALL";
             }
 
             ChartOfAccount chartOfAccount = await _unitOfWork.ChartOfAccount.GetAsync(c => c.AccountNumber == accountNo, cancellationToken);
