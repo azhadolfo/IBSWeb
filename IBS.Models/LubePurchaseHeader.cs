@@ -35,6 +35,7 @@ namespace IBS.Models
 
         [Column(TypeName = "date")]
         [Display(Name = "Delivery Date")]
+        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly DeliveryDate { get; set; }
 
         [Column(TypeName = "varchar(50)")]

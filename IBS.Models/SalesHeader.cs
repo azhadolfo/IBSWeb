@@ -21,6 +21,7 @@ namespace IBS.Models
         public string StationPosCode { get; set; }
 
         [Column(TypeName = "date")]
+        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly Date { get; set; }
 
         [Column(TypeName = "varchar(20)")]

@@ -64,8 +64,8 @@
                     balance += journal.Debit + journal.Credit;
 
                     <tr>
-                        <td>@journal.TransactionDate</td>
-                        <td>@journal.Particular</td>
+                        <td>@Html.DisplayFor(model => journal.TransactionDate)</td>
+                        <td>@Html.DisplayFor(model => journal.Particular)</td>
                         @if (@ViewData["AccountNo"].ToString() == "ALL")
                         {
                             <td>@journal.AccountNumber</td>

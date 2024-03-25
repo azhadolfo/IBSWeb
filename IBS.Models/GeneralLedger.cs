@@ -17,6 +17,7 @@ namespace IBS.Models
 
         [Column(TypeName = "date")]
         [Display(Name = "Transaction Date")]
+        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly TransactionDate { get; set; }
 
         [Column(TypeName = "varchar(100)")]

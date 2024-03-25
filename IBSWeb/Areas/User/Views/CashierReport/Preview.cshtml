@@ -9,7 +9,7 @@
 
 <div class="mb-3">
     <h2 class="text-center">CASHIER REPORT</h2>
-    <h6 class="text-end px-2">Date: @Model.Header.Date.ToString("MM/dd/yyyy")</h6>
+    <h6 class="text-end px-2">Date: @Html.DisplayFor(model => Model.Header.Date)</h6>
     <h6 class="px-2">Cashier: @Model.Header.Cashier</h6>
     <h6 class="px-2">Shift: @Model.Header.Shift</h6>
 </div>

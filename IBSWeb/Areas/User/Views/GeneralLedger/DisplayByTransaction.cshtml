@@ -45,7 +45,7 @@
                 @foreach (var journal in Model.OrderBy(j => j.TransactionDate))
                 {
                     <tr>
-                        <td>@journal.TransactionDate</td>
+                        <td>@Html.DisplayFor(model => journal.TransactionDate)</td>
                         <td>@journal.JournalReference</td>
                         <td>@journal.Particular</td>
                         <td>@journal.AccountNumber</td>
