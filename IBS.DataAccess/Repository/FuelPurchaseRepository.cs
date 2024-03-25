@@ -221,7 +221,7 @@ namespace IBS.DataAccess.Repository
                     QuantityBefore = fuelDelivery.volumebefore,
                     QuantityAfter = fuelDelivery.volumeafter,
                     ShouldBe = fuelDelivery.quantity + fuelDelivery.volumebefore,
-                    GainOrLoss = (fuelDelivery.quantity + fuelDelivery.volumebefore) - fuelDelivery.volumeafter,
+                    GainOrLoss = fuelDelivery.volumeafter - (fuelDelivery.quantity + fuelDelivery.volumebefore),
                     ReceivedBy = fuelDelivery.receivedby,
                     CreatedBy = fuelDelivery.createdby.Substring(1),
                     CreatedDate = fuelDelivery.createddate
