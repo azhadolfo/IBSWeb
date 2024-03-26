@@ -184,12 +184,12 @@ namespace IBS.DataAccess.Repository
                     Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                     AccountNumber = "10100005",
                     AccountTitle = "Cash-on-Hand",
-                    Debit = salesVM.Header.ActualCashOnHand > 0 ? salesVM.Header.ActualCashOnHand : salesVM.Header.SafeDropTotalAmount,
+                    Debit = salesVM.Header.ActualCashOnHand > 0 ? salesVM.Header.ActualCashOnHand : salesVM.Header.SafeDropTotalAmount > 0 ? salesVM.Header.SafeDropTotalAmount : throw new InvalidOperationException("Indicate the cashier's cash on hand before posting."),
                     Credit = 0,
                     StationCode = station.StationCode,
                     JournalReference = nameof(JournalType.Sales),
                     IsValidated = true
-                });
+                });;
 
                 foreach(var product in salesVM.Details.GroupBy(d => d.Product))
                 {
