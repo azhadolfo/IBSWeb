@@ -12,3 +12,13 @@ $(document).ready(function () {
 $(document).ready(function () {
     $('#dataTable').DataTable();
 });
+
+function validateDate() {
+    let dateFrom = document.getElementById("dateFrom").value;
+    let dateTo = document.getElementById("dateTo").value;
+    if (dateFrom > dateTo) {
+        alert("Date From must be less than or equal to Date To");
+        return false;
+    }
+    return true;
+}
