@@ -189,7 +189,7 @@ namespace IBS.DataAccess.Repository
                     StationCode = station.StationCode,
                     JournalReference = nameof(JournalType.Sales),
                     IsValidated = true
-                });;
+                });
 
                 foreach(var product in salesVM.Details.GroupBy(d => d.Product))
                 {
