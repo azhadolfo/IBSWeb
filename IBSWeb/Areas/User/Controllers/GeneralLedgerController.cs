@@ -39,13 +39,13 @@ namespace IBSWeb.Areas.User.Controllers
             return View();
         }
 
-        public async Task<IActionResult> DisplayByJournal(string journal, CancellationToken cancellationToken)
+        public async Task<IActionResult> DisplayByJournal(DateOnly dateFrom, DateOnly dateTo, string journal, CancellationToken cancellationToken)
         {
             if (!String.IsNullOrEmpty(journal))
             {
                 IEnumerable<GeneralLedger> ledgers = await _unitOfWork
                     .GeneralLedger
-                    .GetAllAsync(g => g.JournalReference == journal && g.IsValidated, cancellationToken);
+                    .GetAllAsync(g => g.JournalReference == journal && g.IsValidated && (g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo), cancellationToken);
 
                 ViewData["Journal"] = journal.ToUpper();
                 return View(ledgers);
