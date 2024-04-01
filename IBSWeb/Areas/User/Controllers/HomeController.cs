@@ -43,7 +43,9 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> ImportSales(CancellationToken cancellationToken)
         {
             var importFolder = Path.Combine("I:", "Other computers", "TARLAC", "SALESTEXT");
-            DateTime yesterday = DateTime.Now.AddDays(-1);
+            //DateTime yesterday = DateTime.Now.AddDays(-1);
+
+            DateTime yesterday = DateTime.Now.AddDays(-7);
 
             try
             {

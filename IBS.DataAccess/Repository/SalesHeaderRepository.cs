@@ -88,10 +88,10 @@ namespace IBS.DataAccess.Repository
                         Cashier = fuel.xONAME,
                         Shift = fuel.Shift,
                         CreatedBy = "Ako",
-                        FuelSalesTotalAmount = fuel.Sale,
-                        LubesTotalAmount = lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount),
-                        SafeDropTotalAmount = safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount),
-                        POSalesAmount = HasPoSales ? fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount) : 0,
+                        FuelSalesTotalAmount = Math.Round((decimal)fuel.Liters * fuel.Price, 2),
+                        LubesTotalAmount = Math.Round(lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2),
+                        SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount), 2),
+                        POSalesAmount = HasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
                         TimeIn = fuel.TimeIn,
                         TimeOut = fuel.TimeOut
                     })
@@ -136,7 +136,7 @@ namespace IBS.DataAccess.Repository
                         TransactionCount = fuel.TransactionCount,
                         Price = fuel.Price,
                         Sale = fuel.Sale,
-                        Value = (decimal)fuel.Liters * fuel.Price
+                        Value = Math.Round((decimal)fuel.Liters * fuel.Price, 2)
                     };
 
                     await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
@@ -191,6 +191,23 @@ namespace IBS.DataAccess.Repository
                     IsValidated = true
                 });
 
+                if (salesVM.Header.POSalesAmount > 0)
+                {
+                    journals.Add(new GeneralLedger
+                    {
+                        TransactionDate = salesVM.Header.Date,
+                        Reference = salesVM.Header.SalesNo,
+                        Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        AccountNumber = "10100025",
+                        AccountTitle = "Accounts Receivable",
+                        Debit = salesVM.Header.POSalesAmount,
+                        Credit = 0,
+                        StationCode = station.StationCode,
+                        JournalReference = nameof(JournalType.Sales),
+                        IsValidated = true
+                    });
+                }
+
                 foreach(var product in salesVM.Details.GroupBy(d => d.Product))
                 {
                     Product productDetails = await _db.Products
@@ -202,9 +219,9 @@ namespace IBS.DataAccess.Repository
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = "40100005",
-                        AccountTitle = product.Key == "PET001" ? "Sales-Bio" : product.Key == "PET002" ? "Sales-Econo" : "Sales-Enviro",
+                        AccountTitle = "Sales-Fuel",
                         Debit = 0,
-                        Credit = !salesVM.Header.IsModified ? product.Sum(p => p.Sale) / 1.12m : product.Sum(p => p.Value) / 1.12m,
+                        Credit = Math.Round(product.Sum(p => p.Value) / 1.12m, 2),
                         StationCode = station.StationCode,
                         ProductCode = product.Key,
                         JournalReference = nameof(JournalType.Sales),
@@ -219,7 +236,7 @@ namespace IBS.DataAccess.Repository
                         AccountNumber = "20100065",
                         AccountTitle = "Output VAT",
                         Debit = 0,
-                        Credit = !salesVM.Header.IsModified ? (product.Sum(p => p.Sale) / 1.12m) * 0.12m : (product.Sum(p => p.Value) / 1.12m) * 0.12m,
+                        Credit = Math.Round((product.Sum(p => p.Value) / 1.12m) * 0.12m, 2),
                         StationCode = station.StationCode,
                         JournalReference = nameof(JournalType.Sales),
                         IsValidated = true
@@ -230,7 +247,7 @@ namespace IBS.DataAccess.Repository
                     .OrderByDescending(i => i.InventoryId)
                     .FirstOrDefaultAsync(i => i.ProductCode == product.Key && i.StationCode == station.StationCode, cancellationToken) ?? throw new ArgumentException($"Beginning inventory for {product.Key} in station {station.StationCode} not found!");
 
-                    decimal quantity = salesVM.Header.IsModified ? (decimal)product.Sum(p => p.Liters) : (decimal)product.Sum(p => p.LitersSold);
+                    decimal quantity = (decimal)product.Sum(p => p.Liters);
 
                     if (quantity > previousInventory.InventoryBalance)
                     {
@@ -270,7 +287,7 @@ namespace IBS.DataAccess.Repository
                         Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = "50100005",
                         AccountTitle = "Cost of Goods Sold",
-                        Debit = cogs,
+                        Debit = Math.Round(cogs, 2),
                         Credit = 0,
                         StationCode = station.StationCode,
                         ProductCode = product.Key,
@@ -286,7 +303,7 @@ namespace IBS.DataAccess.Repository
                         AccountNumber = "10100033",
                         AccountTitle = "Merchandise Inventory",
                         Debit = 0,
-                        Credit = cogs,
+                        Credit = Math.Round(cogs, 2),
                         StationCode = station.StationCode,
                         ProductCode = product.Key,
                         JournalReference = nameof(JournalType.Sales),
@@ -302,7 +319,7 @@ namespace IBS.DataAccess.Repository
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = "45300013",
-                        AccountTitle = "Cash Short/(Over) - Handling",
+                        AccountTitle = salesVM.Header.GainOrLoss < 0 ? "Cash Short - Handling" : "Cash Over - Handling",
                         Debit = salesVM.Header.GainOrLoss < 0 ? Math.Abs(salesVM.Header.GainOrLoss) : 0,
                         Credit = salesVM.Header.GainOrLoss > 0 ? salesVM.Header.GainOrLoss : 0,
                         StationCode = station.StationCode,
