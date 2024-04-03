@@ -7,6 +7,10 @@ for details on configuring this project to bundle and minify static web assets. 
     border: 1px solid red;
 }*/
 
+main {
+    margin-bottom: 4rem !important;
+}
+
 .divider-text:before,
 .divider-text:after {
     color: white;

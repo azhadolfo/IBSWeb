@@ -4,8 +4,10 @@
 // Write your JavaScript code.
 $(document).ready(function () {
     $('.js-select2').select2({
+        placeholder: "Select a category...",
+        allowClear: true,
         width: 'resolve',
-        theme: "classic"
+        theme: 'classic'
     });
 });
 
