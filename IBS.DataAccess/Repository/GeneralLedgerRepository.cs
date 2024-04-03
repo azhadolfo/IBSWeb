@@ -92,47 +92,86 @@ namespace IBS.DataAccess.Repository
                 // Populate the data rows
                 int row = 8;
                 decimal balance = 0;
-                foreach (var journal in ledgers.OrderBy(j => j.AccountNumber))
+                string currencyFormat = "#,##0.00";
+                decimal debit = 0;
+                decimal credit = 0;
+                foreach (var journals in ledgers.OrderBy(j => j.AccountNumber).GroupBy(j => j.AccountTitle))
                 {
-                    balance += journal.Debit + journal.Credit;
-
-                    worksheet.Cells[row, 1].Value = journal.TransactionDate;
-                    worksheet.Cells[row, 2].Value = journal.Particular;
-
-                    // Populate additional columns if needed
-                    if (accountNo.ToString().ToUpper() == "ALL")
+                    foreach (var journal in journals.OrderBy(j => j.TransactionDate))
                     {
-                        worksheet.Cells[row, 3].Value = journal.AccountNumber;
-                        worksheet.Cells[row, 4].Value = journal.AccountTitle;
+                        balance += journal.Debit - journal.Credit;
+
+                        worksheet.Cells[row, 1].Value = journal.TransactionDate.ToString("MMM/dd/yyyy");
+                        worksheet.Cells[row, 2].Value = journal.Particular;
+
+                        if (accountNo.ToString().ToUpper() == "ALL")
+                        {
+                            worksheet.Cells[row, 3].Value = journal.AccountNumber;
+                            worksheet.Cells[row, 4].Value = journal.AccountTitle;
+                        }
+
+                        if (productCode.ToUpper() == "ALL")
+                        {
+                            if (worksheet.Cells[7, 3].Value.ToString() == "Account No")
+                                worksheet.Cells[row, 5].Value = journal.ProductCode;
+                            else if (worksheet.Cells[7, 3].Value.ToString() == "Product Code")
+                                worksheet.Cells[row, 3].Value = journal.ProductCode;
+                        }
+
+                        worksheet.Cells[row, columnOffset].Value = journal.Debit;
+                        worksheet.Cells[row, columnOffset + 1].Value = journal.Credit;
+                        worksheet.Cells[row, columnOffset + 2].Value = balance;
+
+                        worksheet.Cells[row, columnOffset].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, columnOffset + 1].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, columnOffset + 2].Style.Numberformat.Format = currencyFormat;
+
+                        row++;
                     }
 
-                    if (productCode.ToUpper() == "ALL")
-                    {
-                        if (worksheet.Cells[7, 3].Value.ToString() == "Account No")
-                            worksheet.Cells[row, 5].Value = journal.ProductCode;
-                        else if (worksheet.Cells[7, 3].Value.ToString() == "Product Code")
-                            worksheet.Cells[row, 3].Value = journal.ProductCode;
-                    }
+                    debit = journals.Sum(j => j.Debit);
+                    credit = journals.Sum(j => j.Credit);
+                    balance = debit - credit;
 
-                    worksheet.Cells[row, columnOffset].Value = journal.Debit;
-                    worksheet.Cells[row, columnOffset + 1].Value = journal.Credit;
+                    worksheet.Cells[row, 2].Value = "Total " + journals.Key;
+                    worksheet.Cells[row, columnOffset].Value = debit;
+                    worksheet.Cells[row, columnOffset + 1].Value = credit;
                     worksheet.Cells[row, columnOffset + 2].Value = balance;
 
-                    // Format Debit, Credit, and Balance columns with commas
-                    worksheet.Cells[row, columnOffset].Style.Numberformat.Format = "#,##0.00";
-                    worksheet.Cells[row, columnOffset + 1].Style.Numberformat.Format = "#,##0.00";
-                    worksheet.Cells[row, columnOffset + 2].Style.Numberformat.Format = "#,##0.00";
+                    worksheet.Cells[row, columnOffset].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, columnOffset + 1].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, columnOffset + 2].Style.Numberformat.Format = currencyFormat;
+
+                    // Apply style to subtotal row
+                    using (var range = worksheet.Cells[row, 1, row, columnOffset + 2])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172,185,202));
+                    }
 
                     row++;
                 }
+
+                debit = ledgers.Sum(j => j.Debit);
+                credit = ledgers.Sum(j => j.Credit);
+                balance = debit - credit;
+
+                worksheet.Cells[row, 2].Value = "Total";
+                worksheet.Cells[row, 2].Style.Font.Bold = true;
+                worksheet.Cells[row, columnOffset].Value = debit;
+                worksheet.Cells[row, columnOffset + 1].Value = credit;
+                worksheet.Cells[row, columnOffset + 2].Value = balance;
+
+                worksheet.Cells[row, columnOffset].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, columnOffset + 1].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, columnOffset + 2].Style.Numberformat.Format = currencyFormat;
 
                 // Auto-fit columns for better readability
                 worksheet.Cells.AutoFitColumns();
 
                 // Convert the Excel package to a byte array
-                var excelBytes = package.GetAsByteArray();
-
-                return excelBytes;
+                return package.GetAsByteArray();
             }
         }
     }

@@ -13,7 +13,7 @@
         </div>
     </div>
     <div class="card-body p-4 table-responsive">
-        <table class="table table-bordered table-striped">
+        <table class="table table-bordered table-striped" id="dataTable">
             <thead>
                 <tr>
                     <th>
@@ -49,9 +49,11 @@
                         </td>
                         <td>
                             <div class="w-100 btn-group" role="group">
-                                <a asp-area="User" asp-controller="Purchase" asp-action="EditFuel" asp-route-id="@obj.FuelPurchaseNo" class="btn btn-primary mx-2">
-                                    <i class="bi bi-pencil-square"></i> Edit
-                                </a>
+                                @if(obj.PostedBy == null){
+                                    <a asp-area="User" asp-controller="Purchase" asp-action="EditFuel" asp-route-id="@obj.FuelPurchaseNo" class="btn btn-primary mx-2">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
+                                }
                                 <a class="btn btn-primary mx-2 preview-btn" asp-area="User" asp-controller="Purchase" asp-action="PreviewFuel" asp-route-id="@obj.FuelPurchaseNo">
                                     <i class="bi bi-printer-fill"></i> Preview
                                 </a>

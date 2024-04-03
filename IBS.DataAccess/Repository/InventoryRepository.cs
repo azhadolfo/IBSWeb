@@ -1,12 +1,15 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.ViewModels;
+using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace IBS.DataAccess.Repository
 {
@@ -39,8 +42,47 @@ namespace IBS.DataAccess.Repository
             model.UnitCostAverage = model.UnitCost;
             model.InventoryValue = model.RunningCost;
             model.ValidatedBy = "N/A";
+            model.TransactionNo = Guid.NewGuid().ToString();
 
-            await _db.Inventories.AddAsync(model, cancellationToken);
+            await _db.AddAsync(model, cancellationToken);
+
+            #region--General Ledger Entries
+
+            var journals = new List<GeneralLedger>
+            {
+                new() {
+                    TransactionDate = model.Date,
+                    Reference = model.TransactionNo,
+                    Particular = $"Beginning Inventory for {model.ProductCode}",
+                    AccountNumber = "50100005",
+                    AccountTitle = "Cost of Goods Sold",
+                    Debit = Math.Round(model.TotalCost, 2),
+                    Credit = 0,
+                    StationCode = model.StationCode,
+                    ProductCode = model.ProductCode,
+                    JournalReference = " ",
+                    IsValidated = true
+                },
+                new() {
+                    TransactionDate = model.Date,
+                    Reference = model.TransactionNo,
+                    Particular = $"Beginning Inventory for {model.ProductCode}",
+                    AccountNumber = "10100033",
+                    AccountTitle = "Merchandise Inventory",
+                    Debit = 0,
+                    Credit = Math.Round(model.TotalCost, 2),
+                    StationCode = model.StationCode,
+                    ProductCode = model.ProductCode,
+                    JournalReference = " ",
+                    IsValidated = true
+                }
+            };
+
+            await _db.GeneralLedgers.AddRangeAsync(journals);
+
+            #endregion
+
+
             await _db.SaveChangesAsync(cancellationToken);
         }
     }

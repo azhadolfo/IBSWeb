@@ -3,8 +3,10 @@
 @{
     string currencyFormat = "N2";
     decimal balance = 0;
+    decimal debit = 0;
+    decimal credit = 0;
 
-    int colspan = 3;
+    int colspan = 2;
     if (ViewData["AccountNo"].ToString() == "ALL")
     {
         colspan += 2;
@@ -71,31 +73,57 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var journal in Model.OrderBy(j => j.AccountNumber))
+                @foreach (var journals in Model.OrderBy(j => j.AccountNumber).GroupBy(g => g.AccountTitle))
                 {
-                    balance += journal.Debit + journal.Credit;
+                    foreach (var journal in journals.OrderBy(j => j.TransactionDate))
+                    {
+                        balance += journal.Debit - journal.Credit;
 
-                    <tr>
-                        <td>@Html.DisplayFor(model => journal.TransactionDate)</td>
-                        <td>@Html.DisplayFor(model => journal.Particular)</td>
-                        @if (@ViewData["AccountNo"].ToString() == "ALL")
-                        {
-                            <td>@journal.AccountNumber</td>
-                            <td>@journal.AccountTitle</td>
+                        <tr>
+                            <td>@Html.DisplayFor(model => journal.TransactionDate)</td>
+                            <td>@Html.DisplayFor(model => journal.Particular)</td>
+                            @if (@ViewData["AccountNo"].ToString() == "ALL")
+                            {
+                                <td>@journal.AccountNumber</td>
+                                <td>@journal.AccountTitle</td>
+                            }
+                            @if (@ViewData["ProductCode"].ToString() == "ALL")
+                            {
+                                <td>@journal.ProductCode</td>
+                            }
+                            <td class="text-end">@journal.Debit.ToString(currencyFormat)</td>
+                            <td class="text-end">@journal.Credit.ToString(currencyFormat)</td>
+                            <td class="text-end">@balance.ToString(currencyFormat)</td>
+                        </tr>
+                    }
+
+                    <tr class="table-primary">
+
+                        @{
+                            debit = journals.Sum(j => j.Debit);
+                            credit = journals.Sum(j => j.Credit);
+                            balance = debit - @credit;
                         }
-                        @if (@ViewData["ProductCode"].ToString() == "ALL")
-                        {
-                            <td>@journal.ProductCode</td>
-                        }
-                        <td class="text-end">@journal.Debit.ToString(currencyFormat)</td>
-                        <td class="text-end">@journal.Credit.ToString(currencyFormat)</td>
+
+                        <td colspan="@colspan" class="text-center"> Total @journals.Key</td>
+                        <td class="text-end">@debit.ToString(currencyFormat)</td>
+                        <td class="text-end">@credit.ToString(currencyFormat)</td>
                         <td class="text-end">@balance.ToString(currencyFormat)</td>
                     </tr>
                 }
-                <tr class="table-primary">
+
+                <tr style="border-top: double">
+
+                    @{
+                        debit = Model.Sum(j => j.Debit);
+                        credit = Model.Sum(j => j.Credit);
+                        balance = debit - credit;
+                    }
+
                     <td colspan="@colspan" class="text-center">TOTAL</td>
-                    <td class="text-end">@Model.Sum(j => j.Debit).ToString("N2")</td>
-                    <td class="text-end">@Model.Sum(j => j.Credit).ToString("N2")</td>
+                    <td class="text-end">@debit.ToString(currencyFormat)</td>
+                    <td class="text-end">@credit.ToString(currencyFormat)</td>
+                    <td class="text-end">@balance.ToString(currencyFormat)</td>
                 </tr>
             </tbody>
         </table>

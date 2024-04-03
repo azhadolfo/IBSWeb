@@ -20,7 +20,7 @@ namespace IBS.Models
 
         [Column(TypeName = "date")]
         [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
-        public DateOnly? Date { get; set; }
+        public DateOnly Date { get; set; }
 
         [Column(TypeName = "varchar(200)")]
         public string Reference { get; set; }
