@@ -4,11 +4,16 @@
 // Write your JavaScript code.
 $(document).ready(function () {
     $('.js-select2').select2({
-        placeholder: "Select a category...",
+        placeholder: "Select an option...",
         allowClear: true,
         width: 'resolve',
         theme: 'classic'
     });
+});
+
+// hack to fix jquery 3.6 focus security patch that bugs auto search in select-2
+$(document).on('select2:open', () => {
+    document.querySelector('.select2-search__field').focus();
 });
 
 $(document).ready(function () {
