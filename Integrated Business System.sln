@@ -4,6 +4,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IBSWeb", "IBSWeb\IBSWeb.csproj", "{6CCF0E55-0788-4D2A-BA52-3969BA6999DA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A39C99B9-B43E-448E-B223-D6633EF26855} = {A39C99B9-B43E-448E-B223-D6633EF26855}
+		{DC26A468-0810-4129-B0EE-74B2828291FF} = {DC26A468-0810-4129-B0EE-74B2828291FF}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IBS.DataAccess", "IBS.DataAccess\IBS.DataAccess.csproj", "{1BE8E30C-6424-4AF0-8B50-6C2C44AA487F}"
 EndProject
