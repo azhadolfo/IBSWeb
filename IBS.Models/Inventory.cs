@@ -29,7 +29,7 @@ namespace IBS.Models
         public string ProductCode { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string StationCode { get; set; }
+        public string? StationCode { get; set; }
 
         [Column(TypeName = "numeric(18,3)")]
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]

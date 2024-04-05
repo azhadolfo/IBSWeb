@@ -2,6 +2,7 @@
 using IBS.Models;
 using IBS.Utility;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using System.Linq.Expressions;
@@ -16,10 +17,13 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly ILogger<GeneralLedgerController> _logger;
 
-        public GeneralLedgerController(IUnitOfWork unitOfWork, ILogger<GeneralLedgerController> logger)
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public GeneralLedgerController(IUnitOfWork unitOfWork, ILogger<GeneralLedgerController> logger, UserManager<IdentityUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userManager = userManager;
         }
 
         public IActionResult GetTransaction()
@@ -29,9 +33,18 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> DisplayByTransaction(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken)
         {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+
+            Expression<Func<GeneralLedger, bool>> filter = g => g.IsValidated &&
+                                                                g.TransactionDate >= dateFrom &&
+                                                                g.TransactionDate <= dateTo &&
+                                                                (stationCodeClaim == "ALL" || g.StationCode == stationCodeClaim);
+
             IEnumerable<GeneralLedger> ledgers = await _unitOfWork
                 .GeneralLedger
-                .GetAllAsync(g => g.IsValidated && g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo, cancellationToken);
+                .GetAllAsync(filter, cancellationToken);
 
             return View(ledgers);
         }
@@ -45,9 +58,19 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (!String.IsNullOrEmpty(journal))
             {
+                var user = await _userManager.GetUserAsync(User);
+                var claims = await _userManager.GetClaimsAsync(user);
+                var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+
+                Expression<Func<GeneralLedger, bool>> filter = g => g.IsValidated &&
+                                                                    g.JournalReference == journal &&
+                                                                    g.TransactionDate >= dateFrom &&
+                                                                    g.TransactionDate <= dateTo &&
+                                                                    (stationCodeClaim == "ALL" || g.StationCode == stationCodeClaim);
+
                 IEnumerable<GeneralLedger> ledgers = await _unitOfWork
                     .GeneralLedger
-                    .GetAllAsync(g => g.JournalReference == journal && g.IsValidated && (g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo), cancellationToken);
+                    .GetAllAsync(filter, cancellationToken);
 
                 ViewData["Journal"] = journal.ToUpper();
                 return View(ledgers);
@@ -72,14 +95,20 @@ namespace IBSWeb.Areas.User.Controllers
         {
             accountNo = string.IsNullOrEmpty(accountNo) ? "ALL" : accountNo;
             productCode = string.IsNullOrEmpty(productCode) ? "ALL" : productCode;
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
             ChartOfAccount chartOfAccount = await _unitOfWork.ChartOfAccount.GetAsync(c => c.AccountNumber == accountNo, cancellationToken);
 
             SetViewData(chartOfAccount, accountNo, productCode, dateFrom, dateTo);
 
-            Expression<Func<GeneralLedger, bool>> filter = g =>
-                g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo &&
-                (accountNo == "ALL" || g.AccountNumber == accountNo) && g.IsValidated && (productCode == "ALL" || g.ProductCode == productCode);
+            Expression<Func<GeneralLedger, bool>> filter = g => g.TransactionDate >= dateFrom &&
+                                                                g.TransactionDate <= dateTo &&
+                                                                (accountNo == "ALL" || g.AccountNumber == accountNo) &&
+                                                                g.IsValidated &&
+                                                                (productCode == "ALL" || g.ProductCode == productCode) &&
+                                                                (stationCodeClaim == "ALL" || g.StationCode == stationCodeClaim);
 
             IEnumerable<GeneralLedger> ledgers = await _unitOfWork.GeneralLedger.GetAllAsync(filter, cancellationToken);
 

@@ -5,9 +5,11 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Threading;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -20,13 +22,16 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly ILogger<PurchaseController> _logger;
 
+        private readonly UserManager<IdentityUser> _userManager;
+
         [BindProperty]
         public LubeDeliveryVM LubeDeliveryVM { get; set; }
 
-        public PurchaseController(IUnitOfWork unitOfWork, ILogger<PurchaseController> logger)
+        public PurchaseController(IUnitOfWork unitOfWork, ILogger<PurchaseController> logger, UserManager<IdentityUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -104,11 +109,17 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        public async Task<IActionResult> Fuel()
+        public async Task<IActionResult> Fuel(CancellationToken cancellationToken)
         {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+
+            Expression<Func<FuelPurchase, bool>> filter = s => (stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim);
+
             IEnumerable<FuelPurchase> fuelPurchaseList = await _unitOfWork
                 .FuelPurchase
-                .GetAllAsync();
+                .GetAllAsync(filter, cancellationToken);
 
             return View(fuelPurchaseList);
         }
@@ -198,11 +209,17 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        public async Task<IActionResult> Lube()
+        public async Task<IActionResult> Lube(CancellationToken cancellationToken)
         {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+
+            Expression<Func<LubePurchaseHeader, bool>> filter = s => (stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim);
+
             IEnumerable<LubePurchaseHeader> lubePurchaseHeaders = await _unitOfWork
                 .LubePurchaseHeader
-                .GetAllAsync();
+                .GetAllAsync(filter, cancellationToken);
 
             return View(lubePurchaseHeaders);
         }

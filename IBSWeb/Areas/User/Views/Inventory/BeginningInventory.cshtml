@@ -3,6 +3,7 @@
 
 @{
     ViewData["Title"] = "Beginning Inventory";
+    string stationCodeClaim = User.Claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 }
 
 <div class="card shadow border-0 mt-4">
@@ -39,13 +40,16 @@
                     </select>
                     <span asp-validation-for="ProductCode" class="text-danger"></span>
                 </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Station List<span class="required">*</span></label>
-                    <select asp-for="StationCode" asp-items="@Model.Stations" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected disabled>Select station</option>
-                    </select>
-                    <span asp-validation-for="StationCode" class="text-danger"></span>
-                </div>
+                @if (stationCodeClaim == "ALL")
+                {
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Station List<span class="required">*</span></label>
+                        <select asp-for="StationCode" asp-items="@Model.Stations" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected disabled>Select station</option>
+                        </select>
+                        <span asp-validation-for="StationCode" class="text-danger"></span>
+                    </div>
+                }
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
                         <button type="submit" class="btn btn-primary form-control">Save</button>

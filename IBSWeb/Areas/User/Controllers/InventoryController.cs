@@ -3,7 +3,9 @@ using IBS.Models;
 using IBS.Models.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -15,10 +17,13 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly ILogger<InventoryController> _logger;
 
-        public InventoryController(IUnitOfWork unitOfWork, ILogger<InventoryController> logger)
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public InventoryController(IUnitOfWork unitOfWork, ILogger<InventoryController> logger, UserManager<IdentityUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> GenerateInventoryCosting()
@@ -37,6 +42,9 @@ namespace IBSWeb.Areas.User.Controllers
 
             IEnumerable<Inventory> inventories;
             Product productDetails = await _unitOfWork.Product.GetAsync(p => p.ProductCode == model.ProductCode, cancellationToken);
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            model.StationCode = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
             if (model.StationCode == "ALL")
             {
@@ -72,6 +80,13 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
+                if (model.StationCode == null)
+                {
+                    var user = await _userManager.GetUserAsync(User);
+                    var claims = await _userManager.GetClaimsAsync(user);
+                    model.StationCode = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+                }
+
                 await _unitOfWork.Inventory.CalculateTheBeginningInventory(model, cancellationToken);
                 TempData["success"] = "Beginning inventory saving successfully.";
                 return RedirectToAction(nameof(BeginningInventory));
