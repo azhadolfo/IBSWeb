@@ -1,31 +1,46 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
+    [Authorize]
     public class CashierReportController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly ILogger<CashierReportController> _logger;
 
+        private readonly UserManager<IdentityUser> _userManager;
+
         [BindProperty]
         public SalesVM SalesVM { get; set; }
 
-        public CashierReportController(IUnitOfWork unitOfWork, ILogger<CashierReportController> logger)
+        public CashierReportController(IUnitOfWork unitOfWork, ILogger<CashierReportController> logger, UserManager<IdentityUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode");
+            string stationCode = stationCodeClaim.Value;
+            var stationDetails = await _unitOfWork.Station.GetAsync(s => s.StationCode == stationCode, cancellationToken);
+
+            Expression<Func<SalesHeader, bool>> filter = s => (stationCode == "ALL" || s.StationPosCode == stationDetails.PosCode);
+
             IEnumerable<SalesHeader> salesHeader = await _unitOfWork
                 .SalesHeader
-                .GetAllAsync();
+                .GetAllAsync(filter, cancellationToken);
 
             return View(salesHeader);
         }

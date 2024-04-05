@@ -14,6 +14,9 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using IBS.DataAccess.Repository.IRepository;
+using System.Security.Claims;
 
 namespace IBSWeb.Areas.Identity.Pages.Account
 {
@@ -21,11 +24,13 @@ namespace IBSWeb.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger, IUnitOfWork unitOfWork)
         {
             _signInManager = signInManager;
             _logger = logger;
+            _unitOfWork = unitOfWork;
         }
 
         /// <summary>
@@ -54,6 +59,8 @@ namespace IBSWeb.Areas.Identity.Pages.Account
         [TempData]
         public string ErrorMessage { get; set; }
 
+        public List<SelectListItem>? Stations { get; set; }
+
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
@@ -65,8 +72,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [Required]
-            [EmailAddress]
-            public string Email { get; set; }
+            public string Username { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -82,10 +88,20 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             /// </summary>
             [Display(Name = "Remember me?")]
             public bool RememberMe { get; set; }
+
+            [Required]
+            [Display(Name = "Station")]
+            public string StationCode { get; set; }
+
         }
 
         public async Task OnGetAsync(string returnUrl = null)
         {
+            if (User.Identity.IsAuthenticated)
+            {
+                Response.Redirect("/");
+            }
+
             if (!string.IsNullOrEmpty(ErrorMessage))
             {
                 ModelState.AddModelError(string.Empty, ErrorMessage);
@@ -97,6 +113,8 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            Stations = await _unitOfWork.GetStationAsyncByCode();
 
             ReturnUrl = returnUrl;
         }
@@ -111,9 +129,22 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
+                    var user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
+                    var existingClaims = await _signInManager.UserManager.GetClaimsAsync(user);
+
+                    var existingStationCodeClaim = existingClaims.FirstOrDefault(c => c.Type == "StationCode");
+
+                    if (existingStationCodeClaim != null)
+                    {
+                        await _signInManager.UserManager.RemoveClaimAsync(user, existingStationCodeClaim);
+                    }
+
+                    var newStationCodeClaim = new Claim("StationCode", Input.StationCode);
+                    await _signInManager.UserManager.AddClaimAsync(user, newStationCodeClaim);
+
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }
@@ -128,6 +159,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                 }
                 else
                 {
+                    Stations = await _unitOfWork.GetStationAsyncByCode();
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     return Page();
                 }

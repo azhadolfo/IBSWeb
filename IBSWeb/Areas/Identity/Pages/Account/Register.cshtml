@@ -1,4 +1,5 @@
 ﻿@page
+@using IBS.Utility
 @model RegisterModel
 @{
     ViewData["Title"] = "Register";
@@ -13,8 +14,37 @@
             <hr />
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                <label asp-for="Input.Email">Email</label>
+                <input asp-for="Input.Username" class="form-control" autocomplete="off" aria-required="true" placeholder="username" />
+                <label asp-for="Input.Username">Username</label>
+                <span asp-validation-for="Input.Username" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Name" class="form-control" autocomplete="off" aria-required="true" placeholder="name" />
+                <label asp-for="Input.Name">Full Name</label>
+                <span asp-validation-for="Input.Name" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <select id="departmentSelect" asp-for="Input.Department" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                    <option value="@SD.Department_Accounting" selected>@SD.Department_Accounting</option>
+                    <option value="@SD.Department_CreditAndCollection">@SD.Department_CreditAndCollection</option>
+                    <option value="@SD.Department_Engineering">@SD.Department_Engineering</option>
+                    <option value="@SD.Department_Finance">@SD.Department_Finance</option>
+                    <option value="@SD.Department_HRAndAdminOrLegal">@SD.Department_HRAndAdminOrLegal</option>
+                    <option value="@SD.Department_Logistics">@SD.Department_Logistics</option>
+                    <option value="@SD.Department_ManagementAccounting">@SD.Department_ManagementAccounting</option>
+                    <option value="@SD.Department_Marketing">@SD.Department_Marketing</option>
+                    <option value="@SD.Department_MIS">@SD.Department_MIS</option>
+                    <option value="@SD.Department_Operation">@SD.Department_Operation</option>
+                    <option value="@SD.Department_RCD">@SD.Department_RCD</option>
+                    <option value="@SD.Department_SiteDevAndSiteAcquisition">@SD.Department_SiteDevAndSiteAcquisition</option>
+                    <option value="@SD.Department_TradeAndSupply">@SD.Department_TradeAndSupply</option>
+                    <option value="@SD.Department_TrainingAndCompliance">@SD.Department_TrainingAndCompliance</option>
+                </select>
+                <span asp-validation-for="Input.Department" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="name@example.com" />
+                <label asp-for="Input.Email">Email(optional)</label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
