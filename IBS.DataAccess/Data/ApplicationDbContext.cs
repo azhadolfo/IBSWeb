@@ -126,6 +126,7 @@ namespace IBS.DataAccess.Data
             {
                 s.HasIndex(s => s.SalesNo).IsUnique();
                 s.HasIndex(s => s.Cashier);
+                s.HasIndex(s => s.StationPosCode);
             });
 
             // SalesDetail
@@ -162,9 +163,12 @@ namespace IBS.DataAccess.Data
             });
 
             // FuelPurchase
-            builder.Entity<FuelPurchase>(f => f
-                .HasIndex(f => f.FuelPurchaseNo)
-                .IsUnique());
+            builder.Entity<FuelPurchase>(f =>
+            {
+                f.HasIndex(f => f.FuelPurchaseNo).IsUnique();
+                f.HasIndex(f => f.StationCode);
+                f.HasIndex(f => f.ProductCode);
+            });
 
             // LubeDelivery
             builder.Entity<LubeDelivery>(l =>
@@ -179,6 +183,12 @@ namespace IBS.DataAccess.Data
                 .HasIndex(lh => lh.LubePurchaseHeaderNo)
                 .IsUnique());
 
+            builder.Entity<LubePurchaseHeader>(lh =>
+            {
+                lh.HasIndex(lh => lh.LubePurchaseHeaderNo).IsUnique();
+                lh.HasIndex(lh => lh.StationCode);
+            });
+
             // LubePurchaseDetail
             builder.Entity<LubePurchaseDetail>()
                 .HasOne(ld => ld.LubePurchaseHeader)
@@ -186,8 +196,11 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(ld => ld.LubePurchaseHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<LubePurchaseDetail>(ld => ld
-                .HasIndex(ld => ld.LubePurchaseHeaderNo));
+            builder.Entity<LubePurchaseDetail>(ld =>
+            {
+                ld.HasIndex(ld => ld.LubePurchaseHeaderNo);
+                ld.HasIndex(lh => lh.ProductCode);
+            });
 
             #endregion
 
@@ -207,6 +220,9 @@ namespace IBS.DataAccess.Data
                 g.HasIndex(g => g.AccountTitle);
                 g.HasIndex(g => g.ProductCode);
                 g.HasIndex(g => g.JournalReference);
+                g.HasIndex(g => g.StationCode);
+                g.HasIndex(g => g.SupplierCode);
+                g.HasIndex(g => g.CustomerCode);
             });
 
             // Inventory
