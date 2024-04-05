@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using System.Linq.Expressions;
@@ -8,6 +9,7 @@ using System.Linq.Expressions;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
+    [Authorize]
     public class GeneralLedgerController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

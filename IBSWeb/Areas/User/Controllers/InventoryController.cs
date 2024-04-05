@@ -2,11 +2,13 @@
 using IBS.Models;
 using IBS.Models.ViewModels;
 using IBS.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
+    [Authorize]
     public class InventoryController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

@@ -1,10 +1,12 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
+    [Authorize]
     public class CustomerController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

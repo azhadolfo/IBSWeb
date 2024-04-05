@@ -4,6 +4,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
@@ -12,6 +13,7 @@ using System.Threading;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
+    [Authorize]
     public class PurchaseController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
