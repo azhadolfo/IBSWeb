@@ -17,7 +17,8 @@ namespace IBS.Utility
     public enum JournalType
     {
         Sales,
-        Purchase
+        Purchase,
+        Inventory
     }
 
 }

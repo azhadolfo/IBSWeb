@@ -60,25 +60,25 @@ namespace IBS.DataAccess.Repository
                     Credit = 0,
                     StationCode = model.StationCode,
                     ProductCode = model.ProductCode,
-                    JournalReference = " ",
+                    JournalReference = nameof(JournalType.Inventory),
                     IsValidated = true
                 },
                 new() {
                     TransactionDate = model.Date,
                     Reference = model.TransactionNo,
                     Particular = $"Beginning Inventory for {model.ProductCode}",
-                    AccountNumber = "10100033",
-                    AccountTitle = "Merchandise Inventory",
+                    AccountNumber = "30200005",
+                    AccountTitle = "Retained Earnings",
                     Debit = 0,
                     Credit = Math.Round(model.TotalCost, 2),
                     StationCode = model.StationCode,
                     ProductCode = model.ProductCode,
-                    JournalReference = " ",
+                    JournalReference = nameof(JournalType.Inventory),
                     IsValidated = true
                 }
             };
 
-            await _db.GeneralLedgers.AddRangeAsync(journals);
+            await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
 
             #endregion
 
