@@ -5,57 +5,53 @@
     ViewData["Title"] = "Log in";
 }
 
-<h1>@ViewData["Title"]</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
-            <form id="account" method="post">
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Username" class="form-control" autocomplete="off" aria-required="true" placeholder="username" />
-                    <label asp-for="Input.Username" class="form-label">Username</label>
-                    <span asp-validation-for="Input.Username" class="text-danger"></span>
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title text-center mb-4">Log in</h1>
+                    <form id="account" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input asp-for="Input.Username" class="form-control" autocomplete="off" aria-required="true" placeholder="Enter your username" />
+                            <span asp-validation-for="Input.Username" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Enter your password" />
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="station" class="form-label">What Station?</label>
+                            <select asp-for="Input.StationCode" asp-items="@Model.Stations" class="form-select js-select2" style="width:100%">
+                                <option value="" selected disabled>Select station</option>
+                                <option value="ALL">ALL STATION</option>
+                            </select>
+                            <span asp-validation-for="Input.StationCode" class="text-danger"></span>
+                        </div>
+                        <div class="text-center">
+                            <button id="login-submit" type="submit" class="btn btn-primary">Log in</button>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">Click To Sign Up</a>
+                        </div>
+                    </form>
+                    <!--Uncomment this if needed-->
+                    <!--
+                    <div class="mt-3 text-center">
+                        <a id="forgot-password" asp-page="./ForgotPassword" class="text-decoration-none">Forgot your password?</a>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <a asp-page="./ResendEmailConfirmation" class="text-decoration-none">Resend email confirmation</a>
+                    </div>
+                    -->
                 </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label asp-for="Input.Password" class="form-label">Password</label>
-                    <span asp-validation-for="Input.Password" class="text-danger"></span>
-                </div>
-                <div class="form-group mb-3">
-                    <label asp-for="Input.StationCode" class="control-label">What Station?</label>
-                    <select asp-for="Input.StationCode" asp-items="@Model.Stations" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected disabled>Select station</option>
-                        <option value="ALL">ALL STATION</option>
-                    </select>
-                    <span asp-validation-for="Input.StationCode" class="text-danger"></span>
-                </div>
-                @* <div class="checkbox mb-3">
-                    <label asp-for="Input.RememberMe" class="form-label">
-                        <input class="form-check-input" asp-for="Input.RememberMe" />
-                        @Html.DisplayNameFor(m => m.Input.RememberMe)
-                    </label>
-                </div> *@
-                <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <!--Uncomment this if needed-->
-                @* <div>
-                    <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div> *@
-            </form>
-        </section>
+            </div>
+        </div>
     </div>
-    <div class="col-md-6 col-md-offset-2">
+    @* <div class="col-md-6 col-md-offset-2">
         <section>
             <h3>Use another service to log in.</h3>
             <hr />
@@ -84,7 +80,7 @@
                 }
             }
         </section>
-    </div>
+    </div> *@
 </div>
 
 @section Scripts {
