@@ -43,10 +43,23 @@ namespace IBS.DataAccess.Repository
                     .Products
                     .FirstOrDefaultAsync(p => p.ProductCode == fuelPurchase.ProductCode, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{fuelPurchase.ProductCode}' not found.");
 
-                Inventory previousInventory = await _db
-                    .Inventories
-                    .OrderByDescending(i => i.InventoryId)
-                    .FirstOrDefaultAsync(i => i.ProductCode == fuelPurchase.ProductCode && i.StationCode == fuelPurchase.StationCode,cancellationToken) ?? throw new ArgumentException($"Beginning inventory for {fuelPurchase.ProductCode} in station {fuelPurchase.StationCode} not found!");
+                var sortedInventory = _db
+                        .Inventories
+                        .OrderBy(i => i.Date)
+                        .Where(i => i.ProductCode == fuelPurchase.ProductCode && i.StationCode == fuelPurchase.StationCode)
+                        .ToList();
+
+                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= fuelPurchase.DeliveryDate);
+                    if (lastIndex >= 0)
+                    {
+                        sortedInventory = sortedInventory.Skip(lastIndex).ToList();
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Beginning inventory for {fuelPurchase.ProductCode} in station {fuelPurchase.StationCode} not found!");
+                    }
+
+                    var previousInventory = sortedInventory.FirstOrDefault();
 
                 fuelPurchase.PostedBy = "Ako";
                 fuelPurchase.PostedDate = DateTime.Now;
@@ -144,6 +157,22 @@ namespace IBS.DataAccess.Repository
                     ProductCode = product.ProductCode,
                     JournalReference = nameof(JournalType.Purchase)
                 });
+
+                foreach (var transaction in sortedInventory.Skip(1))
+                {
+                    transaction.TotalCost = transaction.Quantity * totalCost;
+                    transaction.RunningCost = transaction.Particulars == nameof(JournalType.Purchase) ? runningCost + transaction.TotalCost : runningCost - transaction.TotalCost;
+                    transaction.InventoryBalance = transaction.Particulars == nameof(JournalType.Purchase) ? inventoryBalance + transaction.Quantity : inventoryBalance - transaction.Quantity;
+                    transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
+                    transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+
+                    _db.Inventories.Update(transaction);
+
+                    totalCost = transaction.TotalCost;
+                    runningCost = transaction.RunningCost;
+                    inventoryBalance = transaction.InventoryBalance;
+                }
+
 
                 if (IsJournalEntriesBalanced(journals))
                 {

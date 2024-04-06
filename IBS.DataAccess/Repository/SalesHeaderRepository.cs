@@ -242,10 +242,24 @@ namespace IBS.DataAccess.Repository
                         IsValidated = true
                     });
 
-                    Inventory previousInventory = await _db
-                    .Inventories
-                    .OrderByDescending(i => i.InventoryId)
-                    .FirstOrDefaultAsync(i => i.ProductCode == product.Key && i.StationCode == station.StationCode, cancellationToken) ?? throw new ArgumentException($"Beginning inventory for {product.Key} in station {station.StationCode} not found!");
+                    var sortedInventory = _db
+                        .Inventories
+                        .OrderBy(i => i.Date)
+                        .Where(i => i.ProductCode == product.Key && i.StationCode == station.StationCode)
+                        .ToList();
+
+                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= salesVM.Header.Date);
+                    if (lastIndex >= 0)
+                    {
+                        sortedInventory = sortedInventory.Skip(lastIndex).ToList();
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Beginning inventory for {product.Key} in station {station.StationCode} not found!");
+                    }
+
+                    var previousInventory = sortedInventory.FirstOrDefault();
+
 
                     decimal quantity = (decimal)product.Sum(p => p.Liters);
 
@@ -309,6 +323,21 @@ namespace IBS.DataAccess.Repository
                         JournalReference = nameof(JournalType.Sales),
                         IsValidated = true
                     });
+
+                    foreach (var transaction in sortedInventory.Skip(1))
+                    {
+                        transaction.TotalCost = transaction.Quantity * totalCost;
+                        transaction.RunningCost = transaction.Particulars == nameof(JournalType.Sales) ? runningCost - transaction.TotalCost : runningCost + transaction.TotalCost;
+                        transaction.InventoryBalance = transaction.Particulars == nameof(JournalType.Sales) ? inventoryBalance - transaction.Quantity : inventoryBalance + transaction.Quantity;
+                        transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
+                        transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+
+                        _db.Inventories.Update(transaction);
+
+                        totalCost = transaction.TotalCost;
+                        runningCost = transaction.RunningCost;
+                        inventoryBalance = transaction.InventoryBalance;
+                    }
                 }
 
                 if (salesVM.Header.GainOrLoss != 0)
