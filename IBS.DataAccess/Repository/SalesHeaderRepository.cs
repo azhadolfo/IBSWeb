@@ -120,7 +120,7 @@ namespace IBS.DataAccess.Repository
 
                 foreach (var fuel in fuelSales)
                 {
-                    var salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME);
+                    var salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift);
 
                     var salesDetail = new SalesDetail
                     {
@@ -140,6 +140,28 @@ namespace IBS.DataAccess.Repository
                     };
 
                     await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
+                }
+
+                if (lubeSales.Count != 0)
+                {
+                    foreach (var lube in lubeSales)
+                    {
+                        var salesHeader = salesHeaders.Find(l => l.Cashier == lube.Cashier && l.Shift == lube.Shift);
+
+                        var salesDetail = new SalesDetail
+                        {
+                            SalesHeaderId = salesHeader.SalesHeaderId,
+                            SalesNo = salesHeader.SalesNo,
+                            Product = lube.ItemCode,
+                            Particular = $"{lube.Particulars}",
+                            Liters = lube.LubesQty,
+                            Price = lube.Price,
+                            Sale = lube.Amount,
+                            Value = Math.Round(lube.Amount, 2)
+                        };
+
+                        await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
+                    }
                 }
 
                 await _db.SaveChangesAsync(cancellationToken);
@@ -218,8 +240,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = "40100005",
-                        AccountTitle = "Sales-Fuel",
+                        AccountNumber = product.Key.Contains("PET") ? "40100005" : "40100009",
+                        AccountTitle = product.Key.Contains("PET") ? "Sales-Fuel" : "Sales-Lube",
                         Debit = 0,
                         Credit = Math.Round(product.Sum(p => p.Value) / 1.12m, 2),
                         StationCode = station.StationCode,
@@ -352,9 +374,35 @@ namespace IBS.DataAccess.Repository
                             inventoryBalance = transaction.InventoryBalance;
                         }
 
-                        _db.Inventories.Update(transaction);
+                        var journalEntries = _db.GeneralLedgers
+                            .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
+                                        (j.AccountNumber == "50100005" || j.AccountNumber == "10100033"))
+                            .ToList();
 
+                        foreach (var journal in journalEntries)
+                        {
+                            if (journal.Debit != 0)
+                            {
+                                if (journal.Debit != transaction.CostOfGoodsSold)
+                                {
+                                    journal.Debit = transaction.CostOfGoodsSold;
+                                    journal.Credit = 0;
+                                }
+                            }
+                            else
+                            {
+                                if (journal.Credit != transaction.CostOfGoodsSold)
+                                {
+                                    journal.Credit = transaction.CostOfGoodsSold;
+                                    journal.Debit = 0;
+                                }
+                            }
+                        }
+
+                        _db.GeneralLedgers.UpdateRange(journalEntries);
                     }
+
+                    _db.Inventories.UpdateRange(sortedInventory);
                 }
 
                 if (salesVM.Header.GainOrLoss != 0)

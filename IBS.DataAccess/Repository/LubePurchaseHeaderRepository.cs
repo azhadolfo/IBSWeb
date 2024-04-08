@@ -91,10 +91,23 @@ namespace IBS.DataAccess.Repository
 
                 foreach (var lube in lubeDeliveryVM.Details)
                 {
-                    Inventory? previousInventory = await _db
-                   .Inventories
-                   .OrderByDescending(i => i.InventoryId)
-                   .FirstOrDefaultAsync(i => i.ProductCode == lube.ProductCode && i.StationCode == lubeDeliveryVM.Header.StationCode, cancellationToken) ?? throw new ArgumentException($"Beginning inventory for {lube.ProductCode} in station {lubeDeliveryVM.Header.StationCode} not found!");
+                    var sortedInventory = _db
+                        .Inventories
+                        .OrderBy(i => i.Date)
+                        .Where(i => i.ProductCode == lube.ProductCode && i.StationCode == lubeDeliveryVM.Header.StationCode)
+                        .ToList();
+
+                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= lubeDeliveryVM.Header.DeliveryDate);
+                    if (lastIndex >= 0)
+                    {
+                        sortedInventory = sortedInventory.Skip(lastIndex).ToList();
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Beginning inventory for {lube.ProductCode} in station {lubeDeliveryVM.Header.StationCode} not found!");
+                    }
+
+                    var previousInventory = sortedInventory.FirstOrDefault();
 
                     decimal totalCost = lube.Piece * lube.CostPerPiece;
                     decimal runningCost = previousInventory.RunningCost + totalCost;
@@ -130,7 +143,8 @@ namespace IBS.DataAccess.Repository
                         Debit = cogs,
                         Credit = 0,
                         StationCode = lubeDeliveryVM.Header.StationCode,
-                        JournalReference = nameof(JournalType.Purchase)
+                        JournalReference = nameof(JournalType.Purchase),
+                        ProductCode = lube.ProductCode
                     });
 
                     journals.Add(new GeneralLedger
@@ -143,8 +157,67 @@ namespace IBS.DataAccess.Repository
                         Debit = 0,
                         Credit = cogs,
                         StationCode = lubeDeliveryVM.Header.StationCode,
-                        JournalReference = nameof(JournalType.Purchase)
+                        JournalReference = nameof(JournalType.Purchase),
+                        ProductCode = lube.ProductCode
                     });
+
+                    foreach (var transaction in sortedInventory.Skip(1))
+                    {
+
+                        if (transaction.Particulars == nameof(JournalType.Sales))
+                        {
+                            transaction.UnitCost = unitCostAverage;
+                            transaction.TotalCost = transaction.Quantity * unitCostAverage;
+                            transaction.RunningCost = runningCost - transaction.TotalCost;
+                            transaction.InventoryBalance = inventoryBalance - transaction.Quantity;
+                            transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
+                            transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+
+                            unitCostAverage = transaction.UnitCostAverage;
+                            runningCost = transaction.RunningCost;
+                            inventoryBalance = transaction.InventoryBalance;
+                        }
+                        else if (transaction.Particulars == nameof(JournalType.Purchase))
+                        {
+                            transaction.RunningCost = runningCost + transaction.TotalCost;
+                            transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
+                            transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
+                            transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+
+                            unitCostAverage = transaction.UnitCostAverage;
+                            runningCost = transaction.RunningCost;
+                            inventoryBalance = transaction.InventoryBalance;
+                        }
+
+                        var journalEntries = _db.GeneralLedgers
+                            .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
+                                        (j.AccountNumber == "50100005" || j.AccountNumber == "10100033"))
+                            .ToList();
+
+                        foreach (var journal in journalEntries)
+                        {
+                            if (journal.Debit != 0)
+                            {
+                                if (journal.Debit != transaction.CostOfGoodsSold)
+                                {
+                                    journal.Debit = transaction.CostOfGoodsSold;
+                                    journal.Credit = 0;
+                                }
+                            }
+                            else
+                            {
+                                if (journal.Credit != transaction.CostOfGoodsSold)
+                                {
+                                    journal.Credit = transaction.CostOfGoodsSold;
+                                    journal.Debit = 0;
+                                }
+                            }
+                        }
+
+                        _db.GeneralLedgers.UpdateRange(journalEntries);
+                    }
+
+                    _db.Inventories.UpdateRange(sortedInventory);
                 }
 
                 if (IsJournalEntriesBalanced(journals))

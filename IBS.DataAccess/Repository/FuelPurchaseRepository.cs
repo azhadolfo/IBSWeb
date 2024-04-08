@@ -49,17 +49,17 @@ namespace IBS.DataAccess.Repository
                         .Where(i => i.ProductCode == fuelPurchase.ProductCode && i.StationCode == fuelPurchase.StationCode)
                         .ToList();
 
-                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= fuelPurchase.DeliveryDate);
-                    if (lastIndex >= 0)
-                    {
-                        sortedInventory = sortedInventory.Skip(lastIndex).ToList();
-                    }
-                    else
-                    {
-                        throw new ArgumentException($"Beginning inventory for {fuelPurchase.ProductCode} in station {fuelPurchase.StationCode} not found!");
-                    }
+                var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= fuelPurchase.DeliveryDate);
+                if (lastIndex >= 0)
+                {
+                    sortedInventory = sortedInventory.Skip(lastIndex).ToList();
+                }
+                else
+                {
+                    throw new ArgumentException($"Beginning inventory for {fuelPurchase.ProductCode} in station {fuelPurchase.StationCode} not found!");
+                }
 
-                    var previousInventory = sortedInventory.FirstOrDefault();
+                var previousInventory = sortedInventory.FirstOrDefault();
 
                 fuelPurchase.PostedBy = "Ako";
                 fuelPurchase.PostedDate = DateTime.Now;
@@ -186,8 +186,35 @@ namespace IBS.DataAccess.Repository
                         inventoryBalance = transaction.InventoryBalance;
                     }
 
-                    _db.Inventories.Update(transaction);
+                    var journalEntries = _db.GeneralLedgers
+                            .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
+                                        (j.AccountNumber == "50100005" || j.AccountNumber == "10100033"))
+                            .ToList();
+
+                    foreach (var journal in journalEntries)
+                    {
+                        if (journal.Debit != 0)
+                        {
+                            if (journal.Debit != transaction.CostOfGoodsSold)
+                            {
+                                journal.Debit = transaction.CostOfGoodsSold;
+                                journal.Credit = 0;
+                            }
+                        }
+                        else
+                        {
+                            if (journal.Credit != transaction.CostOfGoodsSold)
+                            {
+                                journal.Credit = transaction.CostOfGoodsSold;
+                                journal.Debit = 0;
+                            }
+                        }
+                    }
+
+                    _db.GeneralLedgers.UpdateRange(journalEntries);
                 }
+
+                _db.Inventories.UpdateRange(sortedInventory);
 
 
                 if (IsJournalEntriesBalanced(journals))
