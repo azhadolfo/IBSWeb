@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBS.Models
 {
@@ -49,9 +50,12 @@ namespace IBS.Models
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal SafeDropTotalAmount { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,2)[]")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal POSalesAmount { get; set; }
+        public decimal[] POSalesAmount { get; set; }
+
+        [Column(TypeName = "varchar[]")]
+        public string?[] Customers { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]

@@ -91,11 +91,25 @@ namespace IBS.DataAccess.Repository
                         FuelSalesTotalAmount = Math.Round((decimal)fuel.Liters * fuel.Price, 2),
                         LubesTotalAmount = Math.Round(lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2),
                         SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount), 2),
-                        POSalesAmount = HasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
+                        //POSalesAmount = HasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
+                        POSalesAmount = HasPoSales ? fuelPoSales
+                            .Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift))
+                            .Select(s => s.Amount)
+                            .Concat(lubePoSales
+                                .Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift))
+                                .Select(l => l.Amount))
+                            .ToArray() : [],
+                        Customers = HasPoSales ? fuelPoSales
+                            .Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift))
+                            .Select(s => s.cust)
+                            .Concat(lubePoSales
+                                .Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift))
+                                .Select(l => l.cust))
+                            .ToArray() : [],
                         TimeIn = fuel.TimeIn,
                         TimeOut = fuel.TimeOut
                     })
-                    .GroupBy(s => new { s.Date, s.StationPosCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.POSalesAmount, s.CreatedBy })
+                    .GroupBy(s => new { s.Date, s.StationPosCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.POSalesAmount, s.Customers, s.CreatedBy })
                     .Select(g => new SalesHeader
                     {
                         SalesNo = Guid.NewGuid().ToString(),
@@ -107,8 +121,9 @@ namespace IBS.DataAccess.Repository
                         LubesTotalAmount = g.Key.LubesTotalAmount,
                         SafeDropTotalAmount = g.Key.SafeDropTotalAmount,
                         POSalesAmount = g.Key.POSalesAmount,
-                        TotalSales = (g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount) - g.Key.POSalesAmount ,
-                        GainOrLoss = g.Key.SafeDropTotalAmount - ((g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount) - g.Key.POSalesAmount),
+                        Customers = g.Key.Customers,
+                        TotalSales = (g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount) - g.Key.POSalesAmount.Sum(),
+                        GainOrLoss = g.Key.SafeDropTotalAmount - ((g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount) - g.Key.POSalesAmount.Sum()),
                         CreatedBy = g.Key.CreatedBy,
                         TimeIn = g.Min(s => s.TimeIn),
                         TimeOut = g.Max(s => s.TimeOut)
@@ -213,24 +228,27 @@ namespace IBS.DataAccess.Repository
                     IsValidated = true
                 });
 
-                if (salesVM.Header.POSalesAmount > 0)
+                if (salesVM.Header.POSalesAmount.Sum() > 0)
                 {
-                    journals.Add(new GeneralLedger
+                    for (int i = 0; i < salesVM.Header.POSalesAmount.Length; i++)
                     {
-                        TransactionDate = salesVM.Header.Date,
-                        Reference = salesVM.Header.SalesNo,
-                        Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = "10100025",
-                        AccountTitle = "Accounts Receivable",
-                        Debit = salesVM.Header.POSalesAmount,
-                        Credit = 0,
-                        StationCode = station.StationCode,
-                        JournalReference = nameof(JournalType.Sales),
-                        IsValidated = true
-                    });
+                        journals.Add(new GeneralLedger
+                        {
+                            TransactionDate = salesVM.Header.Date,
+                            Reference = salesVM.Header.SalesNo,
+                            Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                            AccountNumber = "10100025",
+                            AccountTitle = "Accounts Receivable",
+                            Debit = salesVM.Header.POSalesAmount[i],
+                            Credit = 0,
+                            StationCode = station.StationCode,
+                            JournalReference = nameof(JournalType.Sales),
+                            IsValidated = true
+                        });
+                    }
                 }
 
-                foreach(var product in salesVM.Details.GroupBy(d => d.Product))
+                foreach (var product in salesVM.Details.GroupBy(d => d.Product))
                 {
                     Product productDetails = await _db.Products
                         .FirstOrDefaultAsync(p => p.ProductCode == product.Key, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{product.Key}' not found.");
