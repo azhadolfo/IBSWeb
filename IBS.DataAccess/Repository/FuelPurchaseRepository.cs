@@ -160,17 +160,33 @@ namespace IBS.DataAccess.Repository
 
                 foreach (var transaction in sortedInventory.Skip(1))
                 {
-                    transaction.TotalCost = transaction.Quantity * totalCost;
-                    transaction.RunningCost = transaction.Particulars == nameof(JournalType.Purchase) ? runningCost + transaction.TotalCost : runningCost - transaction.TotalCost;
-                    transaction.InventoryBalance = transaction.Particulars == nameof(JournalType.Purchase) ? inventoryBalance + transaction.Quantity : inventoryBalance - transaction.Quantity;
-                    transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
-                    transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+
+                    if (transaction.Particulars == nameof(JournalType.Sales))
+                    {
+                        transaction.UnitCost = unitCostAverage;
+                        transaction.TotalCost = transaction.Quantity * unitCostAverage;
+                        transaction.RunningCost = runningCost - transaction.TotalCost;
+                        transaction.InventoryBalance = inventoryBalance - transaction.Quantity;
+                        transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
+                        transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+
+                        unitCostAverage = transaction.UnitCostAverage;
+                        runningCost = transaction.RunningCost;
+                        inventoryBalance = transaction.InventoryBalance;
+                    }
+                    else if (transaction.Particulars == nameof(JournalType.Purchase))
+                    {
+                        transaction.RunningCost = runningCost + transaction.TotalCost;
+                        transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
+                        transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
+                        transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+
+                        unitCostAverage = transaction.UnitCostAverage;
+                        runningCost = transaction.RunningCost;
+                        inventoryBalance = transaction.InventoryBalance;
+                    }
 
                     _db.Inventories.Update(transaction);
-
-                    totalCost = transaction.TotalCost;
-                    runningCost = transaction.RunningCost;
-                    inventoryBalance = transaction.InventoryBalance;
                 }
 
 
