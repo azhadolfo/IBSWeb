@@ -91,25 +91,25 @@ namespace IBS.DataAccess.Repository
                         FuelSalesTotalAmount = Math.Round((decimal)fuel.Liters * fuel.Price, 2),
                         LubesTotalAmount = Math.Round(lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2),
                         SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount), 2),
-                        //POSalesAmount = HasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
+                        POSalesTotalAmount = HasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
                         POSalesAmount = HasPoSales ? fuelPoSales
-                            .Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift))
+                            .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift)
                             .Select(s => s.Amount)
                             .Concat(lubePoSales
-                                .Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift))
+                                .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift)
                                 .Select(l => l.Amount))
-                            .ToArray() : [],
+                            .ToArray() : new decimal[0],
                         Customers = HasPoSales ? fuelPoSales
-                            .Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift))
+                            .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift)
                             .Select(s => s.cust)
                             .Concat(lubePoSales
-                                .Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift))
+                                .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift)
                                 .Select(l => l.cust))
-                            .ToArray() : [],
+                            .ToArray() : new string[0],
                         TimeIn = fuel.TimeIn,
                         TimeOut = fuel.TimeOut
                     })
-                    .GroupBy(s => new { s.Date, s.StationPosCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.POSalesAmount, s.Customers, s.CreatedBy })
+                    .GroupBy(s => new { s.Date, s.StationPosCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.POSalesTotalAmount, s.CreatedBy })
                     .Select(g => new SalesHeader
                     {
                         SalesNo = Guid.NewGuid().ToString(),
@@ -120,10 +120,11 @@ namespace IBS.DataAccess.Repository
                         FuelSalesTotalAmount = g.Sum(g => g.FuelSalesTotalAmount),
                         LubesTotalAmount = g.Key.LubesTotalAmount,
                         SafeDropTotalAmount = g.Key.SafeDropTotalAmount,
-                        POSalesAmount = g.Key.POSalesAmount,
-                        Customers = g.Key.Customers,
-                        TotalSales = (g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount) - g.Key.POSalesAmount.Sum(),
-                        GainOrLoss = g.Key.SafeDropTotalAmount - ((g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount) - g.Key.POSalesAmount.Sum()),
+                        POSalesTotalAmount = g.Key.POSalesTotalAmount,
+                        POSalesAmount = g.Select(s => s.POSalesAmount).First(),
+                        Customers = g.Select(s => s.Customers).First(),
+                        TotalSales = (g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount) - g.Key.POSalesTotalAmount,
+                        GainOrLoss = g.Key.SafeDropTotalAmount - ((g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount) - g.Key.POSalesTotalAmount),
                         CreatedBy = g.Key.CreatedBy,
                         TimeIn = g.Min(s => s.TimeIn),
                         TimeOut = g.Max(s => s.TimeOut)
@@ -228,9 +229,9 @@ namespace IBS.DataAccess.Repository
                     IsValidated = true
                 });
 
-                if (salesVM.Header.POSalesAmount.Sum() > 0)
+                if (salesVM.Header.POSalesTotalAmount > 0)
                 {
-                    for (int i = 0; i < salesVM.Header.POSalesAmount.Length; i++)
+                    for (int i = 0; i < salesVM.Header.Customers.Length; i++)
                     {
                         journals.Add(new GeneralLedger
                         {
@@ -242,6 +243,7 @@ namespace IBS.DataAccess.Repository
                             Debit = salesVM.Header.POSalesAmount[i],
                             Credit = 0,
                             StationCode = station.StationCode,
+                            CustomerCode = salesVM.Header.Customers[i],
                             JournalReference = nameof(JournalType.Sales),
                             IsValidated = true
                         });

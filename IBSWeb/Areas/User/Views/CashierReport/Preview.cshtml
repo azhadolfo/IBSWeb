@@ -110,11 +110,11 @@
             <td class="text-center">Lubes</td>
             <td class="text-end">@Html.DisplayFor(model => Model.Header.LubesTotalAmount)</td>
         </tr>
-        @if (Model.Header.POSalesAmount.Sum() > 0)
+        @if (Model.Header.POSalesTotalAmount > 0)
         {
             <tr>
                 <td class="text-center">PO Sales</td>
-                <td class="text-end">@Html.DisplayFor(model => Model.Header.POSalesAmount)</td>
+                <td class="text-end">@Html.DisplayFor(model => Model.Header.POSalesTotalAmount)</td>
             </tr>
         }
         <tr>
