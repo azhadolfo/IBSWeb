@@ -40,7 +40,7 @@
             <tbody>
                 @foreach (var obj in Model.OrderBy(u => u.Date))
                 {
-                    <tr class="@(obj.SafeDropTotalAmount > 0 ? "" : "table-danger")">
+                    <tr class="@((obj.SafeDropTotalAmount > 0 || obj.ActualCashOnHand > 0) && obj.IsTransactionNormal ? "" : "table-danger")">
                         <td>
                             @obj.StationPosCode
                         </td>
