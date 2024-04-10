@@ -134,28 +134,47 @@ namespace IBS.DataAccess.Repository
                 await _db.SalesHeaders.AddRangeAsync(salesHeaders, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
 
-                foreach (var fuel in fuelSales)
+                double previousClosing = 0;
+                foreach (var group in fuelSales.GroupBy(f => new {f.ItemCode, f.xPUMP }))
                 {
-                    var salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift);
 
-                    var salesDetail = new SalesDetail
+                    foreach (var fuel in group)
                     {
-                        SalesHeaderId = salesHeader.SalesHeaderId,
-                        SalesNo = salesHeader.SalesNo,
-                        Product = fuel.ItemCode,
-                        Particular = $"{fuel.Particulars} (P{fuel.xPUMP})",
-                        Closing = fuel.Closing,
-                        Opening = fuel.Opening,
-                        Liters = fuel.Liters,
-                        Calibration = fuel.Calibration,
-                        LitersSold = fuel.LitersSold,
-                        TransactionCount = fuel.TransactionCount,
-                        Price = fuel.Price,
-                        Sale = fuel.Sale,
-                        Value = Math.Round((decimal)fuel.Liters * fuel.Price, 2)
-                    };
+                        SalesHeader? salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} not found!");
 
-                    await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
+                        var salesDetail = new SalesDetail
+                        {
+                            SalesHeaderId = salesHeader.SalesHeaderId,
+                            SalesNo = salesHeader.SalesNo,
+                            Product = fuel.ItemCode,
+                            Particular = $"{fuel.Particulars} (P{fuel.xPUMP})",
+                            Closing = fuel.Closing,
+                            Opening = fuel.Opening,
+                            Liters = fuel.Liters,
+                            Calibration = fuel.Calibration,
+                            LitersSold = fuel.LitersSold,
+                            TransactionCount = fuel.TransactionCount,
+                            Price = fuel.Price,
+                            Sale = fuel.Sale,
+                            Value = Math.Round((decimal)fuel.Liters * fuel.Price, 2)
+                        };
+
+                        if (previousClosing != 0 && previousClosing != fuel.Opening)
+                        {
+                            salesHeader.IsTransactionNormal = false;
+                            salesDetail.IsTransactionNormal = false;
+                        }
+
+                        await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
+
+                        if (previousClosing == 0)
+                        {
+                            previousClosing = fuel.Closing;
+                        }
+                    }
+
+                    previousClosing = 0;
+
                 }
 
                 if (lubeSales.Count != 0)

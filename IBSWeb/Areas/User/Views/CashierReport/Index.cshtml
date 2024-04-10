@@ -40,7 +40,7 @@
             <tbody>
                 @foreach (var obj in Model.OrderBy(u => u.Date))
                 {
-                    <tr>
+                    <tr class="@(obj.SafeDropTotalAmount > 0 ? "" : "table-danger")">
                         <td>
                             @obj.StationPosCode
                         </td>

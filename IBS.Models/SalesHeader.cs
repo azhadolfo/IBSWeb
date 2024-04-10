@@ -19,6 +19,7 @@ namespace IBS.Models
         [Column(TypeName = "varchar(50)")]
         public string SalesNo { get; set; }
 
+        [Display(Name = "Station POS Code")]
         public string StationPosCode { get; set; }
 
         [Column(TypeName = "date")]
@@ -68,6 +69,8 @@ namespace IBS.Models
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal GainOrLoss { get; set; }
+
+        public bool IsTransactionNormal { get; set; } = true;
 
 
         #region --Added properties for editing purposes

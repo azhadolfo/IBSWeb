@@ -55,5 +55,7 @@ namespace IBS.Models
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal Value { get; set; } //Sum of Liters * Price
+
+        public bool IsTransactionNormal { get; set; } = true;
     }
 }

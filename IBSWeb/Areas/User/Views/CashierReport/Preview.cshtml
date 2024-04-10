@@ -42,7 +42,7 @@
             {
                 foreach (var item in group.OrderBy(g => g.Particular))
                 {
-                    <tr>
+                    <tr class="@(!item.IsTransactionNormal ? "table-danger" : "")">
                         <td>@item.Particular</td>
                         <td class="text-end">@Html.DisplayFor(model => item.Closing)</td>
                         <td class="text-end">@Html.DisplayFor(model => item.Opening)</td>

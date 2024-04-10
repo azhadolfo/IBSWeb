@@ -47,7 +47,7 @@ namespace IBSWeb.Areas.User.Controllers
             var importFolder = Path.Combine("I:", "Other computers", "TARLAC", "SALESTEXT");
             //DateTime yesterday = DateTime.Now.AddDays(-1);
 
-            DateTime yesterday = DateTime.Now.AddDays(-14);
+            DateTime yesterday = DateTime.Now.AddDays(-15);
 
             try
             {
