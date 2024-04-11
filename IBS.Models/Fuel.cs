@@ -94,5 +94,7 @@ namespace IBS.Models
         public string? cust { get; set; }
 
         public int TransCount { get; set; }
+
+        public bool IsProcessed { get; set; }
     }
 }

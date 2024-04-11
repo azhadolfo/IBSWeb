@@ -56,6 +56,7 @@ namespace IBSWeb.Areas.User.Controllers
                     return View(model);
                 }
 
+                model.FolderPath = _unitOfWork.Station.GenerateFolderPath(model.StationName);
                 await _unitOfWork.Station.AddAsync(model, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Station created successfully";

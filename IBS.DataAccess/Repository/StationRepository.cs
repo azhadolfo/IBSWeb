@@ -19,6 +19,12 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
+        public string GenerateFolderPath(string stationName)
+        {
+            string formattedStationName = stationName.ToUpper().Replace(" ", "-");
+            return $"G:\\Other computers\\{formattedStationName}";
+        }
+
         public async Task<bool> IsPosCodeExistAsync(string posCode, CancellationToken cancellationToken = default)
         {
             return await _db.Stations

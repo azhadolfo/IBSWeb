@@ -17,5 +17,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task UpdateAsync(Station model, CancellationToken cancellationToken = default);
 
+        string GenerateFolderPath(string stationName);
+
     }
 }

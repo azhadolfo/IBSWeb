@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240411042155_AddFolderPathFieldInStation")]
+    partial class AddFolderPathFieldInStation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -142,30 +145,6 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("Companies");
                 });
 
-            modelBuilder.Entity("IBS.Models.CsvFile", b =>
-                {
-                    b.Property<int>("FileId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FileId"));
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<bool>("IsUploaded")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("StationCode")
-                        .IsRequired()
-                        .HasColumnType("varchar(3)");
-
-                    b.HasKey("FileId");
-
-                    b.ToTable("CsvFiles");
-                });
-
             modelBuilder.Entity("IBS.Models.Customer", b =>
                 {
                     b.Property<int>("CustomerId")
@@ -282,9 +261,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<TimeOnly>("InTime")
                         .HasColumnType("time without time zone");
-
-                    b.Property<bool>("IsProcessed")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("ItemCode")
                         .IsRequired()
@@ -796,9 +772,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<DateOnly>("INV_DATE")
                         .HasColumnType("date");
-
-                    b.Property<bool>("IsProcessed")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("ItemCode")
                         .IsRequired()
@@ -1385,9 +1358,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<DateOnly>("INV_DATE")
                         .HasColumnType("date");
-
-                    b.Property<bool>("IsProcessed")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)");

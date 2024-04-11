@@ -67,5 +67,7 @@ namespace IBS.Models
 
         [Column(TypeName = "varchar(20)")]
         public string? cust { get; set; }
+
+        public bool IsProcessed { get; set; }
     }
 }

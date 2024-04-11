@@ -30,6 +30,9 @@ namespace IBS.Models
 
         public bool IsActive { get; set; } = true;
 
+        [Column(TypeName = "varchar(255)")]
+        public string FolderPath { get; set; } = string.Empty;
+
         [Display(Name = "Created By")]
         [Column(TypeName = "varchar(50)")]
         public string? CreatedBy { get; set; }

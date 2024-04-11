@@ -24,13 +24,17 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task ComputeSalesPerCashier(DateOnly yesterday, bool HasPoSales, CancellationToken cancellationToken = default)
+        public async Task ComputeSalesPerCashier(bool HasPoSales, CancellationToken cancellationToken = default)
         {
             try
             {
-                var fuelSales = await _db.Fuels
-                    .Where(f => f.INV_DATE == yesterday)
-                    .GroupBy(f => new { f.xSITECODE, f.xONAME, f.INV_DATE, f.xPUMP, f.Particulars, f.ItemCode, f.Price, f.Shift, f.Calibration })
+
+                var fuels = await _db.Fuels
+                    .Where(f => !f.IsProcessed)
+                    .ToListAsync(cancellationToken);
+
+                var fuelSales = fuels
+                    .GroupBy(f => new { f.xSITECODE, f.xONAME, f.INV_DATE, f.xPUMP, f.Particulars, f.ItemCode, f.Price, f.Shift, f.Calibration, f.IsProcessed })
                     .Select(g => new
                     {
                         g.Key.xSITECODE,
@@ -50,20 +54,21 @@ namespace IBS.DataAccess.Repository
                         Closing = g.Max(f => f.Closing),
                         Opening = g.Min(f => f.Opening),
                         TimeIn = g.Min(f => f.InTime),
-                        TimeOut = g.Max(f => f.OutTime)
+                        TimeOut = g.Max(f => f.OutTime),
+                        g.Key.IsProcessed
                     })
-                    .OrderBy(g => g.Shift)
+                    .OrderBy(g => g.INV_DATE)
+                    .ThenBy(g => g.Shift)
                     .ThenBy(g => g.xSITECODE)
                     .ThenBy(g => g.Particulars)
-                    .ThenBy(g => g.xPUMP)
-                    .ToListAsync(cancellationToken);
+                    .ThenBy(g => g.xPUMP);
 
                 var lubeSales = await _db.Lubes
-                    .Where(f => f.INV_DATE == yesterday)
+                    .Where(f => !f.IsProcessed)
                     .ToListAsync(cancellationToken);
 
                 var safeDropDeposits = await _db.SafeDrops
-                    .Where(f => f.INV_DATE == yesterday)
+                    .Where(f => !f.IsProcessed)
                     .ToListAsync(cancellationToken);
 
                 var fuelPoSales = Enumerable.Empty<Fuel>();
@@ -72,11 +77,11 @@ namespace IBS.DataAccess.Repository
                 if (HasPoSales)
                 {
                     fuelPoSales = await _db.Fuels
-                        .Where(f => f.INV_DATE == yesterday && (!String.IsNullOrEmpty(f.cust) || !String.IsNullOrEmpty(f.pono) || !String.IsNullOrEmpty(f.plateno)))
+                        .Where(f => !f.IsProcessed && (!String.IsNullOrEmpty(f.cust) || !String.IsNullOrEmpty(f.pono) || !String.IsNullOrEmpty(f.plateno)))
                         .ToListAsync(cancellationToken);
 
                     lubePoSales = await _db.Lubes
-                        .Where(f => f.INV_DATE == yesterday && (!String.IsNullOrEmpty(f.cust) || !String.IsNullOrEmpty(f.pono) || !String.IsNullOrEmpty(f.plateno)))
+                        .Where(f => !f.IsProcessed && (!String.IsNullOrEmpty(f.cust) || !String.IsNullOrEmpty(f.pono) || !String.IsNullOrEmpty(f.plateno)))
                         .ToListAsync(cancellationToken);
                 }
 
@@ -89,21 +94,21 @@ namespace IBS.DataAccess.Repository
                         Shift = fuel.Shift,
                         CreatedBy = "Ako",
                         FuelSalesTotalAmount = Math.Round((decimal)fuel.Liters * fuel.Price, 2),
-                        LubesTotalAmount = Math.Round(lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2),
-                        SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount), 2),
-                        POSalesTotalAmount = HasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
+                        LubesTotalAmount = Math.Round(lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift) && (l.INV_DATE == fuel.INV_DATE)).Sum(l => l.Amount), 2),
+                        SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.INV_DATE == fuel.INV_DATE)).Sum(s => s.Amount), 2),
+                        POSalesTotalAmount = HasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.INV_DATE == fuel.INV_DATE)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
                         POSalesAmount = HasPoSales ? fuelPoSales
-                            .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift)
+                            .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.INV_DATE == fuel.INV_DATE)
                             .Select(s => s.Amount)
                             .Concat(lubePoSales
-                                .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift)
+                                .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.INV_DATE == fuel.INV_DATE)
                                 .Select(l => l.Amount))
                             .ToArray() : new decimal[0],
                         Customers = HasPoSales ? fuelPoSales
-                            .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift)
+                            .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.INV_DATE == fuel.INV_DATE)
                             .Select(s => s.cust)
                             .Concat(lubePoSales
-                                .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift)
+                                .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.INV_DATE == fuel.INV_DATE)
                                 .Select(l => l.cust))
                             .ToArray() : new string[0],
                         TimeIn = fuel.TimeIn,
@@ -135,12 +140,12 @@ namespace IBS.DataAccess.Repository
                 await _db.SaveChangesAsync(cancellationToken);
 
                 double previousClosing = 0;
-                foreach (var group in fuelSales.GroupBy(f => new {f.ItemCode, f.xPUMP }))
+                foreach (var group in fuelSales.GroupBy(f => new {f.INV_DATE, f.ItemCode, f.xPUMP }))
                 {
 
                     foreach (var fuel in group)
                     {
-                        SalesHeader? salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} not found!");
+                        SalesHeader? salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift && s.Date == fuel.INV_DATE) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} not found!");
 
                         var salesDetail = new SalesDetail
                         {
@@ -181,7 +186,7 @@ namespace IBS.DataAccess.Repository
                 {
                     foreach (var lube in lubeSales)
                     {
-                        var salesHeader = salesHeaders.Find(l => l.Cashier == lube.Cashier && l.Shift == lube.Shift);
+                        var salesHeader = salesHeaders.Find(l => l.Cashier == lube.Cashier && l.Shift == lube.Shift && l.Date == lube.INV_DATE);
 
                         var salesDetail = new SalesDetail
                         {
@@ -194,8 +199,24 @@ namespace IBS.DataAccess.Repository
                             Sale = lube.Amount,
                             Value = Math.Round(lube.Amount, 2)
                         };
-
+                        lube.IsProcessed = true;
                         await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
+                    }
+                }
+
+                if (fuelSales.Any())
+                {
+                    foreach(var fuel in fuels)
+                    {
+                        fuel.IsProcessed = true;
+                    }
+                }
+
+                if (safeDropDeposits.Count != 0)
+                {
+                    foreach (var safedrop in safeDropDeposits)
+                    {
+                        safedrop.IsProcessed = true;
                     }
                 }
 
