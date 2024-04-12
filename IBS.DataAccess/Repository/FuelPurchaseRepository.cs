@@ -26,7 +26,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task PostAsync(string id, CancellationToken cancellationToken = default)
+        public async Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -61,7 +61,7 @@ namespace IBS.DataAccess.Repository
 
                 var previousInventory = sortedInventory.FirstOrDefault();
 
-                fuelPurchase.PostedBy = "Ako";
+                fuelPurchase.PostedBy = postedBy;
                 fuelPurchase.PostedDate = DateTime.Now;
 
                 List<GeneralLedger> journals = new();
@@ -315,7 +315,7 @@ namespace IBS.DataAccess.Repository
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingFuelPurchase.EditedBy = "Ako";
+                existingFuelPurchase.EditedBy = model.EditedBy;
                 existingFuelPurchase.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
             }

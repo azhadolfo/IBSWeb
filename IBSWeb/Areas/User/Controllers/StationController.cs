@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -13,10 +14,13 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly ILogger<StationController> _logger;
 
-        public StationController(IUnitOfWork unitOfWork, ILogger<StationController> logger)
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public StationController(IUnitOfWork unitOfWork, ILogger<StationController> logger, UserManager<IdentityUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
@@ -57,6 +61,7 @@ namespace IBSWeb.Areas.User.Controllers
                 }
 
                 model.FolderPath = _unitOfWork.Station.GenerateFolderPath(model.StationName);
+                model.CreatedBy = _userManager.GetUserName(User);
                 await _unitOfWork.Station.AddAsync(model, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Station created successfully";
@@ -93,6 +98,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 try
                 {
+                    model.EditedBy = _userManager.GetUserName(User);
                     await _unitOfWork.Station.UpdateAsync(model, cancellationToken);
                     TempData["success"] = "Station updated successfully";
                     return RedirectToAction(nameof(Index));

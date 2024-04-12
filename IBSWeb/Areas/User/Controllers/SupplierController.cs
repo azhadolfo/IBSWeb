@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -15,11 +16,14 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public SupplierController(IUnitOfWork unitOfWork, ILogger<SupplierController> logger, IWebHostEnvironment webHostEnvironment)
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public SupplierController(IUnitOfWork unitOfWork, ILogger<SupplierController> logger, IWebHostEnvironment webHostEnvironment, UserManager<IdentityUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
+            _userManager = userManager;
 
         }
 
@@ -65,7 +69,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                     model.SupplierCode = await _unitOfWork.Supplier
                         .GenerateCodeAsync(cancellationToken);
-
+                    model.CreatedBy = _userManager.GetUserName(User);
                     await _unitOfWork.Supplier.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Supplier created successfully";
@@ -110,6 +114,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 try
                 {
+                    model.EditedBy = _userManager.GetUserName(User);
                     await _unitOfWork.Supplier.UpdateAsync(model, cancellationToken);
                     TempData["success"] = "Supplier updated successfully";
                     return RedirectToAction(nameof(Index));

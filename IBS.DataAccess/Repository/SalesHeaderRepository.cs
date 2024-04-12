@@ -24,7 +24,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task ComputeSalesPerCashier(bool HasPoSales, CancellationToken cancellationToken = default)
+        public async Task ComputeSalesPerCashier(bool HasPoSales, string createdBy, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -92,7 +92,7 @@ namespace IBS.DataAccess.Repository
                         StationPosCode = fuel.xSITECODE.ToString(),
                         Cashier = fuel.xONAME,
                         Shift = fuel.Shift,
-                        CreatedBy = "Ako",
+                        CreatedBy = createdBy,
                         FuelSalesTotalAmount = Math.Round((decimal)fuel.Liters * fuel.Price, 2),
                         LubesTotalAmount = Math.Round(lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift) && (l.INV_DATE == fuel.INV_DATE)).Sum(l => l.Amount), 2),
                         SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.INV_DATE == fuel.INV_DATE)).Sum(s => s.Amount), 2),
@@ -229,7 +229,7 @@ namespace IBS.DataAccess.Repository
             }
         }
 
-        public async Task PostAsync(string id, CancellationToken cancellationToken = default)
+        public async Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -248,7 +248,7 @@ namespace IBS.DataAccess.Repository
                 Station station = await _db.Stations
                     .FirstOrDefaultAsync(s => s.PosCode == salesVM.Header.StationPosCode, cancellationToken) ?? throw new InvalidOperationException($"Station with POS code {salesVM.Header.StationPosCode} not found.");
 
-                salesVM.Header.PostedBy = "Ako";
+                salesVM.Header.PostedBy = postedBy;
                 salesVM.Header.PostedDate = DateTime.Now;
 
                 var journals = new List<GeneralLedger>();
@@ -548,7 +548,7 @@ namespace IBS.DataAccess.Repository
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingSalesHeader.EditedBy = "Ako";
+                existingSalesHeader.EditedBy = model.Header.EditedBy;
                 existingSalesHeader.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
             }

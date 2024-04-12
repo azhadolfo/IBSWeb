@@ -24,7 +24,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task PostAsync(string id, CancellationToken cancellationToken = default)
+        public async Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace IBS.DataAccess.Repository
                 Supplier supplier = await _db.Suppliers
                     .FirstOrDefaultAsync(s => s.SupplierCode == lubeDeliveryVM.Header.SupplierCode, cancellationToken) ?? throw new InvalidOperationException($"Supplier with code '{lubeDeliveryVM.Header.SupplierCode}' not found.");
 
-                lubeDeliveryVM.Header.PostedBy = "Ako";
+                lubeDeliveryVM.Header.PostedBy = postedBy;
                 lubeDeliveryVM.Header.PostedDate = DateTime.Now;
 
                 List<GeneralLedger> journals = new();

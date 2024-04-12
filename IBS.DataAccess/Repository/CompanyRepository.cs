@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -67,7 +68,7 @@ namespace IBS.DataAccess.Repository
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingCompany.EditedBy = "Ako";
+                existingCompany.EditedBy = model.EditedBy;
                 existingCompany.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
             }

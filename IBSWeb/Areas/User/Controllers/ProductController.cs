@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -14,10 +15,13 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly ILogger<ProductController> _logger;
 
-        public ProductController(IUnitOfWork unitOfWork, ILogger<ProductController> logger)
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public ProductController(IUnitOfWork unitOfWork, ILogger<ProductController> logger, UserManager<IdentityUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userManager = userManager;
 
         }
 
@@ -46,6 +50,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 if (!IsProductExist)
                 {
+                    model.CreatedBy = _userManager.GetUserName(User);
                     await _unitOfWork.Product.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Product created successfully";
@@ -85,6 +90,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 try
                 {
+                    model.EditedBy = _userManager.GetUserName(User);
                     await _unitOfWork.Product.UpdateAsync(model, cancellationToken);
                     TempData["success"] = "Product updated successfully";
                     return RedirectToAction(nameof(Index));

@@ -12,8 +12,6 @@ namespace IBS.DataAccess.Repository.IRepository
     {
         ICustomerRepository Customer { get; }
 
-        ICategoryRepository Category { get; }
-
         IProductRepository Product { get; }
 
         ICompanyRepository Company { get; }

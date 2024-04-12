@@ -88,7 +88,7 @@ namespace IBS.DataAccess.Repository
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingSupplier.EditedBy = "Ako";
+                existingSupplier.EditedBy = model.EditedBy;
                 existingSupplier.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
             }

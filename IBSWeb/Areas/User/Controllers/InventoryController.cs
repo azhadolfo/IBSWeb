@@ -145,7 +145,7 @@ namespace IBSWeb.Areas.User.Controllers
                     entry.IsValidated = true;
                 }
 
-                inventory.ValidatedBy = "Ako";
+                inventory.ValidatedBy = _userManager.GetUserName(User);
                 inventory.ValidatedDate = DateTime.Now;
                 await _unitOfWork.SaveAsync(cancellationToken);
 

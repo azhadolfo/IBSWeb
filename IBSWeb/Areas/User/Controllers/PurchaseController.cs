@@ -183,7 +183,8 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 try
                 {
-                    await _unitOfWork.FuelPurchase.PostAsync(id, cancellationToken);
+                    var postedBy = _userManager.GetUserName(User);
+                    await _unitOfWork.FuelPurchase.PostAsync(id, postedBy, cancellationToken);
                     TempData["success"] = "Fuel delivery approved successfully.";
                     return Redirect($"/User/Purchase/PreviewFuel/{id}");
                 }
@@ -229,6 +230,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
+                model.EditedBy = _userManager.GetUserName(User);
                 await _unitOfWork.FuelPurchase.UpdateAsync(model, cancellationToken);
                 TempData["success"] = "Fuel delivery updated successfully.";
                 return RedirectToAction(nameof(Fuel));
@@ -274,7 +276,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return BadRequest();
             }
 
-            Supplier? supplier = await _unitOfWork.Supplier.GetAsync(s => s.SupplierCode == LubeDeliveryVM.Header.SupplierCode);
+            Supplier? supplier = await _unitOfWork.Supplier.GetAsync(s => s.SupplierCode == LubeDeliveryVM.Header.SupplierCode, cancellationToken);
 
             ViewData["SupplierName"] = supplier.SupplierName;
 
@@ -287,7 +289,8 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 try
                 {
-                    await _unitOfWork.LubePurchaseHeader.PostAsync(id, cancellationToken);
+                    var postedBy = _userManager.GetUserName(User);
+                    await _unitOfWork.LubePurchaseHeader.PostAsync(id, postedBy, cancellationToken);
                     TempData["success"] = "Lube delivery approved successfully.";
                     return Redirect($"/User/Purchase/PreviewLube/{id}");
                 }

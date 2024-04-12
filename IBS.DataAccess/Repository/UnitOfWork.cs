@@ -15,7 +15,6 @@ namespace IBS.DataAccess.Repository
     {
         private ApplicationDbContext _db;
         public ICustomerRepository Customer { get; private set; }
-        public ICategoryRepository Category { get; private set; }
         public IProductRepository Product { get; private set; }
         public ICompanyRepository Company { get; private set; }
         public ISalesHeaderRepository SalesHeader { get; private set; }
@@ -34,7 +33,6 @@ namespace IBS.DataAccess.Repository
         {
             _db = db;
             Customer = new CustomerRepository(_db);
-            Category = new CategoryRepository(_db);
             Product = new ProductRepository(_db);
             Company = new CompanyRepository(_db);
             SalesHeader = new SalesHeaderRepository(_db);

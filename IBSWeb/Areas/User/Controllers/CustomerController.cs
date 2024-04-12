@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -13,10 +14,13 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly ILogger<CustomerController> _logger;
 
-        public CustomerController(IUnitOfWork unitOfWork, ILogger<CustomerController> logger)
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public CustomerController(IUnitOfWork unitOfWork, ILogger<CustomerController> logger, UserManager<IdentityUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userManager = userManager;
 
         }
 
@@ -43,6 +47,7 @@ namespace IBSWeb.Areas.User.Controllers
                 if (!IsTinExist)
                 {
                     model.CustomerCode = await _unitOfWork.Customer.GenerateCodeAsync(model.CustomerType, cancellationToken);
+                    model.CreatedBy = _userManager.GetUserName(User);
                     await _unitOfWork.Customer.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Customer created successfully";
@@ -81,6 +86,7 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 try
                 {
+                    model.EditedBy = _userManager.GetUserName(User);
                     await _unitOfWork.Customer.UpdateAsync(model, cancellationToken);
                     TempData["success"] = "Customer updated successfully";
                     return RedirectToAction(nameof(Index));

@@ -72,7 +72,8 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 try
                 {
-                    await _unitOfWork.SalesHeader.PostAsync(id, cancellationToken);
+                    var postedBy = _userManager.GetUserName(User);
+                    await _unitOfWork.SalesHeader.PostAsync(id, postedBy, cancellationToken);
                     TempData["success"] = "Cashier report approved successfully.";
                     return Redirect($"/User/CashierReport/Preview/{id}");
                 }
@@ -126,6 +127,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             try
             {
+                model.Header.EditedBy = _userManager.GetUserName(User);
                 await _unitOfWork.SalesHeader.UpdateAsync(model, closing, opening, cancellationToken);
                 TempData["success"] = "Cashier Report updated successfully.";
                 return RedirectToAction(nameof(Index));

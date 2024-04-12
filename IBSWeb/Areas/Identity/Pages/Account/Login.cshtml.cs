@@ -59,7 +59,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
         [TempData]
         public string ErrorMessage { get; set; }
 
-        public List<SelectListItem>? Stations { get; set; }
+        public List<SelectListItem> Stations { get; set; }
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
