@@ -24,14 +24,17 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
+        private readonly ApplicationDbContext _dbContext;
+
         [BindProperty]
         public LubeDeliveryVM LubeDeliveryVM { get; set; }
 
-        public PurchaseController(IUnitOfWork unitOfWork, ILogger<PurchaseController> logger, UserManager<IdentityUser> userManager)
+        public PurchaseController(IUnitOfWork unitOfWork, ILogger<PurchaseController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _userManager = userManager;
+            _dbContext = dbContext;
         }
 
         [HttpGet]
@@ -43,7 +46,17 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> ImportPurchase(CancellationToken cancellationToken)
         {
-            string importFolder = Path.Combine("D:", "AzhNewPC", "RealPos", "Feb 5");
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
+            var stationDetails = await _unitOfWork.Station.GetAsync(s => s.StationCode == stationCodeClaim, cancellationToken);
+
+            if (!Directory.Exists(stationDetails.FolderPath))
+            {
+                return Json(new { success = false, message = $"The directory for station '{stationDetails.StationName}' was not found. Please contact the MIS department for assistance." });
+            }
+
+            string importFolder = Path.Combine(stationDetails.FolderPath, "CSV");
             int yearToday = DateTime.Now.Year;
 
             try
@@ -52,19 +65,39 @@ namespace IBSWeb.Areas.User.Controllers
                                      .Where(f =>
                                      f.Contains("FUEL_DELIVERY", StringComparison.CurrentCulture) ||
                                      f.Contains("LUBE_DELIVERY", StringComparison.CurrentCulture) ||
-                                     f.Contains("PO_SALES", StringComparison.CurrentCulture) &&
-                                     Path.GetFileNameWithoutExtension(f).Contains(yearToday.ToString()));
+                                     (f.Contains("PO_SALES", StringComparison.CurrentCulture) &&
+                                     Path.GetFileNameWithoutExtension(f).Contains(yearToday.ToString())));
 
-                if (files.Any())
+                if (!files.Any())
                 {
-                    int fuelsCount = 0;
-                    int lubesCount = 0;
-                    int poSalesCount = 0;
+                    return Json(new { success = false, message = $"No csv file found." });
+                }
 
-                    foreach (var file in files)
+
+                int fuelsCount = 0;
+                int lubesCount = 0;
+                int poSalesCount = 0;
+
+                foreach (var file in files)
+                {
+                    string fileName = Path.GetFileName(file).ToLower();
+
+                    if (!await _dbContext.CsvFiles.AnyAsync(c => c.FileName == fileName, cancellationToken))
                     {
-                        string fileName = Path.GetFileName(file).ToLower();
+                        var csvDetails = new CsvFile
+                        {
+                            FileName = fileName,
+                            StationCode = stationCodeClaim,
+                            IsUploaded = false,
+                        };
 
+                        await _dbContext.CsvFiles.AddAsync(csvDetails, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                    }
+
+                    var csvFile = await _dbContext.CsvFiles.FirstOrDefaultAsync(c => c.FileName == fileName, cancellationToken);
+                    if (csvFile != null && !csvFile.IsUploaded)
+                    {
                         if (fileName.Contains("fuel"))
                         {
                             fuelsCount = await _unitOfWork.FuelPurchase.ProcessFuelDelivery(file, cancellationToken);
@@ -78,28 +111,27 @@ namespace IBSWeb.Areas.User.Controllers
                             poSalesCount = await _unitOfWork.PurchaseOrder.ProcessPOSales(file, cancellationToken);
                         }
 
+                        csvFile.IsUploaded = true;
+                        await _dbContext.SaveChangesAsync(cancellationToken);
                     }
 
-                    if (fuelsCount != 0 || lubesCount != 0 || poSalesCount != 0)
-                   {
-                        return Json(new
-                        {
-                            success = true,
-                            message = $"Import successfully. Fuel Delivery: {fuelsCount} record(s), Lube Delivery: {lubesCount} record(s), PO Sales: {poSalesCount} record(s)."
-                        });
-                    }
-                    else
+                }
+
+                if (fuelsCount != 0 || lubesCount != 0 || poSalesCount != 0)
+                {
+                    return Json(new
                     {
-                        return Json(new
-                        {
-                            success = true,
-                            message = "You're record is up to date."
-                        });
-                    }
+                        success = true,
+                        message = $"Import successfully. Fuel Delivery: {fuelsCount} record(s), Lube Delivery: {lubesCount} record(s), PO Sales: {poSalesCount} record(s)."
+                    });
                 }
                 else
                 {
-                    return Json(new { success = false, message = "No CSV file found." });
+                    return Json(new
+                    {
+                        success = true,
+                        message = "You're record is up to date."
+                    });
                 }
 
             }

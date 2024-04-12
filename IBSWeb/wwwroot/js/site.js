@@ -17,7 +17,9 @@ $(document).on('select2:open', () => {
 });
 
 $(document).ready(function () {
-    $('#dataTable').DataTable();
+    $('#dataTable').DataTable({
+        stateSave: true
+    });
 });
 
 function validateDate() {

@@ -55,6 +55,11 @@ namespace IBSWeb.Areas.User.Controllers
                 var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
                 var stationDetails = await _unitOfWork.Station.GetAsync(s => s.StationCode == stationCodeClaim, cancellationToken);
 
+                if (!Directory.Exists(stationDetails.FolderPath))
+                {
+                    return Json(new { success = false, message = $"The directory for station '{stationDetails.StationName}' was not found. Please contact the MIS department for assistance." });
+                }
+
                 var importFolder = Path.Combine(stationDetails.FolderPath, "SALESTEXT");
                 var files = Directory.GetFiles(importFolder, "*.csv")
                                     .Where(f =>
