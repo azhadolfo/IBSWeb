@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -23,104 +26,107 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="User" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Sales
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="Home" asp-action="ImportSales">Import Sales</a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="CashierReport" asp-action="Index">Cashier Report</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Purchase
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="ImportPurchase">Import Purchase</a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="Fuel">Fuel</a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="Lube">Lube</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Inventory
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="Inventory" asp-action="BeginningInventory">Beginning Inventory</a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="Inventory" asp-action="GenerateInventoryCosting">Inventory Costing</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Master File
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="Company" asp-action="Index">Company</a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="Customer" asp-action="Index">Customer</a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="Product" asp-action="Index">Product</a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="Station" asp-action="Index">Station</a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="Supplier" asp-action="Index">Supplier</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                General Ledger
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetTransaction">By Transaction</a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetJournal">By Journal</a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li class="nav-item">
-                                    <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetAccountNo">By Account No</a>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="User" asp-controller="Home" asp-action="Index">Home</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Sales
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Home" asp-action="ImportSales">Import Sales</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="CashierReport" asp-action="Index">Cashier Report</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Purchase
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="ImportPurchase">Import Purchase</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="Fuel">Fuel</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="Lube">Lube</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Inventory
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Inventory" asp-action="BeginningInventory">Beginning Inventory</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Inventory" asp-action="GenerateInventoryCosting">Inventory Costing</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Master File
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Company" asp-action="Index">Company</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Customer" asp-action="Index">Customer</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Product" asp-action="Index">Product</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Station" asp-action="Index">Station</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Supplier" asp-action="Index">Supplier</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    General Ledger
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetTransaction">By Transaction</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetJournal">By Journal</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetAccountNo">By Account No</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <partial name="_LoginPartial" />
+                    </div>
+                }
             </div>
         </nav>
     </header>

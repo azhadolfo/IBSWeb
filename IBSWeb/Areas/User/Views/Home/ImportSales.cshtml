@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Import Sales";
+    string stationCodeClaim = User.Claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 }
 
 <div class="card shadow border-0 mt-4">
@@ -19,7 +20,7 @@
 
             <div class="row pt-2">
                 <div class="col-6 col-md-3">
-                    <button type="button" class="btn btn-primary form-control" id="importButton">Import Files</button>
+                    <button type="button" class="btn btn-primary form-control" id="importButton" @(stationCodeClaim == "ALL" ? "disabled" : "")>Import Files</button>
                 </div>
                 <div class="col-6 col-md-3">
                     <a asp-asp-area="User" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary border form-control">Back to Homepage</a>
