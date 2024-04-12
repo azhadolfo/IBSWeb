@@ -80,7 +80,7 @@
         if (Model.PostedBy == null)
         {
             <div class="col-6 col-md-3">
-                <a asp-area="User" asp-controller="Purchase" asp-action="PostFuel" asp-route-id="@Model.FuelPurchaseNo" class="btn btn-primary form-control buttons">Approve</a>
+                <a id="approveButton" class="btn btn-primary form-control buttons">Approve</a>
             </div>
         }
         else
@@ -95,3 +95,24 @@
         <a asp-area="User" asp-controller="Purchase" asp-action="Fuel" class="btn btn-outline-primary border form-control buttons">Back to List</a>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.getElementById('approveButton').addEventListener('click', function () {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, approve it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Proceed to the controller action
+                    window.location.href = '@Url.Action("PostFuel", "Purchase", new { area = "User", id = Model.FuelPurchaseNo })';
+                }
+            });
+        });
+    </script>
+}
