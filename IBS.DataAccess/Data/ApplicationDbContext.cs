@@ -11,7 +11,6 @@ namespace IBS.DataAccess.Data
         {
         }
 
-        public DbSet<Category> Categories { get; set; }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 
         #region--Sales Entity
