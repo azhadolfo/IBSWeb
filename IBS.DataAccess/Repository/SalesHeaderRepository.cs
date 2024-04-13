@@ -472,7 +472,7 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = "45300013",
+                        AccountNumber = salesVM.Header.GainOrLoss < 0 ? "40300013" : "40300015",
                         AccountTitle = salesVM.Header.GainOrLoss < 0 ? "Cash Short - Handling" : "Cash Over - Handling",
                         Debit = salesVM.Header.GainOrLoss < 0 ? Math.Abs(salesVM.Header.GainOrLoss) : 0,
                         Credit = salesVM.Header.GainOrLoss > 0 ? salesVM.Header.GainOrLoss : 0,

@@ -21,4 +21,10 @@ namespace IBS.Utility
         Inventory
     }
 
+    public enum AccountCategory
+    {
+        Debit,
+        Credit
+    }
+
 }
