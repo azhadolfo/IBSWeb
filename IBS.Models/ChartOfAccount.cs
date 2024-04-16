@@ -21,10 +21,10 @@ namespace IBS.Models
         [Column(TypeName = "varchar(100)")]
         public string AccountName { get; set; }
 
-        [Column(TypeName = "varchar(15)")]
+        [Column(TypeName = "varchar(25)")]
         public string? AccountType { get; set; }
 
-        [Column(TypeName = "varchar(6)")]
+        [Column(TypeName = "varchar(20)")]
         public string? AccountCategory { get; set; }
 
         public int Level { get; set; }
