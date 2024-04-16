@@ -112,7 +112,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             IEnumerable<GeneralLedger> ledgers = await _unitOfWork.GeneralLedger.GetAllAsync(filter, cancellationToken);
 
-            ViewData["Accounts"] = await _unitOfWork.ChartOfAccount.GetAllAsync();
+            ViewData["Accounts"] = await _unitOfWork.ChartOfAccount.GetAllAsync(cancellationToken: cancellationToken);
 
             if (exportToExcel && ledgers.Any())
             {

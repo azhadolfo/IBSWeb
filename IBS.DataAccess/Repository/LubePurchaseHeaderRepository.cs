@@ -1,6 +1,7 @@
 ﻿using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.ViewModels;
 using IBS.Utility;
@@ -39,8 +40,7 @@ namespace IBS.DataAccess.Repository
                     throw new InvalidOperationException($"Lube purchase header/detail with id '{id}' not found.");
                 }
 
-                Supplier supplier = await _db.Suppliers
-                    .FirstOrDefaultAsync(s => s.SupplierCode == lubeDeliveryVM.Header.SupplierCode, cancellationToken) ?? throw new InvalidOperationException($"Supplier with code '{lubeDeliveryVM.Header.SupplierCode}' not found.");
+                SupplierDto supplier = await MapSupplierToDTO(lubeDeliveryVM.Header.SupplierCode, cancellationToken) ?? throw new InvalidOperationException($"Supplier with code '{lubeDeliveryVM.Header.SupplierCode}' not found.");
 
                 lubeDeliveryVM.Header.PostedBy = postedBy;
                 lubeDeliveryVM.Header.PostedDate = DateTime.Now;

@@ -1,4 +1,5 @@
-﻿using IBS.Models;
+﻿using IBS.Dtos;
+using IBS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,5 +22,12 @@ namespace IBS.DataAccess.Repository.IRepository
         Task RemoveRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
 
         bool IsJournalEntriesBalanced(IEnumerable<GeneralLedger> journals);
+
+
+        // Retrieving DTOs (Data Transfer Objects)
+
+        Task<ProductDto> MapProductToDTO(string productCode, CancellationToken cancellationToken = default);
+        Task<StationDto> MapStationToDTO(string stationCode, CancellationToken cancellationToken = default);
+        Task<SupplierDto> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Dtos;
 using IBS.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -69,6 +70,46 @@ namespace IBS.DataAccess.Repository
         {
             dbSet.RemoveRange(entities);
             await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<ProductDto> MapProductToDTO(string productCode, CancellationToken cancellationToken = default)
+        {
+            return await _db.Set<Product>()
+                .Where(p => p.ProductCode == productCode)
+                .Select(p => new ProductDto
+                {
+                    ProductId = p.ProductId,
+                    ProductCode = p.ProductCode,
+                    ProductName = p.ProductName
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<StationDto> MapStationToDTO(string stationCode, CancellationToken cancellationToken = default)
+        {
+            return await _db.Set<Station>()
+                .Where(s => s.StationCode == stationCode)
+                .Select(s => new StationDto
+                {
+                    StationId = s.StationId,
+                    StationCode = s.StationCode,
+                    StationName = s.StationName,
+                    StationPOSCode = s.PosCode
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<SupplierDto> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default)
+        {
+            return await _db.Set<Supplier>()
+                .Where(s => s.SupplierCode == supplierCode)
+                .Select(s => new SupplierDto
+                {
+                    SupplierId = s.SupplierId,
+                    SupplierCode = s.SupplierCode,
+                    SupplierName = s.SupplierName
+                })
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
     }

@@ -2,6 +2,7 @@
 using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -276,7 +277,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return BadRequest();
             }
 
-            Supplier? supplier = await _unitOfWork.Supplier.GetAsync(s => s.SupplierCode == LubeDeliveryVM.Header.SupplierCode, cancellationToken);
+            SupplierDto? supplier = await _unitOfWork.Supplier.MapSupplierToDTO(LubeDeliveryVM.Header.SupplierCode, cancellationToken);
 
             ViewData["SupplierName"] = supplier.SupplierName;
 

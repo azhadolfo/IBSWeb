@@ -1,4 +1,5 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.ViewModels;
 using IBS.Utility;
@@ -41,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
 
             IEnumerable<Inventory> inventories;
-            Product productDetails = await _unitOfWork.Product.GetAsync(p => p.ProductCode == model.ProductCode, cancellationToken);
+            ProductDto productDetails = await _unitOfWork.Product.MapProductToDTO(model.ProductCode, cancellationToken);
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
             model.StationCode = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
@@ -54,7 +55,7 @@ namespace IBSWeb.Areas.User.Controllers
             else
             {
                 inventories = await _unitOfWork.Inventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
-                Station stationDetails = await _unitOfWork.Station.GetAsync(p => p.StationCode == model.StationCode, cancellationToken);
+                StationDto stationDetails = await _unitOfWork.Station.MapStationToDTO(model.StationCode, cancellationToken);
                 ViewData["Station"] = $"{stationDetails.StationCode} {stationDetails.StationName.ToUpper()}";
             }
 

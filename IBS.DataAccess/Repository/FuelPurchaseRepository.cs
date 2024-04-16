@@ -1,19 +1,11 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
+﻿using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Dtos;
 using IBS.Models;
-using IBS.Models.ViewModels;
 using IBS.Utility;
-using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Collections.Specialized.BitVector32;
 
 namespace IBS.DataAccess.Repository
 {
@@ -39,9 +31,7 @@ namespace IBS.DataAccess.Repository
                     throw new ArgumentException("Encode first the buying price for this purchase!");
                 }
 
-                Product product = await _db
-                    .Products
-                    .FirstOrDefaultAsync(p => p.ProductCode == fuelPurchase.ProductCode, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{fuelPurchase.ProductCode}' not found.");
+                ProductDto product = await MapProductToDTO(fuelPurchase.ProductCode, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{fuelPurchase.ProductCode}' not found.");
 
                 var sortedInventory = _db
                         .Inventories

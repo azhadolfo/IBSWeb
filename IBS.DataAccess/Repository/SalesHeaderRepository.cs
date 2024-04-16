@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Migrations;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.ViewModels;
 using IBS.Utility;
@@ -292,8 +293,7 @@ namespace IBS.DataAccess.Repository
 
                 foreach (var product in salesVM.Details.GroupBy(d => d.Product))
                 {
-                    Product productDetails = await _db.Products
-                        .FirstOrDefaultAsync(p => p.ProductCode == product.Key, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{product.Key}' not found.");
+                    ProductDto productDetails = await MapProductToDTO(product.Key, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{product.Key}' not found.");
 
                     journals.Add(new GeneralLedger
                     {
