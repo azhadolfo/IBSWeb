@@ -261,8 +261,8 @@ namespace IBS.DataAccess.Repository
                     TransactionDate = salesVM.Header.Date,
                     Reference = salesVM.Header.SalesNo,
                     Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                    AccountNumber = "10100005",
-                    AccountTitle = "Cash-on-Hand",
+                    AccountNumber = "1010102",
+                    AccountTitle = "Cash on Hand",
                     Debit = salesVM.Header.ActualCashOnHand > 0 ? salesVM.Header.ActualCashOnHand : salesVM.Header.SafeDropTotalAmount > 0 ? salesVM.Header.SafeDropTotalAmount : throw new InvalidOperationException("Indicate the cashier's cash on hand before posting."),
                     Credit = 0,
                     StationCode = station.StationCode,
@@ -279,8 +279,8 @@ namespace IBS.DataAccess.Repository
                             TransactionDate = salesVM.Header.Date,
                             Reference = salesVM.Header.SalesNo,
                             Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                            AccountNumber = "10100025",
-                            AccountTitle = "Accounts Receivable",
+                            AccountNumber = "1010201",
+                            AccountTitle = "AR-Trade Receivable",
                             Debit = salesVM.Header.POSalesAmount[i],
                             Credit = 0,
                             StationCode = station.StationCode,
@@ -300,8 +300,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = product.Key.Contains("PET") ? "40100005" : "40100009",
-                        AccountTitle = product.Key.Contains("PET") ? "Sales-Fuel" : "Sales-Lube",
+                        AccountNumber = product.Key.Contains("PET") ? "4010101" : "4011001",
+                        AccountTitle = product.Key.Contains("PET") ? "Sales - Fuel" : "Sales - Lubes",
                         Debit = 0,
                         Credit = Math.Round(product.Sum(p => p.Value) / 1.12m, 2),
                         StationCode = station.StationCode,
@@ -315,8 +315,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = "20100065",
-                        AccountTitle = "Output VAT",
+                        AccountNumber = "2010301",
+                        AccountTitle = "Vat Output",
                         Debit = 0,
                         Credit = Math.Round((product.Sum(p => p.Value) / 1.12m) * 0.12m, 2),
                         StationCode = station.StationCode,
@@ -381,8 +381,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = "50100005",
-                        AccountTitle = "Cost of Goods Sold",
+                        AccountNumber = product.Key.Contains("PET") ? "5010101" : "5011001",
+                        AccountTitle = product.Key.Contains("PET") ? "COGS - Fuel" : "COGS - Lubes",
                         Debit = Math.Round(cogs, 2),
                         Credit = 0,
                         StationCode = station.StationCode,
@@ -396,8 +396,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = "10100033",
-                        AccountTitle = "Merchandise Inventory",
+                        AccountNumber = product.Key.Contains("PET") ? "1010401" : "1010410",
+                        AccountTitle = product.Key.Contains("PET") ? "Inventory - Fuel" : "Inventory - Lubes",
                         Debit = 0,
                         Credit = Math.Round(cogs, 2),
                         StationCode = station.StationCode,
@@ -436,7 +436,7 @@ namespace IBS.DataAccess.Repository
 
                         var journalEntries = _db.GeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
-                                        (j.AccountNumber == "50100005" || j.AccountNumber == "10100033"))
+                                        (j.AccountNumber == (product.Key.Contains("PET") ? "5010101" : "5011001") || j.AccountNumber == (product.Key.Contains("PET") ? "1010401" : "1010410")))
                             .ToList();
 
                         foreach (var journal in journalEntries)
@@ -472,7 +472,7 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = salesVM.Header.GainOrLoss < 0 ? "40300013" : "40300015",
+                        AccountNumber = salesVM.Header.GainOrLoss < 0 ? "6100102" : "6010102",
                         AccountTitle = salesVM.Header.GainOrLoss < 0 ? "Cash Short - Handling" : "Cash Over - Handling",
                         Debit = salesVM.Header.GainOrLoss < 0 ? Math.Abs(salesVM.Header.GainOrLoss) : 0,
                         Credit = salesVM.Header.GainOrLoss > 0 ? salesVM.Header.GainOrLoss : 0,

@@ -61,8 +61,8 @@ namespace IBS.DataAccess.Repository
                     TransactionDate = fuelPurchase.DeliveryDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
-                    AccountNumber = "10100033",
-                    AccountTitle = "Merchandise Inventory",
+                    AccountNumber = "1010401",
+                    AccountTitle = "Inventory - Fuel",
                     Debit = (fuelPurchase.Quantity * fuelPurchase.SellingPrice) / 1.12m,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
@@ -75,8 +75,8 @@ namespace IBS.DataAccess.Repository
                     TransactionDate = fuelPurchase.DeliveryDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
-                    AccountNumber = "10100085",
-                    AccountTitle = "Input Tax",
+                    AccountNumber = "1010602",
+                    AccountTitle = "Vat Input",
                     Debit = ((fuelPurchase.Quantity * fuelPurchase.SellingPrice) / 1.12m) * 0.12m,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
@@ -88,8 +88,8 @@ namespace IBS.DataAccess.Repository
                     TransactionDate = fuelPurchase.DeliveryDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
-                    AccountNumber = "20100005",
-                    AccountTitle = "Accounts Payable",
+                    AccountNumber = "2010101",
+                    AccountTitle = "Accounts Payables - Trade",
                     Debit = 0,
                     Credit = fuelPurchase.Quantity * fuelPurchase.SellingPrice,
                     StationCode = fuelPurchase.StationCode,
@@ -125,8 +125,8 @@ namespace IBS.DataAccess.Repository
                     TransactionDate = fuelPurchase.DeliveryDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"COGS:{product.ProductCode} {fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
-                    AccountNumber = "50100005",
-                    AccountTitle = "Cost of Goods Sold",
+                    AccountNumber = "5010101",
+                    AccountTitle = "COGS - Fuel",
                     Debit = cogs,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
@@ -139,8 +139,8 @@ namespace IBS.DataAccess.Repository
                     TransactionDate = fuelPurchase.DeliveryDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"COGS:{product.ProductCode} {fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
-                    AccountNumber = "10100033",
-                    AccountTitle = "Merchandise Inventory",
+                    AccountNumber = "5010101",
+                    AccountTitle = "Inventory - Fuel",
                     Debit = 0,
                     Credit = cogs,
                     StationCode = fuelPurchase.StationCode,
@@ -178,7 +178,7 @@ namespace IBS.DataAccess.Repository
 
                     var journalEntries = _db.GeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
-                                        (j.AccountNumber == "50100005" || j.AccountNumber == "10100033"))
+                                        (j.AccountNumber == "5010101" || j.AccountNumber == "1010401"))
                             .ToList();
 
                     foreach (var journal in journalEntries)

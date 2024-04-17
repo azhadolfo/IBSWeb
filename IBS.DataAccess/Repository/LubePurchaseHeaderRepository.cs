@@ -53,8 +53,8 @@ namespace IBS.DataAccess.Repository
                     TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
                     Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
                     Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
-                    AccountNumber = "10100033",
-                    AccountTitle = "Merchandise Inventory",
+                    AccountNumber = "1010410",
+                    AccountTitle = "Inventory - Lubes",
                     Debit = lubeDeliveryVM.Header.Amount / 1.12m,
                     Credit = 0,
                     StationCode = lubeDeliveryVM.Header.StationCode,
@@ -67,8 +67,8 @@ namespace IBS.DataAccess.Repository
                     TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
                     Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
                     Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
-                    AccountNumber = "10100085",
-                    AccountTitle = "Input Tax",
+                    AccountNumber = "1010602",
+                    AccountTitle = "Vat Input",
                     Debit = (lubeDeliveryVM.Header.Amount / 1.12m) * 0.12m,
                     Credit = 0,
                     StationCode = lubeDeliveryVM.Header.StationCode,
@@ -80,8 +80,8 @@ namespace IBS.DataAccess.Repository
                     TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
                     Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
                     Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
-                    AccountNumber = "20100005",
-                    AccountTitle = "Accounts Payable",
+                    AccountNumber = "2010101",
+                    AccountTitle = "Accounts Payables - Trade",
                     Debit = 0,
                     Credit = lubeDeliveryVM.Header.Amount,
                     StationCode = lubeDeliveryVM.Header.StationCode,
@@ -138,8 +138,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
                         Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
                         Particular = $"COGS:{lube.ProductCode} SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
-                        AccountNumber = "50100005",
-                        AccountTitle = "Cost of Goods Sold",
+                        AccountNumber = "5011001",
+                        AccountTitle = "COGS - Lubes",
                         Debit = cogs,
                         Credit = 0,
                         StationCode = lubeDeliveryVM.Header.StationCode,
@@ -152,8 +152,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
                         Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
                         Particular = $"COGS:{lube.ProductCode} SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
-                        AccountNumber = "10100033",
-                        AccountTitle = "Merchandise Inventory",
+                        AccountNumber = "1010410",
+                        AccountTitle = "Inventory - Lubes",
                         Debit = 0,
                         Credit = cogs,
                         StationCode = lubeDeliveryVM.Header.StationCode,
@@ -191,7 +191,7 @@ namespace IBS.DataAccess.Repository
 
                         var journalEntries = _db.GeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
-                                        (j.AccountNumber == "50100005" || j.AccountNumber == "10100033"))
+                                        (j.AccountNumber == "5011001" || j.AccountNumber == "1010410"))
                             .ToList();
 
                         foreach (var journal in journalEntries)
