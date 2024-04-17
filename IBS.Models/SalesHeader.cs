@@ -72,6 +72,10 @@ namespace IBS.Models
 
         public bool IsTransactionNormal { get; set; } = true;
 
+        [Column(TypeName = "varchar(3)")]
+        [Display(Name = "Station Code")]
+        public string StationCode { get; set; }
+
 
         #region --Added properties for editing purposes
 

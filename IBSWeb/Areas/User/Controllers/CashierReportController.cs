@@ -32,10 +32,9 @@ namespace IBSWeb.Areas.User.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
-            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
-            var stationDetails = await _unitOfWork.SalesHeader.MapStationToDTO(stationCodeClaim, cancellationToken);
+            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;;
 
-            Expression<Func<SalesHeader, bool>> filter = s => (stationCodeClaim == "ALL" || s.StationPosCode == stationDetails.StationPOSCode);
+            Expression<Func<SalesHeader, bool>> filter = s => (stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim);
 
             IEnumerable<SalesHeader> salesHeader = await _unitOfWork
                 .SalesHeader

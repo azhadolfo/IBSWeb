@@ -17,7 +17,7 @@
             <thead>
                 <tr>
                     <th>
-                        @Html.DisplayNameFor(model => model.StationPosCode)
+                        @Html.DisplayNameFor(model => model.StationCode)
                     </th>
                     <th>
                         @Html.DisplayNameFor(model => model.Date)
@@ -42,7 +42,7 @@
                 {
                     <tr class="@((obj.SafeDropTotalAmount > 0 || obj.ActualCashOnHand > 0) && obj.IsTransactionNormal ? "" : "table-danger")">
                         <td>
-                            @obj.StationPosCode
+                            @obj.StationCode
                         </td>
                         <td>
                             @obj.Date.ToString("MMMM dd, yyyy")

@@ -126,7 +126,7 @@ namespace IBS.DataAccess.Data
             {
                 s.HasIndex(s => s.SalesNo).IsUnique();
                 s.HasIndex(s => s.Cashier);
-                s.HasIndex(s => s.StationPosCode);
+                s.HasIndex(s => s.StationCode);
             });
 
             // SalesDetail

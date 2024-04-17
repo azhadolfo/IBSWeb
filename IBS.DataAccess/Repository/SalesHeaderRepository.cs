@@ -25,7 +25,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task ComputeSalesPerCashier(bool HasPoSales, string createdBy, CancellationToken cancellationToken = default)
+        public async Task ComputeSalesPerCashier(bool HasPoSales, string createdBy, string stationCode, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -133,7 +133,8 @@ namespace IBS.DataAccess.Repository
                         GainOrLoss = g.Key.SafeDropTotalAmount - ((g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount) - g.Key.POSalesTotalAmount),
                         CreatedBy = g.Key.CreatedBy,
                         TimeIn = g.Min(s => s.TimeIn),
-                        TimeOut = g.Max(s => s.TimeOut)
+                        TimeOut = g.Max(s => s.TimeOut),
+                        StationCode = stationCode
                     })
                     .ToList();
 
@@ -246,8 +247,7 @@ namespace IBS.DataAccess.Repository
                     throw new InvalidOperationException($"Sales with id '{id}' not found.");
                 }
 
-                Station station = await _db.Stations
-                    .FirstOrDefaultAsync(s => s.PosCode == salesVM.Header.StationPosCode, cancellationToken) ?? throw new InvalidOperationException($"Station with POS code {salesVM.Header.StationPosCode} not found.");
+                StationDto station = await MapStationToDTO(salesVM.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Station with code {salesVM.Header.StationCode} not found.");
 
                 salesVM.Header.PostedBy = postedBy;
                 salesVM.Header.PostedDate = DateTime.Now;
