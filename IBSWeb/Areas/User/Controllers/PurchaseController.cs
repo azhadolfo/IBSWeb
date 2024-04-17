@@ -39,8 +39,14 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public IActionResult ImportPurchase()
+        public async Task<IActionResult> ImportPurchase()
         {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
+
+            ViewData["StationCode"] = stationCodeClaim;
+
             return View();
         }
 
