@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using System.Linq.Expressions;
+using System.Threading;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -80,12 +81,12 @@ namespace IBSWeb.Areas.User.Controllers
             return View();
         }
 
-        public async Task<IActionResult> GetAccountNo()
+        public async Task<IActionResult> GetAccountNo(CancellationToken cancellationToken)
         {
             GeneralLedger model = new()
             {
-                ChartOfAccounts = await _unitOfWork.GetChartOfAccountAsyncByNo(),
-                Products = await _unitOfWork.GetProductsAsyncByCode()
+                ChartOfAccounts = await _unitOfWork.GetChartOfAccountAsyncByNo(cancellationToken),
+                Products = await _unitOfWork.GetProductsAsyncByCode(cancellationToken)
             };
 
             return View(model);
@@ -126,7 +127,7 @@ namespace IBSWeb.Areas.User.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error in exporting excel.");
-                    TempData["error"] = ex.Message;
+                    TempData["error"] = $"Error: '{ex.Message}', contact MIS for assistance!";
                     return RedirectToAction(nameof(GetAccountNo));
                 }
             }

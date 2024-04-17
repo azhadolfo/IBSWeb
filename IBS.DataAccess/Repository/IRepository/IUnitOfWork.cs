@@ -40,19 +40,19 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task SaveAsync(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetCustomersAsync();
+        Task<List<SelectListItem>> GetCustomersAsync(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetProductsAsyncByCode();
+        Task<List<SelectListItem>> GetProductsAsyncByCode(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetProductsAsyncById();
+        Task<List<SelectListItem>> GetProductsAsyncById(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetStationAsyncByCode();
+        Task<List<SelectListItem>> GetStationAsyncByCode(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetStationAsyncById();
+        Task<List<SelectListItem>> GetStationAsyncById(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetChartOfAccountAsyncByNo();
+        Task<List<SelectListItem>> GetChartOfAccountAsyncByNo(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetChartOfAccountAsyncById();
+        Task<List<SelectListItem>> GetChartOfAccountAsyncById(CancellationToken cancellationToken = default);
 
     }
 }

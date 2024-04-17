@@ -78,7 +78,7 @@ namespace IBSWeb.Areas.User.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on creating supplier.");
-                    TempData["error"] = ex.Message;
+                    TempData["error"] = $"Error: '{ex.Message}', contact MIS for assistance!";
                     return View(model);
                 }
             }
@@ -122,7 +122,8 @@ namespace IBSWeb.Areas.User.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error in updating supplier.");
-                    TempData["error"] = ex.Message;
+                    TempData["error"] = $"Error: '{ex.Message}', contact MIS for assistance!";
+                    return View(model);
                 }
             }
 

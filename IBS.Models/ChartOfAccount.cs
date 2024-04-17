@@ -41,5 +41,18 @@ namespace IBS.Models
 
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+
+        [Display(Name = "Edited By")]
+        [Column(TypeName = "varchar(50)")]
+        public string? EditedBy { get; set; }
+
+        [Display(Name = "Edited Date")]
+        public DateTime EditedDate { get; set; }
+
+
+        // Select List
+
+        [NotMapped]
+        public List<SelectListItem>? Accounts { get; set; }
     }
 }

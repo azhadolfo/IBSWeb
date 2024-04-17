@@ -192,7 +192,7 @@ namespace IBSWeb.Areas.User.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting fuel delivery.");
-                    TempData["error"] = ex.Message;
+                    TempData["error"] = $"Error: '{ex.Message}', contact MIS for assistance!";
                     return Redirect($"/User/Purchase/PreviewFuel/{id}");
                 }
             }
@@ -239,7 +239,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in updating fuel delivery.");
-                TempData["error"] = ex.Message;
+                TempData["error"] = $"Error: '{ex.Message}', contact MIS for assistance!";
                 return View(model);
             }
         }
@@ -298,7 +298,7 @@ namespace IBSWeb.Areas.User.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting lube delivery.");
-                    TempData["error"] = ex.Message;
+                    TempData["error"] = $"Error: '{ex.Message}', contact MIS for assistance!";
                     return Redirect($"/User/Purchase/PreviewLube/{id}");
                 }
             }

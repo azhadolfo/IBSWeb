@@ -1,0 +1,133 @@
+﻿@model ChartOfAccount
+
+@{
+    ViewData["Title"] = "Create Chart Of Account";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Chart Of Account</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <div class="border p-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Level 1<span class="required">*</span></label>
+                    <select id="mainLevel" asp-items="@Model.Accounts" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option></option>
+                    </select>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Level 2<span class="required">*</span></label>
+                    <select id="secondLevel" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option></option>
+                    </select>
+                </div>
+                <div class="form-group py-2 col-12" >
+                    <label class="control-label">Level 3<span class="required">*</span></label>
+                    <select id="thirdLevel" name="thirdLevel" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option></option>
+                    </select>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="AccountName" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="AccountName" class="ms-2">Account Name<span class="required">*</span></label>
+                    <span asp-validation-for="AccountName" class="text-danger"></span>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control">Create</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="User" asp-controller="ChartOfAccount" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            $("#mainLevel").change(function () {
+                var main = $(this).val();
+                console.log(main);
+                $.ajax({
+                    url: "/User/ChartOfAccount/GetChartOfAccount",
+                    type: "GET",
+                    data: { parentNo: main },
+                    success: function (data) {
+                        console.log(data);
+                        // Check if data is an array and not null
+                        if (Array.isArray(data) && data.length > 0) {
+
+                            $("#secondLevel").empty();
+
+                            $("#secondLevel").append('<option>');
+
+                            $("#thirdLevel").empty();
+
+                            $("#thirdLevel").append('<option>');
+
+                            $("#fourthLevel").empty();
+
+                            $("#fourthLevel").append('<option>');
+
+                            // Iterate over the array and append options
+                            $.each(data, function (index, item) {
+                                $("#secondLevel").append($('<option>', {
+                                    value: item.value,   // Use the correct property for value
+                                    text: item.text      // Use the correct property for text
+                                }));
+                            });
+                        } else {
+                            // Handle the case where data is null or empty
+                            console.log("No sub account.");
+                        }
+                    }
+                });
+            });
+
+            $("#secondLevel").change(function () {
+                var second = $(this).val();
+                console.log(second);
+                $.ajax({
+                    url: "/User/ChartOfAccount/GetChartOfAccount",
+                    type: "GET",
+                    data: { parentNo: second },
+                    success: function (data) {
+                        console.log(data);
+                        // Check if data is an array and not null
+                        if (Array.isArray(data) && data.length > 0) {
+
+                            $("#thirdLevel").empty();
+
+                            $("#thirdLevel").append('<option>');
+
+                            // Iterate over the array and append options
+                            $.each(data, function (index, item) {
+                                $("#thirdLevel").append($('<option>', {
+                                    value: item.value,   // Use the correct property for value
+                                    text: item.text      // Use the correct property for text
+                                }));
+                            });
+                        } else {
+                            // Handle the case where data is null or empty
+                            console.log("No sub account.");
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

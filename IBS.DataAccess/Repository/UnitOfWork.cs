@@ -53,7 +53,7 @@ namespace IBS.DataAccess.Repository
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetCustomersAsync()
+        public async Task<List<SelectListItem>> GetCustomersAsync(CancellationToken cancellationToken = default)
         {
             return await _db.Customers
                 .OrderBy(c => c.CustomerId)
@@ -62,10 +62,10 @@ namespace IBS.DataAccess.Repository
                     Value = c.CustomerId.ToString(),
                     Text = c.CustomerName
                 })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetProductsAsyncByCode()
+        public async Task<List<SelectListItem>> GetProductsAsyncByCode(CancellationToken cancellationToken = default)
         {
             return await _db.Products
                 .OrderBy(p => p.ProductId)
@@ -74,10 +74,10 @@ namespace IBS.DataAccess.Repository
                     Value = p.ProductCode,
                     Text = p.ProductCode + " " + p.ProductName
                 })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetProductsAsyncById()
+        public async Task<List<SelectListItem>> GetProductsAsyncById(CancellationToken cancellationToken = default)
         {
             return await _db.Products
                 .OrderBy(p => p.ProductId)
@@ -86,10 +86,10 @@ namespace IBS.DataAccess.Repository
                     Value = p.ProductId.ToString(),
                     Text = p.ProductCode + " " + p.ProductName
                 })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetStationAsyncByCode()
+        public async Task<List<SelectListItem>> GetStationAsyncByCode(CancellationToken cancellationToken = default)
         {
             return await _db.Stations
                 .OrderBy(s => s.StationId)
@@ -98,10 +98,10 @@ namespace IBS.DataAccess.Repository
                     Value = s.StationCode,
                     Text = s.StationCode + " " + s.StationName
                 })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetStationAsyncById()
+        public async Task<List<SelectListItem>> GetStationAsyncById(CancellationToken cancellationToken = default)
         {
             return await _db.Stations
                 .OrderBy(s => s.StationId)
@@ -110,10 +110,10 @@ namespace IBS.DataAccess.Repository
                     Value = s.StationId.ToString(),
                     Text = s.StationCode + " " + s.StationName
                 })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetChartOfAccountAsyncById()
+        public async Task<List<SelectListItem>> GetChartOfAccountAsyncById(CancellationToken cancellationToken = default)
         {
             return await _db.ChartOfAccounts
                 .OrderBy(c => c.AccountId)
@@ -123,10 +123,10 @@ namespace IBS.DataAccess.Repository
                     Value = c.AccountId.ToString(),
                     Text = c.AccountNumber + " " + c.AccountName
                 })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetChartOfAccountAsyncByNo()
+        public async Task<List<SelectListItem>> GetChartOfAccountAsyncByNo(CancellationToken cancellationToken = default)
         {
             return await _db.ChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
@@ -136,7 +136,7 @@ namespace IBS.DataAccess.Repository
                     Value = c.AccountNumber,
                     Text = c.AccountNumber + " " + c.AccountName
                 })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
     }

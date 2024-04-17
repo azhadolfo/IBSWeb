@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
+using System.Threading;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -27,12 +28,12 @@ namespace IBSWeb.Areas.User.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> GenerateInventoryCosting()
+        public async Task<IActionResult> GenerateInventoryCosting(CancellationToken cancellationToken)
         {
             Inventory? inventory = new()
             {
-                Products = await _unitOfWork.GetProductsAsyncByCode(),
-                Stations = await _unitOfWork.GetStationAsyncByCode()
+                Products = await _unitOfWork.GetProductsAsyncByCode(cancellationToken),
+                Stations = await _unitOfWork.GetStationAsyncByCode(cancellationToken)
             };
 
             return View(inventory);
@@ -64,12 +65,12 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> BeginningInventory()
+        public async Task<IActionResult> BeginningInventory(CancellationToken cancellationToken)
         {
             Inventory? inventory = new()
             {
-                Products = await _unitOfWork.GetProductsAsyncByCode(),
-                Stations = await _unitOfWork.GetStationAsyncByCode()
+                Products = await _unitOfWork.GetProductsAsyncByCode(cancellationToken),
+                Stations = await _unitOfWork.GetStationAsyncByCode(cancellationToken)
             };
 
             return View(inventory);
@@ -95,10 +96,10 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in saving the beginning inventory.");
-                TempData["error"] = ex.Message;
+                TempData["error"] = $"Error: '{ex.Message}', contact MIS for assistance!";
 
-                model.Products = await _unitOfWork.GetProductsAsyncByCode();
-                model.Stations = await _unitOfWork.GetStationAsyncByCode();
+                model.Products = await _unitOfWork.GetProductsAsyncByCode(cancellationToken);
+                model.Stations = await _unitOfWork.GetStationAsyncByCode(cancellationToken);
 
                 return View(model);
             }
