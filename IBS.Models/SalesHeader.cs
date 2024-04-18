@@ -17,6 +17,7 @@ namespace IBS.Models
         public int SalesHeaderId { get; set; }
 
         [Column(TypeName = "varchar(50)")]
+        [Display(Name = "Sales No.")]
         public string SalesNo { get; set; }
 
         [Display(Name = "Station POS Code")]

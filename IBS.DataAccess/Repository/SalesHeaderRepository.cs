@@ -118,7 +118,6 @@ namespace IBS.DataAccess.Repository
                     .GroupBy(s => new { s.Date, s.StationPosCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.POSalesTotalAmount, s.CreatedBy })
                     .Select(g => new SalesHeader
                     {
-                        SalesNo = Guid.NewGuid().ToString(),
                         Date = g.Key.Date,
                         StationPosCode = g.Key.StationPosCode,
                         Cashier = g.Key.Cashier,
@@ -138,8 +137,12 @@ namespace IBS.DataAccess.Repository
                     })
                     .ToList();
 
-                await _db.SalesHeaders.AddRangeAsync(salesHeaders, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                foreach (var dsr in salesHeaders)
+                {
+                    dsr.SalesNo = await GenerateSeriesNumber(dsr.StationCode);
+                    await _db.SalesHeaders.AddAsync(dsr, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
 
                 double previousClosing = 0;
                 foreach (var group in fuelSales.GroupBy(f => new {f.INV_DATE, f.ItemCode, f.xPUMP }))
@@ -555,6 +558,27 @@ namespace IBS.DataAccess.Repository
             else
             {
                 throw new ArgumentException("No data changes!");
+            }
+        }
+
+        private async Task<string> GenerateSeriesNumber(string stationCode)
+        {
+            var lastCashierReport = await _db.SalesHeaders
+                .OrderBy(s => s.SalesNo)
+                .Where(s => s.StationCode == stationCode)
+                .LastOrDefaultAsync();
+
+            if (lastCashierReport != null)
+            {
+                string lastSeries = lastCashierReport.SalesNo;
+                string numericPart = lastSeries.Substring(3);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
+            }
+            else
+            {
+                return "DSR0000000001";
             }
         }
     }

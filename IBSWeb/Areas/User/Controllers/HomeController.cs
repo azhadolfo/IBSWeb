@@ -182,7 +182,7 @@ namespace IBSWeb.Areas.User.Controllers
                     return Json(new
                     {
                         success = true,
-                        message = $"You're record is up to date."
+                        message = "You're record is up to date."
                     });
                 }
 

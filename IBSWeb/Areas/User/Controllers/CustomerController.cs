@@ -94,7 +94,7 @@ namespace IBSWeb.Areas.User.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error in updating customer.");
-                    TempData["error"] = $"Error: '{ex.Message}', contact MIS for assistance!";
+                    TempData["error"] = $"Error: '{ex.Message}'";
                     return View(model);
                 }
             }

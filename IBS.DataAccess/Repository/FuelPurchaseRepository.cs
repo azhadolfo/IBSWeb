@@ -262,7 +262,6 @@ namespace IBS.DataAccess.Repository
             {
                 fuelPurchase.Add(new FuelPurchase
                 {
-                    FuelPurchaseNo = Guid.NewGuid().ToString(),
                     ShiftRecId = fuelDelivery.shiftrecid,
                     StationCode = fuelDelivery.stncode,
                     CashierCode = fuelDelivery.cashiercode.Substring(1),
@@ -290,8 +289,13 @@ namespace IBS.DataAccess.Repository
                 });
             }
 
-            await _db.AddRangeAsync(fuelPurchase, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
+            foreach (var fd in fuelPurchase)
+            {
+                fd.FuelPurchaseNo = await GenerateSeriesNumber(fd.StationCode);
+
+                await _db.AddAsync(fd, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
 
         }
 
@@ -312,6 +316,27 @@ namespace IBS.DataAccess.Repository
             else
             {
                 throw new InvalidOperationException("No data changes!");
+            }
+        }
+
+        private async Task<string> GenerateSeriesNumber(string stationCode)
+        {
+            var lastCashierReport = await _db.FuelPurchase
+                .OrderBy(s => s.FuelPurchaseNo)
+                .Where(s => s.StationCode == stationCode)
+                .LastOrDefaultAsync();
+
+            if (lastCashierReport != null)
+            {
+                string lastSeries = lastCashierReport.FuelPurchaseNo;
+                string numericPart = lastSeries.Substring(2);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+            }
+            else
+            {
+                return "FD0000000001";
             }
         }
     }

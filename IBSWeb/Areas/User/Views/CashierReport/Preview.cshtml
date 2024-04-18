@@ -11,11 +11,18 @@
     }
 </style>
 
-<div class="mb-3">
-    <h2 class="text-center">CASHIER REPORT</h2>
-    <h6 class="text-end px-2">Date: @Html.DisplayFor(model => Model.Header.Date)</h6>
-    <h6 class="px-2">Cashier: @Model.Header.Cashier</h6>
-    <h6 class="px-2">Shift: @Model.Header.Shift</h6>
+<div class="mb-3 row">
+    <div class="col-12 mb-3">
+        <h2 class="text-center">CASHIER REPORT</h2>
+    </div>
+    <div class="col-9">
+        <h6 class="px-2"><b>Cashier:</b> @Model.Header.Cashier</h6>
+        <h6 class="px-2"><b>Shift:</b> @Model.Header.Shift</h6>
+    </div>
+    <div class="col-3">
+        <h6 class="px-2"><b>No.</b> @Html.DisplayFor(model => Model.Header.SalesNo)</h6>
+        <h6 class="px-2"><b>Date:</b> @Html.DisplayFor(model => Model.Header.Date)</h6>
+    </div>
 </div>
 
 <div class="table-responsive">

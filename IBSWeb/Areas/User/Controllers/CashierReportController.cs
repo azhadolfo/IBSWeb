@@ -79,7 +79,7 @@ namespace IBSWeb.Areas.User.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting cashier report.");
-                    TempData["error"] = $"Error: '{ex.Message}', contact MIS for assistance!";
+                    TempData["error"] = $"Error: '{ex.Message}'";
                     return Redirect($"/User/CashierReport/Preview/{id}");
                 }
             }
@@ -134,7 +134,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in updating cashier report.");
-                TempData["error"] = $"Error: '{ex.Message}', contact MIS for assistance!";
+                TempData["error"] = $"Error: '{ex.Message}'";
                 return View(SalesVM);
             }
         }

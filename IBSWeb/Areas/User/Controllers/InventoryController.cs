@@ -96,7 +96,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in saving the beginning inventory.");
-                TempData["error"] = $"Error: '{ex.Message}', contact MIS for assistance!";
+                TempData["error"] = $"Error: '{ex.Message}'";
 
                 model.Products = await _unitOfWork.GetProductsAsyncByCode(cancellationToken);
                 model.Stations = await _unitOfWork.GetStationAsyncByCode(cancellationToken);

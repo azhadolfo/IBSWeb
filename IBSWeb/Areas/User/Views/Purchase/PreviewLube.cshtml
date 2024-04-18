@@ -10,12 +10,13 @@
 <div class="mb-5">
     <h2 class="text-center">Delivery Details</h2>
         <div class="row">
-            <div class="col-10">
+            <div class="col-9">
             <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.SalesInvoice):</b> @Model.Header.SalesInvoice</h6>
             <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.SupplierCode):</b> @Model.Header.SupplierCode</h6>
             <h6 class="px-2"><b>Supplier Name:</b> @ViewData["SupplierName"]</h6>
             </div>
-            <div class="col-2">
+            <div class="col-3">
+            <h6 class="px-2"><b>No.</b> @Model.Header.LubePurchaseHeaderNo</h6>
             <h6 class="px-2"><b>Date:</b> @Model.Header.DeliveryDate.ToString("MMM/dd/yyyy")</h6>
             <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.DrNo):</b> @Model.Header.DrNo</h6>
             <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.PoNo):</b> @Model.Header.PoNo</h6>

@@ -20,6 +20,9 @@
                         @Html.DisplayNameFor(model => model.StationCode)
                     </th>
                     <th>
+                        Purchase No.
+                    </th>
+                    <th>
                         @Html.DisplayNameFor(model => model.DeliveryDate)
                     </th>
                     <th>
@@ -40,6 +43,9 @@
                     <tr>
                         <td>
                             @obj.StationCode
+                        </td>
+                        <td>
+                            @obj.LubePurchaseHeaderNo
                         </td>
                         <td>
                             @obj.DeliveryDate.ToString("MMMM dd, yyyy")

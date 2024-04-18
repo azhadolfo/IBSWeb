@@ -275,7 +275,6 @@ namespace IBS.DataAccess.Repository
                     .GroupBy(l => new { l.shiftrecid, l.dtllink, l.stncode, l.cashiercode, l.shiftnumber, l.deliverydate, l.suppliercode, l.invoiceno, l.drno, l.pono, l.amount, l.rcvdby, l.createdby, l.createddate })
                     .Select(g => new LubePurchaseHeader
                     {
-                        LubePurchaseHeaderNo = Guid.NewGuid().ToString(),
                         ShiftRecId = g.Key.shiftrecid,
                         DetailLink = g.Key.dtllink,
                         StationCode = g.Key.stncode,
@@ -295,8 +294,13 @@ namespace IBS.DataAccess.Repository
                     })
                     .ToList();
 
-                await _db.LubePurchaseHeaders.AddRangeAsync(lubePurchaseHeaders, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                foreach (var ld in lubePurchaseHeaders)
+                {
+                    ld.LubePurchaseHeaderNo = await GenerateSeriesNumber(ld.StationCode);
+
+                    await _db.LubePurchaseHeaders.AddAsync(ld, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
 
                 foreach (var lubeDelivery in lubeDeliveries)
                 {
@@ -324,6 +328,27 @@ namespace IBS.DataAccess.Repository
             catch (Exception ex)
             {
                 throw new InvalidOperationException(ex.Message);
+            }
+        }
+
+        private async Task<string> GenerateSeriesNumber(string stationCode)
+        {
+            var lastCashierReport = await _db.LubePurchaseHeaders
+                .OrderBy(s => s.LubePurchaseHeaderNo)
+                .Where(s => s.StationCode == stationCode)
+                .LastOrDefaultAsync();
+
+            if (lastCashierReport != null)
+            {
+                string lastSeries = lastCashierReport.LubePurchaseHeaderNo;
+                string numericPart = lastSeries.Substring(2);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+            }
+            else
+            {
+                return "LD0000000001";
             }
         }
     }
