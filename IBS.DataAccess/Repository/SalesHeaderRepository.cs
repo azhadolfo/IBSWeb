@@ -250,6 +250,11 @@ namespace IBS.DataAccess.Repository
                     throw new InvalidOperationException($"Sales with id '{id}' not found.");
                 }
 
+                if (salesVM.Header.SafeDropTotalAmount == 0)
+                {
+                    throw new InvalidOperationException("Indicate the cashier's cash on hand before posting.");
+                }
+
                 StationDto station = await MapStationToDTO(salesVM.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Station with code {salesVM.Header.StationCode} not found.");
 
                 salesVM.Header.PostedBy = postedBy;
@@ -266,7 +271,7 @@ namespace IBS.DataAccess.Repository
                     Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                     AccountNumber = "1010102",
                     AccountTitle = "Cash on Hand",
-                    Debit = salesVM.Header.ActualCashOnHand > 0 ? salesVM.Header.ActualCashOnHand : salesVM.Header.SafeDropTotalAmount > 0 ? salesVM.Header.SafeDropTotalAmount : throw new InvalidOperationException("Indicate the cashier's cash on hand before posting."),
+                    Debit = salesVM.Header.ActualCashOnHand > 0 ? salesVM.Header.ActualCashOnHand : salesVM.Header.SafeDropTotalAmount,
                     Credit = 0,
                     StationCode = station.StationCode,
                     JournalReference = nameof(JournalType.Sales),

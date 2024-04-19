@@ -41,7 +41,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var obj in Model.OrderBy(u => u.Date))
+                @foreach (var obj in Model.OrderByDescending(u => u.SalesNo))
                 {
                     <tr class="@((obj.SafeDropTotalAmount > 0 || obj.ActualCashOnHand > 0) && obj.IsTransactionNormal ? "" : "table-danger")">
                         <td>
