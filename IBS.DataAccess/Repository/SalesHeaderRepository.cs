@@ -256,7 +256,7 @@ namespace IBS.DataAccess.Repository
                 }
 
                 var salesList = await _db.SalesHeaders
-                    .Where(s => s.Date <= salesVM.Header.Date && s.CreatedDate < salesVM.Header.CreatedDate && s.PostedBy == null)
+                    .Where(s => s.StationCode == salesVM.Header.StationCode && s.Date <= salesVM.Header.Date && s.CreatedDate < salesVM.Header.CreatedDate && s.PostedBy == null)
                     .OrderBy(s => s.SalesNo)
                     .ToListAsync(cancellationToken);
 

@@ -32,7 +32,7 @@ namespace IBS.DataAccess.Repository
                 }
 
                 var fuelPurchaselist = await _db.FuelPurchase
-                    .Where(f => f.DeliveryDate <= fuelPurchase.DeliveryDate && f.CreatedDate < fuelPurchase.CreatedDate && f.PostedBy == null)
+                    .Where(f => f.StationCode == fuelPurchase.StationCode && f.DeliveryDate <= fuelPurchase.DeliveryDate && f.CreatedDate < fuelPurchase.CreatedDate && f.PostedBy == null)
                     .OrderBy(f => f.FuelPurchaseNo)
                     .ToListAsync(cancellationToken);
 

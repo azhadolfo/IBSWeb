@@ -41,7 +41,7 @@ namespace IBS.DataAccess.Repository
                 }
 
                 var lubePurchaseList = await _db.LubePurchaseHeaders
-                    .Where(l => l.DeliveryDate <= lubeDeliveryVM.Header.DeliveryDate && l.CreatedDate < lubeDeliveryVM.Header.CreatedDate && l.PostedBy == null)
+                    .Where(l => l.StationCode == lubeDeliveryVM.Header.StationCode && l.DeliveryDate <= lubeDeliveryVM.Header.DeliveryDate && l.CreatedDate < lubeDeliveryVM.Header.CreatedDate && l.PostedBy == null)
                     .OrderBy(l => l.LubePurchaseHeaderNo)
                     .ToListAsync(cancellationToken);
 
