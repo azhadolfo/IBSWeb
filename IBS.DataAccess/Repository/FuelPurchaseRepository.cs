@@ -31,6 +31,16 @@ namespace IBS.DataAccess.Repository
                     throw new ArgumentException("Encode first the buying price for this purchase!");
                 }
 
+                var fuelPurchaselist = await _db.FuelPurchase
+                    .Where(f => f.DeliveryDate <= fuelPurchase.DeliveryDate && f.CreatedDate < fuelPurchase.CreatedDate && f.PostedBy == null)
+                    .OrderBy(f => f.FuelPurchaseNo)
+                    .ToListAsync(cancellationToken);
+
+                if (fuelPurchaselist.Count > 0)
+                {
+                    throw new InvalidOperationException($"Can't proceed to post, you have unposted {fuelPurchaselist.First().FuelPurchaseNo}");
+                }
+
                 ProductDto product = await MapProductToDTO(fuelPurchase.ProductCode, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{fuelPurchase.ProductCode}' not found.");
 
                 var sortedInventory = _db

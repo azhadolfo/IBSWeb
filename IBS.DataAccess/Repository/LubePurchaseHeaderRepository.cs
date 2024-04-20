@@ -40,6 +40,16 @@ namespace IBS.DataAccess.Repository
                     throw new InvalidOperationException($"Lube purchase header/detail with id '{id}' not found.");
                 }
 
+                var lubePurchaseList = await _db.LubePurchaseHeaders
+                    .Where(l => l.DeliveryDate <= lubeDeliveryVM.Header.DeliveryDate && l.CreatedDate < lubeDeliveryVM.Header.CreatedDate && l.PostedBy == null)
+                    .OrderBy(l => l.LubePurchaseHeaderNo)
+                    .ToListAsync(cancellationToken);
+
+                if (lubePurchaseList.Count > 0)
+                {
+                    throw new InvalidOperationException($"Can't proceed to post, you have unposted {lubePurchaseList.First().LubePurchaseHeaderNo}");
+                }
+
                 SupplierDto supplier = await MapSupplierToDTO(lubeDeliveryVM.Header.SupplierCode, cancellationToken) ?? throw new InvalidOperationException($"Supplier with code '{lubeDeliveryVM.Header.SupplierCode}' not found.");
 
                 lubeDeliveryVM.Header.PostedBy = postedBy;

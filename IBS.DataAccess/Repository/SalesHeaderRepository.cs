@@ -250,9 +250,19 @@ namespace IBS.DataAccess.Repository
                     throw new InvalidOperationException($"Sales with id '{id}' not found.");
                 }
 
-                if (salesVM.Header.SafeDropTotalAmount == 0)
+                if (salesVM.Header.SafeDropTotalAmount == 0 && salesVM.Header.ActualCashOnHand == 0)
                 {
                     throw new InvalidOperationException("Indicate the cashier's cash on hand before posting.");
+                }
+
+                var salesList = await _db.SalesHeaders
+                    .Where(s => s.Date <= salesVM.Header.Date && s.CreatedDate < salesVM.Header.CreatedDate && s.PostedBy == null)
+                    .OrderBy(s => s.SalesNo)
+                    .ToListAsync(cancellationToken);
+
+                if (salesList.Count > 0)
+                {
+                    throw new InvalidOperationException($"Can't proceed to post, you have unposted {salesList.First().SalesNo}");
                 }
 
                 StationDto station = await MapStationToDTO(salesVM.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Station with code {salesVM.Header.StationCode} not found.");
