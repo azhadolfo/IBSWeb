@@ -435,6 +435,7 @@ namespace IBS.DataAccess.Repository
                             transaction.InventoryBalance = inventoryBalance - transaction.Quantity;
                             transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
                             transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+                            transaction.InventoryValue = transaction.RunningCost;
 
                             unitCostAverage = transaction.UnitCostAverage;
                             runningCost = transaction.RunningCost;
@@ -445,7 +446,7 @@ namespace IBS.DataAccess.Repository
                             transaction.RunningCost = runningCost + transaction.TotalCost;
                             transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
                             transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
-                            transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+                            transaction.InventoryValue = transaction.RunningCost;
 
                             unitCostAverage = transaction.UnitCostAverage;
                             runningCost = transaction.RunningCost;

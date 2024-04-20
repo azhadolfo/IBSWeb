@@ -110,7 +110,6 @@ namespace IBS.DataAccess.Repository
                 decimal runningCost = previousInventory.RunningCost + totalCost;
                 decimal inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
                 decimal unitCostAverage = runningCost / inventoryBalance;
-                decimal cogs = unitCostAverage * fuelPurchase.Quantity;
 
                 var inventory = new Inventory
                 {
@@ -125,38 +124,9 @@ namespace IBS.DataAccess.Repository
                     InventoryBalance = inventoryBalance,
                     RunningCost = runningCost,
                     UnitCostAverage = unitCostAverage,
-                    CostOfGoodsSold = cogs,
                     InventoryValue = runningCost,
                     TransactionNo = fuelPurchase.FuelPurchaseNo
                 };
-
-                journals.Add(new GeneralLedger
-                {
-                    TransactionDate = fuelPurchase.DeliveryDate,
-                    Reference = fuelPurchase.FuelPurchaseNo,
-                    Particular = $"COGS:{product.ProductCode} {fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
-                    AccountNumber = "5010101",
-                    AccountTitle = "COGS - Fuel",
-                    Debit = cogs,
-                    Credit = 0,
-                    StationCode = fuelPurchase.StationCode,
-                    ProductCode = product.ProductCode,
-                    JournalReference = nameof(JournalType.Purchase)
-                });
-
-                journals.Add(new GeneralLedger
-                {
-                    TransactionDate = fuelPurchase.DeliveryDate,
-                    Reference = fuelPurchase.FuelPurchaseNo,
-                    Particular = $"COGS:{product.ProductCode} {fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
-                    AccountNumber = "5010101",
-                    AccountTitle = "Inventory - Fuel",
-                    Debit = 0,
-                    Credit = cogs,
-                    StationCode = fuelPurchase.StationCode,
-                    ProductCode = product.ProductCode,
-                    JournalReference = nameof(JournalType.Purchase)
-                });
 
                 foreach (var transaction in sortedInventory.Skip(1))
                 {
@@ -169,6 +139,7 @@ namespace IBS.DataAccess.Repository
                         transaction.InventoryBalance = inventoryBalance - transaction.Quantity;
                         transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
                         transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+                        transaction.InventoryValue = transaction.RunningCost;
 
                         unitCostAverage = transaction.UnitCostAverage;
                         runningCost = transaction.RunningCost;
@@ -179,7 +150,7 @@ namespace IBS.DataAccess.Repository
                         transaction.RunningCost = runningCost + transaction.TotalCost;
                         transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
                         transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
-                        transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+                        transaction.InventoryValue = transaction.RunningCost;
 
                         unitCostAverage = transaction.UnitCostAverage;
                         runningCost = transaction.RunningCost;

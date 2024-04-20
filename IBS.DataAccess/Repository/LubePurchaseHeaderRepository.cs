@@ -123,7 +123,6 @@ namespace IBS.DataAccess.Repository
                     decimal runningCost = previousInventory.RunningCost + totalCost;
                     decimal inventoryBalance = previousInventory.InventoryBalance + lube.Piece;
                     decimal unitCostAverage = runningCost / inventoryBalance;
-                    decimal cogs = unitCostAverage * lube.Piece;
 
                     inventories.Add(new Inventory
                     {
@@ -137,7 +136,6 @@ namespace IBS.DataAccess.Repository
                         TotalCost = totalCost,
                         InventoryBalance = inventoryBalance,
                         RunningCost = runningCost,
-                        CostOfGoodsSold = cogs,
                         UnitCostAverage = unitCostAverage,
                         InventoryValue = runningCost,
                         TransactionNo = lubeDeliveryVM.Header.LubePurchaseHeaderNo
@@ -182,6 +180,7 @@ namespace IBS.DataAccess.Repository
                             transaction.InventoryBalance = inventoryBalance - transaction.Quantity;
                             transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
                             transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+                            transaction.InventoryValue = transaction.RunningCost;
 
                             unitCostAverage = transaction.UnitCostAverage;
                             runningCost = transaction.RunningCost;
@@ -192,7 +191,7 @@ namespace IBS.DataAccess.Repository
                             transaction.RunningCost = runningCost + transaction.TotalCost;
                             transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
                             transaction.UnitCostAverage = transaction.RunningCost / transaction.InventoryBalance;
-                            transaction.CostOfGoodsSold = transaction.UnitCostAverage * transaction.Quantity;
+                            transaction.InventoryValue = transaction.RunningCost;
 
                             unitCostAverage = transaction.UnitCostAverage;
                             runningCost = transaction.RunningCost;
