@@ -5,6 +5,7 @@ using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.ViewModels;
 using IBS.Utility;
+using IBS.Utility.Extensions;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -23,6 +24,26 @@ namespace IBS.DataAccess.Repository
         public LubePurchaseHeaderRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
+        }
+
+        public IEnumerable<dynamic> GetLubePurchaseJoin(IEnumerable<LubePurchaseHeader> lubePurchases, CancellationToken cancellationToken = default)
+        {
+            return from lube in lubePurchases
+                   join station in _db.Stations on lube.StationCode equals station.StationCode
+                   join supplier in _db.Suppliers on lube.SupplierCode equals supplier.SupplierCode
+                   select new
+                   {
+                       lube.LubePurchaseHeaderId,
+                       lube.StationCode,
+                       lube.LubePurchaseHeaderNo,
+                       lube.DeliveryDate,
+                       lube.SupplierCode,
+                       supplier.SupplierName,
+                       lube.SalesInvoice,
+                       lube.ReceivedBy,
+                       lube.PostedBy,
+                       station.StationName
+                   }.ToExpando();
         }
 
         public async Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default)
@@ -139,34 +160,6 @@ namespace IBS.DataAccess.Repository
                         UnitCostAverage = unitCostAverage,
                         InventoryValue = runningCost,
                         TransactionNo = lubeDeliveryVM.Header.LubePurchaseHeaderNo
-                    });
-
-                    journals.Add(new GeneralLedger
-                    {
-                        TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                        Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
-                        Particular = $"COGS:{lube.ProductCode} SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
-                        AccountNumber = "5011001",
-                        AccountTitle = "COGS - Lubes",
-                        Debit = cogs,
-                        Credit = 0,
-                        StationCode = lubeDeliveryVM.Header.StationCode,
-                        JournalReference = nameof(JournalType.Purchase),
-                        ProductCode = lube.ProductCode
-                    });
-
-                    journals.Add(new GeneralLedger
-                    {
-                        TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                        Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
-                        Particular = $"COGS:{lube.ProductCode} SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
-                        AccountNumber = "1010410",
-                        AccountTitle = "Inventory - Lubes",
-                        Debit = 0,
-                        Credit = cogs,
-                        StationCode = lubeDeliveryVM.Header.StationCode,
-                        JournalReference = nameof(JournalType.Purchase),
-                        ProductCode = lube.ProductCode
                     });
 
                     foreach (var transaction in sortedInventory.Skip(1))

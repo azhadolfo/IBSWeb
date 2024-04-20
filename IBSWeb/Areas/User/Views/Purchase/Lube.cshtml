@@ -1,4 +1,4 @@
-﻿@model IEnumerable<LubePurchaseHeader>
+﻿@model IEnumerable<dynamic>
 
 @{
     ViewData["Title"] = "Lube Purchase";
@@ -17,22 +17,22 @@
             <thead>
                 <tr>
                     <th>
-                        @Html.DisplayNameFor(model => model.StationCode)
+                        Station
                     </th>
                     <th>
                         Purchase No.
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.DeliveryDate)
+                        Delivery Date
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.SupplierCode)
+                        Supplier
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.SalesInvoice)
+                        Sales Invoice
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.ReceivedBy)
+                        Received By
                     </th>
                     <th></th>
                 </tr>
@@ -42,7 +42,7 @@
                 {
                     <tr>
                         <td>
-                            @obj.StationCode
+                            @obj.StationCode - @obj.StationName
                         </td>
                         <td>
                             @obj.LubePurchaseHeaderNo
@@ -51,7 +51,7 @@
                             @obj.DeliveryDate.ToString("MMMM dd, yyyy")
                         </td>
                         <td>
-                            @obj.SupplierCode
+                            @obj.SupplierCode - @obj.SupplierName
                         </td>
                         <td>
                             @obj.SalesInvoice

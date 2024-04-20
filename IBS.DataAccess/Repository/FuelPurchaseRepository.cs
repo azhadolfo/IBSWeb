@@ -4,6 +4,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models;
 using IBS.Utility;
+using IBS.Utility.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
@@ -16,6 +17,25 @@ namespace IBS.DataAccess.Repository
         public FuelPurchaseRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
+        }
+
+        public IEnumerable<dynamic> GetFuelPurchaseJoin(IEnumerable<FuelPurchase> fuelPurchases, CancellationToken cancellationToken = default)
+        {
+            return from fuel in fuelPurchases
+                   join station in _db.Stations on fuel.StationCode equals station.StationCode
+                   join product in _db.Products on fuel.ProductCode equals product.ProductCode
+                   select new
+                   {
+                       fuel.FuelPurchaseId,
+                       fuel.StationCode,
+                       fuel.FuelPurchaseNo,
+                       fuel.DeliveryDate,
+                       fuel.ProductCode,
+                       product.ProductName,
+                       fuel.ReceivedBy,
+                       fuel.PostedBy,
+                       station.StationName
+                   }.ToExpando();
         }
 
         public async Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default)

@@ -5,6 +5,7 @@ using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.ViewModels;
 using IBS.Utility;
+using IBS.Utility.Extensions;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -232,6 +233,28 @@ namespace IBS.DataAccess.Repository
                 // Handle exceptions appropriately
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
+        }
+
+        public IEnumerable<dynamic> GetSalesHeaderJoin(IEnumerable<SalesHeader> salesHeaders, CancellationToken cancellationToken = default)
+        {
+            return from header in salesHeaders
+                                             join station in _db.Stations
+                                             on header.StationCode equals station.StationCode
+                                             select new
+                                             {
+                                                 header.SalesNo,
+                                                 header.Date,
+                                                 header.Cashier,
+                                                 header.StationCode,
+                                                 header.Shift,
+                                                 header.TimeIn,
+                                                 header.TimeOut,
+                                                 header.PostedBy,
+                                                 header.SafeDropTotalAmount,
+                                                 header.ActualCashOnHand,
+                                                 header.IsTransactionNormal,
+                                                 station.StationName
+                                             }.ToExpando();
         }
 
         public async Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default)

@@ -1,4 +1,4 @@
-﻿@model IEnumerable<FuelPurchase>
+﻿@model IEnumerable<dynamic>
 
 @{
     ViewData["Title"] = "Fuel Purchase";
@@ -17,19 +17,19 @@
             <thead>
                 <tr>
                     <th>
-                        @Html.DisplayNameFor(model => model.StationCode)
+                        Station
                     </th>
                     <th>
                         Purchase No.
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.DeliveryDate)
+                        Delivery Date
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.ProductCode)
+                        Product
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.ReceivedBy)
+                        Received By
                     </th>
                     <th></th>
                 </tr>
@@ -39,7 +39,7 @@
                 {
                     <tr>
                         <td>
-                            @obj.StationCode
+                            @obj.StationCode - @obj.StationName
                         </td>
                         <td>
                             @obj.FuelPurchaseNo
@@ -48,7 +48,7 @@
                             @obj.DeliveryDate.ToString("MMMM dd, yyyy")
                         </td>
                         <td>
-                            @obj.ProductCode
+                            @obj.ProductCode - @obj.ProductName
                         </td>
                         <td>
                             @obj.ReceivedBy

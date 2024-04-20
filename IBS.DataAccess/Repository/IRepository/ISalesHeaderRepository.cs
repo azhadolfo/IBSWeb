@@ -15,5 +15,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default);
 
         Task UpdateAsync(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken = default);
+
+        IEnumerable<dynamic> GetSalesHeaderJoin(IEnumerable<SalesHeader> salesHeaders, CancellationToken cancellationToken = default);
     }
 }

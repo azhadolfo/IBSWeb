@@ -160,7 +160,9 @@ namespace IBSWeb.Areas.User.Controllers
                 .FuelPurchase
                 .GetAllAsync(filter, cancellationToken);
 
-            return View(fuelPurchaseList);
+            var result = _unitOfWork.FuelPurchase.GetFuelPurchaseJoin(fuelPurchaseList, cancellationToken);
+
+            return View(result);
         }
 
         public async Task<IActionResult> PreviewFuel(string? id, CancellationToken cancellationToken)
@@ -262,7 +264,9 @@ namespace IBSWeb.Areas.User.Controllers
                 .LubePurchaseHeader
                 .GetAllAsync(filter, cancellationToken);
 
-            return View(lubePurchaseHeaders);
+            var result = _unitOfWork.LubePurchaseHeader.GetLubePurchaseJoin(lubePurchaseHeaders, cancellationToken);
+
+            return View(result);
         }
 
         public async Task<IActionResult> PreviewLube(string? id, CancellationToken cancellationToken)

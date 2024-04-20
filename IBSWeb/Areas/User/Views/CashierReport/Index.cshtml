@@ -1,4 +1,4 @@
-﻿@model IEnumerable<SalesHeader>
+﻿@model IEnumerable<dynamic>
 
 @{
     ViewData["Title"] = "Cashier Report";
@@ -17,25 +17,25 @@
             <thead>
                 <tr>
                     <th>
-                        @Html.DisplayNameFor(model => model.StationCode)
+                        Station Code / Name
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.SalesNo)
+                        Sales No
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.Date)
+                        Date
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.Cashier)
+                        Cashier
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.Shift)
+                        Shift
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.TimeIn)
+                        Time In
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.TimeOut)
+                        Time Out
                     </th>
                     <th></th>
                 </tr>
@@ -45,7 +45,7 @@
                 {
                     <tr class="@((obj.SafeDropTotalAmount > 0 || obj.ActualCashOnHand > 0) && obj.IsTransactionNormal ? "" : "table-danger")">
                         <td>
-                            @obj.StationCode
+                            @obj.StationCode - @obj.StationName
                         </td>
                         <td>
                             @obj.SalesNo

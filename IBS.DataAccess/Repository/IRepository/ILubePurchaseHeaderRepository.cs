@@ -14,5 +14,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task RecordTheDeliveryToPurchase(IEnumerable<LubeDelivery> lubeDeliveries, CancellationToken cancellationToken = default);
 
         Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default);
+
+        IEnumerable<dynamic> GetLubePurchaseJoin(IEnumerable<LubePurchaseHeader> lubePurchases, CancellationToken cancellationToken = default);
     }
 }

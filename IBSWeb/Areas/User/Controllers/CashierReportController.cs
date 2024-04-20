@@ -1,9 +1,13 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.ViewModels;
+using IBS.Utility.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Dynamic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace IBSWeb.Areas.User.Controllers
@@ -18,14 +22,17 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
+        private readonly ApplicationDbContext _dbContext;
+
         [BindProperty]
         public SalesVM SalesVM { get; set; }
 
-        public CashierReportController(IUnitOfWork unitOfWork, ILogger<CashierReportController> logger, UserManager<IdentityUser> userManager)
+        public CashierReportController(IUnitOfWork unitOfWork, ILogger<CashierReportController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _userManager = userManager;
+            _dbContext = dbContext;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -40,7 +47,9 @@ namespace IBSWeb.Areas.User.Controllers
                 .SalesHeader
                 .GetAllAsync(filter, cancellationToken);
 
-            return View(salesHeader);
+            var salesHeaderWithStationName = _unitOfWork.SalesHeader.GetSalesHeaderJoin(salesHeader, cancellationToken);
+
+            return View(salesHeaderWithStationName);
         }
 
         [HttpGet]

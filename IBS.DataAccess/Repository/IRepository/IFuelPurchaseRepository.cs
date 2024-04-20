@@ -16,5 +16,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default);
 
         Task UpdateAsync(FuelPurchase model, CancellationToken cancellationToken = default);
+
+        IEnumerable<dynamic> GetFuelPurchaseJoin(IEnumerable<FuelPurchase> fuelPurchases, CancellationToken cancellationToken = default);
     }
 }
