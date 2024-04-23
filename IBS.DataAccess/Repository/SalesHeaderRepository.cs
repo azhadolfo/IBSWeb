@@ -30,40 +30,8 @@ namespace IBS.DataAccess.Repository
         {
             try
             {
-
-                var fuels = await _db.Fuels
-                    .Where(f => !f.IsProcessed)
+                var fuelSales = await _db.FuelSalesViews
                     .ToListAsync(cancellationToken);
-
-                var fuelSales = fuels
-                    .GroupBy(f => new { f.xSITECODE, f.xONAME, f.INV_DATE, f.xPUMP, f.Particulars, f.ItemCode, f.Price, f.Shift, f.Calibration, f.IsProcessed })
-                    .Select(g => new
-                    {
-                        g.Key.xSITECODE,
-                        g.Key.xONAME,
-                        g.Key.INV_DATE,
-                        g.Key.xPUMP,
-                        g.Key.Particulars,
-                        g.Key.ItemCode,
-                        g.Key.Price,
-                        g.Key.Shift,
-                        g.Key.Calibration,
-                        AmountDB = g.Sum(f => f.AmountDB),
-                        Sale = g.Sum(f => f.Amount),
-                        LitersSold = g.Sum(f => f.Volume),
-                        Liters = g.Sum(f => f.Liters),
-                        TransactionCount = g.Sum(f => f.TransCount),
-                        Closing = g.Max(f => f.Closing),
-                        Opening = g.Min(f => f.Opening),
-                        TimeIn = g.Min(f => f.InTime),
-                        TimeOut = g.Max(f => f.OutTime),
-                        g.Key.IsProcessed
-                    })
-                    .OrderBy(g => g.INV_DATE)
-                    .ThenBy(g => g.Shift)
-                    .ThenBy(g => g.xSITECODE)
-                    .ThenBy(g => g.Particulars)
-                    .ThenBy(g => g.xPUMP);
 
                 var lubeSales = await _db.Lubes
                     .Where(f => !f.IsProcessed)
@@ -92,6 +60,7 @@ namespace IBS.DataAccess.Repository
                     {
                         Date = fuel.INV_DATE,
                         StationPosCode = fuel.xSITECODE.ToString(),
+                        StationCode = fuel.StationCode,
                         Cashier = fuel.xONAME,
                         Shift = fuel.Shift,
                         CreatedBy = createdBy,
@@ -116,7 +85,7 @@ namespace IBS.DataAccess.Repository
                         TimeIn = fuel.TimeIn,
                         TimeOut = fuel.TimeOut
                     })
-                    .GroupBy(s => new { s.Date, s.StationPosCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.POSalesTotalAmount, s.CreatedBy })
+                    .GroupBy(s => new { s.Date, s.StationPosCode, s.StationCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.POSalesTotalAmount, s.CreatedBy })
                     .Select(g => new SalesHeader
                     {
                         Date = g.Key.Date,
@@ -134,7 +103,7 @@ namespace IBS.DataAccess.Repository
                         CreatedBy = g.Key.CreatedBy,
                         TimeIn = g.Min(s => s.TimeIn),
                         TimeOut = g.Max(s => s.TimeOut),
-                        StationCode = stationCode
+                        StationCode = g.Key.StationCode
                     })
                     .ToList();
 
@@ -146,7 +115,8 @@ namespace IBS.DataAccess.Repository
                 }
 
                 double previousClosing = 0;
-                foreach (var group in fuelSales.GroupBy(f => new {f.INV_DATE, f.ItemCode, f.xPUMP }))
+                string previousNo = string.Empty;
+                foreach (var group in fuelSales.GroupBy(f => new { f.ItemCode, f.xPUMP }))
                 {
 
                     foreach (var fuel in group)
@@ -170,21 +140,22 @@ namespace IBS.DataAccess.Repository
                             Value = Math.Round((decimal)fuel.Liters * fuel.Price, 2)
                         };
 
-                        if (previousClosing != 0 && previousClosing != fuel.Opening)
+                        if (previousClosing != 0 && !string.IsNullOrEmpty(previousNo) && previousClosing != fuel.Opening)
                         {
                             salesHeader.IsTransactionNormal = false;
                             salesDetail.IsTransactionNormal = false;
+                            salesDetail.ReferenceNo = previousNo;
                         }
 
                         await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
 
-                        if (previousClosing == 0)
-                        {
-                            previousClosing = fuel.Closing;
-                        }
+                        previousClosing = fuel.Closing;
+                        previousNo = salesHeader.SalesNo;
+
                     }
 
                     previousClosing = 0;
+                    previousNo = string.Empty;
 
                 }
 
@@ -210,9 +181,13 @@ namespace IBS.DataAccess.Repository
                     }
                 }
 
-                if (fuelSales.Any())
+                if (fuelSales.Count != 0)
                 {
-                    foreach(var fuel in fuels)
+                    var alreadyProcessedList = await _db.Fuels
+                        .Where(f => !f.IsProcessed)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var fuel in alreadyProcessedList)
                     {
                         fuel.IsProcessed = true;
                     }

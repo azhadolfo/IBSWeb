@@ -19,7 +19,7 @@ namespace IBS.Models
         [ForeignKey("SalesHeaderId")]
         public SalesHeader? SalesHeader { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [Column(TypeName = "varchar(15)")]
         public string SalesNo { get; set; }
 
         [Column(TypeName = "varchar(20)")]
@@ -57,5 +57,8 @@ namespace IBS.Models
         public decimal Value { get; set; } //Sum of Liters * Price
 
         public bool IsTransactionNormal { get; set; } = true;
+
+        [Column(TypeName = "varchar(15)")]
+        public string? ReferenceNo { get; set; }
     }
 }

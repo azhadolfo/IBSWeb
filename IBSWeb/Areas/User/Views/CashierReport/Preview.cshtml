@@ -52,7 +52,21 @@
                     <tr>
                         <td>@item.Particular</td>
                         <td class="text-end">@Html.DisplayFor(model => item.Closing)</td>
-                        <td class="text-end" style="@(!item.IsTransactionNormal ? "color:red" : "")">@Html.DisplayFor(model => item.Opening)</td>
+
+                         <td class="text-end">
+                            @if (!item.IsTransactionNormal)
+                            {
+                                <a asp-area="User" asp-controller="CashierReport" asp-action="Preview" asp-route-id="@item.ReferenceNo" title="Click to view @item.ReferenceNo" style="color:red !important">
+                                    @Html.DisplayFor(model => item.Opening)
+                                </a>
+                            }
+                            else
+                            {
+                                @Html.DisplayFor(model => item.Opening)
+                            }
+                        </td>
+
+
                         <td class="text-end">@Html.DisplayFor(model => item.Liters)</td>
                         <td class="text-end">@Html.DisplayFor(model => item.Calibration)</td>
                         <td class="text-end">@Html.DisplayFor(model => item.LitersSold)</td>

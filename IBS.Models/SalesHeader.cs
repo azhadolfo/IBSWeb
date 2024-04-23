@@ -16,7 +16,7 @@ namespace IBS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int SalesHeaderId { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [Column(TypeName = "varchar(15)")]
         [Display(Name = "Sales No.")]
         public string SalesNo { get; set; }
 
@@ -76,7 +76,6 @@ namespace IBS.Models
         [Column(TypeName = "varchar(3)")]
         [Display(Name = "Station Code")]
         public string StationCode { get; set; }
-
 
         #region --Added properties for editing purposes
 

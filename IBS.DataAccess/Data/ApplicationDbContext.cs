@@ -1,4 +1,5 @@
 ﻿using IBS.Models;
+using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -52,6 +53,12 @@ namespace IBS.DataAccess.Data
         public DbSet<Station> Stations { get; set; }
 
         #endregion --Master File Entities
+
+        #region--Views Entity
+
+        public DbSet<FuelSalesView> FuelSalesViews { get; set; }
+
+        #endregion
 
         #region--Fluent API Implementation
         protected override void OnModelCreating(ModelBuilder builder)
@@ -204,34 +211,47 @@ namespace IBS.DataAccess.Data
 
             #endregion
 
-            // ChartOfAccount
+            #region--Chart Of Account
             builder.Entity<ChartOfAccount>(coa =>
             {
                 coa.HasIndex(coa => coa.AccountNumber).IsUnique();
                 coa.HasIndex(coa => coa.AccountName);
             });
+            #endregion
 
-            // GeneralLedger
+            #region--General Ledger
             builder.Entity<GeneralLedger>(g =>
+                {
+                    g.HasIndex(g => g.TransactionDate);
+                    g.HasIndex(g => g.Reference);
+                    g.HasIndex(g => g.AccountNumber);
+                    g.HasIndex(g => g.AccountTitle);
+                    g.HasIndex(g => g.ProductCode);
+                    g.HasIndex(g => g.JournalReference);
+                    g.HasIndex(g => g.StationCode);
+                    g.HasIndex(g => g.SupplierCode);
+                    g.HasIndex(g => g.CustomerCode);
+                });
+            #endregion
+
+            #region--Inventory
+            builder.Entity<Inventory>(i =>
+               {
+                   i.HasIndex(i => i.ProductCode);
+                   i.HasIndex(i => i.StationCode);
+                   i.HasIndex(i => i.TransactionNo);
+               });
+            #endregion
+
+            #region--Views
+
+            builder.Entity<FuelSalesView>(entity =>
             {
-                g.HasIndex(g => g.TransactionDate);
-                g.HasIndex(g => g.Reference);
-                g.HasIndex(g => g.AccountNumber);
-                g.HasIndex(g => g.AccountTitle);
-                g.HasIndex(g => g.ProductCode);
-                g.HasIndex(g => g.JournalReference);
-                g.HasIndex(g => g.StationCode);
-                g.HasIndex(g => g.SupplierCode);
-                g.HasIndex(g => g.CustomerCode);
+                entity.HasNoKey();
+                entity.ToView("fuel_sales_view");
             });
 
-            // Inventory
-            builder.Entity<Inventory>(i =>
-            {
-                i.HasIndex(i => i.ProductCode);
-                i.HasIndex(i => i.StationCode);
-                i.HasIndex(i => i.TransactionNo);
-            });
+            #endregion
         }
         #endregion
     }
