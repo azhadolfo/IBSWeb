@@ -20,9 +20,9 @@
             Sort By <i class="bi bi-funnel-fill"></i>
         </button>
         <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-            <li><button type="button" class="dropdown-item" data-sortby="Date">Date<span class="selected-sort">&#10003;</span></button></li>
-            <li><button type="button" class="dropdown-item" data-sortby="AccountNo">Account No<span class="selected-sort" style="display:none;">&#10003;</span></button></li>
-            <li><button type="button" class="dropdown-item" data-sortby="AccountName">Account Title<span class="selected-sort" style="display:none;">&#10003;</span></button></li>
+            <li><button type="button" class="dropdown-item" data-sortby="transactionDate">Date<span class="selected-sort">&#10003;</span></button></li>
+            <li><button type="button" class="dropdown-item" data-sortby="accountNumber">Account No<span class="selected-sort" style="display:none;">&#10003;</span></button></li>
+            <li><button type="button" class="dropdown-item" data-sortby="accountTitle">Account Title<span class="selected-sort" style="display:none;">&#10003;</span></button></li>
         </ul>
     </div>
 </div>
@@ -33,7 +33,7 @@
         <table id="ledgerTable" class="table">
             <thead>
                 <tr class="table-primary">
-                    <th>Date</th>
+                    <th>Transaction Date</th>
                     <th>Journal</th>
                     <th>Particular</th>
                     <th>Account Number</th>
@@ -80,41 +80,33 @@ else
 
 @section Scripts {
     <script>
-        document.querySelectorAll('.dropdown-item').forEach(item => {
-            item.addEventListener('click', event => {
-                // Remove check mark from all items
-                document.querySelectorAll('.dropdown-item .selected-sort').forEach(checkmark => {
-                    checkmark.style.display = 'none';
+        $(document).ready(function () {
+            $('.dropdown-item').click(function () {
+                var sortBy = $(this).data('sortby');
+                $('.dropdown-item').find('.selected-sort').hide();
+                $(this).find('.selected-sort').show();
+                var sortedModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.TransactionDate)));
+                console.log(sortedModel)
+                sortedModel.sort(function (a, b) {
+                    var propA = a[sortBy] || '';
+                    var propB = b[sortBy] || '';
+                    return propA.localeCompare(propB);
                 });
-
-                // Add check mark to the clicked item
-                const checkmark = event.target.querySelector('.selected-sort');
-                checkmark.style.display = 'inline';
-
-                const sortBy = event.target.getAttribute('data-sortby');
-                const rows = Array.from(document.querySelectorAll('#ledgerTable tbody tr'));
-                rows.sort((a, b) => {
-                    const aVal = a.querySelector(`td:nth-child(${getColIndex(sortBy)})`).textContent;
-                    const bVal = b.querySelector(`td:nth-child(${getColIndex(sortBy)})`).textContent;
-                    return aVal.localeCompare(bVal);
+                $('#ledgerTable tbody').empty();
+                $.each(sortedModel, function (index, value) {
+                    $('#ledgerTable tbody').append(`
+                                <tr>
+                                    <td>${value.transactionDate}</td>
+                                    <td>${value.journalReference}</td>
+                                    <td>${value.particular}</td>
+                                    <td>${value.accountNumber}</td>
+                                    <td>${value.accountTitle}</td>
+                                    <td class="text-end">${value.debit.toFixed(2)}</td>
+                                    <td class="text-end">${value.credit.toFixed(2)}</td>
+                                </tr>
+                            `);
                 });
-                const tbody = document.querySelector('#ledgerTable tbody');
-                tbody.innerHTML = '';
-                rows.forEach(row => tbody.appendChild(row));
             });
         });
-
-        function getColIndex(colName) {
-            switch (colName) {
-                case 'Date':
-                    return 1;
-                case 'AccountNo':
-                    return 4;
-                case 'AccountName':
-                    return 5;
-                default:
-                    return 1;
-            }
-        }
     </script>
 }
