@@ -10,6 +10,6 @@
 
         public string? SupplierName { get; set; }
 
-        public string AccountCategory { get; set; }
+        public string NormalBalance { get; set; }
     }
 }

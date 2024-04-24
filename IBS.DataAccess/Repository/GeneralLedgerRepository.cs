@@ -85,7 +85,7 @@ namespace IBS.DataAccess.Repository
 
                     if (balance != 0)
                     {
-                        if (journal.AccountCategory == nameof(AccountCategory.Debit))
+                        if (journal.NormalBalance == nameof(NormalBalance.Debit))
                         {
                             balance += journal.Debit - journal.Credit;
                         }

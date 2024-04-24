@@ -14,7 +14,7 @@
         Inventory
     }
 
-    public enum AccountCategory
+    public enum NormalBalance
     {
         Debit,
         Credit

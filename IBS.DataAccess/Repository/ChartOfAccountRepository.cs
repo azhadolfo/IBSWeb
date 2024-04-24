@@ -21,7 +21,7 @@ namespace IBS.DataAccess.Repository
                 .FirstOrDefaultAsync(coa => coa.AccountNumber == thirdLevel, cancellationToken) ?? throw new InvalidOperationException($"Chart of account with number '{thirdLevel}' not found.");
 
             model.AccountType = existingCoa.AccountType;
-            model.AccountCategory = existingCoa.AccountCategory;
+            model.NormalBalance = existingCoa.NormalBalance;
             model.Level = existingCoa.Level + 1;
             model.Parent = existingCoa.AccountNumber;
             model.AccountNumber = await GenerateNumberAsync(thirdLevel, cancellationToken);

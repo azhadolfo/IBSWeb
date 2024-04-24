@@ -24,7 +24,7 @@ namespace IBS.Models
         public string? AccountType { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string? AccountCategory { get; set; }
+        public string? NormalBalance { get; set; }
 
         public int Level { get; set; }
 
