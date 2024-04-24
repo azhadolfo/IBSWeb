@@ -113,6 +113,12 @@ namespace IBS.DataAccess.Data
             {
                 f.HasIndex(f => f.xONAME);
                 f.HasIndex(f => f.INV_DATE);
+                f.HasIndex(f => f.xSITECODE);
+                f.HasIndex(f => f.IsProcessed);
+                f.HasIndex(f => f.Particulars);
+                f.HasIndex(f => f.Shift);
+                f.HasIndex(f => f.ItemCode);
+                f.HasIndex(f => f.xPUMP);
             });
 
             // Lube
@@ -134,7 +140,10 @@ namespace IBS.DataAccess.Data
             {
                 s.HasIndex(s => s.SalesNo).IsUnique();
                 s.HasIndex(s => s.Cashier);
+                s.HasIndex(s => s.Shift);
                 s.HasIndex(s => s.StationCode);
+                s.HasIndex(s => s.StationPosCode);
+                s.HasIndex(s => s.Date);
             });
 
             // SalesDetail
