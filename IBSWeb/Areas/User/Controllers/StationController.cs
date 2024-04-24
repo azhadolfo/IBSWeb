@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (await _unitOfWork.Station.IsPosCodeExistAsync(model.PosCode,cancellationToken))
+                if (await _unitOfWork.Station.IsPosCodeExistAsync(model.PosCode, cancellationToken))
                 {
                     ModelState.AddModelError("PosCode", "Station POS Code already exist.");
                     return View(model);

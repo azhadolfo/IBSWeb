@@ -1,13 +1,10 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models;
-using IBS.Models.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq.Expressions;
-using System.Threading;
 
 namespace IBSWeb.Areas.User.Controllers
 {

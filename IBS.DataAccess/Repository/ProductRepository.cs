@@ -2,11 +2,6 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IBS.DataAccess.Repository
 {
@@ -22,7 +17,7 @@ namespace IBS.DataAccess.Repository
         public async Task<bool> IsProductExist(string product, CancellationToken cancellationToken = default)
         {
             return await _db.Products
-                .AnyAsync(p => p.ProductName == product,cancellationToken);
+                .AnyAsync(p => p.ProductName == product, cancellationToken);
         }
 
         public async Task UpdateAsync(Product model, CancellationToken cancellationToken = default)

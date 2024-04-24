@@ -79,7 +79,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || id == 0 )
+            if (id == null || id == 0)
             {
                 return NotFound();
             }

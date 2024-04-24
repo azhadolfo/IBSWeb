@@ -1,8 +1,8 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 

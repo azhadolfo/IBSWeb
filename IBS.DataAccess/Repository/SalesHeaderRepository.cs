@@ -1,19 +1,11 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Migrations;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.ViewModels;
 using IBS.Utility;
 using IBS.Utility.Extensions;
-using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace IBS.DataAccess.Repository
 {
@@ -213,23 +205,23 @@ namespace IBS.DataAccess.Repository
         public IEnumerable<dynamic> GetSalesHeaderJoin(IEnumerable<SalesHeader> salesHeaders, CancellationToken cancellationToken = default)
         {
             return from header in salesHeaders
-                                             join station in _db.Stations
-                                             on header.StationCode equals station.StationCode
-                                             select new
-                                             {
-                                                 header.SalesNo,
-                                                 header.Date,
-                                                 header.Cashier,
-                                                 header.StationCode,
-                                                 header.Shift,
-                                                 header.TimeIn,
-                                                 header.TimeOut,
-                                                 header.PostedBy,
-                                                 header.SafeDropTotalAmount,
-                                                 header.ActualCashOnHand,
-                                                 header.IsTransactionNormal,
-                                                 station.StationName
-                                             }.ToExpando();
+                   join station in _db.Stations
+                   on header.StationCode equals station.StationCode
+                   select new
+                   {
+                       header.SalesNo,
+                       header.Date,
+                       header.Cashier,
+                       header.StationCode,
+                       header.Shift,
+                       header.TimeIn,
+                       header.TimeOut,
+                       header.PostedBy,
+                       header.SafeDropTotalAmount,
+                       header.ActualCashOnHand,
+                       header.IsTransactionNormal,
+                       station.StationName
+                   }.ToExpando();
         }
 
         public async Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default)

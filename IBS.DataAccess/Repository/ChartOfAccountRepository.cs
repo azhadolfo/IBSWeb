@@ -3,11 +3,6 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IBS.DataAccess.Repository
 {
@@ -15,7 +10,7 @@ namespace IBS.DataAccess.Repository
     {
         private ApplicationDbContext _db;
 
-        public ChartOfAccountRepository(ApplicationDbContext db) : base (db)
+        public ChartOfAccountRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
         }

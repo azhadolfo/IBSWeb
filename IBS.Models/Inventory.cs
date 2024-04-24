@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models
 {
@@ -60,7 +55,7 @@ namespace IBS.Models
         // If sales previous balance - Quantity
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal InventoryBalance {  get; set; }
+        public decimal InventoryBalance { get; set; }
 
         // To compute UnitCostAverage
         // RunningCost / InventoryBalance
