@@ -1,4 +1,5 @@
-﻿@model IEnumerable<GeneralLedger>
+﻿@using IBS.Models.ViewModels
+@model IEnumerable<GeneralLedgerView>
 
 @{
     ViewData["Title"] = "GL By Transaction";
@@ -7,10 +8,6 @@
 <style>
     .container {
         max-width: none;
-    }
-
-    @@page {
-        size: landscape;
     }
 </style>
 

@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.ViewModels;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
@@ -25,7 +26,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public byte[] ExportToExcel(IEnumerable<GeneralLedger> ledgers, DateOnly dateTo, DateOnly dateFrom, object accountNo, object accountName, string productCode)
+        public byte[] ExportToExcel(IEnumerable<GeneralLedgerView> ledgers, DateOnly dateTo, DateOnly dateFrom, object accountNo, object accountName, string productCode)
         {
             // Create the Excel package
             using var package = new ExcelPackage();
@@ -49,38 +50,23 @@ namespace IBS.DataAccess.Repository
             worksheet.Cells["B5"].Value = $"{productCode}";
 
             worksheet.Cells["A7"].Value = "Date";
-            worksheet.Cells["B7"].Value = "Particulars";
-
-            // Find the position to insert additional columns
-            int columnOffset = 2; // Start after "Particulars" column
-            if (worksheet.Cells["B7"].Value.ToString() == "Particulars")
-            {
-                columnOffset++;
-            }
-
-            // Insert additional columns if needed
-            if (accountNo.ToString().ToUpper() == "ALL")
-            {
-                worksheet.InsertColumn(columnOffset, 2);
-                worksheet.Cells[7, columnOffset].Value = "Account No";
-                worksheet.Cells[7, columnOffset + 1].Value = "Account Title";
-                columnOffset += 2;
-            }
-
-            if (productCode.ToUpper() == "ALL")
-            {
-                worksheet.InsertColumn(columnOffset, 1);
-                worksheet.Cells[7, columnOffset].Value = "Product Code";
-                columnOffset++;
-            }
-
-            // Set the remaining column headers
-            worksheet.Cells[7, columnOffset].Value = "Debit";
-            worksheet.Cells[7, columnOffset + 1].Value = "Credit";
-            worksheet.Cells[7, columnOffset + 2].Value = "Balance";
+            worksheet.Cells["B7"].Value = "Station Code";
+            worksheet.Cells["C7"].Value = "Station Name";
+            worksheet.Cells["D7"].Value = "Particular";
+            worksheet.Cells["E7"].Value = "Account No";
+            worksheet.Cells["F7"].Value = "Account Title";
+            worksheet.Cells["G7"].Value = "Product Code";
+            worksheet.Cells["H7"].Value = "Product Name";
+            worksheet.Cells["I7"].Value = "Customer Code";
+            worksheet.Cells["J7"].Value = "Customer Name";
+            worksheet.Cells["K7"].Value = "Supplier Code";
+            worksheet.Cells["L7"].Value = "Supplier Name";
+            worksheet.Cells["M7"].Value = "Debit";
+            worksheet.Cells["N7"].Value = "Credit";
+            worksheet.Cells["O7"].Value = "Balance";
 
             // Apply styling to the header row
-            using (var range = worksheet.Cells["A7"].Offset(0, 0, 1, columnOffset + 2))
+            using (var range = worksheet.Cells["A7:O7"])
             {
                 range.Style.Font.Bold = true;
                 range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -103,12 +89,10 @@ namespace IBS.DataAccess.Repository
 
                 foreach (var journal in journals.OrderBy(j => j.TransactionDate))
                 {
-                    var account = _db.ChartOfAccounts.FirstOrDefault(a => a.AccountNumber == journal.AccountNumber)
-                        ?? throw new InvalidOperationException($"No found records for the account '{journal.AccountNumber}'");
 
                     if (balance != 0)
                     {
-                        if (account.AccountCategory == nameof(AccountCategory.Debit))
+                        if (journal.AccountCategory == nameof(AccountCategory.Debit))
                         {
                             balance += journal.Debit - journal.Credit;
                         }
@@ -123,33 +107,25 @@ namespace IBS.DataAccess.Repository
                     }
 
                     worksheet.Cells[row, 1].Value = journal.TransactionDate.ToString("MMM/dd/yyyy");
-                    worksheet.Cells[row, 2].Value = journal.Particular;
+                    worksheet.Cells[row, 2].Value = journal.StationCode;
+                    worksheet.Cells[row, 3].Value = journal.StationName;
+                    worksheet.Cells[row, 4].Value = journal.Particular;
+                    worksheet.Cells[row, 5].Value = journal.AccountNumber;
+                    worksheet.Cells[row, 6].Value = journal.AccountTitle;
+                    worksheet.Cells[row, 7].Value = journal.ProductCode;
+                    worksheet.Cells[row, 8].Value = journal.ProductName;
+                    worksheet.Cells[row, 9].Value = journal.CustomerCode;
+                    worksheet.Cells[row, 10].Value = journal.CustomerName;
+                    worksheet.Cells[row, 11].Value = journal.SupplierCode;
+                    worksheet.Cells[row, 12].Value = journal.SupplierName;
 
-                    if (accountNo.ToString().ToUpper() == "ALL")
-                    {
-                        worksheet.Cells[row, 3].Value = journal.AccountNumber;
-                        worksheet.Cells[row, 4].Value = journal.AccountTitle;
-                    }
+                    worksheet.Cells[row, 13].Value = journal.Debit;
+                    worksheet.Cells[row, 14].Value = journal.Credit;
+                    worksheet.Cells[row, 15].Value = balance;
 
-                    if (productCode.ToUpper() == "ALL")
-                    {
-                        if (worksheet.Cells[7, 3].Value.ToString() == "Account No")
-                        {
-                            worksheet.Cells[row, 5].Value = journal.ProductCode;
-                        }
-                        else if (worksheet.Cells[7, 3].Value.ToString() == "Product Code")
-                        {
-                            worksheet.Cells[row, 3].Value = journal.ProductCode;
-                        }
-                    }
-
-                    worksheet.Cells[row, columnOffset].Value = journal.Debit;
-                    worksheet.Cells[row, columnOffset + 1].Value = journal.Credit;
-                    worksheet.Cells[row, columnOffset + 2].Value = balance;
-
-                    worksheet.Cells[row, columnOffset].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, columnOffset + 1].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, columnOffset + 2].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
 
                     row++;
                 }
@@ -158,17 +134,17 @@ namespace IBS.DataAccess.Repository
                 credit = journals.Sum(j => j.Credit);
                 balance = debit - credit;
 
-                worksheet.Cells[row, 2].Value = "Total " + journals.Key;
-                worksheet.Cells[row, columnOffset].Value = debit;
-                worksheet.Cells[row, columnOffset + 1].Value = credit;
-                worksheet.Cells[row, columnOffset + 2].Value = balance;
+                worksheet.Cells[row, 12].Value = "Total " + journals.Key;
+                worksheet.Cells[row, 13].Value = debit;
+                worksheet.Cells[row, 14].Value = credit;
+                worksheet.Cells[row, 15].Value = balance;
 
-                worksheet.Cells[row, columnOffset].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, columnOffset + 1].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, columnOffset + 2].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
 
                 // Apply style to subtotal row
-                using (var range = worksheet.Cells[row, 1, row, columnOffset + 2])
+                using (var range = worksheet.Cells[row, 1, row, 15])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -178,25 +154,58 @@ namespace IBS.DataAccess.Repository
                 row++;
             }
 
+            using (var range = worksheet.Cells[row, 13, row, 15])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+            }
+
             debit = ledgers.Sum(j => j.Debit);
             credit = ledgers.Sum(j => j.Credit);
             balance = debit - credit;
 
-            worksheet.Cells[row, 2].Value = "Total";
-            worksheet.Cells[row, 2].Style.Font.Bold = true;
-            worksheet.Cells[row, columnOffset].Value = debit;
-            worksheet.Cells[row, columnOffset + 1].Value = credit;
-            worksheet.Cells[row, columnOffset + 2].Value = balance;
+            worksheet.Cells[row, 12].Value = "Total";
+            worksheet.Cells[row, 12].Style.Font.Bold = true;
+            worksheet.Cells[row, 13].Value = debit;
+            worksheet.Cells[row, 14].Value = credit;
+            worksheet.Cells[row, 15].Value = balance;
 
-            worksheet.Cells[row, columnOffset].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, columnOffset + 1].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, columnOffset + 2].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
 
             // Auto-fit columns for better readability
             worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
 
             // Convert the Excel package to a byte array
             return package.GetAsByteArray();
+        }
+
+        public async Task<IEnumerable<GeneralLedgerView>> GetLedgerViewByAccountNo(DateOnly dateFrom, DateOnly dateTo, string stationCode, string accountNo, string productCode, CancellationToken cancellationToken = default)
+        {
+            return await _db.GeneralLedgerViews
+                .Where(g => g.TransactionDate >= dateFrom &&
+                            g.TransactionDate <= dateTo &&
+                            (accountNo == "ALL" || g.AccountNumber == accountNo) &&
+                            (productCode == "ALL" || g.ProductCode == productCode) &&
+                            (stationCode == "ALL" || g.StationCode == stationCode))
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<GeneralLedgerView>> GetLedgerViewByJournal(DateOnly dateFrom, DateOnly dateTo, string stationCode, string journal, CancellationToken cancellationToken = default)
+        {
+            return await _db.GeneralLedgerViews
+                .Where(g => g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo && g.JournalReference == journal && (stationCode == "ALL" || g.StationCode == stationCode))
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<GeneralLedgerView>> GetLedgerViewByTransaction(DateOnly dateFrom, DateOnly dateTo, string stationCode, CancellationToken cancellationToken = default)
+        {
+            return await _db.GeneralLedgerViews
+                .Where(g => g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo && (stationCode == "ALL" || g.StationCode == stationCode))
+                .ToListAsync(cancellationToken);
         }
     }
 }

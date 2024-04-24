@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -38,14 +39,9 @@ namespace IBSWeb.Areas.User.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
-            Expression<Func<GeneralLedger, bool>> filter = g => g.IsValidated &&
-                                                                g.TransactionDate >= dateFrom &&
-                                                                g.TransactionDate <= dateTo &&
-                                                                (stationCodeClaim == "ALL" || g.StationCode == stationCodeClaim);
-
-            IEnumerable<GeneralLedger> ledgers = await _unitOfWork
+            IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork
                 .GeneralLedger
-                .GetAllAsync(filter, cancellationToken);
+                .GetLedgerViewByTransaction(dateFrom, dateTo, stationCodeClaim, cancellationToken);
 
             return View(ledgers);
         }
@@ -63,15 +59,10 @@ namespace IBSWeb.Areas.User.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
-                Expression<Func<GeneralLedger, bool>> filter = g => g.IsValidated &&
-                                                                    g.JournalReference == journal &&
-                                                                    g.TransactionDate >= dateFrom &&
-                                                                    g.TransactionDate <= dateTo &&
-                                                                    (stationCodeClaim == "ALL" || g.StationCode == stationCodeClaim);
 
-                IEnumerable<GeneralLedger> ledgers = await _unitOfWork
+                IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork
                     .GeneralLedger
-                    .GetAllAsync(filter, cancellationToken);
+                    .GetLedgerViewByJournal(dateFrom, dateTo, stationCodeClaim, journal, cancellationToken);
 
                 ViewData["Journal"] = journal.ToUpper();
                 return View(ledgers);
@@ -104,16 +95,7 @@ namespace IBSWeb.Areas.User.Controllers
 
             SetViewData(chartOfAccount, accountNo, productCode, dateFrom, dateTo);
 
-            Expression<Func<GeneralLedger, bool>> filter = g => g.TransactionDate >= dateFrom &&
-                                                                g.TransactionDate <= dateTo &&
-                                                                (accountNo == "ALL" || g.AccountNumber == accountNo) &&
-                                                                g.IsValidated &&
-                                                                (productCode == "ALL" || g.ProductCode == productCode) &&
-                                                                (stationCodeClaim == "ALL" || g.StationCode == stationCodeClaim);
-
-            IEnumerable<GeneralLedger> ledgers = await _unitOfWork.GeneralLedger.GetAllAsync(filter, cancellationToken);
-
-            ViewData["Accounts"] = await _unitOfWork.ChartOfAccount.GetAllAsync(cancellationToken: cancellationToken);
+            IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork.GeneralLedger.GetLedgerViewByAccountNo(dateFrom, dateTo, stationCodeClaim, accountNo, productCode, cancellationToken);
 
             if (exportToExcel && ledgers.Any())
             {

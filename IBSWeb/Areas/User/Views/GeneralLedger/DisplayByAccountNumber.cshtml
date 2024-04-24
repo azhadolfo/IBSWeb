@@ -1,21 +1,12 @@
 ﻿@using IBS.Utility
-@model IEnumerable<GeneralLedger>
+@using IBS.Models.ViewModels
+@model IEnumerable<GeneralLedgerView>
 
 @{
     string currencyFormat = "N2";
     decimal balance = 0;
     decimal debit = 0;
     decimal credit = 0;
-
-    int colspan = 2;
-    if ((string)ViewData["AccountNo"].ToString() == "ALL")
-    {
-        colspan += 2;
-    }
-    if ((string)ViewData["ProductCode"].ToString() == "ALL")
-    {
-        colspan++;
-    }
 
     ViewData["Title"] = "GL By Account Number";
 
@@ -25,10 +16,6 @@
 <style>
     .container {
         max-width: none;
-    }
-
-    @@page {
-        size: landscape;
     }
 </style>
 
@@ -60,16 +47,17 @@
             <thead>
                 <tr class="table-primary">
                     <th>Date</th>
+                    <th>Station Code</th>
+                    <th>Station Name</th>
                     <th>Particular</th>
-                    @if ((string)ViewData["AccountNo"].ToString() == "ALL")
-                    {
-                        <th>Account No</th>
-                        <th>Account Title</th>
-                    }
-                    @if ((string)ViewData["ProductCode"].ToString() == "ALL")
-                    {
-                        <th>Product Code</th>
-                    }
+                    <th>Account No</th>
+                    <th>Account Title</th>
+                    <th>Product Code</th>
+                    <th>Product Name</th>
+                    <th>Customer Code</th>
+                    <th>Customer Name</th>
+                    <th>Supplier Code</th>
+                    <th>Supplier Name</th>
                     <th class="text-end">Debit</th>
                     <th class="text-end">Credit</th>
                     <th class="text-end">Balance</th>
@@ -82,11 +70,10 @@
 
                     foreach (var journal in journals.OrderBy(j => j.TransactionDate))
                     {
-                        var account = accounts.FirstOrDefault(a => a.AccountNumber == journal.AccountNumber);
 
                         if (balance != 0)
                         {
-                            if (account.AccountCategory == nameof(AccountCategory.Debit))
+                            if (journal.AccountCategory == nameof(AccountCategory.Debit))
                             {
                                 balance += journal.Debit - journal.Credit;
                             }
@@ -102,16 +89,17 @@
 
                         <tr>
                             <td>@Html.DisplayFor(model => journal.TransactionDate)</td>
+                            <td>@Html.DisplayFor(model => journal.StationCode)</td>
+                            <td>@Html.DisplayFor(model => journal.StationName)</td>
                             <td>@Html.DisplayFor(model => journal.Particular)</td>
-                            @if ((string)ViewData["AccountNo"].ToString() == "ALL")
-                            {
-                                <td>@journal.AccountNumber</td>
-                                <td>@journal.AccountTitle</td>
-                            }
-                            @if ((string)ViewData["ProductCode"].ToString() == "ALL")
-                            {
-                                <td>@journal.ProductCode</td>
-                            }
+                            <td>@Html.DisplayFor(model => journal.AccountNumber)</td>
+                            <td>@Html.DisplayFor(model => journal.AccountTitle)</td>
+                            <td>@Html.DisplayFor(model => journal.ProductCode)</td>
+                            <td>@Html.DisplayFor(model => journal.ProductName)</td>
+                            <td>@Html.DisplayFor(model => journal.CustomerCode)</td>
+                            <td>@Html.DisplayFor(model => journal.CustomerName)</td>
+                            <td>@Html.DisplayFor(model => journal.SupplierCode)</td>
+                            <td>@Html.DisplayFor(model => journal.SupplierName)</td>
                             <td class="text-end">@journal.Debit.ToString(currencyFormat)</td>
                             <td class="text-end">@journal.Credit.ToString(currencyFormat)</td>
                             <td class="text-end">@balance.ToString(currencyFormat)</td>
@@ -125,7 +113,7 @@
                             balance = debit - @credit;
                         }
 
-                        <td colspan="@colspan" class="text-center"> Total @journals.Key</td>
+                        <td colspan="12" class="text-center"> Total @journals.Key</td>
                         <td class="text-end">@debit.ToString(currencyFormat)</td>
                         <td class="text-end">@credit.ToString(currencyFormat)</td>
                         <td class="text-end">@balance.ToString(currencyFormat)</td>
@@ -140,7 +128,7 @@
                         balance = debit - credit;
                     }
 
-                    <td colspan="@colspan" class="text-center">TOTAL</td>
+                    <td colspan="12" class="text-center">TOTAL</td>
                     <td class="text-end">@debit.ToString(currencyFormat)</td>
                     <td class="text-end">@credit.ToString(currencyFormat)</td>
                     <td class="text-end">@balance.ToString(currencyFormat)</td>
