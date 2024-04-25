@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,6 +55,30 @@ namespace IBS.DataAccess.Repository
                 })
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<IEnumerable<CoaSummaryReportView>> GetSummaryReportView(CancellationToken cancellationToken = default)
+        {
+            var summaries = await _db.CoaSummaryReportViews.ToListAsync(cancellationToken);
+
+            foreach (var account in summaries.OrderByDescending(s => s.AccountNumber))
+            {
+                account.Balance = 9999;
+
+                var parentAccount = summaries.FirstOrDefault(s => s.AccountNumber == account.Parent);
+                while (parentAccount != null)
+                {
+                    parentAccount.Debit += account.Debit;
+                    parentAccount.Credit += account.Credit;
+                    parentAccount.Balance += 100;
+
+                    parentAccount = summaries.FirstOrDefault(s => s.AccountNumber == parentAccount.Parent);
+                }
+
+            }
+
+            return summaries;
+        }
+
 
         public async Task UpdateAsync(ChartOfAccount model, CancellationToken cancellationToken = default)
         {
