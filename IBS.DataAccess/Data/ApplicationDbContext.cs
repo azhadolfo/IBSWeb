@@ -58,7 +58,6 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FuelSalesView> FuelSalesViews { get; set; }
         public DbSet<GeneralLedgerView> GeneralLedgerViews { get; set; }
-        public DbSet<CoaSummaryReportView> CoaSummaryReportViews { get; set; }
 
         #endregion
 
@@ -265,12 +264,6 @@ namespace IBS.DataAccess.Data
             builder.Entity<GeneralLedgerView>(entity =>
             {
                 entity.ToView("general_ledger_view");
-            });
-
-            builder.Entity<CoaSummaryReportView>(entity =>
-            {
-                entity.HasNoKey();
-                entity.ToView("coa_summary_report_view");
             });
 
             #endregion

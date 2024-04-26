@@ -1,5 +1,5 @@
-﻿using IBS.Models;
-using IBS.Models.ViewModels;
+﻿using IBS.Dtos;
+using IBS.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.IRepository
@@ -14,6 +14,6 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task UpdateAsync(ChartOfAccount model, CancellationToken cancellationToken = default);
 
-        Task<IEnumerable<CoaSummaryReportView>> GetSummaryReportView(CancellationToken cancellationToken = default);
+        Task<IEnumerable<ChartOfAccountDto>> GetSummaryReportView(CancellationToken cancellationToken = default);
     }
 }

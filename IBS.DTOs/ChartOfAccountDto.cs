@@ -1,6 +1,6 @@
-﻿namespace IBS.Models.ViewModels
+﻿namespace IBS.Dtos
 {
-    public class CoaSummaryReportView
+    public class ChartOfAccountDto
     {
         public string AccountNumber { get; set; }
 
@@ -9,6 +9,8 @@
         public string AccountType { get; set; }
 
         public string? Parent { get; set; }
+
+        public int Level { get; set; }
 
         public decimal? Debit { get; set; }
 

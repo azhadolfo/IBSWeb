@@ -1,7 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Dtos;
 using IBS.Models;
-using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -56,28 +56,49 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<CoaSummaryReportView>> GetSummaryReportView(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<ChartOfAccountDto>> GetSummaryReportView(CancellationToken cancellationToken = default)
         {
-            var summaries = await _db.CoaSummaryReportViews.ToListAsync(cancellationToken);
+            var query = from c in _db.ChartOfAccounts
+                        join gl in _db.GeneralLedgers on c.AccountNumber equals gl.AccountNumber into glGroup
+                        from gl in glGroup.DefaultIfEmpty()
+                        group new { c, gl } by new { Level = c.Level, AccountNumber = c.AccountNumber, AccountName = c.AccountName, AccountType = c.AccountType, Parent = c.Parent } into g
+                        select new ChartOfAccountDto
+                        {
+                            Level = g.Key.Level,
+                            AccountNumber = g.Key.AccountNumber,
+                            AccountName = g.Key.AccountName,
+                            AccountType = g.Key.AccountType,
+                            Parent = g.Key.Parent,
+                            Debit = g.Sum(x => x.gl.Debit),
+                            Credit = g.Sum(x => x.gl.Credit),
+                            Balance = g.Sum(x => x.gl.Debit) - g.Sum(x => x.gl.Credit)
+                        };
 
-            foreach (var account in summaries.OrderByDescending(s => s.AccountNumber))
+            // Dictionary to store account information by level and account number (key)
+            var accountDictionary = query.ToDictionary(x => new { x.Level, x.AccountNumber }, x => x);
+
+            // Loop through all levels (ascending order to include level 1)
+            foreach (var level in query.Select(x => x.Level).Distinct().OrderByDescending(x => x))
             {
-                account.Balance = 9999;
-
-                var parentAccount = summaries.FirstOrDefault(s => s.AccountNumber == account.Parent);
-                while (parentAccount != null)
+                // Loop through accounts within the current level
+                foreach (var account in accountDictionary.Where(x => x.Key.Level == level))
                 {
-                    parentAccount.Debit += account.Debit;
-                    parentAccount.Credit += account.Credit;
-                    parentAccount.Balance += 100;
-
-                    parentAccount = summaries.FirstOrDefault(s => s.AccountNumber == parentAccount.Parent);
+                    // Update parent account if it exists and handle potential null reference
+                    if (account.Value.Parent != null && accountDictionary.TryGetValue(new { Level = level - 1, AccountNumber = account.Value.Parent }, out var parentAccount))
+                    {
+                        parentAccount.Debit += account.Value.Debit;
+                        parentAccount.Credit += account.Value.Credit;
+                        parentAccount.Balance += account.Value.Balance;
+                    }
                 }
 
             }
 
-            return summaries;
+            // Return the modified accounts
+            return accountDictionary.Values;
         }
+
+
 
 
         public async Task UpdateAsync(ChartOfAccount model, CancellationToken cancellationToken = default)

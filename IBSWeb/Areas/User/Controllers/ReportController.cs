@@ -23,7 +23,7 @@ namespace IBSWeb.Areas.User.Controllers
             var summary = await _unitOfWork.ChartOfAccount
                 .GetSummaryReportView(cancellationToken);
 
-            return View(summary);
+            return Json(summary.OrderBy(x => x.AccountNumber));
         }
     }
 }
