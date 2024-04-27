@@ -40,14 +40,14 @@ namespace IBS.DataAccess.Repository
                    }.ToExpando();
         }
 
-        public async Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default)
+        public async Task PostAsync(string id, string postedBy, string stationCode, CancellationToken cancellationToken = default)
         {
             try
             {
                 LubeDeliveryVM lubeDeliveryVM = new LubeDeliveryVM
                 {
-                    Header = await _db.LubePurchaseHeaders.FirstOrDefaultAsync(l => l.LubePurchaseHeaderNo == id, cancellationToken),
-                    Details = await _db.LubePurchaseDetails.Where(l => l.LubePurchaseHeaderNo == id).ToListAsync(cancellationToken)
+                    Header = await _db.LubePurchaseHeaders.FirstOrDefaultAsync(lh => lh.LubePurchaseHeaderNo == id && lh.StationCode == stationCode, cancellationToken),
+                    Details = await _db.LubePurchaseDetails.Where(ld => ld.LubePurchaseHeaderNo == id && ld.StationCode == stationCode).ToListAsync(cancellationToken)
                 };
 
                 if (lubeDeliveryVM.Header == null || lubeDeliveryVM.Details == null)
@@ -306,6 +306,7 @@ namespace IBS.DataAccess.Repository
                     {
                         LubePurchaseHeaderId = lubeHeader.LubePurchaseHeaderId,
                         LubePurchaseHeaderNo = lubeHeader.LubePurchaseHeaderNo,
+                        StationCode = lubeHeader.StationCode,
                         Quantity = lubeDelivery.quantity,
                         Unit = lubeDelivery.unit,
                         Description = lubeDelivery.description,

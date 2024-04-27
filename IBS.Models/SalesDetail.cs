@@ -55,5 +55,9 @@ namespace IBS.Models
 
         [Column(TypeName = "varchar(15)")]
         public string? ReferenceNo { get; set; }
+
+        [Column(TypeName = "varchar(3)")]
+        [Display(Name = "Station Code")]
+        public string StationCode { get; set; }
     }
 }

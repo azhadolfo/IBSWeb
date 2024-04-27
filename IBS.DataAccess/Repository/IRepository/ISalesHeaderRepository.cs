@@ -7,7 +7,7 @@ namespace IBS.DataAccess.Repository.IRepository
     {
         Task ComputeSalesPerCashier(bool HasPoSales, string createdBy, string stationCode, CancellationToken cancellationToken = default);
 
-        Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default);
+        Task PostAsync(string id, string postedBy, string stationCode, CancellationToken cancellationToken = default);
 
         Task UpdateAsync(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken = default);
 

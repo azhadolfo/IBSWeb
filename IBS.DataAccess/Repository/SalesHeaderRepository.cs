@@ -119,6 +119,7 @@ namespace IBS.DataAccess.Repository
                         {
                             SalesHeaderId = salesHeader.SalesHeaderId,
                             SalesNo = salesHeader.SalesNo,
+                            StationCode = salesHeader.StationCode,
                             Product = fuel.ItemCode,
                             Particular = $"{fuel.Particulars} (P{fuel.xPUMP})",
                             Closing = fuel.Closing,
@@ -224,15 +225,15 @@ namespace IBS.DataAccess.Repository
                    }.ToExpando();
         }
 
-        public async Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default)
+        public async Task PostAsync(string id, string postedBy, string stationCode, CancellationToken cancellationToken = default)
         {
             try
             {
 
                 SalesVM salesVM = new()
                 {
-                    Header = await _db.SalesHeaders.FirstOrDefaultAsync(sd => sd.SalesNo == id, cancellationToken),
-                    Details = await _db.SalesDetails.Where(sd => sd.SalesNo == id).ToListAsync(cancellationToken),
+                    Header = await _db.SalesHeaders.FirstOrDefaultAsync(sh => sh.SalesNo == id && sh.StationCode == stationCode, cancellationToken),
+                    Details = await _db.SalesDetails.Where(sd => sd.SalesNo == id && sd.StationCode == stationCode).ToListAsync(cancellationToken),
                 };
 
                 if (salesVM.Header == null || salesVM.Details == null)
@@ -515,11 +516,11 @@ namespace IBS.DataAccess.Repository
         public async Task UpdateAsync(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken = default)
         {
             SalesHeader existingSalesHeader = await _db.SalesHeaders
-                .FindAsync(model.Header.SalesHeaderId, cancellationToken) ?? throw new InvalidOperationException($"Sales header with id '{model.Header.SalesHeaderId}' not found.");
+                .FirstOrDefaultAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId && sh.StationCode == model.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Sales header with id '{model.Header.SalesHeaderId}' not found.");
 
             IEnumerable<SalesDetail> existingSalesDetail = await _db.SalesDetails
-                .Where(s => s.SalesHeaderId == model.Header.SalesHeaderId)
-                .OrderBy(s => s.SalesDetailId)
+                .Where(sd => sd.SalesHeaderId == model.Header.SalesHeaderId && sd.StationCode == model.Header.StationCode)
+                .OrderBy(sd => sd.SalesDetailId)
                 .ToListAsync(cancellationToken);
 
             bool headerModified = false;

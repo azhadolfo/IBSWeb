@@ -42,5 +42,8 @@ namespace IBS.Models
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
 
+        [Column(TypeName = "varchar(3)")]
+        public string StationCode { get; set; }
+
     }
 }

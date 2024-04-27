@@ -138,7 +138,7 @@ namespace IBS.DataAccess.Data
             // SalesHeader
             builder.Entity<SalesHeader>(s =>
             {
-                s.HasIndex(s => s.SalesNo).IsUnique();
+                s.HasIndex(s => s.SalesNo);
                 s.HasIndex(s => s.Cashier);
                 s.HasIndex(s => s.Shift);
                 s.HasIndex(s => s.StationCode);
@@ -147,8 +147,11 @@ namespace IBS.DataAccess.Data
             });
 
             // SalesDetail
-            builder.Entity<SalesDetail>(s => s
-                .HasIndex(s => s.SalesNo));
+            builder.Entity<SalesDetail>(s =>
+            {
+                s.HasIndex(s => s.SalesNo);
+                s.HasIndex(s => s.StationCode);
+            });
 
             builder.Entity<SalesDetail>()
                 .HasOne(s => s.SalesHeader)

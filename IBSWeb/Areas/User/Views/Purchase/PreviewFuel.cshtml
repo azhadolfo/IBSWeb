@@ -1,13 +1,8 @@
 ﻿@model FuelPurchase
 
-<style>
-    @@page {
-        size: letter portrait;
-    }
-</style>
-
 <div class="mb-5">
     <h2 class="text-center">Delivery Details</h2>
+    <h5 class="text-center">@ViewData["Station"]</h5>
     <div class="row mt-5">
         <div class="col-9">
             <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Driver):</b> @Html.DisplayFor(model => model.Driver)</h6>
@@ -16,10 +11,9 @@
             <h6 class="px-2"><b>WC #:</b> @Html.DisplayFor(model => model.WcNo)</h6>
         </div>
         <div class="col-3" style="white-space: nowrap;">
-            <h6 class="px-2"><b>No.</b> @Html.DisplayFor(model => model.FuelPurchaseNo)</h6>
-            <h6 class="px-2"><b>Date:</b> @Model.DeliveryDate.ToString("MMM/dd/yyyy")</h6>
-            <h6 class="px-2"><b>DR #:</b> @Html.DisplayFor(model => model.DrNo)</h6>
-            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.StationCode):</b> @Html.DisplayFor(model => model.StationCode)</h6>
+            <h6 class="px-2 text-end"><b>No.</b> @Html.DisplayFor(model => model.FuelPurchaseNo)</h6>
+            <h6 class="px-2 text-end"><b>Date:</b> @Model.DeliveryDate.ToString("MMM/dd/yyyy")</h6>
+            <h6 class="px-2 text-end"><b>DR #:</b> @Html.DisplayFor(model => model.DrNo)</h6>
         </div>
     </div>
 </div>
@@ -111,7 +105,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Proceed to the controller action
-                    window.location.href = '@Url.Action("PostFuel", "Purchase", new { area = "User", id = Model.FuelPurchaseNo })';
+                    window.location.href = '@Url.Action("PostFuel", "Purchase", new { area = "User", id = Model.FuelPurchaseNo, stationCode = Model.StationCode })';
                 }
             });
         });

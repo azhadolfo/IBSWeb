@@ -56,11 +56,11 @@
                         <td>
                             <div class="w-100 btn-group" role="group">
                                 @if(obj.PostedBy == null){
-                                    <a asp-area="User" asp-controller="Purchase" asp-action="EditFuel" asp-route-id="@obj.FuelPurchaseNo" class="btn btn-primary mx-2">
+                                    <a asp-area="User" asp-controller="Purchase" asp-action="EditFuel" asp-route-id="@obj.FuelPurchaseNo" asp-route-stationCode="@obj.StationCode" class="btn btn-primary mx-2">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </a>
                                 }
-                                <a class="btn btn-primary mx-2 preview-btn" asp-area="User" asp-controller="Purchase" asp-action="PreviewFuel" asp-route-id="@obj.FuelPurchaseNo">
+                                <a class="btn btn-primary mx-2 preview-btn" asp-area="User" asp-controller="Purchase" asp-action="PreviewFuel" asp-route-id="@obj.FuelPurchaseNo" asp-route-stationCode="@obj.StationCode">
                                     <i class="bi bi-printer-fill"></i> Preview
                                 </a>
                             </div>

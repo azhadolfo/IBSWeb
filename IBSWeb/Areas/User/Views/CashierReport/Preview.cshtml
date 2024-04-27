@@ -8,14 +8,15 @@
 <div class="mb-3 row">
     <div class="col-12 mb-3">
         <h2 class="text-center">CASHIER REPORT</h2>
+        <h5 class="text-center">@ViewData["Station"]</h5>
     </div>
-    <div class="col-9">
+    <div class="col-10">
         <h6 class="px-2"><b>Cashier:</b> @Model.Header.Cashier</h6>
         <h6 class="px-2"><b>Shift:</b> @Model.Header.Shift</h6>
     </div>
-    <div class="col-3">
-        <h6 class="px-2"><b>No.</b> @Html.DisplayFor(model => Model.Header.SalesNo)</h6>
-        <h6 class="px-2"><b>Date:</b> @Html.DisplayFor(model => Model.Header.Date)</h6>
+    <div class="col-2">
+        <h6 class="px-2 text-end"><b>No.</b> @Html.DisplayFor(model => Model.Header.SalesNo)</h6>
+        <h6 class="px-2 text-end"><b>Date:</b> @Html.DisplayFor(model => Model.Header.Date)</h6>
     </div>
 </div>
 
@@ -50,7 +51,7 @@
                          <td class="text-end">
                             @if (!item.IsTransactionNormal)
                             {
-                                <a asp-area="User" asp-controller="CashierReport" asp-action="Preview" asp-route-id="@item.ReferenceNo" title="Click to view @item.ReferenceNo" style="color:red !important">
+                                <a asp-area="User" asp-controller="CashierReport" asp-action="Preview" asp-route-id="@item.ReferenceNo" asp-route-stationCode="@item.StationCode" title="Click to view @item.ReferenceNo" style="color:red !important">
                                     @Html.DisplayFor(model => item.Opening)
                                 </a>
                             }
@@ -196,7 +197,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Proceed to the controller action
-                    window.location.href = '@Url.Action("Post", "CashierReport", new { area = "User", id = Model.Header.SalesNo })';
+                    window.location.href = '@Url.Action("Post", "CashierReport", new { area = "User", id = Model.Header.SalesNo, stationCode = Model.Header.StationCode })';
                 }
             });
         });

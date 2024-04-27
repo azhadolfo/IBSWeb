@@ -102,24 +102,24 @@ namespace IBSWeb.Areas.User.Controllers
             }
         }
 
-        public IActionResult ViewDetail(string transactionNo, string productCode, string typeOfTransaction)
+        public IActionResult ViewDetail(string transactionNo, string productCode, string typeOfTransaction, string stationCode)
         {
-            if (productCode == null || transactionNo == null)
+            if (productCode == null || transactionNo == null || stationCode == null)
             {
                 return NotFound();
             }
 
             if (productCode.Contains("PET") && typeOfTransaction == nameof(JournalType.Sales))
             {
-                return Redirect($"/User/CashierReport/Preview/{transactionNo}");
+                return Redirect($"/User/CashierReport/Preview/{transactionNo}?stationCode={stationCode}");
             }
             else if (productCode.Contains("PET") && typeOfTransaction == nameof(JournalType.Purchase))
             {
-                return Redirect($"/User/Purchase/PreviewFuel/{transactionNo}");
+                return Redirect($"/User/Purchase/PreviewFuel/{transactionNo}?stationCode={stationCode}");
             }
             else
             {
-                return Redirect($"/User/Purchase/PreviewLube/{transactionNo}");
+                return Redirect($"/User/Purchase/PreviewLube/{transactionNo}?stationCode={stationCode}");
             }
         }
 
@@ -135,7 +135,7 @@ namespace IBSWeb.Areas.User.Controllers
                 .GetAsync(i => i.InventoryId == id, cancellationToken);
 
             IEnumerable<GeneralLedger> ledgerEntries = await _unitOfWork.GeneralLedger
-                .GetAllAsync(l => l.Reference == inventory.TransactionNo, cancellationToken);
+                .GetAllAsync(l => l.Reference == inventory.TransactionNo && l.StationCode == inventory.StationCode, cancellationToken);
 
             if (inventory != null || ledgerEntries != null)
             {

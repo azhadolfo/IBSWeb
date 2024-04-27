@@ -38,13 +38,13 @@ namespace IBS.DataAccess.Repository
                    }.ToExpando();
         }
 
-        public async Task PostAsync(string id, string postedBy, CancellationToken cancellationToken = default)
+        public async Task PostAsync(string id, string postedBy, string stationCode, CancellationToken cancellationToken = default)
         {
             try
             {
                 FuelPurchase fuelPurchase = await _db
                     .FuelPurchase
-                    .FirstOrDefaultAsync(f => f.FuelPurchaseNo == id, cancellationToken) ?? throw new InvalidOperationException($"Fuel purchase with id '{id}' not found.");
+                    .FirstOrDefaultAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken) ?? throw new InvalidOperationException($"Fuel purchase with id '{id}' not found.");
 
                 if (fuelPurchase.PurchasePrice == 0)
                 {
@@ -304,7 +304,7 @@ namespace IBS.DataAccess.Repository
         {
             FuelPurchase existingFuelPurchase = await _db
                 .FuelPurchase
-                .FindAsync(model.FuelPurchaseId, cancellationToken) ?? throw new InvalidOperationException($"Fuel purchase with id '{model.FuelPurchaseId}' not found.");
+                .FirstOrDefaultAsync(f => f.FuelPurchaseId == model.FuelPurchaseId && f.StationCode == model.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Fuel purchase with id '{model.FuelPurchaseId}' not found.");
 
             existingFuelPurchase.PurchasePrice = model.PurchasePrice;
 

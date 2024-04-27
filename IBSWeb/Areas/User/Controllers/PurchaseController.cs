@@ -161,35 +161,37 @@ namespace IBSWeb.Areas.User.Controllers
             return View(result);
         }
 
-        public async Task<IActionResult> PreviewFuel(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> PreviewFuel(string? id, string? stationCode, CancellationToken cancellationToken)
         {
-            if (String.IsNullOrEmpty(id))
+            if (String.IsNullOrEmpty(id) || String.IsNullOrEmpty(stationCode))
             {
                 return NotFound();
             }
 
-            FuelPurchase? fuelPurchase = await _unitOfWork.FuelPurchase.GetAsync(f => f.FuelPurchaseNo == id, cancellationToken);
+            FuelPurchase? fuelPurchase = await _unitOfWork.FuelPurchase.GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken);
 
             if (fuelPurchase == null)
             {
                 return BadRequest();
             }
 
-            Product product = await _unitOfWork.Product.GetAsync(p => p.ProductCode == fuelPurchase.ProductCode, cancellationToken);
+            var product = await _unitOfWork.Product.MapProductToDTO(fuelPurchase.ProductCode, cancellationToken);
+            var station = await _unitOfWork.Station.MapStationToDTO(fuelPurchase.StationCode, cancellationToken);
 
             ViewData["ProductName"] = product.ProductName;
+            ViewData["Station"] = $"{station.StationCode} - {station.StationName}";
 
             return View(fuelPurchase);
         }
 
-        public async Task<IActionResult> PostFuel(string id, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostFuel(string? id, string? stationCode, CancellationToken cancellationToken)
         {
-            if (!String.IsNullOrEmpty(id))
+            if (!String.IsNullOrEmpty(id) || !String.IsNullOrEmpty(stationCode))
             {
                 try
                 {
                     var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.FuelPurchase.PostAsync(id, postedBy, cancellationToken);
+                    await _unitOfWork.FuelPurchase.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Fuel delivery approved successfully.";
                     return Redirect($"/User/Purchase/PreviewFuel/{id}");
                 }
@@ -205,16 +207,16 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> EditFuel(string id, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditFuel(string? id, string? stationCode, CancellationToken cancellationToken)
         {
-            if (String.IsNullOrEmpty(id))
+            if (String.IsNullOrEmpty(id) || String.IsNullOrEmpty(stationCode))
             {
                 return NotFound();
             }
 
             FuelPurchase fuelPurchase = await _unitOfWork
                 .FuelPurchase
-                .GetAsync(s => s.FuelPurchaseNo == id, cancellationToken);
+                .GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken);
 
             if (fuelPurchase != null)
             {
@@ -265,17 +267,17 @@ namespace IBSWeb.Areas.User.Controllers
             return View(result);
         }
 
-        public async Task<IActionResult> PreviewLube(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> PreviewLube(string? id, string? stationCode, CancellationToken cancellationToken)
         {
-            if (String.IsNullOrEmpty(id))
+            if (String.IsNullOrEmpty(id) || String.IsNullOrEmpty(stationCode))
             {
                 return NotFound();
             }
 
             LubeDeliveryVM = new LubeDeliveryVM
             {
-                Header = await _unitOfWork.LubePurchaseHeader.GetAsync(lh => lh.LubePurchaseHeaderNo == id, cancellationToken),
-                Details = await _unitOfWork.LubePurchaseDetail.GetAllAsync(sd => sd.LubePurchaseHeaderNo == id, cancellationToken)
+                Header = await _unitOfWork.LubePurchaseHeader.GetAsync(lh => lh.LubePurchaseHeaderNo == id && lh.StationCode == stationCode, cancellationToken),
+                Details = await _unitOfWork.LubePurchaseDetail.GetAllAsync(sd => sd.LubePurchaseHeaderNo == id && sd.StationCode == stationCode, cancellationToken)
             };
 
             if (LubeDeliveryVM.Header == null || LubeDeliveryVM.Details == null)
@@ -283,21 +285,23 @@ namespace IBSWeb.Areas.User.Controllers
                 return BadRequest();
             }
 
-            SupplierDto? supplier = await _unitOfWork.Supplier.MapSupplierToDTO(LubeDeliveryVM.Header.SupplierCode, cancellationToken);
+            SupplierDto supplier = await _unitOfWork.Supplier.MapSupplierToDTO(LubeDeliveryVM.Header.SupplierCode, cancellationToken);
+            StationDto station = await _unitOfWork.Station.MapStationToDTO(LubeDeliveryVM.Header.StationCode, cancellationToken);
 
             ViewData["SupplierName"] = supplier.SupplierName;
+            ViewData["Station"] = $"{station.StationCode} - {station.StationName}";
 
             return View(LubeDeliveryVM);
         }
 
-        public async Task<IActionResult> PostLube(string id, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostLube(string? id, string? stationCode, CancellationToken cancellationToken)
         {
-            if (!String.IsNullOrEmpty(id))
+            if (!String.IsNullOrEmpty(id) || !String.IsNullOrEmpty(stationCode))
             {
                 try
                 {
                     var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.LubePurchaseHeader.PostAsync(id, postedBy, cancellationToken);
+                    await _unitOfWork.LubePurchaseHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Lube delivery approved successfully.";
                     return Redirect($"/User/Purchase/PreviewLube/{id}");
                 }

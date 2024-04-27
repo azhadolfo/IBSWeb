@@ -50,17 +50,18 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Preview(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Preview(string? id, string? stationCode, CancellationToken cancellationToken)
         {
-            if (String.IsNullOrEmpty(id))
+            if (String.IsNullOrEmpty(id) || String.IsNullOrEmpty(stationCode))
             {
                 return NotFound();
             }
+            var station = await _unitOfWork.Station.MapStationToDTO(stationCode, cancellationToken);
 
             SalesVM = new SalesVM
             {
-                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesNo == id, cancellationToken),
-                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesNo == id, cancellationToken)
+                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesNo == id && sh.StationCode == station.StationCode, cancellationToken),
+                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesNo == id && sd.StationCode == station.StationCode, cancellationToken)
             };
 
             if (SalesVM.Header == null || SalesVM.Details == null)
@@ -68,17 +69,18 @@ namespace IBSWeb.Areas.User.Controllers
                 return BadRequest();
             }
 
+            ViewData["Station"] = $"{station.StationCode} - {station.StationName}";
             return View(SalesVM);
         }
 
-        public async Task<IActionResult> Post(string id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(string? id, string? stationCode, CancellationToken cancellationToken)
         {
-            if (!String.IsNullOrEmpty(id))
+            if (!String.IsNullOrEmpty(id) || String.IsNullOrEmpty(stationCode))
             {
                 try
                 {
                     var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.SalesHeader.PostAsync(id, postedBy, cancellationToken);
+                    await _unitOfWork.SalesHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Cashier report approved successfully.";
                     return Redirect($"/User/CashierReport/Preview/{id}");
                 }
@@ -94,17 +96,17 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(string id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(string? id, string? stationCode, CancellationToken cancellationToken)
         {
-            if (String.IsNullOrEmpty(id))
+            if (String.IsNullOrEmpty(id) || String.IsNullOrEmpty(stationCode))
             {
                 return NotFound();
             }
 
             SalesVM = new SalesVM
             {
-                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesNo == id, cancellationToken),
-                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesNo == id, cancellationToken)
+                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesNo == id && sh.StationCode == stationCode, cancellationToken),
+                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesNo == id && sd.StationCode == stationCode, cancellationToken)
             };
 
             if (SalesVM.Header == null)
@@ -120,8 +122,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             SalesVM = new SalesVM
             {
-                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId, cancellationToken),
-                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesHeaderId == model.Header.SalesHeaderId, cancellationToken)
+                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId && sh.StationCode == model.Header.StationCode, cancellationToken),
+                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesHeaderId == model.Header.SalesHeaderId && sd.StationCode == model.Header.StationCode, cancellationToken)
             };
 
             if (String.IsNullOrEmpty(model.Header.Particular))
