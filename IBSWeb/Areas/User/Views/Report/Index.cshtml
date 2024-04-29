@@ -1,1 +1,103 @@
-﻿
+﻿@using IBS.Dtos
+@model IEnumerable<ChartOfAccountDto>
+@{
+    ViewData["Title"] = "Chart of Accounts Summary";
+}
+
+<h2>Summary</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Account Title</th>
+            <th>Debit</th>
+            <th>Credit</th>
+            <th>Balance</th>
+        </tr>
+    </thead>
+    <tbody style="cursor: pointer">
+        @foreach (var firstLevel in Model)
+        {
+            <tr class="parent-account table-dark" onclick="toggleSubAccount(this)" title="Click to expand/collapse">
+                <td>
+                    <span class="account-name">
+                        @firstLevel.AccountNumber - @firstLevel.AccountName
+                    </span>
+                </td>
+                <td>@firstLevel.Debit.ToString("N2")</td>
+                <td>@firstLevel.Credit.ToString("N2")</td>
+                <td>@firstLevel.Balance.ToString("N2")</td>
+            </tr>
+            @if (firstLevel.Children.Any(c => c.Balance != 0))
+            {
+                foreach (var secondLevel in firstLevel.Children.Where(x => x.Balance != 0))
+                {
+                    <tr class="second-level" style="display: none;" onclick="toggleSubAccount(this)" title="Click to expand/collapse">
+                        <td style="padding-left: 20px;">
+                            <span class="account-name">
+                                <i class="bi bi-arrow-return-right"></i> @secondLevel.AccountNumber - @secondLevel.AccountName
+                            </span>
+                        </td>
+                        <td>@secondLevel.Debit.ToString("N2")</td>
+                        <td>@secondLevel.Credit.ToString("N2")</td>
+                        <td>@secondLevel.Balance.ToString("N2")</td>
+                    </tr>
+                    if (secondLevel.Children.Any(c => c.Balance != 0))
+                    {
+                        foreach (var thirdLevel in secondLevel.Children.Where(x => x.Balance != 0))
+                        {
+                            <tr class="third-level" style="display: none;" onclick="toggleSubAccount(this)" title="Click to expand/collapse">
+                                <td style="padding-left: 40px;">
+                                    <span class="account-name">
+                                        <i class="bi bi-arrow-return-right"></i> @thirdLevel.AccountNumber - @thirdLevel.AccountName
+                                    </span>
+                                </td>
+                                <td>@thirdLevel.Debit.ToString("N2")</td>
+                                <td>@thirdLevel.Credit.ToString("N2")</td>
+                                <td>@thirdLevel.Balance.ToString("N2")</td>
+                            </tr>
+                            if (thirdLevel.Children.Any(c => c.Balance != 0))
+                            {
+                                foreach (var fourthLevel in thirdLevel.Children.Where(x => x.Balance != 0))
+                                {
+                                    <tr class="fourth-level" style="display: none;" title="Click to expand/collapse">
+                                        <td style="padding-left: 60px;">
+                                            <span class="account-name">
+                                                <i class="bi bi-arrow-return-right"></i> @fourthLevel.AccountNumber - @fourthLevel.AccountName
+                                            </span>
+                                        </td>
+                                        <td>@fourthLevel.Debit.ToString("N2")</td>
+                                        <td>@fourthLevel.Credit.ToString("N2")</td>
+                                        <td>@fourthLevel.Balance.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        function toggleSubAccount(element) {
+            const row = element.closest('tr');
+            const nextRows = row.nextElementSibling;
+            let childRows;
+            if (nextRows.classList.contains('second-level')) {
+                childRows = row.parentNode.querySelectorAll('.' + row.classList[0] + ' ~ .second-level');
+            }
+            else if (nextRows.classList.contains('third-level')) {
+                childRows = row.parentNode.querySelectorAll('.' + row.classList[0] + ' ~ .third-level');
+            }
+            else {
+                childRows = row.parentNode.querySelectorAll('.' + row.classList[0] + ' ~ .fourth-level');
+            }
+            childRows.forEach(childRow => {
+                childRow.style.display = childRow.style.display === 'none' ? 'table-row' : 'none';
+            });
+        }
+    </script>
+}

@@ -14,6 +14,6 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task UpdateAsync(ChartOfAccount model, CancellationToken cancellationToken = default);
 
-        Task<IEnumerable<ChartOfAccountDto>> GetSummaryReportView(CancellationToken cancellationToken = default);
+        IEnumerable<ChartOfAccountDto> GetSummaryReportView(CancellationToken cancellationToken = default);
     }
 }

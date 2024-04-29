@@ -20,10 +20,18 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var summary = await _unitOfWork.ChartOfAccount
+            try
+            {
+                var summary = _unitOfWork.ChartOfAccount
                 .GetSummaryReportView(cancellationToken);
 
-            return Json(summary.OrderBy(x => x.AccountNumber));
+                return View(summary.OrderBy(x => x.AccountNumber));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return BadRequest();
+            }
         }
     }
 }
