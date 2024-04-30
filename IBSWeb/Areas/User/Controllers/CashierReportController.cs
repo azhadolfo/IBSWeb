@@ -82,13 +82,13 @@ namespace IBSWeb.Areas.User.Controllers
                     var postedBy = _userManager.GetUserName(User);
                     await _unitOfWork.SalesHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Cashier report approved successfully.";
-                    return Redirect($"/User/CashierReport/Preview/{id}");
+                    return Redirect($"/User/CashierReport/Preview/{id}?stationCode={stationCode}");
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting cashier report.");
                     TempData["error"] = $"Error: '{ex.Message}'";
-                    return Redirect($"/User/CashierReport/Preview/{id}");
+                    return Redirect($"/User/CashierReport/Preview/{id}?stationCode={stationCode}");
                 }
             }
 

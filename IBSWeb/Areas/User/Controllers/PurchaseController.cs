@@ -193,13 +193,13 @@ namespace IBSWeb.Areas.User.Controllers
                     var postedBy = _userManager.GetUserName(User);
                     await _unitOfWork.FuelPurchase.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Fuel delivery approved successfully.";
-                    return Redirect($"/User/Purchase/PreviewFuel/{id}");
+                    return Redirect($"/User/Purchase/PreviewFuel/{id}?stationCode={stationCode}");
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting fuel delivery.");
                     TempData["error"] = $"Error: '{ex.Message}'";
-                    return Redirect($"/User/Purchase/PreviewFuel/{id}");
+                    return Redirect($"/User/Purchase/PreviewFuel/{id}?stationCode={stationCode}");
                 }
             }
 
@@ -303,13 +303,13 @@ namespace IBSWeb.Areas.User.Controllers
                     var postedBy = _userManager.GetUserName(User);
                     await _unitOfWork.LubePurchaseHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Lube delivery approved successfully.";
-                    return Redirect($"/User/Purchase/PreviewLube/{id}");
+                    return Redirect($"/User/Purchase/PreviewLube/{id}?stationCode={stationCode}");
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting lube delivery.");
                     TempData["error"] = $"Error: '{ex.Message}'";
-                    return Redirect($"/User/Purchase/PreviewLube/{id}");
+                    return Redirect($"/User/Purchase/PreviewLube/{id}?stationCode={stationCode}");
                 }
             }
 
