@@ -5,12 +5,12 @@ namespace IBS.DataAccess.Repository.IRepository
 {
     public interface ISalesHeaderRepository : IRepository<SalesHeader>
     {
-        Task ComputeSalesPerCashier(bool HasPoSales, string createdBy, string stationCode, CancellationToken cancellationToken = default);
-
         Task PostAsync(string id, string postedBy, string stationCode, CancellationToken cancellationToken = default);
 
         Task UpdateAsync(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken = default);
 
         IEnumerable<dynamic> GetSalesHeaderJoin(IEnumerable<SalesHeader> salesHeaders, CancellationToken cancellationToken = default);
+
+        Task ImportSales(CancellationToken cancellationToken = default);
     }
 }

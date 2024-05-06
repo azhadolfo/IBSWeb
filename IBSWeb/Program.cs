@@ -22,6 +22,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddSingleton<IHostedService, ImportService>();
 
 var app = builder.Build();
 
