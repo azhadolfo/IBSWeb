@@ -43,11 +43,11 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMemberAccount(string parentNo, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMemberAccount(string parentAcc, CancellationToken cancellationToken = default)
         {
             return await _db.ChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
-                .Where(c => c.Parent == parentNo)
+                .Where(c => c.Parent == parentAcc)
                 .Select(c => new SelectListItem
                 {
                     Value = c.AccountNumber,
@@ -99,48 +99,6 @@ namespace IBS.DataAccess.Repository
             // Return the modified accounts
             return accountDictionary.Values.Where(x => x.Level == 1);
         }
-
-        //public async Task<IEnumerable<ChartOfAccountDto>> GetSummaryReportView(CancellationToken cancellationToken = default)
-        //{
-        //    var query = from c in _db.ChartOfAccounts
-        //                join gl in _db.GeneralLedgers on c.AccountNumber equals gl.AccountNumber into glGroup
-        //                from gl in glGroup.DefaultIfEmpty()
-        //                group new { c, gl } by new { Level = c.Level, AccountNumber = c.AccountNumber, AccountName = c.AccountName, AccountType = c.AccountType, Parent = c.Parent } into g
-        //                select new ChartOfAccountDto
-        //                {
-        //                    Level = g.Key.Level,
-        //                    AccountNumber = g.Key.AccountNumber,
-        //                    AccountName = g.Key.AccountName,
-        //                    AccountType = g.Key.AccountType,
-        //                    Parent = g.Key.Parent,
-        //                    Debit = g.Sum(x => x.gl.Debit),
-        //                    Credit = g.Sum(x => x.gl.Credit),
-        //                    Balance = g.Sum(x => x.gl.Debit) - g.Sum(x => x.gl.Credit),
-        //                    Children = new List<ChartOfAccountDto>() // Initialize Children property
-        //                };
-
-        //    var accounts = query.ToList();
-
-        //    // Build the hierarchical structure
-        //    foreach (var account in accounts)
-        //    {
-        //        if (account.Parent != null)
-        //        {
-        //            var parentAccount = accounts.FirstOrDefault(x => x.AccountNumber == account.Parent);
-        //            if (parentAccount != null)
-        //            {
-        //                parentAccount.Children.Add(account);
-        //            }
-        //        }
-        //    }
-
-        //    // Return the top-level accounts (level 1)
-        //    return accounts.Where(x => x.Level == 1);
-        //}
-
-
-
-
 
         public async Task UpdateAsync(ChartOfAccount model, CancellationToken cancellationToken = default)
         {

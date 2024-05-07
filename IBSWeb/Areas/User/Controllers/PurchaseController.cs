@@ -1,5 +1,4 @@
-﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.ViewModels;
@@ -20,17 +19,14 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        private readonly ApplicationDbContext _dbContext;
-
         [BindProperty]
         public LubeDeliveryVM LubeDeliveryVM { get; set; }
 
-        public PurchaseController(IUnitOfWork unitOfWork, ILogger<PurchaseController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        public PurchaseController(IUnitOfWork unitOfWork, ILogger<PurchaseController> logger, UserManager<IdentityUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _userManager = userManager;
-            _dbContext = dbContext;
         }
 
         public async Task<IActionResult> Fuel(CancellationToken cancellationToken)

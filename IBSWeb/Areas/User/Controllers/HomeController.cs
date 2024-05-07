@@ -1,8 +1,5 @@
-using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -14,18 +11,10 @@ namespace IBSWeb.Areas.User.Controllers
     {
         private readonly ILogger<HomeController> _logger;
 
-        private readonly ApplicationDbContext _dbContext;
 
-        private readonly IUnitOfWork _unitOfWork;
-
-        private readonly UserManager<IdentityUser> _userManager;
-
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext dbContext, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
+        public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            _dbContext = dbContext;
-            _unitOfWork = unitOfWork;
-            _userManager = userManager;
         }
 
         public IActionResult Index()

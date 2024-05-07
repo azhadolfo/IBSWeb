@@ -18,7 +18,7 @@ namespace IBSWeb.Areas.User.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index(CancellationToken cancellationToken)
         {
             try
             {

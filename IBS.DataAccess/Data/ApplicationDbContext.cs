@@ -14,6 +14,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 
+        public DbSet<LogMessage> LogMessages { get; set; }
+
         #region--Sales Entity
         public DbSet<Fuel> Fuels { get; set; }
         public DbSet<Lube> Lubes { get; set; }
