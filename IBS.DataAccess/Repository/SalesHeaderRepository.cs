@@ -21,7 +21,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        private async Task ComputeSalesPerCashier(bool HasPoSales, CancellationToken cancellationToken = default)
+        public async Task ComputeSalesPerCashier(bool hasPoSales, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace IBS.DataAccess.Repository
                 var fuelPoSales = Enumerable.Empty<Fuel>();
                 var lubePoSales = Enumerable.Empty<Lube>();
 
-                if (HasPoSales)
+                if (hasPoSales)
                 {
                     fuelPoSales = await _db.Fuels
                         .Where(f => !f.IsProcessed && (!String.IsNullOrEmpty(f.cust) || !String.IsNullOrEmpty(f.pono) || !String.IsNullOrEmpty(f.plateno)))
@@ -62,15 +62,15 @@ namespace IBS.DataAccess.Repository
                         FuelSalesTotalAmount = Math.Round((decimal)fuel.Liters * fuel.Price, 2),
                         LubesTotalAmount = Math.Round(lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift) && (l.INV_DATE == fuel.INV_DATE)).Sum(l => l.Amount), 2),
                         SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.INV_DATE == fuel.INV_DATE)).Sum(s => s.Amount), 2),
-                        POSalesTotalAmount = HasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.INV_DATE == fuel.INV_DATE)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
-                        POSalesAmount = HasPoSales ? fuelPoSales
+                        POSalesTotalAmount = hasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.INV_DATE == fuel.INV_DATE)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
+                        POSalesAmount = hasPoSales ? fuelPoSales
                             .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.INV_DATE == fuel.INV_DATE)
                             .Select(s => s.Amount)
                             .Concat(lubePoSales
                                 .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.INV_DATE == fuel.INV_DATE)
                                 .Select(l => l.Amount))
                             .ToArray() : new decimal[0],
-                        Customers = HasPoSales ? fuelPoSales
+                        Customers = hasPoSales ? fuelPoSales
                             .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.INV_DATE == fuel.INV_DATE)
                             .Select(s => s.cust)
                             .Concat(lubePoSales

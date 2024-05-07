@@ -1,7 +1,13 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+﻿using CsvHelper;
+using CsvHelper.Configuration;
+using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace IBS.DataAccess.Repository
 {
@@ -28,18 +34,16 @@ namespace IBS.DataAccess.Repository
 
         private async void DoWork(object state)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-
             try
             {
-                await unitOfWork.SalesHeader.ImportSales();
+                await ImportSales();
+                await ImportPurchases();
 
-                _logger.LogInformation("Sales import completed successfully.");
+                _logger.LogInformation("Import completed successfully.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during sales import.");
+                _logger.LogError(ex, "Error during import.");
             }
         }
 
@@ -55,6 +59,199 @@ namespace IBS.DataAccess.Repository
         public void Dispose()
         {
             _timer?.Dispose();
+        }
+
+        private async Task ImportSales()
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var stations = await db.Stations.ToListAsync();
+            int fuelsCount;
+            int lubesCount;
+            int safedropsCount;
+            bool hasPoSales = false;
+
+
+            foreach (var station in stations.Where(s => s.StationName == "TARLAC"))
+            {
+
+                if (!Directory.Exists(station.FolderPath))
+                {
+                    // Import this message to your message box
+                    _logger.LogWarning($"The directory for station '{station.StationName}' was not found.");
+                    continue;
+                }
+
+                var importFolder = Path.Combine(station.FolderPath, "SALESTEXT");
+                var files = Directory.GetFiles(importFolder, "*.csv")
+                                    .Where(f =>
+                                        f.Contains("fuels", StringComparison.CurrentCultureIgnoreCase) ||
+                                        f.Contains("lubes", StringComparison.CurrentCultureIgnoreCase) ||
+                                        f.Contains("safedrops", StringComparison.CurrentCultureIgnoreCase) &&
+                                        Path.GetFileNameWithoutExtension(f).EndsWith(DateTime.Now.ToString("yyyy")));
+
+                if (!files.Any())
+                {
+                    // Import this message to your message box
+                    _logger.LogWarning($"No csv files found in station '{station.StationName}'.");
+                    continue;
+                }
+
+                fuelsCount = 0;
+                lubesCount = 0;
+                safedropsCount = 0;
+                hasPoSales = false;
+
+                foreach (var file in files)
+                {
+                    var fileName = Path.GetFileName(file).ToLower();
+
+                    await using var stream = new FileStream(file, FileMode.Open);
+                    using var reader = new StreamReader(stream);
+                    using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+                    {
+                        HeaderValidated = null,
+                        MissingFieldFound = null,
+                    });
+
+                    var newRecords = new List<object>();
+
+                    if (fileName.Contains("fuels"))
+                    {
+                        var records = csv.GetRecords<Fuel>();
+                        var existingRecords = await db.Set<Fuel>().ToListAsync();
+                        foreach (var record in records)
+                        {
+                            if (!existingRecords.Exists(existingRecord => existingRecord.nozdown == record.nozdown))
+                            {
+                                if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
+                                {
+                                    hasPoSales = true;
+                                }
+
+                                newRecords.Add(record);
+                                fuelsCount++;
+                            }
+                        }
+                    }
+                    else if (fileName.Contains("lubes"))
+                    {
+                        var records = csv.GetRecords<Lube>();
+                        var existingRecords = await db.Set<Lube>().ToListAsync();
+                        foreach (var record in records)
+                        {
+                            if (!existingRecords.Exists(existingRecord => existingRecord.xStamp == record.xStamp))
+                            {
+                                if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
+                                {
+                                    hasPoSales = true;
+                                }
+
+                                newRecords.Add(record);
+                                lubesCount++;
+                            }
+                        }
+                    }
+                    else if (fileName.Contains("safedrops"))
+                    {
+                        var records = csv.GetRecords<SafeDrop>();
+                        var existingRecords = await db.Set<SafeDrop>().ToListAsync();
+                        foreach (var record in records)
+                        {
+                            if (!existingRecords.Exists(existingRecord => existingRecord.xSTAMP == record.xSTAMP))
+                            {
+                                newRecords.Add(record);
+                                safedropsCount++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Handle invalid file types
+                        continue;
+                    }
+
+                    await db.AddRangeAsync(newRecords);
+                    await db.SaveChangesAsync();
+                }
+
+                if (fuelsCount != 0 || lubesCount != 0 || safedropsCount != 0)
+                {
+                    await unitOfWork.SalesHeader.ComputeSalesPerCashier(hasPoSales);
+                }
+                else
+                {
+                    // Import this message to your message box
+                    _logger.LogInformation("You're up to date.");
+                }
+            }
+        }
+
+        private async Task ImportPurchases()
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var stations = await db.Stations.ToListAsync();
+
+            int fuelsCount;
+            int lubesCount;
+            int poSalesCount;
+
+            foreach (var station in stations.Where(s => s.StationName == "TARLAC"))
+            {
+                if (!Directory.Exists(station.FolderPath))
+                {
+                    // Import this message to your message box
+                    _logger.LogWarning($"The directory for station '{station.StationName}' was not found.");
+                    continue;
+                }
+
+                var importFolder = Path.Combine(station.FolderPath, "CSV");
+                var files = Directory.GetFiles(importFolder, "*.csv")
+                                     .Where(f =>
+                                     f.Contains("FUEL_DELIVERY", StringComparison.CurrentCulture) ||
+                                     f.Contains("LUBE_DELIVERY", StringComparison.CurrentCulture) ||
+                                     (f.Contains("PO_SALES", StringComparison.CurrentCulture) &&
+                                     Path.GetFileNameWithoutExtension(f).Contains(DateTime.Now.ToString("yyyy"))));
+
+                if (!files.Any())
+                {
+                    // Import this message to your message box
+                    _logger.LogWarning($"No csv files found in station '{station.StationName}'.");
+                    continue;
+                }
+
+                fuelsCount = 0;
+                lubesCount = 0;
+                poSalesCount = 0;
+
+                foreach (var file in files)
+                {
+                    string fileName = Path.GetFileName(file).ToLower();
+
+                    if (fileName.Contains("fuel"))
+                    {
+                        fuelsCount = await unitOfWork.FuelPurchase.ProcessFuelDelivery(file);
+                    }
+                    else if (fileName.Contains("lube"))
+                    {
+                        lubesCount = await unitOfWork.LubePurchaseHeader.ProcessLubeDelivery(file);
+                    }
+                    else if (fileName.Contains("po_sales"))
+                    {
+                        poSalesCount = await unitOfWork.PurchaseOrder.ProcessPOSales(file);
+                    }
+                }
+
+                if (fuelsCount == 0 && lubesCount == 0 && poSalesCount == 0)
+                {
+                    // Import this message to your message box
+                    _logger.LogInformation("You're up to date.");
+                }
+            }
         }
     }
 

@@ -33,18 +33,6 @@ namespace IBSWeb.Areas.User.Controllers
             return View();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ImportSales()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var claims = await _userManager.GetClaimsAsync(user);
-            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
-
-            ViewData["StationCode"] = stationCodeClaim;
-
-            return View();
-        }
-
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

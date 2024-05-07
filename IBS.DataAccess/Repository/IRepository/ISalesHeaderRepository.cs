@@ -12,5 +12,6 @@ namespace IBS.DataAccess.Repository.IRepository
         IEnumerable<dynamic> GetSalesHeaderJoin(IEnumerable<SalesHeader> salesHeaders, CancellationToken cancellationToken = default);
 
         Task ImportSales(CancellationToken cancellationToken = default);
+        Task ComputeSalesPerCashier(bool hasPoSales, CancellationToken cancellationToken = default);
     }
 }
