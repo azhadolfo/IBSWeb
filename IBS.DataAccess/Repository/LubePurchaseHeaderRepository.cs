@@ -190,22 +190,25 @@ namespace IBS.DataAccess.Repository
                                         (j.AccountNumber == "5011001" || j.AccountNumber == "1010410"))
                             .ToList();
 
-                        foreach (var journal in journalEntries)
+                        if (journalEntries.Count != 0)
                         {
-                            if (journal.Debit != 0)
+                            foreach (var journal in journalEntries)
                             {
-                                if (journal.Debit != transaction.CostOfGoodsSold)
+                                if (journal.Debit != 0)
                                 {
-                                    journal.Debit = transaction.CostOfGoodsSold;
-                                    journal.Credit = 0;
+                                    if (journal.Debit != transaction.CostOfGoodsSold)
+                                    {
+                                        journal.Debit = transaction.CostOfGoodsSold;
+                                        journal.Credit = 0;
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                if (journal.Credit != transaction.CostOfGoodsSold)
+                                else
                                 {
-                                    journal.Credit = transaction.CostOfGoodsSold;
-                                    journal.Debit = 0;
+                                    if (journal.Credit != transaction.CostOfGoodsSold)
+                                    {
+                                        journal.Credit = transaction.CostOfGoodsSold;
+                                        journal.Debit = 0;
+                                    }
                                 }
                             }
                         }
