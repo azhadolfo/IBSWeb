@@ -18,7 +18,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task<int> ProcessPOSales(string file, CancellationToken cancellationToken = default)
         {
-            using var stream = new FileStream(file, FileMode.Open);
+            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
             using var reader = new StreamReader(stream);
             using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {

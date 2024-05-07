@@ -123,7 +123,7 @@ namespace IBS.DataAccess.Repository
                     {
                         var fileName = Path.GetFileName(file).ToLower();
 
-                        await using var stream = new FileStream(file, FileMode.Open);
+                        await using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
                         using var reader = new StreamReader(stream);
                         using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
                         {
@@ -225,12 +225,14 @@ namespace IBS.DataAccess.Repository
 
             foreach (var station in stations.Where(s => s.StationName == "TARLAC"))
             {
-                if (!Directory.Exists(station.FolderPath))
+                var importFolder = Path.Combine(station.FolderPath, "CSV");
+
+                if (!Directory.Exists(importFolder))
                 {
                     // Import this message to your message box
                     _logger.LogWarning($"The directory for station '{station.StationName}' was not found.");
 
-                    LogMessage logMessage = new("Warning", "Importing Purchases", $"The directory for station '{station.StationName}' was not found.");
+                    LogMessage logMessage = new("Warning", "Importing Purchases", $"The directory '{importFolder}' for station '{station.StationName}' was not found.");
 
                     await db.LogMessages.AddAsync(logMessage);
                     await db.SaveChangesAsync();
@@ -238,7 +240,6 @@ namespace IBS.DataAccess.Repository
                     continue;
                 }
 
-                var importFolder = Path.Combine(station.FolderPath, "CSV");
                 var files = Directory.GetFiles(importFolder, "*.csv")
                                      .Where(f =>
                                      f.Contains("FUEL_DELIVERY", StringComparison.CurrentCulture) ||
