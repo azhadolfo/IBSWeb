@@ -27,7 +27,7 @@ namespace IBS.DataAccess.Repository
         {
             _logger.LogInformation("Sales import service is starting.");
 
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(2000)); // Adjust the interval as needed
+            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromDays(1)); // Adjust the interval as needed
 
             return Task.CompletedTask;
         }
@@ -73,11 +73,9 @@ namespace IBS.DataAccess.Repository
             int safedropsCount;
             bool hasPoSales = false;
 
-
             foreach (var station in stations.Where(s => s.StationName == "TARLAC"))
             {
-
-                var importFolder = Path.Combine(station.FolderPath, "SALESTEXT");
+                var importFolder = Path.Combine(station.FolderPath);
 
                 if (!Directory.Exists(importFolder))
                 {
@@ -123,68 +121,82 @@ namespace IBS.DataAccess.Repository
                     {
                         var fileName = Path.GetFileName(file).ToLower();
 
-                        await using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
-                        using var reader = new StreamReader(stream);
-                        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+                        bool fileOpened = false;
+                        while (!fileOpened)
                         {
-                            HeaderValidated = null,
-                            MissingFieldFound = null,
-                        });
-
-                        var newRecords = new List<object>();
-
-                        if (fileName.Contains("fuels"))
-                        {
-                            var records = csv.GetRecords<Fuel>();
-                            var existingRecords = await db.Set<Fuel>().ToListAsync();
-                            foreach (var record in records)
+                            try
                             {
-                                if (!existingRecords.Exists(existingRecord => existingRecord.nozdown == record.nozdown))
+                                await using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+                                using var reader = new StreamReader(stream);
+                                using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
                                 {
-                                    if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
+                                    HeaderValidated = null,
+                                    MissingFieldFound = null,
+                                });
+
+                                var newRecords = new List<object>();
+
+                                if (fileName.Contains("fuels"))
+                                {
+                                    var records = csv.GetRecords<Fuel>();
+                                    var existingRecords = await db.Set<Fuel>().ToListAsync();
+                                    foreach (var record in records)
                                     {
-                                        hasPoSales = true;
-                                    }
+                                        if (!existingRecords.Exists(existingRecord => existingRecord.nozdown == record.nozdown))
+                                        {
+                                            if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
+                                            {
+                                                hasPoSales = true;
+                                            }
 
-                                    newRecords.Add(record);
-                                    fuelsCount++;
+                                            newRecords.Add(record);
+                                            fuelsCount++;
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                        else if (fileName.Contains("lubes"))
-                        {
-                            var records = csv.GetRecords<Lube>();
-                            var existingRecords = await db.Set<Lube>().ToListAsync();
-                            foreach (var record in records)
-                            {
-                                if (!existingRecords.Exists(existingRecord => existingRecord.xStamp == record.xStamp))
+                                else if (fileName.Contains("lubes"))
                                 {
-                                    if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
+                                    var records = csv.GetRecords<Lube>();
+                                    var existingRecords = await db.Set<Lube>().ToListAsync();
+                                    foreach (var record in records)
                                     {
-                                        hasPoSales = true;
+                                        if (!existingRecords.Exists(existingRecord => existingRecord.xStamp == record.xStamp))
+                                        {
+                                            if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
+                                            {
+                                                hasPoSales = true;
+                                            }
+
+                                            newRecords.Add(record);
+                                            lubesCount++;
+                                        }
                                     }
-
-                                    newRecords.Add(record);
-                                    lubesCount++;
                                 }
-                            }
-                        }
-                        else if (fileName.Contains("safedrops"))
-                        {
-                            var records = csv.GetRecords<SafeDrop>();
-                            var existingRecords = await db.Set<SafeDrop>().ToListAsync();
-                            foreach (var record in records)
-                            {
-                                if (!existingRecords.Exists(existingRecord => existingRecord.xSTAMP == record.xSTAMP))
+                                else if (fileName.Contains("safedrops"))
                                 {
-                                    newRecords.Add(record);
-                                    safedropsCount++;
+                                    var records = csv.GetRecords<SafeDrop>();
+                                    var existingRecords = await db.Set<SafeDrop>().ToListAsync();
+                                    foreach (var record in records)
+                                    {
+                                        if (!existingRecords.Exists(existingRecord => existingRecord.xSTAMP == record.xSTAMP))
+                                        {
+                                            newRecords.Add(record);
+                                            safedropsCount++;
+                                        }
+                                    }
                                 }
+
+                                await db.AddRangeAsync(newRecords);
+                                await db.SaveChangesAsync();
+
+                                fileOpened = true; // File opened successfully, exit the loop
+                            }
+                            catch (IOException)
+                            {
+                                // File is locked, wait for 100 milliseconds before retrying
+                                await Task.Delay(100);
                             }
                         }
-
-                        await db.AddRangeAsync(newRecords);
-                        await db.SaveChangesAsync();
                     }
 
                     if (fuelsCount != 0 || lubesCount != 0 || safedropsCount != 0)
@@ -212,6 +224,7 @@ namespace IBS.DataAccess.Repository
             }
         }
 
+
         private async Task ImportPurchases()
         {
             using var scope = _scopeFactory.CreateScope();
@@ -225,7 +238,7 @@ namespace IBS.DataAccess.Repository
 
             foreach (var station in stations.Where(s => s.StationName == "TARLAC"))
             {
-                var importFolder = Path.Combine(station.FolderPath, "CSV");
+                var importFolder = Path.Combine(station.FolderPath);
 
                 if (!Directory.Exists(importFolder))
                 {
@@ -245,7 +258,7 @@ namespace IBS.DataAccess.Repository
                                      f.Contains("FUEL_DELIVERY", StringComparison.CurrentCulture) ||
                                      f.Contains("LUBE_DELIVERY", StringComparison.CurrentCulture) ||
                                      (f.Contains("PO_SALES", StringComparison.CurrentCulture) &&
-                                     Path.GetFileNameWithoutExtension(f).Contains(DateTime.Now.ToString("yyyy"))));
+                                     Path.GetFileNameWithoutExtension(f).EndsWith(DateTime.Now.ToString("yyyy"))));
 
                 if (!files.Any())
                 {

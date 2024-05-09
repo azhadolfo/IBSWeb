@@ -58,7 +58,7 @@ namespace IBS.DataAccess.Repository
 
                 if (fuelPurchaselist.Count > 0)
                 {
-                    throw new InvalidOperationException($"Can't proceed to post, you have unposted {fuelPurchaselist.First().FuelPurchaseNo}");
+                    throw new InvalidOperationException($"Can't proceed to post, you have unposted {fuelPurchaselist[0].FuelPurchaseNo}");
                 }
 
                 ProductDto product = await MapProductToDTO(fuelPurchase.ProductCode, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{fuelPurchase.ProductCode}' not found.");

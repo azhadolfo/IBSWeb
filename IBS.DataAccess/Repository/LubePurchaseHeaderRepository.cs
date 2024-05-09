@@ -62,7 +62,7 @@ namespace IBS.DataAccess.Repository
 
                 if (lubePurchaseList.Count > 0)
                 {
-                    throw new InvalidOperationException($"Can't proceed to post, you have unposted {lubePurchaseList.First().LubePurchaseHeaderNo}");
+                    throw new InvalidOperationException($"Can't proceed to post, you have unposted {lubePurchaseList[0].LubePurchaseHeaderNo}");
                 }
 
                 SupplierDto supplier = await MapSupplierToDTO(lubeDeliveryVM.Header.SupplierCode, cancellationToken) ?? throw new InvalidOperationException($"Supplier with code '{lubeDeliveryVM.Header.SupplierCode}' not found.");
