@@ -16,8 +16,8 @@ namespace IBS.DataAccess.Repository
 
         public string GenerateFolderPath(string stationName)
         {
-            string formattedStationName = stationName.ToUpper().Replace(" ", "-");
-            return $"G:\\Other computers\\{formattedStationName}";
+            string formattedStationName = stationName.ToUpper().Replace(" ", "_");
+            return $"D:\\FlowMeter\\Stations\\{formattedStationName}";
         }
 
         public async Task<bool> IsPosCodeExistAsync(string posCode, CancellationToken cancellationToken = default)
