@@ -437,8 +437,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = product.Key.Contains("PET") ? "4010101" : "4011001",
-                        AccountTitle = product.Key.Contains("PET") ? "Sales - Fuel" : "Sales - Lubes",
+                        AccountNumber = product.Key.StartsWith("PET") ? "4010101" : "4011001",
+                        AccountTitle = product.Key.StartsWith("PET") ? "Sales - Fuel" : "Sales - Lubes",
                         Debit = 0,
                         Credit = Math.Round(product.Sum(p => p.Value) / 1.12m, 2),
                         StationCode = station.StationCode,
@@ -518,8 +518,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = product.Key.Contains("PET") ? "5010101" : "5011001",
-                        AccountTitle = product.Key.Contains("PET") ? "COGS - Fuel" : "COGS - Lubes",
+                        AccountNumber = product.Key.StartsWith("PET") ? "5010101" : "5011001",
+                        AccountTitle = product.Key.StartsWith("PET") ? "COGS - Fuel" : "COGS - Lubes",
                         Debit = Math.Round(cogs, 2),
                         Credit = 0,
                         StationCode = station.StationCode,
@@ -533,8 +533,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = product.Key.Contains("PET") ? "1010401" : "1010410",
-                        AccountTitle = product.Key.Contains("PET") ? "Inventory - Fuel" : "Inventory - Lubes",
+                        AccountNumber = product.Key.StartsWith("PET") ? "1010401" : "1010410",
+                        AccountTitle = product.Key.StartsWith("PET") ? "Inventory - Fuel" : "Inventory - Lubes",
                         Debit = 0,
                         Credit = Math.Round(cogs, 2),
                         StationCode = station.StationCode,
@@ -574,7 +574,7 @@ namespace IBS.DataAccess.Repository
 
                         var journalEntries = _db.GeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
-                                        (j.AccountNumber == (product.Key.Contains("PET") ? "5010101" : "5011001") || j.AccountNumber == (product.Key.Contains("PET") ? "1010401" : "1010410")))
+                                        (j.AccountNumber == (product.Key.StartsWith("PET") ? "5010101" : "5011001") || j.AccountNumber == (product.Key.StartsWith("PET") ? "1010401" : "1010410")))
                             .ToList();
 
                         if (journalEntries.Count != 0)

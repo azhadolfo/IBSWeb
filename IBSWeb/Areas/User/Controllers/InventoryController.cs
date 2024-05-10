@@ -109,11 +109,11 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            if (productCode.Contains("PET") && typeOfTransaction == nameof(JournalType.Sales))
+            if (productCode.StartsWith("PET") && typeOfTransaction == nameof(JournalType.Sales))
             {
                 return Redirect($"/User/CashierReport/Preview/{transactionNo}?stationCode={stationCode}");
             }
-            else if (productCode.Contains("PET") && typeOfTransaction == nameof(JournalType.Purchase))
+            else if (productCode.StartsWith("PET") && typeOfTransaction == nameof(JournalType.Purchase))
             {
                 return Redirect($"/User/Purchase/PreviewFuel/{transactionNo}?stationCode={stationCode}");
             }
