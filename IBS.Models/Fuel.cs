@@ -88,6 +88,8 @@ namespace IBS.Models
         [Column(TypeName = "varchar(20)")]
         public string? cust { get; set; }
 
+        public DateOnly BusinessDate { get; set; }
+
         public int TransCount { get; set; }
 
         public bool IsProcessed { get; set; }

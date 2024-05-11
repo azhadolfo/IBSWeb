@@ -1,6 +1,4 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
-using IBS.DataAccess.Data;
+﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models;
@@ -8,7 +6,6 @@ using IBS.Models.ViewModels;
 using IBS.Utility;
 using IBS.Utility.Extensions;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
 
 namespace IBS.DataAccess.Repository
 {
@@ -53,28 +50,28 @@ namespace IBS.DataAccess.Repository
                 var salesHeaders = fuelSales
                     .Select(fuel => new SalesHeader
                     {
-                        Date = fuel.INV_DATE,
+                        Date = fuel.BusinessDate,
                         StationPosCode = fuel.xSITECODE.ToString(),
                         StationCode = fuel.StationCode,
                         Cashier = fuel.xONAME,
                         Shift = fuel.Shift,
                         CreatedBy = "System Generated",
                         FuelSalesTotalAmount = Math.Round((decimal)fuel.Liters * fuel.Price, 2),
-                        LubesTotalAmount = Math.Round(lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift) && (l.INV_DATE == fuel.INV_DATE)).Sum(l => l.Amount), 2),
-                        SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.INV_DATE == fuel.INV_DATE)).Sum(s => s.Amount), 2),
-                        POSalesTotalAmount = hasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.INV_DATE == fuel.INV_DATE)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
+                        LubesTotalAmount = Math.Round(lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift) && (l.BusinessDate == fuel.BusinessDate)).Sum(l => l.Amount), 2),
+                        SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.BusinessDate == fuel.BusinessDate)).Sum(s => s.Amount), 2),
+                        POSalesTotalAmount = hasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.BusinessDate == fuel.BusinessDate)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
                         POSalesAmount = hasPoSales ? fuelPoSales
-                            .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.INV_DATE == fuel.INV_DATE)
+                            .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.BusinessDate == fuel.BusinessDate)
                             .Select(s => s.Amount)
                             .Concat(lubePoSales
-                                .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.INV_DATE == fuel.INV_DATE)
+                                .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.BusinessDate == fuel.BusinessDate)
                                 .Select(l => l.Amount))
                             .ToArray() : new decimal[0],
                         Customers = hasPoSales ? fuelPoSales
-                            .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.INV_DATE == fuel.INV_DATE)
+                            .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.BusinessDate == fuel.BusinessDate)
                             .Select(s => s.cust)
                             .Concat(lubePoSales
-                                .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.INV_DATE == fuel.INV_DATE)
+                                .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.BusinessDate == fuel.BusinessDate)
                                 .Select(l => l.cust))
                             .ToArray() : new string[0],
                         TimeIn = fuel.TimeIn,
@@ -111,12 +108,13 @@ namespace IBS.DataAccess.Repository
 
                 double previousClosing = 0;
                 string previousNo = string.Empty;
+                DateOnly previousStartDate = new();
                 foreach (var group in fuelSales.GroupBy(f => new { f.ItemCode, f.xPUMP }))
                 {
 
                     foreach (var fuel in group)
                     {
-                        SalesHeader? salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift && s.Date == fuel.INV_DATE) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} not found!");
+                        SalesHeader? salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift && s.Date == fuel.BusinessDate) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} not found!");
 
                         var salesDetail = new SalesDetail
                         {
@@ -141,12 +139,19 @@ namespace IBS.DataAccess.Repository
                             salesHeader.IsTransactionNormal = false;
                             salesDetail.IsTransactionNormal = false;
                             salesDetail.ReferenceNo = previousNo;
+
+                            Offline offline = new(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, fuel.Opening, previousClosing);
+
+                            await _db.AddAsync(offline, cancellationToken);
+                            await _db.SaveChangesAsync(cancellationToken);
+
                         }
 
                         await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
 
                         previousClosing = fuel.Closing;
                         previousNo = salesHeader.SalesNo;
+                        previousStartDate = fuel.BusinessDate;
 
                     }
 
@@ -159,7 +164,7 @@ namespace IBS.DataAccess.Repository
                 {
                     foreach (var lube in lubeSales)
                     {
-                        var salesHeader = salesHeaders.Find(l => l.Cashier == lube.Cashier && l.Shift == lube.Shift && l.Date == lube.INV_DATE);
+                        var salesHeader = salesHeaders.Find(l => l.Cashier == lube.Cashier && l.Shift == lube.Shift && l.Date == lube.BusinessDate);
 
                         var salesDetail = new SalesDetail
                         {
@@ -226,131 +231,6 @@ namespace IBS.DataAccess.Repository
                        header.IsTransactionNormal,
                        station.StationName
                    }.ToExpando();
-        }
-
-        public async Task ImportSales(CancellationToken cancellationToken = default)
-        {
-            var stations = await _db.Stations.ToListAsync(cancellationToken);
-            int fuelsCount;
-            int lubesCount;
-            int safedropsCount;
-            bool HasPoSales = false;
-
-
-            foreach (var station in stations.Where(s => s.StationName == "TANAY"))
-            {
-
-                if (!Directory.Exists(station.FolderPath))
-                {
-                    // Import this message to your message box
-                    //_logger.LogInformation($"The directory for station '{station.StationName}' was not found.");
-                    continue;
-                }
-
-                var importFolder = Path.Combine(station.FolderPath, "SALESTEXT");
-                var files = Directory.GetFiles(importFolder, "*.csv")
-                                    .Where(f =>
-                                        f.Contains("fuels", StringComparison.CurrentCultureIgnoreCase) ||
-                                        f.Contains("lubes", StringComparison.CurrentCultureIgnoreCase) ||
-                                        f.Contains("safedrops", StringComparison.CurrentCultureIgnoreCase) &&
-                                        Path.GetFileNameWithoutExtension(f).EndsWith(DateTime.Now.ToString("yyyy")));
-
-                if (!files.Any())
-                {
-                    // Import this message to your message box
-                    //_logger.LogInformation($"No csv files found in station '{station.StationName}'.");
-                    continue;
-                }
-
-                fuelsCount = 0;
-                lubesCount = 0;
-                safedropsCount = 0;
-                HasPoSales = false;
-
-                foreach (var file in files)
-                {
-                    var fileName = Path.GetFileName(file).ToLower();
-
-                    await using var stream = new FileStream(file, FileMode.Open);
-                    using var reader = new StreamReader(stream);
-                    using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
-                    {
-                        HeaderValidated = null,
-                        MissingFieldFound = null,
-                    });
-
-                    var newRecords = new List<object>();
-
-                    if (fileName.Contains("fuels"))
-                    {
-                        var records = csv.GetRecords<Fuel>();
-                        var existingRecords = await _db.Set<Fuel>().ToListAsync(cancellationToken);
-                        foreach (var record in records)
-                        {
-                            if (!existingRecords.Exists(existingRecord => existingRecord.nozdown == record.nozdown))
-                            {
-                                if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
-                                {
-                                    HasPoSales = true;
-                                }
-
-                                newRecords.Add(record);
-                                fuelsCount++;
-                            }
-                        }
-                    }
-                    else if (fileName.Contains("lubes"))
-                    {
-                        var records = csv.GetRecords<Lube>();
-                        var existingRecords = await _db.Set<Lube>().ToListAsync(cancellationToken);
-                        foreach (var record in records)
-                        {
-                            if (!existingRecords.Exists(existingRecord => existingRecord.xStamp == record.xStamp))
-                            {
-                                if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
-                                {
-                                    HasPoSales = true;
-                                }
-
-                                newRecords.Add(record);
-                                lubesCount++;
-                            }
-                        }
-                    }
-                    else if (fileName.Contains("safedrops"))
-                    {
-                        var records = csv.GetRecords<SafeDrop>();
-                        var existingRecords = await _db.Set<SafeDrop>().ToListAsync(cancellationToken);
-                        foreach (var record in records)
-                        {
-                            if (!existingRecords.Exists(existingRecord => existingRecord.xSTAMP == record.xSTAMP))
-                            {
-                                newRecords.Add(record);
-                                safedropsCount++;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Handle invalid file types
-                        continue;
-                    }
-
-                    await _db.AddRangeAsync(newRecords, cancellationToken);
-                    await _db.SaveChangesAsync(cancellationToken);
-                }
-
-                if (fuelsCount != 0 || lubesCount != 0 || safedropsCount != 0)
-                {
-                    await ComputeSalesPerCashier(HasPoSales, cancellationToken);
-                }
-                else
-                {
-                    // Import this message to your message box
-                    //_logger.LogInformation("You're up to date.");
-                }
-            }
-
         }
 
         public async Task PostAsync(string id, string postedBy, string stationCode, CancellationToken cancellationToken = default)

@@ -17,7 +17,7 @@ namespace IBS.DataAccess.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.1")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -234,6 +234,9 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<decimal>("AmountDB")
                         .HasColumnType("numeric");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date");
 
                     b.Property<decimal>("Calibration")
                         .HasColumnType("numeric");
@@ -795,6 +798,9 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("AmountDB")
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date");
+
                     b.Property<string>("CanceledBy")
                         .HasColumnType("varchar(50)");
 
@@ -1148,6 +1154,48 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("LubePurchaseHeaders");
                 });
 
+            modelBuilder.Entity("IBS.Models.Offline", b =>
+                {
+                    b.Property<int>("OfflineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OfflineId"));
+
+                    b.Property<double>("Balance")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Closing")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<double>("Liters")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Opening")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Product")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int>("Pump")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)");
+
+                    b.HasKey("OfflineId");
+
+                    b.ToTable("Offlines");
+                });
+
             modelBuilder.Entity("IBS.Models.POSales", b =>
                 {
                     b.Property<int>("POSalesId")
@@ -1390,6 +1438,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,2)");
 
                     b.Property<DateOnly>("BDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("BusinessDate")
                         .HasColumnType("date");
 
                     b.Property<string>("CanceledBy")
@@ -1788,14 +1839,14 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("AmountDb")
                         .HasColumnType("numeric");
 
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date");
+
                     b.Property<decimal>("Calibration")
                         .HasColumnType("numeric");
 
                     b.Property<double>("Closing")
                         .HasColumnType("double precision");
-
-                    b.Property<DateOnly>("INV_DATE")
-                        .HasColumnType("date");
 
                     b.Property<string>("ItemCode")
                         .IsRequired()

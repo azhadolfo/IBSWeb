@@ -25,6 +25,7 @@ namespace IBS.DataAccess.Data
         public DbSet<PoSalesRaw> PoSalesRaw { get; set; }
         public DbSet<POSales> POSales { get; set; }
         public DbSet<CsvFile> CsvFiles { get; set; }
+        public DbSet<Offline> Offlines { get; set; }
         #endregion
 
         #region--Purchase Entity

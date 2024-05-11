@@ -8,7 +8,7 @@
 
         public string xONAME { get; set; }
 
-        public DateOnly INV_DATE { get; set; }
+        public DateOnly BusinessDate { get; set; }
 
         public int xPUMP { get; set; }
 

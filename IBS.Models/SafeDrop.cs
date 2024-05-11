@@ -42,6 +42,8 @@ namespace IBS.Models
         [Column(TypeName = "numeric(18,2)")]
         public decimal Amount { get; set; }
 
+        public DateOnly BusinessDate { get; set; }
+
         public bool IsProcessed { get; set; }
     }
 }

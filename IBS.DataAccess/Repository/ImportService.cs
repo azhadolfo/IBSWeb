@@ -25,9 +25,19 @@ namespace IBS.DataAccess.Repository
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Sales import service is starting.");
 
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromDays(1)); // Adjust the interval as needed
+            DateTime now = DateTime.Now;
+            DateTime nextRuntime = new DateTime(now.Year, now.Month, now.Day, 08, 00, 00); // It will automatically run every 8:00 AM
+            TimeSpan dueTime;
+
+            if (nextRuntime <= now)
+            {
+                nextRuntime = nextRuntime.AddDays(1);
+            }
+
+            dueTime = nextRuntime - now; // next - 05/11/2024 08:00 now - 05/10/2024 17:11 ???
+
+            _timer = new Timer(DoWork, null, dueTime, TimeSpan.FromDays(1)); // Adjust the interval as needed
 
             return Task.CompletedTask;
         }
@@ -36,6 +46,14 @@ namespace IBS.DataAccess.Repository
         {
             try
             {
+                using var scope = _scopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                LogMessage logMessage = new("Information", "ImportService", $"Importing service is starting in {DateTime.Now}.");
+
+                await db.LogMessages.AddAsync(logMessage);
+                await db.SaveChangesAsync();
+
                 await ImportSales();
                 await ImportPurchases();
 
@@ -82,7 +100,7 @@ namespace IBS.DataAccess.Repository
                     // Import this message to your message box
                     _logger.LogWarning($"The directory for station '{station.StationName}' was not found.");
 
-                    LogMessage logMessage = new("Warning", "Importing Sales", $"The directory '{importFolder}' for station '{station.StationName}' was not found.");
+                    LogMessage logMessage = new("Warning", "ImportSales", $"The directory '{importFolder}' for station '{station.StationName}' was not found.");
 
                     await db.LogMessages.AddAsync(logMessage);
                     await db.SaveChangesAsync();
@@ -104,7 +122,7 @@ namespace IBS.DataAccess.Repository
                         // Import this message to your message box
                         _logger.LogWarning($"No csv files found in station '{station.StationName}'.");
 
-                        LogMessage logMessage = new("Warning", "Importing Sales", $"No csv files found in station '{station.StationName}'.");
+                        LogMessage logMessage = new("Warning", "ImportSales", $"No csv files found in station '{station.StationName}'.");
 
                         await db.LogMessages.AddAsync(logMessage);
                         await db.SaveChangesAsync();
@@ -122,7 +140,8 @@ namespace IBS.DataAccess.Repository
                         var fileName = Path.GetFileName(file).ToLower();
 
                         bool fileOpened = false;
-                        while (!fileOpened)
+                        int retryCount = 0;
+                        while (!fileOpened && retryCount < 5)
                         {
                             try
                             {
@@ -149,6 +168,15 @@ namespace IBS.DataAccess.Repository
                                                 hasPoSales = true;
                                             }
 
+                                            if (record.INV_DATE == DateOnly.FromDateTime(DateTime.Now))
+                                            {
+                                                record.BusinessDate = record.INV_DATE.AddDays(-1);
+                                            }
+                                            else
+                                            {
+                                                record.BusinessDate = record.INV_DATE;
+                                            }
+
                                             newRecords.Add(record);
                                             fuelsCount++;
                                         }
@@ -167,6 +195,16 @@ namespace IBS.DataAccess.Repository
                                                 hasPoSales = true;
                                             }
 
+
+                                            if (record.INV_DATE == DateOnly.FromDateTime(DateTime.Now))
+                                            {
+                                                record.BusinessDate = record.INV_DATE.AddDays(-1);
+                                            }
+                                            else
+                                            {
+                                                record.BusinessDate = record.INV_DATE;
+                                            }
+
                                             newRecords.Add(record);
                                             lubesCount++;
                                         }
@@ -180,6 +218,16 @@ namespace IBS.DataAccess.Repository
                                     {
                                         if (!existingRecords.Exists(existingRecord => existingRecord.xSTAMP == record.xSTAMP))
                                         {
+
+                                            if (record.INV_DATE == DateOnly.FromDateTime(DateTime.Now))
+                                            {
+                                                record.BusinessDate = record.INV_DATE.AddDays(-1);
+                                            }
+                                            else
+                                            {
+                                                record.BusinessDate = record.INV_DATE;
+                                            }
+
                                             newRecords.Add(record);
                                             safedropsCount++;
                                         }
@@ -195,7 +243,19 @@ namespace IBS.DataAccess.Repository
                             {
                                 // File is locked, wait for 100 milliseconds before retrying
                                 await Task.Delay(100);
+                                retryCount++;
                             }
+                        }
+
+                        if (!fileOpened)
+                        {
+                            // Log a warning or handle the situation where the file could not be opened after retrying
+                            _logger.LogWarning($"Failed to open file '{file}' after multiple retries.");
+
+                            LogMessage logMessage = new("Warning", "ImportSales", $"Failed to open file '{file}' after multiple retries.");
+
+                            await db.LogMessages.AddAsync(logMessage);
+                            await db.SaveChangesAsync();
                         }
                     }
 
@@ -208,7 +268,7 @@ namespace IBS.DataAccess.Repository
                         // Import this message to your message box
                         _logger.LogInformation("You're up to date.");
 
-                        LogMessage logMessage = new("Information", "Importing Sales", $"No new record found in the station '{station.StationName}'.");
+                        LogMessage logMessage = new("Information", "ImportSales", $"No new record found in the station '{station.StationName}'.");
 
                         await db.LogMessages.AddAsync(logMessage);
                         await db.SaveChangesAsync();
@@ -216,7 +276,7 @@ namespace IBS.DataAccess.Repository
                 }
                 catch (Exception ex)
                 {
-                    LogMessage logMessage = new("Error", "Importing Sales", $"Error: {ex.Message} in '{station.StationName}'.");
+                    LogMessage logMessage = new("Error", "ImportSales", $"Error: {ex.Message} in '{station.StationName}'.");
 
                     await db.LogMessages.AddAsync(logMessage);
                     await db.SaveChangesAsync();
@@ -245,7 +305,7 @@ namespace IBS.DataAccess.Repository
                     // Import this message to your message box
                     _logger.LogWarning($"The directory for station '{station.StationName}' was not found.");
 
-                    LogMessage logMessage = new("Warning", "Importing Purchases", $"The directory '{importFolder}' for station '{station.StationName}' was not found.");
+                    LogMessage logMessage = new("Warning", "ImportPurchases", $"The directory '{importFolder}' for station '{station.StationName}' was not found.");
 
                     await db.LogMessages.AddAsync(logMessage);
                     await db.SaveChangesAsync();
@@ -265,7 +325,7 @@ namespace IBS.DataAccess.Repository
                     // Import this message to your message box
                     _logger.LogWarning($"No csv files found in station '{station.StationName}'.");
 
-                    LogMessage logMessage = new("Warning", "Importing Purchases", $"No csv files found in station '{station.StationName}'.");
+                    LogMessage logMessage = new("Warning", "ImportPurchases", $"No csv files found in station '{station.StationName}'.");
 
                     await db.LogMessages.AddAsync(logMessage);
                     await db.SaveChangesAsync();
@@ -281,17 +341,46 @@ namespace IBS.DataAccess.Repository
                 {
                     string fileName = Path.GetFileName(file).ToLower();
 
-                    if (fileName.Contains("fuel"))
+                    bool fileOpened = false;
+                    int retryCount = 0;
+                    while (!fileOpened && retryCount < 5)
                     {
-                        fuelsCount = await unitOfWork.FuelPurchase.ProcessFuelDelivery(file);
+                        try
+                        {
+                            if (fileName.Contains("fuel"))
+                            {
+                                fuelsCount = await unitOfWork.FuelPurchase.ProcessFuelDelivery(file);
+                            }
+                            else if (fileName.Contains("lube"))
+                            {
+                                lubesCount = await unitOfWork.LubePurchaseHeader.ProcessLubeDelivery(file);
+                            }
+                            else if (fileName.Contains("po_sales"))
+                            {
+                                poSalesCount = await unitOfWork.PurchaseOrder.ProcessPOSales(file);
+                            }
+
+                            fileOpened = true; // File opened successfully, exit the loop
+                        }
+                        catch (Exception ex)
+                        {
+                            // File is locked, wait for 100 milliseconds before retrying
+                            await Task.Delay(100);
+                            retryCount++;
+                        }
                     }
-                    else if (fileName.Contains("lube"))
+
+                    if (!fileOpened)
                     {
-                        lubesCount = await unitOfWork.LubePurchaseHeader.ProcessLubeDelivery(file);
-                    }
-                    else if (fileName.Contains("po_sales"))
-                    {
-                        poSalesCount = await unitOfWork.PurchaseOrder.ProcessPOSales(file);
+                        // Log a warning or handle the situation where the file could not be opened after retrying
+                        _logger.LogWarning($"Failed to open file '{file}' after multiple retries.");
+
+                        LogMessage logMessage = new("Warning", "ImportPurchases", $"Failed to open file '{file}' after multiple retries.");
+
+                        await db.LogMessages.AddAsync(logMessage);
+                        await db.SaveChangesAsync();
+
+                        return;
                     }
                 }
 
@@ -300,7 +389,7 @@ namespace IBS.DataAccess.Repository
                     // Import this message to your message box
                     _logger.LogInformation("You're up to date.");
 
-                    LogMessage logMessage = new("Information", "Importing Purchases", $"No new record found in the station '{station.StationName}'.");
+                    LogMessage logMessage = new("Information", "ImportPurchases", $"No new record found in the station '{station.StationName}'.");
 
                     await db.LogMessages.AddAsync(logMessage);
                     await db.SaveChangesAsync();
