@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240513031743_AddSeriesInOfflineTableAndAddSourceInSalesHeaderTable")]
+    partial class AddSeriesInOfflineTableAndAddSourceInSalesHeaderTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -223,9 +226,11 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Fuel", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
@@ -387,9 +392,11 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.FuelDelivery", b =>
                 {
-                    b.Property<Guid>("FuelDeliveryId")
+                    b.Property<int>("FuelDeliveryId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FuelDeliveryId"));
 
                     b.Property<string>("cashiercode")
                         .IsRequired()
@@ -782,9 +789,11 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Lube", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18,2)");
@@ -898,9 +907,11 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.LubeDelivery", b =>
                 {
-                    b.Property<Guid>("LubeDeliveryId")
+                    b.Property<int>("LubeDeliveryId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LubeDeliveryId"));
 
                     b.Property<decimal>("amount")
                         .HasColumnType("numeric(18,2)");
@@ -1297,9 +1308,11 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.PoSalesRaw", b =>
                 {
-                    b.Property<Guid>("POSalesRawId")
+                    b.Property<int>("POSalesRawId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("POSalesRawId"));
 
                     b.Property<string>("cashiercode")
                         .IsRequired()
@@ -1421,9 +1434,11 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.SafeDrop", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18,2)");

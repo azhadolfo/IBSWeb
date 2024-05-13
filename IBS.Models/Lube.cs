@@ -7,7 +7,7 @@ namespace IBS.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Column(TypeName = "date")]
         public DateOnly INV_DATE { get; set; }

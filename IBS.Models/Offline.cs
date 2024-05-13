@@ -8,6 +8,8 @@ namespace IBS.Models
         [Key]
         public int OfflineId { get; set; }
 
+        public int SeriesNo { get; set; }
+
         [Column(TypeName = "varchar(3)")]
         public string StationCode { get; set; } //fuel.StationCode
 
@@ -23,7 +25,6 @@ namespace IBS.Models
         public int Pump { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "double()")]
         public double Opening { get; set; } //fuel.Opening - previous
 
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]

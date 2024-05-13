@@ -95,7 +95,8 @@ namespace IBS.DataAccess.Repository
                         CreatedBy = g.Key.CreatedBy,
                         TimeIn = g.Min(s => s.TimeIn),
                         TimeOut = g.Max(s => s.TimeOut),
-                        StationCode = g.Key.StationCode
+                        StationCode = g.Key.StationCode,
+                        Source = "POS"
                     })
                     .ToList();
 
@@ -140,7 +141,10 @@ namespace IBS.DataAccess.Repository
                             salesDetail.IsTransactionNormal = false;
                             salesDetail.ReferenceNo = previousNo;
 
-                            Offline offline = new(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, fuel.Opening, previousClosing);
+                            Offline offline = new(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, fuel.Opening, previousClosing)
+                            {
+                                SeriesNo = await GenerateOfflineNo()
+                            };
 
                             await _db.AddAsync(offline, cancellationToken);
                             await _db.SaveChangesAsync(cancellationToken);
@@ -208,6 +212,11 @@ namespace IBS.DataAccess.Repository
             {
                 // Handle exceptions appropriately
                 Console.WriteLine($"An error occurred: {ex.Message}");
+
+                LogMessage logMessage = new("Error", "ComputeSalesPerCashier", $"Error : '{ex.Message}'");
+
+                await _db.LogMessages.AddAsync(logMessage, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
             }
         }
 
@@ -598,6 +607,20 @@ namespace IBS.DataAccess.Repository
             {
                 return "DSR0000000001";
             }
+        }
+
+        private async Task<int> GenerateOfflineNo()
+        {
+            var lastRecord = await _db.Offlines
+                .OrderByDescending(o => o.OfflineId)
+                .FirstOrDefaultAsync();
+
+            if (lastRecord != null)
+            {
+                return lastRecord.SeriesNo + 1;
+            }
+
+            return 1;
         }
     }
 }

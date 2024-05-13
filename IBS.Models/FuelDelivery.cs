@@ -7,7 +7,7 @@ namespace IBS.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int FuelDeliveryId { get; set; }
+        public Guid FuelDeliveryId { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string shiftrecid { get; set; }

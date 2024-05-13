@@ -7,7 +7,7 @@ namespace IBS.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Column(TypeName = "time without time zone")]
         public TimeOnly Start { get; set; }

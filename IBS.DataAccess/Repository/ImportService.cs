@@ -37,7 +37,7 @@ namespace IBS.DataAccess.Repository
 
             dueTime = nextRuntime - now; // next - 05/11/2024 08:00 now - 05/10/2024 17:11 ???
 
-            _timer = new Timer(DoWork, null, dueTime, TimeSpan.FromDays(1)); // Adjust the interval as needed
+            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromDays(1)); // Adjust the interval as needed
 
             return Task.CompletedTask;
         }
@@ -262,6 +262,11 @@ namespace IBS.DataAccess.Repository
                     if (fuelsCount != 0 || lubesCount != 0 || safedropsCount != 0)
                     {
                         await unitOfWork.SalesHeader.ComputeSalesPerCashier(hasPoSales);
+
+                        LogMessage logMessage = new("Information", "ImportSales", $"Imported successfully in the station '{station.StationName}', Fuels: '{fuelsCount}' record(s), Lubes: '{lubesCount}' record(s), Safe drops: '{safedropsCount}' record(s).");
+
+                        await db.LogMessages.AddAsync(logMessage);
+                        await db.SaveChangesAsync();
                     }
                     else
                     {
@@ -384,7 +389,14 @@ namespace IBS.DataAccess.Repository
                     }
                 }
 
-                if (fuelsCount == 0 && lubesCount == 0 && poSalesCount == 0)
+                if (fuelsCount != 0 && lubesCount != 0 && poSalesCount != 0)
+                {
+                    LogMessage logMessage = new("Information", "ImportPurchases", $"Imported successfully in the station '{station.StationName}', Fuel Delivery: '{fuelsCount}' record(s), Lubes Delivery: '{lubesCount}' record(s), PO Sales: '{poSalesCount}' record(s).");
+
+                    await db.LogMessages.AddAsync(logMessage);
+                    await db.SaveChangesAsync();
+                }
+                else
                 {
                     // Import this message to your message box
                     _logger.LogInformation("You're up to date.");

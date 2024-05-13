@@ -70,6 +70,9 @@ namespace IBS.Models
         [Display(Name = "Station Code")]
         public string StationCode { get; set; }
 
+        [Column(TypeName = "varchar(10)")]
+        public string Source { get; set; }
+
         #region --Added properties for editing purposes
 
         [Column(TypeName = "numeric(18,2)")]
