@@ -13,9 +13,6 @@ namespace IBS.Models
         [Display(Name = "Sales No.")]
         public string SalesNo { get; set; }
 
-        [Display(Name = "Station POS Code")]
-        public string StationPosCode { get; set; }
-
         [Column(TypeName = "date")]
         [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly Date { get; set; }

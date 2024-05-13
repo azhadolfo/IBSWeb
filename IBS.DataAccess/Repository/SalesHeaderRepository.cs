@@ -51,7 +51,6 @@ namespace IBS.DataAccess.Repository
                     .Select(fuel => new SalesHeader
                     {
                         Date = fuel.BusinessDate,
-                        StationPosCode = fuel.xSITECODE.ToString(),
                         StationCode = fuel.StationCode,
                         Cashier = fuel.xONAME,
                         Shift = fuel.Shift,
@@ -77,11 +76,10 @@ namespace IBS.DataAccess.Repository
                         TimeIn = fuel.TimeIn,
                         TimeOut = fuel.TimeOut
                     })
-                    .GroupBy(s => new { s.Date, s.StationPosCode, s.StationCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.POSalesTotalAmount, s.CreatedBy })
+                    .GroupBy(s => new { s.Date, s.StationCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.POSalesTotalAmount, s.CreatedBy })
                     .Select(g => new SalesHeader
                     {
                         Date = g.Key.Date,
-                        StationPosCode = g.Key.StationPosCode,
                         Cashier = g.Key.Cashier,
                         Shift = g.Key.Shift,
                         FuelSalesTotalAmount = g.Sum(g => g.FuelSalesTotalAmount),

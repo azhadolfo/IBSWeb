@@ -145,7 +145,6 @@ namespace IBS.DataAccess.Data
                 s.HasIndex(s => s.Cashier);
                 s.HasIndex(s => s.Shift);
                 s.HasIndex(s => s.StationCode);
-                s.HasIndex(s => s.StationPosCode);
                 s.HasIndex(s => s.Date);
             });
 
