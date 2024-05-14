@@ -72,8 +72,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             GeneralLedger model = new()
             {
-                ChartOfAccounts = await _unitOfWork.GetChartOfAccountAsyncByNo(cancellationToken),
-                Products = await _unitOfWork.GetProductsAsyncByCode(cancellationToken)
+                ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
+                Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken)
             };
 
             return View(model);

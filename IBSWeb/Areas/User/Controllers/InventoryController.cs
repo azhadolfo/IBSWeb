@@ -29,8 +29,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             Inventory? inventory = new()
             {
-                Products = await _unitOfWork.GetProductsAsyncByCode(cancellationToken),
-                Stations = await _unitOfWork.GetStationAsyncByCode(cancellationToken)
+                Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken),
+                Stations = await _unitOfWork.GetStationListAsyncByCode(cancellationToken)
             };
 
             return View(inventory);
@@ -66,8 +66,8 @@ namespace IBSWeb.Areas.User.Controllers
         {
             Inventory? inventory = new()
             {
-                Products = await _unitOfWork.GetProductsAsyncByCode(cancellationToken),
-                Stations = await _unitOfWork.GetStationAsyncByCode(cancellationToken)
+                Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken),
+                Stations = await _unitOfWork.GetStationListAsyncByCode(cancellationToken)
             };
 
             return View(inventory);
@@ -95,8 +95,8 @@ namespace IBSWeb.Areas.User.Controllers
                 _logger.LogError(ex, "Error in saving the beginning inventory.");
                 TempData["error"] = $"Error: '{ex.Message}'";
 
-                model.Products = await _unitOfWork.GetProductsAsyncByCode(cancellationToken);
-                model.Stations = await _unitOfWork.GetStationAsyncByCode(cancellationToken);
+                model.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+                model.Stations = await _unitOfWork.GetStationListAsyncByCode(cancellationToken);
 
                 return View(model);
             }
