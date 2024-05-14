@@ -49,7 +49,6 @@ namespace IBSWeb.Areas.User.Controllers
             return View(salesHeaderWithStationName);
         }
 
-        [HttpGet]
         public async Task<IActionResult> Preview(string? id, string? stationCode, CancellationToken cancellationToken)
         {
             if (String.IsNullOrEmpty(id) || String.IsNullOrEmpty(stationCode))
@@ -145,6 +144,17 @@ namespace IBSWeb.Areas.User.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(SalesVM);
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ManualEntry(CancellationToken cancellationToken)
+        {
+            SalesVM = new SalesVM
+            {
+                Offlines = await _unitOfWork.GetOfflineListAsync(cancellationToken)
+            };
+
+            return View(SalesVM);
         }
     }
 }
