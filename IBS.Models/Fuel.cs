@@ -90,6 +90,8 @@ namespace IBS.Models
 
         public DateOnly BusinessDate { get; set; }
 
+        public int DetailGroup { get; set; }
+
         public int TransCount { get; set; }
 
         public bool IsProcessed { get; set; }

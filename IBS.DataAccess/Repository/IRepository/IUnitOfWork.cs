@@ -34,19 +34,21 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task SaveAsync(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetCustomersAsync(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetCustomerListAsync(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetProductsAsyncByCode(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetProductListAsyncByCode(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetProductsAsyncById(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetProductListAsyncById(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetStationAsyncByCode(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetStationListAsyncByCode(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetStationAsyncById(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetStationListAsyncById(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetChartOfAccountAsyncByNo(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetChartOfAccountListAsyncByNo(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetChartOfAccountAsyncById(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetChartOfAccountListAsyncById(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetOfflineListAsync(CancellationToken cancellationToken = default);
 
     }
 }

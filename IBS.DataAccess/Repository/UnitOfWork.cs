@@ -47,7 +47,7 @@ namespace IBS.DataAccess.Repository
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetCustomersAsync(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetCustomerListAsync(CancellationToken cancellationToken = default)
         {
             return await _db.Customers
                 .OrderBy(c => c.CustomerId)
@@ -59,7 +59,7 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetProductsAsyncByCode(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetProductListAsyncByCode(CancellationToken cancellationToken = default)
         {
             return await _db.Products
                 .OrderBy(p => p.ProductId)
@@ -71,7 +71,7 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetProductsAsyncById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetProductListAsyncById(CancellationToken cancellationToken = default)
         {
             return await _db.Products
                 .OrderBy(p => p.ProductId)
@@ -83,7 +83,7 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetStationAsyncByCode(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetStationListAsyncByCode(CancellationToken cancellationToken = default)
         {
             return await _db.Stations
                 .OrderBy(s => s.StationId)
@@ -95,7 +95,7 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetStationAsyncById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetStationListAsyncById(CancellationToken cancellationToken = default)
         {
             return await _db.Stations
                 .OrderBy(s => s.StationId)
@@ -107,7 +107,7 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetChartOfAccountAsyncById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetChartOfAccountListAsyncById(CancellationToken cancellationToken = default)
         {
             return await _db.ChartOfAccounts
                 .OrderBy(c => c.AccountId)
@@ -120,7 +120,7 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetChartOfAccountAsyncByNo(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetChartOfAccountListAsyncByNo(CancellationToken cancellationToken = default)
         {
             return await _db.ChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
@@ -133,5 +133,16 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<List<SelectListItem>> GetOfflineListAsync(CancellationToken cancellationToken = default)
+        {
+            return await _db.Offlines
+                .OrderBy(o => o.OfflineId)
+                .Select(o => new SelectListItem
+                {
+                    Value = o.OfflineId.ToString(),
+                    Text = $"Offline#{o.SeriesNo}"
+                })
+                .ToListAsync(cancellationToken);
+        }
     }
 }
