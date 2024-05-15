@@ -157,53 +157,71 @@ namespace IBS.DataAccess.Repository
 
                                 if (fileName.Contains("fuels"))
                                 {
-                                    var records = csv.GetRecords<Fuel>();
-                                    var existingRecords = await db.Set<Fuel>().ToListAsync();
+                                    var records = csv.GetRecords<Fuel>()
+                                         .OrderBy(r => r.INV_DATE)
+                                         .ThenBy(r => r.ItemCode)
+                                         .ThenBy(r => r.xPUMP)
+                                         .ThenBy(r => r.Opening);
+
+                                    // Fetch existing nozdown values and store them in a HashSet
+                                    var existingNozdownList = await db.Set<Fuel>().Select(r => r.nozdown).ToListAsync();
+                                    var existingNozdownSet = new HashSet<string>(existingNozdownList);
+
+                                    DateOnly date = new();
+                                    int shift = 0;
+                                    decimal price = 0;
+                                    int pump = 0;
+                                    string itemCode = "";
+                                    int detailCount = 0;
+
                                     foreach (var record in records)
                                     {
-                                        if (!existingRecords.Exists(existingRecord => existingRecord.nozdown == record.nozdown))
+                                        if (!existingNozdownSet.Contains(record.nozdown))
                                         {
-                                            if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
-                                            {
-                                                hasPoSales = true;
-                                            }
+                                            hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
 
-                                            if (record.INV_DATE == DateOnly.FromDateTime(DateTime.Now))
+                                            record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
+                                                ? record.INV_DATE.AddDays(-1)
+                                                : record.INV_DATE;
+
+                                            if (record.BusinessDate == date && record.Shift == shift && record.Price == price && record.xPUMP == pump && record.ItemCode == itemCode)
                                             {
-                                                record.BusinessDate = record.INV_DATE.AddDays(-1);
+                                                record.DetailGroup = detailCount;
                                             }
                                             else
                                             {
-                                                record.BusinessDate = record.INV_DATE;
+                                                detailCount++;
+                                                record.DetailGroup = detailCount;
+                                                date = record.BusinessDate;
+                                                shift = record.Shift;
+                                                price = record.Price;
+                                                pump = record.xPUMP;
+                                                itemCode = record.ItemCode;
                                             }
 
                                             newRecords.Add(record);
                                             fuelsCount++;
                                         }
                                     }
+
                                 }
                                 else if (fileName.Contains("lubes"))
                                 {
                                     var records = csv.GetRecords<Lube>();
-                                    var existingRecords = await db.Set<Lube>().ToListAsync();
+
+                                    var existingNozdownList = await db.Set<Lube>().Select(r => r.xStamp).ToListAsync();
+                                    var existingNozdownSet = new HashSet<string>(existingNozdownList);
+
+
                                     foreach (var record in records)
                                     {
-                                        if (!existingRecords.Exists(existingRecord => existingRecord.xStamp == record.xStamp))
+                                        if (!existingNozdownSet.Contains(record.xStamp))
                                         {
-                                            if (!String.IsNullOrEmpty(record.cust) && !String.IsNullOrEmpty(record.plateno) && !String.IsNullOrEmpty(record.pono))
-                                            {
-                                                hasPoSales = true;
-                                            }
+                                            hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
 
-
-                                            if (record.INV_DATE == DateOnly.FromDateTime(DateTime.Now))
-                                            {
-                                                record.BusinessDate = record.INV_DATE.AddDays(-1);
-                                            }
-                                            else
-                                            {
-                                                record.BusinessDate = record.INV_DATE;
-                                            }
+                                            record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
+                                                ? record.INV_DATE.AddDays(-1)
+                                                : record.INV_DATE;
 
                                             newRecords.Add(record);
                                             lubesCount++;
@@ -213,20 +231,19 @@ namespace IBS.DataAccess.Repository
                                 else if (fileName.Contains("safedrops"))
                                 {
                                     var records = csv.GetRecords<SafeDrop>();
-                                    var existingRecords = await db.Set<SafeDrop>().ToListAsync();
+
+                                    var existingNozdownList = await db.Set<SafeDrop>().Select(r => r.xSTAMP).ToListAsync();
+                                    var existingNozdownSet = new HashSet<string>(existingNozdownList);
+
+
                                     foreach (var record in records)
                                     {
-                                        if (!existingRecords.Exists(existingRecord => existingRecord.xSTAMP == record.xSTAMP))
+                                        if (!existingNozdownSet.Contains(record.xSTAMP))
                                         {
 
-                                            if (record.INV_DATE == DateOnly.FromDateTime(DateTime.Now))
-                                            {
-                                                record.BusinessDate = record.INV_DATE.AddDays(-1);
-                                            }
-                                            else
-                                            {
-                                                record.BusinessDate = record.INV_DATE;
-                                            }
+                                            record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
+                                                ? record.INV_DATE.AddDays(-1)
+                                                : record.INV_DATE;
 
                                             newRecords.Add(record);
                                             safedropsCount++;
@@ -238,6 +255,7 @@ namespace IBS.DataAccess.Repository
                                 await db.SaveChangesAsync();
 
                                 fileOpened = true; // File opened successfully, exit the loop
+
                             }
                             catch (IOException)
                             {

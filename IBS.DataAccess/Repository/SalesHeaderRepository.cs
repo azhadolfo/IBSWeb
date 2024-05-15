@@ -534,10 +534,10 @@ namespace IBS.DataAccess.Repository
         public async Task UpdateAsync(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken = default)
         {
             SalesHeader existingSalesHeader = await _db.SalesHeaders
-                .FirstOrDefaultAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId && sh.StationCode == model.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Sales header with id '{model.Header.SalesHeaderId}' not found.");
+                .FirstOrDefaultAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId, cancellationToken) ?? throw new InvalidOperationException($"Sales header with id '{model.Header.SalesHeaderId}' not found.");
 
             IEnumerable<SalesDetail> existingSalesDetail = await _db.SalesDetails
-                .Where(sd => sd.SalesHeaderId == model.Header.SalesHeaderId && sd.StationCode == model.Header.StationCode)
+                .Where(sd => sd.SalesHeaderId == model.Header.SalesHeaderId)
                 .OrderBy(sd => sd.SalesDetailId)
                 .ToListAsync(cancellationToken);
 
