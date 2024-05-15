@@ -186,14 +186,13 @@ namespace IBS.DataAccess.Repository
 
                 if (fuelSales.Count != 0)
                 {
-                    var alreadyProcessedList = await _db.Fuels
+                    // Bulk update directly in the database without fetching
+                    await _db.Fuels
                         .Where(f => !f.IsProcessed)
-                        .ToListAsync(cancellationToken);
-
-                    foreach (var fuel in alreadyProcessedList)
-                    {
-                        fuel.IsProcessed = true;
-                    }
+                        .ExecuteUpdateAsync(
+                            f => f.SetProperty(p => p.IsProcessed, true),
+                            cancellationToken
+                        );
                 }
 
                 if (safeDropDeposits.Count != 0)
