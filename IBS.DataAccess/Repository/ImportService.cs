@@ -37,7 +37,7 @@ namespace IBS.DataAccess.Repository
 
             dueTime = nextRuntime - now; // next - 05/11/2024 08:00 now - 05/10/2024 17:11 ???
 
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromDays(1)); // Adjust the interval as needed
+            _timer = new Timer(DoWork, null, dueTime, TimeSpan.FromDays(1)); // Adjust the interval as needed
 
             return Task.CompletedTask;
         }

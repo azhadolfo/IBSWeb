@@ -36,6 +36,8 @@ namespace IBS.Models
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
         public double Balance { get; set; } //Remaining Balance
 
+        public bool IsResolve { get; set; }
+
         public Offline(string stationCode, DateOnly startDate, DateOnly endDate, string product, int pump, double opening, double closing)
         {
             StationCode = stationCode;
@@ -47,6 +49,7 @@ namespace IBS.Models
             Closing = closing;
             Liters = opening - closing;
             Balance = Liters;
+            IsResolve = false;
         }
 
     }
