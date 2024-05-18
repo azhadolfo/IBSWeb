@@ -113,7 +113,7 @@ namespace IBS.DataAccess.Repository
 
                     foreach (var fuel in group)
                     {
-                        SalesHeader? salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift && s.Date == fuel.BusinessDate) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} not found!");
+                        SalesHeader? salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift && s.Date == fuel.BusinessDate) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} on {fuel.BusinessDate} not found!");
 
                         var salesDetail = new SalesDetail
                         {
@@ -166,7 +166,7 @@ namespace IBS.DataAccess.Repository
                 {
                     foreach (var lube in lubeSales)
                     {
-                        var salesHeader = salesHeaders.Find(l => l.Cashier == lube.Cashier && l.Shift == lube.Shift && l.Date == lube.BusinessDate);
+                        var salesHeader = salesHeaders.Find(l => l.Cashier == lube.Cashier && l.Shift == lube.Shift && l.Date == lube.BusinessDate) ?? throw new InvalidOperationException($"Sales Header with {lube.Cashier} shift#{lube.Shift} on {lube.BusinessDate} not found!");
 
                         var salesDetail = new SalesDetail
                         {
@@ -174,7 +174,7 @@ namespace IBS.DataAccess.Repository
                             SalesNo = salesHeader.SalesNo,
                             Product = lube.ItemCode,
                             Particular = $"{lube.Particulars}",
-                            Liters = lube.LubesQty,
+                            Liters = (double)lube.LubesQty,
                             Price = lube.Price,
                             Sale = lube.Amount,
                             Value = Math.Round(lube.Amount, 2)

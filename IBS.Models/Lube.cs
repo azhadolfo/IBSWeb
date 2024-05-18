@@ -33,7 +33,7 @@ namespace IBS.Models
         public decimal Amount { get; set; }
 
         //Volume = Amount / Price
-        public int LubesQty { get; set; }
+        public decimal LubesQty { get; set; }
 
         [Column(TypeName = "varchar(16)")]
         public string ItemCode { get; set; }
