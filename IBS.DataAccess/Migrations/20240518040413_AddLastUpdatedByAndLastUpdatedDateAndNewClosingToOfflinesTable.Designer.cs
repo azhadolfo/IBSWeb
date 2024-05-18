@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240518040413_AddLastUpdatedByAndLastUpdatedDateAndNewClosingToOfflinesTable")]
+    partial class AddLastUpdatedByAndLastUpdatedDateAndNewClosingToOfflinesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1163,10 +1166,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<double>("Closing")
                         .HasColumnType("double precision");
 
-                    b.Property<string>("ClosingDSRNo")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateOnly>("EndDate")
                         .HasColumnType("date");
 
@@ -1187,10 +1186,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<double>("Opening")
                         .HasColumnType("double precision");
-
-                    b.Property<string>("OpeningDSRNo")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("Product")
                         .IsRequired()

@@ -32,6 +32,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IPOSalesRepository PurchaseOrder { get; }
 
+        IOfflineRepository Offline { get; }
+
         Task SaveAsync(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetCustomerListAsync(CancellationToken cancellationToken = default);
@@ -47,8 +49,6 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<List<SelectListItem>> GetChartOfAccountListAsyncByNo(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetChartOfAccountListAsyncById(CancellationToken cancellationToken = default);
-
-        Task<List<SelectListItem>> GetOfflineListAsync(CancellationToken cancellationToken = default);
 
     }
 }

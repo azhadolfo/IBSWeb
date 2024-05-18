@@ -141,7 +141,9 @@ namespace IBS.DataAccess.Repository
 
                             Offline offline = new(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, fuel.Opening, previousClosing)
                             {
-                                SeriesNo = await GenerateOfflineNo()
+                                SeriesNo = await GenerateOfflineNo(),
+                                ClosingDSRNo = previousNo,
+                                OpeningDSRNo = salesDetail.SalesNo
                             };
 
                             await _db.AddAsync(offline, cancellationToken);

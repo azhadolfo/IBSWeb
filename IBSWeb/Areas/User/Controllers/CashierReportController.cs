@@ -149,12 +149,59 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> ManualEntry(CancellationToken cancellationToken)
         {
-            SalesVM = new SalesVM
+
+            var model = new ManualEntryViewModel
             {
-                Offlines = await _unitOfWork.GetOfflineListAsync(cancellationToken)
+                OfflineList = await _unitOfWork.Offline.GetOfflineListAsync(cancellationToken)
             };
 
-            return View(SalesVM);
+            return View(model);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ManualEntry(ManualEntryViewModel model, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _unitOfWork.Offline.InserEntry(model, cancellationToken);
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in inserting manual entry.");
+                TempData["error"] = $"Error: '{ex.Message}'";
+                return View(model);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetOfflineDetails(int offlineId, CancellationToken cancellationToken = default)
+        {
+            var offline = await _unitOfWork.Offline.GetOffline(offlineId, cancellationToken);
+
+            if (offline == null)
+            {
+                return NotFound();
+            }
+
+            var formattedData = new
+            {
+                StartDate = offline.StartDate.ToString("MMM/dd/yyyy"),
+                EndDate = offline.EndDate.ToString("MMM/dd/yyyy"),
+                offline.Product,
+                offline.Pump,
+                offline.Opening,
+                offline.Closing,
+                Liters = offline.Liters.ToString("N2"),
+                Balance = offline.Balance.ToString("N2"),
+                offline.ClosingDSRNo,
+                offline.OpeningDSRNo
+            };
+
+            return Json(formattedData);
+        }
+
+
     }
 }

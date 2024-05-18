@@ -36,7 +36,17 @@ namespace IBS.Models
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
         public double Balance { get; set; } //Remaining Balance
 
+        public string ClosingDSRNo { get; set; }
+
+        public string OpeningDSRNo { get; set; }
+
         public bool IsResolve { get; set; }
+
+        public double? NewClosing { get; set; }
+
+        public string? LastUpdatedBy { get; set; }
+
+        public DateTime? LastUpdatedDate { get; set; }
 
         public Offline(string stationCode, DateOnly startDate, DateOnly endDate, string product, int pump, double opening, double closing)
         {

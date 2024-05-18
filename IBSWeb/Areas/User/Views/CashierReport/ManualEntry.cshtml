@@ -1,5 +1,5 @@
 ﻿@using IBS.Models.ViewModels
-@model SalesVM
+@model ManualEntryViewModel
 
 @{
     ViewData["Title"] = "Manual Cashier Report";
@@ -19,32 +19,28 @@
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="form-group py-2 col-12">
                     <label class="control-label">Offline List</label>
-                    <select name="offlineNo" asp-items="@Model.Offlines" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select account</option>
+                    <select asp-for="SelectedOfflineId" id="OfflineNo" asp-items="@Model.OfflineList" class="form-select js-select2 border-0 shadow" style="width:100%" required>
+                        <option value="" selected></option>
                     </select>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Header.Date" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="Header.Date" class="ms-2">Date<span class="required">*</span></label>
-                    <span asp-validation-for="Header.Date" class="text-danger"></span>
+                    <input asp-for="Closing" class="form-control border-0 shadow" placeholder="" required />
+                    <label asp-for="Closing" class="ms-2">Closing<span class="required">*</span></label>
+                    <span asp-validation-for="Closing" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Header.Cashier" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="Header.Cashier" class="ms-2">Cashier<span class="required">*</span></label>
-                    <span asp-validation-for="Header.Cashier" class="text-danger"></span>
+                    <input asp-for="Opening" class="form-control border-0 shadow" placeholder="" readonly/>
+                    <label asp-for="Opening" class="ms-2"></label>
+                    <span asp-validation-for="Opening" class="text-danger"></span>
                 </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Header.Shift" class="form-control border-0 shadow" placeholder="" required />
-                    <label asp-for="Header.Shift" class="ms-2">Shift<span class="required">*</span></label>
-                    <span asp-validation-for="Header.Shift" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input name="closing" class="form-control border-0 shadow" placeholder="" required/>
-                    <label class="ms-2">Closing<span class="required">*</span></label>
+                <div class="form-group py-2 col-12">
+                    <label>Select what DSR will be affected.</label><br />
+                    <div id="DSROptions">
+                    </div>
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control">Create</button>
+                        <button type="submit" class="btn btn-primary form-control">Submit</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="User" asp-controller="Company" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
@@ -52,5 +48,98 @@
                 </div>
             </div>
         </form>
+
+        <div class="border p-3 mt-4">
+            <h4>Offline Details</h4>
+            <table class="table table-bordered" id="OfflineDetailsTable" style="display:none;">
+                <tbody>
+                    <tr>
+                        <th>Closing Date</th>
+                        <td id="StartDate"></td>
+                    </tr>
+                    <tr>
+                        <th>Opening Date</th>
+                        <td id="EndDate"></td>
+                    </tr>
+                    <tr>
+                        <th>Product</th>
+                        <td id="Product"></td>
+                    </tr>
+                    <tr>
+                        <th>Pump</th>
+                        <td id="Pump"></td>
+                    </tr>
+                    <tr>
+                        <th>Closing</th>
+                        <td id="DetailClosing"></td>
+                    </tr>
+                    <tr>
+                        <th>Opening</th>
+                        <td id="DetailOpening"></td>
+                    </tr>
+                    <tr>
+                        <th>Liters</th>
+                        <td id="Liters"></td>
+                    </tr>
+                    <tr>
+                        <th>Remaining Balance</th>
+                        <td id="RemainingBalance"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            $('#OfflineNo').change(function () {
+                var selectedId = $(this).val();
+                if (selectedId) {
+                    $.ajax({
+                        url: '@Url.Action("GetOfflineDetails", "CashierReport")',
+                        type: 'GET',
+                        data: { offlineId: selectedId },
+                        success: function (data) {
+
+                            console.log(data)
+
+                            $('#Opening').val(data.opening);
+                            $('#Closing').val(data.closing);
+
+                            //Details
+                            $('#StartDate').text(data.startDate);
+                            $('#EndDate').text(data.endDate);
+                            $('#Product').text(data.product);
+                            $('#Pump').text(data.pump);
+                            $('#DetailOpening').text(data.opening);
+                            $('#DetailClosing').text(data.closing);
+                            $('#Liters').text(data.liters);
+                            $('#RemainingBalance').text(data.balance);
+
+                            // Clear previous options
+                            $('#DSROptions').empty();
+
+                            // Add the combined options
+                            $('#DSROptions').append('<label><input type="radio" name="AffectedDSRNo" id="ClosingDSR" value="' + data.closingDSRNo + '" required> ' + data.closingDSRNo + '</label><br />');
+                            $('#DSROptions').append('<label><input type="radio" name="AffectedDSRNo" id="OpeningDSR" value="' + data.openingDSRNo + '"> ' + data.openingDSRNo + '</label><br />');
+
+                            // Show the table
+                            $('#OfflineDetailsTable').show();
+                        }
+                    });
+                } else {
+                    $('#Opening').val('');
+                    $('#Closing').val('');
+                    $('#OfflineDetailsTable').hide();
+                }
+            });
+        });
+    </script>
+}

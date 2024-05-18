@@ -22,6 +22,7 @@ namespace IBS.DataAccess.Repository
         public IInventoryRepository Inventory { get; private set; }
         public IChartOfAccountRepository ChartOfAccount { get; private set; }
         public IPOSalesRepository PurchaseOrder { get; private set; }
+        public IOfflineRepository Offline { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -40,6 +41,7 @@ namespace IBS.DataAccess.Repository
             Inventory = new InventoryRepository(_db);
             ChartOfAccount = new ChartOfAccountRepository(_db);
             PurchaseOrder = new POSalesRepository(_db);
+            Offline = new OfflineRepository(_db);
         }
 
         public async Task SaveAsync(CancellationToken cancellationToken = default)
@@ -129,18 +131,6 @@ namespace IBS.DataAccess.Repository
                 {
                     Value = c.AccountNumber,
                     Text = c.AccountNumber + " " + c.AccountName
-                })
-                .ToListAsync(cancellationToken);
-        }
-
-        public async Task<List<SelectListItem>> GetOfflineListAsync(CancellationToken cancellationToken = default)
-        {
-            return await _db.Offlines
-                .OrderBy(o => o.OfflineId)
-                .Select(o => new SelectListItem
-                {
-                    Value = o.OfflineId.ToString(),
-                    Text = $"Offline#{o.SeriesNo}"
                 })
                 .ToListAsync(cancellationToken);
         }
