@@ -24,16 +24,20 @@ namespace IBS.Models
 
         public int Pump { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public double Opening { get; set; } //fuel.Opening - previous
 
-        [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public double Closing { get; set; } //fuel.Closing
 
-        [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public double Liters { get; set; } //Closing - Opening
 
-        [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public double Balance { get; set; } //Remaining Balance
 
         public string ClosingDSRNo { get; set; }
@@ -42,6 +46,8 @@ namespace IBS.Models
 
         public bool IsResolve { get; set; }
 
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public double? NewClosing { get; set; }
 
         public string? LastUpdatedBy { get; set; }

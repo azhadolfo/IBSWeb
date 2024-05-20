@@ -34,7 +34,7 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task InserEntry(ManualEntryViewModel model, CancellationToken cancellationToken = default)
+        public async Task InsertEntry(ManualEntryViewModel model, CancellationToken cancellationToken = default)
         {
             var offlineRecord = await _db.Offlines
                 .FindAsync(model.SelectedOfflineId, cancellationToken);
@@ -62,14 +62,36 @@ namespace IBS.DataAccess.Repository
             }
             else
             {
+                var detailToUpdate = salesDetail.FirstOrDefault(s => s.Particular == $"{offlineRecord.Product} (P{offlineRecord.Pump})");
 
+                detailToUpdate.Opening = offlineRecord.Closing;
+                detailToUpdate.Liters = detailToUpdate.Closing - detailToUpdate.Opening;
+                detailToUpdate.Value = (decimal)detailToUpdate.Liters * detailToUpdate.Price;
+
+                salesHeader.FuelSalesTotalAmount = salesDetail.Sum(s => s.Value);
+                salesHeader.TotalSales = salesHeader.FuelSalesTotalAmount + salesHeader.LubesTotalAmount;
+                salesHeader.GainOrLoss = salesHeader.SafeDropTotalAmount - salesHeader.TotalSales;
             }
 
             offlineRecord.NewClosing = model.Closing;
-            offlineRecord.Balance -= model.Closing - model.Opening;
+            offlineRecord.Balance = (model.Opening - model.Closing) - offlineRecord.Liters;
             offlineRecord.LastUpdatedBy = "Ako";
             offlineRecord.LastUpdatedDate = DateTime.Now;
-            offlineRecord.IsResolve = offlineRecord.Balance <= 0 ? true : false;
+
+            if (offlineRecord.Balance <= 0)
+            {
+                offlineRecord.IsResolve = true;
+
+                var problematicDsr = await _db.SalesHeaders
+                    .Where(o => o.SalesNo == offlineRecord.ClosingDSRNo && o.SalesNo == offlineRecord.OpeningDSRNo)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var offline in problematicDsr)
+                {
+                    offline.IsTransactionNormal = true;
+                }
+            }
+
             await _db.SaveChangesAsync(cancellationToken);
         }
     }

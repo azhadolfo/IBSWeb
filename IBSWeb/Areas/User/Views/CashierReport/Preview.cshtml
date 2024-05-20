@@ -49,7 +49,7 @@
                         <td class="text-end">@Html.DisplayFor(model => item.Closing)</td>
 
                          <td class="text-end">
-                            @if (!item.IsTransactionNormal)
+                            @if (item.ReferenceNo != null && !Model.Header.IsTransactionNormal)
                             {
                                 <a asp-area="User" asp-controller="CashierReport" asp-action="Preview" asp-route-id="@item.ReferenceNo" asp-route-stationCode="@item.StationCode" title="Click to view @item.ReferenceNo" style="color:red !important">
                                     @Html.DisplayFor(model => item.Opening)

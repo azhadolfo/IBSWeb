@@ -163,7 +163,7 @@ namespace IBSWeb.Areas.User.Controllers
         {
             try
             {
-                await _unitOfWork.Offline.InserEntry(model, cancellationToken);
+                await _unitOfWork.Offline.InsertEntry(model, cancellationToken);
 
                 return RedirectToAction(nameof(Index));
             }

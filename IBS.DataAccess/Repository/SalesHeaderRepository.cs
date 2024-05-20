@@ -136,7 +136,6 @@ namespace IBS.DataAccess.Repository
                         if (previousClosing != 0 && !string.IsNullOrEmpty(previousNo) && previousClosing != fuel.Opening)
                         {
                             salesHeader.IsTransactionNormal = false;
-                            salesDetail.IsTransactionNormal = false;
                             salesDetail.ReferenceNo = previousNo;
 
                             Offline offline = new(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, fuel.Opening, previousClosing)

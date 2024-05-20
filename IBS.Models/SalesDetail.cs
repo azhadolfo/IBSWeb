@@ -23,17 +23,21 @@ namespace IBS.Models
         [Column(TypeName = "varchar(50)")]
         public string Particular { get; set; }
 
+        [Column(TypeName = "numeric(18,3)")]
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
         public double Closing { get; set; }
 
+        [Column(TypeName = "numeric(18,3)")]
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
         public double Opening { get; set; }
 
+        [Column(TypeName = "numeric(18,3)")]
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
         public double Liters { get; set; }
 
         public decimal Calibration { get; set; }
 
+        [Column(TypeName = "numeric(18,3)")]
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
         public double LitersSold { get; set; } //Sum of volume
 
@@ -50,8 +54,6 @@ namespace IBS.Models
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal Value { get; set; } //Sum of Liters * Price
-
-        public bool IsTransactionNormal { get; set; } = true;
 
         [Column(TypeName = "varchar(15)")]
         public string? ReferenceNo { get; set; }
