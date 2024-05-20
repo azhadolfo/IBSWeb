@@ -89,6 +89,7 @@ namespace IBS.DataAccess.Repository
                 foreach (var offline in problematicDsr)
                 {
                     offline.IsTransactionNormal = true;
+                    await _db.SaveChangesAsync(cancellationToken);
                 }
             }
 
