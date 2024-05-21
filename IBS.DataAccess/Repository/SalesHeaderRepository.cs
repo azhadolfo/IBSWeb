@@ -280,6 +280,7 @@ namespace IBS.DataAccess.Repository
                 var inventories = new List<Inventory>();
                 var cogsJournals = new List<GeneralLedger>();
 
+
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = salesVM.Header.Date,
@@ -319,20 +320,24 @@ namespace IBS.DataAccess.Repository
                 {
                     ProductDto productDetails = await MapProductToDTO(product.Key, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{product.Key}' not found.");
 
+                    var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(product.Key);
+                    var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(product.Key);
+                    var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(product.Key);
+
                     journals.Add(new GeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = product.Key.StartsWith("PET") ? "4010101" : "4011001",
-                        AccountTitle = product.Key.StartsWith("PET") ? "Sales - Fuel" : "Sales - Lubes",
+                        AccountNumber = salesAcctNo,
+                        AccountTitle = salesAcctTitle,
                         Debit = 0,
                         Credit = Math.Round(product.Sum(p => p.Value) / 1.12m, 2),
                         StationCode = station.StationCode,
                         ProductCode = product.Key,
                         JournalReference = nameof(JournalType.Sales),
                         IsValidated = true
-                    });
+                    }); ;
 
                     journals.Add(new GeneralLedger
                     {
@@ -405,8 +410,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = product.Key.StartsWith("PET") ? "5010101" : "5011001",
-                        AccountTitle = product.Key.StartsWith("PET") ? "COGS - Fuel" : "COGS - Lubes",
+                        AccountNumber = cogsAcctNo,
+                        AccountTitle = cogsAcctTitle,
                         Debit = Math.Round(cogs, 2),
                         Credit = 0,
                         StationCode = station.StationCode,
@@ -420,8 +425,8 @@ namespace IBS.DataAccess.Repository
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
                         Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = product.Key.StartsWith("PET") ? "1010401" : "1010410",
-                        AccountTitle = product.Key.StartsWith("PET") ? "Inventory - Fuel" : "Inventory - Lubes",
+                        AccountNumber = inventoryAcctNo,
+                        AccountTitle = inventoryAcctTitle,
                         Debit = 0,
                         Credit = Math.Round(cogs, 2),
                         StationCode = station.StationCode,
@@ -459,10 +464,10 @@ namespace IBS.DataAccess.Repository
                             inventoryBalance = transaction.InventoryBalance;
                         }
 
-                        var journalEntries = _db.GeneralLedgers
+                        var journalEntries = await _db.GeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
-                                        (j.AccountNumber == (product.Key.StartsWith("PET") ? "5010101" : "5011001") || j.AccountNumber == (product.Key.StartsWith("PET") ? "1010401" : "1010410")))
-                            .ToList();
+                                        (j.AccountNumber.StartsWith("50101") || j.AccountNumber.StartsWith("10104")))
+                            .ToListAsync(cancellationToken);
 
                         if (journalEntries.Count != 0)
                         {

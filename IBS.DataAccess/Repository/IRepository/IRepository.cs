@@ -18,6 +18,12 @@ namespace IBS.DataAccess.Repository.IRepository
 
         bool IsJournalEntriesBalanced(IEnumerable<GeneralLedger> journals);
 
+        (string AccountNo, string AccountTitle) GetSalesAccountTitle(string productCode);
+
+        (string AccountNo, string AccountTitle) GetCogsAccountTitle(string productCode);
+
+        (string AccountNo, string AccountTitle) GetInventoryAccountTitle(string productCode);
+
 
         // Retrieving DTOs (Data Transfer Objects)
 

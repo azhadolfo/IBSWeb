@@ -86,13 +86,15 @@ namespace IBS.DataAccess.Repository
 
                 List<GeneralLedger> journals = new();
 
+                var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(product.ProductCode);
+
                 journals.Add(new GeneralLedger
                 {
                     TransactionDate = fuelPurchase.DeliveryDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
-                    AccountNumber = "1010401",
-                    AccountTitle = "Inventory - Fuel",
+                    AccountNumber = inventoryAcctNo,
+                    AccountTitle = inventoryAcctTitle,
                     Debit = (fuelPurchase.Quantity * fuelPurchase.SellingPrice) / 1.12m,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
@@ -177,10 +179,10 @@ namespace IBS.DataAccess.Repository
                         inventoryBalance = transaction.InventoryBalance;
                     }
 
-                    var journalEntries = _db.GeneralLedgers
+                    var journalEntries = await _db.GeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
-                                        (j.AccountNumber == "5010101" || j.AccountNumber == "1010401"))
-                            .ToList();
+                                        (j.AccountNumber.StartsWith("50101") || j.AccountNumber.StartsWith("10104")))
+                            .ToListAsync(cancellationToken);
 
                     if (journalEntries.Count != 0)
                     {

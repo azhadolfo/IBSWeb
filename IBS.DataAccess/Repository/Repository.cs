@@ -107,5 +107,37 @@ namespace IBS.DataAccess.Repository
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
+        public (string AccountNo, string AccountTitle) GetSalesAccountTitle(string productCode)
+        {
+            return productCode switch
+            {
+                "PET001" => ("4010101", "Sales - Biodiesel"),
+                "PET002" => ("4010102", "Sales - Econogas"),
+                "PET003" => ("4010103", "Sales - Envirogas"),
+                _ => ("4011001", "Sales - Lubes"),
+            };
+        }
+
+        public (string AccountNo, string AccountTitle) GetCogsAccountTitle(string productCode)
+        {
+            return productCode switch
+            {
+                "PET001" => ("5010101", "COGS - Biodiesel"),
+                "PET002" => ("5010102", "COGS - Econogas"),
+                "PET003" => ("5010103", "COGS - Envirogas"),
+                _ => ("5011001", "COGS - Lubes"),
+            };
+        }
+
+        public (string AccountNo, string AccountTitle) GetInventoryAccountTitle(string productCode)
+        {
+            return productCode switch
+            {
+                "PET001" => ("1010401", "Inventory - Biodiesel"),
+                "PET002" => ("1010402", "Inventory - Econogas"),
+                "PET003" => ("1010403", "Inventory - Envirogas"),
+                _ => ("1010410", "Inventory - Lubes"),
+            };
+        }
     }
 }

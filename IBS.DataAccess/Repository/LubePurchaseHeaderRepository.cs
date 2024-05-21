@@ -185,10 +185,10 @@ namespace IBS.DataAccess.Repository
                             inventoryBalance = transaction.InventoryBalance;
                         }
 
-                        var journalEntries = _db.GeneralLedgers
+                        var journalEntries = await _db.GeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
-                                        (j.AccountNumber == "5011001" || j.AccountNumber == "1010410"))
-                            .ToList();
+                                        (j.AccountNumber.StartsWith("50101") || j.AccountNumber.StartsWith("10104")))
+                            .ToListAsync(cancellationToken);
 
                         if (journalEntries.Count != 0)
                         {
