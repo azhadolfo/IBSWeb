@@ -1,15 +1,15 @@
 ﻿@using IBS.Models.ViewModels
-@model ManualEntryViewModel
+@model AdjustReportViewModel
 
 @{
-    ViewData["Title"] = "Manual Cashier Report";
+    ViewData["Title"] = "Cashier Adjustment Report";
 }
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Manual Cashier Report</h2>
+                <h2 class="text-white py-2">Cashier Adjustment Report</h2>
             </div>
         </div>
     </div>
@@ -24,8 +24,8 @@
                     </select>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Closing" class="form-control border-0 shadow" placeholder="" required />
-                    <label asp-for="Closing" class="ms-2">Closing<span class="required">*</span></label>
+                    <input asp-for="Closing" class="form-control border-0 shadow" placeholder="" readonly/>
+                    <label asp-for="Closing" class="ms-2"></label>
                     <span asp-validation-for="Closing" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
@@ -43,7 +43,7 @@
                         <button type="submit" class="btn btn-primary form-control">Submit</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="User" asp-controller="Company" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="User" asp-controller="CashierReport" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -93,10 +93,6 @@
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-
     <script>
         $(document).ready(function () {
             $('#OfflineNo').change(function () {

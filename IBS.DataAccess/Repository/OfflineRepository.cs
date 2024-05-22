@@ -26,6 +26,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.Offlines
                 .OrderBy(o => o.OfflineId)
+                .Where(o => !o.IsResolve)
                 .Select(o => new SelectListItem
                 {
                     Value = o.OfflineId.ToString(),
@@ -34,66 +35,58 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task InsertEntry(ManualEntryViewModel model, CancellationToken cancellationToken = default)
+        public async Task InsertEntry(AdjustReportViewModel model, CancellationToken cancellationToken = default)
         {
             var offlineRecord = await _db.Offlines
-                .FindAsync(model.SelectedOfflineId, cancellationToken);
+                .FindAsync(new object[] { model.SelectedOfflineId }, cancellationToken);
 
             var salesHeader = await _db.SalesHeaders
-                .FirstOrDefaultAsync(s => s.SalesNo == model.AffectedDSRNo);
+                .FirstOrDefaultAsync(s => s.SalesNo == model.AffectedDSRNo, cancellationToken);
 
             var salesDetail = await _db.SalesDetails
                 .Where(s => s.SalesHeaderId == salesHeader.SalesHeaderId)
                 .ToListAsync(cancellationToken);
 
+            var detailToUpdate = salesDetail
+                .Find(s => s.Particular == $"{offlineRecord.Product} (P{offlineRecord.Pump})");
+
             if (model.AffectedDSRNo == offlineRecord.ClosingDSRNo)
             {
-                var detailToUpdate = salesDetail.FirstOrDefault(s => s.Particular == $"{offlineRecord.Product} (P{offlineRecord.Pump})");
-
                 detailToUpdate.Closing = offlineRecord.Opening;
-                detailToUpdate.Liters = detailToUpdate.Closing - detailToUpdate.Opening;
-                detailToUpdate.Value = (decimal)detailToUpdate.Liters * detailToUpdate.Price;
-
-                salesHeader.FuelSalesTotalAmount = salesDetail.Sum(s => s.Value);
-                salesHeader.TotalSales = salesHeader.FuelSalesTotalAmount + salesHeader.LubesTotalAmount;
-                salesHeader.GainOrLoss = salesHeader.SafeDropTotalAmount - salesHeader.TotalSales;
-
-                await _db.SaveChangesAsync(cancellationToken);
             }
             else
             {
-                var detailToUpdate = salesDetail.FirstOrDefault(s => s.Particular == $"{offlineRecord.Product} (P{offlineRecord.Pump})");
-
                 detailToUpdate.Opening = offlineRecord.Closing;
-                detailToUpdate.Liters = detailToUpdate.Closing - detailToUpdate.Opening;
-                detailToUpdate.Value = (decimal)detailToUpdate.Liters * detailToUpdate.Price;
-
-                salesHeader.FuelSalesTotalAmount = salesDetail.Sum(s => s.Value);
-                salesHeader.TotalSales = salesHeader.FuelSalesTotalAmount + salesHeader.LubesTotalAmount;
-                salesHeader.GainOrLoss = salesHeader.SafeDropTotalAmount - salesHeader.TotalSales;
             }
 
+            detailToUpdate.Liters = detailToUpdate.Closing - detailToUpdate.Opening;
+            detailToUpdate.Value = detailToUpdate.Liters * detailToUpdate.Price;
+
+            salesHeader.FuelSalesTotalAmount = salesDetail.Sum(s => s.Value);
+            salesHeader.TotalSales = salesHeader.FuelSalesTotalAmount + salesHeader.LubesTotalAmount;
+            salesHeader.GainOrLoss = salesHeader.SafeDropTotalAmount - salesHeader.TotalSales;
+
             offlineRecord.NewClosing = model.Closing;
-            offlineRecord.Balance = (model.Opening - model.Closing) - offlineRecord.Liters;
-            offlineRecord.LastUpdatedBy = "Ako";
-            offlineRecord.LastUpdatedDate = DateTime.Now;
+            offlineRecord.Balance -= (model.Opening - model.Closing);
+            offlineRecord.LastUpdatedBy = "System"; // Change to a more descriptive value
+            offlineRecord.LastUpdatedDate = DateTime.UtcNow;
 
             if (offlineRecord.Balance <= 0)
             {
                 offlineRecord.IsResolve = true;
 
                 var problematicDsr = await _db.SalesHeaders
-                    .Where(o => o.SalesNo == offlineRecord.ClosingDSRNo && o.SalesNo == offlineRecord.OpeningDSRNo)
+                    .Where(o => o.SalesNo == offlineRecord.ClosingDSRNo || o.SalesNo == offlineRecord.OpeningDSRNo)
                     .ToListAsync(cancellationToken);
 
                 foreach (var offline in problematicDsr)
                 {
                     offline.IsTransactionNormal = true;
-                    await _db.SaveChangesAsync(cancellationToken);
                 }
             }
 
             await _db.SaveChangesAsync(cancellationToken);
         }
+
     }
 }

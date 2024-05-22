@@ -10,6 +10,6 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<Offline> GetOffline(int offlineId, CancellationToken cancellationToken = default);
 
-        Task InsertEntry(ManualEntryViewModel model, CancellationToken cancellationToken = default);
+        Task InsertEntry(AdjustReportViewModel model, CancellationToken cancellationToken = default);
     }
 }

@@ -55,7 +55,7 @@ namespace IBS.DataAccess.Repository
                         Cashier = fuel.xONAME,
                         Shift = fuel.Shift,
                         CreatedBy = "System Generated",
-                        FuelSalesTotalAmount = Math.Round((decimal)fuel.Liters * fuel.Price, 2),
+                        FuelSalesTotalAmount = Math.Round(fuel.Liters * fuel.Price, 2),
                         LubesTotalAmount = Math.Round(lubeSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift) && (l.BusinessDate == fuel.BusinessDate)).Sum(l => l.Amount), 2),
                         SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.BusinessDate == fuel.BusinessDate)).Sum(s => s.Amount), 2),
                         POSalesTotalAmount = hasPoSales ? Math.Round(fuelPoSales.Where(s => (s.xONAME == fuel.xONAME) && (s.Shift == fuel.Shift) && (s.BusinessDate == fuel.BusinessDate)).Sum(s => s.Amount) + lubePoSales.Where(l => (l.Cashier == fuel.xONAME) && (l.Shift == fuel.Shift)).Sum(l => l.Amount), 2) : 0,
@@ -105,7 +105,7 @@ namespace IBS.DataAccess.Repository
                     await _db.SaveChangesAsync(cancellationToken);
                 }
 
-                double previousClosing = 0;
+                decimal previousClosing = 0;
                 string previousNo = string.Empty;
                 DateOnly previousStartDate = new();
                 foreach (var group in fuelSales.GroupBy(f => new { f.ItemCode, f.xPUMP }))
@@ -130,7 +130,7 @@ namespace IBS.DataAccess.Repository
                             TransactionCount = fuel.TransactionCount,
                             Price = fuel.Price,
                             Sale = fuel.Sale,
-                            Value = Math.Round((decimal)fuel.Liters * fuel.Price, 2)
+                            Value = Math.Round(fuel.Liters * fuel.Price, 2)
                         };
 
                         if (previousClosing != 0 && !string.IsNullOrEmpty(previousNo) && previousClosing != fuel.Opening)
@@ -175,7 +175,7 @@ namespace IBS.DataAccess.Repository
                             SalesNo = salesHeader.SalesNo,
                             Product = lube.ItemCode,
                             Particular = $"{lube.Particulars}",
-                            Liters = (double)lube.LubesQty,
+                            Liters = lube.LubesQty,
                             Price = lube.Price,
                             Sale = lube.Amount,
                             Value = Math.Round(lube.Amount, 2)
@@ -536,7 +536,7 @@ namespace IBS.DataAccess.Repository
 
         }
 
-        public async Task UpdateAsync(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(SalesVM model, decimal[] closing, decimal[] opening, CancellationToken cancellationToken = default)
         {
             SalesHeader existingSalesHeader = await _db.SalesHeaders
                 .FirstOrDefaultAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId, cancellationToken) ?? throw new InvalidOperationException($"Sales header with id '{model.Header.SalesHeaderId}' not found.");

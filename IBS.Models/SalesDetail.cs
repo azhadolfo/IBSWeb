@@ -25,21 +25,21 @@ namespace IBS.Models
 
         [Column(TypeName = "numeric(18,3)")]
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
-        public double Closing { get; set; }
+        public decimal Closing { get; set; }
 
         [Column(TypeName = "numeric(18,3)")]
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
-        public double Opening { get; set; }
+        public decimal Opening { get; set; }
 
         [Column(TypeName = "numeric(18,3)")]
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
-        public double Liters { get; set; }
+        public decimal Liters { get; set; }
 
         public decimal Calibration { get; set; }
 
         [Column(TypeName = "numeric(18,3)")]
         [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
-        public double LitersSold { get; set; } //Sum of volume
+        public decimal LitersSold { get; set; } //Sum of volume
 
         public int TransactionCount { get; set; }
 

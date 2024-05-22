@@ -47,7 +47,7 @@ namespace IBS.Models
         public decimal Calibration { get; set; }
 
         //Volume = Amount / Price
-        public double Volume { get; set; }
+        public decimal Volume { get; set; }
 
         [Column(TypeName = "varchar(16)")]
         public string ItemCode { get; set; }
@@ -55,9 +55,9 @@ namespace IBS.Models
         [Column(TypeName = "varchar(32)")]
         public string Particulars { get; set; }
 
-        public double Opening { get; set; }
+        public decimal Opening { get; set; }
 
-        public double Closing { get; set; }
+        public decimal Closing { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string nozdown { get; set; }
@@ -69,7 +69,7 @@ namespace IBS.Models
         public TimeOnly OutTime { get; set; }
 
         //Liters = Opening - Closing
-        public double Liters { get; set; }
+        public decimal Liters { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string xOID { get; set; }

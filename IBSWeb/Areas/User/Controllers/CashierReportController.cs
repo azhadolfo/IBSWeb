@@ -117,7 +117,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(SalesVM model, double[] closing, double[] opening, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(SalesVM model, decimal[] closing, decimal[] opening, CancellationToken cancellationToken)
         {
             SalesVM = new SalesVM
             {
@@ -147,10 +147,10 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ManualEntry(CancellationToken cancellationToken)
+        public async Task<IActionResult> AdjustReport(CancellationToken cancellationToken)
         {
 
-            var model = new ManualEntryViewModel
+            var model = new AdjustReportViewModel
             {
                 OfflineList = await _unitOfWork.Offline.GetOfflineListAsync(cancellationToken)
             };
@@ -159,7 +159,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ManualEntry(ManualEntryViewModel model, CancellationToken cancellationToken)
+        public async Task<IActionResult> AdjustReport(AdjustReportViewModel model, CancellationToken cancellationToken)
         {
             try
             {

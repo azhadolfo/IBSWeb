@@ -26,19 +26,19 @@ namespace IBS.Models
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public double Opening { get; set; } //fuel.Opening - previous
+        public decimal Opening { get; set; } //fuel.Opening - previous
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public double Closing { get; set; } //fuel.Closing
+        public decimal Closing { get; set; } //fuel.Closing
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public double Liters { get; set; } //Closing - Opening
+        public decimal Liters { get; set; } //Closing - Opening
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public double Balance { get; set; } //Remaining Balance
+        public decimal Balance { get; set; } //Remaining Balance
 
         public string ClosingDSRNo { get; set; }
 
@@ -48,13 +48,13 @@ namespace IBS.Models
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public double? NewClosing { get; set; }
+        public decimal? NewClosing { get; set; }
 
         public string? LastUpdatedBy { get; set; }
 
         public DateTime? LastUpdatedDate { get; set; }
 
-        public Offline(string stationCode, DateOnly startDate, DateOnly endDate, string product, int pump, double opening, double closing)
+        public Offline(string stationCode, DateOnly startDate, DateOnly endDate, string product, int pump, decimal opening, decimal closing)
         {
             StationCode = stationCode;
             StartDate = startDate;

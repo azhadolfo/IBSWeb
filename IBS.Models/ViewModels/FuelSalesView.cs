@@ -26,15 +26,15 @@
 
         public decimal Sale { get; set; }
 
-        public double LitersSold { get; set; }
+        public decimal LitersSold { get; set; }
 
-        public double Liters { get; set; }
+        public decimal Liters { get; set; }
 
         public int TransactionCount { get; set; }
 
-        public double Closing { get; set; }
+        public decimal Closing { get; set; }
 
-        public double Opening { get; set; }
+        public decimal Opening { get; set; }
 
         public TimeOnly TimeIn { get; set; }
 
