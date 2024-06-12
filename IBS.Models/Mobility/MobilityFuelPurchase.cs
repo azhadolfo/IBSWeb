@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Mobility
 {
-    public class FuelPurchase : BaseEntity
+    public class MobilityFuelPurchase : BaseEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -60,7 +60,6 @@ namespace IBS.Models.Mobility
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-
         [Display(Name = "Purchase Price")]
         public decimal PurchasePrice { get; set; }
 
@@ -96,6 +95,5 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(50)")]
         [Display(Name = "Received By")]
         public string ReceivedBy { get; set; }
-
     }
 }

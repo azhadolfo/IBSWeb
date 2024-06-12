@@ -38,9 +38,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
-            Expression<Func<SalesHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
+            Expression<Func<MobilitySalesHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
 
-            IEnumerable<SalesHeader> salesHeader = await _unitOfWork
+            IEnumerable<MobilitySalesHeader> salesHeader = await _unitOfWork
                 .SalesHeader
                 .GetAllAsync(filter, cancellationToken);
 

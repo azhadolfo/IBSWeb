@@ -11,7 +11,7 @@ using System.Globalization;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
-    public class FuelPurchaseRepository : Repository<FuelPurchase>, IFuelPurchaseRepository
+    public class FuelPurchaseRepository : Repository<MobilityFuelPurchase>, IFuelPurchaseRepository
     {
         private ApplicationDbContext _db;
 
@@ -20,7 +20,7 @@ namespace IBS.DataAccess.Repository.Mobility
             _db = db;
         }
 
-        public IEnumerable<dynamic> GetFuelPurchaseJoin(IEnumerable<FuelPurchase> fuelPurchases, CancellationToken cancellationToken = default)
+        public IEnumerable<dynamic> GetFuelPurchaseJoin(IEnumerable<MobilityFuelPurchase> fuelPurchases, CancellationToken cancellationToken = default)
         {
             return from fuel in fuelPurchases
                    join station in _db.Stations on fuel.StationCode equals station.StationCode
@@ -43,8 +43,8 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             try
             {
-                FuelPurchase fuelPurchase = await _db
-                    .FuelPurchase
+                MobilityFuelPurchase fuelPurchase = await _db
+                    .MobilityFuelPurchase
                     .FirstOrDefaultAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken) ?? throw new InvalidOperationException($"Fuel purchase with id '{id}' not found.");
 
                 if (fuelPurchase.PurchasePrice == 0)
@@ -52,7 +52,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     throw new ArgumentException("Encode first the buying price for this purchase!");
                 }
 
-                var fuelPurchaselist = await _db.FuelPurchase
+                var fuelPurchaselist = await _db.MobilityFuelPurchase
                     .Where(f => f.StationCode == fuelPurchase.StationCode && f.DeliveryDate <= fuelPurchase.DeliveryDate && f.CreatedDate < fuelPurchase.CreatedDate && f.PostedBy == null)
                     .OrderBy(f => f.FuelPurchaseNo)
                     .ToListAsync(cancellationToken);
@@ -239,8 +239,8 @@ namespace IBS.DataAccess.Repository.Mobility
                 MissingFieldFound = null,
             });
 
-            var records = csv.GetRecords<FuelDelivery>();
-            var existingRecords = await _db.Set<FuelDelivery>().ToListAsync(cancellationToken);
+            var records = csv.GetRecords<MobilityFuelDelivery>();
+            var existingRecords = await _db.Set<MobilityFuelDelivery>().ToListAsync(cancellationToken);
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
                 existingRecord.shiftrecid == record.shiftrecid && existingRecord.stncode == record.stncode && existingRecord.productcode == record.productcode)).ToList();
 
@@ -258,13 +258,13 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public async Task RecordTheDeliveryToPurchase(IEnumerable<FuelDelivery> fuelDeliveries, CancellationToken cancellationToken = default)
+        public async Task RecordTheDeliveryToPurchase(IEnumerable<MobilityFuelDelivery> fuelDeliveries, CancellationToken cancellationToken = default)
         {
-            var fuelPurchase = new List<FuelPurchase>();
+            var fuelPurchase = new List<MobilityFuelPurchase>();
 
             foreach (var fuelDelivery in fuelDeliveries)
             {
-                fuelPurchase.Add(new FuelPurchase
+                fuelPurchase.Add(new MobilityFuelPurchase
                 {
                     ShiftRecId = fuelDelivery.shiftrecid,
                     StationCode = fuelDelivery.stncode,
@@ -302,10 +302,10 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public async Task UpdateAsync(FuelPurchase model, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(MobilityFuelPurchase model, CancellationToken cancellationToken = default)
         {
-            FuelPurchase existingFuelPurchase = await _db
-                .FuelPurchase
+            MobilityFuelPurchase existingFuelPurchase = await _db
+                .MobilityFuelPurchase
                 .FirstOrDefaultAsync(f => f.FuelPurchaseId == model.FuelPurchaseId && f.StationCode == model.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Fuel purchase with id '{model.FuelPurchaseId}' not found.");
 
             existingFuelPurchase.PurchasePrice = model.PurchasePrice;
@@ -324,7 +324,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         private async Task<string> GenerateSeriesNumber(string stationCode)
         {
-            var lastCashierReport = await _db.FuelPurchase
+            var lastCashierReport = await _db.MobilityFuelPurchase
                 .OrderBy(s => s.FuelPurchaseNo)
                 .Where(s => s.StationCode == stationCode)
                 .LastOrDefaultAsync();

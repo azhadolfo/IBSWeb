@@ -23,24 +23,28 @@ namespace IBS.DataAccess.Data
 
         public DbSet<LogMessage> LogMessages { get; set; }
 
+        #region--MOBILITY
+
         #region--Sales Entity
-        public DbSet<Fuel> Fuels { get; set; }
-        public DbSet<Lube> Lubes { get; set; }
-        public DbSet<SafeDrop> SafeDrops { get; set; }
-        public DbSet<SalesHeader> SalesHeaders { get; set; }
-        public DbSet<SalesDetail> SalesDetails { get; set; }
-        public DbSet<PoSalesRaw> PoSalesRaw { get; set; }
-        public DbSet<POSales> POSales { get; set; }
+        public DbSet<MobilityFuel> MobilityFuels { get; set; }
+        public DbSet<MobilityLube> MobilityLubes { get; set; }
+        public DbSet<MobilitySafeDrop> MobilitySafeDrops { get; set; }
+        public DbSet<MobilitySalesHeader> MobilitySalesHeaders { get; set; }
+        public DbSet<MobilitySalesDetail> MobilitySalesDetails { get; set; }
+        public DbSet<MobilityPoSalesRaw> MobilityPoSalesRaw { get; set; }
+        public DbSet<POSales> MobilityPOSales { get; set; }
         public DbSet<CsvFile> CsvFiles { get; set; }
-        public DbSet<Offline> Offlines { get; set; }
+        public DbSet<MobilityOffline> MobilityOfflines { get; set; }
         #endregion
 
         #region--Purchase Entity
-        public DbSet<FuelPurchase> FuelPurchase { get; set; }
-        public DbSet<FuelDelivery> FuelDeliveries { get; set; }
-        public DbSet<LubeDelivery> LubeDeliveries { get; set; }
-        public DbSet<LubePurchaseHeader> LubePurchaseHeaders { get; set; }
-        public DbSet<LubePurchaseDetail> LubePurchaseDetails { get; set; }
+        public DbSet<MobilityFuelPurchase> MobilityFuelPurchase { get; set; }
+        public DbSet<MobilityFuelDelivery> MobilityFuelDeliveries { get; set; }
+        public DbSet<LubeDelivery> MobilityLubeDeliveries { get; set; }
+        public DbSet<MobilityLubePurchaseHeader> MobilityLubePurchaseHeaders { get; set; }
+        public DbSet<MobilityLubePurchaseDetail> MobilityLubePurchaseDetails { get; set; }
+        #endregion
+
         #endregion
 
         #region --Inventory Entity
@@ -120,7 +124,7 @@ namespace IBS.DataAccess.Data
             #region-- Sales
 
             // Fuel
-            builder.Entity<Fuel>(f =>
+            builder.Entity<MobilityFuel>(f =>
             {
                 f.HasIndex(f => f.xONAME);
                 f.HasIndex(f => f.INV_DATE);
@@ -133,21 +137,21 @@ namespace IBS.DataAccess.Data
             });
 
             // Lube
-            builder.Entity<Lube>(l =>
+            builder.Entity<MobilityLube>(l =>
             {
                 l.HasIndex(l => l.Cashier);
                 l.HasIndex(l => l.INV_DATE);
             });
 
             // SafeDrop
-            builder.Entity<SafeDrop>(s =>
+            builder.Entity<MobilitySafeDrop>(s =>
             {
                 s.HasIndex(s => s.xONAME);
                 s.HasIndex(s => s.INV_DATE);
             });
 
             // SalesHeader
-            builder.Entity<SalesHeader>(s =>
+            builder.Entity<MobilitySalesHeader>(s =>
             {
                 s.HasIndex(s => s.SalesNo);
                 s.HasIndex(s => s.Cashier);
@@ -157,20 +161,20 @@ namespace IBS.DataAccess.Data
             });
 
             // SalesDetail
-            builder.Entity<SalesDetail>(s =>
+            builder.Entity<MobilitySalesDetail>(s =>
             {
                 s.HasIndex(s => s.SalesNo);
                 s.HasIndex(s => s.StationCode);
             });
 
-            builder.Entity<SalesDetail>()
+            builder.Entity<MobilitySalesDetail>()
                 .HasOne(s => s.SalesHeader)
                 .WithMany()
                 .HasForeignKey(s => s.SalesHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // POSales
-            builder.Entity<PoSalesRaw>(po =>
+            // MobilityPOSales
+            builder.Entity<MobilityPoSalesRaw>(po =>
             {
                 po.HasIndex(po => po.shiftrecid);
                 po.HasIndex(po => po.stncode);
@@ -186,14 +190,14 @@ namespace IBS.DataAccess.Data
             #region--Purchase
 
             // FuelDelivery
-            builder.Entity<FuelDelivery>(f =>
+            builder.Entity<MobilityFuelDelivery>(f =>
             {
                 f.HasIndex(f => f.shiftrecid);
                 f.HasIndex(f => f.stncode);
             });
 
-            // FuelPurchase
-            builder.Entity<FuelPurchase>(f =>
+            // MobilityFuelPurchase
+            builder.Entity<MobilityFuelPurchase>(f =>
             {
                 f.HasIndex(f => f.FuelPurchaseNo).IsUnique();
                 f.HasIndex(f => f.StationCode);
@@ -209,24 +213,24 @@ namespace IBS.DataAccess.Data
             });
 
             // LubePurchaseHeader
-            builder.Entity<LubePurchaseHeader>(lh => lh
+            builder.Entity<MobilityLubePurchaseHeader>(lh => lh
                 .HasIndex(lh => lh.LubePurchaseHeaderNo)
                 .IsUnique());
 
-            builder.Entity<LubePurchaseHeader>(lh =>
+            builder.Entity<MobilityLubePurchaseHeader>(lh =>
             {
                 lh.HasIndex(lh => lh.LubePurchaseHeaderNo).IsUnique();
                 lh.HasIndex(lh => lh.StationCode);
             });
 
             // LubePurchaseDetail
-            builder.Entity<LubePurchaseDetail>()
+            builder.Entity<MobilityLubePurchaseDetail>()
                 .HasOne(ld => ld.LubePurchaseHeader)
                 .WithMany()
                 .HasForeignKey(ld => ld.LubePurchaseHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<LubePurchaseDetail>(ld =>
+            builder.Entity<MobilityLubePurchaseDetail>(ld =>
             {
                 ld.HasIndex(ld => ld.LubePurchaseHeaderNo);
                 ld.HasIndex(lh => lh.ProductCode);

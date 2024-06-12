@@ -1,10 +1,9 @@
-﻿using IBS.Models.ViewModels;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Mobility
 {
-    public class SalesDetail
+    public class MobilitySalesDetail
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -13,7 +12,7 @@ namespace IBS.Models.Mobility
         public int SalesHeaderId { get; set; }
 
         [ForeignKey("SalesHeaderId")]
-        public SalesHeader? SalesHeader { get; set; }
+        public MobilitySalesHeader? SalesHeader { get; set; }
 
         [Column(TypeName = "varchar(15)")]
         public string SalesNo { get; set; }

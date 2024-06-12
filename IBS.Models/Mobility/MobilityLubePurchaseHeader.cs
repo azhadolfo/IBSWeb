@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Mobility
 {
-    public class LubePurchaseHeader : BaseEntity
+    public class MobilityLubePurchaseHeader : BaseEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -64,6 +64,5 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(50)")]
         [Display(Name = "Received By")]
         public string ReceivedBy { get; set; }
-
     }
 }

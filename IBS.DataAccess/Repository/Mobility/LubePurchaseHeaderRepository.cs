@@ -12,7 +12,7 @@ using System.Globalization;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
-    public class LubePurchaseHeaderRepository : Repository<LubePurchaseHeader>, ILubePurchaseHeaderRepository
+    public class LubePurchaseHeaderRepository : Repository<MobilityLubePurchaseHeader>, ILubePurchaseHeaderRepository
     {
         private ApplicationDbContext _db;
 
@@ -21,7 +21,7 @@ namespace IBS.DataAccess.Repository.Mobility
             _db = db;
         }
 
-        public IEnumerable<dynamic> GetLubePurchaseJoin(IEnumerable<LubePurchaseHeader> lubePurchases, CancellationToken cancellationToken = default)
+        public IEnumerable<dynamic> GetLubePurchaseJoin(IEnumerable<MobilityLubePurchaseHeader> lubePurchases, CancellationToken cancellationToken = default)
         {
             return from lube in lubePurchases
                    join station in _db.Stations on lube.StationCode equals station.StationCode
@@ -47,8 +47,8 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 LubeDeliveryVM lubeDeliveryVM = new LubeDeliveryVM
                 {
-                    Header = await _db.LubePurchaseHeaders.FirstOrDefaultAsync(lh => lh.LubePurchaseHeaderNo == id && lh.StationCode == stationCode, cancellationToken),
-                    Details = await _db.LubePurchaseDetails.Where(ld => ld.LubePurchaseHeaderNo == id && ld.StationCode == stationCode).ToListAsync(cancellationToken)
+                    Header = await _db.MobilityLubePurchaseHeaders.FirstOrDefaultAsync(lh => lh.LubePurchaseHeaderNo == id && lh.StationCode == stationCode, cancellationToken),
+                    Details = await _db.MobilityLubePurchaseDetails.Where(ld => ld.LubePurchaseHeaderNo == id && ld.StationCode == stationCode).ToListAsync(cancellationToken)
                 };
 
                 if (lubeDeliveryVM.Header == null || lubeDeliveryVM.Details == null)
@@ -56,7 +56,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     throw new InvalidOperationException($"Lube purchase header/detail with id '{id}' not found.");
                 }
 
-                var lubePurchaseList = await _db.LubePurchaseHeaders
+                var lubePurchaseList = await _db.MobilityLubePurchaseHeaders
                     .Where(l => l.StationCode == lubeDeliveryVM.Header.StationCode && l.DeliveryDate <= lubeDeliveryVM.Header.DeliveryDate && l.CreatedDate < lubeDeliveryVM.Header.CreatedDate && l.PostedBy == null)
                     .OrderBy(l => l.LubePurchaseHeaderNo)
                     .ToListAsync(cancellationToken);
@@ -273,7 +273,7 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 var lubePurchaseHeaders = lubeDeliveries
                     .GroupBy(l => new { l.shiftrecid, l.dtllink, l.stncode, l.cashiercode, l.shiftnumber, l.deliverydate, l.suppliercode, l.invoiceno, l.drno, l.pono, l.amount, l.rcvdby, l.createdby, l.createddate })
-                    .Select(g => new LubePurchaseHeader
+                    .Select(g => new MobilityLubePurchaseHeader
                     {
                         ShiftRecId = g.Key.shiftrecid,
                         DetailLink = g.Key.dtllink,
@@ -298,7 +298,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 {
                     ld.LubePurchaseHeaderNo = await GenerateSeriesNumber(ld.StationCode);
 
-                    await _db.LubePurchaseHeaders.AddAsync(ld, cancellationToken);
+                    await _db.MobilityLubePurchaseHeaders.AddAsync(ld, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                 }
 
@@ -306,7 +306,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 {
                     var lubeHeader = lubePurchaseHeaders.Find(l => l.ShiftRecId == lubeDelivery.shiftrecid && l.StationCode == lubeDelivery.stncode);
 
-                    var lubesPurchaseDetail = new LubePurchaseDetail
+                    var lubesPurchaseDetail = new MobilityLubePurchaseDetail
                     {
                         LubePurchaseHeaderId = lubeHeader.LubePurchaseHeaderId,
                         LubePurchaseHeaderNo = lubeHeader.LubePurchaseHeaderNo,
@@ -321,7 +321,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         Amount = lubeDelivery.quantity * lubeDelivery.unitprice
                     };
 
-                    await _db.LubePurchaseDetails.AddAsync(lubesPurchaseDetail, cancellationToken);
+                    await _db.MobilityLubePurchaseDetails.AddAsync(lubesPurchaseDetail, cancellationToken);
                 }
 
                 await _db.SaveChangesAsync(cancellationToken);
@@ -334,7 +334,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         private async Task<string> GenerateSeriesNumber(string stationCode)
         {
-            var lastCashierReport = await _db.LubePurchaseHeaders
+            var lastCashierReport = await _db.MobilityLubePurchaseHeaders
                 .OrderBy(s => s.LubePurchaseHeaderNo)
                 .Where(s => s.StationCode == stationCode)
                 .LastOrDefaultAsync();

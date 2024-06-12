@@ -4,7 +4,7 @@ using IBS.Models.Mobility;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
-    public class LubePurchaseDetailRepository : Repository<LubePurchaseDetail>, ILubePurchaseDetailRepository
+    public class LubePurchaseDetailRepository : Repository<MobilityLubePurchaseDetail>, ILubePurchaseDetailRepository
     {
         private ApplicationDbContext _db;
 

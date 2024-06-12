@@ -4,7 +4,7 @@ using IBS.Models.Mobility;
 
 namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
-    public interface ILubePurchaseHeaderRepository : IRepository<LubePurchaseHeader>
+    public interface ILubePurchaseHeaderRepository : IRepository<MobilityLubePurchaseHeader>
     {
         Task<int> ProcessLubeDelivery(string file, CancellationToken cancellationToken = default);
 
@@ -12,6 +12,6 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 
         Task PostAsync(string id, string postedBy, string stationCode, CancellationToken cancellationToken = default);
 
-        IEnumerable<dynamic> GetLubePurchaseJoin(IEnumerable<LubePurchaseHeader> lubePurchases, CancellationToken cancellationToken = default);
+        IEnumerable<dynamic> GetLubePurchaseJoin(IEnumerable<MobilityLubePurchaseHeader> lubePurchases, CancellationToken cancellationToken = default);
     }
 }

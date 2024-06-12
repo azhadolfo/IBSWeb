@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Mobility
 {
-    public class SalesHeader : BaseEntity
+    public class MobilitySalesHeader : BaseEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

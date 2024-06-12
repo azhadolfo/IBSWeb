@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
-    public class OfflineRepository : Repository<Offline>, IOfflineRepository
+    public class OfflineRepository : Repository<MobilityOffline>, IOfflineRepository
     {
         private ApplicationDbContext _db;
 
@@ -16,15 +16,15 @@ namespace IBS.DataAccess.Repository.Mobility
             _db = db;
         }
 
-        public async Task<Offline> GetOffline(int offlineId, CancellationToken cancellationToken = default)
+        public async Task<MobilityOffline> GetOffline(int offlineId, CancellationToken cancellationToken = default)
         {
-            return await _db.Offlines
+            return await _db.MobilityOfflines
                 .FirstOrDefaultAsync(o => o.OfflineId == offlineId, cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetOfflineListAsync(CancellationToken cancellationToken = default)
         {
-            return await _db.Offlines
+            return await _db.MobilityOfflines
                 .OrderBy(o => o.OfflineId)
                 .Where(o => !o.IsResolve)
                 .Select(o => new SelectListItem
@@ -37,13 +37,13 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task InsertEntry(AdjustReportViewModel model, CancellationToken cancellationToken = default)
         {
-            var offlineRecord = await _db.Offlines
+            var offlineRecord = await _db.MobilityOfflines
                 .FindAsync(new object[] { model.SelectedOfflineId }, cancellationToken);
 
-            var salesHeader = await _db.SalesHeaders
+            var salesHeader = await _db.MobilitySalesHeaders
                 .FirstOrDefaultAsync(s => s.SalesNo == model.AffectedDSRNo, cancellationToken);
 
-            var salesDetail = await _db.SalesDetails
+            var salesDetail = await _db.MobilitySalesDetails
                 .Where(s => s.SalesHeaderId == salesHeader.SalesHeaderId)
                 .ToListAsync(cancellationToken);
 
@@ -75,7 +75,7 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 offlineRecord.IsResolve = true;
 
-                var problematicDsr = await _db.SalesHeaders
+                var problematicDsr = await _db.MobilitySalesHeaders
                     .Where(o => o.SalesNo == offlineRecord.ClosingDSRNo || o.SalesNo == offlineRecord.OpeningDSRNo)
                     .ToListAsync(cancellationToken);
 

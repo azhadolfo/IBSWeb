@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Mobility
 {
-    public class LubePurchaseDetail
+    public class MobilityLubePurchaseDetail
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -12,7 +12,7 @@ namespace IBS.Models.Mobility
         public int LubePurchaseHeaderId { get; set; }
 
         [ForeignKey("LubePurchaseHeaderId")]
-        public LubePurchaseHeader? LubePurchaseHeader { get; set; }
+        public MobilityLubePurchaseHeader? LubePurchaseHeader { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string LubePurchaseHeaderNo { get; set; }
@@ -44,6 +44,5 @@ namespace IBS.Models.Mobility
 
         [Column(TypeName = "varchar(3)")]
         public string StationCode { get; set; }
-
     }
 }

@@ -26,8 +26,8 @@ namespace IBS.DataAccess.Repository.Mobility
                 MissingFieldFound = null,
             });
 
-            var records = csv.GetRecords<PoSalesRaw>();
-            var existingRecords = await _db.Set<PoSalesRaw>().ToListAsync(cancellationToken);
+            var records = csv.GetRecords<MobilityPoSalesRaw>();
+            var existingRecords = await _db.Set<MobilityPoSalesRaw>().ToListAsync(cancellationToken);
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
                 existingRecord.shiftrecid == record.shiftrecid && existingRecord.stncode == record.stncode && existingRecord.tripticket == record.tripticket)).ToList();
 
@@ -45,7 +45,7 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public async Task RecordThePurchaseOrder(IEnumerable<PoSalesRaw> poSales, CancellationToken cancellationToken = default)
+        public async Task RecordThePurchaseOrder(IEnumerable<MobilityPoSalesRaw> poSales, CancellationToken cancellationToken = default)
         {
             var purchaseOrders = new List<POSales>();
 

@@ -3,30 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Mobility
 {
-    public class Fuel : BaseEntity
+    public class MobilityLube : BaseEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
 
-        [Column(TypeName = "time without time zone")]
-        public TimeOnly Start { get; set; }
-
-        [Column(TypeName = "time without time zone")]
-        public TimeOnly End { get; set; }
-
         [Column(TypeName = "date")]
         public DateOnly INV_DATE { get; set; }
-
-        public int xCORPCODE { get; set; }
-
-        public int xSITECODE { get; set; }
-
-        public int xTANK { get; set; }
-
-        public int xPUMP { get; set; }
-
-        public int xNOZZLE { get; set; }
 
         public int xYEAR { get; set; }
 
@@ -34,50 +18,41 @@ namespace IBS.Models.Mobility
 
         public int xDAY { get; set; }
 
-        public int xTRANSACTION { get; set; }
+        public int xCORPCODE { get; set; }
+
+        public int xSITECODE { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         public decimal Price { get; set; }
 
         //AmountDB = Price * Volume
+        [Column(TypeName = "numeric(18,2)")]
         public decimal AmountDB { get; set; }
 
+        [Column(TypeName = "numeric(18,2)")]
         public decimal Amount { get; set; }
 
-        public decimal Calibration { get; set; }
-
         //Volume = Amount / Price
-        public decimal Volume { get; set; }
+        public decimal LubesQty { get; set; }
 
         [Column(TypeName = "varchar(16)")]
         public string ItemCode { get; set; }
 
-        [Column(TypeName = "varchar(32)")]
+        [Column(TypeName = "varchar(100)")]
         public string Particulars { get; set; }
 
-        public decimal Opening { get; set; }
-
-        public decimal Closing { get; set; }
-
-        [Column(TypeName = "varchar(20)")]
-        public string nozdown { get; set; }
-
-        [Column(TypeName = "time without time zone")]
-        public TimeOnly InTime { get; set; }
-
-        [Column(TypeName = "time without time zone")]
-        public TimeOnly OutTime { get; set; }
-
-        //Liters = Opening - Closing
-        public decimal Liters { get; set; }
-
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(10)")]
         public string xOID { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string xONAME { get; set; }
+        public string Cashier { get; set; }
 
         public int Shift { get; set; }
+
+        public long xTRANSACTION { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string xStamp { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string? plateno { get; set; }
@@ -89,10 +64,6 @@ namespace IBS.Models.Mobility
         public string? cust { get; set; }
 
         public DateOnly BusinessDate { get; set; }
-
-        public int DetailGroup { get; set; }
-
-        public int TransCount { get; set; }
 
         public bool IsProcessed { get; set; }
     }

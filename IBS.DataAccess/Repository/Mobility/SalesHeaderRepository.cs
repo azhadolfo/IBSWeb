@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
-    public class SalesHeaderRepository : Repository<SalesHeader>, ISalesHeaderRepository
+    public class SalesHeaderRepository : Repository<MobilitySalesHeader>, ISalesHeaderRepository
     {
         private ApplicationDbContext _db;
 
@@ -26,30 +26,30 @@ namespace IBS.DataAccess.Repository.Mobility
                 var fuelSales = await _db.FuelSalesViews
                     .ToListAsync(cancellationToken);
 
-                var lubeSales = await _db.Lubes
+                var lubeSales = await _db.MobilityLubes
                     .Where(f => !f.IsProcessed)
                     .ToListAsync(cancellationToken);
 
-                var safeDropDeposits = await _db.SafeDrops
+                var safeDropDeposits = await _db.MobilitySafeDrops
                     .Where(f => !f.IsProcessed)
                     .ToListAsync(cancellationToken);
 
-                var fuelPoSales = Enumerable.Empty<Fuel>();
-                var lubePoSales = Enumerable.Empty<Lube>();
+                var fuelPoSales = Enumerable.Empty<MobilityFuel>();
+                var lubePoSales = Enumerable.Empty<MobilityLube>();
 
                 if (hasPoSales)
                 {
-                    fuelPoSales = await _db.Fuels
+                    fuelPoSales = await _db.MobilityFuels
                         .Where(f => !f.IsProcessed && (!string.IsNullOrEmpty(f.cust) || !string.IsNullOrEmpty(f.pono) || !string.IsNullOrEmpty(f.plateno)))
                         .ToListAsync(cancellationToken);
 
-                    lubePoSales = await _db.Lubes
+                    lubePoSales = await _db.MobilityLubes
                         .Where(f => !f.IsProcessed && (!string.IsNullOrEmpty(f.cust) || !string.IsNullOrEmpty(f.pono) || !string.IsNullOrEmpty(f.plateno)))
                         .ToListAsync(cancellationToken);
                 }
 
                 var salesHeaders = fuelSales
-                    .Select(fuel => new SalesHeader
+                    .Select(fuel => new MobilitySalesHeader
                     {
                         Date = fuel.BusinessDate,
                         StationCode = fuel.StationCode,
@@ -78,7 +78,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         TimeOut = fuel.TimeOut
                     })
                     .GroupBy(s => new { s.Date, s.StationCode, s.Cashier, s.Shift, s.LubesTotalAmount, s.SafeDropTotalAmount, s.POSalesTotalAmount, s.CreatedBy })
-                    .Select(g => new SalesHeader
+                    .Select(g => new MobilitySalesHeader
                     {
                         Date = g.Key.Date,
                         Cashier = g.Key.Cashier,
@@ -102,7 +102,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 foreach (var dsr in salesHeaders)
                 {
                     dsr.SalesNo = await GenerateSeriesNumber(dsr.StationCode);
-                    await _db.SalesHeaders.AddAsync(dsr, cancellationToken);
+                    await _db.MobilitySalesHeaders.AddAsync(dsr, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                 }
 
@@ -114,9 +114,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     foreach (var fuel in group)
                     {
-                        SalesHeader? salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift && s.Date == fuel.BusinessDate) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} on {fuel.BusinessDate} not found!");
+                        MobilitySalesHeader? salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift && s.Date == fuel.BusinessDate) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} on {fuel.BusinessDate} not found!");
 
-                        var salesDetail = new SalesDetail
+                        var salesDetail = new MobilitySalesDetail
                         {
                             SalesHeaderId = salesHeader.SalesHeaderId,
                             SalesNo = salesHeader.SalesNo,
@@ -139,7 +139,7 @@ namespace IBS.DataAccess.Repository.Mobility
                             salesHeader.IsTransactionNormal = false;
                             salesDetail.ReferenceNo = previousNo;
 
-                            Offline offline = new(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, fuel.Opening, previousClosing)
+                            MobilityOffline offline = new(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, fuel.Opening, previousClosing)
                             {
                                 SeriesNo = await GenerateOfflineNo(),
                                 ClosingDSRNo = previousNo,
@@ -151,7 +151,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                         }
 
-                        await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
+                        await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
 
                         previousClosing = fuel.Closing;
                         previousNo = salesHeader.SalesNo;
@@ -170,7 +170,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     {
                         var salesHeader = salesHeaders.Find(l => l.Cashier == lube.Cashier && l.Shift == lube.Shift && l.Date == lube.BusinessDate) ?? throw new InvalidOperationException($"Sales Header with {lube.Cashier} shift#{lube.Shift} on {lube.BusinessDate} not found!");
 
-                        var salesDetail = new SalesDetail
+                        var salesDetail = new MobilitySalesDetail
                         {
                             SalesHeaderId = salesHeader.SalesHeaderId,
                             SalesNo = salesHeader.SalesNo,
@@ -182,14 +182,14 @@ namespace IBS.DataAccess.Repository.Mobility
                             Value = Math.Round(lube.Amount, 2)
                         };
                         lube.IsProcessed = true;
-                        await _db.SalesDetails.AddAsync(salesDetail, cancellationToken);
+                        await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
                     }
                 }
 
                 if (fuelSales.Count != 0)
                 {
                     // Bulk update directly in the database without fetching
-                    await _db.Fuels
+                    await _db.MobilityFuels
                         .Where(f => !f.IsProcessed)
                         .ExecuteUpdateAsync(
                             f => f.SetProperty(p => p.IsProcessed, true),
@@ -219,7 +219,7 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public IEnumerable<dynamic> GetSalesHeaderJoin(IEnumerable<SalesHeader> salesHeaders, CancellationToken cancellationToken = default)
+        public IEnumerable<dynamic> GetSalesHeaderJoin(IEnumerable<MobilitySalesHeader> salesHeaders, CancellationToken cancellationToken = default)
         {
             return from header in salesHeaders
                    join station in _db.Stations
@@ -248,8 +248,8 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 SalesVM salesVM = new()
                 {
-                    Header = await _db.SalesHeaders.FirstOrDefaultAsync(sh => sh.SalesNo == id && sh.StationCode == stationCode, cancellationToken),
-                    Details = await _db.SalesDetails.Where(sd => sd.SalesNo == id && sd.StationCode == stationCode).ToListAsync(cancellationToken),
+                    Header = await _db.MobilitySalesHeaders.FirstOrDefaultAsync(sh => sh.SalesNo == id && sh.StationCode == stationCode, cancellationToken),
+                    Details = await _db.MobilitySalesDetails.Where(sd => sd.SalesNo == id && sd.StationCode == stationCode).ToListAsync(cancellationToken),
                 };
 
                 if (salesVM.Header == null || salesVM.Details == null)
@@ -262,7 +262,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     throw new InvalidOperationException("Indicate the cashier's cash on hand before posting.");
                 }
 
-                var salesList = await _db.SalesHeaders
+                var salesList = await _db.MobilitySalesHeaders
                     .Where(s => s.StationCode == salesVM.Header.StationCode && s.Date <= salesVM.Header.Date && s.CreatedDate < salesVM.Header.CreatedDate && s.PostedBy == null)
                     .OrderBy(s => s.SalesNo)
                     .ToListAsync(cancellationToken);
@@ -539,10 +539,10 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task UpdateAsync(SalesVM model, decimal[] closing, decimal[] opening, CancellationToken cancellationToken = default)
         {
-            SalesHeader existingSalesHeader = await _db.SalesHeaders
+            MobilitySalesHeader existingSalesHeader = await _db.MobilitySalesHeaders
                 .FirstOrDefaultAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId, cancellationToken) ?? throw new InvalidOperationException($"Sales header with id '{model.Header.SalesHeaderId}' not found.");
 
-            IEnumerable<SalesDetail> existingSalesDetail = await _db.SalesDetails
+            IEnumerable<MobilitySalesDetail> existingSalesDetail = await _db.MobilitySalesDetails
                 .Where(sd => sd.SalesHeaderId == model.Header.SalesHeaderId)
                 .OrderBy(sd => sd.SalesDetailId)
                 .ToListAsync(cancellationToken);
@@ -551,7 +551,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             for (int i = 0; i < existingSalesDetail.Count(); i++)
             {
-                SalesDetail existingDetail = existingSalesDetail.ElementAt(i);
+                MobilitySalesDetail existingDetail = existingSalesDetail.ElementAt(i);
 
                 if (existingDetail.Closing != closing[i] || existingDetail.Opening != opening[i])
                 {
@@ -594,7 +594,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         private async Task<string> GenerateSeriesNumber(string stationCode)
         {
-            var lastCashierReport = await _db.SalesHeaders
+            var lastCashierReport = await _db.MobilitySalesHeaders
                 .OrderBy(s => s.SalesNo)
                 .Where(s => s.StationCode == stationCode)
                 .LastOrDefaultAsync();
@@ -615,7 +615,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         private async Task<int> GenerateOfflineNo()
         {
-            var lastRecord = await _db.Offlines
+            var lastRecord = await _db.MobilityOfflines
                 .OrderByDescending(o => o.OfflineId)
                 .FirstOrDefaultAsync();
 

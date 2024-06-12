@@ -3,11 +3,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Mobility
 {
-    public class FuelDelivery
+    public class MobilityPoSalesRaw
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid FuelDeliveryId { get; set; }
+        public Guid POSalesRawId { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string shiftrecid { get; set; }
@@ -20,30 +20,24 @@ namespace IBS.Models.Mobility
         public int shiftnumber { get; set; }
 
         [Column(TypeName = "date")]
-        public DateOnly deliverydate { get; set; }
+        public DateOnly podate { get; set; }
 
         [Column(TypeName = "time without time zone")]
-        public TimeOnly timein { get; set; }
+        public TimeOnly? potime { get; set; }
 
-        [Column(TypeName = "time without time zone")]
-        public TimeOnly timeout { get; set; }
+        [Column(TypeName = "varchar(20)")]
+        public string customercode { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
+        [Column(TypeName = "varchar(50)")]
         public string driver { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
-        public string hauler { get; set; }
+        [Column(TypeName = "varchar(50)")]
+        public string plateno { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string platenumber { get; set; }
+        public string drnumber { get; set; } //remove the "DR" when saving in actual database
 
-        [Column(TypeName = "varchar(50)")]
-        public string drnumber { get; set; } //it should be int in actual database so remove the "DR"
-
-        [Column(TypeName = "varchar(50)")]
-        public string wcnumber { get; set; }
-
-        public int tanknumber { get; set; }
+        public string tripticket { get; set; }
 
         [Column(TypeName = "varchar(10)")]
         public string productcode { get; set; }
@@ -54,22 +48,11 @@ namespace IBS.Models.Mobility
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal purchaseprice { get; set; }
+        public decimal price { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal sellprice { get; set; }
-
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal volumebefore { get; set; }
-
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal volumeafter { get; set; }
-
-        [Column(TypeName = "varchar(50)")]
-        public string receivedby { get; set; }
+        public decimal contractprice { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string createdby { get; set; } //remove the "E" when saving in actual database

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Mobility
 {
-    public class Offline
+    public class MobilityOffline
     {
         [Key]
         public int OfflineId { get; set; }
@@ -54,7 +54,7 @@ namespace IBS.Models.Mobility
 
         public DateTime? LastUpdatedDate { get; set; }
 
-        public Offline(string stationCode, DateOnly startDate, DateOnly endDate, string product, int pump, decimal opening, decimal closing)
+        public MobilityOffline(string stationCode, DateOnly startDate, DateOnly endDate, string product, int pump, decimal opening, decimal closing)
         {
             StationCode = stationCode;
             StartDate = startDate;
@@ -67,6 +67,5 @@ namespace IBS.Models.Mobility
             Balance = Liters;
             IsResolve = false;
         }
-
     }
 }

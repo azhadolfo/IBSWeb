@@ -4,7 +4,7 @@ namespace IBS.Models.ViewModels
 {
     public class SalesVM
     {
-        public SalesHeader Header { get; set; }
-        public IEnumerable<SalesDetail> Details { get; set; }
+        public MobilitySalesHeader Header { get; set; }
+        public IEnumerable<MobilitySalesDetail> Details { get; set; }
     }
 }

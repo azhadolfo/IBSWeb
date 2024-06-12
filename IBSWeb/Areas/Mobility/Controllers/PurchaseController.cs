@@ -35,9 +35,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
-            Expression<Func<FuelPurchase, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
+            Expression<Func<MobilityFuelPurchase, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
 
-            IEnumerable<FuelPurchase> fuelPurchaseList = await _unitOfWork
+            IEnumerable<MobilityFuelPurchase> fuelPurchaseList = await _unitOfWork
                 .FuelPurchase
                 .GetAllAsync(filter, cancellationToken);
 
@@ -53,7 +53,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            FuelPurchase? fuelPurchase = await _unitOfWork.FuelPurchase.GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken);
+            MobilityFuelPurchase? fuelPurchase = await _unitOfWork.FuelPurchase.GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken);
 
             if (fuelPurchase == null)
             {
@@ -99,7 +99,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            FuelPurchase fuelPurchase = await _unitOfWork
+            MobilityFuelPurchase fuelPurchase = await _unitOfWork
                 .FuelPurchase
                 .GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken);
 
@@ -112,7 +112,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditFuel(FuelPurchase model, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditFuel(MobilityFuelPurchase model, CancellationToken cancellationToken)
         {
             if (model.PurchasePrice < 0)
             {
@@ -141,9 +141,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
-            Expression<Func<LubePurchaseHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
+            Expression<Func<MobilityLubePurchaseHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
 
-            IEnumerable<LubePurchaseHeader> lubePurchaseHeaders = await _unitOfWork
+            IEnumerable<MobilityLubePurchaseHeader> lubePurchaseHeaders = await _unitOfWork
                 .LubePurchaseHeader
                 .GetAllAsync(filter, cancellationToken);
 

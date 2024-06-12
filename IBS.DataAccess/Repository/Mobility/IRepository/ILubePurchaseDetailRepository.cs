@@ -3,7 +3,7 @@ using IBS.Models.Mobility;
 
 namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
-    public interface ILubePurchaseDetailRepository : IRepository<LubePurchaseDetail>
+    public interface ILubePurchaseDetailRepository : IRepository<MobilityLubePurchaseDetail>
     {
     }
 }

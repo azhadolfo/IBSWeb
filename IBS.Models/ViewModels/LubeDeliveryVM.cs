@@ -4,9 +4,9 @@ namespace IBS.Models.ViewModels
 {
     public class LubeDeliveryVM
     {
-        public LubePurchaseHeader Header { get; set; }
+        public MobilityLubePurchaseHeader Header { get; set; }
 
-        public IEnumerable<LubePurchaseDetail> Details { get; set; }
+        public IEnumerable<MobilityLubePurchaseDetail> Details { get; set; }
 
     }
 }

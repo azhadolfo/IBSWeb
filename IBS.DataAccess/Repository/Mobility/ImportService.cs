@@ -158,14 +158,14 @@ namespace IBS.DataAccess.Repository.Mobility
 
                                 if (fileName.Contains("fuels"))
                                 {
-                                    var records = csv.GetRecords<Fuel>()
+                                    var records = csv.GetRecords<MobilityFuel>()
                                          .OrderBy(r => r.INV_DATE)
                                          .ThenBy(r => r.ItemCode)
                                          .ThenBy(r => r.xPUMP)
                                          .ThenBy(r => r.Opening);
 
                                     // Fetch existing nozdown values and store them in a HashSet
-                                    var existingNozdownList = await db.Set<Fuel>().Select(r => r.nozdown).ToListAsync();
+                                    var existingNozdownList = await db.Set<MobilityFuel>().Select(r => r.nozdown).ToListAsync();
                                     var existingNozdownSet = new HashSet<string>(existingNozdownList);
 
                                     DateOnly date = new();
@@ -208,9 +208,9 @@ namespace IBS.DataAccess.Repository.Mobility
                                 }
                                 else if (fileName.Contains("lubes"))
                                 {
-                                    var records = csv.GetRecords<Lube>();
+                                    var records = csv.GetRecords<MobilityLube>();
 
-                                    var existingNozdownList = await db.Set<Lube>().Select(r => r.xStamp).ToListAsync();
+                                    var existingNozdownList = await db.Set<MobilityLube>().Select(r => r.xStamp).ToListAsync();
                                     var existingNozdownSet = new HashSet<string>(existingNozdownList);
 
 
@@ -231,9 +231,9 @@ namespace IBS.DataAccess.Repository.Mobility
                                 }
                                 else if (fileName.Contains("safedrops"))
                                 {
-                                    var records = csv.GetRecords<SafeDrop>();
+                                    var records = csv.GetRecords<MobilitySafeDrop>();
 
-                                    var existingNozdownList = await db.Set<SafeDrop>().Select(r => r.xSTAMP).ToListAsync();
+                                    var existingNozdownList = await db.Set<MobilitySafeDrop>().Select(r => r.xSTAMP).ToListAsync();
                                     var existingNozdownSet = new HashSet<string>(existingNozdownList);
 
 

@@ -5,7 +5,7 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
     public interface IPOSalesRepository : IRepository<POSales>
     {
-        Task RecordThePurchaseOrder(IEnumerable<PoSalesRaw> poSales, CancellationToken cancellationToken = default);
+        Task RecordThePurchaseOrder(IEnumerable<MobilityPoSalesRaw> poSales, CancellationToken cancellationToken = default);
 
         Task<int> ProcessPOSales(string file, CancellationToken cancellationToken = default);
     }
