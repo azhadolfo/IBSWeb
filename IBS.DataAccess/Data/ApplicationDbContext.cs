@@ -12,6 +12,11 @@ namespace IBS.DataAccess.Data
         {
         }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSnakeCaseNamingConvention();
+        }
+
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 
         public DbSet<LogMessage> LogMessages { get; set; }
@@ -65,6 +70,7 @@ namespace IBS.DataAccess.Data
         #endregion
 
         #region--Fluent API Implementation
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -273,6 +279,7 @@ namespace IBS.DataAccess.Data
 
             #endregion
         }
+
         #endregion
     }
 }
