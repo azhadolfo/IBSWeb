@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models;
+using IBS.Models.MasterFile;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 

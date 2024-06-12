@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.MasterFile;
 using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -54,7 +55,6 @@ namespace IBSWeb.Areas.User.Controllers
                 var user = await _userManager.GetUserAsync(User);
                 var claims = await _userManager.GetClaimsAsync(user);
                 var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
-
 
                 IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork
                     .GeneralLedger
@@ -123,6 +123,5 @@ namespace IBSWeb.Areas.User.Controllers
             ViewData["DateFrom"] = dateFrom.ToString("MMM/dd/yyyy");
             ViewData["DateTo"] = dateTo.ToString("MMM/dd/yyyy");
         }
-
     }
 }

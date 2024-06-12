@@ -1,6 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.Models;
+using IBS.Models.MasterFile;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository
@@ -24,7 +24,6 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.Stations
                 .AnyAsync(s => s.PosCode == posCode, cancellationToken);
-
         }
 
         public async Task<bool> IsStationCodeExistAsync(string stationCode, CancellationToken cancellationToken = default)

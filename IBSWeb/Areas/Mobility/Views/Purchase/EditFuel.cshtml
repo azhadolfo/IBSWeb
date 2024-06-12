@@ -1,0 +1,69 @@
+﻿@using IBS.Models.Mobility
+@model FuelPurchase
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Edit Product</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <input asp-for="FuelPurchaseId" hidden />
+            <div class="border p-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="StationCode" class="form-control border-0 shadow" placeholder="" disabled readonly/>
+                    <label asp-for="StationCode" class="ms-2"></label>
+                    <span asp-validation-for="StationCode" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="DeliveryDate" class="form-control border-0 shadow" placeholder="" disabled readonly />
+                    <label asp-for="DeliveryDate" class="ms-2"></label>
+                    <span asp-validation-for="DeliveryDate" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="CashierCode" class="form-control border-0 shadow" placeholder="" disabled readonly />
+                    <label asp-for="CashierCode" class="ms-2"></label>
+                    <span asp-validation-for="CashierCode" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="DrNo" class="form-control border-0 shadow" placeholder="" disabled readonly />
+                    <label asp-for="DrNo" class="ms-2"></label>
+                    <span asp-validation-for="DrNo" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="ProductCode" class="form-control border-0 shadow" placeholder="" disabled readonly />
+                    <label asp-for="ProductCode" class="ms-2"></label>
+                    <span asp-validation-for="ProductCode" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Quantity" class="form-control border-0 shadow" placeholder="" disabled readonly />
+                    <label asp-for="Quantity" class="ms-2"></label>
+                    <span asp-validation-for="Quantity" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="PurchasePrice" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="PurchasePrice" class="ms-2">Cost<span class="required">*</span></label>
+                    <span asp-validation-for="PurchasePrice" class="text-danger"></span>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control">Update</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Mobility" asp-controller="Purchase" asp-action="Fuel" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

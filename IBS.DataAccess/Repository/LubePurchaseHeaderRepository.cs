@@ -3,6 +3,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models;
+using IBS.Models.Mobility;
 using IBS.Models.ViewModels;
 using IBS.Utility;
 using IBS.Utility.Extensions;

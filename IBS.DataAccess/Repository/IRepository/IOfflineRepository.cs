@@ -1,4 +1,4 @@
-﻿using IBS.Models;
+﻿using IBS.Models.Mobility;
 using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 

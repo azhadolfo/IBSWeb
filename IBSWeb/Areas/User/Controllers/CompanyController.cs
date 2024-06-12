@@ -1,5 +1,5 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models;
+using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +21,6 @@ namespace IBSWeb.Areas.User.Controllers
             _unitOfWork = unitOfWork;
             _logger = logger;
             _userManager = userManager;
-
         }
 
         public async Task<IActionResult> Index()

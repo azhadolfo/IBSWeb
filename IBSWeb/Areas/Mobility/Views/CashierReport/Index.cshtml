@@ -1,0 +1,99 @@
+﻿@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Cashier Report";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Cashier's Report</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+            <div class="col-6 text-end">
+                <a asp-area="Mobility" asp-controller="CashierReport" asp-action="AdjustReport" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Adjust Report
+                </a>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-striped" id="dataTable">
+            <thead>
+                <tr>
+                    <th>
+                        Station Code / Name
+                    </th>
+                    <th>
+                        Sales No
+                    </th>
+                    <th>
+                        Date
+                    </th>
+                    <th>
+                        Cashier
+                    </th>
+                    <th>
+                        Shift
+                    </th>
+                    <th>
+                        Time In
+                    </th>
+                    <th>
+                        Time Out
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var obj in Model.OrderByDescending(u => u.SalesNo))
+                {
+                    <tr class="@((obj.SafeDropTotalAmount > 0 || obj.ActualCashOnHand > 0) && obj.IsTransactionNormal ? "" : "table-danger")">
+                        <td>
+                            @obj.StationCode - @obj.StationName
+                        </td>
+                        <td>
+                            @obj.SalesNo
+                        </td>
+                        <td>
+                            @obj.Date.ToString("MMMM dd, yyyy")
+                        </td>
+                        <td>
+                            @obj.Cashier
+                        </td>
+                        <td>
+                            @obj.Shift
+                        </td>
+                        <td>
+                            @obj.TimeIn
+                        </td>
+                        <td>
+                            @obj.TimeOut
+                        </td>
+                        <td>
+                            <div class="w-100 btn-group" role="group">
+                                @if (obj.PostedBy == null)
+                                {
+                                    <a asp-area="Mobility" asp-controller="CashierReport" asp-action="Edit" asp-route-id="@obj.SalesNo" asp-route-stationCode="@obj.StationCode" class="btn btn-primary mx-2">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
+                                }
+                                <a asp-area="Mobility" asp-controller="CashierReport" asp-action="Preview" asp-route-id="@obj.SalesNo" asp-route-stationCode="@obj.StationCode" class="btn btn-primary mx-2">
+                                    <i class="bi bi-printer-fill"></i> Preview
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+
+    </div>
+</div>
+

@@ -1,0 +1,205 @@
+﻿@using IBS.Models.ViewModels
+@model SalesVM
+
+@{
+    ViewData["Title"] = "Preview Cashier Report";
+}
+
+<div class="mb-3 row">
+    <div class="col-12 mb-3">
+        <h2 class="text-center">CASHIER REPORT</h2>
+        <h5 class="text-center">@ViewData["Station"]</h5>
+    </div>
+    <div class="col-10">
+        <h6 class="px-2"><b>Cashier:</b> @Model.Header.Cashier</h6>
+        <h6 class="px-2"><b>Shift:</b> @Model.Header.Shift</h6>
+    </div>
+    <div class="col-2">
+        <h6 class="px-2 text-end"><b>No.</b> @Html.DisplayFor(model => Model.Header.SalesNo)</h6>
+        <h6 class="px-2 text-end"><b>Date:</b> @Html.DisplayFor(model => Model.Header.Date)</h6>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th colspan="10" class="text-center">Fuels</th>
+            </tr>
+            <tr class="table-primary text-center">
+                <th>Particular</th>
+                <th>Closing</th>
+                <th>Opening</th>
+                <th>Liters</th>
+                <th>Calibration</th>
+                <th>Liters Sold</th>
+                <th>Trans Count</th>
+                <th>Price</th>
+                <th>Sale</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var group in Model.Details.OrderBy(d => d.SalesDetailId).GroupBy(d => d.Product))
+            {
+                foreach (var item in group.OrderBy(g => g.Particular))
+                {
+                    <tr>
+                        <td>@item.Particular</td>
+                        <td class="text-end">@Html.DisplayFor(model => item.Closing)</td>
+
+                         <td class="text-end">
+                            @if (item.ReferenceNo != null && !Model.Header.IsTransactionNormal)
+                            {
+                                <a asp-area="Mobility" asp-controller="CashierReport" asp-action="Preview" asp-route-id="@item.ReferenceNo" asp-route-stationCode="@item.StationCode" title="Click to view @item.ReferenceNo" style="color:red !important">
+                                    @Html.DisplayFor(model => item.Opening)
+                                </a>
+                            }
+                            else
+                            {
+                                @Html.DisplayFor(model => item.Opening)
+                            }
+                        </td>
+
+
+                        <td class="text-end">@Html.DisplayFor(model => item.Liters)</td>
+                        <td class="text-end">@Html.DisplayFor(model => item.Calibration)</td>
+                        <td class="text-end">@Html.DisplayFor(model => item.LitersSold)</td>
+                        <td class="text-end">@Html.DisplayFor(model => item.TransactionCount)</td>
+                        <td class="text-end">@Html.DisplayFor(model => item.Price)</td>
+                        <td class="text-end">@Html.DisplayFor(model => item.Sale)</td>
+                        <td class="text-end">@Html.DisplayFor(model => item.Value)</td>
+                    </tr>
+                }
+                <tr class="table-secondary fw-medium">
+                    @{
+                        string displayName;
+                        switch (group.Key)
+                        {
+                            case "PET001":
+                                displayName = "BIODIESEL";
+                                break;
+                            case "PET002":
+                                displayName = "ECONOGAS";
+                                break;
+                            default:
+                                displayName = "ENVIROGAS";
+                                break;
+                        }
+                    }
+                    <td colspan="3" class="text-center">Total for @displayName</td>
+                    <td class="text-end">@group.Sum(d => d.Liters).ToString("N3")</td>
+                    <td class="text-end">@group.Sum(d => d.Calibration).ToString("N2")</td>
+                    <td class="text-end">@group.Sum(d => d.LitersSold).ToString("N3")</td>
+                    <td class="text-end">@group.Sum(d => d.TransactionCount).ToString("N2")</td>
+                    <td class="text-end"></td>
+                    <td class="text-end">@group.Sum(d => d.Sale).ToString("N2")</td>
+                    <td class="text-end">@group.Sum(d => d.Value).ToString("N2")</td>
+                </tr>
+            }
+            <tr class="table-primary fw-semibold">
+                <td colspan="3" class="text-center">Total</td>
+                <td class="text-end">@Model.Details.Sum(d => d.Liters).ToString("N3")</td>
+                <td class="text-end">@Model.Details.Sum(d => d.Calibration).ToString("N2")</td>
+                <td class="text-end">@Model.Details.Sum(d => d.LitersSold).ToString("N3")</td>
+                <td class="text-end">@Model.Details.Sum(d => d.TransactionCount).ToString("N2")</td>
+                <td class="text-end"></td>
+                <td class="text-end">@Model.Details.Sum(d => d.Sale).ToString("N2")</td>
+                <td class="text-end">@Model.Details.Sum(d => d.Value).ToString("N2")</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<table class="table table-borderless">
+    <thead>
+        <tr class="table-primary">
+            <th colspan="2" class="text-center">Summary</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="text-center">Fuel</td>
+            <td class="text-end">@Html.DisplayFor(model => Model.Header.FuelSalesTotalAmount)</td>
+        </tr>
+        <tr>
+            <td class="text-center">Lubes</td>
+            <td class="text-end">@Html.DisplayFor(model => Model.Header.LubesTotalAmount)</td>
+        </tr>
+        @if (Model.Header.POSalesTotalAmount > 0)
+        {
+            <tr>
+                <td class="text-center">PO Sales</td>
+                <td class="text-end">@Html.DisplayFor(model => Model.Header.POSalesTotalAmount)</td>
+            </tr>
+        }
+        <tr>
+            <td class="text-center">Total Cash Sales</td>
+            <td class="text-end" style="border-top: double">@Html.DisplayFor(model => Model.Header.TotalSales)</td>
+        </tr>
+        @if (Model.Header.ActualCashOnHand > 0)
+        {
+            <tr>
+                <td class="text-center">Cash on Hand (Total Drops)</td>
+                <td class="text-end">@Html.DisplayFor(model => Model.Header.SafeDropTotalAmount)</td>
+            </tr>
+            <tr>
+                <td class="text-center">Actual Cash on Hand (Audit)</td>
+                <td class="text-end">@Html.DisplayFor(model => Model.Header.ActualCashOnHand)</td>
+            </tr>
+        }
+        else
+        {
+            <tr>
+                <td class="text-center">Cash on Hand (Total Drops)</td>
+                <td class="text-end">@Html.DisplayFor(model => Model.Header.SafeDropTotalAmount)</td>
+            </tr>
+        }
+        <tr>
+            <td class="text-center">Over (Short) / Handling</td>
+            <td class="text-end" style="border-top: double">@string.Format("{0:#,0.00;(#,0.00)}", Model.Header.GainOrLoss)</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="row pt-2">
+    @{
+        if (Model.Header.PostedBy == null)
+        {
+            <div class="col-6 col-md-3">
+                <a id="approveButton" class="btn btn-primary form-control buttons">Approve</a>
+            </div>
+        }
+        else
+        {
+            <div class="col-6 col-md-3">
+                <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+            </div>
+        }
+    }
+
+    <div class="col-6 col-md-3">
+        <a asp-area="Mobility" asp-controller="CashierReport" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('approveButton').addEventListener('click', function () {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, approve it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Proceed to the controller action
+                    window.location.href = '@Url.Action("Post", "CashierReport", new { area = "Mobility", id = Model.Header.SalesNo, stationCode = Model.Header.StationCode })';
+                }
+            });
+        });
+    </script>
+}

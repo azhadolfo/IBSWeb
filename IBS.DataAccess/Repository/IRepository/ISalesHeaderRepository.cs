@@ -1,4 +1,4 @@
-﻿using IBS.Models;
+﻿using IBS.Models.Mobility;
 using IBS.Models.ViewModels;
 
 namespace IBS.DataAccess.Repository.IRepository

@@ -1,7 +1,7 @@
 ﻿using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.Models;
+using IBS.Models.Mobility;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 

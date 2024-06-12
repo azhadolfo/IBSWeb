@@ -483,3 +483,26 @@ bg-success {
     color: green;
 }
 
+/* For navbar dropdown */
+
+.dropdown .dropdown-menu {
+    display: none;
+}
+
+.dropdown:hover > .dropdown-menu, .dropend:hover > .dropdown-menu {
+    display: block;
+    margin-top: .125em;
+    margin-left: .125em;
+}
+
+@media screen and (min-width:992px) {
+    .dropend:hover > .dropdown-menu {
+        position: absolute;
+        top: 0;
+        left: 100%;
+    }
+
+    .dropend .dropdown-toggle {
+        margin-left: .5em;
+    }
+}

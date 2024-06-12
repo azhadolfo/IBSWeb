@@ -1,4 +1,4 @@
-﻿using IBS.Models;
+﻿using IBS.Models.MasterFile;
 
 namespace IBS.DataAccess.Repository.IRepository
 {

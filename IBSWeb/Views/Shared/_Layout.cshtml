@@ -35,26 +35,78 @@
                             </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Sales
+                                    Mobility
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="CashierReport" asp-action="Index">Cashier Report</a>
+                                    <li class="nav-item dropend">
+                                        <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Purchase
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Purchase" asp-action="Fuel">Fuel</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Purchase" asp-action="Lube">Lube</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item dropend">
+                                        <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Sales
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CashierReport" asp-action="Index">Cashier Report</a>
+                                            </li>
+                                        </ul>
                                     </li>
                                 </ul>
                             </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Purchase
+                                    Filpride
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="Fuel">Fuel</a>
+                                    <li class="nav-item dropend">
+                                        <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Purchase
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="Fuel">Order</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="Lube">Approval</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="Lube">Hauling</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="Lube">DR</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="Lube">RR</a>
+                                            </li>
+                                        </ul>
                                     </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Purchase" asp-action="Lube">Lube</a>
-                                    </li>
+                                    @* <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item dropend">
+                                        <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Sales
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="User" asp-controller="CashierReport" asp-action="Index">Cashier Report</a>
+                                            </li>
+                                        </ul>
+                                    </li> *@
                                 </ul>
                             </li>
                             <li class="nav-item dropdown">

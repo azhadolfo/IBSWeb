@@ -1,4 +1,6 @@
 ﻿using IBS.Models;
+using IBS.Models.MasterFile;
+using IBS.Models.Mobility;
 using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;

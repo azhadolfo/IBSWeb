@@ -1,5 +1,5 @@
 ﻿using IBS.Dtos;
-using IBS.Models;
+using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.IRepository

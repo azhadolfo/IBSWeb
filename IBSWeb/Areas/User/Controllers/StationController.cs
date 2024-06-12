@@ -1,5 +1,5 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models;
+using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

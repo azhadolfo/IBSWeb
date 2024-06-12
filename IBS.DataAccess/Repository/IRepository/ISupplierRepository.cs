@@ -1,4 +1,4 @@
-﻿using IBS.Models;
+﻿using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Http;
 
 namespace IBS.DataAccess.Repository.IRepository

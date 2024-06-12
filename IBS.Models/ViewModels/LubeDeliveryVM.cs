@@ -1,4 +1,6 @@
-﻿namespace IBS.Models.ViewModels
+﻿using IBS.Models.Mobility;
+
+namespace IBS.Models.ViewModels
 {
     public class LubeDeliveryVM
     {

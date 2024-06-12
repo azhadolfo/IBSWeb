@@ -1,4 +1,4 @@
-﻿using IBS.Models;
+﻿using IBS.Models.MasterFile;
 
 namespace IBS.DataAccess.Repository.IRepository
 {
@@ -13,6 +13,5 @@ namespace IBS.DataAccess.Repository.IRepository
         Task UpdateAsync(Station model, CancellationToken cancellationToken = default);
 
         string GenerateFolderPath(string stationName);
-
     }
 }

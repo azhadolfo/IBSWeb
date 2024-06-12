@@ -1,0 +1,114 @@
+﻿@using IBS.Models.Mobility
+@model FuelPurchase
+
+<div class="mb-5">
+    <h2 class="text-center">Delivery Details</h2>
+    <h5 class="text-center">@ViewData["Station"]</h5>
+    <div class="row mt-5">
+        <div class="col-9">
+            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Driver):</b> @Html.DisplayFor(model => model.Driver)</h6>
+            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Hauler):</b> @Html.DisplayFor(model => model.Hauler)</h6>
+            <h6 class="px-2"><b>Plate #:</b> @Html.DisplayFor(model => model.PlateNo)</h6>
+            <h6 class="px-2"><b>WC #:</b> @Html.DisplayFor(model => model.WcNo)</h6>
+        </div>
+        <div class="col-3" style="white-space: nowrap;">
+            <h6 class="px-2 text-end"><b>No.</b> @Html.DisplayFor(model => model.FuelPurchaseNo)</h6>
+            <h6 class="px-2 text-end"><b>Date:</b> @Model.DeliveryDate.ToString("MMM/dd/yyyy")</h6>
+            <h6 class="px-2 text-end"><b>DR #:</b> @Html.DisplayFor(model => model.DrNo)</h6>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th colspan="4" class="text-center">
+                    Fuel
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><b>Product Code:</b></td>
+                <td>@Html.DisplayFor(model => model.ProductCode)</td>
+                <td><b>Quantity:</b></td>
+                <td>@Html.DisplayFor(model => model.Quantity)</td>
+            </tr>
+            <tr>
+                <td><b>Product Desc:</b></td>
+                <td>@ViewData["ProductName"]</td>
+                <td><b>Quantity Before:</b></td>
+                <td>@Html.DisplayFor(model => model.QuantityBefore)</td>
+            </tr>
+            <tr>
+                <td><b>Buying Price:</b></td>
+                <td>@Html.DisplayFor(model => model.PurchasePrice)</td>
+                <td><b>Quantity After:</b></td>
+                <td>@Html.DisplayFor(model => model.QuantityAfter)</td>
+            </tr>
+            <tr>
+                <td><b>Selling Price:</b></td>
+                <td>@Html.DisplayFor(model => model.SellingPrice)</td>
+                <td><b>Should Be:</b></td>
+                <td>@Html.DisplayFor(model => model.ShouldBe)</td>
+            </tr>
+            <tr>
+                <td><b>Tank #:</b></td>
+                <td>@Html.DisplayFor(model => model.TankNo)</td>
+                <td><b>Gain/(Loss):</b></td>
+                <td>@string.Format("{0:#,0.00;(#,0.00)}", Model.GainOrLoss)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="signature-section mt-5">
+    <hr class="signature-line">
+    <p class="text-center mb-2">Received By:</p>
+    <div class="signature-block">
+    </div>
+    <p class="small text-muted text-center">@Html.DisplayFor(model => model.ReceivedBy)</p>
+</div>
+
+<div class="row mt-5">
+    @{
+        if (Model.PostedBy == null)
+        {
+            <div class="col-6 col-md-3">
+                <a id="approveButton" class="btn btn-primary form-control buttons">Approve</a>
+            </div>
+        }
+        else
+        {
+            <div class="col-6 col-md-3">
+                <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+            </div>
+        }
+    }
+
+    <div class="col-6 col-md-3">
+        <a asp-area="Mobility" asp-controller="Purchase" asp-action="Fuel" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('approveButton').addEventListener('click', function () {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, approve it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Proceed to the controller action
+                    window.location.href = '@Url.Action("PostFuel", "Purchase", new { area = "Mobility", id = Model.FuelPurchaseNo, stationCode = Model.StationCode })';
+                }
+            });
+        });
+    </script>
+}
