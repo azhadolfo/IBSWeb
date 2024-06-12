@@ -1,6 +1,7 @@
-﻿using IBS.Models.Mobility;
+﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Mobility;
 
-namespace IBS.DataAccess.Repository.IRepository
+namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
     public interface IFuelPurchaseRepository : IRepository<FuelPurchase>
     {

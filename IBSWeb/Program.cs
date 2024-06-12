@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.Mobility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 

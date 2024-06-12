@@ -1,11 +1,11 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
-namespace IBS.DataAccess.Repository
+namespace IBS.DataAccess.Repository.Mobility
 {
     public class OfflineRepository : Repository<Offline>, IOfflineRepository
     {
@@ -67,7 +67,7 @@ namespace IBS.DataAccess.Repository
             salesHeader.GainOrLoss = salesHeader.SafeDropTotalAmount - salesHeader.TotalSales;
 
             offlineRecord.NewClosing = model.Closing;
-            offlineRecord.Balance -= (model.Opening - model.Closing);
+            offlineRecord.Balance -= model.Opening - model.Closing;
             offlineRecord.LastUpdatedBy = "System"; // Change to a more descriptive value
             offlineRecord.LastUpdatedDate = DateTime.UtcNow;
 

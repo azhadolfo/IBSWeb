@@ -1,6 +1,6 @@
 ﻿using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.Mobility;
@@ -9,7 +9,7 @@ using IBS.Utility.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
-namespace IBS.DataAccess.Repository
+namespace IBS.DataAccess.Repository.Mobility
 {
     public class FuelPurchaseRepository : Repository<FuelPurchase>, IFuelPurchaseRepository
     {
@@ -96,7 +96,7 @@ namespace IBS.DataAccess.Repository
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = inventoryAcctNo,
                     AccountTitle = inventoryAcctTitle,
-                    Debit = (fuelPurchase.Quantity * fuelPurchase.SellingPrice) / 1.12m,
+                    Debit = fuelPurchase.Quantity * fuelPurchase.SellingPrice / 1.12m,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
                     ProductCode = fuelPurchase.ProductCode,
@@ -110,7 +110,7 @@ namespace IBS.DataAccess.Repository
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = "1010602",
                     AccountTitle = "Vat Input",
-                    Debit = ((fuelPurchase.Quantity * fuelPurchase.SellingPrice) / 1.12m) * 0.12m,
+                    Debit = fuelPurchase.Quantity * fuelPurchase.SellingPrice / 1.12m * 0.12m,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
                     JournalReference = nameof(JournalType.Purchase)
@@ -153,7 +153,6 @@ namespace IBS.DataAccess.Repository
 
                 foreach (var transaction in sortedInventory.Skip(1))
                 {
-
                     if (transaction.Particulars == nameof(JournalType.Sales))
                     {
                         transaction.UnitCost = unitCostAverage;
@@ -213,7 +212,6 @@ namespace IBS.DataAccess.Repository
 
                 _db.Inventories.UpdateRange(sortedInventory);
 
-
                 if (IsJournalEntriesBalanced(journals))
                 {
                     await _db.AddAsync(inventory, cancellationToken);
@@ -258,7 +256,6 @@ namespace IBS.DataAccess.Repository
             {
                 return 0;
             }
-
         }
 
         public async Task RecordTheDeliveryToPurchase(IEnumerable<FuelDelivery> fuelDeliveries, CancellationToken cancellationToken = default)
@@ -303,7 +300,6 @@ namespace IBS.DataAccess.Repository
                 await _db.AddAsync(fd, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
             }
-
         }
 
         public async Task UpdateAsync(FuelPurchase model, CancellationToken cancellationToken = default)

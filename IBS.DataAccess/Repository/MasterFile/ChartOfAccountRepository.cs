@@ -1,11 +1,11 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Dtos;
 using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
-namespace IBS.DataAccess.Repository
+namespace IBS.DataAccess.Repository.MasterFile
 {
     public class ChartOfAccountRepository : Repository<ChartOfAccount>, IChartOfAccountRepository
     {
@@ -61,7 +61,7 @@ namespace IBS.DataAccess.Repository
             var query = from c in _db.ChartOfAccounts
                         join gl in _db.GeneralLedgers on c.AccountNumber equals gl.AccountNumber into glGroup
                         from gl in glGroup.DefaultIfEmpty()
-                        group new { c, gl } by new { Level = c.Level, AccountNumber = c.AccountNumber, AccountName = c.AccountName, AccountType = c.AccountType, Parent = c.Parent } into g
+                        group new { c, gl } by new { c.Level, c.AccountNumber, c.AccountName, c.AccountType, c.Parent } into g
                         select new ChartOfAccountDto
                         {
                             Level = g.Key.Level,
@@ -127,7 +127,7 @@ namespace IBS.DataAccess.Repository
 
             if (lastAccount != null)
             {
-                var accountNo = Int32.Parse(lastAccount.AccountNumber);
+                var accountNo = int.Parse(lastAccount.AccountNumber);
                 var generatedNo = accountNo + 1;
 
                 return generatedNo.ToString();

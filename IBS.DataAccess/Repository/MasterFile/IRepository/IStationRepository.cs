@@ -1,6 +1,7 @@
-﻿using IBS.Models.MasterFile;
+﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.MasterFile;
 
-namespace IBS.DataAccess.Repository.IRepository
+namespace IBS.DataAccess.Repository.MasterFile.IRepository
 {
     public interface IStationRepository : IRepository<Station>
     {

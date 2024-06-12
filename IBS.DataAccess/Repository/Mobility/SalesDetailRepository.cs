@@ -1,8 +1,8 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 
-namespace IBS.DataAccess.Repository
+namespace IBS.DataAccess.Repository.Mobility
 {
     public class SalesDetailRepository : Repository<SalesDetail>, ISalesDetailRepository
     {
@@ -12,6 +12,5 @@ namespace IBS.DataAccess.Repository
         {
             _db = db;
         }
-
     }
 }

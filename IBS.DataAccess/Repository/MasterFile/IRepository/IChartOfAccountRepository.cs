@@ -1,8 +1,9 @@
-﻿using IBS.Dtos;
+﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.Dtos;
 using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.DataAccess.Repository.IRepository
+namespace IBS.DataAccess.Repository.MasterFile.IRepository
 {
     public interface IChartOfAccountRepository : IRepository<ChartOfAccount>
     {

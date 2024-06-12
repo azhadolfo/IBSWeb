@@ -1,7 +1,8 @@
-﻿using IBS.Models.MasterFile;
+﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Http;
 
-namespace IBS.DataAccess.Repository.IRepository
+namespace IBS.DataAccess.Repository.MasterFile.IRepository
 {
     public interface ISupplierRepository : IRepository<Supplier>
     {

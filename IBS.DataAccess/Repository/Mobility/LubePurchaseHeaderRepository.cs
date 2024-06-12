@@ -1,6 +1,6 @@
 ﻿using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.Mobility;
@@ -10,7 +10,7 @@ using IBS.Utility.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
-namespace IBS.DataAccess.Repository
+namespace IBS.DataAccess.Repository.Mobility
 {
     public class LubePurchaseHeaderRepository : Repository<LubePurchaseHeader>, ILubePurchaseHeaderRepository
     {
@@ -95,7 +95,7 @@ namespace IBS.DataAccess.Repository
                     Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
                     AccountNumber = "1010602",
                     AccountTitle = "Vat Input",
-                    Debit = (lubeDeliveryVM.Header.Amount / 1.12m) * 0.12m,
+                    Debit = lubeDeliveryVM.Header.Amount / 1.12m * 0.12m,
                     Credit = 0,
                     StationCode = lubeDeliveryVM.Header.StationCode,
                     JournalReference = nameof(JournalType.Purchase)
@@ -287,7 +287,7 @@ namespace IBS.DataAccess.Repository
                         PoNo = g.Key.pono.Substring(2),
                         Amount = g.Key.amount,
                         VatableSales = g.Key.amount / 1.12m,
-                        VatAmount = (g.Key.amount / 1.12m) * .12m,
+                        VatAmount = g.Key.amount / 1.12m * .12m,
                         ReceivedBy = g.Key.rcvdby,
                         CreatedBy = g.Key.createdby.Substring(1),
                         CreatedDate = g.Key.createddate

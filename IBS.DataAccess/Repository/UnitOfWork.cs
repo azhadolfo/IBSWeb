@@ -1,5 +1,9 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.MasterFile;
+using IBS.DataAccess.Repository.MasterFile.IRepository;
+using IBS.DataAccess.Repository.Mobility;
+using IBS.DataAccess.Repository.Mobility.IRepository;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 

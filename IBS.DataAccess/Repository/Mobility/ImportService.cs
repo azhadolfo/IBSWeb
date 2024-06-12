@@ -10,7 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
 
-namespace IBS.DataAccess.Repository
+namespace IBS.DataAccess.Repository.Mobility
 {
     public class ImportService : IHostedService, IDisposable
     {
@@ -341,8 +341,8 @@ namespace IBS.DataAccess.Repository
                                      .Where(f =>
                                      f.Contains("FUEL_DELIVERY", StringComparison.CurrentCulture) ||
                                      f.Contains("LUBE_DELIVERY", StringComparison.CurrentCulture) ||
-                                     (f.Contains("PO_SALES", StringComparison.CurrentCulture) &&
-                                     Path.GetFileNameWithoutExtension(f).EndsWith(DateTime.Now.ToString("yyyy"))));
+                                     f.Contains("PO_SALES", StringComparison.CurrentCulture) &&
+                                     Path.GetFileNameWithoutExtension(f).EndsWith(DateTime.Now.ToString("yyyy")));
 
                 if (!files.Any())
                 {

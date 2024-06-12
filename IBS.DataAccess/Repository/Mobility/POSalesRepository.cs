@@ -1,11 +1,11 @@
 ﻿using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
-namespace IBS.DataAccess.Repository
+namespace IBS.DataAccess.Repository.Mobility
 {
     public class POSalesRepository : Repository<POSales>, IPOSalesRepository
     {

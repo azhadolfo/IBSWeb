@@ -1,10 +1,10 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.MasterFile;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 
-namespace IBS.DataAccess.Repository
+namespace IBS.DataAccess.Repository.MasterFile
 {
     public class CustomerRepository : Repository<Customer>, ICustomerRepository
     {

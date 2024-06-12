@@ -1,8 +1,9 @@
-﻿using IBS.Models.Mobility;
+﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Mobility;
 using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.DataAccess.Repository.IRepository
+namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
     public interface IOfflineRepository : IRepository<Offline>
     {

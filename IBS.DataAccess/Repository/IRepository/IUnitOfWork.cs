@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using IBS.DataAccess.Repository.MasterFile.IRepository;
+using IBS.DataAccess.Repository.Mobility.IRepository;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.IRepository
 {

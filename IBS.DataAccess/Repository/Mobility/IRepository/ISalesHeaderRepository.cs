@@ -1,7 +1,8 @@
-﻿using IBS.Models.Mobility;
+﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Mobility;
 using IBS.Models.ViewModels;
 
-namespace IBS.DataAccess.Repository.IRepository
+namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
     public interface ISalesHeaderRepository : IRepository<SalesHeader>
     {
