@@ -1,4 +1,5 @@
-﻿using IBS.DataAccess.Repository.MasterFile.IRepository;
+﻿using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -12,29 +13,15 @@ namespace IBS.DataAccess.Repository.IRepository
 
         ICompanyRepository Company { get; }
 
-        ISalesHeaderRepository SalesHeader { get; }
-
-        ISalesDetailRepository SalesDetail { get; }
-
         IStationRepository Station { get; }
 
         IGeneralLedgerRepository GeneralLedger { get; }
-
-        IFuelPurchaseRepository FuelPurchase { get; }
-
-        ILubePurchaseHeaderRepository LubePurchaseHeader { get; }
-
-        ILubePurchaseDetailRepository LubePurchaseDetail { get; }
 
         ISupplierRepository Supplier { get; }
 
         IInventoryRepository Inventory { get; }
 
         IChartOfAccountRepository ChartOfAccount { get; }
-
-        IPOSalesRepository PurchaseOrder { get; }
-
-        IOfflineRepository Offline { get; }
 
         Task SaveAsync(CancellationToken cancellationToken = default);
 
@@ -52,5 +39,30 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<List<SelectListItem>> GetChartOfAccountListAsyncById(CancellationToken cancellationToken = default);
 
+        Task<List<SelectListItem>> GetSupplierListAsyncById(CancellationToken cancellationToken = default);
+
+        #region--Mobility
+
+        IFuelPurchaseRepository MobilityFuelPurchase { get; }
+
+        ILubePurchaseHeaderRepository MobilityLubePurchaseHeader { get; }
+
+        ILubePurchaseDetailRepository MobilityLubePurchaseDetail { get; }
+
+        ISalesHeaderRepository MobilitySalesHeader { get; }
+
+        ISalesDetailRepository MobilitySalesDetail { get; }
+
+        IPOSalesRepository MobilityPurchaseOrder { get; }
+
+        IOfflineRepository MobilityOffline { get; }
+
+        #endregion
+
+        #region--Filpride
+
+        IPurchaseOrderRepository FilpridePurchaseOrder { get; }
+
+        #endregion
     }
 }

@@ -38,10 +38,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
             Expression<Func<MobilityFuelPurchase, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
 
             IEnumerable<MobilityFuelPurchase> fuelPurchaseList = await _unitOfWork
-                .FuelPurchase
+                .MobilityFuelPurchase
                 .GetAllAsync(filter, cancellationToken);
 
-            var result = _unitOfWork.FuelPurchase.GetFuelPurchaseJoin(fuelPurchaseList, cancellationToken);
+            var result = _unitOfWork.MobilityFuelPurchase.GetFuelPurchaseJoin(fuelPurchaseList, cancellationToken);
 
             return View(result);
         }
@@ -53,7 +53,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityFuelPurchase? fuelPurchase = await _unitOfWork.FuelPurchase.GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken);
+            MobilityFuelPurchase? fuelPurchase = await _unitOfWork.MobilityFuelPurchase.GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken);
 
             if (fuelPurchase == null)
             {
@@ -76,7 +76,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 try
                 {
                     var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.FuelPurchase.PostAsync(id, postedBy, stationCode, cancellationToken);
+                    await _unitOfWork.MobilityFuelPurchase.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Fuel delivery approved successfully.";
                     return Redirect($"/Mobility/Purchase/PreviewFuel/{id}?stationCode={stationCode}");
                 }
@@ -100,7 +100,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             MobilityFuelPurchase fuelPurchase = await _unitOfWork
-                .FuelPurchase
+                .MobilityFuelPurchase
                 .GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken);
 
             if (fuelPurchase != null)
@@ -123,7 +123,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             try
             {
                 model.EditedBy = _userManager.GetUserName(User);
-                await _unitOfWork.FuelPurchase.UpdateAsync(model, cancellationToken);
+                await _unitOfWork.MobilityFuelPurchase.UpdateAsync(model, cancellationToken);
                 TempData["success"] = "Fuel delivery updated successfully.";
                 return RedirectToAction(nameof(Fuel));
             }
@@ -144,10 +144,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
             Expression<Func<MobilityLubePurchaseHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
 
             IEnumerable<MobilityLubePurchaseHeader> lubePurchaseHeaders = await _unitOfWork
-                .LubePurchaseHeader
+                .MobilityLubePurchaseHeader
                 .GetAllAsync(filter, cancellationToken);
 
-            var result = _unitOfWork.LubePurchaseHeader.GetLubePurchaseJoin(lubePurchaseHeaders, cancellationToken);
+            var result = _unitOfWork.MobilityLubePurchaseHeader.GetLubePurchaseJoin(lubePurchaseHeaders, cancellationToken);
 
             return View(result);
         }
@@ -161,8 +161,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             LubeDeliveryVM = new LubeDeliveryVM
             {
-                Header = await _unitOfWork.LubePurchaseHeader.GetAsync(lh => lh.LubePurchaseHeaderNo == id && lh.StationCode == stationCode, cancellationToken),
-                Details = await _unitOfWork.LubePurchaseDetail.GetAllAsync(sd => sd.LubePurchaseHeaderNo == id && sd.StationCode == stationCode, cancellationToken)
+                Header = await _unitOfWork.MobilityLubePurchaseHeader.GetAsync(lh => lh.LubePurchaseHeaderNo == id && lh.StationCode == stationCode, cancellationToken),
+                Details = await _unitOfWork.MobilityLubePurchaseDetail.GetAllAsync(sd => sd.LubePurchaseHeaderNo == id && sd.StationCode == stationCode, cancellationToken)
             };
 
             if (LubeDeliveryVM.Header == null || LubeDeliveryVM.Details == null)
@@ -186,7 +186,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 try
                 {
                     var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.LubePurchaseHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
+                    await _unitOfWork.MobilityLubePurchaseHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Lube delivery approved successfully.";
                     return Redirect($"/Mobility/Purchase/PreviewLube/{id}?stationCode={stationCode}");
                 }

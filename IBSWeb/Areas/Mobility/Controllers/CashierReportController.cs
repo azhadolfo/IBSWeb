@@ -41,10 +41,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
             Expression<Func<MobilitySalesHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
 
             IEnumerable<MobilitySalesHeader> salesHeader = await _unitOfWork
-                .SalesHeader
+                .MobilitySalesHeader
                 .GetAllAsync(filter, cancellationToken);
 
-            var salesHeaderWithStationName = _unitOfWork.SalesHeader.GetSalesHeaderJoin(salesHeader, cancellationToken);
+            var salesHeaderWithStationName = _unitOfWork.MobilitySalesHeader.GetSalesHeaderJoin(salesHeader, cancellationToken);
 
             return View(salesHeaderWithStationName);
         }
@@ -59,8 +59,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             SalesVM = new SalesVM
             {
-                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesNo == id && sh.StationCode == station.StationCode, cancellationToken),
-                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesNo == id && sd.StationCode == station.StationCode, cancellationToken)
+                Header = await _unitOfWork.MobilitySalesHeader.GetAsync(sh => sh.SalesNo == id && sh.StationCode == station.StationCode, cancellationToken),
+                Details = await _unitOfWork.MobilitySalesDetail.GetAllAsync(sd => sd.SalesNo == id && sd.StationCode == station.StationCode, cancellationToken)
             };
 
             if (SalesVM.Header == null || SalesVM.Details == null)
@@ -79,7 +79,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 try
                 {
                     var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.SalesHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
+                    await _unitOfWork.MobilitySalesHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Cashier report approved successfully.";
                     return Redirect($"/Mobility/CashierReport/Preview/{id}?stationCode={stationCode}");
                 }
@@ -104,8 +104,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             SalesVM = new SalesVM
             {
-                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesNo == id && sh.StationCode == stationCode, cancellationToken),
-                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesNo == id && sd.StationCode == stationCode, cancellationToken)
+                Header = await _unitOfWork.MobilitySalesHeader.GetAsync(sh => sh.SalesNo == id && sh.StationCode == stationCode, cancellationToken),
+                Details = await _unitOfWork.MobilitySalesDetail.GetAllAsync(sd => sd.SalesNo == id && sd.StationCode == stationCode, cancellationToken)
             };
 
             if (SalesVM.Header == null)
@@ -121,8 +121,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             SalesVM = new SalesVM
             {
-                Header = await _unitOfWork.SalesHeader.GetAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId && sh.StationCode == model.Header.StationCode, cancellationToken),
-                Details = await _unitOfWork.SalesDetail.GetAllAsync(sd => sd.SalesHeaderId == model.Header.SalesHeaderId && sd.StationCode == model.Header.StationCode, cancellationToken)
+                Header = await _unitOfWork.MobilitySalesHeader.GetAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId && sh.StationCode == model.Header.StationCode, cancellationToken),
+                Details = await _unitOfWork.MobilitySalesDetail.GetAllAsync(sd => sd.SalesHeaderId == model.Header.SalesHeaderId && sd.StationCode == model.Header.StationCode, cancellationToken)
             };
 
             if (string.IsNullOrEmpty(model.Header.Particular))
@@ -134,7 +134,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             try
             {
                 model.Header.EditedBy = _userManager.GetUserName(User);
-                await _unitOfWork.SalesHeader.UpdateAsync(model, closing, opening, cancellationToken);
+                await _unitOfWork.MobilitySalesHeader.UpdateAsync(model, closing, opening, cancellationToken);
                 TempData["success"] = "Cashier Report updated successfully.";
                 return RedirectToAction(nameof(Index));
             }
@@ -151,7 +151,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var model = new AdjustReportViewModel
             {
-                OfflineList = await _unitOfWork.Offline.GetOfflineListAsync(cancellationToken)
+                OfflineList = await _unitOfWork.MobilityOffline.GetOfflineListAsync(cancellationToken)
             };
 
             return View(model);
@@ -162,7 +162,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             try
             {
-                await _unitOfWork.Offline.InsertEntry(model, cancellationToken);
+                await _unitOfWork.MobilityOffline.InsertEntry(model, cancellationToken);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -177,7 +177,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> GetOfflineDetails(int offlineId, CancellationToken cancellationToken = default)
         {
-            var offline = await _unitOfWork.Offline.GetOffline(offlineId, cancellationToken);
+            var offline = await _unitOfWork.MobilityOffline.GetOffline(offlineId, cancellationToken);
 
             if (offline == null)
             {

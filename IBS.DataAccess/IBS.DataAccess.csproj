@@ -27,8 +27,4 @@
     <ProjectReference Include="..\IBS.Utility\IBS.Utility.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Repository\Filpride\" />
-  </ItemGroup>
-
 </Project>

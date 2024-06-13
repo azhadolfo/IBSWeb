@@ -1,4 +1,6 @@
 ﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.Filpride;
+using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.MasterFile;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
@@ -15,18 +17,29 @@ namespace IBS.DataAccess.Repository
         public ICustomerRepository Customer { get; private set; }
         public IProductRepository Product { get; private set; }
         public ICompanyRepository Company { get; private set; }
-        public ISalesHeaderRepository SalesHeader { get; private set; }
-        public ISalesDetailRepository SalesDetail { get; private set; }
         public IStationRepository Station { get; private set; }
         public IGeneralLedgerRepository GeneralLedger { get; private set; }
-        public IFuelPurchaseRepository FuelPurchase { get; private set; }
-        public ILubePurchaseHeaderRepository LubePurchaseHeader { get; private set; }
-        public ILubePurchaseDetailRepository LubePurchaseDetail { get; private set; }
         public ISupplierRepository Supplier { get; private set; }
         public IInventoryRepository Inventory { get; private set; }
         public IChartOfAccountRepository ChartOfAccount { get; private set; }
-        public IPOSalesRepository PurchaseOrder { get; private set; }
-        public IOfflineRepository Offline { get; private set; }
+
+        #region--Mobility
+
+        public ISalesHeaderRepository MobilitySalesHeader { get; private set; }
+        public ISalesDetailRepository MobilitySalesDetail { get; private set; }
+        public IFuelPurchaseRepository MobilityFuelPurchase { get; private set; }
+        public ILubePurchaseHeaderRepository MobilityLubePurchaseHeader { get; private set; }
+        public ILubePurchaseDetailRepository MobilityLubePurchaseDetail { get; private set; }
+        public IPOSalesRepository MobilityPurchaseOrder { get; private set; }
+        public IOfflineRepository MobilityOffline { get; private set; }
+
+        #endregion
+
+        #region--Filpride
+
+        public IPurchaseOrderRepository FilpridePurchaseOrder { get; private set; }
+
+        #endregion
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -34,18 +47,29 @@ namespace IBS.DataAccess.Repository
             Customer = new CustomerRepository(_db);
             Product = new ProductRepository(_db);
             Company = new CompanyRepository(_db);
-            SalesHeader = new SalesHeaderRepository(_db);
-            SalesDetail = new SalesDetailRepository(_db);
             Station = new StationRepository(_db);
             GeneralLedger = new GeneralLedgerRepository(_db);
-            FuelPurchase = new FuelPurchaseRepository(_db);
-            LubePurchaseHeader = new LubePurchaseHeaderRepository(_db);
-            LubePurchaseDetail = new LubePurchaseDetailRepository(_db);
             Supplier = new SupplierRepository(_db);
             Inventory = new InventoryRepository(_db);
             ChartOfAccount = new ChartOfAccountRepository(_db);
-            PurchaseOrder = new POSalesRepository(_db);
-            Offline = new OfflineRepository(_db);
+
+            #region--Mobility
+
+            MobilitySalesHeader = new SalesHeaderRepository(_db);
+            MobilitySalesDetail = new SalesDetailRepository(_db);
+            MobilityFuelPurchase = new FuelPurchaseRepository(_db);
+            MobilityLubePurchaseHeader = new LubePurchaseHeaderRepository(_db);
+            MobilityLubePurchaseDetail = new LubePurchaseDetailRepository(_db);
+            MobilityPurchaseOrder = new POSalesRepository(_db);
+            MobilityOffline = new OfflineRepository(_db);
+
+            #endregion
+
+            #region--Filpride
+
+            FilpridePurchaseOrder = new PurchaseOrderRepository(_db);
+
+            #endregion
         }
 
         public async Task SaveAsync(CancellationToken cancellationToken = default)
@@ -135,6 +159,18 @@ namespace IBS.DataAccess.Repository
                 {
                     Value = c.AccountNumber,
                     Text = c.AccountNumber + " " + c.AccountName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetSupplierListAsyncById(CancellationToken cancellationToken = default)
+        {
+            return await _db.Suppliers
+                .OrderBy(s => s.SupplierCode)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = s.SupplierCode + " " + s.SupplierName
                 })
                 .ToListAsync(cancellationToken);
         }

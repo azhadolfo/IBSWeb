@@ -19,7 +19,7 @@ namespace IBS.DataAccess.Repository
             this.dbSet = _db.Set<T>();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken = default)
+        public virtual async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<T> query = dbSet;
             if (filter != null)
@@ -30,7 +30,7 @@ namespace IBS.DataAccess.Repository
             return await query.ToListAsync(cancellationToken);
         }
 
-        public async Task<T> GetAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
+        public virtual async Task<T> GetAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter).FirstOrDefaultAsync(cancellationToken);
         }

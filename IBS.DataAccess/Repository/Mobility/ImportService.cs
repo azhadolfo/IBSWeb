@@ -26,7 +26,6 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-
             DateTime now = DateTime.Now;
             DateTime nextRuntime = new DateTime(now.Year, now.Month, now.Day, 08, 00, 00); // It will automatically run every 8:00 AM
             TimeSpan dueTime;
@@ -204,7 +203,6 @@ namespace IBS.DataAccess.Repository.Mobility
                                             fuelsCount++;
                                         }
                                     }
-
                                 }
                                 else if (fileName.Contains("lubes"))
                                 {
@@ -212,7 +210,6 @@ namespace IBS.DataAccess.Repository.Mobility
 
                                     var existingNozdownList = await db.Set<MobilityLube>().Select(r => r.xStamp).ToListAsync();
                                     var existingNozdownSet = new HashSet<string>(existingNozdownList);
-
 
                                     foreach (var record in records)
                                     {
@@ -236,12 +233,10 @@ namespace IBS.DataAccess.Repository.Mobility
                                     var existingNozdownList = await db.Set<MobilitySafeDrop>().Select(r => r.xSTAMP).ToListAsync();
                                     var existingNozdownSet = new HashSet<string>(existingNozdownList);
 
-
                                     foreach (var record in records)
                                     {
                                         if (!existingNozdownSet.Contains(record.xSTAMP))
                                         {
-
                                             record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
                                                 ? record.INV_DATE.AddDays(-1)
                                                 : record.INV_DATE;
@@ -256,7 +251,6 @@ namespace IBS.DataAccess.Repository.Mobility
                                 await db.SaveChangesAsync();
 
                                 fileOpened = true; // File opened successfully, exit the loop
-
                             }
                             catch (IOException)
                             {
@@ -280,7 +274,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     if (fuelsCount != 0 || lubesCount != 0 || safedropsCount != 0)
                     {
-                        await unitOfWork.SalesHeader.ComputeSalesPerCashier(hasPoSales);
+                        await unitOfWork.MobilitySalesHeader.ComputeSalesPerCashier(hasPoSales);
 
                         LogMessage logMessage = new("Information", "ImportSales", $"Imported successfully in the station '{station.StationName}', Fuels: '{fuelsCount}' record(s), Lubes: '{lubesCount}' record(s), Safe drops: '{safedropsCount}' record(s).");
 
@@ -307,7 +301,6 @@ namespace IBS.DataAccess.Repository.Mobility
                 }
             }
         }
-
 
         private async Task ImportPurchases()
         {
@@ -373,15 +366,15 @@ namespace IBS.DataAccess.Repository.Mobility
                         {
                             if (fileName.Contains("fuel"))
                             {
-                                fuelsCount = await unitOfWork.FuelPurchase.ProcessFuelDelivery(file);
+                                fuelsCount = await unitOfWork.MobilityFuelPurchase.ProcessFuelDelivery(file);
                             }
                             else if (fileName.Contains("lube"))
                             {
-                                lubesCount = await unitOfWork.LubePurchaseHeader.ProcessLubeDelivery(file);
+                                lubesCount = await unitOfWork.MobilityLubePurchaseHeader.ProcessLubeDelivery(file);
                             }
                             else if (fileName.Contains("po_sales"))
                             {
-                                poSalesCount = await unitOfWork.PurchaseOrder.ProcessPOSales(file);
+                                poSalesCount = await unitOfWork.MobilityPurchaseOrder.ProcessPOSales(file);
                             }
 
                             fileOpened = true; // File opened successfully, exit the loop
@@ -428,5 +421,4 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
     }
-
 }

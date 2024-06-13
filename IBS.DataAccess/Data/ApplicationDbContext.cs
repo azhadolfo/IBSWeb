@@ -1,4 +1,5 @@
 ﻿using IBS.Models;
+using IBS.Models.Filpride;
 using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
 using IBS.Models.ViewModels;
@@ -44,6 +45,12 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityLubePurchaseHeader> MobilityLubePurchaseHeaders { get; set; }
         public DbSet<MobilityLubePurchaseDetail> MobilityLubePurchaseDetails { get; set; }
         #endregion
+
+        #endregion
+
+        #region--FILPRIDE
+
+        public DbSet<FilpridePurchaseOrder> FilpridePurchaseOrders { get; set; }
 
         #endregion
 
@@ -121,6 +128,55 @@ namespace IBS.DataAccess.Data
 
             #endregion
 
+            #region--Chart Of Account
+            builder.Entity<ChartOfAccount>(coa =>
+            {
+                coa.HasIndex(coa => coa.AccountNumber).IsUnique();
+                coa.HasIndex(coa => coa.AccountName);
+            });
+            #endregion
+
+            #region--General Ledger
+            builder.Entity<GeneralLedger>(g =>
+                {
+                    g.HasIndex(g => g.TransactionDate);
+                    g.HasIndex(g => g.Reference);
+                    g.HasIndex(g => g.AccountNumber);
+                    g.HasIndex(g => g.AccountTitle);
+                    g.HasIndex(g => g.ProductCode);
+                    g.HasIndex(g => g.JournalReference);
+                    g.HasIndex(g => g.StationCode);
+                    g.HasIndex(g => g.SupplierCode);
+                    g.HasIndex(g => g.CustomerCode);
+                });
+            #endregion
+
+            #region--Inventory
+            builder.Entity<Inventory>(i =>
+               {
+                   i.HasIndex(i => i.ProductCode);
+                   i.HasIndex(i => i.StationCode);
+                   i.HasIndex(i => i.TransactionNo);
+               });
+            #endregion
+
+            #region--Views
+
+            builder.Entity<FuelSalesView>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView("fuel_sales_view");
+            });
+
+            builder.Entity<GeneralLedgerView>(entity =>
+            {
+                entity.ToView("general_ledger_view");
+            });
+
+            #endregion
+
+            #region--Mobility
+
             #region-- Sales
 
             // Fuel
@@ -150,7 +206,7 @@ namespace IBS.DataAccess.Data
                 s.HasIndex(s => s.INV_DATE);
             });
 
-            // SalesHeader
+            // MobilitySalesHeader
             builder.Entity<MobilitySalesHeader>(s =>
             {
                 s.HasIndex(s => s.SalesNo);
@@ -160,7 +216,7 @@ namespace IBS.DataAccess.Data
                 s.HasIndex(s => s.Date);
             });
 
-            // SalesDetail
+            // MobilitySalesDetail
             builder.Entity<MobilitySalesDetail>(s =>
             {
                 s.HasIndex(s => s.SalesNo);
@@ -212,7 +268,7 @@ namespace IBS.DataAccess.Data
                 l.HasIndex(l => l.dtllink);
             });
 
-            // LubePurchaseHeader
+            // MobilityLubePurchaseHeader
             builder.Entity<MobilityLubePurchaseHeader>(lh => lh
                 .HasIndex(lh => lh.LubePurchaseHeaderNo)
                 .IsUnique());
@@ -223,7 +279,7 @@ namespace IBS.DataAccess.Data
                 lh.HasIndex(lh => lh.StationCode);
             });
 
-            // LubePurchaseDetail
+            // MobilityLubePurchaseDetail
             builder.Entity<MobilityLubePurchaseDetail>()
                 .HasOne(ld => ld.LubePurchaseHeader)
                 .WithMany()
@@ -238,49 +294,24 @@ namespace IBS.DataAccess.Data
 
             #endregion
 
-            #region--Chart Of Account
-            builder.Entity<ChartOfAccount>(coa =>
-            {
-                coa.HasIndex(coa => coa.AccountNumber).IsUnique();
-                coa.HasIndex(coa => coa.AccountName);
-            });
             #endregion
 
-            #region--General Ledger
-            builder.Entity<GeneralLedger>(g =>
-                {
-                    g.HasIndex(g => g.TransactionDate);
-                    g.HasIndex(g => g.Reference);
-                    g.HasIndex(g => g.AccountNumber);
-                    g.HasIndex(g => g.AccountTitle);
-                    g.HasIndex(g => g.ProductCode);
-                    g.HasIndex(g => g.JournalReference);
-                    g.HasIndex(g => g.StationCode);
-                    g.HasIndex(g => g.SupplierCode);
-                    g.HasIndex(g => g.CustomerCode);
-                });
-            #endregion
+            #region--Filpride
 
-            #region--Inventory
-            builder.Entity<Inventory>(i =>
-               {
-                   i.HasIndex(i => i.ProductCode);
-                   i.HasIndex(i => i.StationCode);
-                   i.HasIndex(i => i.TransactionNo);
-               });
-            #endregion
-
-            #region--Views
-
-            builder.Entity<FuelSalesView>(entity =>
+            builder.Entity<FilpridePurchaseOrder>(po =>
             {
-                entity.HasNoKey();
-                entity.ToView("fuel_sales_view");
-            });
+                po.HasIndex(po => po.PurchaseOrderNo).IsUnique();
+                po.HasIndex(po => po.Date);
 
-            builder.Entity<GeneralLedgerView>(entity =>
-            {
-                entity.ToView("general_ledger_view");
+                po.HasOne(po => po.Supplier)
+                .WithMany()
+                .HasForeignKey(po => po.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                po.HasOne(po => po.Product)
+                .WithMany()
+                .HasForeignKey(po => po.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
             });
 
             #endregion
