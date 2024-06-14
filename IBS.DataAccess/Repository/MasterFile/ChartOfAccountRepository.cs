@@ -84,7 +84,7 @@ namespace IBS.DataAccess.Repository.MasterFile
                 // Loop through accounts within the current level
                 foreach (var account in accountDictionary.Where(x => x.Key.Level == level))
                 {
-                    // Update parent account if it exists and handle potential null reference
+                    // UpdateAsync parent account if it exists and handle potential null reference
                     if (account.Value.Parent != null && accountDictionary.TryGetValue(new { Level = level - 1, AccountNumber = account.Value.Parent }, out var parentAccount))
                     {
                         parentAccount.Debit += account.Value.Debit;

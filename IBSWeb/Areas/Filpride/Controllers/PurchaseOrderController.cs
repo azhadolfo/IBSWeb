@@ -46,7 +46,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
-                    FilpridePurchaseOrder model = new FilpridePurchaseOrder
+                    FilpridePurchaseOrder model = new()
                     {
                         PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(cancellationToken),
                         Date = viewModel.Date,
@@ -118,7 +118,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return View();
+                return RedirectToAction(nameof(Index));
             }
         }
 
@@ -129,6 +129,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
+                    await _unitOfWork.FilpridePurchaseOrder.UpdateAsync(viewModel, _userManager.GetUserName(User), cancellationToken);
+
+                    TempData["success"] = "Purchase order updated successfully.";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
@@ -143,6 +147,98 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
+        }
+
+        public async Task<IActionResult> Preview(string? id, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(po => po.PurchaseOrderNo == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                return View(existingRecord);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        public async Task<IActionResult> Print(string? id, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(po => po.PurchaseOrderNo == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                if (!existingRecord.IsPrinted)
+                {
+                    existingRecord.IsPrinted = true;
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                }
+
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
+
+        public async Task<IActionResult> Post(string? id, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(po => po.PurchaseOrderNo == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                if (existingRecord.PostedBy == null)
+                {
+                    existingRecord.PostedBy = _userManager.GetUserName(User);
+                    existingRecord.PostedDate = DateTime.Now;
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                }
+
+                TempData["success"] = "Purchase order approved successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Preview), new { id });
+            }
         }
     }
 }

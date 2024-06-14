@@ -61,5 +61,7 @@ namespace IBS.Models.Filpride
 
         [Column(TypeName = "timestamp with time zone")]
         public DateTime ServedDate { get; set; }
+
+        public bool IsPrinted { get; set; }
     }
 }

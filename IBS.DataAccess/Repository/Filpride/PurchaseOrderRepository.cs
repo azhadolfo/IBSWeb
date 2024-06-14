@@ -59,13 +59,30 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        //TODO Edit functionality of Purchase Order
-        public async Task Update(PurchaseOrderViewModel model, CancellationToken cancellationToken)
+        public async Task UpdateAsync(PurchaseOrderViewModel model, string userName, CancellationToken cancellationToken)
         {
             FilpridePurchaseOrder existingRecord = await _db.FilpridePurchaseOrders
                 .FindAsync(model.PurchaseOrderId, cancellationToken);
 
             existingRecord.Date = model.Date;
+            existingRecord.SupplierId = model.SupplierId;
+            existingRecord.ProductId = model.ProductId;
+            existingRecord.Terms = model.Terms;
+            existingRecord.Quantity = model.Quantity;
+            existingRecord.UnitCost = model.UnitCost;
+            existingRecord.TotalAmount = model.Quantity * model.UnitCost;
+            existingRecord.Remarks = model.Remarks;
+
+            if (_db.ChangeTracker.HasChanges())
+            {
+                existingRecord.EditedBy = userName;
+                existingRecord.EditedDate = DateTime.Now;
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new InvalidOperationException("No data changes!");
+            }
         }
     }
 }
