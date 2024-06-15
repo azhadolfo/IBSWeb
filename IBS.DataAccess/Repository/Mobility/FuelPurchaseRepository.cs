@@ -5,7 +5,6 @@ using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.Mobility;
 using IBS.Utility;
-using IBS.Utility.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 

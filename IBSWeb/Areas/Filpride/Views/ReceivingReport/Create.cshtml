@@ -1,0 +1,129 @@
+﻿@using IBS.Models.Filpride.ViewModels
+@model ReceivingReportViewModel
+
+@{
+    ViewData["Title"] = "Create Receiving Report";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Receiving Report</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <div class="border-2 p-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
+                    <span asp-validation-for="Date" class="text-danger"></span>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">PO List<span class="required">*</span></label>
+                    <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select supplier</option>
+                    </select>
+                    <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
+                </div>
+
+                <fieldset class="border p-2 py-2">
+                    <legend class="w-auto px-2">Supplier Details</legend>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="SupplierSiNo" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="SupplierSiNo" class="ms-2">SI#</label>
+                        <span asp-validation-for="SupplierSiNo" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="SupplierSiDate" type="date" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="SupplierSiDate" class="ms-2">SI Date</label>
+                        <span asp-validation-for="SupplierSiDate" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="SupplierDrNo" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="SupplierDrNo" class="ms-2">DR#</label>
+                        <span asp-validation-for="SupplierDrNo" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="SupplierDrDate" type="date" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="SupplierDrDate" class="ms-2">DR Date</label>
+                        <span asp-validation-for="SupplierDrDate" class="text-danger"></span>
+                    </div>
+                </fieldset>
+
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="TruckOrVessels" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="TruckOrVessels" class="ms-2">Truck/Vessels<span class="required">*</span></label>
+                    <span asp-validation-for="TruckOrVessels" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="OtherReference" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="OtherReference" class="ms-2">Other Reference<span class="required">*</span></label>
+                    <span asp-validation-for="OtherReference" class="text-danger"></span>
+                </div>
+
+                <div class="row py-2">
+                    <div class="form-floating col-6">
+                        <input asp-for="QuantityDelivered" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="QuantityDelivered" class="ms-2">Quantity Delivered<span class="required">*</span></label>
+                        <span asp-validation-for="QuantityDelivered" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6">
+                        <input asp-for="QuantityReceived" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="QuantityReceived" class="ms-2">Quantity Received<span class="required">*</span></label>
+                        <span asp-validation-for="QuantityReceived" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="Freight" class="ms-2">Freight<span class="required">*</span></label>
+                    <span asp-validation-for="Freight" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="TotalFreight" class="form-control border-0 shadow" placeholder="" readonly />
+                    <label asp-for="TotalFreight" class="ms-2">Total Freight</label>
+                    <span asp-validation-for="TotalFreight" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
+                    <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
+                    <span asp-validation-for="Remarks" class="text-danger"></span>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control">Create</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Filpride" asp-controller="PurchaseOrder" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const quantityReceivedInput = document.getElementById('QuantityReceived');
+            const freightInput = document.getElementById('Freight');
+            const totalFreightInput = document.getElementById('TotalFreight');
+
+            function updateTotalFreight() {
+                const quantityReceived = parseFloat(quantityReceivedInput.value) || 0;
+                const freight = parseFloat(freightInput.value) || 0;
+                totalFreightInput.value = (quantityReceived * freight).toFixed(2);
+            }
+
+            quantityReceivedInput.addEventListener('input', updateTotalFreight);
+            freightInput.addEventListener('input', updateTotalFreight);
+        });
+    </script>
+}

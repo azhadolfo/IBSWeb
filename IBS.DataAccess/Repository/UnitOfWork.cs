@@ -39,6 +39,8 @@ namespace IBS.DataAccess.Repository
 
         public IPurchaseOrderRepository FilpridePurchaseOrder { get; private set; }
 
+        public IReceivingReportRepository FilprideReceivingReport { get; private set; }
+
         #endregion
 
         public UnitOfWork(ApplicationDbContext db)
@@ -68,6 +70,7 @@ namespace IBS.DataAccess.Repository
             #region--Filpride
 
             FilpridePurchaseOrder = new PurchaseOrderRepository(_db);
+            FilprideReceivingReport = new ReceivingReportRepository(_db);
 
             #endregion
         }

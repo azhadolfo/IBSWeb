@@ -4,9 +4,8 @@ using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.Mobility;
-using IBS.Models.ViewModels;
+using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
-using IBS.Utility.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 

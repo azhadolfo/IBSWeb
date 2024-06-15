@@ -2,6 +2,7 @@
 using IBS.Models.Filpride;
 using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
+using IBS.Models.Mobility.ViewModels;
 using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -51,6 +52,8 @@ namespace IBS.DataAccess.Data
         #region--FILPRIDE
 
         public DbSet<FilpridePurchaseOrder> FilpridePurchaseOrders { get; set; }
+
+        public DbSet<FilprideReceivingReport> FilprideReceivingReports { get; set; }
 
         #endregion
 
@@ -311,6 +314,17 @@ namespace IBS.DataAccess.Data
                 po.HasOne(po => po.Product)
                 .WithMany()
                 .HasForeignKey(po => po.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideReceivingReport>(rr =>
+            {
+                rr.HasIndex(rr => rr.ReceivingReportNo).IsUnique();
+                rr.HasIndex(rr => rr.Date);
+
+                rr.HasOne(rr => rr.PurchaseOrder)
+                .WithMany()
+                .HasForeignKey(rr => rr.PurchaseOrderId)
                 .OnDelete(DeleteBehavior.Restrict);
             });
 

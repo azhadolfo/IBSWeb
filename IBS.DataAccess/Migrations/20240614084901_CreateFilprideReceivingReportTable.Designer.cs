@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240614084901_CreateFilprideReceivingReportTable")]
+    partial class CreateFilprideReceivingReportTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -297,10 +300,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_amount");
-
-                    b.Property<decimal>("TotalFreight")
-                        .HasColumnType("numeric(18,2)")
-                        .HasColumnName("total_freight");
 
                     b.Property<string>("TruckOrVessels")
                         .IsRequired()
@@ -2658,7 +2657,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mobility_po_sales", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.ViewModels.FuelSalesView", b =>
+            modelBuilder.Entity("IBS.Models.ViewModels.FuelSalesView", b =>
                 {
                     b.Property<decimal>("AmountDb")
                         .HasColumnType("numeric")

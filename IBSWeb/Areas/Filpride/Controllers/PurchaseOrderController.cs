@@ -1,6 +1,6 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride;
-using IBS.Models.ViewModels;
+using IBS.Models.Filpride.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 

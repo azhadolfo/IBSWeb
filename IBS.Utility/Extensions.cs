@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Routing;
 using System.Dynamic;
 
-namespace IBS.Utility.Extensions
+namespace IBS.Utility
 {
     public static class ObjectExtensions
     {

@@ -1,6 +1,6 @@
 ﻿using IBS.Models.Mobility;
 
-namespace IBS.Models.ViewModels
+namespace IBS.Models.Mobility.ViewModels
 {
     public class LubeDeliveryVM
     {

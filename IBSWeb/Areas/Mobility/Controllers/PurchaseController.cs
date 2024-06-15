@@ -1,7 +1,7 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models.Mobility;
-using IBS.Models.ViewModels;
+using IBS.Models.Mobility.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

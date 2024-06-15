@@ -1,7 +1,8 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride;
-using IBS.Models.ViewModels;
+using IBS.Models.Filpride.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -57,6 +58,18 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(po => po.Supplier)
                 .Include(po => po.Product)
                 .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetPurchaseOrderListAsync(CancellationToken cancellationToken = default)
+        {
+            return await _db.FilpridePurchaseOrders
+                .OrderBy(po => po.PurchaseOrderId)
+                .Select(po => new SelectListItem
+                {
+                    Value = po.PurchaseOrderId.ToString(),
+                    Text = po.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
         }
 
         public async Task UpdateAsync(PurchaseOrderViewModel model, string userName, CancellationToken cancellationToken)

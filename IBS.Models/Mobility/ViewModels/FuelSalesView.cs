@@ -1,4 +1,4 @@
-﻿namespace IBS.Models.ViewModels
+﻿namespace IBS.Models.Mobility.ViewModels
 {
     public class FuelSalesView
     {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
-namespace IBS.Models.ViewModels
+namespace IBS.Models.Filpride.ViewModels
 {
     public class PurchaseOrderViewModel
     {
