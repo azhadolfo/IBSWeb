@@ -326,6 +326,11 @@ namespace IBS.DataAccess.Data
                 .WithMany()
                 .HasForeignKey(rr => rr.PurchaseOrderId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+                rr.HasOne(rr => rr.Customer)
+                .WithMany()
+                .HasForeignKey(rr => rr.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
             });
 
             #endregion

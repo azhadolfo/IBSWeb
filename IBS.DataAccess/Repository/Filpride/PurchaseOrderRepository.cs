@@ -64,6 +64,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilpridePurchaseOrders
                 .OrderBy(po => po.PurchaseOrderId)
+                .Where(po => po.PostedBy != null && !po.IsServed)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
@@ -72,19 +73,20 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task UpdateAsync(PurchaseOrderViewModel model, string userName, CancellationToken cancellationToken)
+        public async Task UpdateAsync(PurchaseOrderViewModel viewModel, string userName, CancellationToken cancellationToken)
         {
-            FilpridePurchaseOrder existingRecord = await _db.FilpridePurchaseOrders
-                .FindAsync(model.PurchaseOrderId, cancellationToken);
+            var existingRecord = await _db.FilpridePurchaseOrders
+                .FindAsync(viewModel.PurchaseOrderId, cancellationToken);
 
-            existingRecord.Date = model.Date;
-            existingRecord.SupplierId = model.SupplierId;
-            existingRecord.ProductId = model.ProductId;
-            existingRecord.Terms = model.Terms;
-            existingRecord.Quantity = model.Quantity;
-            existingRecord.UnitCost = model.UnitCost;
-            existingRecord.TotalAmount = model.Quantity * model.UnitCost;
-            existingRecord.Remarks = model.Remarks;
+            existingRecord.Date = viewModel.Date;
+            existingRecord.SupplierId = viewModel.SupplierId;
+            existingRecord.ProductId = viewModel.ProductId;
+            existingRecord.Terms = viewModel.Terms;
+            existingRecord.Port = viewModel.Port;
+            existingRecord.Quantity = viewModel.Quantity;
+            existingRecord.UnitCost = viewModel.UnitCost;
+            existingRecord.TotalAmount = viewModel.Quantity * viewModel.UnitCost;
+            existingRecord.Remarks = viewModel.Remarks;
 
             if (_db.ChangeTracker.HasChanges())
             {

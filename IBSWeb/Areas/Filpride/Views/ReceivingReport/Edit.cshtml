@@ -1,14 +1,14 @@
 ﻿@model ReceivingReportViewModel
 
 @{
-    ViewData["Title"] = "Create Receiving Report";
+    ViewData["Title"] = "Edit Receiving Report";
 }
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Create Receiving Report</h2>
+                <h2 class="text-white py-2">Edit Receiving Report</h2>
             </div>
         </div>
     </div>
@@ -16,6 +16,7 @@
         <form method="post" class="row">
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
+                <input asp-for="ReceivingReportId" type="hidden" />
                 <div class="form-floating py-2 col-12">
                     <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
                     <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
@@ -100,7 +101,7 @@
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control">Create</button>
+                        <button type="submit" class="btn btn-primary form-control">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
@@ -132,3 +133,4 @@
         });
     </script>
 }
+

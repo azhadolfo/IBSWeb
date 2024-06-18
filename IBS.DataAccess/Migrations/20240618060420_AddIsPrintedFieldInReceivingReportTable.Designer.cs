@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240618060420_AddIsPrintedFieldInReceivingReportTable")]
+    partial class AddIsPrintedFieldInReceivingReportTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -95,11 +98,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsServed")
                         .HasColumnType("boolean")
                         .HasColumnName("is_served");
-
-                    b.Property<string>("Port")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("port");
 
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)")
@@ -207,10 +205,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_id");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
@@ -338,9 +332,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("ReceivingReportId")
                         .HasName("pk_filpride_receiving_reports");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_filpride_receiving_reports_customer_id");
 
                     b.HasIndex("Date")
                         .HasDatabaseName("ix_filpride_receiving_reports_date");
@@ -3090,21 +3081,12 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.FilprideReceivingReport", b =>
                 {
-                    b.HasOne("IBS.Models.MasterFile.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_receiving_reports_customers_customer_id");
-
                     b.HasOne("IBS.Models.Filpride.FilpridePurchaseOrder", "PurchaseOrder")
                         .WithMany()
                         .HasForeignKey("PurchaseOrderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_filpride_receiving_reports_filpride_purchase_orders_purchas");
-
-                    b.Navigation("Customer");
 
                     b.Navigation("PurchaseOrder");
                 });

@@ -13,6 +13,8 @@ namespace IBS.DataAccess.Repository
         private readonly ApplicationDbContext _db;
         internal DbSet<T> dbSet;
 
+        private const decimal VatRate = 0.12m;
+
         public Repository(ApplicationDbContext db)
         {
             _db = db;
@@ -139,6 +141,26 @@ namespace IBS.DataAccess.Repository
                 "PET003" => ("1010403", "Inventory - Envirogas"),
                 _ => ("1010410", "Inventory - Lubes"),
             };
+        }
+
+        public decimal ComputeNetOfVat(decimal grossAmount)
+        {
+            if (grossAmount < 0)
+            {
+                throw new ArgumentException("Gross amount cannot be negative.");
+            }
+
+            return grossAmount / (1 + VatRate);
+        }
+
+        public decimal ComputeVatAmount(decimal grossAmount)
+        {
+            if (grossAmount < 0)
+            {
+                throw new ArgumentException("Gross amount cannot be negative.");
+            }
+
+            return grossAmount - ComputeNetOfVat(grossAmount);
         }
     }
 }

@@ -31,6 +31,9 @@ namespace IBS.Models.Filpride.ViewModels
         [Range(1, double.MaxValue, ErrorMessage = "The unit cost should be greater than zero.")]
         public decimal UnitCost { get; set; }
 
+        [Required]
+        public string Port { get; set; }
+
         public string Remarks { get; set; }
     }
 }

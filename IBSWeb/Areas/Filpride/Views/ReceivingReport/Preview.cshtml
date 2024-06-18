@@ -1,0 +1,163 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model FilprideReceivingReport
+@inject UserManager<IdentityUser> UserManager
+
+@{
+    ViewData["Title"] = "Preview Receiving Report";
+}
+
+<div class="text-end">
+    <img src="~/img/Filpride.jpg" alt="Filpride Logo" width="130px" />
+</div>
+<div class="text-center">
+    <h2><u><b>FILPRIDE RESOURCES INC.</b></u></h2>
+    <p style="line-height: 1; margin-top:-7px;">
+        57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
+        Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
+        VAT Reg. TIN: 000-216-589-00000
+    </p>
+</div>
+
+<h3 style="margin-top:50px;"><b>RECEIVING REPORT</b></h3>
+<div class="text-end" style="margin-top:-50px;">
+    <h6><b>No.&nbsp;@Html.DisplayFor(model => model.ReceivingReportNo)</b></h6>
+</div>
+
+<div class="w-100 text-end" style="margin-top:20px; padding-bottom:10px;">
+    <span><b>Date:</b></span>
+    <span class="underline" style="display: inline-block; width: 20%; text-align:center;">@Model.Date.ToShortDateString()</span>
+</div>
+
+<div>
+    <table class="table table-bordered w-100">
+        <tbody>
+            <tr>
+                <td colspan="2" style="padding-left:10px;">Supplier: &nbsp; @Html.DisplayFor(model => model.PurchaseOrder.Supplier.SupplierName)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top:20px;">
+    <table class="table table-bordered w-100">
+        <thead>
+            <tr>
+                <th class="text-center" colspan="7" style="padding-left:20px;">DETAILS</th>
+            </tr>
+            <tr>
+                <th class="text-center" style="width:12.5%">PO#</th>
+                <th class="text-center" style="width:12.5%">SUPPLIER INVOICE#/DATE</th>
+                <th class="text-center" style="width:25%">TRUCK/VESSELS</th>
+                <th class="text-center" style="width:12.5%">PRODUCT</th>
+                <th class="text-center" style="width:12.5%">QTY SERVED</th>
+                <th class="text-center" style="width:12.5%">QTY RECEIVED</th>
+                <th class="text-center" style="width:12.5%">GAIN/LOSS</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-center p-4">@Html.DisplayFor(model => model.PurchaseOrder.PurchaseOrderNo)</td>
+                <td class="text-center p-4">@Html.DisplayFor(model => model.SupplierSiNo)</td>
+                <td class="text-center p-4">@Html.DisplayFor(model => model.TruckOrVessels)</td>
+                <td class="text-center p-4">@Html.DisplayFor(model => model.PurchaseOrder.Product.ProductName)</td>
+                <td class="text-center p-4">@Html.DisplayFor(model => model.QuantityDelivered)</td>
+                <td class="text-center p-4">@Html.DisplayFor(model => model.QuantityReceived)</td>
+                <td class="text-center p-4">@Html.DisplayFor(model => model.GainOrLoss)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <table class="table table-bordered w-100 mt-2">
+        <tbody>
+            <tr>
+                <td colspan="2" style="padding-left:10px;">Other Reference: &nbsp; @Html.DisplayFor(model => model.OtherReference)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top:10px;">
+    <table class="table table-bordered w-100">
+        <tbody>
+            <tr>
+                <td class="p-4" colspan="6" style="padding-left:20px;">REMARKS : @Html.DisplayFor(model => model.Remarks)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="text-center w-100" style="margin-top:10px;">
+    <p>
+        <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br />
+        Series: RR0000000001 - RR9999999999<br />
+        Date and Time Created:&nbsp; @Html.DisplayFor(model => model.CreatedDate)
+    </p>
+</div>
+
+<div class="text-start w-100">
+    <p style="line-height: 1;">
+        <em>
+            <strong>Software Name :</strong> Accounting Administration System (AAS)<br />
+            <strong>Version :</strong> v1.0.0<br />
+            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()<br />
+            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+        </em>
+    </p>
+</div>
+
+@if (!Model.IsPrinted)
+{
+    <div class="text-end">
+        ORIGINAL COPY
+    </div>
+}
+else
+{
+    <div class="text-end">
+        REPRINT COPY
+    </div>
+}
+
+<div class="row pt-2">
+    @{
+        if (Model.PostedBy == null)
+        {
+            <div class="col-6 col-md-3">
+                <a id="approveButton" class="btn btn-primary form-control buttons">Approve</a>
+            </div>
+        }
+        else
+        {
+            <div class="col-6 col-md-3">
+                <a asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Print" asp-route-id="@Model.ReceivingReportNo" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+            </div>
+        }
+    }
+
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('approveButton').addEventListener('click', function () {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, approve it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Proceed to the controller action
+                    window.location.href = '@Url.Action("Post", "ReceivingReport", new { area = "Filpride", id = Model.ReceivingReportNo })';
+                }
+            });
+        });
+    </script>
+}

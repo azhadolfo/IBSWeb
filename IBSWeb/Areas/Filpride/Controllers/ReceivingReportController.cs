@@ -28,13 +28,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(rrList);
         }
 
-        //TODO create crud operation of RR
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             ReceivingReportViewModel viewModel = new()
             {
                 PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken),
+                Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken),
             };
 
             return View(viewModel);
@@ -56,6 +56,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Date = viewModel.Date,
                         DueDate = await _unitOfWork.FilprideReceivingReport.CalculateDueDateAsync(purchaseOrder.Terms, viewModel.Date, cancellationToken),
                         PurchaseOrderId = viewModel.PurchaseOrderId,
+                        CustomerId = viewModel.CustomerId,
                         SupplierSiNo = viewModel.SupplierSiNo,
                         SupplierSiDate = viewModel.SupplierSiDate,
                         SupplierDrNo = viewModel.SupplierDrNo,
@@ -74,8 +75,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (purchaseOrder.Supplier.VatType == SD.VatType_Vatable)
                     {
-                        model.NetOfVatAmount = model.TotalAmount / 1.12m;
-                        model.VatAmount = model.NetOfVatAmount * .12m;
+                        model.NetOfVatAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(model.TotalAmount);
+                        model.VatAmount = _unitOfWork.FilprideReceivingReport.ComputeVatAmount(model.TotalAmount);
                     }
                     else
                     {
@@ -100,14 +101,179 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(string? id, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideReceivingReport
+                    .GetAsync(rr => rr.ReceivingReportNo == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                ReceivingReportViewModel viewModel = new()
+                {
+                    ReceivingReportId = existingRecord.ReceivingReportId,
+                    Date = existingRecord.Date,
+                    PurchaseOrderId = existingRecord.PurchaseOrderId,
+                    PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken),
+                    Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken),
+                    CustomerId = existingRecord.CustomerId,
+                    SupplierSiNo = existingRecord.SupplierSiNo,
+                    SupplierSiDate = existingRecord.SupplierSiDate,
+                    SupplierDrNo = existingRecord.SupplierDrNo,
+                    SupplierDrDate = existingRecord.SupplierDrDate,
+                    WithdrawalCertificate = existingRecord.WithdrawalCertificate,
+                    TruckOrVessels = existingRecord.TruckOrVessels,
+                    OtherReference = existingRecord.OtherReference,
+                    QuantityDelivered = existingRecord.QuantityDelivered,
+                    QuantityReceived = existingRecord.QuantityReceived,
+                    Freight = existingRecord.Freight,
+                    TotalFreight = existingRecord.TotalFreight,
+                    Remarks = existingRecord.Remarks
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(ReceivingReportViewModel viewModel, CancellationToken cancellationToken)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    await _unitOfWork.FilprideReceivingReport.UpdateAsync(viewModel, _userManager.GetUserName(User), cancellationToken);
+
+                    TempData["success"] = "Receiving report updated successfully.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return View(viewModel);
+                }
+            }
+
+            viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
+            TempData["error"] = "The submitted information is invalid.";
+            return View(viewModel);
+        }
+
+        public async Task<IActionResult> Preview(string? id, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideReceivingReport
+                    .GetAsync(po => po.ReceivingReportNo == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                return View(existingRecord);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        public async Task<IActionResult> Print(string? id, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideReceivingReport
+                    .GetAsync(po => po.ReceivingReportNo == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                if (!existingRecord.IsPrinted)
+                {
+                    existingRecord.IsPrinted = true;
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                }
+
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
+
+        public async Task<IActionResult> Post(string? id, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideReceivingReport
+                    .GetAsync(po => po.ReceivingReportNo == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                await _unitOfWork.FilprideReceivingReport.PostAsync(existingRecord, _userManager.GetUserName(User), cancellationToken);
+
+                TempData["success"] = "Receiving report approved successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Preview), new { id });
+            }
         }
     }
 }

@@ -56,6 +56,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         UnitCost = viewModel.UnitCost,
                         TotalAmount = viewModel.Quantity * viewModel.UnitCost,
                         Terms = viewModel.Terms,
+                        Port = viewModel.Port,
                         Remarks = viewModel.Remarks,
                         CreatedBy = _userManager.GetUserName(User)
                     };
@@ -99,13 +100,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                PurchaseOrderViewModel viewModel = new PurchaseOrderViewModel
+                PurchaseOrderViewModel viewModel = new()
                 {
                     PurchaseOrderId = existingRecord.PurchaseOrderId,
                     Date = existingRecord.Date,
                     ProductId = existingRecord.ProductId,
                     SupplierId = existingRecord.SupplierId,
                     Terms = existingRecord.Terms,
+                    Port = existingRecord.Port,
                     Quantity = existingRecord.Quantity,
                     UnitCost = existingRecord.UnitCost,
                     Remarks = existingRecord.Remarks,

@@ -1,5 +1,4 @@
-﻿@using IBS.Models.Filpride.ViewModels
-@using IBS.Utility
+﻿@using IBS.Utility
 @model PurchaseOrderViewModel
 
 @{
@@ -59,6 +58,11 @@
                     <input asp-for="UnitCost" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="UnitCost" class="ms-2">Unit Cost<span class="required">*</span></label>
                     <span asp-validation-for="UnitCost" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Port" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="Port" class="ms-2">Port<span class="required">*</span></label>
+                    <span asp-validation-for="Port" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>

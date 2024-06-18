@@ -82,7 +82,6 @@ namespace IBS.DataAccess.Repository
 
                 foreach (var journal in journals.OrderBy(j => j.TransactionDate))
                 {
-
                     if (balance != 0)
                     {
                         if (journal.NormalBalance == nameof(NormalBalance.Debit))

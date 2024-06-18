@@ -24,11 +24,16 @@ namespace IBS.DataAccess.Repository.IRepository
 
         (string AccountNo, string AccountTitle) GetInventoryAccountTitle(string productCode);
 
+        decimal ComputeNetOfVat(decimal grossAmount);
+
+        decimal ComputeVatAmount(decimal grossAmount);
 
         // Retrieving DTOs (Data Transfer Objects)
 
         Task<ProductDto> MapProductToDTO(string productCode, CancellationToken cancellationToken = default);
+
         Task<StationDto> MapStationToDTO(string stationCode, CancellationToken cancellationToken = default);
+
         Task<SupplierDto> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default);
     }
 }

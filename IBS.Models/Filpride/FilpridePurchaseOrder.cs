@@ -53,6 +53,9 @@ namespace IBS.Models.Filpride
         [Column(TypeName = "varchar(5)")]
         public string Terms { get; set; }
 
+        [Column(TypeName = "varchar(100)")]
+        public string Port { get; set; }
+
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal QuantityServed { get; set; }

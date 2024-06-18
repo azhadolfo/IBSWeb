@@ -5,7 +5,7 @@ namespace IBS.Models.Filpride.ViewModels
 {
     public class ReceivingReportViewModel
     {
-        public int? Id { get; set; }
+        public int? ReceivingReportId { get; set; }
 
         [Required]
         public DateOnly Date { get; set; }
@@ -14,6 +14,11 @@ namespace IBS.Models.Filpride.ViewModels
         public int PurchaseOrderId { get; set; }
 
         public List<SelectListItem>? PurchaseOrders { get; set; }
+
+        [Required(ErrorMessage = "The Customer field is required.")]
+        public int CustomerId { get; set; }
+
+        public List<SelectListItem>? Customers { get; set; }
 
         [Display(Name = "Supplier SI#")]
         public string? SupplierSiNo { get; set; }

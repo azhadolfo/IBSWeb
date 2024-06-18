@@ -1,8 +1,10 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride;
+using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -56,14 +58,14 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
         {
-            FilpridePurchaseOrder? lastPo = await _db
-                .FilpridePurchaseOrders
-                .OrderBy(c => c.PurchaseOrderNo)
+            FilprideReceivingReport? lastRr = await _db
+                .FilprideReceivingReports
+                .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastPo != null)
+            if (lastRr != null)
             {
-                string lastSeries = lastPo.PurchaseOrderNo;
+                string lastSeries = lastRr.ReceivingReportNo;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -72,6 +74,137 @@ namespace IBS.DataAccess.Repository.Filpride
             else
             {
                 return "RR0000000001";
+            }
+        }
+
+        public override async Task<IEnumerable<FilprideReceivingReport>> GetAllAsync(Expression<Func<FilprideReceivingReport, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<FilprideReceivingReport> query = dbSet
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(po => po.Supplier)
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(po => po.Product);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
+        }
+
+        public override async Task<FilprideReceivingReport> GetAsync(Expression<Func<FilprideReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(po => po.Supplier)
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(po => po.Product)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task PostAsync(FilprideReceivingReport receivingReport, string userName, CancellationToken cancellationToken = default)
+        {
+            if (receivingReport.PostedBy == null)
+            {
+                receivingReport.PostedBy = userName;
+                receivingReport.PostedDate = DateTime.Now;
+
+                //PENDING journal entries of rr
+                #region--General Ledger Recording
+
+                #endregion
+
+                #region--Update PO Served
+                await UpdatePoServedAsync(receivingReport.PurchaseOrderId, receivingReport.QuantityReceived, cancellationToken);
+                #endregion
+
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task UpdateAsync(ReceivingReportViewModel viewModel, string userName, CancellationToken cancellationToken = default)
+        {
+            var existingRecord = await _db.FilprideReceivingReports
+                .FindAsync(viewModel.ReceivingReportId, cancellationToken);
+
+            existingRecord.Date = viewModel.Date;
+            existingRecord.PurchaseOrderId = viewModel.PurchaseOrderId;
+            existingRecord.CustomerId = viewModel.CustomerId;
+            existingRecord.SupplierSiNo = viewModel.SupplierSiNo;
+            existingRecord.SupplierSiDate = viewModel.SupplierSiDate;
+            existingRecord.SupplierDrNo = viewModel.SupplierDrNo;
+            existingRecord.SupplierDrDate = viewModel.SupplierDrDate;
+            existingRecord.WithdrawalCertificate = viewModel.WithdrawalCertificate;
+            existingRecord.TruckOrVessels = viewModel.TruckOrVessels;
+            existingRecord.OtherReference = viewModel.OtherReference;
+            existingRecord.Freight = viewModel.Freight;
+            existingRecord.TotalFreight = viewModel.TotalFreight;
+            existingRecord.Remarks = viewModel.Remarks;
+
+            bool quantityChanged = existingRecord.QuantityDelivered != viewModel.QuantityDelivered ||
+                           existingRecord.QuantityReceived != viewModel.QuantityReceived;
+
+            if (quantityChanged)
+            {
+                var purchaseOrder = await _db.FilpridePurchaseOrders
+                    .Include(po => po.Supplier)
+                    .FirstOrDefaultAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
+
+                existingRecord.QuantityReceived = viewModel.QuantityReceived;
+                existingRecord.QuantityDelivered = viewModel.QuantityDelivered;
+                existingRecord.TotalAmount = viewModel.QuantityDelivered * viewModel.QuantityReceived;
+                existingRecord.GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered;
+
+                if (purchaseOrder.Supplier.VatType == SD.VatType_Vatable)
+                {
+                    existingRecord.NetOfVatAmount = ComputeNetOfVat(existingRecord.TotalAmount);
+                    existingRecord.VatAmount = ComputeVatAmount(existingRecord.TotalAmount);
+                }
+                else
+                {
+                    existingRecord.NetOfVatAmount = existingRecord.TotalAmount;
+                    existingRecord.VatAmount = 0;
+                }
+
+                if (purchaseOrder.Supplier.TaxType == SD.TaxType_WithTax)
+                {
+                    existingRecord.NetOfTaxAmount = existingRecord.NetOfVatAmount * 0.01m;
+                }
+                else
+                {
+                    existingRecord.NetOfTaxAmount = existingRecord.NetOfVatAmount;
+                }
+            }
+
+            if (_db.ChangeTracker.HasChanges())
+            {
+                existingRecord.EditedBy = userName;
+                existingRecord.EditedDate = DateTime.Now;
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new InvalidOperationException("No data changes!");
+            }
+        }
+
+        private async Task UpdatePoServedAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
+        {
+            var purchaseOrder = await _db.FilpridePurchaseOrders
+                .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken) ?? throw new InvalidOperationException("No record found.");
+
+            purchaseOrder.QuantityServed += quantityReceived;
+
+            if (purchaseOrder.QuantityServed == purchaseOrder.Quantity)
+            {
+                purchaseOrder.IsServed = true;
+                purchaseOrder.ServedDate = DateTime.Now;
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            else if (purchaseOrder.QuantityServed > purchaseOrder.Quantity)
+            {
+                throw new InvalidOperationException("The entered Quantity Received exceeds the Purchase Order Quantity.");
             }
         }
     }

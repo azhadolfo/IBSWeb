@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using IBS.Models.MasterFile;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride
@@ -25,6 +26,14 @@ namespace IBS.Models.Filpride
 
         [ForeignKey("PurchaseOrderId")]
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
+
+        #endregion
+
+        #region--Customer properties
+
+        public int CustomerId { get; set; }
+
+        public Customer? Customer { get; set; }
 
         #endregion
 
@@ -94,5 +103,7 @@ namespace IBS.Models.Filpride
         public bool IsPaid { get; set; }
 
         public DateTime PaidDate { get; set; }
+
+        public bool IsPrinted { get; set; }
     }
 }
