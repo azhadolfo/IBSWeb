@@ -12,13 +12,13 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "date")]
         public DateOnly INV_DATE { get; set; }
 
-        public int xYEAR { get; set; }
+        public int? xYEAR { get; set; }
 
-        public int xMONTH { get; set; }
+        public int? xMONTH { get; set; }
 
-        public int xDAY { get; set; }
+        public int? xDAY { get; set; }
 
-        public int xCORPCODE { get; set; }
+        public int? xCORPCODE { get; set; }
 
         public int xSITECODE { get; set; }
 
@@ -42,14 +42,14 @@ namespace IBS.Models.Mobility
         public string Particulars { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string xOID { get; set; }
+        public string? xOID { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string Cashier { get; set; }
 
         public int Shift { get; set; }
 
-        public long xTRANSACTION { get; set; }
+        public int? xTRANSACTION { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string xStamp { get; set; }

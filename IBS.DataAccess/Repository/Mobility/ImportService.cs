@@ -44,11 +44,11 @@ namespace IBS.DataAccess.Repository.Mobility
 
         private async void DoWork(object state)
         {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
             try
             {
-                using var scope = _scopeFactory.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
                 LogMessage logMessage = new("Information", "ImportService", $"Importing service is starting in {DateTime.Now}.");
 
                 await db.LogMessages.AddAsync(logMessage);
@@ -61,6 +61,9 @@ namespace IBS.DataAccess.Repository.Mobility
             }
             catch (Exception ex)
             {
+                LogMessage logMessage = new("Error", "ImportService", $"Error: {ex.Message}.");
+
+                await db.LogMessages.AddAsync(logMessage);
                 _logger.LogError(ex, "Error during import.");
             }
         }
@@ -91,7 +94,7 @@ namespace IBS.DataAccess.Repository.Mobility
             int safedropsCount;
             bool hasPoSales = false;
 
-            foreach (var station in stations.Where(s => s.StationName == "TARLAC"))
+            foreach (var station in stations.Where(s => s.StationName == "COMMONWEALTH"))
             {
                 var importFolder = Path.Combine(station.FolderPath);
 
@@ -108,6 +111,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     continue;
                 }
 
+                await using var transaction = await db.Database.BeginTransactionAsync();
                 try
                 {
                     var files = Directory.GetFiles(importFolder, "*.csv")
@@ -126,6 +130,8 @@ namespace IBS.DataAccess.Repository.Mobility
 
                         await db.LogMessages.AddAsync(logMessage);
                         await db.SaveChangesAsync();
+
+                        await transaction.CommitAsync();
 
                         continue;
                     }
@@ -291,9 +297,13 @@ namespace IBS.DataAccess.Repository.Mobility
                         await db.LogMessages.AddAsync(logMessage);
                         await db.SaveChangesAsync();
                     }
+
+                    await transaction.CommitAsync();
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync();
+
                     LogMessage logMessage = new("Error", "ImportSales", $"Error: {ex.Message} in '{station.StationName}'.");
 
                     await db.LogMessages.AddAsync(logMessage);
@@ -313,7 +323,7 @@ namespace IBS.DataAccess.Repository.Mobility
             int lubesCount;
             int poSalesCount;
 
-            foreach (var station in stations.Where(s => s.StationName == "TARLAC"))
+            foreach (var station in stations.Where(s => s.StationName == "COMMONWEALTH"))
             {
                 var importFolder = Path.Combine(station.FolderPath);
 
@@ -330,90 +340,108 @@ namespace IBS.DataAccess.Repository.Mobility
                     continue;
                 }
 
-                var files = Directory.GetFiles(importFolder, "*.csv")
+                await using var transaction = await db.Database.BeginTransactionAsync();
+
+                try
+                {
+                    var files = Directory.GetFiles(importFolder, "*.csv")
                                      .Where(f =>
                                      f.Contains("FUEL_DELIVERY", StringComparison.CurrentCulture) ||
                                      f.Contains("LUBE_DELIVERY", StringComparison.CurrentCulture) ||
                                      f.Contains("PO_SALES", StringComparison.CurrentCulture) &&
                                      Path.GetFileNameWithoutExtension(f).EndsWith(DateTime.Now.ToString("yyyy")));
 
-                if (!files.Any())
-                {
-                    // Import this message to your message box
-                    _logger.LogWarning($"No csv files found in station '{station.StationName}'.");
-
-                    LogMessage logMessage = new("Warning", "ImportPurchases", $"No csv files found in station '{station.StationName}'.");
-
-                    await db.LogMessages.AddAsync(logMessage);
-                    await db.SaveChangesAsync();
-
-                    continue;
-                }
-
-                fuelsCount = 0;
-                lubesCount = 0;
-                poSalesCount = 0;
-
-                foreach (var file in files)
-                {
-                    string fileName = Path.GetFileName(file).ToLower();
-
-                    bool fileOpened = false;
-                    int retryCount = 0;
-                    while (!fileOpened && retryCount < 5)
+                    if (!files.Any())
                     {
-                        try
-                        {
-                            if (fileName.Contains("fuel"))
-                            {
-                                fuelsCount = await unitOfWork.MobilityFuelPurchase.ProcessFuelDelivery(file);
-                            }
-                            else if (fileName.Contains("lube"))
-                            {
-                                lubesCount = await unitOfWork.MobilityLubePurchaseHeader.ProcessLubeDelivery(file);
-                            }
-                            else if (fileName.Contains("po_sales"))
-                            {
-                                poSalesCount = await unitOfWork.MobilityPurchaseOrder.ProcessPOSales(file);
-                            }
+                        // Import this message to your message box
+                        _logger.LogWarning($"No csv files found in station '{station.StationName}'.");
 
-                            fileOpened = true; // File opened successfully, exit the loop
-                        }
-                        catch (Exception ex)
-                        {
-                            // File is locked, wait for 100 milliseconds before retrying
-                            await Task.Delay(100);
-                            retryCount++;
-                        }
-                    }
-
-                    if (!fileOpened)
-                    {
-                        // Log a warning or handle the situation where the file could not be opened after retrying
-                        _logger.LogWarning($"Failed to open file '{file}' after multiple retries.");
-
-                        LogMessage logMessage = new("Warning", "ImportPurchases", $"Failed to open file '{file}' after multiple retries.");
+                        LogMessage logMessage = new("Warning", "ImportPurchases", $"No csv files found in station '{station.StationName}'.");
 
                         await db.LogMessages.AddAsync(logMessage);
                         await db.SaveChangesAsync();
 
-                        return;
+                        await transaction.CommitAsync();
+
+                        continue;
                     }
+
+                    fuelsCount = 0;
+                    lubesCount = 0;
+                    poSalesCount = 0;
+
+                    foreach (var file in files)
+                    {
+                        string fileName = Path.GetFileName(file).ToLower();
+
+                        bool fileOpened = false;
+                        int retryCount = 0;
+                        while (!fileOpened && retryCount < 5)
+                        {
+                            try
+                            {
+                                if (fileName.Contains("fuel"))
+                                {
+                                    fuelsCount = await unitOfWork.MobilityFuelPurchase.ProcessFuelDelivery(file);
+                                }
+                                else if (fileName.Contains("lube"))
+                                {
+                                    lubesCount = await unitOfWork.MobilityLubePurchaseHeader.ProcessLubeDelivery(file);
+                                }
+                                else if (fileName.Contains("po_sales"))
+                                {
+                                    poSalesCount = await unitOfWork.MobilityPurchaseOrder.ProcessPOSales(file);
+                                }
+
+                                fileOpened = true; // File opened successfully, exit the loop
+                            }
+                            catch (Exception ex)
+                            {
+                                // File is locked, wait for 100 milliseconds before retrying
+                                await Task.Delay(100);
+                                retryCount++;
+                            }
+                        }
+
+                        if (!fileOpened)
+                        {
+                            // Log a warning or handle the situation where the file could not be opened after retrying
+                            _logger.LogWarning($"Failed to open file '{file}' after multiple retries.");
+
+                            LogMessage logMessage = new("Warning", "ImportPurchases", $"Failed to open file '{file}' after multiple retries.");
+
+                            await db.LogMessages.AddAsync(logMessage);
+                            await db.SaveChangesAsync();
+
+                            return;
+                        }
+                    }
+
+                    if (fuelsCount != 0 && lubesCount != 0 && poSalesCount != 0)
+                    {
+                        LogMessage logMessage = new("Information", "ImportPurchases", $"Imported successfully in the station '{station.StationName}', Fuel Delivery: '{fuelsCount}' record(s), Lubes Delivery: '{lubesCount}' record(s), PO Sales: '{poSalesCount}' record(s).");
+
+                        await db.LogMessages.AddAsync(logMessage);
+                        await db.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        // Import this message to your message box
+                        _logger.LogInformation("You're up to date.");
+
+                        LogMessage logMessage = new("Information", "ImportPurchases", $"No new record found in the station '{station.StationName}'.");
+
+                        await db.LogMessages.AddAsync(logMessage);
+                        await db.SaveChangesAsync();
+                    }
+
+                    await transaction.CommitAsync();
                 }
-
-                if (fuelsCount != 0 && lubesCount != 0 && poSalesCount != 0)
+                catch (Exception ex)
                 {
-                    LogMessage logMessage = new("Information", "ImportPurchases", $"Imported successfully in the station '{station.StationName}', Fuel Delivery: '{fuelsCount}' record(s), Lubes Delivery: '{lubesCount}' record(s), PO Sales: '{poSalesCount}' record(s).");
+                    await transaction.RollbackAsync();
 
-                    await db.LogMessages.AddAsync(logMessage);
-                    await db.SaveChangesAsync();
-                }
-                else
-                {
-                    // Import this message to your message box
-                    _logger.LogInformation("You're up to date.");
-
-                    LogMessage logMessage = new("Information", "ImportPurchases", $"No new record found in the station '{station.StationName}'.");
+                    LogMessage logMessage = new("Error", "ImportPurchase", $"Error: {ex.Message} in '{station.StationName}'.");
 
                     await db.LogMessages.AddAsync(logMessage);
                     await db.SaveChangesAsync();

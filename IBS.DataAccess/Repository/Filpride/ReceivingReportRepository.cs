@@ -17,7 +17,7 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<DateOnly> CalculateDueDateAsync(string terms, DateOnly transactionDate, CancellationToken cancellationToken = default)
+        public DateOnly CalculateDueDate(string terms, DateOnly transactionDate, CancellationToken cancellationToken = default)
         {
             DateOnly dueDate;
 
@@ -126,7 +126,8 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task UpdateAsync(ReceivingReportViewModel viewModel, string userName, CancellationToken cancellationToken = default)
         {
             var existingRecord = await _db.FilprideReceivingReports
-                .FindAsync(viewModel.ReceivingReportId, cancellationToken);
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .FirstOrDefaultAsync(rr => rr.ReceivingReportId == viewModel.ReceivingReportId, cancellationToken);
 
             existingRecord.Date = viewModel.Date;
             existingRecord.PurchaseOrderId = viewModel.PurchaseOrderId;
@@ -147,16 +148,12 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (quantityChanged)
             {
-                var purchaseOrder = await _db.FilpridePurchaseOrders
-                    .Include(po => po.Supplier)
-                    .FirstOrDefaultAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
-
                 existingRecord.QuantityReceived = viewModel.QuantityReceived;
                 existingRecord.QuantityDelivered = viewModel.QuantityDelivered;
                 existingRecord.TotalAmount = viewModel.QuantityDelivered * viewModel.QuantityReceived;
-                existingRecord.GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered;
+                existingRecord.GainOrLoss = viewModel.QuantityDelivered - viewModel.QuantityReceived;
 
-                if (purchaseOrder.Supplier.VatType == SD.VatType_Vatable)
+                if (existingRecord.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable)
                 {
                     existingRecord.NetOfVatAmount = ComputeNetOfVat(existingRecord.TotalAmount);
                     existingRecord.VatAmount = ComputeVatAmount(existingRecord.TotalAmount);
@@ -167,7 +164,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     existingRecord.VatAmount = 0;
                 }
 
-                if (purchaseOrder.Supplier.TaxType == SD.TaxType_WithTax)
+                if (existingRecord.PurchaseOrder.Supplier.TaxType == SD.TaxType_WithTax)
                 {
                     existingRecord.NetOfTaxAmount = existingRecord.NetOfVatAmount * 0.01m;
                 }

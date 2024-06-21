@@ -54,7 +54,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(cancellationToken),
                         Date = viewModel.Date,
-                        DueDate = await _unitOfWork.FilprideReceivingReport.CalculateDueDateAsync(purchaseOrder.Terms, viewModel.Date, cancellationToken),
+                        DueDate = _unitOfWork.FilprideReceivingReport.CalculateDueDate(purchaseOrder.Terms, viewModel.Date, cancellationToken),
                         PurchaseOrderId = viewModel.PurchaseOrderId,
                         CustomerId = viewModel.CustomerId,
                         SupplierSiNo = viewModel.SupplierSiNo,

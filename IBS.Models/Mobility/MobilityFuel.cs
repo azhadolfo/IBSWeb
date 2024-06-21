@@ -10,31 +10,31 @@ namespace IBS.Models.Mobility
         public Guid Id { get; set; }
 
         [Column(TypeName = "time without time zone")]
-        public TimeOnly Start { get; set; }
+        public TimeOnly? Start { get; set; }
 
         [Column(TypeName = "time without time zone")]
-        public TimeOnly End { get; set; }
+        public TimeOnly? End { get; set; }
 
         [Column(TypeName = "date")]
         public DateOnly INV_DATE { get; set; }
 
-        public int xCORPCODE { get; set; }
+        public int? xCORPCODE { get; set; }
 
         public int xSITECODE { get; set; }
 
-        public int xTANK { get; set; }
+        public int? xTANK { get; set; }
 
         public int xPUMP { get; set; }
 
-        public int xNOZZLE { get; set; }
+        public int? xNOZZLE { get; set; }
 
-        public int xYEAR { get; set; }
+        public int? xYEAR { get; set; }
 
-        public int xMONTH { get; set; }
+        public int? xMONTH { get; set; }
 
-        public int xDAY { get; set; }
+        public int? xDAY { get; set; }
 
-        public int xTRANSACTION { get; set; }
+        public int? xTRANSACTION { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         public decimal Price { get; set; }
@@ -63,16 +63,16 @@ namespace IBS.Models.Mobility
         public string nozdown { get; set; }
 
         [Column(TypeName = "time without time zone")]
-        public TimeOnly InTime { get; set; }
+        public TimeOnly? InTime { get; set; }
 
         [Column(TypeName = "time without time zone")]
-        public TimeOnly OutTime { get; set; }
+        public TimeOnly? OutTime { get; set; }
 
         //Liters = Opening - Closing
         public decimal Liters { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string xOID { get; set; }
+        public string? xOID { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string xONAME { get; set; }

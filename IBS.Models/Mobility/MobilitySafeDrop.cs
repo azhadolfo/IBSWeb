@@ -13,17 +13,17 @@ namespace IBS.Models.Mobility
         public DateOnly INV_DATE { get; set; }
 
         [Column(TypeName = "date")]
-        public DateOnly BDate { get; set; }
+        public DateOnly? BDate { get; set; }
 
-        public int xYEAR { get; set; }
+        public int? xYEAR { get; set; }
 
-        public int xMONTH { get; set; }
+        public int? xMONTH { get; set; }
 
-        public int xDAY { get; set; }
+        public int? xDAY { get; set; }
 
-        public int xCORPCODE { get; set; }
+        public int? xCORPCODE { get; set; }
 
-        public int xSITECODE { get; set; }
+        public int? xSITECODE { get; set; }
 
         [Column(TypeName = "time without time zone")]
         public TimeOnly TTime { get; set; }
@@ -32,7 +32,7 @@ namespace IBS.Models.Mobility
         public string xSTAMP { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string xOID { get; set; }
+        public string? xOID { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string xONAME { get; set; }

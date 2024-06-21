@@ -24,11 +24,11 @@ namespace IBS.Models.Mobility
 
         [Column(TypeName = "time without time zone")]
         [Display(Name = "Time In")]
-        public TimeOnly TimeIn { get; set; }
+        public TimeOnly? TimeIn { get; set; }
 
         [Column(TypeName = "time without time zone")]
         [Display(Name = "Time Out")]
-        public TimeOnly TimeOut { get; set; }
+        public TimeOnly? TimeOut { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]

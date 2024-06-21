@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240620012334_MakeSomeFieldNullableInMobilityImportingTables")]
+    partial class MakeSomeFieldNullableInMobilityImportingTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2497,11 +2500,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(3)")
                         .HasColumnName("station_code");
 
-                    b.Property<TimeOnly?>("TimeIn")
+                    b.Property<TimeOnly>("TimeIn")
                         .HasColumnType("time without time zone")
                         .HasColumnName("time_in");
 
-                    b.Property<TimeOnly?>("TimeOut")
+                    b.Property<TimeOnly>("TimeOut")
                         .HasColumnType("time without time zone")
                         .HasColumnName("time_out");
 
