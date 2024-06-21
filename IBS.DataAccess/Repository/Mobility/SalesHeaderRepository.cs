@@ -22,21 +22,30 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             try
             {
-                var fuelSales = await _db.FuelSalesViews.ToListAsync(cancellationToken);
-                var lubeSales = await _db.MobilityLubes.Where(f => !f.IsProcessed).ToListAsync(cancellationToken);
-                var safeDropDeposits = await _db.MobilitySafeDrops.Where(f => !f.IsProcessed).ToListAsync(cancellationToken);
+                var fuelSales = await _db.FuelSalesViews
+                    .ToListAsync(cancellationToken);
 
-                var fuelPoSales = hasPoSales
-                    ? await _db.MobilityFuels
-                       .Where(f => !f.IsProcessed && (!string.IsNullOrEmpty(f.cust) || !string.IsNullOrEmpty(f.pono) || !string.IsNullOrEmpty(f.plateno)))
-                       .ToListAsync(cancellationToken)
-                   : new List<MobilityFuel>();
+                var lubeSales = await _db.MobilityLubes
+                    .Where(f => !f.IsProcessed)
+                    .ToListAsync(cancellationToken);
 
-                var lubePoSales = hasPoSales
-                    ? await _db.MobilityLubes
+                var safeDropDeposits = await _db.MobilitySafeDrops
+                    .Where(f => !f.IsProcessed)
+                    .ToListAsync(cancellationToken);
+
+                var fuelPoSales = Enumerable.Empty<MobilityFuel>();
+                var lubePoSales = Enumerable.Empty<MobilityLube>();
+
+                if (hasPoSales)
+                {
+                    fuelPoSales = await _db.MobilityFuels
                         .Where(f => !f.IsProcessed && (!string.IsNullOrEmpty(f.cust) || !string.IsNullOrEmpty(f.pono) || !string.IsNullOrEmpty(f.plateno)))
-                        .ToListAsync(cancellationToken)
-                    : new List<MobilityLube>();
+                        .ToListAsync(cancellationToken);
+
+                    lubePoSales = await _db.MobilityLubes
+                        .Where(f => !f.IsProcessed && (!string.IsNullOrEmpty(f.cust) || !string.IsNullOrEmpty(f.pono) || !string.IsNullOrEmpty(f.plateno)))
+                        .ToListAsync(cancellationToken);
+                }
 
                 var salesHeaders = fuelSales
                     .Select(fuel => new MobilitySalesHeader
@@ -99,12 +108,11 @@ namespace IBS.DataAccess.Repository.Mobility
                 decimal previousClosing = 0;
                 string previousNo = string.Empty;
                 DateOnly previousStartDate = new();
-
                 foreach (var group in fuelSales.GroupBy(f => new { f.ItemCode, f.xPUMP }))
                 {
                     foreach (var fuel in group)
                     {
-                        var salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift && s.Date == fuel.BusinessDate) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} on {fuel.BusinessDate} not found!");
+                        MobilitySalesHeader? salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift && s.Date == fuel.BusinessDate) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} on {fuel.BusinessDate} not found!");
 
                         var salesDetail = new MobilitySalesDetail
                         {
@@ -129,18 +137,17 @@ namespace IBS.DataAccess.Repository.Mobility
                             salesHeader.IsTransactionNormal = false;
                             salesDetail.ReferenceNo = previousNo;
 
-                            var offline = new MobilityOffline(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, fuel.Opening, previousClosing)
+                            MobilityOffline offline = new(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, fuel.Opening, previousClosing)
                             {
                                 SeriesNo = await GenerateOfflineNo(),
                                 ClosingDSRNo = previousNo,
                                 OpeningDSRNo = salesDetail.SalesNo
                             };
 
-                            await _db.AddAsync(offline, cancellationToken);
+                            await _db.MobilityOfflines.AddAsync(offline, cancellationToken);
                         }
 
                         await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
-                        await _db.SaveChangesAsync(cancellationToken);
 
                         previousClosing = fuel.Closing;
                         previousNo = salesHeader.SalesNo;
@@ -155,66 +162,28 @@ namespace IBS.DataAccess.Repository.Mobility
                 {
                     var salesHeader = salesHeaders.Find(l => l.Cashier == lube.Cashier && l.Shift == lube.Shift && l.Date == lube.BusinessDate);
 
-                    if (salesHeader == null)
+                    if (salesHeader != null)
                     {
-                        var stationCode = await _db.Stations.FirstOrDefaultAsync(s => s.PosCode == lube.xSITECODE.ToString(), cancellationToken);
-
-                        var lubeSalesHeader = new MobilitySalesHeader
-                        {
-                            SalesNo = await GenerateSeriesNumber(stationCode.StationCode),
-                            Date = lube.BusinessDate,
-                            Cashier = lube.Cashier,
-                            Shift = lube.Shift,
-                            LubesTotalAmount = lube.Amount,
-                            CreatedBy = "System Generated",
-                            StationCode = stationCode.StationCode,
-                            POSalesAmount = [],
-                            Customers = [],
-                            SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => s.xONAME == lube.Cashier && s.Shift == lube.Shift && s.BusinessDate == lube.BusinessDate).Sum(s => s.Amount), 2),
-                            Source = "POS"
-                        };
-
-                        lubeSalesHeader.TotalSales = lubeSalesHeader.LubesTotalAmount;
-                        lubeSalesHeader.GainOrLoss = lubeSalesHeader.SafeDropTotalAmount - lubeSalesHeader.LubesTotalAmount;
-
-                        await _db.MobilitySalesHeaders.AddAsync(lubeSalesHeader, cancellationToken);
-
-                        var salesDetails = new MobilitySalesDetail
-                        {
-                            SalesHeaderId = lubeSalesHeader.SalesHeaderId,
-                            SalesNo = lubeSalesHeader.SalesNo,
-                            StationCode = lubeSalesHeader.StationCode,
-                            Product = lube.ItemCode,
-                            Particular = $"{lube.Particulars}",
-                            Liters = lube.LubesQty,
-                            Price = lube.Price,
-                            Sale = lube.Amount,
-                            Value = Math.Round(lube.Amount, 2)
-                        };
-
-                        await _db.MobilitySalesDetails.AddAsync(salesDetails, cancellationToken);
-
-                        lube.IsProcessed = true;
-                        await _db.SaveChangesAsync(cancellationToken);
-                    }
-                    else
-                    {
-                        var salesDetails = new MobilitySalesDetail
+                        var salesDetail = new MobilitySalesDetail
                         {
                             SalesHeaderId = salesHeader.SalesHeaderId,
                             SalesNo = salesHeader.SalesNo,
-                            StationCode = salesHeader.StationCode,
                             Product = lube.ItemCode,
+                            StationCode = salesHeader.StationCode,
                             Particular = $"{lube.Particulars}",
                             Liters = lube.LubesQty,
                             Price = lube.Price,
                             Sale = lube.Amount,
                             Value = Math.Round(lube.Amount, 2)
                         };
-
                         lube.IsProcessed = true;
-                        await _db.MobilitySalesDetails.AddAsync(salesDetails, cancellationToken);
-                        await _db.SaveChangesAsync(cancellationToken);
+                        await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
+                    }
+                    else
+                    {
+                        var safeDrop = Math.Round(safeDropDeposits.Where(s => s.xONAME == lube.Cashier && s.Shift == lube.Shift && s.BusinessDate == lube.BusinessDate).Sum(s => s.Amount), 2);
+
+                        await CreateSalesHeaderForLubes(lube, safeDrop, cancellationToken);
                     }
                 }
 
@@ -647,8 +616,47 @@ namespace IBS.DataAccess.Repository.Mobility
             return 1;
         }
 
-        private async Task CreateSalesHeaderForLubes()
+        private async Task CreateSalesHeaderForLubes(MobilityLube lube, decimal safeDrop, CancellationToken cancellationToken)
         {
+            var stationCode = await _db.Stations.FirstOrDefaultAsync(s => s.PosCode == lube.xSITECODE.ToString(), cancellationToken);
+
+            var lubeSalesHeader = new MobilitySalesHeader
+            {
+                SalesNo = await GenerateSeriesNumber(stationCode.StationCode),
+                Date = lube.BusinessDate,
+                Cashier = lube.Cashier,
+                Shift = lube.Shift,
+                LubesTotalAmount = lube.Amount,
+                CreatedBy = "System Generated",
+                StationCode = stationCode.StationCode,
+                POSalesAmount = [],
+                Customers = [],
+                SafeDropTotalAmount = safeDrop,
+                Source = "POS",
+            };
+
+            lubeSalesHeader.TotalSales = lubeSalesHeader.LubesTotalAmount;
+            lubeSalesHeader.GainOrLoss = lubeSalesHeader.SafeDropTotalAmount - lubeSalesHeader.LubesTotalAmount;
+
+            await _db.MobilitySalesHeaders.AddAsync(lubeSalesHeader, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+
+            var salesDetails = new MobilitySalesDetail
+            {
+                SalesHeaderId = lubeSalesHeader.SalesHeaderId,
+                SalesNo = lubeSalesHeader.SalesNo,
+                StationCode = lubeSalesHeader.StationCode,
+                Product = lube.ItemCode,
+                Particular = $"{lube.Particulars}",
+                Liters = lube.LubesQty,
+                Price = lube.Price,
+                Sale = lube.Amount,
+                Value = Math.Round(lube.Amount, 2)
+            };
+
+            lubeSalesHeader.IsTransactionNormal = true;
+            lube.IsProcessed = true;
+            await _db.MobilitySalesDetails.AddAsync(salesDetails, cancellationToken);
         }
     }
 }

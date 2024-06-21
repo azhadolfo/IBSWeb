@@ -112,6 +112,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 }
 
                 await using var transaction = await db.Database.BeginTransactionAsync();
+
                 try
                 {
                     var files = Directory.GetFiles(importFolder, "*.csv")
