@@ -41,6 +41,8 @@ namespace IBS.DataAccess.Repository
 
         public IReceivingReportRepository FilprideReceivingReport { get; private set; }
 
+        public ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; private set; }
+
         #endregion
 
         public UnitOfWork(ApplicationDbContext db)
@@ -71,6 +73,7 @@ namespace IBS.DataAccess.Repository
 
             FilpridePurchaseOrder = new PurchaseOrderRepository(_db);
             FilprideReceivingReport = new ReceivingReportRepository(_db);
+            FilprideCustomerOrderSlip = new CustomerOrderSlipRepository(_db);
 
             #endregion
         }

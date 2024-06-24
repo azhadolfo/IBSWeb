@@ -162,5 +162,20 @@ namespace IBS.DataAccess.Repository
 
             return grossAmount - ComputeNetOfVat(grossAmount);
         }
+
+        public async Task<CustomerDto> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default)
+        {
+            return await _db.Set<Customer>()
+                .Where(c => c.CustomerId == customerId || c.CustomerCode == customerCode)
+                .Select(c => new CustomerDto
+                {
+                    CustomerId = c.CustomerId,
+                    CustomerCode = c.CustomerCode,
+                    CustomerName = c.CustomerName,
+                    CustomerAddress = c.CustomerAddress,
+                    CustomerTin = c.CustomerTin
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+        }
     }
 }

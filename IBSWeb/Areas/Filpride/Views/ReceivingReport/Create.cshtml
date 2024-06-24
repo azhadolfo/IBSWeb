@@ -18,7 +18,7 @@
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-                    <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
+                    <label asp-for="Date">Date<span class="required">*</span></label>
                     <span asp-validation-for="Date" class="text-danger"></span>
                 </div>
                 <div class="form-group py-2 col-12">
@@ -39,35 +39,35 @@
                     <legend class="w-auto px-2">Supplier Details</legend>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="SupplierSiNo" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierSiNo" class="ms-2">SI#</label>
+                        <label asp-for="SupplierSiNo">SI#</label>
                         <span asp-validation-for="SupplierSiNo" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="SupplierSiDate" type="date" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierSiDate" class="ms-2">SI Date</label>
+                        <label asp-for="SupplierSiDate">SI Date</label>
                         <span asp-validation-for="SupplierSiDate" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="SupplierDrNo" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierDrNo" class="ms-2">DR#</label>
+                        <label asp-for="SupplierDrNo">DR#</label>
                         <span asp-validation-for="SupplierDrNo" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="SupplierDrDate" type="date" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierDrDate" class="ms-2">DR Date</label>
+                        <label asp-for="SupplierDrDate">DR Date</label>
                         <span asp-validation-for="SupplierDrDate" class="text-danger"></span>
                     </div>
                 </fieldset>
 
                 <div class="form-floating py-2 col-12">
                     <input asp-for="TruckOrVessels" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="TruckOrVessels" class="ms-2">Truck/Vessels<span class="required">*</span></label>
+                    <label asp-for="TruckOrVessels">Truck/Vessels<span class="required">*</span></label>
                     <span asp-validation-for="TruckOrVessels" class="text-danger"></span>
                 </div>
 
                 <div class="form-floating py-2 col-12">
                     <input asp-for="OtherReference" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="OtherReference" class="ms-2">Other Reference<span class="required">*</span></label>
+                    <label asp-for="OtherReference">Other Reference<span class="required">*</span></label>
                     <span asp-validation-for="OtherReference" class="text-danger"></span>
                 </div>
 
@@ -85,12 +85,12 @@
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="Freight" class="ms-2">Freight<span class="required">*</span></label>
+                    <label asp-for="Freight">Freight<span class="required">*</span></label>
                     <span asp-validation-for="Freight" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="TotalFreight" class="form-control border-0 shadow" placeholder="" readonly />
-                    <label asp-for="TotalFreight" class="ms-2">Total Freight</label>
+                    <label asp-for="TotalFreight">Total Freight</label>
                     <span asp-validation-for="TotalFreight" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">

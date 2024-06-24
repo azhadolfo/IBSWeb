@@ -1,0 +1,148 @@
+﻿@model CustomerOrderSlipViewModel
+
+@{
+    ViewData["Title"] = "Create Customer Order Slip";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Customer Order Slip</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <div class="border-2 p-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div class="row py-2">
+                    <div class="form-floating col-6">
+                        <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
+                        <span asp-validation-for="Date" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6">
+                        <input asp-for="DeliveryDateAndTime" type="datetime-local" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-ddThh:mm")" />
+                        <label asp-for="DeliveryDateAndTime" class="ms-2">Delivery Date & Time<span class="required">*</span></label>
+                        <span asp-validation-for="DeliveryDateAndTime" class="text-danger"></span>
+                    </div>
+                </div>
+                <fieldset class="border p-2 py-2">
+                    <legend class="w-auto px-2">Delivered To</legend>
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Customer List<span class="required">*</span></label>
+                        <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected>Select customer</option>
+                        </select>
+                        <span asp-validation-for="CustomerId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" disabled readonly/>
+                        <label asp-for="CustomerAddress" class="ms-2"></label>
+                        <span asp-validation-for="CustomerAddress" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="TinNo" class="form-control border-0 shadow" placeholder="" disabled readonly />
+                        <label asp-for="TinNo" class="ms-2"></label>
+                        <span asp-validation-for="TinNo" class="text-danger"></span>
+                    </div>
+                </fieldset>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="PoNo" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="PoNo" class="ms-2">PO No.<span class="required">*</span></label>
+                    <span asp-validation-for="PoNo" class="text-danger"></span>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Product List<span class="required">*</span></label>
+                    <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select product</option>
+                    </select>
+                    <span asp-validation-for="ProductId" class="text-danger"></span>
+                </div>
+                <div class="row py-2">
+                    <div class="form-floating col-4">
+                        <input asp-for="Quantity" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="Quantity" class="ms-2">Quantity<span class="required">*</span></label>
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-4">
+                        <input asp-for="DeliveredPrice" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="DeliveredPrice" class="ms-2">Delivered Price<span class="required">*</span></label>
+                        <span asp-validation-for="DeliveredPrice" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-4">
+                        <input asp-for="Vat" class="form-control border-0 shadow" placeholder="" readonly/>
+                        <label asp-for="Vat" class="ms-2">VAT</label>
+                        <span asp-validation-for="Vat" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="TotalAmount" class="form-control border-0 shadow" placeholder="" readonly/>
+                    <label asp-for="TotalAmount">Total Amount</label>
+                    <span asp-validation-for="TotalAmount" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
+                    <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
+                    <span asp-validation-for="Remarks" class="text-danger"></span>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control">Create</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            $('select[name="CustomerId"]').on('change', function () {
+                var customerId = $(this).val();
+                if (customerId) {
+                    $.ajax({
+                        url: '@Url.Action("GetCustomerDetails", "CustomerOrderSlip", new { area = "Filpride" })',
+                        type: "GET",
+                        data: { id: customerId },
+                        success: function (data) {
+                            if (data) {
+                                $('input[name="CustomerAddress"]').val(data.address);
+                                $('input[name="TinNo"]').val(data.tinNo);
+                            } else {
+                                $('input[name="CustomerAddress"]').val('');
+                                $('input[name="TinNo"]').val('');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error: " + error);
+                        }
+                    });
+                } else {
+                    $('input[name="CustomerAddress"]').val('');
+                    $('input[name="TinNo"]').val('');
+                }
+            });
+
+            $('input[name="Quantity"], input[name="DeliveredPrice"]').on('input', function () {
+                var quantity = parseFloat($('input[name="Quantity"]').val()) || 0;
+                var deliveredPrice = parseFloat($('input[name="DeliveredPrice"]').val()) || 0;
+
+                var totalAmount = (quantity * deliveredPrice);
+                var vat = (totalAmount / 1.12) * 0.12;
+
+                $('input[name="Vat"]').val(formatNumber(vat));
+                $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
+            });
+        });
+    </script>
+}
