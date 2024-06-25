@@ -238,6 +238,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     existingRecord.ApprovedBy = _userManager.GetUserName(User);
                     existingRecord.ApprovedDate = DateTime.Now;
+                    existingRecord.ExpirationDate = DateOnly.FromDateTime(DateTime.Now.AddDays(7));
                     await _unitOfWork.SaveAsync(cancellationToken);
                 }
 

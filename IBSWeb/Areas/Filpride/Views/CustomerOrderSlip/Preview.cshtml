@@ -39,11 +39,11 @@
             </tr>
             <tr>
                 <td class="w-75"><b>Customer Name:</b> &nbsp;@Model.Customer?.CustomerName</td>
-                <td class="2-25 text-end"><b>PO No:</b> &nbsp;@Model.PoNo</td>
+                <td class="w-25 text-end"><b>Exp Date:</b> &nbsp;@Model.ExpirationDate?.ToString("MMM dd, yyyy")</td>
             </tr>
             <tr>
                 <td><b>Terms.:</b> &nbsp;@Model.Customer?.CustomerTerms</td>
-                <td></td>
+                <td class="2-25 text-end"><b>PO No:</b> &nbsp;@Model.PoNo</td>
             </tr>
         </tbody>
     </table>

@@ -93,5 +93,8 @@ namespace IBS.Models.Filpride
         public DateTime? DisapprovedDate { get; set; }
 
         public bool IsPrinted { get; set; }
+
+        [Column(TypeName = "date")]
+        public DateOnly? ExpirationDate { get; set; }
     }
 }
