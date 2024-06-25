@@ -6,26 +6,34 @@
     ViewData["Title"] = "Preview Receiving Report";
 }
 
-<div class="text-end">
-    <img src="~/img/Filpride.jpg" alt="Filpride Logo" width="130px" />
-</div>
-<div class="text-center">
-    <h2><u><b>FILPRIDE RESOURCES INC.</b></u></h2>
-    <p style="line-height: 1; margin-top:-7px;">
-        57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
-        Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
-        VAT Reg. TIN: 000-216-589-00000
-    </p>
-</div>
 
-<h3 style="margin-top:50px;"><b>RECEIVING REPORT</b></h3>
-<div class="text-end" style="margin-top:-50px;">
-    <h6><b>No.&nbsp;@Html.DisplayFor(model => model.ReceivingReportNo)</b></h6>
-</div>
+<table class="w-100">
+    <tbody>
+        <tr>
+            <td class="text-end" style="padding: 0 !important;"><img src="~/img/Filpride.jpg" width="130px" /></td>
+        </tr>
+        <tr style="margin: 0 !important;">
+            <td class="text-center" style="padding: 0 !important;">
+                <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
+                <p style="margin: 0; padding: 0; line-height: 1;">
+                    57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
+                    Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
+                    VAT Reg. TIN: 000-216-589-00000
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td class="text-end" style="padding: 0 !important;"><h6 class="series"><b>No.&nbsp;@Html.DisplayFor(model => model.ReceivingReportNo)</b></h6></td>
+        </tr>
+        <tr>
+            <td class="text-center" style="padding: 0 !important;"><h3 class="module-name"><b>RECEIVING REPORT</b></h3></td>
+        </tr>
+    </tbody>
+</table>
 
 <div class="w-100 text-end" style="margin-top:20px; padding-bottom:10px;">
-    <span><b>Date:</b></span>
-    <span class="underline" style="display: inline-block; width: 20%; text-align:center;">@Model.Date.ToShortDateString()</span>
+    <span class="text-end"><b>Date:</b></span>
+    <span class="underline">@Model.Date.ToString("MMM dd, yyyy")</span>
 </div>
 
 <div>
@@ -92,17 +100,20 @@
     <p>
         <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br />
         Series: RR0000000001 - RR9999999999<br />
-        Date and Time Created:&nbsp; @Html.DisplayFor(model => model.CreatedDate)
+        Date and Time Created:&nbsp; @Model.CreatedDate.ToString("MMM dd, yyyy hh:mm tt")
     </p>
 </div>
 
-<div class="text-start w-100">
-    <p style="line-height: 1;">
+<div class="text-start w-100 footer mt-5">
+    <p class="m-0 p-0">
         <em>
-            <strong>Software Name :</strong> Accounting Administration System (AAS)<br />
-            <strong>Version :</strong> v1.0.0<br />
-            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()<br />
-            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+            <strong>Software Name :</strong> Integrated Business System (IBS)
+            <br />
+            <strong>Version :</strong> v1.0.0
+            <br />
+            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+            <br />
+            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MMM dd, yyyy hh:mm tt")
         </em>
     </p>
 </div>

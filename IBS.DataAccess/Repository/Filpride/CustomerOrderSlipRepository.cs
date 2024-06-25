@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride;
+using IBS.Models.Filpride.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -56,6 +57,33 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(po => po.Customer)
                 .Include(po => po.Product)
                 .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task UpdateAsync(CustomerOrderSlipViewModel viewModel, string userName, CancellationToken cancellationToken = default)
+        {
+            var existingRecord = await GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+            existingRecord.Date = viewModel.Date;
+            existingRecord.DeliveryDateAndTime = viewModel.DeliveryDateAndTime;
+            existingRecord.CustomerId = viewModel.CustomerId;
+            existingRecord.PoNo = viewModel.PoNo;
+            existingRecord.ProductId = viewModel.ProductId;
+            existingRecord.Quantity = viewModel.Quantity;
+            existingRecord.DeliveredPrice = viewModel.DeliveredPrice;
+            existingRecord.Vat = viewModel.Vat;
+            existingRecord.TotalAmount = viewModel.TotalAmount;
+            existingRecord.Remarks = viewModel.Remarks;
+
+            if (_db.ChangeTracker.HasChanges())
+            {
+                existingRecord.EditedBy = userName;
+                existingRecord.EditedDate = DateTime.Now;
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new InvalidOperationException("No data changes!");
+            }
         }
     }
 }

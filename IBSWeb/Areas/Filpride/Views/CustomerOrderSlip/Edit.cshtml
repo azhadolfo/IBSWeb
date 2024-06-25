@@ -16,6 +16,7 @@
         <form method="post" class="row">
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
+                <input asp-for="CustomerOrderSlipId" type="hidden" />
                 <div class="row py-2">
                     <div class="form-floating col-6">
                         <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />

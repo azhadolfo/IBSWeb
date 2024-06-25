@@ -234,7 +234,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 TempData["success"] = "Purchase order approved successfully.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Preview), new { id });
             }
             catch (Exception ex)
             {

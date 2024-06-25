@@ -29,25 +29,25 @@
         </tr>
     </tbody>
 </table>
-<div class="table-responsive" style="margin-top:50px;">
+<div class="table-responsive mt-5">
     <table class="w-100">
         <tbody>
-            <tr style="padding-left:10px;">
+            <tr>
                 <td class="w-75"><b>Supplier:</b> &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
                 <td class="w-25 text-end"><b>Date:</b> &nbsp;@Model.Date.ToString("MMM dd, yyyy")</td>
             </tr>
-            <tr style="padding-left:10px;">
+            <tr>
                 <td><b>Address:</b> &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
                 <td></td>
             </tr>
-            <tr style="padding-left:10px;">
+            <tr>
                 <td><b>TIN No.:</b> &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierTin)</td>
                 <td></td>
             </tr>
         </tbody>
     </table>
 </div>
-<div class="table-responsive" style="margin-top:50px;">
+<div class="table-responsive mt-5">
     <table class="w-100 text-center">
         <thead>
             <tr>
@@ -59,19 +59,19 @@
         </thead>
         <tbody>
             <tr>
-                <td class="w-25">@Html.DisplayFor(model => model.Product.ProductName)</td>
-                <td class="w-25">@Html.DisplayFor(model => model.Quantity)</td>
-                <td class="w-25">@Html.DisplayFor(model => model.UnitCost)</td>
-                <td class="w-25">@Html.DisplayFor(model => model.TotalAmount)</td>
+                <td>@Html.DisplayFor(model => model.Product.ProductName)</td>
+                <td>@Html.DisplayFor(model => model.Quantity)</td>
+                <td>@Html.DisplayFor(model => model.UnitCost)</td>
+                <td>@Html.DisplayFor(model => model.TotalAmount)</td>
             </tr>
         </tbody>
     </table>
 </div>
-<div class="table-responsive" style="margin-top:50px;">
+<div class="table-responsive mt-5">
     <table class="w-100">
         <thead>
             <tr>
-                <th class="w-25">@Html.DisplayNameFor(model => model.Remarks)</th>
+                <th>@Html.DisplayNameFor(model => model.Remarks)</th>
                 <th></th>
                 <th></th>
                 <th></th>
@@ -79,15 +79,15 @@
         </thead>
         <tbody>
             <tr>
-                <td class="w-25" colspan="4">@Html.DisplayFor(model => model.Remarks)</td>
+                <td colspan="4">@Html.DisplayFor(model => model.Remarks)</td>
             </tr>
         </tbody>
     </table>
 </div>
-<div class="text-center w-100" style="margin-top:150px;">
+<div class="text-center w-100 mt-5">
     <p>
         <em><b>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</b></em><br />
-        SERIES: PO0000000001 - PO9999999999<br />
+        Series: PO0000000001 - PO9999999999<br />
         Date and Time Created:&nbsp;@Model.CreatedDate.ToString("MMM dd, yyyy hh:mm tt");
     </p>
 </div>
@@ -106,8 +106,8 @@ else
     </div>
 }
 
-<div class="text-start w-100 footer" style="margin-top:50px;">
-    <p style="line-height: 1;">
+<div class="text-start w-100 footer mt-5">
+    <p class="m-0 p-0">
         <em>
             <strong>Software Name :</strong> Integrated Business System (IBS)
             <br />
@@ -122,7 +122,7 @@ else
 
 <div class="row pt-2">
     @{
-        if (Model.PostedBy == null)
+        if (Model.PostedBy != null)
         {
             <div class="col-6 col-md-3">
                 <a id="approveButton" class="btn btn-primary form-control buttons">Approve</a>

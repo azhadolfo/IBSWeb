@@ -91,5 +91,7 @@ namespace IBS.Models.Filpride
         public string? DisapprovedBy { get; set; }
 
         public DateTime? DisapprovedDate { get; set; }
+
+        public bool IsPrinted { get; set; }
     }
 }

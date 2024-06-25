@@ -64,15 +64,22 @@
                         </td>
                         <td>
                             <div class="w-100 btn-group" role="group">
-                                @if (obj.ApprovedBy == null)
+                                @if (obj.DisapprovedBy != null)
+                                {
+                                    <span class="badge rounded-bill bg-danger w-100">Disapproved</span>
+                                }
+                                else if (obj.ApprovedBy == null && obj.DisapprovedBy == null)
                                 {
                                     <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipNo" class="btn btn-primary mx-2">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </a>
                                 }
-                                <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipNo">
-                                    <i class="bi bi-printer-fill"></i> Preview
-                                </a>
+                                else if (obj.ApprovedBy != null && obj.DisapprovedBy == null)
+                                {
+                                    <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipNo">
+                                        <i class="bi bi-printer-fill"></i> Preview
+                                    </a>
+                                }
                             </div>
                         </td>
                     </tr>

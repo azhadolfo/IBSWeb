@@ -267,7 +267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideReceivingReport.PostAsync(existingRecord, _userManager.GetUserName(User), cancellationToken);
 
                 TempData["success"] = "Receiving report approved successfully.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Preview), new { id });
             }
             catch (Exception ex)
             {
