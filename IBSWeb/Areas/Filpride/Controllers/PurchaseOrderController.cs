@@ -131,6 +131,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
+                    //PENDING Implement the same function of editing in master file on how they can pass the user
                     await _unitOfWork.FilpridePurchaseOrder.UpdateAsync(viewModel, _userManager.GetUserName(User), cancellationToken);
 
                     TempData["success"] = "Purchase order updated successfully.";

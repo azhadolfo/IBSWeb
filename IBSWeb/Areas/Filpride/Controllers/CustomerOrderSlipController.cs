@@ -261,7 +261,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                //PENDING ApproveAsync repo
+                //PENDING DisapproveAsync repo
 
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipNo == id, cancellationToken);

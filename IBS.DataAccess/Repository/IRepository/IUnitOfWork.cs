@@ -23,6 +23,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IChartOfAccountRepository ChartOfAccount { get; }
 
+        IHaulerRepository Hauler { get; }
+
         Task SaveAsync(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetCustomerListAsync(CancellationToken cancellationToken = default);

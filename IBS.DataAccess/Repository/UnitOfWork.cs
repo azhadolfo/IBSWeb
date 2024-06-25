@@ -23,6 +23,8 @@ namespace IBS.DataAccess.Repository
         public IInventoryRepository Inventory { get; private set; }
         public IChartOfAccountRepository ChartOfAccount { get; private set; }
 
+        public IHaulerRepository Hauler { get; private set; }
+
         #region--Mobility
 
         public ISalesHeaderRepository MobilitySalesHeader { get; private set; }
@@ -56,6 +58,7 @@ namespace IBS.DataAccess.Repository
             Supplier = new SupplierRepository(_db);
             Inventory = new InventoryRepository(_db);
             ChartOfAccount = new ChartOfAccountRepository(_db);
+            Hauler = new HaulerRepository(_db);
 
             #region--Mobility
 

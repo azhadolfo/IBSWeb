@@ -77,6 +77,7 @@ namespace IBS.DataAccess.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Station> Stations { get; set; }
+        public DbSet<Hauler> Haulers { get; set; }
 
         #endregion --Master File Entities
 
@@ -129,6 +130,12 @@ namespace IBS.DataAccess.Data
             {
                 s.HasIndex(s => s.SupplierCode).IsUnique();
                 s.HasIndex(s => s.SupplierName).IsUnique();
+            });
+
+            builder.Entity<Hauler>(h =>
+            {
+                h.HasIndex(h => h.HaulerCode).IsUnique();
+                h.HasIndex(h => h.HaulerName).IsUnique();
             });
 
             #endregion
