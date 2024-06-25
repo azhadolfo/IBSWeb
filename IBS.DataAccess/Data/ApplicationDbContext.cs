@@ -57,6 +57,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideCustomerOrderSlip> FilprideCustomerOrderSlips { get; set; }
 
+        public DbSet<FilprideDeliveryReport> FilprideDeliveryReports { get; set; }
+
         #endregion
 
         #region --Inventory Entity
@@ -355,6 +357,23 @@ namespace IBS.DataAccess.Data
                 cos.HasOne(cos => cos.Product)
                 .WithMany()
                 .HasForeignKey(cos => cos.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideDeliveryReport>(dr =>
+            {
+                dr.HasIndex(dr => dr.DeliveryReportNo).IsUnique();
+                dr.HasIndex(dr => dr.InvoiceNo).IsUnique();
+                dr.HasIndex(dr => dr.Date);
+
+                dr.HasOne(dr => dr.CustomerOrderSlip)
+                .WithMany()
+                .HasForeignKey(dr => dr.CustomerOrderSlipId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                dr.HasOne(dr => dr.Hauler)
+                .WithMany()
+                .HasForeignKey(dr => dr.HaulerId)
                 .OnDelete(DeleteBehavior.Restrict);
             });
 
