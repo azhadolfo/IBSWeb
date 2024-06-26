@@ -1,0 +1,84 @@
+﻿@model IEnumerable<FilprideDeliveryReport>
+
+@{
+    ViewData["Title"] = "Delivery Report";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">DELIVERY REPORT</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+            <div class="col-6 text-end">
+                <a asp-area="Filpride" asp-controller="DeliveryReport" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create New
+                </a>
+            </div>
+        </div>
+        <table class="table table-bordered table-striped" id="dataTable">
+            <thead>
+                <tr>
+                    <th>
+                        @Html.DisplayNameFor(m => m.DeliveryReportNo)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(m => m.Date)
+                    </th>
+                    <th>
+                        COS No
+                    </th>
+                    <th>
+                        Hauler
+                    </th>
+                    <th>
+                        Total Amount
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var obj in Model.OrderBy(u => u.DeliveryReportNo))
+                {
+                    <tr>
+                        <td>
+                            @obj.DeliveryReportNo
+                        </td>
+                        <td>
+                            @obj.Date.ToString("MMM dd, yyyy")
+                        </td>
+                        <td>
+                            @obj.CustomerOrderSlip?.CustomerOrderSlipNo
+                        </td>
+                        <td>
+                            @obj.Hauler?.HaulerName
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => obj.TotalAmount)
+                        </td>
+                        <td>
+                            <div class="w-100 btn-group" role="group">
+                                @if (obj.PostedBy == null)
+                                {
+                                    <a asp-area="Filpride" asp-controller="DeliveryReport" asp-action="Edit" asp-route-id="@obj.DeliveryReportNo" class="btn btn-primary mx-2">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
+                                }
+                                <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="DeliveryReport" asp-action="Preview" asp-route-id="@obj.DeliveryReportNo">
+                                    <i class="bi bi-printer-fill"></i> Preview
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+    </div>
+</div>

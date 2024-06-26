@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.MasterFile;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MasterFile
@@ -60,6 +61,18 @@ namespace IBS.DataAccess.Repository.MasterFile
             {
                 throw new InvalidOperationException("No data changes!");
             }
+        }
+
+        public async Task<List<SelectListItem>> GetHaulerListAsync(CancellationToken cancellationToken = default)
+        {
+            return await _db.Haulers
+                .OrderBy(h => h.HaulerId)
+                .Select(h => new SelectListItem
+                {
+                    Value = h.HaulerId.ToString(),
+                    Text = h.HaulerCode + " " + h.HaulerName
+                })
+                .ToListAsync(cancellationToken);
         }
     }
 }

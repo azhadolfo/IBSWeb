@@ -10,12 +10,12 @@ namespace IBS.Models.Filpride.ViewModels
         [Required]
         public DateOnly Date { get; set; }
 
-        [Required(ErrorMessage = "The PO field is required.")]
+        [Required(ErrorMessage = "PO No field is required.")]
         public int PurchaseOrderId { get; set; }
 
         public List<SelectListItem>? PurchaseOrders { get; set; }
 
-        [Required(ErrorMessage = "The Customer field is required.")]
+        [Required(ErrorMessage = "Customer field is required.")]
         public int CustomerId { get; set; }
 
         public List<SelectListItem>? Customers { get; set; }

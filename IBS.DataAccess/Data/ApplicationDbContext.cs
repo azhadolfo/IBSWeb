@@ -365,6 +365,11 @@ namespace IBS.DataAccess.Data
                 dr.HasIndex(dr => dr.InvoiceNo).IsUnique();
                 dr.HasIndex(dr => dr.Date);
 
+                dr.HasOne(dr => dr.Customer)
+                .WithMany()
+                .HasForeignKey(dr => dr.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
                 dr.HasOne(dr => dr.CustomerOrderSlip)
                 .WithMany()
                 .HasForeignKey(dr => dr.CustomerOrderSlipId)

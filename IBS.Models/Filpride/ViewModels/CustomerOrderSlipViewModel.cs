@@ -13,6 +13,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         #region Customer properties
 
+        [Required(ErrorMessage = "Customer field is required.")]
         public int CustomerId { get; set; }
 
         public List<SelectListItem>? Customers { get; set; }
@@ -29,6 +30,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         #region Product properties
 
+        [Required(ErrorMessage = "Product field is required.")]
         public int ProductId { get; set; }
 
         public List<SelectListItem>? Products { get; set; }

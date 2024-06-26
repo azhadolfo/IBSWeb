@@ -12,6 +12,7 @@ namespace IBS.Models.Filpride
         public int DeliveryReportId { get; set; }
 
         [Column(TypeName = "varchar(12)")]
+        [Display(Name = "DR No")]
         public string DeliveryReportNo { get; set; }
 
         [Column(TypeName = "date")]
@@ -19,6 +20,15 @@ namespace IBS.Models.Filpride
 
         [Column(TypeName = "varchar(50)")]
         public string InvoiceNo { get; set; }
+
+        #region--Customer properties
+
+        public int CustomerId { get; set; }
+
+        [ForeignKey("CustomerId")]
+        public Customer? Customer { get; set; }
+
+        #endregion
 
         #region--COS properties
 

@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -40,8 +41,8 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<IEnumerable<FilprideCustomerOrderSlip>> GetAllAsync(Expression<Func<FilprideCustomerOrderSlip, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<FilprideCustomerOrderSlip> query = dbSet
-                .Include(po => po.Customer)
-                .Include(po => po.Product);
+                .Include(cos => cos.Customer)
+                .Include(cos => cos.Product);
 
             if (filter != null)
             {
@@ -54,8 +55,8 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<FilprideCustomerOrderSlip> GetAsync(Expression<Func<FilprideCustomerOrderSlip, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
-                .Include(po => po.Customer)
-                .Include(po => po.Product)
+                .Include(cos => cos.Customer)
+                .Include(cos => cos.Product)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -84,6 +85,18 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 throw new InvalidOperationException("No data changes!");
             }
+        }
+
+        public async Task<List<SelectListItem>> GetCosListAsync(CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideCustomerOrderSlips
+                .OrderBy(cos => cos.CustomerOrderSlipId)
+                .Select(cos => new SelectListItem
+                {
+                    Value = cos.CustomerOrderSlipId.ToString(),
+                    Text = cos.CustomerOrderSlipNo
+                })
+                .ToListAsync(cancellationToken);
         }
     }
 }

@@ -22,7 +22,6 @@ namespace IBS.DataAccess.Repository
         public ISupplierRepository Supplier { get; private set; }
         public IInventoryRepository Inventory { get; private set; }
         public IChartOfAccountRepository ChartOfAccount { get; private set; }
-
         public IHaulerRepository Hauler { get; private set; }
 
         #region--Mobility
@@ -44,6 +43,8 @@ namespace IBS.DataAccess.Repository
         public IReceivingReportRepository FilprideReceivingReport { get; private set; }
 
         public ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; private set; }
+
+        public IDeliveryReportRepository FilprideDeliveryReport { get; private set; }
 
         #endregion
 
@@ -77,6 +78,7 @@ namespace IBS.DataAccess.Repository
             FilpridePurchaseOrder = new PurchaseOrderRepository(_db);
             FilprideReceivingReport = new ReceivingReportRepository(_db);
             FilprideCustomerOrderSlip = new CustomerOrderSlipRepository(_db);
+            FilprideDeliveryReport = new DeliveryReportRepository(_db);
 
             #endregion
         }
