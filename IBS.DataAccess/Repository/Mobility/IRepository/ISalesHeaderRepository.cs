@@ -13,5 +13,11 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
         IEnumerable<dynamic> GetSalesHeaderJoin(IEnumerable<MobilitySalesHeader> salesHeaders, CancellationToken cancellationToken = default);
 
         Task ComputeSalesPerCashier(bool hasPoSales, CancellationToken cancellationToken = default);
+
+        Task<(int fuelCount, bool hasPoSales)> ProcessFuel(string file, CancellationToken cancellationToken = default);
+
+        Task<(int lubeCount, bool hasPoSales)> ProcessLube(string file, CancellationToken cancellationToken = default);
+
+        Task<int> ProcessSafeDrop(string file, CancellationToken cancellationToken = default);
     }
 }

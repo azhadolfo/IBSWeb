@@ -1,4 +1,5 @@
-﻿using IBS.DataAccess.Data;
+﻿using CsvHelper.Configuration;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Dtos;
 using IBS.Models;
@@ -6,6 +7,7 @@ using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
@@ -139,12 +141,13 @@ namespace IBS.DataAccess.Repository.Mobility
 
                             MobilityOffline offline = new(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, fuel.Opening, previousClosing)
                             {
-                                SeriesNo = await GenerateOfflineNo(),
+                                SeriesNo = await GenerateOfflineNo(fuel.StationCode),
                                 ClosingDSRNo = previousNo,
                                 OpeningDSRNo = salesDetail.SalesNo
                             };
 
                             await _db.MobilityOfflines.AddAsync(offline, cancellationToken);
+                            await _db.SaveChangesAsync(cancellationToken);
                         }
 
                         await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
@@ -602,11 +605,11 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        private async Task<int> GenerateOfflineNo()
+        private async Task<int> GenerateOfflineNo(string stationCode)
         {
             var lastRecord = await _db.MobilityOfflines
                 .OrderByDescending(o => o.OfflineId)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(o => o.StationCode == stationCode);
 
             if (lastRecord != null)
             {
@@ -657,6 +660,185 @@ namespace IBS.DataAccess.Repository.Mobility
             lubeSalesHeader.IsTransactionNormal = true;
             lube.IsProcessed = true;
             await _db.MobilitySalesDetails.AddAsync(salesDetails, cancellationToken);
+        }
+
+        public async Task<(int fuelCount, bool hasPoSales)> ProcessFuel(string file, CancellationToken cancellationToken = default)
+        {
+            var records = ReadFuelRecords(file);
+            var (newRecords, hasPoSales) = await AddNewFuelRecords(records, cancellationToken);
+            return (newRecords.Count, hasPoSales);
+        }
+
+        private List<MobilityFuel> ReadFuelRecords(string file)
+        {
+            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+            using var reader = new StreamReader(stream);
+            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HeaderValidated = null,
+                MissingFieldFound = null,
+            });
+
+            return csv.GetRecords<MobilityFuel>()
+                .OrderBy(r => r.INV_DATE)
+                .ThenBy(r => r.ItemCode)
+                .ThenBy(r => r.xPUMP)
+                .ThenBy(r => r.Opening)
+                .ToList();
+        }
+
+        private async Task<(List<MobilityFuel> newRecords, bool hasPoSales)> AddNewFuelRecords(List<MobilityFuel> records, CancellationToken cancellationToken)
+        {
+            var newRecords = new List<MobilityFuel>();
+            var existingNozdownList = await _db.Set<MobilityFuel>().Select(r => r.nozdown).ToListAsync(cancellationToken);
+            var existingNozdownSet = new HashSet<string>(existingNozdownList);
+
+            DateOnly date = new();
+            int shift = 0;
+            decimal price = 0;
+            int pump = 0;
+            string itemCode = "";
+            int detailCount = 0;
+            bool hasPoSales = false;
+            int fuelsCount = 0;
+
+            foreach (var record in records)
+            {
+                if (!existingNozdownSet.Contains(record.nozdown))
+                {
+                    hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
+
+                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
+                        ? record.INV_DATE.AddDays(-1)
+                        : record.INV_DATE;
+
+                    if (record.BusinessDate == date && record.Shift == shift && record.Price == price && record.xPUMP == pump && record.ItemCode == itemCode)
+                    {
+                        record.DetailGroup = detailCount;
+                    }
+                    else
+                    {
+                        detailCount++;
+                        record.DetailGroup = detailCount;
+                        date = record.BusinessDate;
+                        shift = record.Shift;
+                        price = record.Price;
+                        pump = record.xPUMP;
+                        itemCode = record.ItemCode;
+                    }
+
+                    newRecords.Add(record);
+                    fuelsCount++;
+                }
+            }
+
+            if (newRecords.Count != 0)
+            {
+                await _db.AddRangeAsync(newRecords, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+
+            return (newRecords, hasPoSales);
+        }
+
+        public async Task<(int lubeCount, bool hasPoSales)> ProcessLube(string file, CancellationToken cancellationToken = default)
+        {
+            var records = ReadLubeRecords(file);
+            var (newRecords, hasPoSales) = await AddNewLubeRecords(records, cancellationToken);
+            return (newRecords.Count, hasPoSales);
+        }
+
+        private List<MobilityLube> ReadLubeRecords(string file)
+        {
+            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+            using var reader = new StreamReader(stream);
+            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HeaderValidated = null,
+                MissingFieldFound = null,
+            });
+
+            return csv.GetRecords<MobilityLube>().ToList();
+        }
+
+        private async Task<(List<MobilityLube> newRecords, bool hasPoSales)> AddNewLubeRecords(List<MobilityLube> records, CancellationToken cancellationToken)
+        {
+            var newRecords = new List<MobilityLube>();
+            var existingNozdownList = await _db.Set<MobilityLube>().Select(r => r.xStamp).ToListAsync(cancellationToken);
+            var existingNozdownSet = new HashSet<string>(existingNozdownList);
+
+            bool hasPoSales = false;
+            int lubesCount = 0;
+
+            foreach (var record in records)
+            {
+                if (!existingNozdownSet.Contains(record.xStamp))
+                {
+                    hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
+
+                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
+                        ? record.INV_DATE.AddDays(-1)
+                        : record.INV_DATE;
+
+                    newRecords.Add(record);
+                    lubesCount++;
+                }
+            }
+
+            if (newRecords.Count != 0)
+            {
+                await _db.AddRangeAsync(newRecords, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+
+            return (newRecords, hasPoSales);
+        }
+
+        public async Task<int> ProcessSafeDrop(string file, CancellationToken cancellationToken = default)
+        {
+            var records = ReadSafeDropRecords(file);
+            var newRecords = await AddNewSafeDropRecords(records, cancellationToken);
+            return newRecords.Count;
+        }
+
+        private List<MobilitySafeDrop> ReadSafeDropRecords(string file)
+        {
+            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+            using var reader = new StreamReader(stream);
+            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HeaderValidated = null,
+                MissingFieldFound = null,
+            });
+
+            return csv.GetRecords<MobilitySafeDrop>().ToList();
+        }
+
+        private async Task<List<MobilitySafeDrop>> AddNewSafeDropRecords(List<MobilitySafeDrop> records, CancellationToken cancellationToken)
+        {
+            var newRecords = new List<MobilitySafeDrop>();
+            var existingNozdownList = await _db.Set<MobilitySafeDrop>().Select(r => r.xSTAMP).ToListAsync(cancellationToken);
+            var existingNozdownSet = new HashSet<string>(existingNozdownList);
+
+            foreach (var record in records)
+            {
+                if (!existingNozdownSet.Contains(record.xSTAMP))
+                {
+                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
+                        ? record.INV_DATE.AddDays(-1)
+                        : record.INV_DATE;
+
+                    newRecords.Add(record);
+                }
+            }
+
+            if (newRecords.Count != 0)
+            {
+                await _db.AddRangeAsync(newRecords, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+
+            return newRecords;
         }
     }
 }

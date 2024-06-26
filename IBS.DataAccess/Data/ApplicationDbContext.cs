@@ -199,7 +199,6 @@ namespace IBS.DataAccess.Data
                 f.HasIndex(f => f.xONAME);
                 f.HasIndex(f => f.INV_DATE);
                 f.HasIndex(f => f.xSITECODE);
-                f.HasIndex(f => f.IsProcessed);
                 f.HasIndex(f => f.Particulars);
                 f.HasIndex(f => f.Shift);
                 f.HasIndex(f => f.ItemCode);

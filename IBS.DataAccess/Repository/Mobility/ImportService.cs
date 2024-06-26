@@ -1,14 +1,10 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
-using IBS.DataAccess.Data;
+﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.Mobility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Globalization;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
@@ -94,7 +90,7 @@ namespace IBS.DataAccess.Repository.Mobility
             int safedropsCount;
             bool hasPoSales = false;
 
-            foreach (var station in stations.Where(s => s.StationName == "COMMONWEALTH"))
+            foreach (var station in stations)
             {
                 var importFolder = Path.Combine(station.FolderPath);
 
@@ -145,117 +141,24 @@ namespace IBS.DataAccess.Repository.Mobility
                     foreach (var file in files)
                     {
                         var fileName = Path.GetFileName(file).ToLower();
-
                         bool fileOpened = false;
                         int retryCount = 0;
                         while (!fileOpened && retryCount < 5)
                         {
                             try
                             {
-                                await using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
-                                using var reader = new StreamReader(stream);
-                                using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
-                                {
-                                    HeaderValidated = null,
-                                    MissingFieldFound = null,
-                                });
-
-                                var newRecords = new List<object>();
-
                                 if (fileName.Contains("fuels"))
                                 {
-                                    var records = csv.GetRecords<MobilityFuel>()
-                                         .OrderBy(r => r.INV_DATE)
-                                         .ThenBy(r => r.ItemCode)
-                                         .ThenBy(r => r.xPUMP)
-                                         .ThenBy(r => r.Opening);
-
-                                    // Fetch existing nozdown values and store them in a HashSet
-                                    var existingNozdownList = await db.Set<MobilityFuel>().Select(r => r.nozdown).ToListAsync();
-                                    var existingNozdownSet = new HashSet<string>(existingNozdownList);
-
-                                    DateOnly date = new();
-                                    int shift = 0;
-                                    decimal price = 0;
-                                    int pump = 0;
-                                    string itemCode = "";
-                                    int detailCount = 0;
-
-                                    foreach (var record in records)
-                                    {
-                                        if (!existingNozdownSet.Contains(record.nozdown))
-                                        {
-                                            hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
-
-                                            record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
-                                                ? record.INV_DATE.AddDays(-1)
-                                                : record.INV_DATE;
-
-                                            if (record.BusinessDate == date && record.Shift == shift && record.Price == price && record.xPUMP == pump && record.ItemCode == itemCode)
-                                            {
-                                                record.DetailGroup = detailCount;
-                                            }
-                                            else
-                                            {
-                                                detailCount++;
-                                                record.DetailGroup = detailCount;
-                                                date = record.BusinessDate;
-                                                shift = record.Shift;
-                                                price = record.Price;
-                                                pump = record.xPUMP;
-                                                itemCode = record.ItemCode;
-                                            }
-
-                                            newRecords.Add(record);
-                                            fuelsCount++;
-                                        }
-                                    }
+                                    (fuelsCount, hasPoSales) = await unitOfWork.MobilitySalesHeader.ProcessFuel(file);
                                 }
                                 else if (fileName.Contains("lubes"))
                                 {
-                                    var records = csv.GetRecords<MobilityLube>();
-
-                                    var existingNozdownList = await db.Set<MobilityLube>().Select(r => r.xStamp).ToListAsync();
-                                    var existingNozdownSet = new HashSet<string>(existingNozdownList);
-
-                                    foreach (var record in records)
-                                    {
-                                        if (!existingNozdownSet.Contains(record.xStamp))
-                                        {
-                                            hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
-
-                                            record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
-                                                ? record.INV_DATE.AddDays(-1)
-                                                : record.INV_DATE;
-
-                                            newRecords.Add(record);
-                                            lubesCount++;
-                                        }
-                                    }
+                                    (lubesCount, hasPoSales) = await unitOfWork.MobilitySalesHeader.ProcessLube(file);
                                 }
                                 else if (fileName.Contains("safedrops"))
                                 {
-                                    var records = csv.GetRecords<MobilitySafeDrop>();
-
-                                    var existingNozdownList = await db.Set<MobilitySafeDrop>().Select(r => r.xSTAMP).ToListAsync();
-                                    var existingNozdownSet = new HashSet<string>(existingNozdownList);
-
-                                    foreach (var record in records)
-                                    {
-                                        if (!existingNozdownSet.Contains(record.xSTAMP))
-                                        {
-                                            record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
-                                                ? record.INV_DATE.AddDays(-1)
-                                                : record.INV_DATE;
-
-                                            newRecords.Add(record);
-                                            safedropsCount++;
-                                        }
-                                    }
+                                    safedropsCount = await unitOfWork.MobilitySalesHeader.ProcessSafeDrop(file);
                                 }
-
-                                await db.AddRangeAsync(newRecords);
-                                await db.SaveChangesAsync();
 
                                 fileOpened = true; // File opened successfully, exit the loop
                             }
@@ -324,7 +227,7 @@ namespace IBS.DataAccess.Repository.Mobility
             int lubesCount;
             int poSalesCount;
 
-            foreach (var station in stations.Where(s => s.StationName == "COMMONWEALTH"))
+            foreach (var station in stations)
             {
                 var importFolder = Path.Combine(station.FolderPath);
 

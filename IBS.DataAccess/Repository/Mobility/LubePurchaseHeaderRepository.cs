@@ -158,7 +158,6 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     foreach (var transaction in sortedInventory.Skip(1))
                     {
-
                         if (transaction.Particulars == nameof(JournalType.Sales))
                         {
                             transaction.UnitCost = unitCostAverage;
@@ -229,7 +228,6 @@ namespace IBS.DataAccess.Repository.Mobility
                 {
                     throw new ArgumentException("Debit and Credit is not equal, check your entries.");
                 }
-
             }
             catch (Exception ex)
             {
