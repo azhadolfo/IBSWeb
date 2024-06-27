@@ -73,7 +73,7 @@ namespace IBSWeb.Areas.User.Controllers
                     await _unitOfWork.Supplier.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Supplier created successfully";
-                    return RedirectToAction("Index");
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {

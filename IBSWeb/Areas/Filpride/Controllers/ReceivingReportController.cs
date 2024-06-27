@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
-    [Area("Filpride")]
+    [Area(nameof(Filpride))]
     public class ReceivingReportController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

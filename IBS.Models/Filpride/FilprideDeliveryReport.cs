@@ -25,7 +25,7 @@ namespace IBS.Models.Filpride
 
         public int CustomerId { get; set; }
 
-        [ForeignKey("CustomerId")]
+        [ForeignKey(nameof(CustomerId))]
         public Customer? Customer { get; set; }
 
         #endregion
@@ -34,7 +34,7 @@ namespace IBS.Models.Filpride
 
         public int CustomerOrderSlipId { get; set; }
 
-        [ForeignKey("CustomerOrderSlipId")]
+        [ForeignKey(nameof(CustomerOrderSlipId))]
         public FilprideCustomerOrderSlip? CustomerOrderSlip { get; set; }
 
         #endregion
@@ -43,7 +43,7 @@ namespace IBS.Models.Filpride
 
         public int HaulerId { get; set; }
 
-        [ForeignKey("HaulerId")]
+        [ForeignKey(nameof(HaulerId))]
         public Hauler? Hauler { get; set; }
 
         #endregion

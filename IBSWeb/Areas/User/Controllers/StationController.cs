@@ -65,7 +65,7 @@ namespace IBSWeb.Areas.User.Controllers
                 await _unitOfWork.Station.AddAsync(model, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Station created successfully";
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
             ModelState.AddModelError("", "Make sure to fill all the required details.");
             return View(model);

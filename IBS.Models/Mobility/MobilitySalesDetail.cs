@@ -11,7 +11,7 @@ namespace IBS.Models.Mobility
 
         public int SalesHeaderId { get; set; }
 
-        [ForeignKey("SalesHeaderId")]
+        [ForeignKey(nameof(SalesHeaderId))]
         public MobilitySalesHeader? SalesHeader { get; set; }
 
         [Column(TypeName = "varchar(15)")]

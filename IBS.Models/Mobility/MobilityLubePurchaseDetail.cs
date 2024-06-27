@@ -11,7 +11,7 @@ namespace IBS.Models.Mobility
 
         public int LubePurchaseHeaderId { get; set; }
 
-        [ForeignKey("LubePurchaseHeaderId")]
+        [ForeignKey(nameof(LubePurchaseHeaderId))]
         public MobilityLubePurchaseHeader? LubePurchaseHeader { get; set; }
 
         [Column(TypeName = "varchar(50)")]

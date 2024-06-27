@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
-    [Area("Mobility")]
+    [Area(nameof(Mobility))]
     [Authorize]
     public class CashierReportController : Controller
     {
@@ -81,13 +81,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var postedBy = _userManager.GetUserName(User);
                     await _unitOfWork.MobilitySalesHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Cashier report approved successfully.";
-                    return Redirect($"/Mobility/CashierReport/Preview/{id}?stationCode={stationCode}");
+                    return RedirectToAction(nameof(Preview), new { id, stationCode });
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting cashier report.");
                     TempData["error"] = $"Error: '{ex.Message}'";
-                    return Redirect($"/Mobility/CashierReport/Preview/{id}?stationCode={stationCode}");
+                    return RedirectToAction(nameof(Preview), new { id, stationCode });
                 }
             }
 

@@ -24,7 +24,7 @@ namespace IBS.Models.Filpride
 
         public int PurchaseOrderId { get; set; }
 
-        [ForeignKey("PurchaseOrderId")]
+        [ForeignKey(nameof(PurchaseOrderId))]
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
 
         #endregion
@@ -33,6 +33,7 @@ namespace IBS.Models.Filpride
 
         public int CustomerId { get; set; }
 
+        [ForeignKey(nameof(CustomerId))]
         public Customer? Customer { get; set; }
 
         #endregion

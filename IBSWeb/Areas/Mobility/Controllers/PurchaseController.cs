@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
-    [Area("Mobility")]
+    [Area(nameof(Mobility))]
     [Authorize]
     public class PurchaseController : Controller
     {
@@ -78,13 +78,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var postedBy = _userManager.GetUserName(User);
                     await _unitOfWork.MobilityFuelPurchase.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Fuel delivery approved successfully.";
-                    return Redirect($"/Mobility/Purchase/PreviewFuel/{id}?stationCode={stationCode}");
+                    return RedirectToAction(nameof(PreviewFuel), new { id, stationCode });
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting fuel delivery.");
                     TempData["error"] = $"Error: '{ex.Message}'";
-                    return Redirect($"/Mobility/Purchase/PreviewFuel/{id}?stationCode={stationCode}");
+                    return RedirectToAction(nameof(PreviewFuel), new { id, stationCode });
                 }
             }
 
@@ -188,13 +188,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var postedBy = _userManager.GetUserName(User);
                     await _unitOfWork.MobilityLubePurchaseHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
                     TempData["success"] = "Lube delivery approved successfully.";
-                    return Redirect($"/Mobility/Purchase/PreviewLube/{id}?stationCode={stationCode}");
+                    return RedirectToAction(nameof(PreviewLube), new { id, stationCode });
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting lube delivery.");
                     TempData["error"] = $"Error: '{ex.Message}'";
-                    return Redirect($"/Mobility/Purchase/PreviewLube/{id}?stationCode={stationCode}");
+                    return RedirectToAction(nameof(PreviewLube), new { id, stationCode });
                 }
             }
 

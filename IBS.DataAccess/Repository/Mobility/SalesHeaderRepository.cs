@@ -363,7 +363,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     }
                     else
                     {
-                        throw new ArgumentException($"Beginning inventory for {product.Key} in station {station.StationCode} not found!");
+                        throw new ArgumentException($"Beginning inventory for the month of '{salesVM.Header.Date:MMMM}' in this product '{product.Key} on station '{station.StationCode}' was not found!");
                     }
 
                     var previousInventory = sortedInventory.FirstOrDefault();

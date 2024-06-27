@@ -2,6 +2,7 @@
 using IBS.Dtos;
 using IBS.Models;
 using IBS.Utility;
+using IBSWeb.Areas.Mobility.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -38,7 +39,6 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> InventoryCosting(Inventory model, DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken)
         {
-
             IEnumerable<Inventory> inventories;
             ProductDto productDetails = await _unitOfWork.Product.MapProductToDTO(model.ProductCode, cancellationToken);
             var user = await _userManager.GetUserAsync(User);
@@ -76,7 +76,6 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> BeginningInventory(Inventory model, CancellationToken cancellationToken)
         {
-
             try
             {
                 if (model.StationCode == null)
@@ -111,15 +110,15 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (productCode.StartsWith("PET") && typeOfTransaction == nameof(JournalType.Sales))
             {
-                return Redirect($"/User/CashierReport/Preview/{transactionNo}?stationCode={stationCode}");
+                return RedirectToAction(nameof(CashierReportController.Preview), "CashierReport", new { area = nameof(Mobility), id = transactionNo, stationCode });
             }
             else if (productCode.StartsWith("PET") && typeOfTransaction == nameof(JournalType.Purchase))
             {
-                return Redirect($"/User/Purchase/PreviewFuel/{transactionNo}?stationCode={stationCode}");
+                return RedirectToAction(nameof(PurchaseController.PreviewFuel), "Purchase", new { area = nameof(Mobility), id = transactionNo, stationCode });
             }
             else
             {
-                return Redirect($"/User/Purchase/PreviewLube/{transactionNo}?stationCode={stationCode}");
+                return RedirectToAction(nameof(PurchaseController.PreviewLube), "Purchase", new { area = nameof(Mobility), id = transactionNo, stationCode });
             }
         }
 
@@ -155,8 +154,5 @@ namespace IBSWeb.Areas.User.Controllers
                 return BadRequest();
             }
         }
-
-
-
     }
 }
