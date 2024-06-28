@@ -44,7 +44,7 @@ namespace IBS.DataAccess.Repository
 
         public ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; private set; }
 
-        public IDeliveryReportRepository FilprideDeliveryReport { get; private set; }
+        public IDeliveryReceiptRepository FilprideDeliveryReceipt { get; private set; }
 
         #endregion
 
@@ -78,7 +78,7 @@ namespace IBS.DataAccess.Repository
             FilpridePurchaseOrder = new PurchaseOrderRepository(_db);
             FilprideReceivingReport = new ReceivingReportRepository(_db);
             FilprideCustomerOrderSlip = new CustomerOrderSlipRepository(_db);
-            FilprideDeliveryReport = new DeliveryReportRepository(_db);
+            FilprideDeliveryReceipt = new DeliveryReceiptRepository(_db);
 
             #endregion
         }
@@ -92,6 +92,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.Customers
                 .OrderBy(c => c.CustomerId)
+                .Where(c => c.IsActive)
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),
@@ -104,6 +105,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.Products
                 .OrderBy(p => p.ProductId)
+                .Where(p => p.IsActive)
                 .Select(p => new SelectListItem
                 {
                     Value = p.ProductCode,
@@ -116,6 +118,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.Products
                 .OrderBy(p => p.ProductId)
+                .Where(p => p.IsActive)
                 .Select(p => new SelectListItem
                 {
                     Value = p.ProductId.ToString(),
@@ -128,6 +131,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.Stations
                 .OrderBy(s => s.StationId)
+                .Where(s => s.IsActive)
                 .Select(s => new SelectListItem
                 {
                     Value = s.StationCode,
@@ -140,6 +144,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.Stations
                 .OrderBy(s => s.StationId)
+                .Where(s => s.IsActive)
                 .Select(s => new SelectListItem
                 {
                     Value = s.StationId.ToString(),
@@ -178,6 +183,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.Suppliers
                 .OrderBy(s => s.SupplierCode)
+                .Where(s => s.IsActive)
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),

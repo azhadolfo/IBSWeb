@@ -26,16 +26,16 @@ namespace IBS.Models.Filpride.ViewModels
 
         #endregion Customer properties
 
-        public string PoNo { get; set; }
+        [Required(ErrorMessage = "Customer PO No field is required.")]
+        public string CustomerPoNo { get; set; }
 
-        #region Product properties
+        #region--PO properties
 
-        [Required(ErrorMessage = "Product field is required.")]
-        public int ProductId { get; set; }
+        public int PurchaseOrderId { get; set; }
 
-        public List<SelectListItem>? Products { get; set; }
+        public List<SelectListItem>? PurchaseOrders { get; set; }
 
-        #endregion Product properties
+        #endregion
 
         public decimal Quantity { get; set; }
 

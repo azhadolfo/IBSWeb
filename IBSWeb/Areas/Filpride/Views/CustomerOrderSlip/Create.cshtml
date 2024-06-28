@@ -38,27 +38,27 @@
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" disabled readonly/>
+                        <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" readonly/>
                         <label asp-for="CustomerAddress"></label>
                         <span asp-validation-for="CustomerAddress" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="TinNo" class="form-control border-0 shadow" placeholder="" disabled readonly />
+                        <input asp-for="TinNo" class="form-control border-0 shadow" placeholder="" readonly />
                         <label asp-for="TinNo"></label>
                         <span asp-validation-for="TinNo" class="text-danger"></span>
                     </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="CustomerPoNo" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="CustomerPoNo">Customer PO No.<span class="required">*</span></label>
+                        <span asp-validation-for="CustomerPoNo" class="text-danger"></span>
+                    </div>
                 </fieldset>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="PoNo" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="PoNo">PO No.<span class="required">*</span></label>
-                    <span asp-validation-for="PoNo" class="text-danger"></span>
-                </div>
                 <div class="form-group py-2 col-12">
-                    <label class="control-label">Product List<span class="required">*</span></label>
-                    <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select product</option>
+                    <label class="control-label">PO List<span class="required">*</span></label>
+                    <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select po</option>
                     </select>
-                    <span asp-validation-for="ProductId" class="text-danger"></span>
+                    <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
                 </div>
                 <div class="row py-2">
                     <div class="form-floating col-4">

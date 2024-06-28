@@ -66,7 +66,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IPurchaseOrderRepository FilpridePurchaseOrder { get; }
         IReceivingReportRepository FilprideReceivingReport { get; }
         ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; }
-        IDeliveryReportRepository FilprideDeliveryReport { get; }
+        IDeliveryReceiptRepository FilprideDeliveryReceipt { get; }
 
         #endregion
     }

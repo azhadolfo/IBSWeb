@@ -42,7 +42,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideCustomerOrderSlip> query = dbSet
                 .Include(cos => cos.Customer)
-                .Include(cos => cos.Product);
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product);
 
             if (filter != null)
             {
@@ -56,7 +56,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await dbSet.Where(filter)
                 .Include(cos => cos.Customer)
-                .Include(cos => cos.Product)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -67,8 +67,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Date = viewModel.Date;
             existingRecord.DeliveryDateAndTime = viewModel.DeliveryDateAndTime;
             existingRecord.CustomerId = viewModel.CustomerId;
-            existingRecord.PoNo = viewModel.PoNo;
-            existingRecord.ProductId = viewModel.ProductId;
+            existingRecord.CustomerPoNo = viewModel.CustomerPoNo;
+            existingRecord.PurchaseOrderId = viewModel.PurchaseOrderId;
             existingRecord.Quantity = viewModel.Quantity;
             existingRecord.DeliveredPrice = viewModel.DeliveredPrice;
             existingRecord.Vat = viewModel.Vat;
@@ -91,6 +91,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
+                .Where(cos => cos.ApprovedBy != null)
+                .Select(cos => new SelectListItem
+                {
+                    Value = cos.CustomerOrderSlipId.ToString(),
+                    Text = cos.CustomerOrderSlipNo
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetCosListPerCustomerAsync(int customerId, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideCustomerOrderSlips
+                .OrderBy(cos => cos.CustomerOrderSlipId)
+                .Where(cos => cos.ApprovedBy != null && cos.CustomerId == customerId)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),

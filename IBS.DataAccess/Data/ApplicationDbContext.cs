@@ -57,7 +57,7 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideCustomerOrderSlip> FilprideCustomerOrderSlips { get; set; }
 
-        public DbSet<FilprideDeliveryReport> FilprideDeliveryReports { get; set; }
+        public DbSet<FilprideDeliveryReceipt> FilprideDeliveryReceipts { get; set; }
 
         #endregion
 
@@ -348,27 +348,22 @@ namespace IBS.DataAccess.Data
                 cos.HasIndex(cos => cos.CustomerOrderSlipNo).IsUnique();
                 cos.HasIndex(cos => cos.Date);
 
+                cos.HasOne(cos => cos.PurchaseOrder)
+                .WithMany()
+                .HasForeignKey(cos => cos.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
                 cos.HasOne(cos => cos.Customer)
                 .WithMany()
                 .HasForeignKey(cos => cos.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-                cos.HasOne(cos => cos.Product)
-                .WithMany()
-                .HasForeignKey(cos => cos.ProductId)
-                .OnDelete(DeleteBehavior.Restrict);
             });
 
-            builder.Entity<FilprideDeliveryReport>(dr =>
+            builder.Entity<FilprideDeliveryReceipt>(dr =>
             {
-                dr.HasIndex(dr => dr.DeliveryReportNo).IsUnique();
+                dr.HasIndex(dr => dr.DeliveryReceiptNo).IsUnique();
                 dr.HasIndex(dr => dr.InvoiceNo).IsUnique();
                 dr.HasIndex(dr => dr.Date);
-
-                dr.HasOne(dr => dr.Customer)
-                .WithMany()
-                .HasForeignKey(dr => dr.CustomerId)
-                .OnDelete(DeleteBehavior.Restrict);
 
                 dr.HasOne(dr => dr.CustomerOrderSlip)
                 .WithMany()

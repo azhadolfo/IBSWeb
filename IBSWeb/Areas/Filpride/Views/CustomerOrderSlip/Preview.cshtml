@@ -42,8 +42,8 @@
                 <td class="w-25 text-end"><b>Exp Date:</b> &nbsp;@Model.ExpirationDate?.ToString("MMM dd, yyyy")</td>
             </tr>
             <tr>
-                <td><b>Terms.:</b> &nbsp;@Model.Customer?.CustomerTerms</td>
-                <td class="2-25 text-end"><b>PO No:</b> &nbsp;@Model.PoNo</td>
+                <td><b>Terms:</b> &nbsp;@Model.Customer?.CustomerTerms</td>
+                <td class="2-25 text-end"><b>PO No:</b> &nbsp;@Model.CustomerPoNo</td>
             </tr>
         </tbody>
     </table>
@@ -63,9 +63,9 @@
         </thead>
         <tbody>
             <tr>
-                <td scope="row">@Model.Product?.ProductName</td>
+                <td scope="row">@Model.PurchaseOrder.Product?.ProductName</td>
                 <td>@Html.DisplayFor(model => model.Quantity)</td>
-                <td>@Model.Product?.ProductUnit</td>
+                <td>@Model.PurchaseOrder.Product?.ProductUnit</td>
                 <td>@Html.DisplayFor(model => model.Vat)</td>
                 <td>@Html.DisplayFor(model => model.DeliveredPrice)</td>
                 <td>@Html.DisplayFor(model => model.TotalAmount)</td>
@@ -86,23 +86,8 @@
 
 <div class="text-center w-100" style="margin-top:10px;">
     <p>
-        <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br />
         Series: COS0000000001 - COS9999999999<br />
         Date and Time Created:&nbsp; @Model.CreatedDate.ToString("MMM dd, yyyy hh:mm tt")
-    </p>
-</div>
-
-<div class="text-start w-100 footer mt-5">
-    <p class="m-0 p-0">
-        <em>
-            <strong>Software Name :</strong> Integrated Business System (IBS)
-            <br />
-            <strong>Version :</strong> v1.0.0
-            <br />
-            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
-            <br />
-            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MMM dd, yyyy hh:mm tt")
-        </em>
     </p>
 </div>
 
@@ -118,6 +103,20 @@ else
         REPRINT COPY
     </div>
 }
+
+<div class="text-start w-100 footer mt-5">
+    <p class="m-0 p-0">
+        <em>
+            <strong>Software Name :</strong> Integrated Business System (IBS)
+            <br />
+            <strong>Version :</strong> v1.0.0
+            <br />
+            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+            <br />
+            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MMM dd, yyyy hh:mm tt")
+        </em>
+    </p>
+</div>
 
 <div class="row pt-2">
     @{

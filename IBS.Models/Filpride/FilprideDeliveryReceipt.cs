@@ -5,30 +5,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride
 {
-    public class FilprideDeliveryReport : BaseEntity
+    public class FilprideDeliveryReceipt : BaseEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int DeliveryReportId { get; set; }
+        public int DeliveryReceiptId { get; set; }
 
         [Column(TypeName = "varchar(12)")]
         [Display(Name = "DR No")]
-        public string DeliveryReportNo { get; set; }
+        public string DeliveryReceiptNo { get; set; }
 
         [Column(TypeName = "date")]
         public DateOnly Date { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string InvoiceNo { get; set; }
-
-        #region--Customer properties
-
-        public int CustomerId { get; set; }
-
-        [ForeignKey(nameof(CustomerId))]
-        public Customer? Customer { get; set; }
-
-        #endregion
 
         #region--COS properties
 
@@ -48,11 +39,12 @@ namespace IBS.Models.Filpride
 
         #endregion
 
-        [Column(TypeName = "varchar(50)")]
-        public string Driver { get; set; }
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal Freight { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string TruckAndPlateNo { get; set; }
+        public string LoadPort { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string AuthorityToLoadNo { get; set; }
@@ -75,5 +67,7 @@ namespace IBS.Models.Filpride
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal VatAmount { get; set; }
+
+        public bool IsPrinted { get; set; }
     }
 }

@@ -1,0 +1,228 @@
+﻿@model DeliveryReceiptViewModel
+
+@{
+    ViewData["Title"] = "Create Delivery Receipt";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Edit Delivery Receipt</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <div class="border-2 p-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <input asp-for="DeliverReceiptId" type="hidden" />
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <label asp-for="Date">Date<span class="required">*</span></label>
+                    <span asp-validation-for="Date" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="InvoiceNo" class="form-control border-0 shadow" placeholder="Leave it blank if the delivery receipt (DR) is the same as the invoice number." />
+                    <label asp-for="InvoiceNo">Invoice No</label>
+                    <span asp-validation-for="InvoiceNo" class="text-danger"></span>
+                </div>
+                <fieldset class="border p-2 py-2">
+                    <legend class="w-auto px-2">Customer Details</legend>
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Customer List<span class="required">*</span></label>
+                        <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected>Select customer</option>
+                        </select>
+                        <span asp-validation-for="CustomerId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" readonly />
+                        <label asp-for="CustomerAddress">Address</label>
+                        <span asp-validation-for="CustomerAddress" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="CustomerTin" class="form-control border-0 shadow" placeholder="" readonly />
+                        <label asp-for="CustomerTin">TIN</label>
+                        <span asp-validation-for="CustomerTin" class="text-danger"></span>
+                    </div>
+                </fieldset>
+                <hr />
+                <fieldset class="border p-2 py-2">
+                    <legend class="w-auto px-2">Order Details</legend>
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">COS List<span class="required">*</span></label>
+                        <select asp-for="CustomerOrderSlipId" asp-items="@Model.CustomerOrderSlips" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected>Select cos</option>
+                        </select>
+                        <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="Product" class="form-control border-0 shadow" placeholder="" readonly />
+                        <label asp-for="Product"></label>
+                        <span asp-validation-for="Product" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="RemainingVolume" class="form-control border-0 shadow" placeholder="" readonly />
+                        <label asp-for="RemainingVolume">Remaining Volume</label>
+                        <span asp-validation-for="RemainingVolume" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="Price" class="form-control border-0 shadow" placeholder="" readonly />
+                        <label asp-for="Price"></label>
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+                </fieldset>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="Volume">Volume<span class="required">*</span></label>
+                    <span asp-validation-for="Volume" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="TotalAmount" class="form-control border-0 shadow" placeholder="" readonly />
+                    <label asp-for="TotalAmount">Total Amount</label>
+                    <span asp-validation-for="TotalAmount" class="text-danger"></span>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Hauler List<span class="required">*</span></label>
+                    <select asp-for="HaulerId" asp-items="@Model.Haulers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select hauler</option>
+                    </select>
+                    <span asp-validation-for="HaulerId" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="AuthorityToLoadNo" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="AuthorityToLoadNo">ATL No<span class="required">*</span></label>
+                    <span asp-validation-for="AuthorityToLoadNo" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="Freight">Freight<span class="required">*</span></label>
+                    <span asp-validation-for="Freight" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="LoadPort" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="LoadPort">Load Port<span class="required">*</span></label>
+                    <span asp-validation-for="LoadPort" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
+                    <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
+                    <span asp-validation-for="Remarks" class="text-danger"></span>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control">Save</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+                </input>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            //Get customer
+            $('select[name="CustomerId"]').on('change', function () {
+                var customerId = $(this).val();
+                if (customerId) {
+                    $.ajax({
+                        url: '@Url.Action("GetCustomerDetails", "DeliveryReceipt", new { area = "Filpride" })',
+                        type: "GET",
+                        data: { id: customerId },
+                        success: function (data) {
+                            if (data) {
+                                $('input[name="CustomerAddress"]').val(data.address);
+                                $('input[name="CustomerTin"]').val(data.tinNo);
+                            } else {
+                                $('input[name="CustomerAddress"]').val('');
+                                $('input[name="CustomerTin"]').val('');
+                            }
+
+                            // Update COS list
+                            updateCustomerOrderSlips(customerId);
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error: " + error);
+                        }
+                    });
+                } else {
+                    $('input[name="CustomerAddress"]').val('');
+                    $('input[name="CustomerTin"]').val('');
+                }
+            });
+
+            //Get cos
+            $('select[name="CustomerOrderSlipId"]').on('change', function () {
+                var cosId = $(this).val();
+                if (cosId) {
+                    $.ajax({
+                        url: '@Url.Action("GetCosDetails", "DeliveryReceipt", new { area = "Filpride" })',
+                        type: "GET",
+                        data: { id: cosId },
+                        success: function (data) {
+                            if (data) {
+                                $('input[name="Product"]').val(data.product);
+                                $('input[name="RemainingVolume"]').val(formatNumber(data.remainingVolume));
+                                $('input[name="Price"]').val(formatNumber(data.price));
+                            } else {
+                                $('input[name="Product"]').val('');
+                                $('input[name="RemainingVolume"]').val('');
+                                $('input[name="Price"]').val('');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error: " + error);
+                        }
+                    });
+                } else {
+                    $('input[name="Product"]').val('');
+                    $('input[name="RemainingVolume"]').val('');
+                    $('input[name="Price"]').val('');
+                }
+            });
+
+            // Calculate Total Amount
+            $('input[name="Volume"]').on('input', function () {
+                var volume = parseFloat($(this).val()) || 0;
+                var price = parseFloat($('input[name="Price"]').val().replace(/,/g, '')) || 0;
+                var totalAmount = volume * price;
+                $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
+            });
+
+            // Update COS list based on customer
+            function updateCustomerOrderSlips(customerId) {
+                if (customerId) {
+                    $.ajax({
+                        url: '@Url.Action("GetCustomerOrderSlipList", "DeliveryReceipt", new { area = "Filpride" })',
+                        type: "GET",
+                        data: { customerId: customerId },
+                        success: function (data) {
+                            var $cosSelect = $('select[name="CustomerOrderSlipId"]');
+                            $cosSelect.empty();
+                            if (data && data.length > 0) {
+                                $cosSelect.append('<option value="">Select cos</option>');
+                                $.each(data, function (index, item) {
+                                    $cosSelect.append('<option value="' + item.value + '">' + item.text + '</option>');
+                                });
+                            } else {
+                                $cosSelect.append('<option value="">No cos available</option>');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error: " + error);
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+}

@@ -35,20 +35,19 @@ namespace IBS.Models.Filpride
         public string Remarks { get; set; }
 
         [Column(TypeName = "varchar(100)")]
-        [Display(Name = "PO No.")]
-        public string PoNo { get; set; }
+        [Display(Name = "Customer PO No.")]
+        public string CustomerPoNo { get; set; }
+
+        #region--PO properties
+
+        public int PurchaseOrderId { get; set; }
+
+        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
+
+        #endregion
 
         [Column(TypeName = "timestamp without time zone")]
         public DateTime DeliveryDateAndTime { get; set; }
-
-        #region--Product properties
-
-        public int ProductId { get; set; }
-
-        [ForeignKey(nameof(ProductId))]
-        public Product? Product { get; set; }
-
-        #endregion
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]

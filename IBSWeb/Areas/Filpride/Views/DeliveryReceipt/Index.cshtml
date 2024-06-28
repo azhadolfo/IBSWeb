@@ -1,14 +1,14 @@
-﻿@model IEnumerable<FilprideDeliveryReport>
+﻿@model IEnumerable<FilprideDeliveryReceipt>
 
 @{
-    ViewData["Title"] = "Delivery Report";
+    ViewData["Title"] = "Delivery Receipt";
 }
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">DELIVERY REPORT</h2>
+                <h2 class="text-white py-2">DELIVERY RECEIPT</h2>
             </div>
         </div>
     </div>
@@ -17,7 +17,7 @@
             <div class="col-6">
             </div>
             <div class="col-6 text-end">
-                <a asp-area="Filpride" asp-controller="DeliveryReport" asp-action="Create" class="btn btn-primary">
+                <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Create" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Create New
                 </a>
             </div>
@@ -26,7 +26,7 @@
             <thead>
                 <tr>
                     <th>
-                        @Html.DisplayNameFor(m => m.DeliveryReportNo)
+                        @Html.DisplayNameFor(m => m.DeliveryReceiptNo)
                     </th>
                     <th>
                         @Html.DisplayNameFor(m => m.Date)
@@ -44,11 +44,11 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var obj in Model.OrderBy(u => u.DeliveryReportNo))
+                @foreach (var obj in Model.OrderBy(u => u.DeliveryReceiptNo))
                 {
                     <tr>
                         <td>
-                            @obj.DeliveryReportNo
+                            @obj.DeliveryReceiptNo
                         </td>
                         <td>
                             @obj.Date.ToString("MMM dd, yyyy")
@@ -66,11 +66,11 @@
                             <div class="w-100 btn-group" role="group">
                                 @if (obj.PostedBy == null)
                                 {
-                                    <a asp-area="Filpride" asp-controller="DeliveryReport" asp-action="Edit" asp-route-id="@obj.DeliveryReportNo" class="btn btn-primary mx-2">
+                                    <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Edit" asp-route-id="@obj.DeliveryReceiptNo" class="btn btn-primary mx-2">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </a>
                                 }
-                                <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="DeliveryReport" asp-action="Preview" asp-route-id="@obj.DeliveryReportNo">
+                                <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Preview" asp-route-id="@obj.DeliveryReceiptNo">
                                     <i class="bi bi-printer-fill"></i> Preview
                                 </a>
                             </div>
@@ -78,7 +78,6 @@
                     </tr>
                 }
             </tbody>
-
         </table>
     </div>
 </div>

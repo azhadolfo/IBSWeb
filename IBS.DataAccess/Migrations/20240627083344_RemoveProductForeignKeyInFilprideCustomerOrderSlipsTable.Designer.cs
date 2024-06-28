@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240627083344_RemoveProductForeignKeyInFilprideCustomerOrderSlipsTable")]
+    partial class RemoveProductForeignKeyInFilprideCustomerOrderSlipsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -178,14 +181,14 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_customer_order_slips", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideDeliveryReceipt", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideDeliveryReport", b =>
                 {
-                    b.Property<int>("DeliveryReceiptId")
+                    b.Property<int>("DeliveryReportId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("delivery_receipt_id");
+                        .HasColumnName("delivery_report_id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DeliveryReceiptId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DeliveryReportId"));
 
                     b.Property<string>("AuthorityToLoadNo")
                         .IsRequired()
@@ -216,10 +219,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("date");
 
-                    b.Property<string>("DeliveryReceiptNo")
+                    b.Property<string>("DeliveryReportNo")
                         .IsRequired()
                         .HasColumnType("varchar(12)")
-                        .HasColumnName("delivery_receipt_no");
+                        .HasColumnName("delivery_report_no");
 
                     b.Property<string>("EditedBy")
                         .HasColumnType("varchar(50)")
@@ -241,10 +244,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(50)")
                         .HasColumnName("invoice_no");
-
-                    b.Property<bool>("IsPrinted")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_printed");
 
                     b.Property<string>("LoadPort")
                         .IsRequired()
@@ -288,27 +287,27 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("voided_date");
 
-                    b.HasKey("DeliveryReceiptId")
-                        .HasName("pk_filpride_delivery_receipts");
+                    b.HasKey("DeliveryReportId")
+                        .HasName("pk_filpride_delivery_reports");
 
                     b.HasIndex("CustomerOrderSlipId")
-                        .HasDatabaseName("ix_filpride_delivery_receipts_customer_order_slip_id");
+                        .HasDatabaseName("ix_filpride_delivery_reports_customer_order_slip_id");
 
                     b.HasIndex("Date")
-                        .HasDatabaseName("ix_filpride_delivery_receipts_date");
+                        .HasDatabaseName("ix_filpride_delivery_reports_date");
 
-                    b.HasIndex("DeliveryReceiptNo")
+                    b.HasIndex("DeliveryReportNo")
                         .IsUnique()
-                        .HasDatabaseName("ix_filpride_delivery_receipts_delivery_receipt_no");
+                        .HasDatabaseName("ix_filpride_delivery_reports_delivery_report_no");
 
                     b.HasIndex("HaulerId")
-                        .HasDatabaseName("ix_filpride_delivery_receipts_hauler_id");
+                        .HasDatabaseName("ix_filpride_delivery_reports_hauler_id");
 
                     b.HasIndex("InvoiceNo")
                         .IsUnique()
-                        .HasDatabaseName("ix_filpride_delivery_receipts_invoice_no");
+                        .HasDatabaseName("ix_filpride_delivery_reports_invoice_no");
 
-                    b.ToTable("filpride_delivery_receipts", (string)null);
+                    b.ToTable("filpride_delivery_reports", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.FilpridePurchaseOrder", b =>
@@ -3400,21 +3399,21 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("PurchaseOrder");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideDeliveryReceipt", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideDeliveryReport", b =>
                 {
                     b.HasOne("IBS.Models.Filpride.FilprideCustomerOrderSlip", "CustomerOrderSlip")
                         .WithMany()
                         .HasForeignKey("CustomerOrderSlipId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_filpride_delivery_receipts_filpride_customer_order_slips_cu");
+                        .HasConstraintName("fk_filpride_delivery_reports_filpride_customer_order_slips_cus");
 
                     b.HasOne("IBS.Models.MasterFile.Hauler", "Hauler")
                         .WithMany()
                         .HasForeignKey("HaulerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_filpride_delivery_receipts_haulers_hauler_id");
+                        .HasConstraintName("fk_filpride_delivery_reports_haulers_hauler_id");
 
                     b.Navigation("CustomerOrderSlip");
 

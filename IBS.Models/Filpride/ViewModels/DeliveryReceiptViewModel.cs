@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IBS.Models.Filpride.ViewModels
 {
-    public class DeliveryReportViewModel
+    public class DeliveryReceiptViewModel
     {
-        public int DeliverReportId { get; set; }
+        public int DeliverReceiptId { get; set; }
 
         public DateOnly Date { get; set; }
 
@@ -18,9 +18,9 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem>? Customers { get; set; }
 
-        public string CustomerAddress { get; set; }
+        public string? CustomerAddress { get; set; }
 
-        public string CustomerTin { get; set; }
+        public string? CustomerTin { get; set; }
 
         #endregion
 
@@ -31,11 +31,11 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem>? CustomerOrderSlips { get; set; }
 
-        public string Product { get; set; }
+        public string? Product { get; set; }
 
-        public decimal RemainingVolume { get; set; }
+        public decimal? RemainingVolume { get; set; }
 
-        public decimal Price { get; set; }
+        public decimal? Price { get; set; }
 
         #endregion
 
@@ -52,9 +52,11 @@ namespace IBS.Models.Filpride.ViewModels
 
         #endregion
 
-        public string Driver { get; set; }
+        public decimal Freight { get; set; }
 
-        public string TruckOrPlateNo { get; set; }
+        public string LoadPort { get; set; }
+
+        public string AuthorityToLoadNo { get; set; }
 
         public string Remarks { get; set; }
     }

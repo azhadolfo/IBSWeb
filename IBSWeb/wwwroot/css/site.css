@@ -506,3 +506,8 @@ bg-success {
         margin-left: .5em;
     }
 }
+
+input[readonly] {
+    background-color: #f5f5f5; /* Light grey background */
+    cursor: not-allowed; /* Indicate that the input is not editable */
+}
