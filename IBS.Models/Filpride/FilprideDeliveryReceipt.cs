@@ -21,6 +21,15 @@ namespace IBS.Models.Filpride
         [Column(TypeName = "varchar(50)")]
         public string InvoiceNo { get; set; }
 
+        #region--Customer properties
+
+        public int CustomerId { get; set; }
+
+        [ForeignKey(nameof(CustomerId))]
+        public Customer? Customer { get; set; }
+
+        #endregion
+
         #region--COS properties
 
         public int CustomerOrderSlipId { get; set; }

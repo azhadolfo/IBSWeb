@@ -332,9 +332,9 @@ namespace IBS.DataAccess.Data
                 rr.HasIndex(rr => rr.ReceivingReportNo).IsUnique();
                 rr.HasIndex(rr => rr.Date);
 
-                rr.HasOne(rr => rr.PurchaseOrder)
+                rr.HasOne(rr => rr.DeliveryReceipt)
                 .WithMany()
-                .HasForeignKey(rr => rr.PurchaseOrderId)
+                .HasForeignKey(rr => rr.DeliveryReceiptId)
                 .OnDelete(DeleteBehavior.Restrict);
 
                 rr.HasOne(rr => rr.Customer)
@@ -373,6 +373,11 @@ namespace IBS.DataAccess.Data
                 dr.HasOne(dr => dr.Hauler)
                 .WithMany()
                 .HasForeignKey(dr => dr.HaulerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                dr.HasOne(dr => dr.Customer)
+                .WithMany()
+                .HasForeignKey(dr => dr.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
             });
 

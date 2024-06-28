@@ -33,7 +33,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             ReceivingReportViewModel viewModel = new()
             {
-                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken),
+                DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
                 Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken),
             };
 
@@ -47,33 +47,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
-                    var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder
-                        .GetAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
+                    var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAsync(po => po.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
 
                     FilprideReceivingReport model = new()
                     {
                         ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(cancellationToken),
                         Date = viewModel.Date,
-                        DueDate = _unitOfWork.FilprideReceivingReport.CalculateDueDate(purchaseOrder.Terms, viewModel.Date, cancellationToken),
-                        PurchaseOrderId = viewModel.PurchaseOrderId,
+                        DueDate = _unitOfWork.FilprideReceivingReport.CalculateDueDate(deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Terms, viewModel.Date, cancellationToken),
+                        DeliveryReceiptId = viewModel.DeliveryReceiptId,
                         CustomerId = viewModel.CustomerId,
                         SupplierSiNo = viewModel.SupplierSiNo,
                         SupplierSiDate = viewModel.SupplierSiDate,
                         SupplierDrNo = viewModel.SupplierDrNo,
                         SupplierDrDate = viewModel.SupplierDrDate,
-                        TruckOrVessels = viewModel.TruckOrVessels,
                         OtherReference = viewModel.OtherReference,
                         QuantityDelivered = viewModel.QuantityDelivered,
                         QuantityReceived = viewModel.QuantityReceived,
                         GainOrLoss = viewModel.QuantityDelivered - viewModel.QuantityReceived,
-                        TotalAmount = viewModel.QuantityReceived * purchaseOrder.UnitCost,
-                        Freight = viewModel.Freight,
+                        TotalAmount = viewModel.QuantityReceived * deliveryReceipt.CustomerOrderSlip.PurchaseOrder.UnitCost,
                         TotalFreight = viewModel.TotalFreight,
                         Remarks = viewModel.Remarks,
                         CreatedBy = _userManager.GetUserName(User)
                     };
 
-                    if (purchaseOrder.Supplier.VatType == SD.VatType_Vatable)
+                    if (deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable)
                     {
                         model.NetOfVatAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(model.TotalAmount);
                         model.VatAmount = _unitOfWork.FilprideReceivingReport.ComputeVatAmount(model.TotalAmount);
@@ -84,7 +82,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.VatAmount = 0;
                     }
 
-                    if (purchaseOrder.Supplier.TaxType == SD.TaxType_WithTax)
+                    if (deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.TaxType == SD.TaxType_WithTax)
                     {
                         model.NetOfTaxAmount = model.NetOfVatAmount * 0.01m;
                     }
@@ -100,14 +98,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
+                    viewModel.DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
                     viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
-            viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
+            viewModel.DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
             viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
@@ -135,8 +133,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     ReceivingReportId = existingRecord.ReceivingReportId,
                     Date = existingRecord.Date,
-                    PurchaseOrderId = existingRecord.PurchaseOrderId,
-                    PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken),
+                    DeliveryReceiptId = existingRecord.DeliveryReceiptId,
+                    DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
                     Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken),
                     CustomerId = existingRecord.CustomerId,
                     SupplierSiNo = existingRecord.SupplierSiNo,
@@ -144,11 +142,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     SupplierDrNo = existingRecord.SupplierDrNo,
                     SupplierDrDate = existingRecord.SupplierDrDate,
                     WithdrawalCertificate = existingRecord.WithdrawalCertificate,
-                    TruckOrVessels = existingRecord.TruckOrVessels,
                     OtherReference = existingRecord.OtherReference,
                     QuantityDelivered = existingRecord.QuantityDelivered,
                     QuantityReceived = existingRecord.QuantityReceived,
-                    Freight = existingRecord.Freight,
+                    Freight = existingRecord.DeliveryReceipt.Freight,
                     TotalFreight = existingRecord.TotalFreight,
                     Remarks = existingRecord.Remarks
                 };
@@ -176,14 +173,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
+                    viewModel.DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
                     viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
-            viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
+            viewModel.DeliveryReceipts = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
             viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
@@ -274,6 +271,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Preview), new { id });
             }
+        }
+
+        public async Task<IActionResult> GetDeliveryReceiptsByCustomer(int customerId)
+        {
+            var drList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListByCustomerAsync(customerId);
+
+            return Json(drList);
+        }
+
+        public async Task<IActionResult> GetFreightByDeliveryReceipt(int drId)
+        {
+            var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAsync(dr => dr.DeliveryReceiptId == drId);
+
+            return Json(deliveryReceipt.Freight);
         }
     }
 }

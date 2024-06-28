@@ -20,12 +20,12 @@ namespace IBS.Models.Filpride
         [Column(TypeName = "date")]
         public DateOnly DueDate { get; set; }
 
-        #region--Purchase Order properties
+        #region--DR properties
 
-        public int PurchaseOrderId { get; set; }
+        public int DeliveryReceiptId { get; set; }
 
-        [ForeignKey(nameof(PurchaseOrderId))]
-        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
+        [ForeignKey(nameof(DeliveryReceiptId))]
+        public FilprideDeliveryReceipt? DeliveryReceipt { get; set; }
 
         #endregion
 
@@ -53,17 +53,10 @@ namespace IBS.Models.Filpride
         public string? WithdrawalCertificate { get; set; }
 
         [Column(TypeName = "varchar(100)")]
-        public string TruckOrVessels { get; set; }
-
-        [Column(TypeName = "varchar(100)")]
         public string OtherReference { get; set; }
 
         [Column(TypeName = "varchar(200)")]
         public string Remarks { get; set; }
-
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal Freight { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]

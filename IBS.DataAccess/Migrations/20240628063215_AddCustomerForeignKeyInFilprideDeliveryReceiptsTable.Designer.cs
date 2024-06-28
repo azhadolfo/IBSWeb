@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240628063215_AddCustomerForeignKeyInFilprideDeliveryReceiptsTable")]
+    partial class AddCustomerForeignKeyInFilprideDeliveryReceiptsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -499,6 +502,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
 
+                    b.Property<decimal>("Freight")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("freight");
+
                     b.Property<decimal>("GainOrLoss")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("gain_or_loss");
@@ -577,6 +584,11 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("TotalFreight")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_freight");
+
+                    b.Property<string>("TruckOrVessels")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("truck_or_vessels");
 
                     b.Property<decimal>("VatAmount")
                         .HasColumnType("numeric(18,2)")

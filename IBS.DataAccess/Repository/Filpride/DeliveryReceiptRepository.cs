@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -41,7 +42,8 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideDeliveryReceipt> query = dbSet
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Customer)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(dr => dr.Customer)
                 .Include(dr => dr.Hauler);
 
             if (filter != null)
@@ -56,7 +58,8 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await dbSet.Where(filter)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Customer)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(dr => dr.Customer)
                 .Include(dr => dr.Hauler)
                 .FirstOrDefaultAsync(cancellationToken);
         }
@@ -68,6 +71,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Date = viewModel.Date;
             existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
             existingRecord.HaulerId = viewModel.HaulerId;
+            existingRecord.CustomerId = viewModel.CustomerId;
             existingRecord.Freight = viewModel.Freight;
             existingRecord.LoadPort = viewModel.LoadPort;
             existingRecord.AuthorityToLoadNo = viewModel.AuthorityToLoadNo;
@@ -91,6 +95,32 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 throw new InvalidOperationException("No data changes!");
             }
+        }
+
+        public async Task<List<SelectListItem>> GetDeliveryReceiptListAsync(CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideDeliveryReceipts
+                .OrderBy(po => po.DeliveryReceiptId)
+                .Where(po => po.PostedBy != null)
+                .Select(po => new SelectListItem
+                {
+                    Value = po.DeliveryReceiptId.ToString(),
+                    Text = po.DeliveryReceiptNo
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetDeliveryReceiptListByCustomerAsync(int customerId, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideDeliveryReceipts
+                    .OrderBy(cos => cos.DeliveryReceiptId)
+                    .Where(cos => cos.PostedBy != null && cos.CustomerId == customerId)
+                    .Select(cos => new SelectListItem
+                    {
+                        Value = cos.DeliveryReceiptId.ToString(),
+                        Text = cos.DeliveryReceiptNo
+                    })
+                    .ToListAsync(cancellationToken);
         }
     }
 }

@@ -54,7 +54,7 @@
                             @obj.Date.ToString("MMM dd, yyyy")
                         </td>
                         <td>
-                            @obj.PurchaseOrder?.PurchaseOrderNo
+                            @obj.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder?.PurchaseOrderNo
                         </td>
                         <td>
                             @Html.DisplayFor(model => obj.GainOrLoss)
@@ -81,4 +81,3 @@
         </table>
     </div>
 </div>
-

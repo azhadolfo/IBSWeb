@@ -6,7 +6,6 @@
     ViewData["Title"] = "Preview Receiving Report";
 }
 
-
 <table class="w-100">
     <tbody>
         <tr>
@@ -40,7 +39,7 @@
     <table class="table table-bordered w-100">
         <tbody>
             <tr>
-                <td colspan="2" style="padding-left:10px;">Supplier: &nbsp; @Html.DisplayFor(model => model.PurchaseOrder.Supplier.SupplierName)</td>
+                <td colspan="2" style="padding-left:10px;">Supplier: &nbsp; @Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier?.SupplierName</td>
             </tr>
         </tbody>
     </table>
@@ -64,10 +63,10 @@
         </thead>
         <tbody>
             <tr>
-                <td class="text-center p-4">@Html.DisplayFor(model => model.PurchaseOrder.PurchaseOrderNo)</td>
+                <td class="text-center p-4">@Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder?.PurchaseOrderNo)</td>
                 <td class="text-center p-4">@Html.DisplayFor(model => model.SupplierSiNo)</td>
-                <td class="text-center p-4">@Html.DisplayFor(model => model.TruckOrVessels)</td>
-                <td class="text-center p-4">@Html.DisplayFor(model => model.PurchaseOrder.Product.ProductName)</td>
+                <td class="text-center p-4">@Model.DeliveryReceipt.Hauler?.HaulerName</td>
+                <td class="text-center p-4">@Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.Product?.ProductName</td>
                 <td class="text-center p-4">@Html.DisplayFor(model => model.QuantityDelivered)</td>
                 <td class="text-center p-4">@Html.DisplayFor(model => model.QuantityReceived)</td>
                 <td class="text-center p-4">@Html.DisplayFor(model => model.GainOrLoss)</td>

@@ -10,10 +10,10 @@ namespace IBS.Models.Filpride.ViewModels
         [Required]
         public DateOnly Date { get; set; }
 
-        [Required(ErrorMessage = "PO No field is required.")]
-        public int PurchaseOrderId { get; set; }
+        [Required(ErrorMessage = "DR No field is required.")]
+        public int DeliveryReceiptId { get; set; }
 
-        public List<SelectListItem>? PurchaseOrders { get; set; }
+        public List<SelectListItem>? DeliveryReceipts { get; set; }
 
         [Required(ErrorMessage = "Customer field is required.")]
         public int CustomerId { get; set; }
@@ -35,9 +35,6 @@ namespace IBS.Models.Filpride.ViewModels
         [Display(Name = "WC No")]
         public string? WithdrawalCertificate { get; set; }
 
-        [Display(Name = "Truck/Vessels")]
-        public string TruckOrVessels { get; set; }
-
         [Display(Name = "Other Reference")]
         public string OtherReference { get; set; }
 
@@ -49,8 +46,6 @@ namespace IBS.Models.Filpride.ViewModels
         [Range(1, double.MaxValue, ErrorMessage = "The quantity received should be greater than zero.")]
         public decimal QuantityReceived { get; set; }
 
-        [Display(Name = "Total Freight")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "The quantity received should be greater than zero.")]
         public decimal Freight { get; set; }
 
         public decimal TotalFreight { get; set; }

@@ -227,6 +227,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                //PENDING create  await _unitOfWork.FilpridePurchaseOrderRepository.PostAsync(existingRecord, _userManager.GetUserName(User), cancellationToken);
+
                 if (existingRecord.PostedBy == null)
                 {
                     existingRecord.PostedBy = _userManager.GetUserName(User);

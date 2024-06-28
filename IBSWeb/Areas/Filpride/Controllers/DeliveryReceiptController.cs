@@ -53,6 +53,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Date = viewModel.Date,
                         CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
                         HaulerId = viewModel.HaulerId,
+                        CustomerId = viewModel.CustomerId,
                         Freight = viewModel.Freight,
                         LoadPort = viewModel.LoadPort,
                         AuthorityToLoadNo = viewModel.AuthorityToLoadNo,
@@ -112,10 +113,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     DeliverReceiptId = existingRecord.DeliveryReceiptId,
                     Date = existingRecord.Date,
                     InvoiceNo = existingRecord.InvoiceNo,
-                    CustomerId = existingRecord.CustomerOrderSlip.CustomerId,
+                    CustomerId = existingRecord.Customer.CustomerId,
                     Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken),
-                    CustomerAddress = existingRecord.CustomerOrderSlip.Customer.CustomerAddress,
-                    CustomerTin = existingRecord.CustomerOrderSlip.Customer.CustomerTin,
+                    CustomerAddress = existingRecord.Customer.CustomerAddress,
+                    CustomerTin = existingRecord.Customer.CustomerTin,
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                     CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken),
                     Product = existingRecord.CustomerOrderSlip.PurchaseOrder.Product.ProductName,
@@ -236,7 +237,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                //PENDING ApproveAsync repo
+                //PENDING PostAsync repo
 
                 var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
                     .GetAsync(cos => cos.DeliveryReceiptNo == id, cancellationToken);
@@ -245,6 +246,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     return BadRequest();
                 }
+
+                //PENDING create  await _unitOfWork.FilprideDeliveryReceiptRepository.PostAsync(existingRecord, _userManager.GetUserName(User), cancellationToken);
 
                 if (existingRecord.PostedBy == null)
                 {

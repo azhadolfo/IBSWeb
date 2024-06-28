@@ -80,10 +80,10 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<IEnumerable<FilprideReceivingReport>> GetAllAsync(Expression<Func<FilprideReceivingReport, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<FilprideReceivingReport> query = dbSet
-                .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(po => po.Supplier)
-                .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(po => po.Product);
+                .Include(rr => rr.Customer)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Hauler)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier);
 
             if (filter != null)
             {
@@ -96,10 +96,10 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<FilprideReceivingReport> GetAsync(Expression<Func<FilprideReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
-                .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(po => po.Supplier)
-                .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(po => po.Product)
+                .Include(rr => rr.Customer)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Hauler)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -116,7 +116,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 #endregion
 
                 #region--Update PO Served
-                await UpdatePoServedAsync(receivingReport.PurchaseOrderId, receivingReport.QuantityReceived, cancellationToken);
+                await UpdatePoServedAsync(receivingReport.DeliveryReceipt.CustomerOrderSlip.PurchaseOrderId, receivingReport.QuantityDelivered, cancellationToken);
                 #endregion
 
                 await _db.SaveChangesAsync(cancellationToken);
@@ -125,21 +125,17 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task UpdateAsync(ReceivingReportViewModel viewModel, string userName, CancellationToken cancellationToken = default)
         {
-            var existingRecord = await _db.FilprideReceivingReports
-                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
-                .FirstOrDefaultAsync(rr => rr.ReceivingReportId == viewModel.ReceivingReportId, cancellationToken);
+            var existingRecord = await GetAsync(rr => rr.ReceivingReportId == viewModel.ReceivingReportId, cancellationToken);
 
             existingRecord.Date = viewModel.Date;
-            existingRecord.PurchaseOrderId = viewModel.PurchaseOrderId;
+            existingRecord.DeliveryReceiptId = viewModel.DeliveryReceiptId;
             existingRecord.CustomerId = viewModel.CustomerId;
             existingRecord.SupplierSiNo = viewModel.SupplierSiNo;
             existingRecord.SupplierSiDate = viewModel.SupplierSiDate;
             existingRecord.SupplierDrNo = viewModel.SupplierDrNo;
             existingRecord.SupplierDrDate = viewModel.SupplierDrDate;
             existingRecord.WithdrawalCertificate = viewModel.WithdrawalCertificate;
-            existingRecord.TruckOrVessels = viewModel.TruckOrVessels;
             existingRecord.OtherReference = viewModel.OtherReference;
-            existingRecord.Freight = viewModel.Freight;
             existingRecord.TotalFreight = viewModel.TotalFreight;
             existingRecord.Remarks = viewModel.Remarks;
 
@@ -151,9 +147,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 existingRecord.QuantityReceived = viewModel.QuantityReceived;
                 existingRecord.QuantityDelivered = viewModel.QuantityDelivered;
                 existingRecord.TotalAmount = viewModel.QuantityDelivered * viewModel.QuantityReceived;
-                existingRecord.GainOrLoss = viewModel.QuantityDelivered - viewModel.QuantityReceived;
+                existingRecord.GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered;
 
-                if (existingRecord.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable)
+                if (existingRecord.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable)
                 {
                     existingRecord.NetOfVatAmount = ComputeNetOfVat(existingRecord.TotalAmount);
                     existingRecord.VatAmount = ComputeVatAmount(existingRecord.TotalAmount);
@@ -164,7 +160,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     existingRecord.VatAmount = 0;
                 }
 
-                if (existingRecord.PurchaseOrder.Supplier.TaxType == SD.TaxType_WithTax)
+                if (existingRecord.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.TaxType == SD.TaxType_WithTax)
                 {
                     existingRecord.NetOfTaxAmount = existingRecord.NetOfVatAmount * 0.01m;
                 }
@@ -186,12 +182,12 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        private async Task UpdatePoServedAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
+        private async Task UpdatePoServedAsync(int id, decimal quantityDelivered, CancellationToken cancellationToken = default)
         {
             var purchaseOrder = await _db.FilpridePurchaseOrders
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken) ?? throw new InvalidOperationException("No record found.");
 
-            purchaseOrder.QuantityServed += quantityReceived;
+            purchaseOrder.QuantityServed += quantityDelivered;
 
             if (purchaseOrder.QuantityServed == purchaseOrder.Quantity)
             {
@@ -201,7 +197,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
             else if (purchaseOrder.QuantityServed > purchaseOrder.Quantity)
             {
-                throw new InvalidOperationException("The entered Quantity Received exceeds the Purchase Order Quantity.");
+                throw new InvalidOperationException("The entered Quantity Delivered exceeds the Purchase Order Quantity.");
             }
         }
     }

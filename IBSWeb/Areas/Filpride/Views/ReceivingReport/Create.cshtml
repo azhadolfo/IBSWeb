@@ -22,18 +22,18 @@
                     <span asp-validation-for="Date" class="text-danger"></span>
                 </div>
                 <div class="form-group py-2 col-12">
-                    <label class="control-label">PO List<span class="required">*</span></label>
-                    <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select supplier</option>
-                    </select>
-                    <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
                     <label class="control-label">Customer List<span class="required">*</span></label>
                     <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
                         <option value="" selected>Select customer</option>
                     </select>
                     <span asp-validation-for="CustomerId" class="text-danger"></span>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">DR List<span class="required">*</span></label>
+                    <select asp-for="DeliveryReceiptId" asp-items="@Model.DeliveryReceipts" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select supplier</option>
+                    </select>
+                    <span asp-validation-for="DeliveryReceiptId" class="text-danger"></span>
                 </div>
                 <fieldset class="border p-2 py-2">
                     <legend class="w-auto px-2">Supplier Details</legend>
@@ -60,12 +60,6 @@
                 </fieldset>
 
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="TruckOrVessels" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="TruckOrVessels">Truck/Vessels<span class="required">*</span></label>
-                    <span asp-validation-for="TruckOrVessels" class="text-danger"></span>
-                </div>
-
-                <div class="form-floating py-2 col-12">
                     <input asp-for="OtherReference" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="OtherReference">Other Reference<span class="required">*</span></label>
                     <span asp-validation-for="OtherReference" class="text-danger"></span>
@@ -84,8 +78,8 @@
                     </div>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="Freight">Freight<span class="required">*</span></label>
+                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" readonly />
+                    <label asp-for="Freight">Freight</label>
                     <span asp-validation-for="Freight" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
@@ -116,19 +110,77 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const quantityReceivedInput = document.getElementById('QuantityReceived');
-            const freightInput = document.getElementById('Freight');
-            const totalFreightInput = document.getElementById('TotalFreight');
+        $(document).ready(function () {
+            // Get Delivery Receipts by Customer
+            $('select[name="CustomerId"]').on('change', function () {
+                var customerId = $(this).val();
+                if (customerId) {
+                    $.ajax({
+                        url: '@Url.Action("GetDeliveryReceiptsByCustomer", "ReceivingReport")',
+                        type: "GET",
+                        data: { customerId: customerId },
+                        success: function (data) {
+                            var $drSelect = $('select[name="DeliveryReceiptId"]');
+                            $drSelect.empty();
+                            if (data && data.length > 0) {
+                                $drSelect.append('<option value="">Select DR</option>');
+                                $.each(data, function (index, item) {
+                                    $drSelect.append('<option value="' + item.value + '">' + item.text + '</option>');
+                                });
+                            } else {
+                                $drSelect.append('<option value="">No DR available</option>');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error: " + error);
+                        }
+                    });
+                } else {
+                    var $drSelect = $('select[name="DeliveryReceiptId"]');
+                    $drSelect.empty();
+                    $drSelect.append('<option value="">Select DR</option>');
+                }
+            });
+
+            // Get Freight and update total freight
+            $('select[name="DeliveryReceiptId"]').on('change', function () {
+                var drId = $(this).val();
+                if (drId) {
+                    $.ajax({
+                        url: '@Url.Action("GetFreightByDeliveryReceipt", "ReceivingReport")',
+                        type: "GET",
+                        data: { drId: drId },
+                        success: function (data) {
+                            console.log(data)
+                            if (data) {
+                                $('input[name="Freight"]').val(formatNumber(data));
+                                updateTotalFreight();
+                            } else {
+                                $('input[name="Freight"]').val('');
+                                $('input[name="TotalFreight"]').val('');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error: " + error);
+                        }
+                    });
+                } else {
+                    $('input[name="Freight"]').val('');
+                    $('input[name="TotalFreight"]').val('');
+                }
+            });
+
+            // Calculate Total Freight
+            $('input[name="QuantityReceived"]').on('input', function () {
+                updateTotalFreight();
+            });
 
             function updateTotalFreight() {
-                const quantityReceived = parseFloat(quantityReceivedInput.value) || 0;
-                const freight = parseFloat(freightInput.value) || 0;
-                totalFreightInput.value = (quantityReceived * freight).toFixed(2);
+                var quantityReceived = parseFloat($('input[name="QuantityReceived"]').val()) || 0;
+                var freight = parseFloat($('input[name="Freight"]').val()) || 0;
+                var totalFreight = quantityReceived * freight;
+                $('input[name="TotalFreight"]').val(formatNumber(totalFreight));
             }
-
-            quantityReceivedInput.addEventListener('input', updateTotalFreight);
-            freightInput.addEventListener('input', updateTotalFreight);
         });
     </script>
 }

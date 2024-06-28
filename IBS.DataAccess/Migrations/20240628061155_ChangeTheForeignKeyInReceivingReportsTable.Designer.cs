@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240628061155_ChangeTheForeignKeyInReceivingReportsTable")]
+    partial class ChangeTheForeignKeyInReceivingReportsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -208,10 +211,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_id");
-
                     b.Property<int>("CustomerOrderSlipId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_order_slip_id");
@@ -294,9 +293,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("DeliveryReceiptId")
                         .HasName("pk_filpride_delivery_receipts");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_filpride_delivery_receipts_customer_id");
 
                     b.HasIndex("CustomerOrderSlipId")
                         .HasDatabaseName("ix_filpride_delivery_receipts_customer_order_slip_id");
@@ -499,6 +495,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
 
+                    b.Property<decimal>("Freight")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("freight");
+
                     b.Property<decimal>("GainOrLoss")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("gain_or_loss");
@@ -577,6 +577,11 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("TotalFreight")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_freight");
+
+                    b.Property<string>("TruckOrVessels")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("truck_or_vessels");
 
                     b.Property<decimal>("VatAmount")
                         .HasColumnType("numeric(18,2)")
@@ -3400,13 +3405,6 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.FilprideDeliveryReceipt", b =>
                 {
-                    b.HasOne("IBS.Models.MasterFile.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_delivery_receipts_customers_customer_id");
-
                     b.HasOne("IBS.Models.Filpride.FilprideCustomerOrderSlip", "CustomerOrderSlip")
                         .WithMany()
                         .HasForeignKey("CustomerOrderSlipId")
@@ -3420,8 +3418,6 @@ namespace IBS.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_filpride_delivery_receipts_haulers_hauler_id");
-
-                    b.Navigation("Customer");
 
                     b.Navigation("CustomerOrderSlip");
 
