@@ -229,13 +229,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                //PENDING create  await _unitOfWork.FilpridePurchaseOrderRepository.PostAsync(existingRecord, _userManager.GetUserName(User), cancellationToken);
-
                 if (existingRecord.PostedBy == null)
                 {
                     existingRecord.PostedBy = _userManager.GetUserName(User);
                     existingRecord.PostedDate = DateTime.Now;
-                    await _unitOfWork.SaveAsync(cancellationToken);
+                    await _unitOfWork.FilpridePurchaseOrder.PostAsync(existingRecord, cancellationToken);
                 }
 
                 TempData["success"] = "Purchase order approved successfully.";

@@ -103,24 +103,18 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task PostAsync(FilprideReceivingReport receivingReport, string userName, CancellationToken cancellationToken = default)
+        public async Task PostAsync(FilprideReceivingReport receivingReport, CancellationToken cancellationToken = default)
         {
-            if (receivingReport.PostedBy == null)
-            {
-                receivingReport.PostedBy = userName;
-                receivingReport.PostedDate = DateTime.Now;
+            //PENDING journal entries of rr
+            #region--General Ledger Recording
 
-                //PENDING journal entries of rr
-                #region--General Ledger Recording
+            #endregion
 
-                #endregion
+            #region--Update PO Served
+            await UpdatePoServedAsync(receivingReport.DeliveryReceipt.CustomerOrderSlip.PurchaseOrderId, receivingReport.QuantityDelivered, cancellationToken);
+            #endregion
 
-                #region--Update PO Served
-                await UpdatePoServedAsync(receivingReport.DeliveryReceipt.CustomerOrderSlip.PurchaseOrderId, receivingReport.QuantityDelivered, cancellationToken);
-                #endregion
-
-                await _db.SaveChangesAsync(cancellationToken);
-            }
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdateAsync(ReceivingReportViewModel viewModel, CancellationToken cancellationToken = default)

@@ -264,7 +264,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                await _unitOfWork.FilprideReceivingReport.PostAsync(existingRecord, _userManager.GetUserName(User), cancellationToken);
+                if (existingRecord.PostedBy == null)
+                {
+                    existingRecord.PostedBy = _userManager.GetUserName(User);
+                    existingRecord.PostedDate = DateTime.Now;
+                    await _unitOfWork.FilprideReceivingReport.PostAsync(existingRecord, cancellationToken);
+                }
 
                 TempData["success"] = "Receiving report approved successfully.";
                 return RedirectToAction(nameof(Preview), new { id });

@@ -12,6 +12,6 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task UpdateAsync(ReceivingReportViewModel viewModel, CancellationToken cancellationToken = default);
 
-        Task PostAsync(FilprideReceivingReport receivingReport, string userName, CancellationToken cancellationToken = default);
+        Task PostAsync(FilprideReceivingReport receivingReport, CancellationToken cancellationToken = default);
     }
 }

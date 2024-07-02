@@ -227,8 +227,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                //PENDING ApproveAsync repo
-
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipNo == id, cancellationToken);
 
@@ -241,8 +239,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     existingRecord.ApprovedBy = _userManager.GetUserName(User);
                     existingRecord.ApprovedDate = DateTime.Now;
-                    existingRecord.ExpirationDate = DateOnly.FromDateTime(DateTime.Now.AddDays(7));
-                    await _unitOfWork.SaveAsync(cancellationToken);
+                    await _unitOfWork.FilprideCustomerOrderSlip.PostAsync(existingRecord, cancellationToken);
                 }
 
                 TempData["success"] = "Customer order slip approved successfully.";

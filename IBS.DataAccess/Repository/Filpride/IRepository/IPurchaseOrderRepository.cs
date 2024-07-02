@@ -12,5 +12,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task UpdateAsync(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken);
 
         Task<List<SelectListItem>> GetPurchaseOrderListAsync(CancellationToken cancellationToken = default);
+
+        Task PostAsync(FilpridePurchaseOrder purchaseOrder, CancellationToken cancellationToken = default);
     }
 }

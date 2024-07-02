@@ -104,13 +104,20 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.ApprovedBy != null && cos.CustomerId == customerId)
+                .Where(cos => cos.ApprovedBy != null && cos.CustomerId == customerId && !cos.IsDelivered)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
                     Text = cos.CustomerOrderSlipNo
                 })
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task PostAsync(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default)
+        {
+            //PENDING process the method here
+            customerOrderSlip.ExpirationDate = DateOnly.FromDateTime(DateTime.Now.AddDays(7));
+            await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }

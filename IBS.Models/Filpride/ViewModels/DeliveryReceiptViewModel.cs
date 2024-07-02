@@ -33,6 +33,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string? Product { get; set; }
 
+        public decimal? InitialVolume { get; set; }
+
         public decimal? RemainingVolume { get; set; }
 
         public decimal? Price { get; set; }

@@ -122,5 +122,37 @@ namespace IBS.DataAccess.Repository.Filpride
                     })
                     .ToListAsync(cancellationToken);
         }
+
+        public async Task PostAsync(FilprideDeliveryReceipt deliveryReceipt, CancellationToken cancellationToken = default)
+        {
+            #region--Update COS
+
+            await UpdateCosRemainingVolumeAsync(deliveryReceipt.CustomerOrderSlipId, deliveryReceipt.Quantity, cancellationToken);
+
+            #endregion
+
+            //PENDING process the method here
+
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        private async Task UpdateCosRemainingVolumeAsync(int cosId, decimal drVolume, CancellationToken cancellationToken)
+        {
+            var cos = await _db.FilprideCustomerOrderSlips
+                .FirstOrDefaultAsync(po => po.CustomerOrderSlipId == cosId, cancellationToken) ?? throw new InvalidOperationException("No record found.");
+
+            if (cos != null)
+            {
+                cos.DeliveredQuantity = drVolume;
+                cos.BalanceQuantity -= cos.DeliveredQuantity;
+
+                if (cos.BalanceQuantity <= 0)
+                {
+                    cos.IsDelivered = true;
+                }
+
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
     }
 }

@@ -37,12 +37,12 @@
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" readonly />
+                        <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                         <label asp-for="CustomerAddress">Address</label>
                         <span asp-validation-for="CustomerAddress" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="CustomerTin" class="form-control border-0 shadow" placeholder="" readonly />
+                        <input asp-for="CustomerTin" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                         <label asp-for="CustomerTin">TIN</label>
                         <span asp-validation-for="CustomerTin" class="text-danger"></span>
                     </div>
@@ -58,17 +58,22 @@
                         <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="Product" class="form-control border-0 shadow" placeholder="" readonly />
+                        <input asp-for="Product" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                         <label asp-for="Product"></label>
                         <span asp-validation-for="Product" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="RemainingVolume" class="form-control border-0 shadow" placeholder="" readonly />
+                        <input asp-for="InitialVolume" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                        <label asp-for="InitialVolume">Initial Volume</label>
+                        <span asp-validation-for="InitialVolume" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="RemainingVolume" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                         <label asp-for="RemainingVolume">Remaining Volume</label>
                         <span asp-validation-for="RemainingVolume" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="Price" class="form-control border-0 shadow" placeholder="" readonly />
+                        <input asp-for="Price" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                         <label asp-for="Price"></label>
                         <span asp-validation-for="Price" class="text-danger"></span>
                     </div>
@@ -79,7 +84,7 @@
                     <span asp-validation-for="Volume" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="TotalAmount" class="form-control border-0 shadow" placeholder="" readonly />
+                    <input asp-for="TotalAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                     <label asp-for="TotalAmount">Total Amount</label>
                     <span asp-validation-for="TotalAmount" class="text-danger"></span>
                 </div>
@@ -171,6 +176,7 @@
                         success: function (data) {
                             if (data) {
                                 $('input[name="Product"]').val(data.product);
+                                $('input[name="InitialVolume"]').val(formatNumber(data.initialVolume));
                                 $('input[name="RemainingVolume"]').val(formatNumber(data.remainingVolume));
                                 $('input[name="Price"]').val(formatNumber(data.price));
                             } else {
@@ -185,6 +191,7 @@
                     });
                 } else {
                     $('input[name="Product"]').val('');
+                    $('input[name="InitialVolume"]').val('');
                     $('input[name="RemainingVolume"]').val('');
                     $('input[name="Price"]').val('');
                 }

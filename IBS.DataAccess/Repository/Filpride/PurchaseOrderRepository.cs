@@ -73,6 +73,13 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task PostAsync(FilpridePurchaseOrder purchaseOrder, CancellationToken cancellationToken = default)
+        {
+            //PENDING process the method here
+
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task UpdateAsync(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
         {
             var existingRecord = await _db.FilpridePurchaseOrders

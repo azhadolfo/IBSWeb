@@ -122,6 +122,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                     CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken),
                     Product = existingRecord.CustomerOrderSlip.PurchaseOrder.Product.ProductName,
+                    InitialVolume = existingRecord.CustomerOrderSlip.Quantity,
                     RemainingVolume = existingRecord.CustomerOrderSlip.BalanceQuantity,
                     Price = existingRecord.CustomerOrderSlip.DeliveredPrice,
                     Volume = existingRecord.Quantity,
@@ -240,8 +241,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                //PENDING PostAsync repo
-
                 var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
                     .GetAsync(cos => cos.DeliveryReceiptNo == id, cancellationToken);
 
@@ -250,13 +249,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                //PENDING create  await _unitOfWork.FilprideDeliveryReceiptRepository.PostAsync(existingRecord, _userManager.GetUserName(User), cancellationToken);
-
                 if (existingRecord.PostedBy == null)
                 {
                     existingRecord.PostedBy = _userManager.GetUserName(User);
                     existingRecord.PostedDate = DateTime.Now;
-                    await _unitOfWork.SaveAsync(cancellationToken);
+                    await _unitOfWork.FilprideDeliveryReceipt.PostAsync(existingRecord, cancellationToken);
                 }
 
                 TempData["success"] = "Delivery receipt approved successfully.";
@@ -314,6 +311,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(new
             {
                 Product = cos.PurchaseOrder.Product?.ProductName,
+                InitialVolume = cos.Quantity,
                 RemainingVolume = cos.BalanceQuantity,
                 Price = cos.DeliveredPrice
             });
