@@ -1,12 +1,14 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
+    [Authorize]
     public class DeliveryReceiptController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -148,7 +150,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
-                    await _unitOfWork.FilprideDeliveryReceipt.UpdateAsync(viewModel, _userManager.GetUserName(User), cancellationToken);
+                    viewModel.CurrentUser = _userManager.GetUserName(User);
+                    await _unitOfWork.FilprideDeliveryReceipt.UpdateAsync(viewModel, cancellationToken);
 
                     TempData["success"] = "Delivery receipt updated successfully.";
                     return RedirectToAction(nameof(Index));

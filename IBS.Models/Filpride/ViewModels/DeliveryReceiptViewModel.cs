@@ -59,5 +59,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string AuthorityToLoadNo { get; set; }
 
         public string Remarks { get; set; }
+
+        public string? CurrentUser { get; set; }
     }
 }

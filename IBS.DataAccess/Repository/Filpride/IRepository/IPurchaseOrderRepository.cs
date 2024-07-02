@@ -9,7 +9,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
     {
         Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default);
 
-        Task UpdateAsync(PurchaseOrderViewModel viewModel, string userName, CancellationToken cancellationToken);
+        Task UpdateAsync(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken);
 
         Task<List<SelectListItem>> GetPurchaseOrderListAsync(CancellationToken cancellationToken = default);
     }

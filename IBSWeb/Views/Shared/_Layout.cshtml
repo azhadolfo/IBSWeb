@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
 
 <!DOCTYPE html>
 <html lang="en">
@@ -16,7 +17,6 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.1/css/dataTables.dataTables.css" /> <!--Data tables plug ins-->
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
 </head>
 <body>
     <header>
@@ -118,40 +118,6 @@
                             </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Master File
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Company" asp-action="Index">Company</a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Customer" asp-action="Index">Customer</a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="ChartOfAccount" asp-action="Index">Chart Of Account</a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Hauler" asp-action="Index">Hauler</a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Product" asp-action="Index">Product</a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Station" asp-action="Index">Station</a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Supplier" asp-action="Index">Supplier</a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     General Ledger
                                 </a>
                                 <ul class="dropdown-menu">
@@ -178,6 +144,45 @@
                                     </li>
                                 </ul>
                             </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Master File
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Company" asp-action="Index">Company</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Customer" asp-action="Index">Customer</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Hauler" asp-action="Index">Hauler</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Product" asp-action="Index">Product</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Station" asp-action="Index">Station</a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li class="nav-item">
+                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Supplier" asp-action="Index">Supplier</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="User" asp-controller="ChartOfAccount" asp-action="Index">Chart Of Account</a>
+                            </li>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="Admin" asp-controller="AppRole" asp-action="Index">Role</a>
+                                </li>
+                            }
                         </ul>
                         <partial name="_LoginPartial" />
                     </div>

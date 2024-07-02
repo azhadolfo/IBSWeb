@@ -123,7 +123,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task UpdateAsync(ReceivingReportViewModel viewModel, string userName, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(ReceivingReportViewModel viewModel, CancellationToken cancellationToken = default)
         {
             var existingRecord = await GetAsync(rr => rr.ReceivingReportId == viewModel.ReceivingReportId, cancellationToken);
 
@@ -172,7 +172,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingRecord.EditedBy = userName;
+                existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
             }

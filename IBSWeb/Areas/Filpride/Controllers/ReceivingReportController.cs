@@ -2,12 +2,14 @@
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
+    [Authorize]
     public class ReceivingReportController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -166,7 +168,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
-                    await _unitOfWork.FilprideReceivingReport.UpdateAsync(viewModel, _userManager.GetUserName(User), cancellationToken);
+                    viewModel.CurrentUser = _userManager.GetUserName(User);
+                    await _unitOfWork.FilprideReceivingReport.UpdateAsync(viewModel, cancellationToken);
 
                     TempData["success"] = "Receiving report updated successfully.";
                     return RedirectToAction(nameof(Index));

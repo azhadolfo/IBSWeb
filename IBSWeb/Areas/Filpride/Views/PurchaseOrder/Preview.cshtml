@@ -122,7 +122,7 @@ else
 
 <div class="row pt-2">
     @{
-        if (Model.PostedBy != null)
+        if (Model.PostedBy == null)
         {
             <div class="col-6 col-md-3">
                 <a id="approveButton" class="btn btn-primary form-control buttons">Approve</a>

@@ -45,11 +45,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Admin\Controllers\" />
-    <Folder Include="Areas\Admin\Controllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Update="Areas\Filpride\Views\_ViewImports.cshtml">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

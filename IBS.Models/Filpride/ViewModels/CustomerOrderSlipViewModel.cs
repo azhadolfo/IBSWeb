@@ -46,5 +46,7 @@ namespace IBS.Models.Filpride.ViewModels
         public decimal TotalAmount { get; set; }
 
         public string Remarks { get; set; }
+
+        public string? CurrentUser { get; set; }
     }
 }

@@ -35,5 +35,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string Port { get; set; }
 
         public string Remarks { get; set; }
+
+        public string? CurrentUser { get; set; }
     }
 }

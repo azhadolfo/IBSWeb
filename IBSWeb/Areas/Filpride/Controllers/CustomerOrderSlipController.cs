@@ -1,12 +1,14 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
+    [Authorize]
     public class CustomerOrderSlipController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -137,7 +139,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
-                    await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, _userManager.GetUserName(User), cancellationToken);
+                    viewModel.CurrentUser = _userManager.GetUserName(User);
+                    await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
 
                     TempData["success"] = "Customer order slip updated successfully.";
                     return RedirectToAction(nameof(Index));

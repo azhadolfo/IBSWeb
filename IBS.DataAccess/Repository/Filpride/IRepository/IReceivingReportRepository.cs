@@ -10,7 +10,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         DateOnly CalculateDueDate(string terms, DateOnly transactionDate, CancellationToken cancellationToken = default);
 
-        Task UpdateAsync(ReceivingReportViewModel viewModel, string userName, CancellationToken cancellationToken = default);
+        Task UpdateAsync(ReceivingReportViewModel viewModel, CancellationToken cancellationToken = default);
 
         Task PostAsync(FilprideReceivingReport receivingReport, string userName, CancellationToken cancellationToken = default);
     }

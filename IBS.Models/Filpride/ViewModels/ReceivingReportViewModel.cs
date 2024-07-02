@@ -51,5 +51,7 @@ namespace IBS.Models.Filpride.ViewModels
         public decimal TotalFreight { get; set; }
 
         public string Remarks { get; set; }
+
+        public string? CurrentUser { get; set; }
     }
 }

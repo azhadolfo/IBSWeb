@@ -64,7 +64,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task UpdateAsync(DeliveryReceiptViewModel viewModel, string userName, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(DeliveryReceiptViewModel viewModel, CancellationToken cancellationToken = default)
         {
             var existingRecord = await GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
 
@@ -87,7 +87,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingRecord.EditedBy = userName;
+                existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
             }
