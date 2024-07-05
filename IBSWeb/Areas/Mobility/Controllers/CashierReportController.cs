@@ -149,9 +149,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> AdjustReport(CancellationToken cancellationToken)
         {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+
             var model = new AdjustReportViewModel
             {
-                OfflineList = await _unitOfWork.MobilityOffline.GetOfflineListAsync(cancellationToken)
+                OfflineList = await _unitOfWork.MobilityOffline.GetOfflineListAsync(stationCodeClaim, cancellationToken)
             };
 
             return View(model);
@@ -164,6 +168,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 await _unitOfWork.MobilityOffline.InsertEntry(model, cancellationToken);
 
+                TempData["success"] = "Adjusted report successfully.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -190,12 +195,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 EndDate = offline.EndDate.ToString("MMM/dd/yyyy"),
                 offline.Product,
                 offline.Pump,
-                offline.Opening,
-                offline.Closing,
+                FirstDsrOpeningBefore = offline.FirstDsrOpening,
+                FirstDsrClosingBefore = offline.FirstDsrClosing,
+                SecondDsrOpeningBefore = offline.SecondDsrOpening,
+                SecondDsrClosingBefore = offline.SecondDsrClosing,
                 Liters = offline.Liters.ToString("N2"),
                 Balance = offline.Balance.ToString("N2"),
-                offline.ClosingDSRNo,
-                offline.OpeningDSRNo
+                offline.FirstDsrNo,
+                offline.SecondDsrNo
             };
 
             return Json(formattedData);

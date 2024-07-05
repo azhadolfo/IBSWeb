@@ -48,10 +48,10 @@
                         <td>@item.Particular</td>
                         <td class="text-end">@Html.DisplayFor(model => item.Closing)</td>
 
-                         <td class="text-end">
+                        <td class="text-end">
                             @if (item.ReferenceNo != null && !Model.Header.IsTransactionNormal)
                             {
-                                <a asp-area="Mobility" asp-controller="CashierReport" asp-action="Preview" asp-route-id="@item.ReferenceNo" asp-route-stationCode="@item.StationCode" title="Click to view @item.ReferenceNo" style="color:red !important">
+                                <a asp-area="Mobility" asp-controller="CashierReport" asp-action="Preview" asp-route-id="@item.ReferenceNo" asp-route-stationCode="@item.StationCode" title="Click to view @item.ReferenceNo in new tab" style="color:red !important" target="_blank">
                                     @Html.DisplayFor(model => item.Opening)
                                 </a>
                             }
@@ -60,7 +60,6 @@
                                 @Html.DisplayFor(model => item.Opening)
                             }
                         </td>
-
 
                         <td class="text-end">@Html.DisplayFor(model => item.Liters)</td>
                         <td class="text-end">@Html.DisplayFor(model => item.Calibration)</td>

@@ -24,16 +24,62 @@
                         <option value="" selected></option>
                     </select>
                 </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Closing" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                    <label asp-for="Closing"></label>
-                    <span asp-validation-for="Closing" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Opening" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                    <label asp-for="Opening"></label>
-                    <span asp-validation-for="Opening" class="text-danger"></span>
-                </div>
+                <fieldset>
+                    <div class="row">
+                        <div class="row col-6" style="border-right: 1px solid #ddd;">
+                            <p class="text-center">BEFORE</p>
+                            <div class="form-floating py-2 col-md-6">
+                                <input asp-for="FirstDsrClosingBefore" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                                <label asp-for="FirstDsrClosingBefore" id="FirstDsrClosingBeforeLabel" class="ms-2"></label>
+                                <span asp-validation-for="FirstDsrClosingBefore" class="text-danger"></span>
+                            </div>
+                            <div class="form-floating py-2 col-md-6">
+                                <input asp-for="FirstDsrOpeningBefore" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                                <label asp-for="FirstDsrOpeningBefore" id="FirstDsrOpeningBeforeLabel" class="ms-2"></label>
+                                <span asp-validation-for="FirstDsrOpeningBefore" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row col-6" style="margin-left: 10px;">
+                            <p class="text-center">AFTER</p>
+                            <div class="form-floating py-2 col-md-6">
+                                <input asp-for="FirstDsrClosingAfter" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                                <label asp-for="FirstDsrClosingAfter" id="FirstDsrClosingAfterLabel" class="ms-2"></label>
+                                <span asp-validation-for="FirstDsrClosingAfter" class="text-danger"></span>
+                            </div>
+                            <div class="form-floating py-2 col-md-6">
+                                <input asp-for="FirstDsrOpeningAfter" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                                <label asp-for="FirstDsrOpeningAfter" id="FirstDsrOpeningAfterLabel" class="ms-2"></label>
+                                <span asp-validation-for="FirstDsrOpeningAfter" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="row col-6" style="border-right: 1px solid #ddd;">
+                            <div class="form-floating py-2 col-md-6">
+                                <input asp-for="SecondDsrClosingBefore" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                                <label asp-for="SecondDsrClosingBefore" id="SecondDsrClosingBeforeLabel" class="ms-2"></label>
+                                <span asp-validation-for="SecondDsrClosingBefore" class="text-danger"></span>
+                            </div>
+                            <div class="form-floating py-2 col-md-6">
+                                <input asp-for="SecondDsrOpeningBefore" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                                <label asp-for="SecondDsrOpeningBefore" id="SecondDsrOpeningBeforeLabel" class="ms-2"></label>
+                                <span asp-validation-for="SecondDsrOpeningBefore" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row col-6" style="margin-left: 10px;">
+                            <div class="form-floating py-2 col-md-6">
+                                <input asp-for="SecondDsrClosingAfter" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                                <label asp-for="SecondDsrClosingAfter" id="SecondDsrClosingAfterLabel" class="ms-2"></label>
+                                <span asp-validation-for="SecondDsrClosingAfter" class="text-danger"></span>
+                            </div>
+                            <div class="form-floating py-2 col-md-6">
+                                <input asp-for="SecondDsrOpeningAfter" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                                <label asp-for="SecondDsrOpeningAfter" id="SecondDsrOpeningAfterLabel" class="ms-2"></label>
+                                <span asp-validation-for="SecondDsrOpeningAfter" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
                 <div class="form-group py-2 col-12">
                     <label>Select what DSR will be affected.</label><br />
                     <div id="DSROptions">
@@ -44,7 +90,7 @@
                         <button type="submit" class="btn btn-primary form-control">Submit</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Mobility" asp-controller="CashierReport" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Mobility" asp-controller="CashierReport" asp-action="Index" class="btn btn-outline-primary border form-control ">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -104,18 +150,28 @@
                         data: { offlineId: selectedId },
                         success: function (data) {
 
-                            console.log(data)
+                            $('#FirstDsrClosingBefore').val(data.firstDsrClosingBefore);
+                            $('#FirstDsrOpeningBefore').val(data.firstDsrOpeningBefore);
+                            $('#SecondDsrClosingBefore').val(data.secondDsrClosingBefore);
+                            $('#SecondDsrOpeningBefore').val(data.secondDsrOpeningBefore);
 
-                            $('#Opening').val(data.opening);
-                            $('#Closing').val(data.closing);
+                            $('#FirstDsrClosingBeforeLabel').text(data.firstDsrNo + ' ' + 'CLOSING');
+                            $('#FirstDsrOpeningBeforeLabel').text(data.firstDsrNo + ' ' + 'OPENING');
+                            $('#FirstDsrClosingAfterLabel').text(data.firstDsrNo + ' ' + 'CLOSING');
+                            $('#FirstDsrOpeningAfterLabel').text(data.firstDsrNo + ' ' + 'OPENING');
+
+                            $('#SecondDsrClosingBeforeLabel').text(data.secondDsrNo + ' ' + 'CLOSING');
+                            $('#SecondDsrOpeningBeforeLabel').text(data.secondDsrNo + ' ' + 'OPENING');
+                            $('#SecondDsrClosingAfterLabel').text(data.secondDsrNo + ' ' + 'CLOSING');
+                            $('#SecondDsrOpeningAfterLabel').text(data.secondDsrNo + ' ' + 'OPENING');
 
                             //Details
                             $('#StartDate').text(data.startDate);
                             $('#EndDate').text(data.endDate);
                             $('#Product').text(data.product);
                             $('#Pump').text(data.pump);
-                            $('#DetailOpening').text(data.opening);
-                            $('#DetailClosing').text(data.closing);
+                            $('#DetailOpening').text(data.secondDsrOpeningBefore);
+                            $('#DetailClosing').text(data.firstDsrClosingBefore);
                             $('#Liters').text(data.liters);
                             $('#RemainingBalance').text(data.balance);
 
@@ -123,8 +179,8 @@
                             $('#DSROptions').empty();
 
                             // Add the combined options
-                            $('#DSROptions').append('<label><input type="radio" name="AffectedDSRNo" id="ClosingDSR" value="' + data.closingDSRNo + '" required> ' + data.closingDSRNo + '</label><br />');
-                            $('#DSROptions').append('<label><input type="radio" name="AffectedDSRNo" id="OpeningDSR" value="' + data.openingDSRNo + '"> ' + data.openingDSRNo + '</label><br />');
+                            $('#DSROptions').append('<label><input type="radio" name="AffectedDSRNo" id="ClosingDsr" value="' + data.firstDsrNo + '" required> ' + data.firstDsrNo + '</label><br />');
+                            $('#DSROptions').append('<label><input type="radio" name="AffectedDSRNo" id="OpeningDsr" value="' + data.secondDsrNo + '"> ' + data.secondDsrNo + '</label><br />');
 
                             // Show the table
                             $('#OfflineDetailsTable').show();
@@ -134,8 +190,43 @@
                     $('#Opening').val('');
                     $('#Closing').val('');
                     $('#OfflineDetailsTable').hide();
+
+                    $('#FirstDsrClosingBeforeLabel').text('');
+                    $('#FirstDsrOpeningBeforeLabel').text('');
+                    $('#FirstDsrClosingAfterLabel').text('');
+                    $('#FirstDsrOpeningAfterLabel').text('');
+
+                    $('#FirstDsrClosingAfter').val('');
+                    $('#FirstDsrOpeningAfter').val('');
+                    $('#SecondDsrClosingAfter').val('');
+                    $('#SecondDsrOpeningAfter').val('');
                 }
             });
+
+            // Bind change event to radio buttons
+            $(document).on('change', 'input[name="AffectedDSRNo"]', updateDsrValues);
+
+            // Function to update DSR values
+            function updateDsrValues() {
+                var firstDsrClosingBefore = parseFloat($('#FirstDsrClosingBefore').val());
+                var firstDsrOpeningBefore = parseFloat($('#FirstDsrOpeningBefore').val());
+                var secondDsrClosingBefore = parseFloat($('#SecondDsrClosingBefore').val());
+                var secondDsrOpeningBefore = parseFloat($('#SecondDsrOpeningBefore').val());
+
+                var selectedDsrId = $('input[name="AffectedDSRNo"]:checked').attr('id');
+
+                if (selectedDsrId === 'ClosingDsr') {
+                    $('#FirstDsrClosingAfter').val(secondDsrOpeningBefore);
+                    $('#FirstDsrOpeningAfter').val(firstDsrOpeningBefore);
+                    $('#SecondDsrClosingAfter').val(secondDsrClosingBefore);
+                    $('#SecondDsrOpeningAfter').val(secondDsrOpeningBefore);
+                } else if (selectedDsrId === 'OpeningDsr') {
+                    $('#FirstDsrClosingAfter').val(firstDsrClosingBefore);
+                    $('#FirstDsrOpeningAfter').val(firstDsrOpeningBefore);
+                    $('#SecondDsrClosingAfter').val(secondDsrClosingBefore);
+                    $('#SecondDsrOpeningAfter').val(firstDsrClosingBefore);
+                }
+            }
         });
     </script>
 }

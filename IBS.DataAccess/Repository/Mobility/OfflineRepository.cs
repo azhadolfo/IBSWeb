@@ -22,15 +22,15 @@ namespace IBS.DataAccess.Repository.Mobility
                 .FirstOrDefaultAsync(o => o.OfflineId == offlineId, cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetOfflineListAsync(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetOfflineListAsync(string stationCode, CancellationToken cancellationToken = default)
         {
             return await _db.MobilityOfflines
                 .OrderBy(o => o.OfflineId)
-                .Where(o => !o.IsResolve)
+                .Where(o => !o.IsResolve && (stationCode == "ALL" || o.StationCode == stationCode))
                 .Select(o => new SelectListItem
                 {
                     Value = o.OfflineId.ToString(),
-                    Text = $"Offline#{o.SeriesNo}"
+                    Text = $"#{o.SeriesNo} {o.FirstDsrNo} - {o.SecondDsrNo}"
                 })
                 .ToListAsync(cancellationToken);
         }
@@ -41,7 +41,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 .FindAsync(new object[] { model.SelectedOfflineId }, cancellationToken);
 
             var salesHeader = await _db.MobilitySalesHeaders
-                .FirstOrDefaultAsync(s => s.SalesNo == model.AffectedDSRNo, cancellationToken);
+                .FirstOrDefaultAsync(s => s.SalesNo == model.AffectedDSRNo && s.StationCode == offlineRecord.StationCode, cancellationToken);
 
             var salesDetail = await _db.MobilitySalesDetails
                 .Where(s => s.SalesHeaderId == salesHeader.SalesHeaderId)
@@ -50,13 +50,15 @@ namespace IBS.DataAccess.Repository.Mobility
             var detailToUpdate = salesDetail
                 .Find(s => s.Particular == $"{offlineRecord.Product} (P{offlineRecord.Pump})");
 
-            if (model.AffectedDSRNo == offlineRecord.ClosingDSRNo)
+            if (model.AffectedDSRNo == offlineRecord.FirstDsrNo)
             {
-                detailToUpdate.Closing = offlineRecord.Opening;
+                detailToUpdate.Closing = model.FirstDsrClosingAfter;
+                offlineRecord.Balance -= model.FirstDsrClosingAfter - model.FirstDsrClosingBefore;
             }
             else
             {
-                detailToUpdate.Opening = offlineRecord.Closing;
+                detailToUpdate.Opening = model.SecondDsrOpeningAfter;
+                offlineRecord.Balance -= model.SecondDsrOpeningBefore - model.SecondDsrOpeningAfter;
             }
 
             detailToUpdate.Liters = detailToUpdate.Closing - detailToUpdate.Opening;
@@ -66,17 +68,16 @@ namespace IBS.DataAccess.Repository.Mobility
             salesHeader.TotalSales = salesHeader.FuelSalesTotalAmount + salesHeader.LubesTotalAmount;
             salesHeader.GainOrLoss = salesHeader.SafeDropTotalAmount - salesHeader.TotalSales;
 
-            offlineRecord.NewClosing = model.Closing;
-            offlineRecord.Balance -= model.Opening - model.Closing;
+            offlineRecord.NewClosing = model.SecondDsrClosingAfter;
             offlineRecord.LastUpdatedBy = "System"; // Change to a more descriptive value
-            offlineRecord.LastUpdatedDate = DateTime.UtcNow;
+            offlineRecord.LastUpdatedDate = DateTime.Now;
 
             if (offlineRecord.Balance <= 0)
             {
                 offlineRecord.IsResolve = true;
 
                 var problematicDsr = await _db.MobilitySalesHeaders
-                    .Where(o => o.SalesNo == offlineRecord.ClosingDSRNo || o.SalesNo == offlineRecord.OpeningDSRNo)
+                    .Where(s => s.StationCode == offlineRecord.StationCode && (s.SalesNo == offlineRecord.FirstDsrNo || s.SalesNo == offlineRecord.SecondDsrNo))
                     .ToListAsync(cancellationToken);
 
                 foreach (var offline in problematicDsr)
@@ -87,6 +88,5 @@ namespace IBS.DataAccess.Repository.Mobility
 
             await _db.SaveChangesAsync(cancellationToken);
         }
-
     }
 }

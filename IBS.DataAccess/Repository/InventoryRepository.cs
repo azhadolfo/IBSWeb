@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.ViewModels;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 
@@ -75,6 +76,81 @@ namespace IBS.DataAccess.Repository
 
             #endregion
 
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<Inventory> GetLastInventoryAsync(string productCode, string stationCode, CancellationToken cancellationToken = default)
+        {
+            return await _db.Inventories
+                .Where(i => i.ProductCode == productCode && i.StationCode == stationCode)
+                .OrderByDescending(i => i.Date)
+                .ThenByDescending(i => i.InventoryId)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task CalculateTheActualInventory(Inventory model, ActualInventoryViewModel viewModel, CancellationToken cancellationToken = default)
+        {
+            decimal totalCost = viewModel.Variance * model.UnitCostAverage;
+            decimal runningCost = model.RunningCost + totalCost;
+            decimal inventoryBalance = model.InventoryBalance + viewModel.Variance;
+            decimal unitCostAverage = runningCost / inventoryBalance;
+
+            Inventory inventory = new()
+            {
+                Particulars = viewModel.Variance > 0 ? "Actual Inventory (Gain)" : "Actual Inventory (Loss)",
+                Date = viewModel.Date,
+                Reference = viewModel.Variance > 0 ? "Actual Inventory (Gain)" : "Actual Inventory (Loss)",
+                ProductCode = viewModel.ProductCode,
+                StationCode = model.StationCode,
+                Quantity = viewModel.Variance,
+                UnitCost = model.UnitCost,
+                TotalCost = totalCost,
+                InventoryBalance = inventoryBalance,
+                RunningCost = runningCost,
+                UnitCostAverage = unitCostAverage,
+                InventoryValue = runningCost,
+                ValidatedBy = "N/A",
+                TransactionNo = Guid.NewGuid().ToString()
+            };
+
+            await _db.AddAsync(inventory, cancellationToken);
+
+            #region--General Ledger Entries
+
+            //PENDING Accounting entries for actual inventory
+            var journals = new List<GeneralLedger>
+            {
+                new() {
+                    TransactionDate = inventory.Date,
+                    Reference = inventory.TransactionNo,
+                    Particular = $"Actual Inventory for {inventory.ProductCode}",
+                    AccountNumber = inventory.TotalCost > 0 ? "1010401" : "1010204",
+                    AccountTitle = inventory.TotalCost > 0 ? "Inventory - Fuel" : "Advances from Officers and Employees",
+                    Debit = Math.Round(Math.Abs(inventory.TotalCost), 2),
+                    Credit = 0,
+                    StationCode = inventory.StationCode,
+                    ProductCode = inventory.ProductCode,
+                    JournalReference = nameof(JournalType.Inventory),
+                    IsValidated = true
+                },
+                new() {
+                    TransactionDate = inventory.Date,
+                    Reference = inventory.TransactionNo,
+                    Particular = $"Actual Inventory for {inventory.ProductCode}",
+                    AccountNumber = inventory.TotalCost > 0 ? "6010103" : "1010401",
+                    AccountTitle = inventory.TotalCost > 0 ? "Gain on Inventory - Fuel" : "Inventory - Fuel",
+                    Debit = 0,
+                    Credit = Math.Round(Math.Abs(inventory.TotalCost), 2),
+                    StationCode = inventory.StationCode,
+                    ProductCode = inventory.ProductCode,
+                    JournalReference = nameof(JournalType.Inventory),
+                    IsValidated = true
+                }
+            };
+
+            await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
+
+            #endregion
 
             await _db.SaveChangesAsync(cancellationToken);
         }

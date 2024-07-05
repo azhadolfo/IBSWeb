@@ -28,11 +28,11 @@ namespace IBS.DataAccess.Repository.Mobility
                     .ToListAsync(cancellationToken);
 
                 var lubeSales = await _db.MobilityLubes
-                    .Where(f => !f.IsProcessed)
+                    .Where(l => !l.IsProcessed && l.BusinessDate.Month == 6)
                     .ToListAsync(cancellationToken);
 
                 var safeDropDeposits = await _db.MobilitySafeDrops
-                    .Where(f => !f.IsProcessed)
+                    .Where(s => !s.IsProcessed && s.BusinessDate.Month == 6)
                     .ToListAsync(cancellationToken);
 
                 var fuelPoSales = Enumerable.Empty<MobilityFuel>();
@@ -108,6 +108,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 }
 
                 decimal previousClosing = 0;
+                decimal previousOpening = 0;
                 string previousNo = string.Empty;
                 DateOnly previousStartDate = new();
                 foreach (var group in fuelSales.GroupBy(f => new { f.ItemCode, f.xPUMP }))
@@ -139,11 +140,12 @@ namespace IBS.DataAccess.Repository.Mobility
                             salesHeader.IsTransactionNormal = false;
                             salesDetail.ReferenceNo = previousNo;
 
-                            MobilityOffline offline = new(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, fuel.Opening, previousClosing)
+                            MobilityOffline offline = new(fuel.StationCode, previousStartDate, fuel.BusinessDate, fuel.Particulars, fuel.xPUMP, previousOpening, previousClosing,
+                                fuel.Opening, fuel.Closing)
                             {
                                 SeriesNo = await GenerateOfflineNo(fuel.StationCode),
-                                ClosingDSRNo = previousNo,
-                                OpeningDSRNo = salesDetail.SalesNo
+                                FirstDsrNo = previousNo,
+                                SecondDsrNo = salesDetail.SalesNo
                             };
 
                             await _db.MobilityOfflines.AddAsync(offline, cancellationToken);
@@ -153,6 +155,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
 
                         previousClosing = fuel.Closing;
+                        previousOpening = fuel.Opening;
                         previousNo = salesHeader.SalesNo;
                         previousStartDate = fuel.BusinessDate;
                     }

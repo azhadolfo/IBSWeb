@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models;
+using IBS.Models.ViewModels;
 using IBS.Utility;
 using IBSWeb.Areas.Mobility.Controllers;
 using Microsoft.AspNetCore.Authorization;
@@ -153,6 +154,65 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 return BadRequest();
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ActualInventory(CancellationToken cancellationToken)
+        {
+            ActualInventoryViewModel viewModel = new()
+            {
+                Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken)
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ActualInventory(ActualInventoryViewModel viewModel, CancellationToken cancellationToken)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var inventory = await _unitOfWork.Inventory
+                        .GetAsync(i => i.InventoryId == viewModel.InventoryId, cancellationToken);
+
+                    await _unitOfWork.Inventory.CalculateTheActualInventory(inventory, viewModel, cancellationToken);
+
+                    TempData["success"] = "Actual inventory inserted successfully.";
+                    return RedirectToAction(nameof(ActualInventory));
+                }
+                catch (Exception ex)
+                {
+                    viewModel.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return View(viewModel);
+                }
+            }
+
+            viewModel.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+            TempData["error"] = "The submitted information is invalid.";
+            return View(viewModel);
+        }
+
+        public async Task<IActionResult> GetLastInventory(string productCode, CancellationToken cancellationToken)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var stationCode = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+
+            var lastInventory = await _unitOfWork.Inventory.GetLastInventoryAsync(productCode, stationCode, cancellationToken);
+
+            if (lastInventory == null)
+            {
+                return NotFound();
+            }
+
+            return Json(new
+            {
+                lastInventory.InventoryId,
+                PerBook = lastInventory.InventoryBalance,
+            });
         }
     }
 }

@@ -35,3 +35,7 @@ function validateDate() {
 function formatNumber(number) {
     return number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+function parseNumber(formattedNum) {
+    return parseFloat(formattedNum.replace(/,/g, '')) || 0;
+}

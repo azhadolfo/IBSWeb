@@ -446,7 +446,6 @@ bg-success {
         font-size: 12pt !important;
     }
 
-
     h6 {
         font-family: sans-serif;
         font-size: 12pt;
@@ -510,4 +509,8 @@ bg-success {
 input[readonly] {
     background-color: #f5f5f5; /* Light grey background */
     cursor: not-allowed; /* Indicate that the input is not editable */
+}
+
+.negative {
+    color: red;
 }

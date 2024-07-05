@@ -68,7 +68,7 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "time without time zone")]
         public TimeOnly? OutTime { get; set; }
 
-        //Liters = Opening - Closing
+        //Liters = FirstDsrOpeningBefore - FirstDsrClosing
         public decimal Liters { get; set; }
 
         [Column(TypeName = "varchar(20)")]

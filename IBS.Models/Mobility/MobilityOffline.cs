@@ -26,23 +26,31 @@ namespace IBS.Models.Mobility
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal Opening { get; set; } //fuel.Opening - previous
+        public decimal FirstDsrOpening { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal Closing { get; set; } //fuel.Closing
+        public decimal FirstDsrClosing { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        public decimal Liters { get; set; } //Closing - Opening
+        public decimal SecondDsrOpening { get; set; }
+
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal SecondDsrClosing { get; set; }
+
+        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        public decimal Liters { get; set; } //FirstDsrClosing - SecondDsrOpeningBeforer
 
         [Column(TypeName = "numeric(18,2)")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal Balance { get; set; } //Remaining Balance
 
-        public string ClosingDSRNo { get; set; }
+        public string FirstDsrNo { get; set; }
 
-        public string OpeningDSRNo { get; set; }
+        public string SecondDsrNo { get; set; }
 
         public bool IsResolve { get; set; }
 
@@ -54,16 +62,18 @@ namespace IBS.Models.Mobility
 
         public DateTime? LastUpdatedDate { get; set; }
 
-        public MobilityOffline(string stationCode, DateOnly startDate, DateOnly endDate, string product, int pump, decimal opening, decimal closing)
+        public MobilityOffline(string stationCode, DateOnly startDate, DateOnly endDate, string product, int pump, decimal firstDsrOpening, decimal firstDsrClosing, decimal secondDsrOpening, decimal secondDsrClosing)
         {
             StationCode = stationCode;
             StartDate = startDate;
             EndDate = endDate;
             Product = product;
             Pump = pump;
-            Opening = opening;
-            Closing = closing;
-            Liters = opening - closing;
+            FirstDsrOpening = firstDsrOpening;
+            FirstDsrClosing = firstDsrClosing;
+            SecondDsrOpening = secondDsrOpening;
+            SecondDsrClosing = secondDsrClosing;
+            Liters = secondDsrOpening - firstDsrClosing;
             Balance = Liters;
             IsResolve = false;
         }

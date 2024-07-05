@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace IBS.Models.Mobility.ViewModels
 {
@@ -8,11 +9,30 @@ namespace IBS.Models.Mobility.ViewModels
 
         public int SelectedOfflineId { get; set; }
 
-        public decimal Closing { get; set; }
+        [Display(Name = "First Closing")]
+        public decimal FirstDsrClosingBefore { get; set; }
 
-        public decimal Opening { get; set; } //Mapped via selected offline list - readonly
+        [Display(Name = "First Opening")]
+        public decimal FirstDsrOpeningBefore { get; set; }
+
+        [Display(Name = "Second Closing")]
+        public decimal SecondDsrClosingBefore { get; set; }
+
+        [Display(Name = "Second Opening")]
+        public decimal SecondDsrOpeningBefore { get; set; }
+
+        [Display(Name = "First Closing")]
+        public decimal FirstDsrClosingAfter { get; set; }
+
+        [Display(Name = "First Opening")]
+        public decimal FirstDsrOpeningAfter { get; set; }
+
+        [Display(Name = "Second Closing")]
+        public decimal SecondDsrClosingAfter { get; set; }
+
+        [Display(Name = "Second Opening")]
+        public decimal SecondDsrOpeningAfter { get; set; }
 
         public string AffectedDSRNo { get; set; }
-
     }
 }

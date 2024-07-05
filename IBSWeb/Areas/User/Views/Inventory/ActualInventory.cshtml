@@ -1,0 +1,109 @@
+﻿@model ActualInventoryViewModel
+
+@{
+    ViewData["Title"] = "Actual Inventory";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Actual Inventory</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <div class="border p-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <input asp-for="InventoryId" type="hidden" />
+                <div class="form-floating py-2 col-12">
+                    <input type="date" asp-for="Date" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control border-0 shadow" placeholder="" required />
+                    <label asp-for="Date">Date<span class="required">*</span></label>
+                    <span asp-validation-for="Date" class="text-danger"></span>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Product List<span class="required">*</span></label>
+                    <select asp-for="ProductCode" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected disabled>Select product</option>
+                    </select>
+                    <span asp-validation-for="ProductCode" class="text-danger"></span>
+                </div>
+                <div class="row">
+                    <div class="form-floating py-2 col-4">
+                        <input asp-for="ActualVolume" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="ActualVolume" class="ms-2">Actual Volume<span class="required">*</span></label>
+                        <span asp-validation-for="ActualVolume" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-4">
+                        <input asp-for="PerBook" class="form-control border-0 shadow" placeholder="" readonly />
+                        <label asp-for="PerBook" class="ms-2">Per Book</label>
+                        <span asp-validation-for="PerBook" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-4">
+                        <input asp-for="Variance" id="Variance" class="form-control border-0 shadow" placeholder="" readonly />
+                        <label asp-for="Variance" class="ms-2">Variance</label>
+                        <span asp-validation-for="Variance" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control">Save</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="User" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to Homepage</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            $('#ProductCode').change(function () {
+                var productCode = $(this).val();
+                if (productCode) {
+                    $.ajax({
+                        url: '@Url.Action("GetLastInventory", "Inventory", new { area = "User" })',
+                        type: 'GET',
+                        data: { productCode: productCode },
+                        success: function (data) {
+                            $('#InventoryId').val(data.inventoryId);
+                            $('#PerBook').val(formatNumber(data.perBook));
+                            computeVariance();
+                        }
+                    });
+                }
+            });
+
+            $('#ActualVolume').on('input', function () {
+                computeVariance();
+            });
+
+            function computeVariance() {
+                var actualVolume = parseNumber($('#ActualVolume').val());
+                var perBook = parseNumber($('#PerBook').val());
+                var variance = actualVolume - perBook;
+                $('#Variance').val(formatNumber(variance));
+                updateVarianceField(variance);
+            }
+
+            function updateVarianceField(variance) {
+                const varianceField = $('#Variance');
+                varianceField.val(formatNumber(variance));
+                if (variance < 0) {
+                    varianceField.addClass('negative');
+                } else {
+                    varianceField.removeClass('negative');
+                }
+            }
+        });
+    </script>
+
+}
