@@ -41,7 +41,7 @@ namespace IBS.Models.Filpride
 
         #region--Hauler properties
 
-        public int HaulerId { get; set; }
+        public int? HaulerId { get; set; }
 
         [ForeignKey(nameof(HaulerId))]
         public Hauler? Hauler { get; set; }
@@ -78,5 +78,8 @@ namespace IBS.Models.Filpride
         public decimal VatAmount { get; set; }
 
         public bool IsPrinted { get; set; }
+
+        [Column(TypeName = "varchar(15)")]
+        public string DeliveryType { get; set; }
     }
 }

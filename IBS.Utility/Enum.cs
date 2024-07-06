@@ -19,5 +19,4 @@
         Debit,
         Credit
     }
-
 }

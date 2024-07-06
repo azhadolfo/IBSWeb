@@ -225,6 +225,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(12)")
                         .HasColumnName("delivery_receipt_no");
 
+                    b.Property<string>("DeliveryType")
+                        .IsRequired()
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("delivery_type");
+
                     b.Property<string>("EditedBy")
                         .HasColumnType("varchar(50)")
                         .HasColumnName("edited_by");
@@ -237,7 +242,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("freight");
 
-                    b.Property<int>("HaulerId")
+                    b.Property<int?>("HaulerId")
                         .HasColumnType("integer")
                         .HasColumnName("hauler_id");
 
@@ -3426,7 +3431,6 @@ namespace IBS.DataAccess.Migrations
                         .WithMany()
                         .HasForeignKey("HaulerId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("fk_filpride_delivery_receipts_haulers_hauler_id");
 
                     b.Navigation("Customer");

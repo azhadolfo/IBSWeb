@@ -45,10 +45,11 @@ namespace IBS.Models.Filpride.ViewModels
 
         public decimal TotalAmount { get; set; }
 
+        public string DeliveryType { get; set; }
+
         #region--Hauler
 
-        [Required(ErrorMessage = "Hauler field is required.")]
-        public int HaulerId { get; set; }
+        public int? HaulerId { get; set; }
 
         public List<SelectListItem>? Haulers { get; set; }
 

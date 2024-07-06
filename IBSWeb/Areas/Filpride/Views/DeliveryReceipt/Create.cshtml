@@ -1,4 +1,5 @@
-﻿@model DeliveryReceiptViewModel
+﻿@using IBS.Utility
+@model DeliveryReceiptViewModel
 
 @{
     ViewData["Title"] = "Create Delivery Receipt";
@@ -83,26 +84,38 @@
                     <span asp-validation-for="Volume" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="TotalAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
+                    <input asp-for="TotalAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                     <label asp-for="TotalAmount">Total Amount</label>
                     <span asp-validation-for="TotalAmount" class="text-danger"></span>
                 </div>
                 <div class="form-group py-2 col-12">
+                    <label class="control-label">Delivery Type<span class="required">*</span></label><br />
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="DeliveryType" value="@SD.DeliveryType_ForPickUp" id="DeliveryType_ForPickUp" />
+                        <label class="form-check-label" for="DeliveryType_ForPickUp">@SD.DeliveryType_ForPickUp</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="DeliveryType" value="@SD.DeliveryType_DirectDelivery" id="DeliveryType_DirectDelivery" />
+                        <label class="form-check-label" for="DeliveryType_DirectDelivery">@SD.DeliveryType_DirectDelivery</label>
+                    </div>
+                    <span asp-validation-for="DeliveryType" class="text-danger"></span>
+                </div>
+                <div class="form-group py-2 col-12" id="haulerAndFreight">
                     <label class="control-label">Hauler List<span class="required">*</span></label>
-                    <select asp-for="HaulerId" asp-items="@Model.Haulers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <select asp-for="HaulerId" asp-items="@Model.Haulers" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                         <option value="" selected>Select hauler</option>
                     </select>
                     <span asp-validation-for="HaulerId" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12" id="freightField">
+                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" min="0.01" required />
+                    <label asp-for="Freight">Freight<span class="required">*</span></label>
+                    <span asp-validation-for="Freight" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="AuthorityToLoadNo" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="AuthorityToLoadNo">ATL No<span class="required">*</span></label>
                     <span asp-validation-for="AuthorityToLoadNo" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="Freight">Freight<span class="required">*</span></label>
-                    <span asp-validation-for="Freight" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="LoadPort" class="form-control border-0 shadow" placeholder="" />
@@ -249,6 +262,37 @@
                     $("#Volume").val(remainingVolume);
                 }
             }
+        });
+    </script>
+    <script>
+        $(function () {
+            var directDeliveryRadio = $("#DeliveryType_DirectDelivery");
+            var forPickUpRadio = $("#DeliveryType_ForPickUp");
+            var haulerAndFreightSection = $("#haulerAndFreight");
+            var freightField = $("#freightField");
+            var haulerSelect = $("#HaulerId");
+            var freightInput = $("#Freight");
+
+            // Initially hide hauler and freight fields
+            haulerAndFreightSection.hide();
+            freightField.hide();
+
+            // Show/hide hauler and freight fields based on delivery type selection
+            directDeliveryRadio.change(function () {
+                if ($(this).is(":checked")) {
+                    haulerSelect.val(""); // Clear selected hauler
+                    freightInput.val("0.00"); // Clear freight input
+                    haulerAndFreightSection.hide();
+                    freightField.hide();
+                }
+            });
+
+            forPickUpRadio.change(function () {
+                if ($(this).is(":checked")) {
+                    haulerAndFreightSection.show();
+                    freightField.show();
+                }
+            });
         });
     </script>
 }
