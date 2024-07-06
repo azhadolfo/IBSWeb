@@ -83,9 +83,11 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             public bool RememberMe { get; set; }
 
             [Required]
-            [Display(Name = "Station")]
-            public string StationCode { get; set; }
+            [Display(Name = "Company")]
+            public string Company { get; set; }
 
+            [Display(Name = "Station")]
+            public string? StationCode { get; set; }
         }
 
         public async Task OnGetAsync(string returnUrl = null)
@@ -135,8 +137,21 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                         await _signInManager.UserManager.RemoveClaimAsync(user, existingStationCodeClaim);
                     }
 
-                    var newStationCodeClaim = new Claim("StationCode", Input.StationCode);
-                    await _signInManager.UserManager.AddClaimAsync(user, newStationCodeClaim);
+                    if (Input.StationCode != null)
+                    {
+                        var newStationCodeClaim = new Claim("StationCode", Input.StationCode);
+                        await _signInManager.UserManager.AddClaimAsync(user, newStationCodeClaim);
+                    }
+
+                    var existingCompanyClaim = existingClaims.FirstOrDefault(c => c.Type == "Company");
+
+                    if (existingCompanyClaim != null)
+                    {
+                        await _signInManager.UserManager.RemoveClaimAsync(user, existingCompanyClaim);
+                    }
+
+                    var newCompanyClaim = new Claim("Company", Input.Company);
+                    await _signInManager.UserManager.AddClaimAsync(user, newCompanyClaim);
 
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);

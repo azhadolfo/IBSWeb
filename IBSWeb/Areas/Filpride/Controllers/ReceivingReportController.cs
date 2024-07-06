@@ -2,14 +2,13 @@
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
-    [Authorize]
+    [CompanyAuthorize(nameof(Filpride))]
     public class ReceivingReportController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

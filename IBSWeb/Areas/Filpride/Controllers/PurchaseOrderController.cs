@@ -1,14 +1,14 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.ViewModels;
-using Microsoft.AspNetCore.Authorization;
+using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
-    [Authorize]
+    [CompanyAuthorize(nameof(Filpride))]
     public class PurchaseOrderController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

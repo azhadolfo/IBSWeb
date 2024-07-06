@@ -55,7 +55,7 @@
                 </fieldset>
                 <div class="form-group py-2 col-12">
                     <label class="control-label">PO List<span class="required">*</span></label>
-                    <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%" id="company-select">
                         <option value="" selected>Select po</option>
                     </select>
                     <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
@@ -143,6 +143,19 @@
                 $('input[name="Vat"]').val(formatNumber(vat));
                 $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
             });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var companySelect = document.getElementById('company-select'); // Ensure correct ID for company select
+            var stationDiv = document.getElementById('station-div');
+
+            function toggleStationDiv() {
+                console.log('working')
+            }
+
+            companySelect.addEventListener('change', toggleStationDiv);
+
         });
     </script>
 }

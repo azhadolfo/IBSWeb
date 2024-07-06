@@ -2,7 +2,7 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
-using Microsoft.AspNetCore.Authorization;
+using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
@@ -10,7 +10,7 @@ using System.Linq.Expressions;
 namespace IBSWeb.Areas.Mobility.Controllers
 {
     [Area(nameof(Mobility))]
-    [Authorize]
+    [CompanyAuthorize(nameof(Mobility))]
     public class CashierReportController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
