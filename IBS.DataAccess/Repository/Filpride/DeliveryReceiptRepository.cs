@@ -100,12 +100,12 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<List<SelectListItem>> GetDeliveryReceiptListAsync(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideDeliveryReceipts
-                .OrderBy(po => po.DeliveryReceiptId)
-                .Where(po => po.PostedBy != null)
-                .Select(po => new SelectListItem
+                .OrderBy(dr => dr.DeliveryReceiptId)
+                .Where(dr => dr.PostedBy != null)
+                .Select(dr => new SelectListItem
                 {
-                    Value = po.DeliveryReceiptId.ToString(),
-                    Text = po.DeliveryReceiptNo
+                    Value = dr.DeliveryReceiptId.ToString(),
+                    Text = dr.DeliveryReceiptNo
                 })
                 .ToListAsync(cancellationToken);
         }
@@ -113,12 +113,12 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<List<SelectListItem>> GetDeliveryReceiptListByCustomerAsync(int customerId, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideDeliveryReceipts
-                    .OrderBy(cos => cos.DeliveryReceiptId)
-                    .Where(cos => cos.PostedBy != null && cos.CustomerId == customerId)
-                    .Select(cos => new SelectListItem
+                    .OrderBy(dr => dr.DeliveryReceiptId)
+                    .Where(dr => dr.PostedBy != null && dr.CustomerId == customerId)
+                    .Select(dr => new SelectListItem
                     {
-                        Value = cos.DeliveryReceiptId.ToString(),
-                        Text = cos.DeliveryReceiptNo
+                        Value = dr.DeliveryReceiptId.ToString(),
+                        Text = $"{dr.DeliveryReceiptNo} - {dr.DeliveryType.ToUpper()}"
                     })
                     .ToListAsync(cancellationToken);
         }

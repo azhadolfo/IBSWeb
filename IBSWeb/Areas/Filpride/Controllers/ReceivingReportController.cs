@@ -62,6 +62,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         SupplierSiDate = viewModel.SupplierSiDate,
                         SupplierDrNo = viewModel.SupplierDrNo,
                         SupplierDrDate = viewModel.SupplierDrDate,
+                        WithdrawalCertificate = viewModel.WithdrawalCertificate,
                         OtherReference = viewModel.OtherReference,
                         QuantityDelivered = viewModel.QuantityDelivered,
                         QuantityReceived = viewModel.QuantityReceived,
