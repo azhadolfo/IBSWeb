@@ -72,6 +72,42 @@
                                         </li>
                                     </ul>
                                 </li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Inventory
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="User" asp-controller="Inventory" asp-action="BeginningInventory">Beginning Inventory</a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="User" asp-controller="Inventory" asp-action="GenerateInventoryCosting">Inventory Costing</a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="User" asp-controller="Inventory" asp-action="ActualInventory">Actual Inventory</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        General Ledger
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetTransaction">By Transaction</a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetJournal">By Journal</a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetAccountNo">By Account No</a>
+                                        </li>
+                                    </ul>
+                                </li>
                             }
                             else if (selectedCompany == "Filpride")
                             {
@@ -112,42 +148,6 @@
                                     </ul>
                                 </li>
                             }
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Inventory
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Inventory" asp-action="BeginningInventory">Beginning Inventory</a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Inventory" asp-action="GenerateInventoryCosting">Inventory Costing</a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Inventory" asp-action="ActualInventory">Actual Inventory</a>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    General Ledger
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetTransaction">By Transaction</a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetJournal">By Journal</a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="GeneralLedger" asp-action="GetAccountNo">By Account No</a>
-                                    </li>
-                                </ul>
-                            </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Report

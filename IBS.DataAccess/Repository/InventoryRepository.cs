@@ -42,14 +42,15 @@ namespace IBS.DataAccess.Repository
 
             #region--General Ledger Entries
 
+            var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(model.ProductCode);
             var journals = new List<GeneralLedger>
             {
                 new() {
                     TransactionDate = model.Date,
                     Reference = model.TransactionNo,
                     Particular = $"Beginning Inventory for {model.ProductCode}",
-                    AccountNumber = model.ProductCode.StartsWith("PET") ? "5010101" : "5011001",
-                    AccountTitle = model.ProductCode.StartsWith("PET") ? "COGS - Fuel" : "COGS - Lubes",
+                    AccountNumber = cogsAcctNo,
+                    AccountTitle = cogsAcctTitle,
                     Debit = Math.Round(model.TotalCost, 2),
                     Credit = 0,
                     StationCode = model.StationCode,
@@ -117,6 +118,8 @@ namespace IBS.DataAccess.Repository
 
             #region--General Ledger Entries
 
+            var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(inventory.ProductCode);
+
             //PENDING Accounting entries for actual inventory
             var journals = new List<GeneralLedger>
             {
@@ -124,8 +127,8 @@ namespace IBS.DataAccess.Repository
                     TransactionDate = inventory.Date,
                     Reference = inventory.TransactionNo,
                     Particular = $"Actual Inventory for {inventory.ProductCode}",
-                    AccountNumber = inventory.TotalCost > 0 ? "1010401" : "1010204",
-                    AccountTitle = inventory.TotalCost > 0 ? "Inventory - Fuel" : "Advances from Officers and Employees",
+                    AccountNumber = inventory.TotalCost > 0 ? inventoryAcctNo : "1010204",
+                    AccountTitle = inventory.TotalCost > 0 ? inventoryAcctTitle : "Advances from Officers and Employees",
                     Debit = Math.Round(Math.Abs(inventory.TotalCost), 2),
                     Credit = 0,
                     StationCode = inventory.StationCode,
