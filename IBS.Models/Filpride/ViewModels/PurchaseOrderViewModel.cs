@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using IBS.Utility;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace IBS.Models.Filpride.ViewModels
@@ -32,7 +33,7 @@ namespace IBS.Models.Filpride.ViewModels
         public decimal UnitCost { get; set; }
 
         [Required]
-        public string Port { get; set; }
+        public Port Port { get; set; }
 
         public string Remarks { get; set; }
 

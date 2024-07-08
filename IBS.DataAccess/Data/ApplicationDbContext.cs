@@ -325,6 +325,9 @@ namespace IBS.DataAccess.Data
                 .WithMany()
                 .HasForeignKey(po => po.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+                po.Property(po => po.Port)
+                .HasConversion<int>();
             });
 
             builder.Entity<FilprideReceivingReport>(rr =>
