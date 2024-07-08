@@ -66,7 +66,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         OtherReference = viewModel.OtherReference,
                         QuantityDelivered = viewModel.QuantityDelivered,
                         QuantityReceived = viewModel.QuantityReceived,
-                        GainOrLoss = viewModel.QuantityDelivered - viewModel.QuantityReceived,
+                        GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered,
                         TotalAmount = viewModel.QuantityReceived * deliveryReceipt.CustomerOrderSlip.PurchaseOrder.UnitCost,
                         TotalFreight = viewModel.TotalFreight,
                         Remarks = viewModel.Remarks,
@@ -288,12 +288,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(drList);
         }
 
-        public async Task<IActionResult> GetFreightByDeliveryReceipt(int drId)
+        public async Task<IActionResult> GetDeliveryReceiptDetails(int drId)
         {
             var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
                 .GetAsync(dr => dr.DeliveryReceiptId == drId);
 
-            return Json(deliveryReceipt.Freight);
+            return Json(new
+            {
+                deliveryReceipt.Quantity,
+                deliveryReceipt.Freight
+            });
         }
     }
 }

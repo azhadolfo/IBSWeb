@@ -4,6 +4,9 @@
 
 @{
     ViewData["Title"] = "Preview Receiving Report";
+
+    var value = Model.GainOrLoss;
+    var formattedGainOrLoss = value < 0 ? $"({Math.Abs(value):N2})" : value.ToString("N2");
 }
 
 <table class="w-100">
@@ -58,7 +61,7 @@
                 <th class="text-center" style="width:12.5%">PRODUCT</th>
                 <th class="text-center" style="width:12.5%">QTY SERVED</th>
                 <th class="text-center" style="width:12.5%">QTY RECEIVED</th>
-                <th class="text-center" style="width:12.5%">GAIN/LOSS</th>
+                <th class="text-center" style="width:12.5%">GAIN/(LOSS)</th>
             </tr>
         </thead>
         <tbody>
@@ -69,7 +72,7 @@
                 <td class="text-center p-4">@Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.Product?.ProductName</td>
                 <td class="text-center p-4">@Html.DisplayFor(model => model.QuantityDelivered)</td>
                 <td class="text-center p-4">@Html.DisplayFor(model => model.QuantityReceived)</td>
-                <td class="text-center p-4">@Html.DisplayFor(model => model.GainOrLoss)</td>
+                <td class="text-center p-4">@formattedGainOrLoss</td>
             </tr>
         </tbody>
     </table>

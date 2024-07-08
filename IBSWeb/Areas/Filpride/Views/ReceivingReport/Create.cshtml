@@ -71,8 +71,8 @@
 
                 <div class="row py-2">
                     <div class="form-floating col-6">
-                        <input asp-for="QuantityDelivered" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="QuantityDelivered" class="ms-2">Quantity Delivered<span class="required">*</span></label>
+                        <input asp-for="QuantityDelivered" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                        <label asp-for="QuantityDelivered" class="ms-2">Quantity Delivered</label>
                         <span asp-validation-for="QuantityDelivered" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6">
@@ -151,15 +151,17 @@
                 var drId = $(this).val();
                 if (drId) {
                     $.ajax({
-                        url: '@Url.Action("GetFreightByDeliveryReceipt", "ReceivingReport")',
+                        url: '@Url.Action("GetDeliveryReceiptDetails", "ReceivingReport")',
                         type: "GET",
                         data: { drId: drId },
                         success: function (data) {
                             console.log(data)
                             if (data) {
-                                $('input[name="Freight"]').val(formatNumber(data));
+                                $('input[name="QuantityDelivered"]').val(formatNumber(data.quantity));
+                                $('input[name="Freight"]').val(formatNumber(data.freight));
                                 updateTotalFreight();
                             } else {
+                                $('input[name="QuantityDelivered"]').val('0.00');
                                 $('input[name="Freight"]').val('0.00');
                                 $('input[name="TotalFreight"]').val('0.00');
                             }
@@ -169,6 +171,7 @@
                         }
                     });
                 } else {
+                    $('input[name="QuantityDelivered"]').val('');
                     $('input[name="Freight"]').val('');
                     $('input[name="TotalFreight"]').val('');
                 }

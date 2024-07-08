@@ -25,7 +25,7 @@
         <table class="table table-bordered table-striped" id="dataTable">
             <thead>
                 <tr>
-                    <th>
+                    <th class="text-start">
                         @Html.DisplayNameFor(m => m.ReceivingReportNo)
                     </th>
                     <th>
@@ -34,8 +34,8 @@
                     <th>
                         PO No.
                     </th>
-                    <th>
-                        Gain / Loss
+                    <th class="text-end">
+                        Gain/(Loss)
                     </th>
                     <th>
                         Total Amount
@@ -47,7 +47,7 @@
                 @foreach (var obj in Model.OrderBy(u => u.ReceivingReportNo))
                 {
                     <tr>
-                        <td>
+                        <td class="text-start">
                             @obj.ReceivingReportNo
                         </td>
                         <td>
@@ -56,8 +56,12 @@
                         <td>
                             @obj.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder?.PurchaseOrderNo
                         </td>
-                        <td>
-                            @Html.DisplayFor(model => obj.GainOrLoss)
+                        <td class="text-end">
+                            @{
+                                var value = obj.GainOrLoss;
+                                var formattedGainOrLoss = value < 0 ? $"({Math.Abs(value):N2})" : value.ToString("N2");
+                            }
+                            @formattedGainOrLoss
                         </td>
                         <td>
                             @Html.DisplayFor(model => obj.TotalAmount)
