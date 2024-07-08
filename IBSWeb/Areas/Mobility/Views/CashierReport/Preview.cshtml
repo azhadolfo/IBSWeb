@@ -1,5 +1,4 @@
-﻿@using IBS.Models.Mobility.ViewModels
-@model SalesVM
+﻿@model MobilitySalesHeader
 
 @{
     ViewData["Title"] = "Preview Cashier Report";
@@ -11,12 +10,12 @@
         <h5 class="text-center">@ViewData["Station"]</h5>
     </div>
     <div class="col-10">
-        <h6 class="px-2"><b>Cashier:</b> @Model.Header.Cashier</h6>
-        <h6 class="px-2"><b>Shift:</b> @Model.Header.Shift</h6>
+        <h6 class="px-2"><b>Cashier:</b> @Model.Cashier</h6>
+        <h6 class="px-2"><b>Shift:</b> @Model.Shift</h6>
     </div>
     <div class="col-2">
-        <h6 class="px-2 text-end"><b>No.</b> @Html.DisplayFor(model => Model.Header.SalesNo)</h6>
-        <h6 class="px-2 text-end"><b>Date:</b> @Html.DisplayFor(model => Model.Header.Date)</h6>
+        <h6 class="px-2 text-end"><b>No.</b> @Html.DisplayFor(model => Model.SalesNo)</h6>
+        <h6 class="px-2 text-end"><b>Date:</b> @Html.DisplayFor(model => Model.Date)</h6>
     </div>
 </div>
 
@@ -40,7 +39,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var group in Model.Details.OrderBy(d => d.SalesDetailId).GroupBy(d => d.Product))
+            @foreach (var group in Model.SalesDetails.OrderBy(d => d.SalesDetailId).GroupBy(d => d.Product))
             {
                 foreach (var item in group.OrderBy(g => g.Particular))
                 {
@@ -49,7 +48,7 @@
                         <td class="text-end">@Html.DisplayFor(model => item.Closing)</td>
 
                         <td class="text-end">
-                            @if (item.ReferenceNo != null && !Model.Header.IsTransactionNormal)
+                            @if (item.ReferenceNo != null && !Model.IsTransactionNormal)
                             {
                                 <a asp-area="Mobility" asp-controller="CashierReport" asp-action="Preview" asp-route-id="@item.ReferenceNo" asp-route-stationCode="@item.StationCode" title="Click to view @item.ReferenceNo in new tab" style="color:red !important" target="_blank">
                                     @Html.DisplayFor(model => item.Opening)
@@ -101,13 +100,13 @@
             }
             <tr class="table-primary fw-semibold">
                 <td colspan="3" class="text-center">Total</td>
-                <td class="text-end">@Model.Details.Sum(d => d.Liters).ToString("N3")</td>
-                <td class="text-end">@Model.Details.Sum(d => d.Calibration).ToString("N2")</td>
-                <td class="text-end">@Model.Details.Sum(d => d.LitersSold).ToString("N3")</td>
-                <td class="text-end">@Model.Details.Sum(d => d.TransactionCount).ToString("N2")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.Liters).ToString("N3")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.Calibration).ToString("N2")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.LitersSold).ToString("N3")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.TransactionCount).ToString("N2")</td>
                 <td class="text-end"></td>
-                <td class="text-end">@Model.Details.Sum(d => d.Sale).ToString("N2")</td>
-                <td class="text-end">@Model.Details.Sum(d => d.Value).ToString("N2")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.Sale).ToString("N2")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.Value).ToString("N2")</td>
             </tr>
         </tbody>
     </table>
@@ -122,51 +121,51 @@
     <tbody>
         <tr>
             <td class="text-center">Fuel</td>
-            <td class="text-end">@Html.DisplayFor(model => Model.Header.FuelSalesTotalAmount)</td>
+            <td class="text-end">@Html.DisplayFor(model => Model.FuelSalesTotalAmount)</td>
         </tr>
         <tr>
             <td class="text-center">Lubes</td>
-            <td class="text-end">@Html.DisplayFor(model => Model.Header.LubesTotalAmount)</td>
+            <td class="text-end">@Html.DisplayFor(model => Model.LubesTotalAmount)</td>
         </tr>
-        @if (Model.Header.POSalesTotalAmount > 0)
+        @if (Model.POSalesTotalAmount > 0)
         {
             <tr>
                 <td class="text-center">PO Sales</td>
-                <td class="text-end">@Html.DisplayFor(model => Model.Header.POSalesTotalAmount)</td>
+                <td class="text-end">@Html.DisplayFor(model => Model.POSalesTotalAmount)</td>
             </tr>
         }
         <tr>
             <td class="text-center">Total Cash Sales</td>
-            <td class="text-end" style="border-top: double">@Html.DisplayFor(model => Model.Header.TotalSales)</td>
+            <td class="text-end" style="border-top: double">@Html.DisplayFor(model => Model.TotalSales)</td>
         </tr>
-        @if (Model.Header.ActualCashOnHand > 0)
+        @if (Model.ActualCashOnHand > 0)
         {
             <tr>
                 <td class="text-center">Cash on Hand (Total Drops)</td>
-                <td class="text-end">@Html.DisplayFor(model => Model.Header.SafeDropTotalAmount)</td>
+                <td class="text-end">@Html.DisplayFor(model => Model.SafeDropTotalAmount)</td>
             </tr>
             <tr>
                 <td class="text-center">Actual Cash on Hand (Audit)</td>
-                <td class="text-end">@Html.DisplayFor(model => Model.Header.ActualCashOnHand)</td>
+                <td class="text-end">@Html.DisplayFor(model => Model.ActualCashOnHand)</td>
             </tr>
         }
         else
         {
             <tr>
                 <td class="text-center">Cash on Hand (Total Drops)</td>
-                <td class="text-end">@Html.DisplayFor(model => Model.Header.SafeDropTotalAmount)</td>
+                <td class="text-end">@Html.DisplayFor(model => Model.SafeDropTotalAmount)</td>
             </tr>
         }
         <tr>
             <td class="text-center">Over (Short) / Handling</td>
-            <td class="text-end" style="border-top: double">@string.Format("{0:#,0.00;(#,0.00)}", Model.Header.GainOrLoss)</td>
+            <td class="text-end" style="border-top: double">@string.Format("{0:#,0.00;(#,0.00)}", Model.GainOrLoss)</td>
         </tr>
     </tbody>
 </table>
 
 <div class="row pt-2">
     @{
-        if (Model.Header.PostedBy == null)
+        if (Model.PostedBy == null)
         {
             <div class="col-6 col-md-3">
                 <a id="approveButton" class="btn btn-primary form-control buttons">Approve</a>
@@ -199,7 +198,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Proceed to the controller action
-                    window.location.href = '@Url.Action("Post", "CashierReport", new { area = "Mobility", id = Model.Header.SalesNo, stationCode = Model.Header.StationCode })';
+                    window.location.href = '@Url.Action("Post", "CashierReport", new { area = "Mobility", id = Model.SalesNo, stationCode = Model.StationCode })';
                 }
             });
         });

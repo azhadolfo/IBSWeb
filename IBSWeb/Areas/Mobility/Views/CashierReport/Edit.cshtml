@@ -46,14 +46,14 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input name="closing" value="@obj.Closing" class="form-control border-0 shadow" placeholder="" />
+                                <input name="closing" value="@obj.Closing" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                                 <label asp-for="@obj.Closing"></label>
                                 <span asp-validation-for="@obj.Closing" class="text-danger"></span>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input name="opening" value="@obj.Opening" class="form-control border-0 shadow" placeholder="" />
+                                <input name="opening" value="@obj.Opening" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                                 <label asp-for="@obj.Opening"></label>
                                 <span asp-validation-for="@obj.Opening" class="text-danger"></span>
                             </div>

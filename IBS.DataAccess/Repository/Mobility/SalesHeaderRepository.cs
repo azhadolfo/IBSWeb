@@ -8,6 +8,7 @@ using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
@@ -842,6 +843,26 @@ namespace IBS.DataAccess.Repository.Mobility
             }
 
             return newRecords;
+        }
+
+        public override async Task<MobilitySalesHeader> GetAsync(Expression<Func<MobilitySalesHeader, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet
+                .Include(sh => sh.SalesDetails)
+                .FirstOrDefaultAsync(filter, cancellationToken);
+        }
+
+        public override async Task<IEnumerable<MobilitySalesHeader>> GetAllAsync(Expression<Func<MobilitySalesHeader, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MobilitySalesHeader> query = dbSet
+                .Include(sh => sh.SalesDetails);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
     }
 }

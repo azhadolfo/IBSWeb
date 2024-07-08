@@ -4,10 +4,10 @@ using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.Mobility;
-using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
@@ -44,19 +44,15 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             try
             {
-                LubeDeliveryVM lubeDeliveryVM = new LubeDeliveryVM
-                {
-                    Header = await _db.MobilityLubePurchaseHeaders.FirstOrDefaultAsync(lh => lh.LubePurchaseHeaderNo == id && lh.StationCode == stationCode, cancellationToken),
-                    Details = await _db.MobilityLubePurchaseDetails.Where(ld => ld.LubePurchaseHeaderNo == id && ld.StationCode == stationCode).ToListAsync(cancellationToken)
-                };
+                var lubes = await GetAsync(l => l.LubePurchaseHeaderNo == id, cancellationToken);
 
-                if (lubeDeliveryVM.Header == null || lubeDeliveryVM.Details == null)
+                if (lubes == null)
                 {
                     throw new InvalidOperationException($"Lube purchase header/detail with id '{id}' not found.");
                 }
 
                 var lubePurchaseList = await _db.MobilityLubePurchaseHeaders
-                    .Where(l => l.StationCode == lubeDeliveryVM.Header.StationCode && l.DeliveryDate <= lubeDeliveryVM.Header.DeliveryDate && l.CreatedDate < lubeDeliveryVM.Header.CreatedDate && l.PostedBy == null)
+                    .Where(l => l.StationCode == lubes.StationCode && l.DeliveryDate <= lubes.DeliveryDate && l.CreatedDate < lubes.CreatedDate && l.PostedBy == null)
                     .OrderBy(l => l.LubePurchaseHeaderNo)
                     .ToListAsync(cancellationToken);
 
@@ -65,71 +61,71 @@ namespace IBS.DataAccess.Repository.Mobility
                     throw new InvalidOperationException($"Can't proceed to post, you have unposted {lubePurchaseList[0].LubePurchaseHeaderNo}");
                 }
 
-                SupplierDto supplier = await MapSupplierToDTO(lubeDeliveryVM.Header.SupplierCode, cancellationToken) ?? throw new InvalidOperationException($"Supplier with code '{lubeDeliveryVM.Header.SupplierCode}' not found.");
+                SupplierDto supplier = await MapSupplierToDTO(lubes.SupplierCode, cancellationToken) ?? throw new InvalidOperationException($"Supplier with code '{lubes.SupplierCode}' not found.");
 
-                lubeDeliveryVM.Header.PostedBy = postedBy;
-                lubeDeliveryVM.Header.PostedDate = DateTime.Now;
+                lubes.PostedBy = postedBy;
+                lubes.PostedDate = DateTime.Now;
 
                 List<GeneralLedger> journals = new();
                 List<Inventory> inventories = new();
 
                 journals.Add(new GeneralLedger
                 {
-                    TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                    Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
-                    Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
+                    TransactionDate = lubes.DeliveryDate,
+                    Reference = lubes.LubePurchaseHeaderNo,
+                    Particular = $"SI#{lubes.SalesInvoice} DR#{lubes.DrNo} LUBES PURCHASE {lubes.DeliveryDate}",
                     AccountNumber = "1010410",
                     AccountTitle = "Inventory - Lubes",
-                    Debit = lubeDeliveryVM.Header.Amount / 1.12m,
+                    Debit = lubes.Amount / 1.12m,
                     Credit = 0,
-                    StationCode = lubeDeliveryVM.Header.StationCode,
+                    StationCode = lubes.StationCode,
                     JournalReference = nameof(JournalType.Purchase),
                     ProductCode = "LUBES"
                 });
 
                 journals.Add(new GeneralLedger
                 {
-                    TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                    Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
-                    Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
+                    TransactionDate = lubes.DeliveryDate,
+                    Reference = lubes.LubePurchaseHeaderNo,
+                    Particular = $"SI#{lubes.SalesInvoice} DR#{lubes.DrNo} LUBES PURCHASE {lubes.DeliveryDate}",
                     AccountNumber = "1010602",
                     AccountTitle = "Vat Input",
-                    Debit = lubeDeliveryVM.Header.Amount / 1.12m * 0.12m,
+                    Debit = lubes.Amount / 1.12m * 0.12m,
                     Credit = 0,
-                    StationCode = lubeDeliveryVM.Header.StationCode,
+                    StationCode = lubes.StationCode,
                     JournalReference = nameof(JournalType.Purchase)
                 });
 
                 journals.Add(new GeneralLedger
                 {
-                    TransactionDate = lubeDeliveryVM.Header.DeliveryDate,
-                    Reference = lubeDeliveryVM.Header.LubePurchaseHeaderNo,
-                    Particular = $"SI#{lubeDeliveryVM.Header.SalesInvoice} DR#{lubeDeliveryVM.Header.DrNo} LUBES PURCHASE {lubeDeliveryVM.Header.DeliveryDate}",
+                    TransactionDate = lubes.DeliveryDate,
+                    Reference = lubes.LubePurchaseHeaderNo,
+                    Particular = $"SI#{lubes.SalesInvoice} DR#{lubes.DrNo} LUBES PURCHASE {lubes.DeliveryDate}",
                     AccountNumber = "2010101",
                     AccountTitle = "Accounts Payables - Trade",
                     Debit = 0,
-                    Credit = lubeDeliveryVM.Header.Amount,
-                    StationCode = lubeDeliveryVM.Header.StationCode,
+                    Credit = lubes.Amount,
+                    StationCode = lubes.StationCode,
                     SupplierCode = supplier.SupplierName.ToUpper(),
                     JournalReference = nameof(JournalType.Purchase)
                 });
 
-                foreach (var lube in lubeDeliveryVM.Details)
+                foreach (var lube in lubes.LubePurchaseDetails)
                 {
                     var sortedInventory = _db
                         .Inventories
                         .OrderBy(i => i.Date)
-                        .Where(i => i.ProductCode == lube.ProductCode && i.StationCode == lubeDeliveryVM.Header.StationCode)
+                        .Where(i => i.ProductCode == lube.ProductCode && i.StationCode == lube.StationCode)
                         .ToList();
 
-                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= lubeDeliveryVM.Header.DeliveryDate);
+                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= lubes.DeliveryDate);
                     if (lastIndex >= 0)
                     {
                         sortedInventory = sortedInventory.Skip(lastIndex).ToList();
                     }
                     else
                     {
-                        throw new ArgumentException($"Beginning inventory for {lube.ProductCode} in station {lubeDeliveryVM.Header.StationCode} not found!");
+                        throw new ArgumentException($"Beginning inventory for {lube.ProductCode} in station {lubes.StationCode} not found!");
                     }
 
                     var previousInventory = sortedInventory.FirstOrDefault();
@@ -142,10 +138,10 @@ namespace IBS.DataAccess.Repository.Mobility
                     inventories.Add(new Inventory
                     {
                         Particulars = nameof(JournalType.Purchase),
-                        Date = lubeDeliveryVM.Header.DeliveryDate,
-                        Reference = $"DR#{lubeDeliveryVM.Header.DrNo}",
+                        Date = lubes.DeliveryDate,
+                        Reference = $"DR#{lubes.DrNo}",
                         ProductCode = lube.ProductCode,
-                        StationCode = lubeDeliveryVM.Header.StationCode,
+                        StationCode = lubes.StationCode,
                         Quantity = lube.Piece,
                         UnitCost = lube.CostPerPiece,
                         TotalCost = totalCost,
@@ -153,7 +149,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         RunningCost = runningCost,
                         UnitCostAverage = unitCostAverage,
                         InventoryValue = runningCost,
-                        TransactionNo = lubeDeliveryVM.Header.LubePurchaseHeaderNo
+                        TransactionNo = lubes.LubePurchaseHeaderNo
                     });
 
                     foreach (var transaction in sortedInventory.Skip(1))
@@ -348,6 +344,26 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 return "LD0000000001";
             }
+        }
+
+        public override async Task<MobilityLubePurchaseHeader> GetAsync(Expression<Func<MobilityLubePurchaseHeader, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet
+                .Include(sh => sh.LubePurchaseDetails)
+                .FirstOrDefaultAsync(filter, cancellationToken);
+        }
+
+        public override async Task<IEnumerable<MobilityLubePurchaseHeader>> GetAllAsync(Expression<Func<MobilityLubePurchaseHeader, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MobilityLubePurchaseHeader> query = dbSet
+                .Include(sh => sh.LubePurchaseDetails);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
     }
 }

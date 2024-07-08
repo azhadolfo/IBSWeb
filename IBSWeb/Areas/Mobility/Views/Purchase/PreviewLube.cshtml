@@ -1,5 +1,4 @@
-﻿@using IBS.Models.Mobility.ViewModels
-@model LubeDeliveryVM
+﻿@model MobilityLubePurchaseHeader
 
 <style>
     @@page {
@@ -10,19 +9,19 @@
 <div class="mb-5">
     <h2 class="text-center">Delivery Details</h2>
     <h5 class="text-center">@ViewData["Station"]</h5>
-        <div class="row">
-            <div class="col-9">
-            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.SalesInvoice):</b> @Model.Header.SalesInvoice</h6>
-            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.SupplierCode):</b> @Model.Header.SupplierCode</h6>
+    <div class="row">
+        <div class="col-9">
+            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.SalesInvoice):</b> @Model.SalesInvoice</h6>
+            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.SupplierCode):</b> @Model.SupplierCode</h6>
             <h6 class="px-2"><b>Supplier Name:</b> @ViewData["SupplierName"]</h6>
-            </div>
-            <div class="col-3">
-            <h6 class="px-2"><b>No.</b> @Model.Header.LubePurchaseHeaderNo</h6>
-            <h6 class="px-2"><b>Date:</b> @Model.Header.DeliveryDate.ToString("MMM/dd/yyyy")</h6>
-            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.DrNo):</b> @Model.Header.DrNo</h6>
-            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Header.PoNo):</b> @Model.Header.PoNo</h6>
-            </div>
         </div>
+        <div class="col-3">
+            <h6 class="px-2"><b>No.</b> @Model.LubePurchaseHeaderNo</h6>
+            <h6 class="px-2"><b>Date:</b> @Model.DeliveryDate.ToString("MMM/dd/yyyy")</h6>
+            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.DrNo):</b> @Model.DrNo</h6>
+            <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.PoNo):</b> @Model.PoNo</h6>
+        </div>
+    </div>
 </div>
 
 <div class="table-responsive">
@@ -41,7 +40,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach(var obj in Model.Details)
+            @foreach (var obj in Model.LubePurchaseDetails)
             {
                 <tr>
                     <td>@Html.DisplayFor(d => obj.Quantity)</td>
@@ -60,7 +59,7 @@
                     <td></td>
                     <td></td>
                     <td class="fw-medium text-end">Net of VAT:</td>
-                    <td class="text-end">@Html.DisplayFor(model => model.Header.VatableSales)</td>
+                    <td class="text-end">@Html.DisplayFor(model => model.VatableSales)</td>
                 </tr>
                 <tr>
                     <td></td>
@@ -68,7 +67,7 @@
                     <td></td>
                     <td></td>
                     <td class="fw-medium text-end">Vat Amount</td>
-                    <td class="text-end">@Html.DisplayFor(model => model.Header.VatAmount)</td>
+                    <td class="text-end">@Html.DisplayFor(model => model.VatAmount)</td>
                 </tr>
                 <tr>
                     <td></td>
@@ -76,10 +75,9 @@
                     <td></td>
                     <td></td>
                     <td class="fw-medium text-end">Total Amount:</td>
-                    <td class="text-end">@Html.DisplayFor(model => model.Header.Amount)</td>
+                    <td class="text-end">@Html.DisplayFor(model => model.Amount)</td>
                 </tr>
             </table>
-
         </tbody>
     </table>
 </div>
@@ -89,12 +87,12 @@
     <p class="text-center mb-2">Received By:</p>
     <div class="signature-block">
     </div>
-    <p class="small text-muted text-center">@Html.DisplayFor(model => model.Header.ReceivedBy)</p>
+    <p class="small text-muted text-center">@Html.DisplayFor(model => model.ReceivedBy)</p>
 </div>
 
 <div class="row mt-5">
     @{
-        if (Model.Header.PostedBy == null)
+        if (Model.PostedBy == null)
         {
             <div class="col-6 col-md-3">
                 <a id="approveButton" class="btn btn-primary form-control buttons">Approve</a>
@@ -127,7 +125,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Proceed to the controller action
-                    window.location.href = '@Url.Action("PostLube", "Purchase", new { area = "Mobility", id = Model.Header.LubePurchaseHeaderNo, stationCode = Model.Header.StationCode })';
+                    window.location.href = '@Url.Action("PostLube", "Purchase", new { area = "Mobility", id = Model.LubePurchaseHeaderNo, stationCode = Model.StationCode })';
                 }
             });
         });

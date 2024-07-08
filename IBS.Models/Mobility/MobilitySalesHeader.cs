@@ -82,5 +82,7 @@ namespace IBS.Models.Mobility
         public bool IsModified { get; set; }
 
         #endregion --Added properties for editing purposes
+
+        public ICollection<MobilitySalesDetail> SalesDetails { get; set; }
     }
 }

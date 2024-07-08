@@ -64,5 +64,7 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(50)")]
         [Display(Name = "Received By")]
         public string ReceivedBy { get; set; }
+
+        public ICollection<MobilityLubePurchaseDetail> LubePurchaseDetails { get; set; }
     }
 }

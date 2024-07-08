@@ -1,7 +1,6 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models.Mobility;
-using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -18,9 +17,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         private readonly ILogger<PurchaseController> _logger;
 
         private readonly UserManager<IdentityUser> _userManager;
-
-        [BindProperty]
-        public LubeDeliveryVM LubeDeliveryVM { get; set; }
 
         public PurchaseController(IUnitOfWork unitOfWork, ILogger<PurchaseController> logger, UserManager<IdentityUser> userManager)
         {
@@ -159,24 +155,21 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            LubeDeliveryVM = new LubeDeliveryVM
-            {
-                Header = await _unitOfWork.MobilityLubePurchaseHeader.GetAsync(lh => lh.LubePurchaseHeaderNo == id && lh.StationCode == stationCode, cancellationToken),
-                Details = await _unitOfWork.MobilityLubePurchaseDetail.GetAllAsync(sd => sd.LubePurchaseHeaderNo == id && sd.StationCode == stationCode, cancellationToken)
-            };
+            var lube = await _unitOfWork.MobilityLubePurchaseHeader
+                .GetAsync(l => l.LubePurchaseHeaderNo == id, cancellationToken);
 
-            if (LubeDeliveryVM.Header == null || LubeDeliveryVM.Details == null)
+            if (lube == null)
             {
                 return BadRequest();
             }
 
-            SupplierDto supplier = await _unitOfWork.Supplier.MapSupplierToDTO(LubeDeliveryVM.Header.SupplierCode, cancellationToken);
-            StationDto station = await _unitOfWork.Station.MapStationToDTO(LubeDeliveryVM.Header.StationCode, cancellationToken);
+            SupplierDto supplier = await _unitOfWork.Supplier.MapSupplierToDTO(lube.SupplierCode, cancellationToken);
+            StationDto station = await _unitOfWork.Station.MapStationToDTO(lube.StationCode, cancellationToken);
 
             ViewData["SupplierName"] = supplier.SupplierName;
             ViewData["Station"] = $"{station.StationCode} - {station.StationName}";
 
-            return View(LubeDeliveryVM);
+            return View(lube);
         }
 
         public async Task<IActionResult> PostLube(string? id, string? stationCode, CancellationToken cancellationToken)

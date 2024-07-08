@@ -238,7 +238,7 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<MobilitySalesDetail>()
                 .HasOne(s => s.SalesHeader)
-                .WithMany()
+                .WithMany(sh => sh.SalesDetails)
                 .HasForeignKey(s => s.SalesHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -295,7 +295,7 @@ namespace IBS.DataAccess.Data
             // MobilityLubePurchaseDetail
             builder.Entity<MobilityLubePurchaseDetail>()
                 .HasOne(ld => ld.LubePurchaseHeader)
-                .WithMany()
+                .WithMany(lh => lh.LubePurchaseDetails)
                 .HasForeignKey(ld => ld.LubePurchaseHeaderId)
                 .OnDelete(DeleteBehavior.Restrict);
 

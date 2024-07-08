@@ -5,6 +5,7 @@ using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace IBSWeb.Areas.Mobility.Controllers
@@ -57,19 +58,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
             var station = await _unitOfWork.Station.MapStationToDTO(stationCode, cancellationToken);
 
-            SalesVM = new SalesVM
-            {
-                Header = await _unitOfWork.MobilitySalesHeader.GetAsync(sh => sh.SalesNo == id && sh.StationCode == station.StationCode, cancellationToken),
-                Details = await _unitOfWork.MobilitySalesDetail.GetAllAsync(sd => sd.SalesNo == id && sd.StationCode == station.StationCode, cancellationToken)
-            };
+            var sales = await _dbContext.MobilitySalesHeaders
+                .Include(s => s.SalesDetails)
+                .FirstOrDefaultAsync(s => s.SalesNo == id, cancellationToken);
 
-            if (SalesVM.Header == null || SalesVM.Details == null)
+            if (sales == null)
             {
                 return BadRequest();
             }
 
             ViewData["Station"] = $"{station.StationCode} - {station.StationName}";
-            return View(SalesVM);
+            return View(sales);
         }
 
         public async Task<IActionResult> Post(string? id, string? stationCode, CancellationToken cancellationToken)
