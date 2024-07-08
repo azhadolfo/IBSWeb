@@ -58,7 +58,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         HaulerId = viewModel.HaulerId,
                         CustomerId = viewModel.CustomerId,
                         Freight = viewModel.Freight,
-                        LoadPort = viewModel.LoadPort,
                         AuthorityToLoadNo = viewModel.AuthorityToLoadNo,
                         Remarks = viewModel.Remarks,
                         Quantity = viewModel.Volume,
@@ -132,7 +131,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     HaulerId = existingRecord.HaulerId,
                     Haulers = await _unitOfWork.Hauler.GetHaulerListAsync(cancellationToken),
                     Freight = existingRecord.Freight,
-                    LoadPort = existingRecord.LoadPort,
                     AuthorityToLoadNo = existingRecord.AuthorityToLoadNo,
                     Remarks = existingRecord.Remarks
                 };

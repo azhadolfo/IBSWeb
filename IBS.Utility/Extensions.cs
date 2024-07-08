@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Routing;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Routing;
+using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
+using System.Reflection;
 
 namespace IBS.Utility
 {
@@ -12,6 +15,30 @@ namespace IBS.Utility
             foreach (var item in anonymousDictionary)
                 expando.Add(item);
             return (ExpandoObject)expando;
+        }
+    }
+
+    public static class EnumExtensions
+    {
+        public static string GetEnumDisplayName(this Enum enumValue)
+        {
+            return enumValue.GetType()
+                            .GetMember(enumValue.ToString())
+                            .First()
+                            .GetCustomAttribute<DisplayAttribute>()?
+                            .GetName() ?? enumValue.ToString();
+        }
+
+        public static List<SelectListItem> ToSelectList<TEnum>() where TEnum : Enum
+        {
+            return Enum.GetValues(typeof(TEnum))
+                       .Cast<TEnum>()
+                       .Select(e => new SelectListItem
+                       {
+                           Value = Convert.ToInt32(e).ToString(),
+                           Text = e.GetEnumDisplayName()
+                       })
+                       .ToList();
         }
     }
 }

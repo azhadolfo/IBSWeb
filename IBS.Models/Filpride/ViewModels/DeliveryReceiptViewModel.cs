@@ -57,8 +57,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         public decimal Freight { get; set; }
 
-        public string LoadPort { get; set; }
-
         public string AuthorityToLoadNo { get; set; }
 
         public string Remarks { get; set; }

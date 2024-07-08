@@ -52,9 +52,6 @@ namespace IBS.Models.Filpride
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         public decimal Freight { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
-        public string LoadPort { get; set; }
-
         [Column(TypeName = "varchar(20)")]
         public string AuthorityToLoadNo { get; set; }
 

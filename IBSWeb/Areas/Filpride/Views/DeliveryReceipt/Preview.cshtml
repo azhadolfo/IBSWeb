@@ -1,4 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using IBS.Utility
 @model FilprideDeliveryReceipt
 @inject UserManager<IdentityUser> UserManager
 
@@ -81,7 +82,7 @@
                 <td class="p-4 w-50" style="padding-left:20px;" scope="row">@Html.DisplayFor(model => model.Remarks)</td>
                 <td class="p-4 w-50" style="padding-left:20px;">
                     <b>Hauler:</b> &nbsp; @Model.Hauler.HaulerName<br />
-                    <b>Load Port:</b> &nbsp; @Model.LoadPort<br />
+                    <b>Load Port:</b> &nbsp; @Model.CustomerOrderSlip.PurchaseOrder?.Port.GetEnumDisplayName()<br />
                     <b>Freight:</b> &nbsp; @Html.DisplayFor(model => model.Freight)<br />
                 </td>
             </tr>

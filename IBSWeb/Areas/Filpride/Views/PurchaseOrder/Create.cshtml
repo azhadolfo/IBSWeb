@@ -6,17 +6,7 @@
 @{
     ViewData["Title"] = "Create Purchase Order";
 
-    var portSelectList = Enum.GetValues(typeof(Port))
-                            .Cast<Port>()
-                            .Select(p => new SelectListItem
-                            {
-                                Value = ((int)p).ToString(),
-                                Text = p.GetType()
-                                        .GetMember(p.ToString())
-                                        .First()
-                                        .GetCustomAttribute<DisplayAttribute>()?
-                                        .Name ?? p.ToString()
-                            }).ToList();
+    var portSelectList = EnumExtensions.ToSelectList<Port>();
 }
 
 <div class="card shadow border-0 mt-4">

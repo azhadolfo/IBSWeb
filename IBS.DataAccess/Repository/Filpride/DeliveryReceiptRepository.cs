@@ -73,7 +73,6 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.HaulerId = viewModel.HaulerId;
             existingRecord.CustomerId = viewModel.CustomerId;
             existingRecord.Freight = viewModel.Freight;
-            existingRecord.LoadPort = viewModel.LoadPort;
             existingRecord.AuthorityToLoadNo = viewModel.AuthorityToLoadNo;
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.Quantity = viewModel.Volume;
