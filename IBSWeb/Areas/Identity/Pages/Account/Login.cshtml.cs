@@ -153,6 +153,8 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                     var newCompanyClaim = new Claim("Company", Input.Company);
                     await _signInManager.UserManager.AddClaimAsync(user, newCompanyClaim);
 
+                    await _signInManager.RefreshSignInAsync(user);
+
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }

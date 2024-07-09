@@ -3,7 +3,12 @@
 @inject UserManager<IdentityUser> UserManager
 
 @{
-    string? selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+    string? selectedCompany = string.Empty;
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+    }
 }
 
 <!DOCTYPE html>
