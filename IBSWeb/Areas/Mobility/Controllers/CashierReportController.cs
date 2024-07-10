@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
@@ -33,21 +34,44 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _dbContext = dbContext;
         }
 
+        [HttpGet]
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
-            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? "ALL";
+
+            ViewData["StationCodeClaim"] = stationCodeClaim;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetSalesHeaders([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? "ALL";
 
             Expression<Func<MobilitySalesHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
 
-            IEnumerable<MobilitySalesHeader> salesHeader = await _unitOfWork
-                .MobilitySalesHeader
-                .GetAllAsync(filter, cancellationToken);
+            var salesHeaders = await _unitOfWork.MobilitySalesHeader.GetAllAsync(filter, cancellationToken);
 
-            var salesHeaderWithStationName = _unitOfWork.MobilitySalesHeader.GetSalesHeaderJoin(salesHeader, cancellationToken);
+            var salesHeaderWithStationName = _unitOfWork.MobilitySalesHeader.GetSalesHeaderJoin(salesHeaders, cancellationToken);
 
-            return View(salesHeaderWithStationName);
+            var totalRecords = salesHeaderWithStationName.Count();
+
+            var pagedData = salesHeaderWithStationName
+                .Skip(parameters.Start)
+                .Take(parameters.Length)
+                .ToList();
+
+            return Json(new
+            {
+                draw = parameters.Draw,
+                recordsTotal = totalRecords,
+                recordsFiltered = totalRecords,
+                data = pagedData
+            });
         }
 
         public async Task<IActionResult> Preview(string? id, string? stationCode, CancellationToken cancellationToken)
