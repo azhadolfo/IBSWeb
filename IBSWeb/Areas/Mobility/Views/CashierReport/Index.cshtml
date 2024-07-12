@@ -46,6 +46,7 @@
             $('#paginatedTable').DataTable({
                 "processing": true,
                 "serverSide": true,
+                "stateSave": true,
                 "ajax": {
                     "url": "@Url.Action("GetSalesHeaders", "CashierReport")",
                     "type": "POST",
@@ -54,9 +55,17 @@
                     }
                 },
                 "columns": [
-                    { "data": "StationCode", "name": "StationCode" },
+                    { "data": "StationCodeWithName", "name": "StationCodeWithName" },
                     { "data": "SalesNo", "name": "SalesNo" },
-                    { "data": "Date", "name": "Date" },
+                    {
+                        "data": "Date",
+                        "name": "Date",
+                        "render": function (data, type, row) {
+                            // Assuming 'Date' is in ISO format like "2024-07-12T00:00:00"
+                            var date = new Date(data);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                        }
+                    },
                     { "data": "Cashier", "name": "Cashier" },
                     { "data": "Shift", "name": "Shift" },
                     { "data": "TimeIn", "name": "TimeIn" },
@@ -66,8 +75,8 @@
                         "orderable": false,
                         "render": function (data, type, row) {
                             return '<div class="w-100 btn-group" role="group">' +
-                                (row.PostedBy == null ? '<a asp-area="Mobility" asp-controller="CashierReport" asp-action="Edit" asp-route-id="' + row.SalesNo + '" asp-route-stationCode="' + row.StationCode + '" class="btn btn-primary mx-2"><i class="bi bi-pencil-square"></i> Edit</a>' : '') +
-                                '<a asp-area="Mobility" asp-controller="CashierReport" asp-action="Preview" asp-route-id="' + row.SalesNo + '" asp-route-stationCode="' + row.StationCode + '" class="btn btn-primary mx-2"><i class="bi bi-printer-fill"></i> Preview</a>' +
+                                (row.PostedBy == null ? '<a href="/Mobility/CashierReport/Edit?id=' + row.SalesNo + '&stationCode=' + row.StationCode + '" class="btn btn-primary mx-2"><i class="bi bi-pencil-square"></i> Edit</a>' : '') +
+                                '<a href="/Mobility/CashierReport/Preview?id=' + row.SalesNo + '&stationCode=' + row.StationCode + '" class="btn btn-primary mx-2"><i class="bi bi-printer-fill"></i> Preview</a>' +
                                 '</div>';
                         }
                     }

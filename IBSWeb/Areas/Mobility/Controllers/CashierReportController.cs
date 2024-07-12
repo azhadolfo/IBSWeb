@@ -7,6 +7,7 @@ using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 
 namespace IBSWeb.Areas.Mobility.Controllers
@@ -48,30 +49,67 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpPost]
         public async Task<IActionResult> GetSalesHeaders([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
-            var user = await _userManager.GetUserAsync(User);
-            var claims = await _userManager.GetClaimsAsync(user);
-            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? "ALL";
-
-            Expression<Func<MobilitySalesHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
-
-            var salesHeaders = await _unitOfWork.MobilitySalesHeader.GetAllAsync(filter, cancellationToken);
-
-            var salesHeaderWithStationName = _unitOfWork.MobilitySalesHeader.GetSalesHeaderJoin(salesHeaders, cancellationToken);
-
-            var totalRecords = salesHeaderWithStationName.Count();
-
-            var pagedData = salesHeaderWithStationName
-                .Skip(parameters.Start)
-                .Take(parameters.Length)
-                .ToList();
-
-            return Json(new
+            try
             {
-                draw = parameters.Draw,
-                recordsTotal = totalRecords,
-                recordsFiltered = totalRecords,
-                data = pagedData
-            });
+                var user = await _userManager.GetUserAsync(User);
+                var claims = await _userManager.GetClaimsAsync(user);
+                var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? "ALL";
+
+                Expression<Func<MobilitySalesHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
+
+                var salesHeaders = await _unitOfWork.MobilitySalesHeader.GetAllAsync(filter, cancellationToken);
+
+                var salesHeaderWithStationName = _unitOfWork.MobilitySalesHeader.GetSalesHeaderJoin(salesHeaders, cancellationToken).ToList();
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+                    salesHeaderWithStationName = salesHeaderWithStationName
+                        .Where(s =>
+                            s.StationCodeWithName.ToLower().Contains(searchValue) ||
+                            s.SalesNo.ToLower().Contains(searchValue) ||
+                            s.Date.ToString().Contains(searchValue) ||
+                            s.Cashier.ToLower().Contains(searchValue) ||
+                            s.Shift.ToString().Contains(searchValue) ||
+                            s.TimeIn.ToString().Contains(searchValue) ||
+                            s.TimeOut.ToString().Contains(searchValue))
+                        .ToList();
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    salesHeaderWithStationName = salesHeaderWithStationName
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = salesHeaderWithStationName.Count();
+
+                var pagedData = salesHeaderWithStationName
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         public async Task<IActionResult> Preview(string? id, string? stationCode, CancellationToken cancellationToken)

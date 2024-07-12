@@ -239,7 +239,7 @@ namespace IBS.DataAccess.Repository.Mobility
                        header.SafeDropTotalAmount,
                        header.ActualCashOnHand,
                        header.IsTransactionNormal,
-                       station.StationName
+                       StationCodeWithName = $"{header.StationCode} - {station.StationName}"
                    }.ToExpando();
         }
 
