@@ -191,5 +191,7 @@ namespace IBS.DataAccess.Repository
                 })
                 .ToListAsync(cancellationToken);
         }
+
+        public void Dispose() => _db.Dispose();
     }
 }
