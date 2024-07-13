@@ -47,16 +47,16 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(10)")]
         public string ProductCode { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Quantity { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Price { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal ContractPrice { get; set; }
     }
 }

@@ -25,12 +25,12 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(200)")]
         public string Description { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal CostPerCase { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal CostPerPiece { get; set; }
 
         [Column(TypeName = "varchar(10)")]
@@ -38,8 +38,8 @@ namespace IBS.Models.Mobility
 
         public int Piece { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
 
         [Column(TypeName = "varchar(3)")]

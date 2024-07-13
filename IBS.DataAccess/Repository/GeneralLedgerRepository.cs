@@ -98,7 +98,7 @@ namespace IBS.DataAccess.Repository
                         balance = journal.Debit > 0 ? journal.Debit : journal.Credit;
                     }
 
-                    worksheet.Cells[row, 1].Value = journal.TransactionDate.ToString("MMM/dd/yyyy");
+                    worksheet.Cells[row, 1].Value = journal.TransactionDate;
                     worksheet.Cells[row, 2].Value = journal.StationCode;
                     worksheet.Cells[row, 3].Value = journal.StationName;
                     worksheet.Cells[row, 4].Value = journal.Particular;

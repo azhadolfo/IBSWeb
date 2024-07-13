@@ -58,10 +58,10 @@ namespace IBS.DataAccess.Repository.Mobility
                         Cashier = fuel.xONAME,
                         Shift = fuel.Shift,
                         CreatedBy = "System Generated",
-                        FuelSalesTotalAmount = Math.Round(fuel.Liters * fuel.Price, 2),
-                        LubesTotalAmount = Math.Round(lubeSales.Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.BusinessDate == fuel.BusinessDate).Sum(l => l.Amount), 2),
-                        SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.BusinessDate == fuel.BusinessDate).Sum(s => s.Amount), 2),
-                        POSalesTotalAmount = hasPoSales ? Math.Round(fuelPoSales.Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.BusinessDate == fuel.BusinessDate).Sum(s => s.Amount) + lubePoSales.Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift).Sum(l => l.Amount), 2) : 0,
+                        FuelSalesTotalAmount = Math.Round(fuel.Liters * fuel.Price, 4),
+                        LubesTotalAmount = Math.Round(lubeSales.Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.BusinessDate == fuel.BusinessDate).Sum(l => l.Amount), 4),
+                        SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.BusinessDate == fuel.BusinessDate).Sum(s => s.Amount), 4),
+                        POSalesTotalAmount = hasPoSales ? Math.Round(fuelPoSales.Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.BusinessDate == fuel.BusinessDate).Sum(s => s.Amount) + lubePoSales.Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift).Sum(l => l.Amount), 4) : 0,
                         POSalesAmount = hasPoSales ? fuelPoSales
                             .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.BusinessDate == fuel.BusinessDate)
                             .Select(s => s.Amount)
@@ -133,7 +133,7 @@ namespace IBS.DataAccess.Repository.Mobility
                             TransactionCount = fuel.TransactionCount,
                             Price = fuel.Price,
                             Sale = fuel.Sale,
-                            Value = Math.Round(fuel.Liters * fuel.Price, 2)
+                            Value = Math.Round(fuel.Liters * fuel.Price, 4)
                         };
 
                         if (previousClosing != 0 && !string.IsNullOrEmpty(previousNo) && previousClosing != fuel.Opening)
@@ -181,14 +181,14 @@ namespace IBS.DataAccess.Repository.Mobility
                             Liters = lube.LubesQty,
                             Price = lube.Price,
                             Sale = lube.Amount,
-                            Value = Math.Round(lube.Amount, 2)
+                            Value = Math.Round(lube.Amount, 4)
                         };
                         lube.IsProcessed = true;
                         await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
                     }
                     else
                     {
-                        var safeDrop = Math.Round(safeDropDeposits.Where(s => s.xONAME == lube.Cashier && s.Shift == lube.Shift && s.BusinessDate == lube.BusinessDate).Sum(s => s.Amount), 2);
+                        var safeDrop = Math.Round(safeDropDeposits.Where(s => s.xONAME == lube.Cashier && s.Shift == lube.Shift && s.BusinessDate == lube.BusinessDate).Sum(s => s.Amount), 4);
 
                         await CreateSalesHeaderForLubes(lube, safeDrop, cancellationToken);
                     }
@@ -333,7 +333,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         AccountNumber = salesAcctNo,
                         AccountTitle = salesAcctTitle,
                         Debit = 0,
-                        Credit = Math.Round(product.Sum(p => p.Value) / 1.12m, 2),
+                        Credit = Math.Round(product.Sum(p => p.Value) / 1.12m, 4),
                         StationCode = station.StationCode,
                         ProductCode = product.Key,
                         JournalReference = nameof(JournalType.Sales),
@@ -348,7 +348,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         AccountNumber = "2010301",
                         AccountTitle = "Vat Output",
                         Debit = 0,
-                        Credit = Math.Round(product.Sum(p => p.Value) / 1.12m * 0.12m, 2),
+                        Credit = Math.Round(product.Sum(p => p.Value) / 1.12m * 0.12m, 4),
                         StationCode = station.StationCode,
                         JournalReference = nameof(JournalType.Sales),
                         IsValidated = true
@@ -412,7 +412,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
                         AccountNumber = cogsAcctNo,
                         AccountTitle = cogsAcctTitle,
-                        Debit = Math.Round(cogs, 2),
+                        Debit = Math.Round(cogs, 4),
                         Credit = 0,
                         StationCode = station.StationCode,
                         ProductCode = product.Key,
@@ -428,7 +428,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         AccountNumber = inventoryAcctNo,
                         AccountTitle = inventoryAcctTitle,
                         Debit = 0,
-                        Credit = Math.Round(cogs, 2),
+                        Credit = Math.Round(cogs, 4),
                         StationCode = station.StationCode,
                         ProductCode = product.Key,
                         JournalReference = nameof(JournalType.Sales),
@@ -658,7 +658,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 Liters = lube.LubesQty,
                 Price = lube.Price,
                 Sale = lube.Amount,
-                Value = Math.Round(lube.Amount, 2)
+                Value = Math.Round(lube.Amount, 4)
             };
 
             lubeSalesHeader.IsTransactionNormal = true;

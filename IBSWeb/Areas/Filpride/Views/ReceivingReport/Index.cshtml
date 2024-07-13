@@ -51,7 +51,7 @@
                             @obj.ReceivingReportNo
                         </td>
                         <td>
-                            @obj.Date.ToString("MMM dd, yyyy")
+                            @Html.DisplayFor(model => obj.Date)
                         </td>
                         <td>
                             @obj.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder?.PurchaseOrderNo

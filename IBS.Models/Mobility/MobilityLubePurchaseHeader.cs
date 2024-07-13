@@ -49,16 +49,16 @@ namespace IBS.Models.Mobility
         [Display(Name = "PO#")]
         public string PoNo { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal VatableSales { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal VatAmount { get; set; }
 
         [Column(TypeName = "varchar(50)")]

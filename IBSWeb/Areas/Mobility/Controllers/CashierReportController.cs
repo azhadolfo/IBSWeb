@@ -252,8 +252,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var formattedData = new
             {
-                StartDate = offline.StartDate.ToString("MMM/dd/yyyy"),
-                EndDate = offline.EndDate.ToString("MMM/dd/yyyy"),
+                offline.StartDate,
+                offline.EndDate,
                 offline.Product,
                 offline.Pump,
                 FirstDsrOpeningBefore = offline.FirstDsrOpening,

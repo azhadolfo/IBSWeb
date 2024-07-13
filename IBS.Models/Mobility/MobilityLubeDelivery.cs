@@ -34,8 +34,8 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(50)")]
         public string pono { get; set; } //remove the "PO" when saving in actual database
 
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal amount { get; set; }
 
         [Column(TypeName = "varchar(50)")]
@@ -58,8 +58,8 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(200)")]
         public string description { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal unitprice { get; set; }
 
         [Column(TypeName = "varchar(10)")]

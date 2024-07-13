@@ -36,7 +36,8 @@ namespace IBS.Models.Mobility
 
         public int? xTRANSACTION { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Price { get; set; }
 
         //AmountDB = Price * Volume

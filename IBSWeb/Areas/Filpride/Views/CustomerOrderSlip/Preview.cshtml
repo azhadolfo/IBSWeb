@@ -39,7 +39,7 @@
             </tr>
             <tr>
                 <td class="w-75"><b>Customer Name:</b> &nbsp;@Model.Customer?.CustomerName</td>
-                <td class="w-25 text-end"><b>Exp Date:</b> &nbsp;@Model.ExpirationDate?.ToString("MMM dd, yyyy")</td>
+                <td class="w-25 text-end"><b>Exp Date:</b> &nbsp;@Html.DisplayFor(model => model.ExpirationDate)</td>
             </tr>
             <tr>
                 <td><b>Terms:</b> &nbsp;@Model.Customer?.CustomerTerms</td>

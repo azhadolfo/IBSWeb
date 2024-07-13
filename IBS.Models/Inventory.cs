@@ -26,8 +26,8 @@ namespace IBS.Models
         [Column(TypeName = "varchar(10)")]
         public string? StationCode { get; set; }
 
-        [Column(TypeName = "numeric(18,3)")]
-        [DisplayFormat(DataFormatString = "{0:N3}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Quantity { get; set; }
 
         // To compute UnitCost
@@ -39,22 +39,22 @@ namespace IBS.Models
 
         // To compute TotalCost
         // Quantity * UnitCost
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal TotalCost { get; set; }
 
         // To compute RunningCost
         // If purchase previous balance + TotalCost
         // If sales previous balance - TotalCost
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal RunningCost { get; set; }
 
         // To compute InventoryBalance
         // If purchase previous balance + Quantity
         // If sales previous balance - Quantity
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal InventoryBalance { get; set; }
 
         // To compute UnitCostAverage
@@ -66,14 +66,14 @@ namespace IBS.Models
         // To compute Inventory
         // It's same with the RunningCost
         // it means InventoryValue == RunningCost
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal InventoryValue { get; set; }
 
         // To compute COGS
         // UnitCostAverage * Quantity
-        [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal CostOfGoodsSold { get; set; }
 
         [Column(TypeName = "varchar(50)")]
@@ -88,11 +88,13 @@ namespace IBS.Models
         public string TransactionNo { get; set; }
 
         #region-- Select List
+
         [NotMapped]
         public List<SelectListItem>? Products { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? Stations { get; set; }
+
         #endregion
     }
 }

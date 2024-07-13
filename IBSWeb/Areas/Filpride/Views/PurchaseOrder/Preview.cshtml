@@ -34,7 +34,7 @@
         <tbody>
             <tr>
                 <td class="w-75"><b>Supplier:</b> &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
-                <td class="w-25 text-end"><b>Date:</b> &nbsp;@Model.Date.ToString("MMM dd, yyyy")</td>
+                <td class="w-25 text-end"><b>Date:</b> &nbsp;@Html.DisplayFor(model => model.Date)</td>
             </tr>
             <tr>
                 <td><b>Address:</b> &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>

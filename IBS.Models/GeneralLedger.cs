@@ -29,10 +29,12 @@ namespace IBS.Models
         [Display(Name = "Account Title")]
         public string AccountTitle { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Debit { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Credit { get; set; }
 
         [Column(TypeName = "varchar(5)")]
