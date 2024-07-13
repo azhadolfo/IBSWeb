@@ -1,14 +1,14 @@
-﻿@model ActualInventoryViewModel
+﻿@model ActualSoundingViewModel
 
 @{
-    ViewData["Title"] = "Actual Inventory";
+    ViewData["Title"] = "Actual Sounding";
 }
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Actual Inventory</h2>
+                <h2 class="text-white py-2">Actual Sounding</h2>
             </div>
         </div>
     </div>
@@ -36,9 +36,9 @@
                         <span asp-validation-for="ActualVolume" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-4">
-                        <input asp-for="PerBook" class="form-control border-0 shadow" placeholder="" readonly />
-                        <label asp-for="PerBook" class="ms-2">Per Book</label>
-                        <span asp-validation-for="PerBook" class="text-danger"></span>
+                        <input asp-for="PerSystem" class="form-control border-0 shadow" placeholder="" readonly />
+                        <label asp-for="PerSystem" class="ms-2">Per System</label>
+                        <span asp-validation-for="PerSystem" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-4">
                         <input asp-for="Variance" id="Variance" class="form-control border-0 shadow" placeholder="" readonly />
@@ -75,7 +75,7 @@
                         data: { productCode: productCode },
                         success: function (data) {
                             $('#InventoryId').val(data.inventoryId);
-                            $('#PerBook').val(formatNumber(data.perBook));
+                            $('#PerSystem').val(formatNumber(data.perBook));
                             computeVariance();
                         }
                     });
@@ -88,8 +88,8 @@
 
             function computeVariance() {
                 var actualVolume = parseNumber($('#ActualVolume').val());
-                var perBook = parseNumber($('#PerBook').val());
-                var variance = actualVolume - perBook;
+                var perSystem = parseNumber($('#PerSystem').val());
+                var variance = actualVolume - perSystem;
                 $('#Variance').val(formatNumber(variance));
                 updateVarianceField(variance);
             }

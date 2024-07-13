@@ -2,7 +2,7 @@
 
 namespace IBS.Models.ViewModels
 {
-    public class ActualInventoryViewModel
+    public class ActualSoundingViewModel
     {
         public DateOnly Date { get; set; }
 
@@ -12,7 +12,7 @@ namespace IBS.Models.ViewModels
 
         public int InventoryId { get; set; }
 
-        public decimal PerBook { get; set; }
+        public decimal PerSystem { get; set; }
 
         public decimal ActualVolume { get; set; }
 

@@ -157,9 +157,9 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ActualInventory(CancellationToken cancellationToken)
+        public async Task<IActionResult> ActualSounding(CancellationToken cancellationToken)
         {
-            ActualInventoryViewModel viewModel = new()
+            ActualSoundingViewModel viewModel = new()
             {
                 Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken)
             };
@@ -168,7 +168,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ActualInventory(ActualInventoryViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> ActualSounding(ActualSoundingViewModel viewModel, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
@@ -177,10 +177,10 @@ namespace IBSWeb.Areas.User.Controllers
                     var inventory = await _unitOfWork.Inventory
                         .GetAsync(i => i.InventoryId == viewModel.InventoryId, cancellationToken);
 
-                    await _unitOfWork.Inventory.CalculateTheActualInventory(inventory, viewModel, cancellationToken);
+                    await _unitOfWork.Inventory.CalculateTheActualSounding(inventory, viewModel, cancellationToken);
 
-                    TempData["success"] = "Actual inventory inserted successfully.";
-                    return RedirectToAction(nameof(ActualInventory));
+                    TempData["success"] = "Actual sounding inserted successfully.";
+                    return RedirectToAction(nameof(ActualSounding));
                 }
                 catch (Exception ex)
                 {

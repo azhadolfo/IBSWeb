@@ -89,7 +89,7 @@ namespace IBS.DataAccess.Repository
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task CalculateTheActualInventory(Inventory model, ActualInventoryViewModel viewModel, CancellationToken cancellationToken = default)
+        public async Task CalculateTheActualSounding(Inventory model, ActualSoundingViewModel viewModel, CancellationToken cancellationToken = default)
         {
             decimal totalCost = viewModel.Variance * model.UnitCostAverage;
             decimal runningCost = model.RunningCost + totalCost;
@@ -98,9 +98,9 @@ namespace IBS.DataAccess.Repository
 
             Inventory inventory = new()
             {
-                Particulars = viewModel.Variance > 0 ? "Actual Inventory (Gain)" : "Actual Inventory (Loss)",
+                Particulars = viewModel.Variance > 0 ? "Actual Sounding (Gain)" : "Actual Sounding (Loss)",
                 Date = viewModel.Date,
-                Reference = viewModel.Variance > 0 ? "Actual Inventory (Gain)" : "Actual Inventory (Loss)",
+                Reference = viewModel.Variance > 0 ? "Actual Sounding (Gain)" : "Actual Sounding (Loss)",
                 ProductCode = viewModel.ProductCode,
                 StationCode = model.StationCode,
                 Quantity = viewModel.Variance,
@@ -120,13 +120,12 @@ namespace IBS.DataAccess.Repository
 
             var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(inventory.ProductCode);
 
-            //PENDING Accounting entries for actual inventory
             var journals = new List<GeneralLedger>
             {
                 new() {
                     TransactionDate = inventory.Date,
                     Reference = inventory.TransactionNo,
-                    Particular = $"Actual Inventory for {inventory.ProductCode}",
+                    Particular = $"Actual Sounding for {inventory.ProductCode}",
                     AccountNumber = inventory.TotalCost > 0 ? inventoryAcctNo : "1010204",
                     AccountTitle = inventory.TotalCost > 0 ? inventoryAcctTitle : "Advances from Officers and Employees",
                     Debit = Math.Round(Math.Abs(inventory.TotalCost), 2),
@@ -139,7 +138,7 @@ namespace IBS.DataAccess.Repository
                 new() {
                     TransactionDate = inventory.Date,
                     Reference = inventory.TransactionNo,
-                    Particular = $"Actual Inventory for {inventory.ProductCode}",
+                    Particular = $"Actual Sounding for {inventory.ProductCode}",
                     AccountNumber = inventory.TotalCost > 0 ? "6010103" : "1010401",
                     AccountTitle = inventory.TotalCost > 0 ? "Gain on Inventory - Fuel" : "Inventory - Fuel",
                     Debit = 0,

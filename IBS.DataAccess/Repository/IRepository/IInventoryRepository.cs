@@ -9,6 +9,6 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<Inventory> GetLastInventoryAsync(string productCode, string stationCode, CancellationToken cancellationToken = default);
 
-        Task CalculateTheActualInventory(Inventory model, ActualInventoryViewModel viewModel, CancellationToken cancellationToken = default);
+        Task CalculateTheActualSounding(Inventory model, ActualSoundingViewModel viewModel, CancellationToken cancellationToken = default);
     }
 }
