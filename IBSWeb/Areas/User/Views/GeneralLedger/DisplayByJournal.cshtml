@@ -49,14 +49,14 @@
                         <td>@journal.Particular</td>
                         <td>@journal.AccountNumber</td>
                         <td>@journal.AccountTitle</td>
-                        <td class="text-end">@journal.Debit.ToString("N2")</td>
-                        <td class="text-end">@journal.Credit.ToString("N2")</td>
+                        <td class="text-end">@Html.DisplayFor(model => journal.Debit)</td>
+                        <td class="text-end">@Html.DisplayFor(model => journal.Credit)</td>
                     </tr>
                 }
                 <tr class="table-primary">
                     <td colspan="4" class="text-center">TOTAL</td>
-                    <td class="text-end">@Model.Sum(j => j.Debit).ToString("N2")</td>
-                    <td class="text-end">@Model.Sum(j => j.Credit).ToString("N2")</td>
+                    <td class="text-end">@Model.Sum(j => j.Debit).ToString("N4")</td>
+                    <td class="text-end">@Model.Sum(j => j.Credit).ToString("N4")</td>
                 </tr>
             </tbody>
         </table>
@@ -77,7 +77,7 @@ else
 </div>
 
 @section Scripts {
-        <script>
+    <script>
             $(document).ready(function () {
                 $('.dropdown-item').click(function () {
                     var sortBy = $(this).data('sortby');
@@ -97,12 +97,12 @@ else
                                         <td>${value.particular}</td>
                                         <td>${value.accountNumber}</td>
                                         <td>${value.accountTitle}</td>
-                                        <td class="text-end">${value.debit.toFixed(2)}</td>
-                                        <td class="text-end">${value.credit.toFixed(2)}</td>
+                                        <td class="text-end">${value.debit.toFixed(4)}</td>
+                                        <td class="text-end">${value.credit.toFixed(4)}</td>
                                     </tr>
                                 `);
                     });
                 });
             });
-        </script>
+    </script>
 }

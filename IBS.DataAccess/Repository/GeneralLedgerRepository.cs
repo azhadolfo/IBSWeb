@@ -73,7 +73,7 @@ namespace IBS.DataAccess.Repository
             // Populate the data rows
             int row = 8;
             decimal balance = 0;
-            string currencyFormat = "#,##0.00";
+            string currencyFormat = "#,##0.0000";
             decimal debit = 0;
             decimal credit = 0;
             foreach (var journals in ledgers.OrderBy(j => j.AccountNumber).GroupBy(j => j.AccountTitle))

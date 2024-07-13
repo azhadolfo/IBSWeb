@@ -252,16 +252,16 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var formattedData = new
             {
-                offline.StartDate,
-                offline.EndDate,
+                StartDate = offline.StartDate.ToString("MMM/dd/yyyy"),
+                EndDate = offline.EndDate.ToString("MMM/dd/yyyy"),
                 offline.Product,
                 offline.Pump,
                 FirstDsrOpeningBefore = offline.FirstDsrOpening,
                 FirstDsrClosingBefore = offline.FirstDsrClosing,
                 SecondDsrOpeningBefore = offline.SecondDsrOpening,
                 SecondDsrClosingBefore = offline.SecondDsrClosing,
-                Liters = offline.Liters.ToString("N2"),
-                Balance = offline.Balance.ToString("N2"),
+                Liters = offline.Liters.ToString("N4"),
+                Balance = offline.Balance.ToString("N4"),
                 offline.FirstDsrNo,
                 offline.SecondDsrNo
             };

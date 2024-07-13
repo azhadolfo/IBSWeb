@@ -33,7 +33,7 @@ function validateDate() {
 }
 
 function formatNumber(number) {
-    return number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return number.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 }
 
 function parseNumber(formattedNum) {

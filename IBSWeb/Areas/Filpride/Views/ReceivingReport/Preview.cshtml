@@ -6,7 +6,7 @@
     ViewData["Title"] = "Preview Receiving Report";
 
     var value = Model.GainOrLoss;
-    var formattedGainOrLoss = value < 0 ? $"({Math.Abs(value):N2})" : value.ToString("N2");
+    var formattedGainOrLoss = value < 0 ? $"({Math.Abs(value):N4})" : value.ToString("N4");
 }
 
 <table class="w-100">

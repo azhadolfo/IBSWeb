@@ -59,7 +59,7 @@
                         <td class="text-end">
                             @{
                                 var value = obj.GainOrLoss;
-                                var formattedGainOrLoss = value < 0 ? $"({Math.Abs(value):N2})" : value.ToString("N2");
+                                var formattedGainOrLoss = value < 0 ? $"({Math.Abs(value):N4})" : value.ToString("N4");
                             }
                             @formattedGainOrLoss
                         </td>

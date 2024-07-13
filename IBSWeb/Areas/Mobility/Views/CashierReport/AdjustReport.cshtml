@@ -170,10 +170,10 @@
                             $('#EndDate').text(data.endDate);
                             $('#Product').text(data.product);
                             $('#Pump').text(data.pump);
-                            $('#DetailOpening').text(data.secondDsrOpeningBefore);
-                            $('#DetailClosing').text(data.firstDsrClosingBefore);
-                            $('#Liters').text(data.liters);
-                            $('#RemainingBalance').text(data.balance);
+                            $('#DetailOpening').text(formatNumber(data.secondDsrOpeningBefore));
+                            $('#DetailClosing').text(formatNumber(data.firstDsrClosingBefore));
+                            $('#Liters').text(formatNumber(data.liters));
+                            $('#RemainingBalance').text(formatNumber(data.balance));
 
                             // Clear previous options
                             $('#DSROptions').empty();
