@@ -13,7 +13,7 @@ namespace IBS.Models.Mobility
         public string FuelPurchaseNo { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string ShiftRecId { get; set; }
+        public string? ShiftRecId { get; set; }
 
         [Column(TypeName = "varchar(5)")]
         [Display(Name = "Station Code")]

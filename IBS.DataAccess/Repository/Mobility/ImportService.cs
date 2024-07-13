@@ -321,7 +321,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         }
                     }
 
-                    if (fuelsCount != 0 && lubesCount != 0 && poSalesCount != 0)
+                    if (fuelsCount != 0 || lubesCount != 0 || poSalesCount != 0)
                     {
                         LogMessage logMessage = new("Information", "ImportPurchases", $"Imported successfully in the station '{station.StationName}', Fuel Delivery: '{fuelsCount}' record(s), Lubes Delivery: '{lubesCount}' record(s), PO Sales: '{poSalesCount}' record(s).");
 

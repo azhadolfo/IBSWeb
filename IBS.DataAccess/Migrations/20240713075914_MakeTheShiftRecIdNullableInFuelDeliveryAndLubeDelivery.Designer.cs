@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240713075914_MakeTheShiftRecIdNullableInFuelDeliveryAndLubeDelivery")]
+    partial class MakeTheShiftRecIdNullableInFuelDeliveryAndLubeDelivery
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1931,6 +1934,7 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_mobility_fuel_purchase");
 
                     b.HasIndex("FuelPurchaseNo")
+                        .IsUnique()
                         .HasDatabaseName("ix_mobility_fuel_purchase_fuel_purchase_no");
 
                     b.HasIndex("ProductCode")

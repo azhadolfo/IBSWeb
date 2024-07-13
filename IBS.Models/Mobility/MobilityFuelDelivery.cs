@@ -10,7 +10,7 @@ namespace IBS.Models.Mobility
         public Guid FuelDeliveryId { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string shiftrecid { get; set; }
+        public string? shiftrecid { get; set; }
 
         [Column(TypeName = "varchar(5)")]
         public string stncode { get; set; }

@@ -268,7 +268,7 @@ namespace IBS.DataAccess.Data
             // MobilityFuelPurchase
             builder.Entity<MobilityFuelPurchase>(f =>
             {
-                f.HasIndex(f => f.FuelPurchaseNo).IsUnique();
+                f.HasIndex(f => f.FuelPurchaseNo);
                 f.HasIndex(f => f.StationCode);
                 f.HasIndex(f => f.ProductCode);
             });
@@ -288,7 +288,7 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<MobilityLubePurchaseHeader>(lh =>
             {
-                lh.HasIndex(lh => lh.LubePurchaseHeaderNo).IsUnique();
+                lh.HasIndex(lh => lh.LubePurchaseHeaderNo);
                 lh.HasIndex(lh => lh.StationCode);
             });
 
