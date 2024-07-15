@@ -37,28 +37,33 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task InsertEntry(AdjustReportViewModel model, CancellationToken cancellationToken = default)
         {
-            var offlineRecord = await _db.MobilityOfflines
-                .FindAsync(new object[] { model.SelectedOfflineId }, cancellationToken);
+            //var selectedOffline = await _db.MobilityOfflines
+            //    .FindAsync(new object[] { model.SelectedOfflineId }, cancellationToken);
+
+            var offlineList = await _db.MobilityOfflines
+                .ToListAsync(cancellationToken);
+
+            var selectedOffline = offlineList.Find(o => o.OfflineId == model.SelectedOfflineId);
 
             var salesHeader = await _db.MobilitySalesHeaders
-                .FirstOrDefaultAsync(s => s.SalesNo == model.AffectedDSRNo && s.StationCode == offlineRecord.StationCode, cancellationToken);
+                .FirstOrDefaultAsync(s => s.SalesNo == model.AffectedDSRNo && s.StationCode == selectedOffline.StationCode, cancellationToken);
 
             var salesDetail = await _db.MobilitySalesDetails
                 .Where(s => s.SalesHeaderId == salesHeader.SalesHeaderId)
                 .ToListAsync(cancellationToken);
 
             var detailToUpdate = salesDetail
-                .Find(s => s.Particular == $"{offlineRecord.Product} (P{offlineRecord.Pump})");
+                .Find(s => s.Particular == $"{selectedOffline.Product} (P{selectedOffline.Pump})");
 
-            if (model.AffectedDSRNo == offlineRecord.FirstDsrNo)
+            if (model.AffectedDSRNo == selectedOffline.FirstDsrNo)
             {
                 detailToUpdate.Closing = model.FirstDsrClosingAfter;
-                offlineRecord.Balance -= model.FirstDsrClosingAfter - model.FirstDsrClosingBefore;
+                selectedOffline.Balance -= model.FirstDsrClosingAfter - model.FirstDsrClosingBefore;
             }
             else
             {
                 detailToUpdate.Opening = model.SecondDsrOpeningAfter;
-                offlineRecord.Balance -= model.SecondDsrOpeningBefore - model.SecondDsrOpeningAfter;
+                selectedOffline.Balance -= model.SecondDsrOpeningBefore - model.SecondDsrOpeningAfter;
             }
 
             detailToUpdate.Liters = detailToUpdate.Closing - detailToUpdate.Opening;
@@ -68,22 +73,29 @@ namespace IBS.DataAccess.Repository.Mobility
             salesHeader.TotalSales = salesHeader.FuelSalesTotalAmount + salesHeader.LubesTotalAmount;
             salesHeader.GainOrLoss = salesHeader.SafeDropTotalAmount - salesHeader.TotalSales;
 
-            offlineRecord.NewClosing = model.SecondDsrClosingAfter;
-            offlineRecord.LastUpdatedBy = "System"; // Change to a more descriptive value
-            offlineRecord.LastUpdatedDate = DateTime.Now;
+            selectedOffline.NewClosing = model.SecondDsrClosingAfter;
+            selectedOffline.LastUpdatedBy = "System"; // Change to a more descriptive value
+            selectedOffline.LastUpdatedDate = DateTime.Now;
 
-            if (offlineRecord.Balance <= 0)
+            if (selectedOffline.Balance <= 0)
             {
-                offlineRecord.IsResolve = true;
+                selectedOffline.IsResolve = true;
 
-                var problematicDsr = await _db.MobilitySalesHeaders
-                    .Where(s => s.StationCode == offlineRecord.StationCode && (s.SalesNo == offlineRecord.FirstDsrNo || s.SalesNo == offlineRecord.SecondDsrNo))
-                    .ToListAsync(cancellationToken);
-
-                foreach (var offline in problematicDsr)
+                async Task CheckAndMarkDsrAsync(string dsrNo)
                 {
-                    offline.IsTransactionNormal = true;
+                    var hasPendingOffline = offlineList.Any(o => !o.IsResolve && (o.FirstDsrNo == dsrNo || o.SecondDsrNo == dsrNo));
+                    if (!hasPendingOffline)
+                    {
+                        var problematicDsr = await _db.MobilitySalesHeaders
+                            .FirstOrDefaultAsync(s => s.StationCode == selectedOffline.StationCode && s.SalesNo == dsrNo, cancellationToken);
+                        if (problematicDsr != null)
+                        {
+                            problematicDsr.IsTransactionNormal = true;
+                        }
+                    }
                 }
+
+                await Task.WhenAll(CheckAndMarkDsrAsync(selectedOffline.FirstDsrNo), CheckAndMarkDsrAsync(selectedOffline.SecondDsrNo));
             }
 
             await _db.SaveChangesAsync(cancellationToken);
