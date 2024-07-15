@@ -9,8 +9,7 @@ namespace IBS.Models.Mobility
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid LubeDeliveryId { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
-        public string? shiftrecid { get; set; }
+        public int pagenumber { get; set; }
 
         [Column(TypeName = "varchar(5)")]
         public string stncode { get; set; }
@@ -20,7 +19,7 @@ namespace IBS.Models.Mobility
         public int shiftnumber { get; set; }
 
         [Column(TypeName = "date")]
-        public DateOnly deliverydate { get; set; }
+        public DateOnly shiftdate { get; set; }
 
         [Column(TypeName = "varchar(10)")]
         public string suppliercode { get; set; }
@@ -38,6 +37,10 @@ namespace IBS.Models.Mobility
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal amount { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        public decimal freight { get; set; }
+
         [Column(TypeName = "varchar(50)")]
         public string rcvdby { get; set; }
 
@@ -46,9 +49,6 @@ namespace IBS.Models.Mobility
 
         [Column(TypeName = "timestamp without time zone")]
         public DateTime createddate { get; set; }
-
-        [Column(TypeName = "varchar(50)")]
-        public string dtllink { get; set; }
 
         public int quantity { get; set; }
 
@@ -66,5 +66,13 @@ namespace IBS.Models.Mobility
         public string productcode { get; set; }
 
         public int piece { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        public decimal srp { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        public decimal cost { get; set; }
     }
 }

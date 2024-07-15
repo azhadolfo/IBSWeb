@@ -12,8 +12,7 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(50)")]
         public string FuelPurchaseNo { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
-        public string? ShiftRecId { get; set; }
+        public int PageNumber { get; set; }
 
         [Column(TypeName = "varchar(5)")]
         [Display(Name = "Station Code")]
@@ -27,9 +26,9 @@ namespace IBS.Models.Mobility
         public int ShiftNo { get; set; }
 
         [Column(TypeName = "date")]
-        [Display(Name = "Delivery Date")]
+        [Display(Name = "Shift Date")]
         [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
-        public DateOnly DeliveryDate { get; set; }
+        public DateOnly ShiftDate { get; set; }
 
         [Column(TypeName = "time without time zone")]
         public TimeOnly TimeIn { get; set; }

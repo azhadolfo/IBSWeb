@@ -9,8 +9,7 @@ namespace IBS.Models.Mobility
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid FuelDeliveryId { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
-        public string? shiftrecid { get; set; }
+        public int pagenumber { get; set; }
 
         [Column(TypeName = "varchar(5)")]
         public string stncode { get; set; }
@@ -20,7 +19,7 @@ namespace IBS.Models.Mobility
         public int shiftnumber { get; set; }
 
         [Column(TypeName = "date")]
-        public DateOnly deliverydate { get; set; }
+        public DateOnly shiftdate { get; set; }
 
         [Column(TypeName = "time without time zone")]
         public TimeOnly timein { get; set; }

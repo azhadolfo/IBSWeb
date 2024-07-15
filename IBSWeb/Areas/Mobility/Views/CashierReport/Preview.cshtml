@@ -92,7 +92,7 @@
                     <td class="text-end">@group.Sum(d => d.Liters).ToString("N4")</td>
                     <td class="text-end">@group.Sum(d => d.Calibration).ToString("N4")</td>
                     <td class="text-end">@group.Sum(d => d.LitersSold).ToString("N4")</td>
-                    <td class="text-end">@group.Sum(d => d.TransactionCount).ToString("N4")</td>
+                    <td class="text-end">@group.Sum(d => d.TransactionCount)</td>
                     <td class="text-end"></td>
                     <td class="text-end">@group.Sum(d => d.Sale).ToString("N4")</td>
                     <td class="text-end">@group.Sum(d => d.Value).ToString("N4")</td>
@@ -103,7 +103,7 @@
                 <td class="text-end">@Model.SalesDetails.Sum(d => d.Liters).ToString("N4")</td>
                 <td class="text-end">@Model.SalesDetails.Sum(d => d.Calibration).ToString("N4")</td>
                 <td class="text-end">@Model.SalesDetails.Sum(d => d.LitersSold).ToString("N4")</td>
-                <td class="text-end">@Model.SalesDetails.Sum(d => d.TransactionCount).ToString("N4")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.TransactionCount)</td>
                 <td class="text-end"></td>
                 <td class="text-end">@Model.SalesDetails.Sum(d => d.Sale).ToString("N4")</td>
                 <td class="text-end">@Model.SalesDetails.Sum(d => d.Value).ToString("N4")</td>

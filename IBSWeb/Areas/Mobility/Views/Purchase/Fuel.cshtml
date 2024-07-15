@@ -23,7 +23,7 @@
                         Purchase No.
                     </th>
                     <th>
-                        Delivery Date
+                        Shift Date
                     </th>
                     <th>
                         Product
@@ -45,7 +45,7 @@
                             @obj.FuelPurchaseNo
                         </td>
                         <td>
-                            @obj.DeliveryDate.ToString("MMMM dd, yyyy")
+                            @obj.ShiftDate.ToString("MMMM dd, yyyy")
                         </td>
                         <td>
                             @obj.ProductCode - @obj.ProductName
@@ -55,7 +55,8 @@
                         </td>
                         <td>
                             <div class="w-100 btn-group" role="group">
-                                @if(obj.PostedBy == null){
+                                @if (obj.PostedBy == null)
+                                {
                                     <a asp-area="Mobility" asp-controller="Purchase" asp-action="EditFuel" asp-route-id="@obj.FuelPurchaseNo" asp-route-stationCode="@obj.StationCode" class="btn btn-primary mx-2">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </a>
@@ -68,9 +69,6 @@
                     </tr>
                 }
             </tbody>
-
         </table>
-
     </div>
 </div>
-

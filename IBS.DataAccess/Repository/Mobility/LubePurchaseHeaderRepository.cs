@@ -30,7 +30,7 @@ namespace IBS.DataAccess.Repository.Mobility
                        lube.LubePurchaseHeaderId,
                        lube.StationCode,
                        lube.LubePurchaseHeaderNo,
-                       lube.DeliveryDate,
+                       lube.ShiftDate,
                        lube.SupplierCode,
                        supplier.SupplierName,
                        lube.SalesInvoice,
@@ -52,7 +52,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 }
 
                 var lubePurchaseList = await _db.MobilityLubePurchaseHeaders
-                    .Where(l => l.StationCode == lubes.StationCode && l.DeliveryDate <= lubes.DeliveryDate && l.CreatedDate < lubes.CreatedDate && l.PostedBy == null)
+                    .Where(l => l.StationCode == lubes.StationCode && l.ShiftDate <= lubes.ShiftDate && l.CreatedDate < lubes.CreatedDate && l.PostedBy == null)
                     .OrderBy(l => l.LubePurchaseHeaderNo)
                     .ToListAsync(cancellationToken);
 
@@ -71,9 +71,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 journals.Add(new GeneralLedger
                 {
-                    TransactionDate = lubes.DeliveryDate,
+                    TransactionDate = lubes.ShiftDate,
                     Reference = lubes.LubePurchaseHeaderNo,
-                    Particular = $"SI#{lubes.SalesInvoice} DR#{lubes.DrNo} LUBES PURCHASE {lubes.DeliveryDate}",
+                    Particular = $"SI#{lubes.SalesInvoice} DR#{lubes.DrNo} LUBES PURCHASE {lubes.ShiftDate}",
                     AccountNumber = "1010410",
                     AccountTitle = "Inventory - Lubes",
                     Debit = lubes.Amount / 1.12m,
@@ -85,9 +85,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 journals.Add(new GeneralLedger
                 {
-                    TransactionDate = lubes.DeliveryDate,
+                    TransactionDate = lubes.ShiftDate,
                     Reference = lubes.LubePurchaseHeaderNo,
-                    Particular = $"SI#{lubes.SalesInvoice} DR#{lubes.DrNo} LUBES PURCHASE {lubes.DeliveryDate}",
+                    Particular = $"SI#{lubes.SalesInvoice} DR#{lubes.DrNo} LUBES PURCHASE {lubes.ShiftDate}",
                     AccountNumber = "1010602",
                     AccountTitle = "Vat Input",
                     Debit = lubes.Amount / 1.12m * 0.12m,
@@ -98,9 +98,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 journals.Add(new GeneralLedger
                 {
-                    TransactionDate = lubes.DeliveryDate,
+                    TransactionDate = lubes.ShiftDate,
                     Reference = lubes.LubePurchaseHeaderNo,
-                    Particular = $"SI#{lubes.SalesInvoice} DR#{lubes.DrNo} LUBES PURCHASE {lubes.DeliveryDate}",
+                    Particular = $"SI#{lubes.SalesInvoice} DR#{lubes.DrNo} LUBES PURCHASE {lubes.ShiftDate}",
                     AccountNumber = "2010101",
                     AccountTitle = "Accounts Payables - Trade",
                     Debit = 0,
@@ -118,7 +118,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         .Where(i => i.ProductCode == lube.ProductCode && i.StationCode == lube.StationCode)
                         .ToList();
 
-                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= lubes.DeliveryDate);
+                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= lubes.ShiftDate);
                     if (lastIndex >= 0)
                     {
                         sortedInventory = sortedInventory.Skip(lastIndex).ToList();
@@ -138,7 +138,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     inventories.Add(new Inventory
                     {
                         Particulars = nameof(JournalType.Purchase),
-                        Date = lubes.DeliveryDate,
+                        Date = lubes.ShiftDate,
                         Reference = $"DR#{lubes.DrNo}",
                         ProductCode = lube.ProductCode,
                         StationCode = lubes.StationCode,
@@ -244,7 +244,7 @@ namespace IBS.DataAccess.Repository.Mobility
             var records = csv.GetRecords<LubeDelivery>();
             var existingRecords = await _db.Set<LubeDelivery>().ToListAsync(cancellationToken);
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
-                existingRecord.shiftrecid == record.shiftrecid && existingRecord.stncode == record.stncode && existingRecord.dtllink == record.dtllink)).ToList();
+                existingRecord.shiftdate == record.shiftdate && existingRecord.pagenumber == record.pagenumber && existingRecord.stncode == record.stncode && existingRecord.shiftnumber == record.shiftnumber)).ToList();
 
             if (recordsToInsert.Count != 0)
             {
@@ -265,15 +265,14 @@ namespace IBS.DataAccess.Repository.Mobility
             try
             {
                 var lubePurchaseHeaders = lubeDeliveries
-                    .GroupBy(l => new { l.shiftrecid, l.dtllink, l.stncode, l.cashiercode, l.shiftnumber, l.deliverydate, l.suppliercode, l.invoiceno, l.drno, l.pono, l.amount, l.rcvdby, l.createdby, l.createddate })
+                    .GroupBy(l => new { l.pagenumber, l.stncode, l.cashiercode, l.shiftnumber, l.shiftdate, l.suppliercode, l.invoiceno, l.drno, l.pono, l.amount, l.rcvdby, l.createdby, l.createddate })
                     .Select(g => new MobilityLubePurchaseHeader
                     {
-                        ShiftRecId = g.Key.shiftrecid,
-                        DetailLink = g.Key.dtllink,
+                        PageNumber = g.Key.pagenumber,
                         StationCode = g.Key.stncode,
                         CashierCode = g.Key.cashiercode.Substring(1),
                         ShiftNo = g.Key.shiftnumber,
-                        DeliveryDate = g.Key.deliverydate,
+                        ShiftDate = g.Key.shiftdate,
                         SalesInvoice = g.Key.invoiceno.Substring(2),
                         SupplierCode = g.Key.suppliercode,
                         DrNo = g.Key.drno.Substring(2),
@@ -297,7 +296,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 foreach (var lubeDelivery in lubeDeliveries)
                 {
-                    var lubeHeader = lubePurchaseHeaders.Find(l => l.ShiftRecId == lubeDelivery.shiftrecid && l.StationCode == lubeDelivery.stncode);
+                    var lubeHeader = lubePurchaseHeaders.Find(l => l.ShiftDate == lubeDelivery.shiftdate && l.ShiftNo == lubeDelivery.shiftnumber && l.PageNumber == lubeDelivery.pagenumber && l.StationCode == lubeDelivery.stncode);
 
                     var lubesPurchaseDetail = new MobilityLubePurchaseDetail
                     {

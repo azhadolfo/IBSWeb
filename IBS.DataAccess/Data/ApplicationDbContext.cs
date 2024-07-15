@@ -261,7 +261,7 @@ namespace IBS.DataAccess.Data
             // FuelDelivery
             builder.Entity<MobilityFuelDelivery>(f =>
             {
-                f.HasIndex(f => f.shiftrecid);
+                f.HasIndex(f => f.pagenumber);
                 f.HasIndex(f => f.stncode);
             });
 
@@ -276,9 +276,8 @@ namespace IBS.DataAccess.Data
             // LubeDelivery
             builder.Entity<LubeDelivery>(l =>
             {
-                l.HasIndex(l => l.shiftrecid);
+                l.HasIndex(l => l.pagenumber);
                 l.HasIndex(l => l.stncode);
-                l.HasIndex(l => l.dtllink);
             });
 
             // MobilityLubePurchaseHeader

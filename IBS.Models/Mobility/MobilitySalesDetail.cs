@@ -35,6 +35,8 @@ namespace IBS.Models.Mobility
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Liters { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Calibration { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]

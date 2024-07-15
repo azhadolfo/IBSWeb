@@ -23,7 +23,7 @@
                         Purchase No.
                     </th>
                     <th>
-                        Delivery Date
+                        Shift Date
                     </th>
                     <th>
                         Supplier
@@ -48,7 +48,7 @@
                             @obj.LubePurchaseHeaderNo
                         </td>
                         <td>
-                            @obj.DeliveryDate.ToString("MMMM dd, yyyy")
+                            @obj.ShiftDate.ToString("MMMM dd, yyyy")
                         </td>
                         <td>
                             @obj.SupplierCode - @obj.SupplierName
@@ -62,8 +62,8 @@
                         <td>
                             <div class="w-100 btn-group" role="group">
                                 @* <a asp-area="User" asp-controller="Purchase" asp-action="EditLube" asp-route-id="@obj.LubePurchaseHeaderId" class="btn btn-primary mx-2">
-                                    <i class="bi bi-pencil-square"></i> Edit
-                                </a> *@
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a> *@
                                 <a asp-area="Mobility" asp-controller="Purchase" asp-action="PreviewLube" asp-route-id="@obj.LubePurchaseHeaderNo" asp-route-stationCode="@obj.StationCode" class="btn btn-primary mx-2">
                                     <i class="bi bi-printer-fill"></i> Preview
                                 </a>
@@ -72,9 +72,7 @@
                     </tr>
                 }
             </tbody>
-
         </table>
-
     </div>
 </div>
 
@@ -98,4 +96,3 @@
         });
     </script>
 }
-

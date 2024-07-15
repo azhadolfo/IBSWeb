@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240715012628_AddPrecisionAndLengthToCalibrationInMobilitySalesDetailsTable")]
+    partial class AddPrecisionAndLengthToCalibrationInMobilitySalesDetailsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1343,10 +1346,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("cashiercode");
 
-                    b.Property<decimal>("cost")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("cost");
-
                     b.Property<string>("createdby")
                         .IsRequired()
                         .HasColumnType("varchar(50)")
@@ -1355,6 +1354,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime>("createddate")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("createddate");
+
+                    b.Property<DateOnly>("deliverydate")
+                        .HasColumnType("date")
+                        .HasColumnName("deliverydate");
 
                     b.Property<string>("description")
                         .IsRequired()
@@ -1366,18 +1369,15 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(50)")
                         .HasColumnName("drno");
 
-                    b.Property<decimal>("freight")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("freight");
+                    b.Property<string>("dtllink")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("dtllink");
 
                     b.Property<string>("invoiceno")
                         .IsRequired()
                         .HasColumnType("varchar(50)")
                         .HasColumnName("invoiceno");
-
-                    b.Property<int>("pagenumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("pagenumber");
 
                     b.Property<int>("piece")
                         .HasColumnType("integer")
@@ -1402,17 +1402,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(50)")
                         .HasColumnName("rcvdby");
 
-                    b.Property<DateOnly>("shiftdate")
-                        .HasColumnType("date")
-                        .HasColumnName("shiftdate");
-
                     b.Property<int>("shiftnumber")
                         .HasColumnType("integer")
                         .HasColumnName("shiftnumber");
 
-                    b.Property<decimal>("srp")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("srp");
+                    b.Property<string>("shiftrecid")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("shiftrecid");
 
                     b.Property<string>("stncode")
                         .IsRequired()
@@ -1436,8 +1432,11 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("LubeDeliveryId")
                         .HasName("pk_mobility_lube_deliveries");
 
-                    b.HasIndex("pagenumber")
-                        .HasDatabaseName("ix_mobility_lube_deliveries_pagenumber");
+                    b.HasIndex("dtllink")
+                        .HasDatabaseName("ix_mobility_lube_deliveries_dtllink");
+
+                    b.HasIndex("shiftrecid")
+                        .HasDatabaseName("ix_mobility_lube_deliveries_shiftrecid");
 
                     b.HasIndex("stncode")
                         .HasDatabaseName("ix_mobility_lube_deliveries_stncode");
@@ -1684,6 +1683,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("createddate");
 
+                    b.Property<DateOnly>("deliverydate")
+                        .HasColumnType("date")
+                        .HasColumnName("deliverydate");
+
                     b.Property<string>("driver")
                         .IsRequired()
                         .HasColumnType("varchar(100)")
@@ -1698,10 +1701,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("hauler");
-
-                    b.Property<int>("pagenumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("pagenumber");
 
                     b.Property<string>("platenumber")
                         .IsRequired()
@@ -1730,13 +1729,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("sellprice");
 
-                    b.Property<DateOnly>("shiftdate")
-                        .HasColumnType("date")
-                        .HasColumnName("shiftdate");
-
                     b.Property<int>("shiftnumber")
                         .HasColumnType("integer")
                         .HasColumnName("shiftnumber");
+
+                    b.Property<string>("shiftrecid")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("shiftrecid");
 
                     b.Property<string>("stncode")
                         .IsRequired()
@@ -1771,8 +1770,8 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("FuelDeliveryId")
                         .HasName("pk_mobility_fuel_deliveries");
 
-                    b.HasIndex("pagenumber")
-                        .HasDatabaseName("ix_mobility_fuel_deliveries_pagenumber");
+                    b.HasIndex("shiftrecid")
+                        .HasDatabaseName("ix_mobility_fuel_deliveries_shiftrecid");
 
                     b.HasIndex("stncode")
                         .HasDatabaseName("ix_mobility_fuel_deliveries_stncode");
@@ -1810,6 +1809,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
+                    b.Property<DateOnly>("DeliveryDate")
+                        .HasColumnType("date")
+                        .HasColumnName("delivery_date");
+
                     b.Property<string>("DrNo")
                         .IsRequired()
                         .HasColumnType("varchar(50)")
@@ -1841,10 +1844,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("hauler");
-
-                    b.Property<int>("PageNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("page_number");
 
                     b.Property<string>("PlateNo")
                         .IsRequired()
@@ -1889,13 +1888,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("selling_price");
 
-                    b.Property<DateOnly>("ShiftDate")
-                        .HasColumnType("date")
-                        .HasColumnName("shift_date");
-
                     b.Property<int>("ShiftNo")
                         .HasColumnType("integer")
                         .HasColumnName("shift_no");
+
+                    b.Property<string>("ShiftRecId")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("shift_rec_id");
 
                     b.Property<decimal>("ShouldBe")
                         .HasColumnType("numeric(18,4)")
@@ -2204,6 +2203,15 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
+                    b.Property<DateOnly>("DeliveryDate")
+                        .HasColumnType("date")
+                        .HasColumnName("delivery_date");
+
+                    b.Property<string>("DetailLink")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("detail_link");
+
                     b.Property<string>("DrNo")
                         .IsRequired()
                         .HasColumnType("varchar(50)")
@@ -2221,10 +2229,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(50)")
                         .HasColumnName("lube_purchase_header_no");
-
-                    b.Property<int>("PageNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("page_number");
 
                     b.Property<string>("PoNo")
                         .IsRequired()
@@ -2249,13 +2253,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(50)")
                         .HasColumnName("sales_invoice");
 
-                    b.Property<DateOnly>("ShiftDate")
-                        .HasColumnType("date")
-                        .HasColumnName("shift_date");
-
                     b.Property<int>("ShiftNo")
                         .HasColumnType("integer")
                         .HasColumnName("shift_no");
+
+                    b.Property<string>("ShiftRecId")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("shift_rec_id");
 
                     b.Property<string>("StationCode")
                         .IsRequired()

@@ -29,7 +29,7 @@ namespace IBS.DataAccess.Repository.Mobility
                        fuel.FuelPurchaseId,
                        fuel.StationCode,
                        fuel.FuelPurchaseNo,
-                       fuel.DeliveryDate,
+                       fuel.ShiftDate,
                        fuel.ProductCode,
                        product.ProductName,
                        fuel.ReceivedBy,
@@ -52,7 +52,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 }
 
                 var fuelPurchaselist = await _db.MobilityFuelPurchase
-                    .Where(f => f.StationCode == fuelPurchase.StationCode && f.DeliveryDate <= fuelPurchase.DeliveryDate && f.CreatedDate < fuelPurchase.CreatedDate && f.PostedBy == null)
+                    .Where(f => f.StationCode == fuelPurchase.StationCode && f.ShiftDate <= fuelPurchase.ShiftDate && f.CreatedDate < fuelPurchase.CreatedDate && f.PostedBy == null)
                     .OrderBy(f => f.FuelPurchaseNo)
                     .ToListAsync(cancellationToken);
 
@@ -69,7 +69,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         .Where(i => i.ProductCode == fuelPurchase.ProductCode && i.StationCode == fuelPurchase.StationCode)
                         .ToList();
 
-                var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= fuelPurchase.DeliveryDate);
+                var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= fuelPurchase.ShiftDate);
                 if (lastIndex >= 0)
                 {
                     sortedInventory = sortedInventory.Skip(lastIndex).ToList();
@@ -90,7 +90,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 journals.Add(new GeneralLedger
                 {
-                    TransactionDate = fuelPurchase.DeliveryDate,
+                    TransactionDate = fuelPurchase.ShiftDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = inventoryAcctNo,
@@ -104,7 +104,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 journals.Add(new GeneralLedger
                 {
-                    TransactionDate = fuelPurchase.DeliveryDate,
+                    TransactionDate = fuelPurchase.ShiftDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = "1010602",
@@ -117,7 +117,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 journals.Add(new GeneralLedger
                 {
-                    TransactionDate = fuelPurchase.DeliveryDate,
+                    TransactionDate = fuelPurchase.ShiftDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = "2010101",
@@ -136,7 +136,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 var inventory = new Inventory
                 {
                     Particulars = nameof(JournalType.Purchase),
-                    Date = fuelPurchase.DeliveryDate,
+                    Date = fuelPurchase.ShiftDate,
                     Reference = $"DR#{fuelPurchase.DrNo}",
                     ProductCode = fuelPurchase.ProductCode,
                     StationCode = fuelPurchase.StationCode,
@@ -241,7 +241,7 @@ namespace IBS.DataAccess.Repository.Mobility
             var records = csv.GetRecords<MobilityFuelDelivery>();
             var existingRecords = await _db.Set<MobilityFuelDelivery>().ToListAsync(cancellationToken);
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
-                existingRecord.shiftrecid == record.shiftrecid && existingRecord.stncode == record.stncode && existingRecord.productcode == record.productcode)).ToList();
+                existingRecord.pagenumber == record.pagenumber && existingRecord.shiftnumber == record.shiftnumber && existingRecord.shiftdate == record.shiftdate && existingRecord.stncode == record.stncode && existingRecord.productcode == record.productcode)).ToList();
 
             if (recordsToInsert.Count != 0)
             {
@@ -265,11 +265,11 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 fuelPurchase.Add(new MobilityFuelPurchase
                 {
-                    ShiftRecId = fuelDelivery.shiftrecid,
+                    PageNumber = fuelDelivery.pagenumber,
                     StationCode = fuelDelivery.stncode,
                     CashierCode = fuelDelivery.cashiercode.Substring(1),
                     ShiftNo = fuelDelivery.shiftnumber,
-                    DeliveryDate = fuelDelivery.deliverydate,
+                    ShiftDate = fuelDelivery.shiftdate,
                     TimeIn = fuelDelivery.timein,
                     TimeOut = fuelDelivery.timeout,
                     Driver = fuelDelivery.driver,
