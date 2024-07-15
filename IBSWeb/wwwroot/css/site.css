@@ -490,8 +490,6 @@ bg-success {
 
 .dropdown:hover > .dropdown-menu, .dropend:hover > .dropdown-menu {
     display: block;
-    margin-top: .125em;
-    margin-left: .125em;
 }
 
 @media screen and (min-width:992px) {
