@@ -37,9 +37,6 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task InsertEntry(AdjustReportViewModel model, CancellationToken cancellationToken = default)
         {
-            //var selectedOffline = await _db.MobilityOfflines
-            //    .FindAsync(new object[] { model.SelectedOfflineId }, cancellationToken);
-
             var offlineList = await _db.MobilityOfflines
                 .ToListAsync(cancellationToken);
 
@@ -81,21 +78,25 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 selectedOffline.IsResolve = true;
 
-                async Task CheckAndMarkDsrAsync(string dsrNo)
+                var firstDsrHasPendingOffline = offlineList.Any(o => !o.IsResolve && (o.FirstDsrNo == selectedOffline.FirstDsrNo || o.SecondDsrNo == selectedOffline.FirstDsrNo));
+
+                if (!firstDsrHasPendingOffline)
                 {
-                    var hasPendingOffline = offlineList.Any(o => !o.IsResolve && (o.FirstDsrNo == dsrNo || o.SecondDsrNo == dsrNo));
-                    if (!hasPendingOffline)
-                    {
-                        var problematicDsr = await _db.MobilitySalesHeaders
-                            .FirstOrDefaultAsync(s => s.StationCode == selectedOffline.StationCode && s.SalesNo == dsrNo, cancellationToken);
-                        if (problematicDsr != null)
-                        {
-                            problematicDsr.IsTransactionNormal = true;
-                        }
-                    }
+                    var problematicDsr = await _db.MobilitySalesHeaders
+                   .FirstOrDefaultAsync(s => s.StationCode == selectedOffline.StationCode && s.SalesNo == selectedOffline.FirstDsrNo, cancellationToken);
+
+                    problematicDsr.IsTransactionNormal = true;
                 }
 
-                await Task.WhenAll(CheckAndMarkDsrAsync(selectedOffline.FirstDsrNo), CheckAndMarkDsrAsync(selectedOffline.SecondDsrNo));
+                var secondDsrHasPendingOffline = offlineList.Any(o => !o.IsResolve && (o.FirstDsrNo == selectedOffline.SecondDsrNo || o.SecondDsrNo == selectedOffline.SecondDsrNo));
+
+                if (!secondDsrHasPendingOffline)
+                {
+                    var problematicDsr = await _db.MobilitySalesHeaders
+                   .FirstOrDefaultAsync(s => s.StationCode == selectedOffline.StationCode && s.SalesNo == selectedOffline.SecondDsrNo, cancellationToken);
+
+                    problematicDsr.IsTransactionNormal = true;
+                }
             }
 
             await _db.SaveChangesAsync(cancellationToken);

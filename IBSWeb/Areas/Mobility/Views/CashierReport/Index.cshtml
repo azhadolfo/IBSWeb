@@ -82,7 +82,6 @@
                     }
                 ],
                 "rowCallback": function (row, data) {
-                    console.log(data)
                     if ((data.SafeDropTotalAmount <= 0 || data.ActualCashOnHand <= 0) && data.IsTransactionNormal === false) {
                         $(row).addClass('table-danger');
                     }
