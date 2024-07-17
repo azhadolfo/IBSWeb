@@ -533,52 +533,54 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public async Task UpdateAsync(SalesVM model, decimal[] closing, decimal[] opening, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(MobilitySalesHeader model, CancellationToken cancellationToken = default)
         {
             MobilitySalesHeader existingSalesHeader = await _db.MobilitySalesHeaders
-                .FirstOrDefaultAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId, cancellationToken) ?? throw new InvalidOperationException($"Sales header with id '{model.Header.SalesHeaderId}' not found.");
+                .FirstOrDefaultAsync(sh => sh.SalesHeaderId == model.SalesHeaderId, cancellationToken) ?? throw new InvalidOperationException($"Sales header with id '{model.SalesHeaderId}' not found.");
 
-            IEnumerable<MobilitySalesDetail> existingSalesDetail = await _db.MobilitySalesDetails
-                .Where(sd => sd.SalesHeaderId == model.Header.SalesHeaderId)
+            List<MobilitySalesDetail> existingSalesDetails = await _db.MobilitySalesDetails
+                .Where(sd => sd.SalesHeaderId == model.SalesHeaderId)
                 .OrderBy(sd => sd.SalesDetailId)
                 .ToListAsync(cancellationToken);
 
             bool headerModified = false;
 
-            for (int i = 0; i < existingSalesDetail.Count(); i++)
+            for (int i = 0; i < existingSalesDetails.Count; i++)
             {
-                MobilitySalesDetail existingDetail = existingSalesDetail.ElementAt(i);
+                var existingDetail = existingSalesDetails[i];
+                var updatedDetail = model.SalesDetails[i];
 
-                if (existingDetail.Closing != closing[i] || existingDetail.Opening != opening[i])
+                if (existingDetail.Closing != updatedDetail.Closing || existingDetail.Opening != updatedDetail.Opening || existingDetail.Price != updatedDetail.Price)
                 {
                     headerModified = true;
                     existingSalesHeader.IsModified = true;
-                    existingDetail.Closing = closing[i];
-                    existingDetail.Opening = opening[i];
+                    existingDetail.Closing = updatedDetail.Closing;
+                    existingDetail.Opening = updatedDetail.Opening;
+                    existingDetail.PreviousPrice = existingDetail.Price;
+                    existingDetail.Price = updatedDetail.Price;
                     existingDetail.Liters = existingDetail.Closing - existingDetail.Opening;
                     existingDetail.Value = existingDetail.Liters * existingDetail.Price;
-                    await _db.SaveChangesAsync(cancellationToken);
                 }
             }
 
             if (headerModified)
             {
-                existingSalesHeader!.FuelSalesTotalAmount = existingSalesDetail.Sum(d => d.Value);
-                existingSalesHeader!.TotalSales = existingSalesHeader.FuelSalesTotalAmount + existingSalesHeader.LubesTotalAmount;
-                existingSalesHeader!.GainOrLoss = existingSalesHeader.SafeDropTotalAmount - existingSalesHeader.TotalSales;
+                existingSalesHeader.FuelSalesTotalAmount = existingSalesDetails.Sum(d => d.Value);
+                existingSalesHeader.TotalSales = existingSalesHeader.FuelSalesTotalAmount + existingSalesHeader.LubesTotalAmount;
+                existingSalesHeader.GainOrLoss = existingSalesHeader.SafeDropTotalAmount - existingSalesHeader.TotalSales;
             }
 
-            existingSalesHeader!.Particular = model.Header.Particular;
+            existingSalesHeader.Particular = model.Particular;
 
-            if (existingSalesHeader.ActualCashOnHand != model.Header.ActualCashOnHand)
+            if (existingSalesHeader.ActualCashOnHand != model.ActualCashOnHand)
             {
-                existingSalesHeader!.ActualCashOnHand = model.Header.ActualCashOnHand;
-                existingSalesHeader!.GainOrLoss = model.Header.ActualCashOnHand - existingSalesHeader.TotalSales;
+                existingSalesHeader.ActualCashOnHand = model.ActualCashOnHand;
+                existingSalesHeader.GainOrLoss = model.ActualCashOnHand - existingSalesHeader.TotalSales;
             }
 
             if (_db.ChangeTracker.HasChanges())
             {
-                existingSalesHeader.EditedBy = model.Header.EditedBy;
+                existingSalesHeader.EditedBy = model.EditedBy;
                 existingSalesHeader.EditedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
             }

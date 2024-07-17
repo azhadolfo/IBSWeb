@@ -1,5 +1,4 @@
-﻿@using IBS.Models.Mobility.ViewModels
-@model SalesVM
+﻿@model MobilitySalesHeader
 
 @{
     ViewData["Title"] = "Edit Cashier Report";
@@ -15,61 +14,70 @@
     </div>
     <div class="card-body p-4">
         <form method="post" class="row">
-            <input asp-for="Header.SalesHeaderId" hidden />
+            <input asp-for="SalesHeaderId" hidden />
             <div class="border p-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Header.Date" class="form-control border-0 shadow" placeholder="" value="@Model.Header.Date.ToString("MMM/dd/yyyy")" readonly tabindex="-1" />
-                    <label asp-for="Header.Date" class="ms-2"></label>
-                    <span asp-validation-for="Header.Date" class="text-danger"></span>
+                    <input asp-for="Date" class="form-control border-0 shadow" placeholder="" value="@Model.Date.ToString("MMM/dd/yyyy")" readonly tabindex="-1" />
+                    <label asp-for="Date" class="ms-2"></label>
+                    <span asp-validation-for="Date" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Header.Cashier" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                    <label asp-for="Header.Cashier" class="ms-2"></label>
-                    <span asp-validation-for="Header.Cashier" class="text-danger"></span>
+                    <input asp-for="Cashier" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                    <label asp-for="Cashier" class="ms-2"></label>
+                    <span asp-validation-for="Cashier" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Header.Shift" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                    <label asp-for="Header.Shift" class="ms-2"></label>
-                    <span asp-validation-for="Header.Shift" class="text-danger"></span>
+                    <input asp-for="Shift" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                    <label asp-for="Shift" class="ms-2"></label>
+                    <span asp-validation-for="Shift" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Header.SafeDropTotalAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                    <label asp-for="Header.SafeDropTotalAmount" class="ms-2">Cash On Hand</label>
-                    <span asp-validation-for="Header.SafeDropTotalAmount" class="text-danger"></span>
+                    <input asp-for="SafeDropTotalAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                    <label asp-for="SafeDropTotalAmount" class="ms-2">Cash On Hand</label>
+                    <span asp-validation-for="SafeDropTotalAmount" class="text-danger"></span>
                 </div>
-                @foreach (var obj in Model.Details.OrderBy(d => d.SalesDetailId))
+                @for (int i = 0; i < Model.SalesDetails.Count; i++)
                 {
+                    var detail = Model.SalesDetails[i];
                     <div class="row py-2 m-2 border border-secondary-subtle p-2 border-opacity-50">
+                        <input type="hidden" asp-for="@Model.SalesDetails[i].SalesDetailId" name="SalesDetails[@i].SalesDetailId" />
                         <div class="col-12">
-                            <h6>@obj.Particular</h6>
+                            <h6>@detail.Particular</h6>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-floating">
-                                <input name="closing" value="@obj.Closing.ToString("N4")" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                                <label asp-for="@obj.Closing"></label>
-                                <span asp-validation-for="@obj.Closing" class="text-danger"></span>
+                                <input name="SalesDetails[@i].Closing" value="@detail.Closing.ToString("N4")" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                                <label asp-for="SalesDetails[@i].Closing">Closing</label>
+                                <span asp-validation-for="SalesDetails[@i].Closing" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-floating">
-                                <input name="opening" value="@obj.Opening.ToString("N4")" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                                <label asp-for="@obj.Opening"></label>
-                                <span asp-validation-for="@obj.Opening" class="text-danger"></span>
+                                <input name="SalesDetails[@i].Opening" value="@detail.Opening.ToString("N4")" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                                <label asp-for="SalesDetails[@i].Opening">Opening</label>
+                                <span asp-validation-for="SalesDetails[@i].Opening" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input name="SalesDetails[@i].Price" value="@detail.Price.ToString("N4")" class="form-control border-0 shadow" placeholder="" />
+                                <label asp-for="SalesDetails[@i].Price">Price</label>
+                                <span asp-validation-for="SalesDetails[@i].Price" class="text-danger"></span>
                             </div>
                         </div>
                     </div>
                 }
 
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Header.ActualCashOnHand" class="form-control border-0 shadow" placeholder="" required />
-                    <label asp-for="Header.ActualCashOnHand" class="ms-2">Actual Cash On Hand<span class="required">*</span></label>
-                    <span asp-validation-for="Header.ActualCashOnHand" class="text-danger"></span>
+                    <input asp-for="ActualCashOnHand" class="form-control border-0 shadow" placeholder="" min="0" />
+                    <label asp-for="ActualCashOnHand" class="ms-2">Actual Cash On Hand</label>
+                    <span asp-validation-for="ActualCashOnHand" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <textarea asp-for="Header.Particular" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px" required></textarea>
-                    <label asp-for="Header.Particular" class="control-label">Particular<span class="required">*</span></label>
-                    <span asp-validation-for="Header.Particular" class="text-danger"></span>
+                    <textarea asp-for="Particular" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px" required></textarea>
+                    <label asp-for="Particular" class="control-label">Particular<span class="required">*</span></label>
+                    <span asp-validation-for="Particular" class="text-danger"></span>
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">

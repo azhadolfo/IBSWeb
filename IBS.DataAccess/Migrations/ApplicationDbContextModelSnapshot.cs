@@ -2642,6 +2642,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(50)")
                         .HasColumnName("particular");
 
+                    b.Property<decimal?>("PreviousPrice")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("previous_price");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("price");

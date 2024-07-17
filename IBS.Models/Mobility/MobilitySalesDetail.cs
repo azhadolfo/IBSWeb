@@ -63,5 +63,9 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(3)")]
         [Display(Name = "Station Code")]
         public string StationCode { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        public decimal? PreviousPrice { get; set; }
     }
 }

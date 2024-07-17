@@ -24,9 +24,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        [BindProperty]
-        public SalesVM SalesVM { get; set; }
-
         public CashierReportController(IUnitOfWork unitOfWork, ILogger<CashierReportController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
@@ -163,47 +160,37 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            SalesVM = new SalesVM
-            {
-                Header = await _unitOfWork.MobilitySalesHeader.GetAsync(sh => sh.SalesNo == id && sh.StationCode == stationCode, cancellationToken),
-                Details = await _unitOfWork.MobilitySalesDetail.GetAllAsync(sd => sd.SalesNo == id && sd.StationCode == stationCode, cancellationToken)
-            };
+            var sales = await _unitOfWork.MobilitySalesHeader.GetAsync(s => s.SalesNo == id, cancellationToken);
 
-            if (SalesVM.Header == null)
+            if (sales == null)
             {
                 return BadRequest();
             }
 
-            return View(SalesVM);
+            return View(sales);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(SalesVM model, decimal[] closing, decimal[] opening, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(MobilitySalesHeader model, CancellationToken cancellationToken)
         {
-            SalesVM = new SalesVM
-            {
-                Header = await _unitOfWork.MobilitySalesHeader.GetAsync(sh => sh.SalesHeaderId == model.Header.SalesHeaderId && sh.StationCode == model.Header.StationCode, cancellationToken),
-                Details = await _unitOfWork.MobilitySalesDetail.GetAllAsync(sd => sd.SalesHeaderId == model.Header.SalesHeaderId && sd.StationCode == model.Header.StationCode, cancellationToken)
-            };
-
-            if (string.IsNullOrEmpty(model.Header.Particular))
+            if (string.IsNullOrEmpty(model.Particular))
             {
                 ModelState.AddModelError("Header.Particular", "Indicate the reason of this changes.");
-                return View(SalesVM);
+                return View(model);
             }
 
             try
             {
-                model.Header.EditedBy = _userManager.GetUserName(User);
-                await _unitOfWork.MobilitySalesHeader.UpdateAsync(model, closing, opening, cancellationToken);
-                TempData["success"] = "Cashier Report updated successfully.";
+                model.EditedBy = _userManager.GetUserName(User);
+                await _unitOfWork.MobilitySalesHeader.UpdateAsync(model, cancellationToken);
+                TempData["success"] = "Cashier report updated successfully.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in updating cashier report.");
                 TempData["error"] = $"Error: '{ex.Message}'";
-                return View(SalesVM);
+                return View(model);
             }
         }
 
