@@ -18,11 +18,18 @@
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7222;http://localhost:5073"
     },
-    "IIS Express": {
+    "IIS Express (dev)": {
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development" //Change it to Production to use the database_prod
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "IIS Express (prod)": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Production"
       }
     },
     "WSL": {
