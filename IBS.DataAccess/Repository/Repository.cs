@@ -1,8 +1,8 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
-using IBS.Models;
 using IBS.Models.MasterFile;
+using IBS.Models.Mobility;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -43,7 +43,7 @@ namespace IBS.DataAccess.Repository
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public bool IsJournalEntriesBalanced(IEnumerable<GeneralLedger> journals)
+        public bool IsJournalEntriesBalanced(IEnumerable<MobilityGeneralLedger> journals)
         {
             try
             {

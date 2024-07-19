@@ -1,17 +1,14 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
-using IBS.Models;
-using IBS.Models.ViewModels;
+using IBS.Models.Mobility;
+using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
-using IBSWeb.Areas.Mobility.Controllers;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace IBSWeb.Areas.User.Controllers
+namespace IBSWeb.Areas.Mobility.Controllers
 {
-    [Area("User")]
-    [Authorize]
+    [Area(nameof(Mobility))]
     public class InventoryController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -29,7 +26,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> GenerateInventoryCosting(CancellationToken cancellationToken)
         {
-            Inventory? inventory = new()
+            MobilityInventory? inventory = new()
             {
                 Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken),
                 Stations = await _unitOfWork.GetStationListAsyncByCode(cancellationToken)
@@ -38,9 +35,9 @@ namespace IBSWeb.Areas.User.Controllers
             return View(inventory);
         }
 
-        public async Task<IActionResult> InventoryCosting(Inventory model, DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken)
+        public async Task<IActionResult> InventoryCosting(MobilityInventory model, DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken)
         {
-            IEnumerable<Inventory> inventories;
+            IEnumerable<MobilityInventory> inventories;
             ProductDto productDetails = await _unitOfWork.Product.MapProductToDTO(model.ProductCode, cancellationToken);
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
@@ -48,12 +45,12 @@ namespace IBSWeb.Areas.User.Controllers
 
             if (model.StationCode == "ALL")
             {
-                inventories = await _unitOfWork.Inventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
+                inventories = await _unitOfWork.MobilityInventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
                 ViewData["Station"] = model.StationCode;
             }
             else
             {
-                inventories = await _unitOfWork.Inventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
+                inventories = await _unitOfWork.MobilityInventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
                 StationDto stationDetails = await _unitOfWork.Station.MapStationToDTO(model.StationCode, cancellationToken);
                 ViewData["Station"] = $"{stationDetails.StationCode} {stationDetails.StationName.ToUpper()}";
             }
@@ -65,7 +62,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> BeginningInventory(CancellationToken cancellationToken)
         {
-            Inventory? inventory = new()
+            MobilityInventory? inventory = new()
             {
                 Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken),
                 Stations = await _unitOfWork.GetStationListAsyncByCode(cancellationToken)
@@ -75,7 +72,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> BeginningInventory(Inventory model, CancellationToken cancellationToken)
+        public async Task<IActionResult> BeginningInventory(MobilityInventory model, CancellationToken cancellationToken)
         {
             try
             {
@@ -86,7 +83,7 @@ namespace IBSWeb.Areas.User.Controllers
                     model.StationCode = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
                 }
 
-                await _unitOfWork.Inventory.CalculateTheBeginningInventory(model, cancellationToken);
+                await _unitOfWork.MobilityInventory.CalculateTheBeginningInventory(model, cancellationToken);
                 TempData["success"] = "Beginning inventory saving successfully.";
                 return RedirectToAction(nameof(BeginningInventory));
             }
@@ -131,10 +128,10 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Inventory inventory = await _unitOfWork.Inventory
+            MobilityInventory inventory = await _unitOfWork.MobilityInventory
                 .GetAsync(i => i.InventoryId == id, cancellationToken);
 
-            IEnumerable<GeneralLedger> ledgerEntries = await _unitOfWork.GeneralLedger
+            IEnumerable<MobilityGeneralLedger> ledgerEntries = await _unitOfWork.MobilityGeneralLedger
                 .GetAllAsync(l => l.Reference == inventory.TransactionNo && l.StationCode == inventory.StationCode, cancellationToken);
 
             if (inventory != null || ledgerEntries != null)
@@ -174,10 +171,10 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 try
                 {
-                    var inventory = await _unitOfWork.Inventory
+                    var inventory = await _unitOfWork.MobilityInventory
                         .GetAsync(i => i.InventoryId == viewModel.InventoryId, cancellationToken);
 
-                    await _unitOfWork.Inventory.CalculateTheActualSounding(inventory, viewModel, cancellationToken);
+                    await _unitOfWork.MobilityInventory.CalculateTheActualSounding(inventory, viewModel, cancellationToken);
 
                     TempData["success"] = "Actual sounding inserted successfully.";
                     return RedirectToAction(nameof(ActualSounding));
@@ -201,7 +198,7 @@ namespace IBSWeb.Areas.User.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             var stationCode = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
-            var lastInventory = await _unitOfWork.Inventory.GetLastInventoryAsync(productCode, stationCode, cancellationToken);
+            var lastInventory = await _unitOfWork.MobilityInventory.GetLastInventoryAsync(productCode, stationCode, cancellationToken);
 
             if (lastInventory == null)
             {

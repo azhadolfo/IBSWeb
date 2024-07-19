@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.Models.ViewModels
+namespace IBS.Models.Mobility.ViewModels
 {
     public class ActualSoundingViewModel
     {

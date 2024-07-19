@@ -1,16 +1,16 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
-using IBS.Models;
-using IBS.Models.ViewModels;
+using IBS.DataAccess.Repository.Mobility.IRepository;
+using IBS.Models.Mobility;
+using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
 
-namespace IBS.DataAccess.Repository
+namespace IBS.DataAccess.Repository.Mobility
 {
-    public class GeneralLedgerRepository : Repository<GeneralLedger>, IGeneralLedgerRepository
+    public class GeneralLedgerRepository : Repository<MobilityGeneralLedger>, IGeneralLedgerRepository
     {
         private ApplicationDbContext _db;
 

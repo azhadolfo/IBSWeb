@@ -2,7 +2,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Dtos;
-using IBS.Models;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
@@ -278,11 +277,11 @@ namespace IBS.DataAccess.Repository.Mobility
                 salesVM.Header.PostedBy = postedBy;
                 salesVM.Header.PostedDate = DateTime.Now;
 
-                var journals = new List<GeneralLedger>();
-                var inventories = new List<Inventory>();
-                var cogsJournals = new List<GeneralLedger>();
+                var journals = new List<MobilityGeneralLedger>();
+                var inventories = new List<MobilityInventory>();
+                var cogsJournals = new List<MobilityGeneralLedger>();
 
-                journals.Add(new GeneralLedger
+                journals.Add(new MobilityGeneralLedger
                 {
                     TransactionDate = salesVM.Header.Date,
                     Reference = salesVM.Header.SalesNo,
@@ -300,7 +299,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 {
                     for (int i = 0; i < salesVM.Header.Customers.Length; i++)
                     {
-                        journals.Add(new GeneralLedger
+                        journals.Add(new MobilityGeneralLedger
                         {
                             TransactionDate = salesVM.Header.Date,
                             Reference = salesVM.Header.SalesNo,
@@ -325,7 +324,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(product.Key);
                     var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(product.Key);
 
-                    journals.Add(new GeneralLedger
+                    journals.Add(new MobilityGeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
@@ -340,7 +339,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         IsValidated = true
                     }); ;
 
-                    journals.Add(new GeneralLedger
+                    journals.Add(new MobilityGeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
@@ -385,7 +384,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     decimal unitCostAverage = runningCost / inventoryBalance;
                     decimal cogs = unitCostAverage * quantity;
 
-                    inventories.Add(new Inventory
+                    inventories.Add(new MobilityInventory
                     {
                         Particulars = nameof(JournalType.Sales),
                         Date = salesVM.Header.Date,
@@ -405,7 +404,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         TransactionNo = salesVM.Header.SalesNo
                     });
 
-                    cogsJournals.Add(new GeneralLedger
+                    cogsJournals.Add(new MobilityGeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
@@ -420,7 +419,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         IsValidated = true
                     });
 
-                    cogsJournals.Add(new GeneralLedger
+                    cogsJournals.Add(new MobilityGeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,
@@ -463,7 +462,7 @@ namespace IBS.DataAccess.Repository.Mobility
                             inventoryBalance = transaction.InventoryBalance;
                         }
 
-                        var journalEntries = await _db.GeneralLedgers
+                        List<MobilityGeneralLedger> journalEntries = await _db.GeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
                                         (j.AccountNumber.StartsWith("50101") || j.AccountNumber.StartsWith("10104")))
                             .ToListAsync(cancellationToken);
@@ -499,7 +498,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 if (salesVM.Header.GainOrLoss != 0)
                 {
-                    journals.Add(new GeneralLedger
+                    journals.Add(new MobilityGeneralLedger
                     {
                         TransactionDate = salesVM.Header.Date,
                         Reference = salesVM.Header.SalesNo,

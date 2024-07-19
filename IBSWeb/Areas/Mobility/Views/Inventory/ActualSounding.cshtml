@@ -51,7 +51,7 @@
                         <button type="submit" class="btn btn-primary form-control">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="User" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to Homepage</a>
+                        <a asp-area="Mobility" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to Homepage</a>
                     </div>
                 </div>
             </div>
@@ -70,7 +70,7 @@
                 var productCode = $(this).val();
                 if (productCode) {
                     $.ajax({
-                        url: '@Url.Action("GetLastInventory", "Inventory", new { area = "User" })',
+                        url: '@Url.Action("GetLastInventory", "Inventory", new { area = "Mobility" })',
                         type: 'GET',
                         data: { productCode: productCode },
                         success: function (data) {

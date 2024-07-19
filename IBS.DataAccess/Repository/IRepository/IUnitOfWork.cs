@@ -15,11 +15,11 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IStationRepository Station { get; }
 
-        IGeneralLedgerRepository GeneralLedger { get; }
+        IGeneralLedgerRepository MobilityGeneralLedger { get; }
 
         ISupplierRepository Supplier { get; }
 
-        IInventoryRepository Inventory { get; }
+        IInventoryRepository MobilityInventory { get; }
 
         IChartOfAccountRepository ChartOfAccount { get; }
 

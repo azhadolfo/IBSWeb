@@ -3,7 +3,6 @@ using IBS.Models.Filpride;
 using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
-using IBS.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -34,8 +33,7 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilitySalesHeader> MobilitySalesHeaders { get; set; }
         public DbSet<MobilitySalesDetail> MobilitySalesDetails { get; set; }
         public DbSet<MobilityPoSalesRaw> MobilityPoSalesRaw { get; set; }
-        public DbSet<POSales> MobilityPOSales { get; set; }
-        public DbSet<CsvFile> CsvFiles { get; set; }
+        public DbSet<MobilityPOSales> MobilityPOSales { get; set; }
         public DbSet<MobilityOffline> MobilityOfflines { get; set; }
         #endregion
 
@@ -62,12 +60,12 @@ namespace IBS.DataAccess.Data
         #endregion
 
         #region --Inventory Entity
-        public DbSet<Inventory> Inventories { get; set; }
+        public DbSet<MobilityInventory> Inventories { get; set; }
         #endregion
 
         #region --Book Entity
 
-        public DbSet<GeneralLedger> GeneralLedgers { get; set; }
+        public DbSet<MobilityGeneralLedger> GeneralLedgers { get; set; }
 
         #endregion
 
@@ -151,7 +149,7 @@ namespace IBS.DataAccess.Data
             #endregion
 
             #region--General Ledger
-            builder.Entity<GeneralLedger>(g =>
+            builder.Entity<MobilityGeneralLedger>(g =>
                 {
                     g.HasIndex(g => g.TransactionDate);
                     g.HasIndex(g => g.Reference);
@@ -166,7 +164,7 @@ namespace IBS.DataAccess.Data
             #endregion
 
             #region--Inventory
-            builder.Entity<Inventory>(i =>
+            builder.Entity<MobilityInventory>(i =>
                {
                    i.HasIndex(i => i.ProductCode);
                    i.HasIndex(i => i.StationCode);
@@ -250,7 +248,7 @@ namespace IBS.DataAccess.Data
                 po.HasIndex(po => po.tripticket);
             });
 
-            builder.Entity<POSales>(po => po
+            builder.Entity<MobilityPOSales>(po => po
                 .HasIndex(po => po.POSalesNo)
                 .IsUnique());
 

@@ -1,6 +1,6 @@
-﻿namespace IBS.Models.ViewModels
+﻿namespace IBS.Models.Mobility.ViewModels
 {
-    public class GeneralLedgerView : GeneralLedger
+    public class GeneralLedgerView : MobilityGeneralLedger
     {
         public string StationName { get; set; }
 

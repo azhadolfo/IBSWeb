@@ -18,9 +18,7 @@ namespace IBS.DataAccess.Repository
         public IProductRepository Product { get; private set; }
         public ICompanyRepository Company { get; private set; }
         public IStationRepository Station { get; private set; }
-        public IGeneralLedgerRepository GeneralLedger { get; private set; }
         public ISupplierRepository Supplier { get; private set; }
-        public IInventoryRepository Inventory { get; private set; }
         public IChartOfAccountRepository ChartOfAccount { get; private set; }
         public IHaulerRepository Hauler { get; private set; }
 
@@ -33,6 +31,8 @@ namespace IBS.DataAccess.Repository
         public ILubePurchaseDetailRepository MobilityLubePurchaseDetail { get; private set; }
         public IPOSalesRepository MobilityPurchaseOrder { get; private set; }
         public IOfflineRepository MobilityOffline { get; private set; }
+        public IGeneralLedgerRepository MobilityGeneralLedger { get; private set; }
+        public IInventoryRepository MobilityInventory { get; private set; }
 
         #endregion
 
@@ -55,9 +55,7 @@ namespace IBS.DataAccess.Repository
             Product = new ProductRepository(_db);
             Company = new CompanyRepository(_db);
             Station = new StationRepository(_db);
-            GeneralLedger = new GeneralLedgerRepository(_db);
             Supplier = new SupplierRepository(_db);
-            Inventory = new InventoryRepository(_db);
             ChartOfAccount = new ChartOfAccountRepository(_db);
             Hauler = new HaulerRepository(_db);
 
@@ -70,6 +68,8 @@ namespace IBS.DataAccess.Repository
             MobilityLubePurchaseDetail = new LubePurchaseDetailRepository(_db);
             MobilityPurchaseOrder = new POSalesRepository(_db);
             MobilityOffline = new OfflineRepository(_db);
+            MobilityGeneralLedger = new GeneralLedgerRepository(_db);
+            MobilityInventory = new InventoryRepository(_db);
 
             #endregion
 

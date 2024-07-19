@@ -1,15 +1,13 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models;
 using IBS.Models.MasterFile;
-using IBS.Models.ViewModels;
-using Microsoft.AspNetCore.Authorization;
+using IBS.Models.Mobility;
+using IBS.Models.Mobility.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace IBSWeb.Areas.User.Controllers
+namespace IBSWeb.Areas.Mobility.Controllers
 {
-    [Area("User")]
-    [Authorize]
+    [Area(nameof(Mobility))]
     public class GeneralLedgerController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -37,7 +35,7 @@ namespace IBSWeb.Areas.User.Controllers
             var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
             IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork
-                .GeneralLedger
+                .MobilityGeneralLedger
                 .GetLedgerViewByTransaction(dateFrom, dateTo, stationCodeClaim, cancellationToken);
 
             return View(ledgers);
@@ -50,14 +48,14 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> DisplayByJournal(DateOnly dateFrom, DateOnly dateTo, string journal, CancellationToken cancellationToken)
         {
-            if (!String.IsNullOrEmpty(journal))
+            if (!string.IsNullOrEmpty(journal))
             {
                 var user = await _userManager.GetUserAsync(User);
                 var claims = await _userManager.GetClaimsAsync(user);
                 var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
                 IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork
-                    .GeneralLedger
+                    .MobilityGeneralLedger
                     .GetLedgerViewByJournal(dateFrom, dateTo, stationCodeClaim, journal, cancellationToken);
 
                 ViewData["Journal"] = journal.ToUpper();
@@ -70,7 +68,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> GetAccountNo(CancellationToken cancellationToken)
         {
-            GeneralLedger model = new()
+            MobilityGeneralLedger model = new()
             {
                 ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
                 Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken)
@@ -91,13 +89,13 @@ namespace IBSWeb.Areas.User.Controllers
 
             SetViewData(chartOfAccount, accountNo, productCode, dateFrom, dateTo);
 
-            IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork.GeneralLedger.GetLedgerViewByAccountNo(dateFrom, dateTo, stationCodeClaim, accountNo, productCode, cancellationToken);
+            IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork.MobilityGeneralLedger.GetLedgerViewByAccountNo(dateFrom, dateTo, stationCodeClaim, accountNo, productCode, cancellationToken);
 
             if (exportToExcel && ledgers.Any())
             {
                 try
                 {
-                    var excelBytes = _unitOfWork.GeneralLedger.ExportToExcel(ledgers, dateTo, dateFrom, ViewData["AccountNo"], ViewData["AccountName"], productCode);
+                    var excelBytes = _unitOfWork.MobilityGeneralLedger.ExportToExcel(ledgers, dateTo, dateFrom, ViewData["AccountNo"], ViewData["AccountName"], productCode);
 
                     // Return the Excel file as a download
                     return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "GeneralLedger.xlsx");

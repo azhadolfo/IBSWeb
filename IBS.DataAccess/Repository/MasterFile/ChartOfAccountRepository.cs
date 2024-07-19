@@ -93,7 +93,6 @@ namespace IBS.DataAccess.Repository.MasterFile
                         parentAccount.Children.Add(account.Value);
                     }
                 }
-
             }
 
             // Return the modified accounts

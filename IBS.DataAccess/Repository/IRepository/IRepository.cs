@@ -1,5 +1,5 @@
 ﻿using IBS.Dtos;
-using IBS.Models;
+using IBS.Models.Mobility;
 using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.IRepository
@@ -16,7 +16,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task RemoveRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
 
-        bool IsJournalEntriesBalanced(IEnumerable<GeneralLedger> journals);
+        bool IsJournalEntriesBalanced(IEnumerable<MobilityGeneralLedger> journals);
 
         (string AccountNo, string AccountTitle) GetSalesAccountTitle(string productCode);
 

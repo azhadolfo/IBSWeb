@@ -2,7 +2,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Dtos;
-using IBS.Models;
 using IBS.Models.Mobility;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
@@ -66,10 +65,10 @@ namespace IBS.DataAccess.Repository.Mobility
                 lubes.PostedBy = postedBy;
                 lubes.PostedDate = DateTime.Now;
 
-                List<GeneralLedger> journals = new();
-                List<Inventory> inventories = new();
+                List<MobilityGeneralLedger> journals = new();
+                List<MobilityInventory> inventories = new();
 
-                journals.Add(new GeneralLedger
+                journals.Add(new MobilityGeneralLedger
                 {
                     TransactionDate = lubes.ShiftDate,
                     Reference = lubes.LubePurchaseHeaderNo,
@@ -83,7 +82,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     ProductCode = "LUBES"
                 });
 
-                journals.Add(new GeneralLedger
+                journals.Add(new MobilityGeneralLedger
                 {
                     TransactionDate = lubes.ShiftDate,
                     Reference = lubes.LubePurchaseHeaderNo,
@@ -96,7 +95,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     JournalReference = nameof(JournalType.Purchase)
                 });
 
-                journals.Add(new GeneralLedger
+                journals.Add(new MobilityGeneralLedger
                 {
                     TransactionDate = lubes.ShiftDate,
                     Reference = lubes.LubePurchaseHeaderNo,
@@ -135,7 +134,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     decimal inventoryBalance = previousInventory.InventoryBalance + lube.Piece;
                     decimal unitCostAverage = runningCost / inventoryBalance;
 
-                    inventories.Add(new Inventory
+                    inventories.Add(new MobilityInventory
                     {
                         Particulars = nameof(JournalType.Purchase),
                         Date = lubes.ShiftDate,

@@ -1,20 +1,20 @@
-﻿@model GeneralLedger
+﻿@model MobilityInventory
 
 @{
-    ViewData["Title"] = "Generate GL By Transaction";
+    ViewData["Title"] = "Generate Inventory Costing";
 }
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">General Ledger By Transaction</h2>
+                <h2 class="text-white py-2">Generate Inventory Costing</h2>
             </div>
         </div>
     </div>
     <div class="card-body p-4">
         <div class="border p-3">
-            <form asp-area="User" asp-controller="GeneralLedger" asp-action="DisplayByTransaction" target="_blank" onsubmit="return validateDate()">
+            <form asp-area="Mobility" asp-controller="Inventory" asp-action="InventoryCosting" method="get" onsubmit="return validateDate()">
                 <div class="form-floating py-2 col-12">
                     <input type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" name="dateFrom" id="dateFrom" class="form-control border-0 shadow" placeholder="" required />
                     <label class="ms-2">Date From<span class="required">*</span></label>
@@ -23,15 +23,28 @@
                     <input type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" name="dateTo" id="dateTo" class="form-control border-0 shadow" placeholder="" required />
                     <label class="ms-2">Date To<span class="required">*</span></label>
                 </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Product List<span class="required">*</span></label>
+                    <select asp-for="ProductCode" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected disabled>Select product</option>
+                    </select>
+                    <span asp-validation-for="ProductCode" class="text-danger"></span>
+                </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
                         <button type="submit" class="btn btn-primary form-control">Generate</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="User" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary border form-control">Back to Homepage</a>
+                        <a asp-area="Mobility" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary border form-control">Back to Homepage</a>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

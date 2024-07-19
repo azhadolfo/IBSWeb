@@ -7,7 +7,7 @@ using System.Globalization;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
-    public class POSalesRepository : Repository<POSales>, IPOSalesRepository
+    public class POSalesRepository : Repository<MobilityPOSales>, IPOSalesRepository
     {
         private ApplicationDbContext _db;
 
@@ -47,11 +47,11 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task RecordThePurchaseOrder(IEnumerable<MobilityPoSalesRaw> poSales, CancellationToken cancellationToken = default)
         {
-            var purchaseOrders = new List<POSales>();
+            var purchaseOrders = new List<MobilityPOSales>();
 
             foreach (var po in poSales)
             {
-                purchaseOrders.Add(new POSales
+                purchaseOrders.Add(new MobilityPOSales
                 {
                     POSalesNo = Guid.NewGuid().ToString(),
                     ShiftRecId = po.shiftrecid,

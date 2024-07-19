@@ -1,13 +1,13 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.Models;
-using IBS.Models.ViewModels;
+using IBS.Models.Mobility;
+using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 
-namespace IBS.DataAccess.Repository
+namespace IBS.DataAccess.Repository.Mobility
 {
-    public class InventoryRepository : Repository<Inventory>, IInventoryRepository
+    public class InventoryRepository : Repository<MobilityInventory>, IInventoryRepository
     {
         private ApplicationDbContext _db;
 
@@ -16,7 +16,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task CalculateTheBeginningInventory(Inventory model, CancellationToken cancellationToken = default)
+        public async Task CalculateTheBeginningInventory(MobilityInventory model, CancellationToken cancellationToken = default)
         {
             if (model.Quantity <= 0 || model.UnitCost <= 0)
             {
@@ -43,7 +43,7 @@ namespace IBS.DataAccess.Repository
             #region--General Ledger Entries
 
             var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(model.ProductCode);
-            var journals = new List<GeneralLedger>
+            var journals = new List<MobilityGeneralLedger>
             {
                 new() {
                     TransactionDate = model.Date,
@@ -80,7 +80,7 @@ namespace IBS.DataAccess.Repository
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<Inventory> GetLastInventoryAsync(string productCode, string stationCode, CancellationToken cancellationToken = default)
+        public async Task<MobilityInventory> GetLastInventoryAsync(string productCode, string stationCode, CancellationToken cancellationToken = default)
         {
             return await _db.Inventories
                 .Where(i => i.ProductCode == productCode && i.StationCode == stationCode)
@@ -89,14 +89,14 @@ namespace IBS.DataAccess.Repository
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task CalculateTheActualSounding(Inventory model, ActualSoundingViewModel viewModel, CancellationToken cancellationToken = default)
+        public async Task CalculateTheActualSounding(MobilityInventory model, ActualSoundingViewModel viewModel, CancellationToken cancellationToken = default)
         {
             decimal totalCost = viewModel.Variance * model.UnitCostAverage;
             decimal runningCost = model.RunningCost + totalCost;
             decimal inventoryBalance = model.InventoryBalance + viewModel.Variance;
             decimal unitCostAverage = runningCost / inventoryBalance;
 
-            Inventory inventory = new()
+            MobilityInventory inventory = new()
             {
                 Particulars = viewModel.Variance > 0 ? "Actual Sounding (Gain)" : "Actual Sounding (Loss)",
                 Date = viewModel.Date,
@@ -120,7 +120,7 @@ namespace IBS.DataAccess.Repository
 
             var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(inventory.ProductCode);
 
-            var journals = new List<GeneralLedger>
+            var journals = new List<MobilityGeneralLedger>
             {
                 new() {
                     TransactionDate = inventory.Date,

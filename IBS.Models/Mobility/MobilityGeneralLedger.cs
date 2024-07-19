@@ -2,9 +2,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace IBS.Models
+namespace IBS.Models.Mobility
 {
-    public class GeneralLedger
+    public class MobilityGeneralLedger
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

@@ -2,7 +2,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Dtos;
-using IBS.Models;
 using IBS.Models.Mobility;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
@@ -84,11 +83,11 @@ namespace IBS.DataAccess.Repository.Mobility
                 fuelPurchase.PostedBy = postedBy;
                 fuelPurchase.PostedDate = DateTime.Now;
 
-                List<GeneralLedger> journals = new();
+                List<MobilityGeneralLedger> journals = new();
 
                 var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(product.ProductCode);
 
-                journals.Add(new GeneralLedger
+                journals.Add(new MobilityGeneralLedger
                 {
                     TransactionDate = fuelPurchase.ShiftDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
@@ -102,7 +101,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     JournalReference = nameof(JournalType.Purchase)
                 });
 
-                journals.Add(new GeneralLedger
+                journals.Add(new MobilityGeneralLedger
                 {
                     TransactionDate = fuelPurchase.ShiftDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
@@ -115,7 +114,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     JournalReference = nameof(JournalType.Purchase)
                 });
 
-                journals.Add(new GeneralLedger
+                journals.Add(new MobilityGeneralLedger
                 {
                     TransactionDate = fuelPurchase.ShiftDate,
                     Reference = fuelPurchase.FuelPurchaseNo,
@@ -133,7 +132,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 decimal inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
                 decimal unitCostAverage = runningCost / inventoryBalance;
 
-                var inventory = new Inventory
+                var inventory = new MobilityInventory
                 {
                     Particulars = nameof(JournalType.Purchase),
                     Date = fuelPurchase.ShiftDate,
