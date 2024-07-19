@@ -132,7 +132,7 @@ namespace IBS.DataAccess.Repository.Mobility
                             TransactionCount = fuel.TransactionCount,
                             Price = fuel.Price,
                             Sale = fuel.Sale,
-                            Value = Math.Round(fuel.Liters * fuel.Price, 4)
+                            Value = fuel.Calibration == 0 ? Math.Round(fuel.Liters * fuel.Price, 4) : Math.Round((fuel.Liters - fuel.Calibration) * fuel.Price, 4)
                         };
 
                         if (previousClosing != 0 && !string.IsNullOrEmpty(previousNo) && previousClosing != fuel.Opening)
