@@ -17,7 +17,7 @@
             <div class="col-6">
             </div>
             <div class="col-6 text-end">
-                <a asp-area="User" asp-controller="Station" asp-action="Create" class="btn btn-primary">
+                <a asp-area="Mobility" asp-controller="Station" asp-action="Create" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Create New Station
                 </a>
             </div>
@@ -59,18 +59,18 @@
                         </td>
                         <td>
                             <div class="w-100 btn-group" role="group">
-                                <a asp-area="User" asp-controller="Station" asp-action="Edit" asp-route-id="@obj.StationId" class="btn btn-primary mx-2">
+                                <a asp-area="Mobility" asp-controller="Station" asp-action="Edit" asp-route-id="@obj.StationId" class="btn btn-primary mx-2">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
                                 @if (obj.IsActive)
                                 {
-                                    <a asp-area="User" asp-controller="Station" asp-action="Deactivate" asp-route-id="@obj.StationId" class="btn btn-danger mx-2">
+                                    <a asp-area="Mobility" asp-controller="Station" asp-action="Deactivate" asp-route-id="@obj.StationId" class="btn btn-danger mx-2">
                                         <i class="bi bi-person-fill-slash"></i> Deactivate
                                     </a>
                                 }
                                 else
                                 {
-                                    <a asp-area="User" asp-controller="Station" asp-action="Activate" asp-route-id="@obj.StationId" class="btn btn-success mx-2">
+                                    <a asp-area="Mobility" asp-controller="Station" asp-action="Activate" asp-route-id="@obj.StationId" class="btn btn-success mx-2">
                                         <i class="bi bi-person-fill-check"></i> Activate
                                     </a>
                                 }

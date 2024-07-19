@@ -337,7 +337,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         ProductCode = product.Key,
                         JournalReference = nameof(JournalType.Sales),
                         IsValidated = true
-                    }); ;
+                    });
 
                     journals.Add(new MobilityGeneralLedger
                     {
