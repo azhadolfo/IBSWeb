@@ -1,12 +1,12 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
-using IBS.Models.MasterFile;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MasterFile
 {
-    public class CustomerRepository : Repository<Customer>, ICustomerRepository
+    public class CustomerRepository : Repository<FilprideCustomer>, ICustomerRepository
     {
         private ApplicationDbContext _db;
 
@@ -17,8 +17,8 @@ namespace IBS.DataAccess.Repository.MasterFile
 
         public async Task<string> GenerateCodeAsync(string customerType, CancellationToken cancellationToken = default)
         {
-            Customer? lastCustomer = await _db
-                .Customers
+            FilprideCustomer? lastCustomer = await _db
+                .FilprideCustomers
                 .Where(c => c.CustomerType == customerType)
                 .OrderBy(c => c.CustomerId)
                 .LastOrDefaultAsync(cancellationToken);
@@ -51,13 +51,13 @@ namespace IBS.DataAccess.Repository.MasterFile
 
         public async Task<bool> IsTinNoExistAsync(string tin, CancellationToken cancellationToken = default)
         {
-            return await _db.Customers
+            return await _db.FilprideCustomers
                 .AnyAsync(c => c.CustomerTin == tin, cancellationToken);
         }
 
-        public async Task UpdateAsync(Customer model, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(FilprideCustomer model, CancellationToken cancellationToken = default)
         {
-            Customer existingCustomer = await _db.Customers
+            FilprideCustomer existingCustomer = await _db.FilprideCustomers
                 .FindAsync(model.CustomerId, cancellationToken) ?? throw new InvalidOperationException($"Customer with id '{model.CustomerId}' not found.");
 
             existingCustomer.CustomerName = model.CustomerName;

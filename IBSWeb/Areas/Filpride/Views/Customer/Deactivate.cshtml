@@ -1,16 +1,15 @@
-﻿@using IBS.Models.MasterFile
-@model Customer
+﻿@model FilprideCustomer
 @using IBS.Utility
 
 @{
-    ViewData["Title"] = "Activate Customer";
+    ViewData["Title"] = "Deactivate Customer";
 }
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Activate Customer</h2>
+                <h2 class="text-white py-2">Deactivate Customer</h2>
             </div>
         </div>
     </div>
@@ -19,19 +18,19 @@
             <input asp-for="CustomerId" hidden />
             <div class="border p-3">
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerName" class="form-control border-0 shadow" placeholder="" disabled/>
+                    <input asp-for="CustomerName" class="form-control border-0 shadow" placeholder="" disabled />
                     <label asp-for="CustomerName" class="ms-2"></label>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" disabled/>
+                    <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" disabled />
                     <label asp-for="CustomerAddress" class="ms-2"></label>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerTin" class="form-control border-0 shadow" placeholder="" disabled/>
+                    <input asp-for="CustomerTin" class="form-control border-0 shadow" placeholder="" disabled />
                     <label asp-for="CustomerTin" class="ms-2"></label>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="BusinessStyle" class="form-control border-0 shadow" placeholder="" disabled/>
+                    <input asp-for="BusinessStyle" class="form-control border-0 shadow" placeholder="" disabled />
                     <label asp-for="BusinessStyle" class="ms-2"></label>
                 </div>
                 <div class="form-group py-2 col-12">
@@ -65,17 +64,17 @@
                 </div>
                 <div class="form-check pt-2">
                     <label class="form-check-label">
-                        <input class="form-check-input" asp-for="WithHoldingVat" disabled/> @Html.DisplayNameFor(model => model.WithHoldingVat)
+                        <input class="form-check-input" asp-for="WithHoldingVat" disabled /> @Html.DisplayNameFor(model => model.WithHoldingVat)
                     </label>
                 </div>
                 <div class="form-check pb-2">
                     <label class="form-check-label">
-                        <input class="form-check-input" asp-for="WithHoldingTax" disabled/> @Html.DisplayNameFor(model => model.WithHoldingTax)
+                        <input class="form-check-input" asp-for="WithHoldingTax" disabled /> @Html.DisplayNameFor(model => model.WithHoldingTax)
                     </label>
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-success form-control">Activate</button>
+                        <button type="submit" class="btn btn-danger form-control">Deactivate</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="User" asp-controller="Customer" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>

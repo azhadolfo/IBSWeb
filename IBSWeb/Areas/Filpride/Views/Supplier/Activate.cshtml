@@ -1,16 +1,15 @@
-﻿@using IBS.Models.MasterFile
-@model Supplier
+﻿@model FilprideSupplier
 @using IBS.Utility
 
 @{
-    ViewData["Title"] = "Edit Supplier";
+    ViewData["Title"] = "Activate Supplier";
 }
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Edit Supplier</h2>
+                <h2 class="text-white py-2">Activate Supplier</h2>
             </div>
         </div>
     </div>
@@ -20,23 +19,22 @@
             <div class="border p-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="SupplierName" class="form-control border-0 shadow" placeholder="" />
+                    <input asp-for="SupplierName" class="form-control border-0 shadow" placeholder="" disabled readonly />
                     <label asp-for="SupplierName" class="ms-2"></label>
                     <span asp-validation-for="SupplierName" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="SupplierAddress" class="form-control border-0 shadow" placeholder="" />
+                    <input asp-for="SupplierAddress" class="form-control border-0 shadow" placeholder="" disabled readonly />
                     <label asp-for="SupplierAddress" class="ms-2"></label>
                     <span asp-validation-for="SupplierAddress" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="SupplierTin" class="form-control border-0 shadow" placeholder="" />
+                    <input asp-for="SupplierTin" class="form-control border-0 shadow" placeholder="" disabled readonly />
                     <label asp-for="SupplierTin" class="ms-2"></label>
                     <span asp-validation-for="SupplierTin" class="text-danger"></span>
                 </div>
                 <div class="form-group py-2 col-12">
-                    <label class="control-label">Supplier Terms</label>
-                    <select asp-for="SupplierTerms" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                    <select asp-for="SupplierTerms" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" disabled readonly>
                         <option value="" selected disabled>Select payment terms</option>
                         <option value="@SD.Terms_Cod">@SD.Terms_Cod</option>
                         <option value="@SD.Terms_7d">@SD.Terms_7d</option>
@@ -48,8 +46,7 @@
                     <span asp-validation-for="SupplierTerms" class="text-danger"></span>
                 </div>
                 <div class="form-group py-2 col-12">
-                    <label class="control-label">Vat Type</label>
-                    <select asp-for="VatType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                    <select asp-for="VatType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" disabled readonly>
                         <option value="" selected disabled>Select vat type</option>
                         <option value="@SD.VatType_Vatable">@SD.VatType_Vatable</option>
                         <option value="@SD.VatType_ZeroRated">@SD.VatType_ZeroRated</option>
@@ -58,8 +55,7 @@
                     <span asp-validation-for="VatType" class="text-danger"></span>
                 </div>
                 <div class="form-group py-2 col-12">
-                    <label class="control-label">Tax Type</label>
-                    <select asp-for="TaxType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                    <select asp-for="TaxType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" disabled readonly>
                         <option value="" selected disabled>Select tax type</option>
                         <option value="@SD.TaxType_WithTax">@SD.TaxType_WithTax</option>
                         <option value="@SD.TaxType_Exempt">@SD.TaxType_Exempt</option>
@@ -68,7 +64,7 @@
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control">Save</button>
+                        <button type="submit" class="btn btn-success form-control">Activate</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="User" asp-controller="Supplier" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>

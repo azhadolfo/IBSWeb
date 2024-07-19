@@ -1,15 +1,14 @@
-﻿@using IBS.Models.MasterFile
-@model IEnumerable<Station>
+﻿@model IEnumerable<FilprideSupplier>
 
 @{
-    ViewData["Title"] = "Station";
+    ViewData["Title"] = "Supplier";
 }
 
-<div class="card shadow border-0">
+<div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">STATION</h2>
+                <h2 class="text-white py-2">SUPPLIER</h2>
             </div>
         </div>
     </div>
@@ -18,8 +17,8 @@
             <div class="col-6">
             </div>
             <div class="col-6 text-end">
-                <a asp-area="User" asp-controller="Station" asp-action="Create" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create New Station
+                <a asp-area="User" asp-controller="Supplier" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create New Supplier
                 </a>
             </div>
         </div>
@@ -28,61 +27,64 @@
             <thead>
                 <tr>
                     <th>
-                        @Html.DisplayNameFor(model => model.StationCode)
+                        @Html.DisplayNameFor(model => model.SupplierCode)
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.PosCode)
+                        @Html.DisplayNameFor(model => model.SupplierName)
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.StationName)
+                        @Html.DisplayNameFor(model => model.SupplierAddress)
                     </th>
                     <th>
-                        @Html.DisplayNameFor(model => model.Initial)
+                        @Html.DisplayNameFor(model => model.SupplierTin)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.SupplierTerms)
                     </th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var obj in Model.OrderBy(u => u.StationCode))
+                @foreach (var obj in Model.OrderBy(u => u.SupplierCode))
                 {
                     <tr>
                         <td>
-                            @obj.StationCode
+                            @obj.SupplierCode
                         </td>
                         <td>
-                            @obj.PosCode
+                            @obj.SupplierName
                         </td>
                         <td>
-                            @obj.StationName
+                            @obj.SupplierAddress
                         </td>
                         <td>
-                            @obj.Initial
+                            @obj.SupplierTin
+                        </td>
+                        <td>
+                            @obj.SupplierTerms
                         </td>
                         <td>
                             <div class="w-100 btn-group" role="group">
-                                <a asp-area="User" asp-controller="Station" asp-action="Edit" asp-route-id="@obj.StationId" class="btn btn-primary mx-2">
+                                <a asp-area="User" asp-controller="Supplier" asp-action="Edit" asp-route-id="@obj.SupplierId" class="btn btn-primary mx-2">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
                                 @if (obj.IsActive)
                                 {
-                                    <a asp-area="User" asp-controller="Station" asp-action="Deactivate" asp-route-id="@obj.StationId" class="btn btn-danger mx-2">
+                                    <a asp-area="User" asp-controller="Supplier" asp-action="Deactivate" asp-route-id="@obj.SupplierId" class="btn btn-danger mx-2">
                                         <i class="bi bi-person-fill-slash"></i> Deactivate
                                     </a>
                                 }
                                 else
                                 {
-                                    <a asp-area="User" asp-controller="Station" asp-action="Activate" asp-route-id="@obj.StationId" class="btn btn-success mx-2">
+                                    <a asp-area="User" asp-controller="Supplier" asp-action="Activate" asp-route-id="@obj.SupplierId" class="btn btn-success mx-2">
                                         <i class="bi bi-person-fill-check"></i> Activate
                                     </a>
                                 }
-
                             </div>
                         </td>
                     </tr>
                 }
             </tbody>
-
         </table>
-
     </div>
 </div>

@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240719040244_RenameTheCustomerToFilprideCustomer")]
+    partial class RenameTheCustomerToFilprideCustomer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -838,87 +841,6 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_customers", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.MasterFile.FilprideSupplier", b =>
-                {
-                    b.Property<int>("SupplierId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("supplier_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SupplierId"));
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<string>("ProofOfRegistrationFilePath")
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("proof_of_registration_file_path");
-
-                    b.Property<string>("SupplierAddress")
-                        .IsRequired()
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("supplier_address");
-
-                    b.Property<string>("SupplierCode")
-                        .HasColumnType("varchar(7)")
-                        .HasColumnName("supplier_code");
-
-                    b.Property<string>("SupplierName")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("supplier_name");
-
-                    b.Property<string>("SupplierTerms")
-                        .IsRequired()
-                        .HasColumnType("varchar(3)")
-                        .HasColumnName("supplier_terms");
-
-                    b.Property<string>("SupplierTin")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("supplier_tin");
-
-                    b.Property<string>("TaxType")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("tax_type");
-
-                    b.Property<string>("VatType")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("vat_type");
-
-                    b.HasKey("SupplierId")
-                        .HasName("pk_filpride_suppliers");
-
-                    b.HasIndex("SupplierCode")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_suppliers_supplier_code");
-
-                    b.HasIndex("SupplierName")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_suppliers_supplier_name");
-
-                    b.ToTable("filpride_suppliers", (string)null);
-                });
-
             modelBuilder.Entity("IBS.Models.MasterFile.Hauler", b =>
                 {
                     b.Property<int>("HaulerId")
@@ -1105,6 +1027,87 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_products_product_name");
 
                     b.ToTable("products", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MasterFile.Supplier", b =>
+                {
+                    b.Property<int>("SupplierId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("supplier_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SupplierId"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("ProofOfRegistrationFilePath")
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("proof_of_registration_file_path");
+
+                    b.Property<string>("SupplierAddress")
+                        .IsRequired()
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("supplier_address");
+
+                    b.Property<string>("SupplierCode")
+                        .HasColumnType("varchar(7)")
+                        .HasColumnName("supplier_code");
+
+                    b.Property<string>("SupplierName")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("supplier_name");
+
+                    b.Property<string>("SupplierTerms")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("supplier_terms");
+
+                    b.Property<string>("SupplierTin")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("supplier_tin");
+
+                    b.Property<string>("TaxType")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("tax_type");
+
+                    b.Property<string>("VatType")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("vat_type");
+
+                    b.HasKey("SupplierId")
+                        .HasName("pk_suppliers");
+
+                    b.HasIndex("SupplierCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_suppliers_supplier_code");
+
+                    b.HasIndex("SupplierName")
+                        .IsUnique()
+                        .HasDatabaseName("ix_suppliers_supplier_name");
+
+                    b.ToTable("suppliers", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.LubeDelivery", b =>
@@ -3413,12 +3416,12 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_purchase_orders_products_product_id");
 
-                    b.HasOne("IBS.Models.MasterFile.FilprideSupplier", "Supplier")
+                    b.HasOne("IBS.Models.MasterFile.Supplier", "Supplier")
                         .WithMany()
                         .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_filpride_purchase_orders_filpride_suppliers_supplier_id");
+                        .HasConstraintName("fk_filpride_purchase_orders_suppliers_supplier_id");
 
                     b.Navigation("Product");
 

@@ -1,4 +1,4 @@
-﻿using IBS.Models.MasterFile;
+﻿using IBS.Models.Filpride.MasterFile;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -22,7 +22,7 @@ namespace IBS.Models.Filpride
         public int CustomerId { get; set; }
 
         [ForeignKey(nameof(CustomerId))]
-        public Customer? Customer { get; set; }
+        public FilprideCustomer? Customer { get; set; }
 
         #endregion
 

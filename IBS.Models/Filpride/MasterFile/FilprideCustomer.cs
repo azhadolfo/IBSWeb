@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace IBS.Models.MasterFile
+namespace IBS.Models.Filpride.MasterFile
 {
-    public class Customer
+    public class FilprideCustomer
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

@@ -223,7 +223,7 @@ namespace IBS.DataAccess.Repository.Mobility
         public IEnumerable<dynamic> GetSalesHeaderJoin(IEnumerable<MobilitySalesHeader> salesHeaders, CancellationToken cancellationToken = default)
         {
             return from header in salesHeaders
-                   join station in _db.Stations
+                   join station in _db.MobilityStations
                    on header.StationCode equals station.StationCode
                    select new
                    {
@@ -626,7 +626,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         private async Task CreateSalesHeaderForLubes(MobilityLube lube, decimal safeDrop, CancellationToken cancellationToken)
         {
-            var stationCode = await _db.Stations.FirstOrDefaultAsync(s => s.PosCode == lube.xSITECODE.ToString(), cancellationToken);
+            var stationCode = await _db.MobilityStations.FirstOrDefaultAsync(s => s.PosCode == lube.xSITECODE.ToString(), cancellationToken);
 
             var lubeSalesHeader = new MobilitySalesHeader
             {

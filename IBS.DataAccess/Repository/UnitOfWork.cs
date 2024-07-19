@@ -90,7 +90,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task<List<SelectListItem>> GetCustomerListAsync(CancellationToken cancellationToken = default)
         {
-            return await _db.Customers
+            return await _db.FilprideCustomers
                 .OrderBy(c => c.CustomerId)
                 .Where(c => c.IsActive)
                 .Select(c => new SelectListItem
@@ -129,7 +129,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task<List<SelectListItem>> GetStationListAsyncByCode(CancellationToken cancellationToken = default)
         {
-            return await _db.Stations
+            return await _db.MobilityStations
                 .OrderBy(s => s.StationId)
                 .Where(s => s.IsActive)
                 .Select(s => new SelectListItem
@@ -142,7 +142,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task<List<SelectListItem>> GetStationListAsyncById(CancellationToken cancellationToken = default)
         {
-            return await _db.Stations
+            return await _db.MobilityStations
                 .OrderBy(s => s.StationId)
                 .Where(s => s.IsActive)
                 .Select(s => new SelectListItem
@@ -181,7 +181,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task<List<SelectListItem>> GetSupplierListAsyncById(CancellationToken cancellationToken = default)
         {
-            return await _db.Suppliers
+            return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
                 .Where(s => s.IsActive)
                 .Select(s => new SelectListItem

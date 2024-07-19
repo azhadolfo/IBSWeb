@@ -84,7 +84,7 @@ namespace IBS.DataAccess.Repository.Mobility
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            var stations = await db.Stations.Where(s => s.StationCode == "S19").ToListAsync();
+            var stations = await db.MobilityStations.Where(s => s.StationCode == "S19").ToListAsync();
             int fuelsCount;
             int lubesCount;
             int safedropsCount;
@@ -222,7 +222,7 @@ namespace IBS.DataAccess.Repository.Mobility
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            var stations = await db.Stations.Where(s => s.StationCode == "S19").ToListAsync();
+            var stations = await db.MobilityStations.Where(s => s.StationCode == "S19").ToListAsync();
             int fuelsCount;
             int lubesCount;
             int poSalesCount;

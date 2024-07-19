@@ -22,8 +22,8 @@ namespace IBS.DataAccess.Repository.Mobility
         public IEnumerable<dynamic> GetLubePurchaseJoin(IEnumerable<MobilityLubePurchaseHeader> lubePurchases, CancellationToken cancellationToken = default)
         {
             return from lube in lubePurchases
-                   join station in _db.Stations on lube.StationCode equals station.StationCode
-                   join supplier in _db.Suppliers on lube.SupplierCode equals supplier.SupplierCode
+                   join station in _db.MobilityStations on lube.StationCode equals station.StationCode
+                   join supplier in _db.FilprideSuppliers on lube.SupplierCode equals supplier.SupplierCode
                    select new
                    {
                        lube.LubePurchaseHeaderId,

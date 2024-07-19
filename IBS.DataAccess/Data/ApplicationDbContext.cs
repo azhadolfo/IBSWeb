@@ -1,7 +1,9 @@
 ﻿using IBS.Models;
 using IBS.Models.Filpride;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
+using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -73,10 +75,10 @@ namespace IBS.DataAccess.Data
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
-        public DbSet<Customer> Customers { get; set; }
+        public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
         public DbSet<Product> Products { get; set; }
-        public DbSet<Supplier> Suppliers { get; set; }
-        public DbSet<Station> Stations { get; set; }
+        public DbSet<FilprideSupplier> FilprideSuppliers { get; set; }
+        public DbSet<MobilityStation> MobilityStations { get; set; }
         public DbSet<Hauler> Haulers { get; set; }
 
         #endregion --Master File Entities
@@ -97,7 +99,7 @@ namespace IBS.DataAccess.Data
             #region-- Master File
 
             // Customer
-            builder.Entity<Customer>(c =>
+            builder.Entity<FilprideCustomer>(c =>
             {
                 c.HasIndex(c => c.CustomerCode).IsUnique();
                 c.HasIndex(c => c.CustomerName);
@@ -118,7 +120,7 @@ namespace IBS.DataAccess.Data
             });
 
             // Station
-            builder.Entity<Station>(s =>
+            builder.Entity<MobilityStation>(s =>
             {
                 s.HasIndex(s => s.PosCode).IsUnique();
                 s.HasIndex(s => s.StationCode).IsUnique();
@@ -126,7 +128,7 @@ namespace IBS.DataAccess.Data
             });
 
             // Supplier
-            builder.Entity<Supplier>(s =>
+            builder.Entity<FilprideSupplier>(s =>
             {
                 s.HasIndex(s => s.SupplierCode).IsUnique();
                 s.HasIndex(s => s.SupplierName).IsUnique();

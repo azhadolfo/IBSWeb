@@ -1,13 +1,13 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.MasterFile;
-using Microsoft.AspNetCore.Authorization;
+using IBS.Models.Filpride.MasterFile;
+using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace IBSWeb.Areas.User.Controllers
+namespace IBSWeb.Areas.Filpride.Controllers
 {
-    [Area("User")]
-    [Authorize]
+    [Area(nameof(Filpride))]
+    [CompanyAuthorize(nameof(Filpride))]
     public class CustomerController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -21,12 +21,11 @@ namespace IBSWeb.Areas.User.Controllers
             _unitOfWork = unitOfWork;
             _logger = logger;
             _userManager = userManager;
-
         }
 
         public async Task<IActionResult> Index()
         {
-            IEnumerable<Customer> customer = await _unitOfWork.Customer
+            IEnumerable<FilprideCustomer> customer = await _unitOfWork.Customer
                 .GetAllAsync();
             return View(customer);
         }
@@ -38,7 +37,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Customer model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(FilprideCustomer model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
@@ -69,7 +68,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Customer customer = await _unitOfWork.Customer.GetAsync(c => c.CustomerId == id, cancellationToken);
+            FilprideCustomer customer = await _unitOfWork.Customer.GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
             {
@@ -80,7 +79,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Customer model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(FilprideCustomer model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
@@ -110,7 +109,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Customer customer = await _unitOfWork
+            FilprideCustomer customer = await _unitOfWork
                 .Customer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -130,7 +129,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Customer customer = await _unitOfWork
+            FilprideCustomer customer = await _unitOfWork
                 .Customer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -153,7 +152,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Customer customer = await _unitOfWork
+            FilprideCustomer customer = await _unitOfWork
                 .Customer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -173,7 +172,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Customer customer = await _unitOfWork
+            FilprideCustomer customer = await _unitOfWork
                 .Customer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 

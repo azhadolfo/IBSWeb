@@ -1,10 +1,10 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.MasterFile;
+using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Http;
 
 namespace IBS.DataAccess.Repository.MasterFile.IRepository
 {
-    public interface ISupplierRepository : IRepository<Supplier>
+    public interface ISupplierRepository : IRepository<FilprideSupplier>
     {
         Task<bool> IsTinNoExistAsync(string tin, CancellationToken cancellationToken = default);
 
@@ -14,7 +14,7 @@ namespace IBS.DataAccess.Repository.MasterFile.IRepository
 
         Task<string> SaveProofOfRegistration(IFormFile file, string localPath, CancellationToken cancellationToken = default);
 
-        Task UpdateAsync(Supplier model, CancellationToken cancellationToken = default);
+        Task UpdateAsync(FilprideSupplier model, CancellationToken cancellationToken = default);
 
     }
 }

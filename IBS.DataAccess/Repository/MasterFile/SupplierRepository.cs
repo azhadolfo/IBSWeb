@@ -1,12 +1,12 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
-using IBS.Models.MasterFile;
+using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MasterFile
 {
-    public class SupplierRepository : Repository<Supplier>, ISupplierRepository
+    public class SupplierRepository : Repository<FilprideSupplier>, ISupplierRepository
     {
         private ApplicationDbContext _db;
 
@@ -17,8 +17,8 @@ namespace IBS.DataAccess.Repository.MasterFile
 
         public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
         {
-            Supplier? lastSupplier = await _db
-                .Suppliers
+            FilprideSupplier? lastSupplier = await _db
+                .FilprideSuppliers
                 .OrderBy(s => s.SupplierId)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -41,13 +41,13 @@ namespace IBS.DataAccess.Repository.MasterFile
 
         public async Task<bool> IsSupplierExistAsync(string supplierName, CancellationToken cancellationToken = default)
         {
-            return await _db.Suppliers
+            return await _db.FilprideSuppliers
                 .AnyAsync(s => s.SupplierName == supplierName, cancellationToken);
         }
 
         public async Task<bool> IsTinNoExistAsync(string tin, CancellationToken cancellationToken = default)
         {
-            return await _db.Suppliers
+            return await _db.FilprideSuppliers
                 .AnyAsync(s => s.SupplierTin == tin, cancellationToken);
         }
 
@@ -69,9 +69,9 @@ namespace IBS.DataAccess.Repository.MasterFile
             return fileSavePath;
         }
 
-        public async Task UpdateAsync(Supplier model, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(FilprideSupplier model, CancellationToken cancellationToken = default)
         {
-            Supplier existingSupplier = await _db.Suppliers
+            FilprideSupplier existingSupplier = await _db.FilprideSuppliers
                 .FindAsync(model.SupplierId, cancellationToken) ?? throw new InvalidOperationException($"Supplier with id '{model.SupplierId}' not found.");
 
             existingSupplier.SupplierName = model.SupplierName;

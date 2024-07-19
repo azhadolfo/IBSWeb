@@ -21,7 +21,7 @@ namespace IBS.DataAccess.Repository.Mobility
         public IEnumerable<dynamic> GetFuelPurchaseJoin(IEnumerable<MobilityFuelPurchase> fuelPurchases, CancellationToken cancellationToken = default)
         {
             return from fuel in fuelPurchases
-                   join station in _db.Stations on fuel.StationCode equals station.StationCode
+                   join station in _db.MobilityStations on fuel.StationCode equals station.StationCode
                    join product in _db.Products on fuel.ProductCode equals product.ProductCode
                    select new
                    {

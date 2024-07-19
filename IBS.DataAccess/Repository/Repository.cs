@@ -1,8 +1,10 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
+using IBS.Models.Mobility.MasterFile;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -85,7 +87,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task<StationDto> MapStationToDTO(string stationCode, CancellationToken cancellationToken = default)
         {
-            return await _db.Set<Station>()
+            return await _db.Set<MobilityStation>()
                 .Where(s => s.StationCode == stationCode)
                 .Select(s => new StationDto
                 {
@@ -99,7 +101,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task<SupplierDto> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default)
         {
-            return await _db.Set<Supplier>()
+            return await _db.Set<FilprideSupplier>()
                 .Where(s => s.SupplierCode == supplierCode)
                 .Select(s => new SupplierDto
                 {
@@ -165,7 +167,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task<CustomerDto> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default)
         {
-            return await _db.Set<Customer>()
+            return await _db.Set<FilprideCustomer>()
                 .Where(c => c.CustomerId == customerId || c.CustomerCode == customerCode)
                 .Select(c => new CustomerDto
                 {

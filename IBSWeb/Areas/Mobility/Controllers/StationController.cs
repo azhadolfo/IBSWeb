@@ -1,13 +1,13 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.MasterFile;
-using Microsoft.AspNetCore.Authorization;
+using IBS.Models.Mobility.MasterFile;
+using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace IBSWeb.Areas.User.Controllers
+namespace IBSWeb.Areas.Mobility.Controllers
 {
-    [Area("User")]
-    [Authorize]
+    [Area(nameof(Mobility))]
+    [CompanyAuthorize(nameof(Mobility))]
     public class StationController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -25,7 +25,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index()
         {
-            IEnumerable<Station> stations = await _unitOfWork
+            IEnumerable<MobilityStation> stations = await _unitOfWork
                 .Station
                 .GetAllAsync();
             return View(stations);
@@ -38,7 +38,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Station model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(MobilityStation model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
@@ -79,7 +79,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Station station = await _unitOfWork
+            MobilityStation station = await _unitOfWork
                 .Station
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Station model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(MobilityStation model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
@@ -122,7 +122,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Station station = await _unitOfWork
+            MobilityStation station = await _unitOfWork
                 .Station
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
@@ -142,7 +142,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Station station = await _unitOfWork
+            MobilityStation station = await _unitOfWork
                 .Station
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
@@ -165,7 +165,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Station station = await _unitOfWork
+            MobilityStation station = await _unitOfWork
                 .Station
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
@@ -185,7 +185,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Station station = await _unitOfWork
+            MobilityStation station = await _unitOfWork
                 .Station
                 .GetAsync(c => c.StationId == id, cancellationToken);
 

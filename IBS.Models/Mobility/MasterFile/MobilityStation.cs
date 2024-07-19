@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace IBS.Models.MasterFile
+namespace IBS.Models.Mobility.MasterFile
 {
-    public class Station
+    public class MobilityStation
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

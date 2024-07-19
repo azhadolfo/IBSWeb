@@ -1,11 +1,13 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.MasterFile;
+using IBS.Models.Filpride.MasterFile;
+using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.User.Controllers
 {
-    [Area("User")]
+    [Area(nameof(Filpride))]
+    [CompanyAuthorize(nameof(Filpride))]
     public class HaulerController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

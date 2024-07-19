@@ -1,11 +1,11 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
-using IBS.Models.MasterFile;
+using IBS.Models.Mobility.MasterFile;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MasterFile
 {
-    public class StationRepository : Repository<Station>, IStationRepository
+    public class StationRepository : Repository<MobilityStation>, IStationRepository
     {
         private ApplicationDbContext _db;
 
@@ -22,25 +22,25 @@ namespace IBS.DataAccess.Repository.MasterFile
 
         public async Task<bool> IsPosCodeExistAsync(string posCode, CancellationToken cancellationToken = default)
         {
-            return await _db.Stations
+            return await _db.MobilityStations
                 .AnyAsync(s => s.PosCode == posCode, cancellationToken);
         }
 
         public async Task<bool> IsStationCodeExistAsync(string stationCode, CancellationToken cancellationToken = default)
         {
-            return await _db.Stations
+            return await _db.MobilityStations
                 .AnyAsync(s => s.StationCode == stationCode, cancellationToken);
         }
 
         public async Task<bool> IsStationNameExistAsync(string stationName, CancellationToken cancellationToken = default)
         {
-            return await _db.Stations
+            return await _db.MobilityStations
                 .AnyAsync(s => s.StationName == stationName, cancellationToken);
         }
 
-        public async Task UpdateAsync(Station model, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(MobilityStation model, CancellationToken cancellationToken = default)
         {
-            Station existingStation = await _db.Stations
+            MobilityStation existingStation = await _db.MobilityStations
                 .FindAsync(model.StationId, cancellationToken) ?? throw new InvalidOperationException($"Station with id '{model.StationId}' not found.");
 
             existingStation.PosCode = model.PosCode;

@@ -1,9 +1,9 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.MasterFile;
+using IBS.Models.Mobility.MasterFile;
 
 namespace IBS.DataAccess.Repository.MasterFile.IRepository
 {
-    public interface IStationRepository : IRepository<Station>
+    public interface IStationRepository : IRepository<MobilityStation>
     {
         Task<bool> IsStationCodeExistAsync(string stationCode, CancellationToken cancellationToken = default);
 
@@ -11,7 +11,7 @@ namespace IBS.DataAccess.Repository.MasterFile.IRepository
 
         Task<bool> IsPosCodeExistAsync(string posCode, CancellationToken cancellationToken = default);
 
-        Task UpdateAsync(Station model, CancellationToken cancellationToken = default);
+        Task UpdateAsync(MobilityStation model, CancellationToken cancellationToken = default);
 
         string GenerateFolderPath(string stationName);
     }

@@ -1,13 +1,13 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.MasterFile;
-using Microsoft.AspNetCore.Authorization;
+using IBS.Models.Filpride.MasterFile;
+using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace IBSWeb.Areas.User.Controllers
+namespace IBSWeb.Areas.Filpride.Controllers
 {
-    [Area("User")]
-    [Authorize]
+    [Area(nameof(Filpride))]
+    [CompanyAuthorize(nameof(Filpride))]
     public class SupplierController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -24,12 +24,11 @@ namespace IBSWeb.Areas.User.Controllers
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
             _userManager = userManager;
-
         }
 
         public async Task<IActionResult> Index()
         {
-            IEnumerable<Supplier> suppliers = await _unitOfWork.Supplier
+            IEnumerable<FilprideSupplier> suppliers = await _unitOfWork.Supplier
                 .GetAllAsync();
 
             return View(suppliers);
@@ -42,7 +41,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Supplier model, IFormFile? file, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(FilprideSupplier model, IFormFile? file, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
@@ -97,7 +96,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Supplier supplier = await _unitOfWork.Supplier.GetAsync(c => c.SupplierId == id, cancellationToken);
+            FilprideSupplier supplier = await _unitOfWork.Supplier.GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier != null)
             {
@@ -108,7 +107,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Supplier model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(FilprideSupplier model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
@@ -138,7 +137,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Supplier supplier = await _unitOfWork
+            FilprideSupplier supplier = await _unitOfWork
                 .Supplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
@@ -158,7 +157,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Supplier supplier = await _unitOfWork
+            FilprideSupplier supplier = await _unitOfWork
                 .Supplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
@@ -181,7 +180,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Supplier supplier = await _unitOfWork
+            FilprideSupplier supplier = await _unitOfWork
                 .Supplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
@@ -201,7 +200,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Supplier supplier = await _unitOfWork
+            FilprideSupplier supplier = await _unitOfWork
                 .Supplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
