@@ -63,7 +63,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 ProductDto product = await MapProductToDTO(fuelPurchase.ProductCode, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{fuelPurchase.ProductCode}' not found.");
 
                 var sortedInventory = _db
-                        .Inventories
+                        .MobilityInventories
                         .OrderBy(i => i.Date)
                         .Where(i => i.ProductCode == fuelPurchase.ProductCode && i.StationCode == fuelPurchase.StationCode)
                         .ToList();
@@ -177,7 +177,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         inventoryBalance = transaction.InventoryBalance;
                     }
 
-                    var journalEntries = await _db.GeneralLedgers
+                    var journalEntries = await _db.MobilityGeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
                                         (j.AccountNumber.StartsWith("50101") || j.AccountNumber.StartsWith("10104")))
                             .ToListAsync(cancellationToken);
@@ -205,15 +205,15 @@ namespace IBS.DataAccess.Repository.Mobility
                         }
                     }
 
-                    _db.GeneralLedgers.UpdateRange(journalEntries);
+                    _db.MobilityGeneralLedgers.UpdateRange(journalEntries);
                 }
 
-                _db.Inventories.UpdateRange(sortedInventory);
+                _db.MobilityInventories.UpdateRange(sortedInventory);
 
                 if (IsJournalEntriesBalanced(journals))
                 {
                     await _db.AddAsync(inventory, cancellationToken);
-                    await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
+                    await _db.MobilityGeneralLedgers.AddRangeAsync(journals, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                 }
                 else

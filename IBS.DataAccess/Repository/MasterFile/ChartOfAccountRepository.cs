@@ -59,7 +59,7 @@ namespace IBS.DataAccess.Repository.MasterFile
         public IEnumerable<ChartOfAccountDto> GetSummaryReportView(CancellationToken cancellationToken = default)
         {
             var query = from c in _db.ChartOfAccounts
-                        join gl in _db.GeneralLedgers on c.AccountNumber equals gl.AccountNumber into glGroup
+                        join gl in _db.MobilityGeneralLedgers on c.AccountNumber equals gl.AccountNumber into glGroup
                         from gl in glGroup.DefaultIfEmpty()
                         group new { c, gl } by new { c.Level, c.AccountNumber, c.AccountName, c.AccountType, c.Parent } into g
                         select new ChartOfAccountDto

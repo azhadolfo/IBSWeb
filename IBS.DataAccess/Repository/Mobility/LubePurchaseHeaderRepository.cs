@@ -112,7 +112,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 foreach (var lube in lubes.LubePurchaseDetails)
                 {
                     var sortedInventory = _db
-                        .Inventories
+                        .MobilityInventories
                         .OrderBy(i => i.Date)
                         .Where(i => i.ProductCode == lube.ProductCode && i.StationCode == lube.StationCode)
                         .ToList();
@@ -179,7 +179,7 @@ namespace IBS.DataAccess.Repository.Mobility
                             inventoryBalance = transaction.InventoryBalance;
                         }
 
-                        var journalEntries = await _db.GeneralLedgers
+                        var journalEntries = await _db.MobilityGeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
                                         (j.AccountNumber.StartsWith("50101") || j.AccountNumber.StartsWith("10104")))
                             .ToListAsync(cancellationToken);
@@ -207,16 +207,16 @@ namespace IBS.DataAccess.Repository.Mobility
                             }
                         }
 
-                        _db.GeneralLedgers.UpdateRange(journalEntries);
+                        _db.MobilityGeneralLedgers.UpdateRange(journalEntries);
                     }
 
-                    _db.Inventories.UpdateRange(sortedInventory);
+                    _db.MobilityInventories.UpdateRange(sortedInventory);
                 }
 
                 if (IsJournalEntriesBalanced(journals))
                 {
-                    await _db.Inventories.AddRangeAsync(inventories, cancellationToken);
-                    await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
+                    await _db.MobilityInventories.AddRangeAsync(inventories, cancellationToken);
+                    await _db.MobilityGeneralLedgers.AddRangeAsync(journals, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                 }
                 else

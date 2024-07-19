@@ -354,7 +354,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     });
 
                     var sortedInventory = _db
-                        .Inventories
+                        .MobilityInventories
                         .OrderBy(i => i.Date)
                         .Where(i => i.ProductCode == product.Key && i.StationCode == station.StationCode)
                         .ToList();
@@ -462,7 +462,7 @@ namespace IBS.DataAccess.Repository.Mobility
                             inventoryBalance = transaction.InventoryBalance;
                         }
 
-                        List<MobilityGeneralLedger> journalEntries = await _db.GeneralLedgers
+                        List<MobilityGeneralLedger> journalEntries = await _db.MobilityGeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
                                         (j.AccountNumber.StartsWith("50101") || j.AccountNumber.StartsWith("10104")))
                             .ToListAsync(cancellationToken);
@@ -490,10 +490,10 @@ namespace IBS.DataAccess.Repository.Mobility
                             }
                         }
 
-                        _db.GeneralLedgers.UpdateRange(journalEntries);
+                        _db.MobilityGeneralLedgers.UpdateRange(journalEntries);
                     }
 
-                    _db.Inventories.UpdateRange(sortedInventory);
+                    _db.MobilityInventories.UpdateRange(sortedInventory);
                 }
 
                 if (salesVM.Header.GainOrLoss != 0)
@@ -517,8 +517,8 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 if (IsJournalEntriesBalanced(journals))
                 {
-                    await _db.Inventories.AddRangeAsync(inventories, cancellationToken);
-                    await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
+                    await _db.MobilityInventories.AddRangeAsync(inventories, cancellationToken);
+                    await _db.MobilityGeneralLedgers.AddRangeAsync(journals, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                 }
                 else

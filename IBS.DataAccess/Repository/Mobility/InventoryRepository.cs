@@ -23,7 +23,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 throw new ArgumentException("Quantity and Unit Cost must be greater than zero.");
             }
 
-            if (await _db.Inventories.AnyAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode, cancellationToken))
+            if (await _db.MobilityInventories.AnyAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode, cancellationToken))
             {
                 throw new InvalidOperationException($"{model.ProductCode} in {model.StationCode} had already beginning inventory.");
             }
@@ -73,7 +73,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 }
             };
 
-            await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
+            await _db.MobilityGeneralLedgers.AddRangeAsync(journals, cancellationToken);
 
             #endregion
 
@@ -82,7 +82,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task<MobilityInventory> GetLastInventoryAsync(string productCode, string stationCode, CancellationToken cancellationToken = default)
         {
-            return await _db.Inventories
+            return await _db.MobilityInventories
                 .Where(i => i.ProductCode == productCode && i.StationCode == stationCode)
                 .OrderByDescending(i => i.Date)
                 .ThenByDescending(i => i.InventoryId)
@@ -150,7 +150,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 }
             };
 
-            await _db.GeneralLedgers.AddRangeAsync(journals, cancellationToken);
+            await _db.MobilityGeneralLedgers.AddRangeAsync(journals, cancellationToken);
 
             #endregion
 

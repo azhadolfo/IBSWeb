@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240719020305_RenameTheInventoriesToMobilityInventories")]
+    partial class RenameTheInventoriesToMobilityInventories
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1793,37 +1796,36 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("transaction_date");
 
-                    b.HasKey("GeneralLedgerId")
-                        .HasName("pk_mobility_general_ledgers");
+                    b.HasKey("GeneralLedgerId");
 
                     b.HasIndex("AccountNumber")
-                        .HasDatabaseName("ix_mobility_general_ledgers_account_number");
+                        .HasDatabaseName("ix_general_ledgers_account_number");
 
                     b.HasIndex("AccountTitle")
-                        .HasDatabaseName("ix_mobility_general_ledgers_account_title");
+                        .HasDatabaseName("ix_general_ledgers_account_title");
 
                     b.HasIndex("CustomerCode")
-                        .HasDatabaseName("ix_mobility_general_ledgers_customer_code");
+                        .HasDatabaseName("ix_general_ledgers_customer_code");
 
                     b.HasIndex("JournalReference")
-                        .HasDatabaseName("ix_mobility_general_ledgers_journal_reference");
+                        .HasDatabaseName("ix_general_ledgers_journal_reference");
 
                     b.HasIndex("ProductCode")
-                        .HasDatabaseName("ix_mobility_general_ledgers_product_code");
+                        .HasDatabaseName("ix_general_ledgers_product_code");
 
                     b.HasIndex("Reference")
-                        .HasDatabaseName("ix_mobility_general_ledgers_reference");
+                        .HasDatabaseName("ix_general_ledgers_reference");
 
                     b.HasIndex("StationCode")
-                        .HasDatabaseName("ix_mobility_general_ledgers_station_code");
+                        .HasDatabaseName("ix_general_ledgers_station_code");
 
                     b.HasIndex("SupplierCode")
-                        .HasDatabaseName("ix_mobility_general_ledgers_supplier_code");
+                        .HasDatabaseName("ix_general_ledgers_supplier_code");
 
                     b.HasIndex("TransactionDate")
-                        .HasDatabaseName("ix_mobility_general_ledgers_transaction_date");
+                        .HasDatabaseName("ix_general_ledgers_transaction_date");
 
-                    b.ToTable("mobility_general_ledgers", (string)null);
+                    b.ToTable("general_ledgers", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityInventory", b =>

@@ -60,12 +60,12 @@ namespace IBS.DataAccess.Data
         #endregion
 
         #region --Inventory Entity
-        public DbSet<MobilityInventory> Inventories { get; set; }
+        public DbSet<MobilityInventory> MobilityInventories { get; set; }
         #endregion
 
         #region --Book Entity
 
-        public DbSet<MobilityGeneralLedger> GeneralLedgers { get; set; }
+        public DbSet<MobilityGeneralLedger> MobilityGeneralLedgers { get; set; }
 
         #endregion
 
