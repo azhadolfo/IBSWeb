@@ -205,6 +205,7 @@ namespace IBS.DataAccess.Data
                 f.HasIndex(f => f.Shift);
                 f.HasIndex(f => f.ItemCode);
                 f.HasIndex(f => f.xPUMP);
+                f.HasIndex(f => f.xTicketID);
             });
 
             // Lube
@@ -212,6 +213,7 @@ namespace IBS.DataAccess.Data
             {
                 l.HasIndex(l => l.Cashier);
                 l.HasIndex(l => l.INV_DATE);
+                l.HasIndex(l => l.xTicketID);
             });
 
             // SafeDrop
@@ -219,6 +221,7 @@ namespace IBS.DataAccess.Data
             {
                 s.HasIndex(s => s.xONAME);
                 s.HasIndex(s => s.INV_DATE);
+                s.HasIndex(s => s.xTicketID);
             });
 
             // MobilitySalesHeader

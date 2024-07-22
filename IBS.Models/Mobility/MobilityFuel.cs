@@ -96,5 +96,7 @@ namespace IBS.Models.Mobility
         public int TransCount { get; set; }
 
         public bool IsProcessed { get; set; }
+
+        public string xTicketID { get; set; }
     }
 }

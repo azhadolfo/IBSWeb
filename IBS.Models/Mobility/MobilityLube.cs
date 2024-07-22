@@ -69,5 +69,7 @@ namespace IBS.Models.Mobility
         public DateOnly BusinessDate { get; set; }
 
         public bool IsProcessed { get; set; }
+
+        public string xTicketID { get; set; }
     }
 }

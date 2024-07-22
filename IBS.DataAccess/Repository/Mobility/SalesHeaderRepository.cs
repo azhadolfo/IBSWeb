@@ -354,12 +354,12 @@ namespace IBS.DataAccess.Repository.Mobility
                         IsValidated = true
                     });
 
-                    var sortedInventory = _db
+                    var sortedInventory = await _db
                         .MobilityInventories
+                        .Where(i => i.ProductCode == product.Key && i.StationCode == station.StationCode)
                         .OrderBy(i => i.Date)
                         .ThenBy(i => i.InventoryId)
-                        .Where(i => i.ProductCode == product.Key && i.StationCode == station.StationCode)
-                        .ToList();
+                        .ToListAsync(cancellationToken);
 
                     var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= salesVM.Header.Date);
                     if (lastIndex >= 0)
@@ -705,10 +705,11 @@ namespace IBS.DataAccess.Repository.Mobility
             int shift = 0;
             decimal price = 0;
             int pump = 0;
-            string itemCode = "";
+            string itemCode = string.Empty;
             int detailCount = 0;
             bool hasPoSales = false;
             int fuelsCount = 0;
+            string xTicketId = string.Empty;
 
             foreach (var record in records)
             {
@@ -716,9 +717,16 @@ namespace IBS.DataAccess.Repository.Mobility
                 {
                     hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
 
-                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
-                        ? record.INV_DATE.AddDays(-1)
-                        : record.INV_DATE;
+                    xTicketId = record.xTicketID;
+
+                    if (record.xTicketID == xTicketId && record.INV_DATE == date && date != default)
+                    {
+                        record.BusinessDate = date;
+                    }
+                    else
+                    {
+                        record.BusinessDate = record.INV_DATE;
+                    }
 
                     if (record.BusinessDate == date && record.Shift == shift && record.Price == price && record.xPUMP == pump && record.ItemCode == itemCode)
                     {
