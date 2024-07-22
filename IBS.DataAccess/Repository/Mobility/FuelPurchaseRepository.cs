@@ -65,6 +65,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 var sortedInventory = _db
                         .MobilityInventories
                         .OrderBy(i => i.Date)
+                        .ThenBy(i => i.InventoryId)
                         .Where(i => i.ProductCode == fuelPurchase.ProductCode && i.StationCode == fuelPurchase.StationCode)
                         .ToList();
 
