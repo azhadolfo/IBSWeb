@@ -2,6 +2,9 @@
 @model IEnumerable<ChartOfAccountDto>
 @{
     ViewData["Title"] = "Chart of Accounts Summary";
+    decimal totalDebit = Model.Sum(x => x.Debit);
+    decimal totalCredit = Model.Sum(x => x.Credit);
+    decimal totalBalance = totalDebit - totalCredit;
 }
 
 <h2><b>Summary</b></h2>
@@ -30,7 +33,7 @@
             </tr>
             @if (firstLevel.Children.Any(c => c.Balance != 0))
             {
-                foreach (var secondLevel in firstLevel.Children.Where(x => x.Balance != 0))
+                foreach (var secondLevel in firstLevel.Children.Where(x => x.Debit != 0 || x.Credit != 0))
                 {
                     <tr class="second-level" style="display: none;" onclick="toggleSubAccount(this)" title="Click to expand/collapse">
                         <td style="padding-left: 20px;">
@@ -44,7 +47,7 @@
                     </tr>
                     if (secondLevel.Children.Any(c => c.Balance != 0))
                     {
-                        foreach (var thirdLevel in secondLevel.Children.Where(x => x.Balance != 0))
+                        foreach (var thirdLevel in secondLevel.Children.Where(x => x.Debit != 0 || x.Credit != 0))
                         {
                             <tr class="third-level" style="display: none;" onclick="toggleSubAccount(this)" title="Click to expand/collapse">
                                 <td style="padding-left: 40px;">
@@ -58,7 +61,7 @@
                             </tr>
                             if (thirdLevel.Children.Any(c => c.Balance != 0))
                             {
-                                foreach (var fourthLevel in thirdLevel.Children.Where(x => x.Balance != 0))
+                                foreach (var fourthLevel in thirdLevel.Children.Where(x => x.Debit != 0 || x.Credit != 0))
                                 {
                                     <tr class="fourth-level" style="display: none;" title="Click to expand/collapse">
                                         <td style="padding-left: 60px;">
@@ -78,6 +81,14 @@
             }
         }
     </tbody>
+    <tfoot>
+        <tr>
+            <td><b>Grand Total</b></td>
+            <td><b>@totalDebit.ToString("N4")</b></td>
+            <td><b>@totalCredit.ToString("N4")</b></td>
+            <td><b>@totalBalance.ToString("N4")</b></td>
+        </tr>
+    </tfoot>
 </table>
 
 @section Scripts {

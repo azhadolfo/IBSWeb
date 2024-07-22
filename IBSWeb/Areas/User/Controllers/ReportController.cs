@@ -18,7 +18,7 @@ namespace IBSWeb.Areas.User.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        public IActionResult Index(CancellationToken cancellationToken)
+        public IActionResult TrialBalance(CancellationToken cancellationToken)
         {
             try
             {
