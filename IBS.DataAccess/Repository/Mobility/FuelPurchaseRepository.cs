@@ -62,12 +62,12 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 ProductDto product = await MapProductToDTO(fuelPurchase.ProductCode, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{fuelPurchase.ProductCode}' not found.");
 
-                var sortedInventory = _db
+                var sortedInventory = await _db
                         .MobilityInventories
+                        .Where(i => i.ProductCode == fuelPurchase.ProductCode && i.StationCode == fuelPurchase.StationCode)
                         .OrderBy(i => i.Date)
                         .ThenBy(i => i.InventoryId)
-                        .Where(i => i.ProductCode == fuelPurchase.ProductCode && i.StationCode == fuelPurchase.StationCode)
-                        .ToList();
+                        .ToListAsync(cancellationToken);
 
                 var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= fuelPurchase.ShiftDate);
                 if (lastIndex >= 0)
