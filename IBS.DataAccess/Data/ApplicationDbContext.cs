@@ -47,6 +47,16 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityLubePurchaseDetail> MobilityLubePurchaseDetails { get; set; }
         #endregion
 
+        #region --Inventory Entity
+        public DbSet<MobilityInventory> MobilityInventories { get; set; }
+        #endregion
+
+        #region --Book Entity
+
+        public DbSet<MobilityGeneralLedger> MobilityGeneralLedgers { get; set; }
+
+        #endregion
+
         #endregion
 
         #region--FILPRIDE
@@ -58,16 +68,6 @@ namespace IBS.DataAccess.Data
         public DbSet<FilprideCustomerOrderSlip> FilprideCustomerOrderSlips { get; set; }
 
         public DbSet<FilprideDeliveryReceipt> FilprideDeliveryReceipts { get; set; }
-
-        #endregion
-
-        #region --Inventory Entity
-        public DbSet<MobilityInventory> MobilityInventories { get; set; }
-        #endregion
-
-        #region --Book Entity
-
-        public DbSet<MobilityGeneralLedger> MobilityGeneralLedgers { get; set; }
 
         #endregion
 
@@ -163,6 +163,8 @@ namespace IBS.DataAccess.Data
                     g.HasIndex(g => g.SupplierCode);
                     g.HasIndex(g => g.CustomerCode);
                 });
+
+            builder.Entity<MobilityGeneralLedger>().ToTable("mobility_general_ledgers");
             #endregion
 
             #region--Inventory

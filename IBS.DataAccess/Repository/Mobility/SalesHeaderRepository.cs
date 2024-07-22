@@ -280,6 +280,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 var journals = new List<MobilityGeneralLedger>();
                 var inventories = new List<MobilityInventory>();
                 var cogsJournals = new List<MobilityGeneralLedger>();
+                var journalEntriesToUpdate = new List<MobilityGeneralLedger>();
 
                 journals.Add(new MobilityGeneralLedger
                 {
@@ -356,6 +357,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     var sortedInventory = _db
                         .MobilityInventories
                         .OrderBy(i => i.Date)
+                        .ThenBy(i => i.InventoryId)
                         .Where(i => i.ProductCode == product.Key && i.StationCode == station.StationCode)
                         .ToList();
 
@@ -371,7 +373,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     var previousInventory = sortedInventory.FirstOrDefault();
 
-                    decimal quantity = product.Sum(p => p.Liters);
+                    decimal quantity = product.Sum(p => p.Liters - p.Calibration);
 
                     if (quantity > previousInventory.InventoryBalance)
                     {
@@ -462,14 +464,14 @@ namespace IBS.DataAccess.Repository.Mobility
                             inventoryBalance = transaction.InventoryBalance;
                         }
 
-                        List<MobilityGeneralLedger> journalEntries = await _db.MobilityGeneralLedgers
+                        journalEntriesToUpdate = await _db.MobilityGeneralLedgers
                             .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
                                         (j.AccountNumber.StartsWith("50101") || j.AccountNumber.StartsWith("10104")))
                             .ToListAsync(cancellationToken);
 
-                        if (journalEntries.Count != 0)
+                        if (journalEntriesToUpdate.Count != 0)
                         {
-                            foreach (var journal in journalEntries)
+                            foreach (var journal in journalEntriesToUpdate)
                             {
                                 if (journal.Debit != 0)
                                 {
@@ -490,7 +492,8 @@ namespace IBS.DataAccess.Repository.Mobility
                             }
                         }
 
-                        _db.MobilityGeneralLedgers.UpdateRange(journalEntries);
+                        _db.MobilityGeneralLedgers.UpdateRange(journalEntriesToUpdate);
+                        await _db.SaveChangesAsync(cancellationToken);
                     }
 
                     _db.MobilityInventories.UpdateRange(sortedInventory);
