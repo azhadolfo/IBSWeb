@@ -192,6 +192,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return View(viewModel);
         }
 
+        [HttpGet]
         public async Task<IActionResult> GetLastInventory(string productCode, CancellationToken cancellationToken)
         {
             var user = await _userManager.GetUserAsync(User);

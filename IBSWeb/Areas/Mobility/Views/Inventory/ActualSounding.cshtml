@@ -65,45 +65,51 @@
     }
 
     <script>
-        $(document).ready(function () {
-            $('#ProductCode').change(function () {
-                var productCode = $(this).val();
-                if (productCode) {
-                    $.ajax({
-                        url: '@Url.Action("GetLastInventory", "Inventory", new { area = "Mobility" })',
-                        type: 'GET',
-                        data: { productCode: productCode },
-                        success: function (data) {
+    $(document).ready(function () {
+        $('#ProductCode').change(function () {
+            var productCode = $(this).val();
+            if (productCode) {
+                $.ajax({
+                    url: '@Url.Action("GetLastInventory", "Inventory", new { area = "Mobility" })',
+                    type: 'GET',
+                    data: { productCode: productCode },
+                    success: function (data) {
+                        if (data) {
                             $('#InventoryId').val(data.inventoryId);
                             $('#PerSystem').val(formatNumber(data.perBook));
-                            computeVariance();
+                        } else {
+                            $('#InventoryId').val('');
+                            $('#PerSystem').val('');
                         }
-                    });
-                }
-            });
-
-            $('#ActualVolume').on('input', function () {
-                computeVariance();
-            });
-
-            function computeVariance() {
-                var actualVolume = parseNumber($('#ActualVolume').val());
-                var perSystem = parseNumber($('#PerSystem').val());
-                var variance = actualVolume - perSystem;
-                $('#Variance').val(formatNumber(variance));
-                updateVarianceField(variance);
-            }
-
-            function updateVarianceField(variance) {
-                const varianceField = $('#Variance');
-                varianceField.val(formatNumber(variance));
-                if (variance < 0) {
-                    varianceField.addClass('negative');
-                } else {
-                    varianceField.removeClass('negative');
-                }
+                        computeVariance();
+                    }
+                });
             }
         });
+
+        $('#ActualVolume').on('input', function () {
+            computeVariance();
+        });
+
+        function computeVariance() {
+            var actualVolume = parseNumber($('#ActualVolume').val());
+            var perSystem = parseNumber($('#PerSystem').val());
+            var variance = actualVolume - perSystem;
+            $('#Variance').val(formatNumber(variance));
+            updateVarianceField(variance);
+        }
+
+        function updateVarianceField(variance) {
+            const varianceField = $('#Variance');
+            varianceField.val(formatNumber(variance));
+            if (variance < 0) {
+                varianceField.addClass('negative');
+            } else {
+                varianceField.removeClass('negative');
+            }
+        }
+    });
     </script>
+
 
 }
