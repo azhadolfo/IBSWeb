@@ -8,6 +8,37 @@
     .container {
         max-width: none;
     }
+
+    .table-responsive {
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+
+    table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .table-responsive, .table-responsive * {
+            visibility: visible;
+        }
+
+        .table-responsive {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+    }
 </style>
 
 <div class="mb-3 row">
@@ -68,7 +99,7 @@ else
 
 <div class="row mt-5">
     <div class="col-6 col-md-3">
-        <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+        <a onclick="printTable()" class="btn btn-primary form-control buttons">Print</a>
     </div>
     <div class="col-6 col-md-3">
         <a asp-area="Mobility" asp-controller="GeneralLedger" asp-action="GetJournal" class="btn btn-outline-primary border form-control buttons">Back</a>
@@ -77,31 +108,35 @@ else
 
 @section Scripts {
     <script>
-            $(document).ready(function () {
-                $('.dropdown-item').click(function () {
-                    var sortBy = $(this).data('sortby');
-                    $('.dropdown-item').find('.selected-sort').hide();
-                    $(this).find('.selected-sort').show();
-                    var sortedModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.TransactionDate)));
-                    sortedModel.sort(function (a, b) {
-                        var propA = a[sortBy] || '';
-                        var propB = b[sortBy] || '';
-                        return propA.localeCompare(propB);
-                    });
-                    $('#ledgerTable tbody').empty();
-                    $.each(sortedModel, function (index, value) {
-                        $('#ledgerTable tbody').append(`
-                                    <tr>
-                                        <td>${value.transactionDate}</td>
-                                        <td>${value.particular}</td>
-                                        <td>${value.accountNumber}</td>
-                                        <td>${value.accountTitle}</td>
-                                        <td class="text-end">${value.debit.toFixed(4)}</td>
-                                        <td class="text-end">${value.credit.toFixed(4)}</td>
-                                    </tr>
-                                `);
-                    });
+        $(document).ready(function () {
+            $('.dropdown-item').click(function () {
+                var sortBy = $(this).data('sortby');
+                $('.dropdown-item').find('.selected-sort').hide();
+                $(this).find('.selected-sort').show();
+                var sortedModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.TransactionDate)));
+                sortedModel.sort(function (a, b) {
+                    var propA = a[sortBy] || '';
+                    var propB = b[sortBy] || '';
+                    return propA.localeCompare(propB);
+                });
+                $('#ledgerTable tbody').empty();
+                $.each(sortedModel, function (index, value) {
+                    $('#ledgerTable tbody').append(`
+                                <tr>
+                                    <td>${value.transactionDate}</td>
+                                    <td>${value.particular}</td>
+                                    <td>${value.accountNumber}</td>
+                                    <td>${value.accountTitle}</td>
+                                    <td class="text-end">${value.debit.toFixed(4)}</td>
+                                    <td class="text-end">${value.credit.toFixed(4)}</td>
+                                </tr>
+                            `);
                 });
             });
+        });
+
+        function printTable() {
+            window.print();
+        }
     </script>
 }

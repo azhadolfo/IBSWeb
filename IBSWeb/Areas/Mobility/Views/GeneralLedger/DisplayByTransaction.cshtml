@@ -8,6 +8,37 @@
     .container {
         max-width: none;
     }
+
+    .table-responsive {
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+
+    table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .table-responsive, .table-responsive * {
+            visibility: visible;
+        }
+
+        .table-responsive {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+    }
 </style>
 
 <div class="mb-3 row">
@@ -70,7 +101,7 @@ else
 
 <div class="row mt-5">
     <div class="col-6 col-md-3">
-        <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+        <a onclick="printTable()" class="btn btn-primary form-control buttons">Print</a>
     </div>
     <div class="col-6 col-md-3">
         <a asp-area="Mobility" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to Homepage</a>
@@ -107,5 +138,9 @@ else
                 });
             });
         });
+
+        function printTable() {
+            window.print();
+        }
     </script>
 }

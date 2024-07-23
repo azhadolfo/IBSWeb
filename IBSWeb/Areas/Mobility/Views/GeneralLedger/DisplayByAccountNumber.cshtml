@@ -17,9 +17,47 @@
     .container {
         max-width: none;
     }
+
+    .table-responsive {
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+
+    table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .print-header, .table-responsive, .table-responsive * {
+            visibility: visible;
+        }
+
+        .print-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .table-responsive {
+            position: absolute;
+            top: 0; /* Adjust this value based on your header's height */
+            left: 0;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+    }
 </style>
 
-<div class="mb-3 row">
+<div class="mb-3 row print-header">
     <div class="col-11">
         <h5>GENERAL LEDGER BY ACCOUNT NUMBER</h5>
         <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
@@ -59,7 +97,6 @@
 
                     foreach (var journal in journals.OrderBy(j => j.TransactionDate))
                     {
-
                         if (balance != 0)
                         {
                             if (journal.NormalBalance == nameof(NormalBalance.Debit))
@@ -95,13 +132,11 @@
                         </tr>
                     }
                     <tr class="table-primary">
-
                         @{
                             debit = journals.Sum(j => j.Debit);
                             credit = journals.Sum(j => j.Credit);
-                            balance = debit - @credit;
+                            balance = debit - credit;
                         }
-
                         <td colspan="12" class="text-center"> Total @journals.Key</td>
                         <td class="text-end">@debit.ToString(currencyFormat)</td>
                         <td class="text-end">@credit.ToString(currencyFormat)</td>
@@ -110,13 +145,11 @@
                 }
 
                 <tr style="border-top: double">
-
                     @{
                         debit = Model.Sum(j => j.Debit);
                         credit = Model.Sum(j => j.Credit);
                         balance = debit - credit;
                     }
-
                     <td colspan="12" class="text-center">TOTAL</td>
                     <td class="text-end">@debit.ToString(currencyFormat)</td>
                     <td class="text-end">@credit.ToString(currencyFormat)</td>
@@ -133,9 +166,17 @@ else
 
 <div class="row mt-5">
     <div class="col-6 col-md-3">
-        <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+        <a onclick="printTable()" class="btn btn-primary form-control buttons">Print</a>
     </div>
     <div class="col-6 col-md-3">
         <a asp-area="Mobility" asp-controller="GeneralLedger" asp-action="GetAccountNo" class="btn btn-outline-primary border form-control buttons">Back</a>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function printTable() {
+            window.print();
+        }
+    </script>
+}

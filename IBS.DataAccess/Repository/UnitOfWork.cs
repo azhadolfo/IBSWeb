@@ -157,7 +157,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.ChartOfAccounts
                 .OrderBy(c => c.AccountId)
-                .Where(c => c.Level == 3)
+                .Where(c => c.Level == 4)
                 .Select(c => new SelectListItem
                 {
                     Value = c.AccountId.ToString(),
@@ -170,7 +170,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.ChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
-                .Where(c => c.Level == 3)
+                .Where(c => c.Level == 4)
                 .Select(c => new SelectListItem
                 {
                     Value = c.AccountNumber,

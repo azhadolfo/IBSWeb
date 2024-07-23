@@ -9,8 +9,58 @@
         max-width: none;
     }
 
-    @@page {
-        size: landscape;
+    @@media print {
+        /* Hide all elements except for the table */
+        body * {
+            visibility: hidden;
+        }
+
+        /* Make table visible */
+        #inventory-table, #inventory-table * {
+            visibility: visible;
+        }
+
+        /* Set table to full width for printing */
+        #inventory-table {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+
+        /* Style adjustments for print */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    }
+
+    .table-container {
+        max-height: 70vh; /* Adjust the height as needed */
+        overflow-y: auto;
+    }
+
+    .table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa; /* Adjust background color as needed */
+        z-index: 10; /* Ensure the header stays above the table rows */
+    }
+
+    .table thead th, .table tbody td {
+        padding: 0.75rem;
+        vertical-align: middle;
     }
 </style>
 
@@ -21,7 +71,7 @@
 
 @if (Model.Any())
 {
-    <div id="inventory-table" class="table-responsive">
+    <div id="inventory-table" class="table-container">
         <table class="table">
             <thead>
                 <tr>
