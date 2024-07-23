@@ -3,7 +3,7 @@ using IBS.Models.Mobility;
 
 namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
-    public interface ISalesHeaderRepository : IRepository<MobilitySalesHeader>
+    public interface ISalesHeaderRepository : IRepository<MobilitySalesHeader>, ILogReportRepository
     {
         Task PostAsync(string id, string postedBy, string stationCode, CancellationToken cancellationToken = default);
 

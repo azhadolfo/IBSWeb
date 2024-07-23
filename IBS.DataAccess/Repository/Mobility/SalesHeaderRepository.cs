@@ -537,13 +537,14 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task UpdateAsync(MobilitySalesHeader model, CancellationToken cancellationToken = default)
         {
-            MobilitySalesHeader existingSalesHeader = await _db.MobilitySalesHeaders
-                .FirstOrDefaultAsync(sh => sh.SalesHeaderId == model.SalesHeaderId, cancellationToken) ?? throw new InvalidOperationException($"Sales header with id '{model.SalesHeaderId}' not found.");
+            var existingSalesHeader = await _db.MobilitySalesHeaders
+                .Include(sh => sh.SalesDetails)
+                .FirstOrDefaultAsync(sh => sh.SalesHeaderId == model.SalesHeaderId, cancellationToken)
+                ?? throw new InvalidOperationException($"Sales header with id '{model.SalesHeaderId}' not found.");
 
-            List<MobilitySalesDetail> existingSalesDetails = await _db.MobilitySalesDetails
-                .Where(sd => sd.SalesHeaderId == model.SalesHeaderId)
+            var existingSalesDetails = existingSalesHeader.SalesDetails
                 .OrderBy(sd => sd.SalesDetailId)
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             bool headerModified = false;
 
@@ -552,17 +553,64 @@ namespace IBS.DataAccess.Repository.Mobility
                 var existingDetail = existingSalesDetails[i];
                 var updatedDetail = model.SalesDetails[i];
 
-                if (existingDetail.Closing != updatedDetail.Closing || existingDetail.Opening != updatedDetail.Opening || existingDetail.Price != updatedDetail.Price)
+                var changes = new Dictionary<string, (string OriginalValue, string NewValue)>();
+
+                if (existingDetail.Closing != updatedDetail.Closing)
                 {
-                    headerModified = true;
-                    existingSalesHeader.IsModified = true;
+                    changes["Closing"] = (existingDetail.Closing.ToString(), updatedDetail.Closing.ToString());
                     existingDetail.Closing = updatedDetail.Closing;
+                }
+
+                if (existingDetail.Opening != updatedDetail.Opening)
+                {
+                    changes["Opening"] = (existingDetail.Opening.ToString(), updatedDetail.Opening.ToString());
                     existingDetail.Opening = updatedDetail.Opening;
+                }
+
+                if (existingDetail.Price != updatedDetail.Price)
+                {
+                    changes["Price"] = (existingDetail.Price.ToString(), updatedDetail.Price.ToString());
                     existingDetail.PreviousPrice = existingDetail.Price;
                     existingDetail.Price = updatedDetail.Price;
+                }
+
+                if (changes.Any())
+                {
+                    var salesDetailRepo = new SalesDetailRepository(_db);
+                    await salesDetailRepo.LogChangesAsync(existingDetail.SalesDetailId, changes, model.EditedBy, cancellationToken);
+
+                    headerModified = true;
+                    existingSalesHeader.IsModified = true;
                     existingDetail.Liters = existingDetail.Closing - existingDetail.Opening;
                     existingDetail.Value = existingDetail.Liters * existingDetail.Price;
                 }
+            }
+
+            var headerChanges = new Dictionary<string, (string OriginalValue, string NewValue)>();
+
+            if (existingSalesHeader.Particular != model.Particular)
+            {
+                headerChanges["Particular"] = (existingSalesHeader.Particular, model.Particular);
+                existingSalesHeader.Particular = model.Particular;
+            }
+
+            if (existingSalesHeader.ActualCashOnHand != model.ActualCashOnHand)
+            {
+                headerChanges["ActualCashOnHand"] = (existingSalesHeader.ActualCashOnHand.ToString(), model.ActualCashOnHand.ToString());
+                existingSalesHeader.ActualCashOnHand = model.ActualCashOnHand;
+                existingSalesHeader.GainOrLoss = model.ActualCashOnHand - existingSalesHeader.TotalSales;
+            }
+
+            if (existingSalesHeader.Date != model.Date)
+            {
+                headerChanges["Date"] = (existingSalesHeader.Date.ToString(), model.Date.ToString());
+                existingSalesHeader.Date = model.Date;
+            }
+
+            if (headerChanges.Any())
+            {
+                await LogChangesAsync(existingSalesHeader.SalesHeaderId, headerChanges, model.EditedBy, cancellationToken);
+                headerModified = true;
             }
 
             if (headerModified)
@@ -570,14 +618,6 @@ namespace IBS.DataAccess.Repository.Mobility
                 existingSalesHeader.FuelSalesTotalAmount = existingSalesDetails.Sum(d => d.Value);
                 existingSalesHeader.TotalSales = existingSalesHeader.FuelSalesTotalAmount + existingSalesHeader.LubesTotalAmount;
                 existingSalesHeader.GainOrLoss = existingSalesHeader.SafeDropTotalAmount - existingSalesHeader.TotalSales;
-            }
-
-            existingSalesHeader.Particular = model.Particular;
-
-            if (existingSalesHeader.ActualCashOnHand != model.ActualCashOnHand)
-            {
-                existingSalesHeader.ActualCashOnHand = model.ActualCashOnHand;
-                existingSalesHeader.GainOrLoss = model.ActualCashOnHand - existingSalesHeader.TotalSales;
             }
 
             if (_db.ChangeTracker.HasChanges())
@@ -876,5 +916,29 @@ namespace IBS.DataAccess.Repository.Mobility
 
             return await query.ToListAsync(cancellationToken);
         }
+
+        #region--Log
+
+        public async Task LogChangesAsync(int id, Dictionary<string, (string OriginalValue, string NewValue)> changes, string modifiedBy, CancellationToken cancellationToken)
+        {
+            foreach (var change in changes)
+            {
+                var logReport = new MobilityLogReport
+                {
+                    Id = Guid.NewGuid(),
+                    Reference = nameof(MobilitySalesHeader),
+                    ReferenceId = id,
+                    Description = change.Key,
+                    Module = "Cashier Report",
+                    OriginalValue = change.Value.OriginalValue,
+                    AdjustedValue = change.Value.NewValue,
+                    TimeStamp = DateTime.Now,
+                    ModifiedBy = modifiedBy
+                };
+                await _db.MobilityLogReports.AddAsync(logReport, cancellationToken);
+            }
+        }
+
+        #endregion
     }
 }

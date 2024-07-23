@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Edit Cashier Report";
+    Model.SalesDetails = Model.SalesDetails.OrderBy(x => x.Product).ToList();
 }
 
 <div class="card shadow border-0 mt-4">
@@ -18,7 +19,7 @@
             <div class="border p-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Date" class="form-control border-0 shadow" placeholder="" value="@Model.Date.ToString("MMM/dd/yyyy")" readonly tabindex="-1" />
+                    <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="Date" class="ms-2"></label>
                     <span asp-validation-for="Date" class="text-danger"></span>
                 </div>
@@ -96,4 +97,10 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var actualCashOnHandInput = document.getElementById("ActualCashOnHand");
+            actualCashOnHandInput.value = parseNumber(actualCashOnHandInput.value);
+        });
+    </script>
 }

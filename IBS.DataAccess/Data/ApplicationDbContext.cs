@@ -57,6 +57,18 @@ namespace IBS.DataAccess.Data
 
         #endregion
 
+        #region--Master File
+
+        public DbSet<MobilityStation> MobilityStations { get; set; }
+
+        #endregion
+
+        #region--Log Report
+
+        public DbSet<MobilityLogReport> MobilityLogReports { get; set; }
+
+        #endregion
+
         #endregion
 
         #region--FILPRIDE
@@ -69,17 +81,23 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideDeliveryReceipt> FilprideDeliveryReceipts { get; set; }
 
+        #region--Master File
+
+        public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
+
+        public DbSet<FilprideSupplier> FilprideSuppliers { get; set; }
+
+        public DbSet<Hauler> Haulers { get; set; }
+
+        #endregion
+
         #endregion
 
         #region --Master File Entity
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
-        public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
         public DbSet<Product> Products { get; set; }
-        public DbSet<FilprideSupplier> FilprideSuppliers { get; set; }
-        public DbSet<MobilityStation> MobilityStations { get; set; }
-        public DbSet<Hauler> Haulers { get; set; }
 
         #endregion --Master File Entities
 
@@ -98,13 +116,6 @@ namespace IBS.DataAccess.Data
 
             #region-- Master File
 
-            // Customer
-            builder.Entity<FilprideCustomer>(c =>
-            {
-                c.HasIndex(c => c.CustomerCode).IsUnique();
-                c.HasIndex(c => c.CustomerName);
-            });
-
             // Company
             builder.Entity<Company>(c =>
             {
@@ -119,27 +130,6 @@ namespace IBS.DataAccess.Data
                 p.HasIndex(p => p.ProductName).IsUnique();
             });
 
-            // Station
-            builder.Entity<MobilityStation>(s =>
-            {
-                s.HasIndex(s => s.PosCode).IsUnique();
-                s.HasIndex(s => s.StationCode).IsUnique();
-                s.HasIndex(s => s.StationName).IsUnique();
-            });
-
-            // Supplier
-            builder.Entity<FilprideSupplier>(s =>
-            {
-                s.HasIndex(s => s.SupplierCode).IsUnique();
-                s.HasIndex(s => s.SupplierName).IsUnique();
-            });
-
-            builder.Entity<Hauler>(h =>
-            {
-                h.HasIndex(h => h.HaulerCode).IsUnique();
-                h.HasIndex(h => h.HaulerName).IsUnique();
-            });
-
             #endregion
 
             #region--Chart Of Account
@@ -148,32 +138,6 @@ namespace IBS.DataAccess.Data
                 coa.HasIndex(coa => coa.AccountNumber).IsUnique();
                 coa.HasIndex(coa => coa.AccountName);
             });
-            #endregion
-
-            #region--General Ledger
-            builder.Entity<MobilityGeneralLedger>(g =>
-                {
-                    g.HasIndex(g => g.TransactionDate);
-                    g.HasIndex(g => g.Reference);
-                    g.HasIndex(g => g.AccountNumber);
-                    g.HasIndex(g => g.AccountTitle);
-                    g.HasIndex(g => g.ProductCode);
-                    g.HasIndex(g => g.JournalReference);
-                    g.HasIndex(g => g.StationCode);
-                    g.HasIndex(g => g.SupplierCode);
-                    g.HasIndex(g => g.CustomerCode);
-                });
-
-            builder.Entity<MobilityGeneralLedger>().ToTable("mobility_general_ledgers");
-            #endregion
-
-            #region--Inventory
-            builder.Entity<MobilityInventory>(i =>
-               {
-                   i.HasIndex(i => i.ProductCode);
-                   i.HasIndex(i => i.StationCode);
-                   i.HasIndex(i => i.TransactionNo);
-               });
             #endregion
 
             #region--Views
@@ -311,6 +275,44 @@ namespace IBS.DataAccess.Data
 
             #endregion
 
+            #region--General Ledger
+            builder.Entity<MobilityGeneralLedger>(g =>
+            {
+                g.HasIndex(g => g.TransactionDate);
+                g.HasIndex(g => g.Reference);
+                g.HasIndex(g => g.AccountNumber);
+                g.HasIndex(g => g.AccountTitle);
+                g.HasIndex(g => g.ProductCode);
+                g.HasIndex(g => g.JournalReference);
+                g.HasIndex(g => g.StationCode);
+                g.HasIndex(g => g.SupplierCode);
+                g.HasIndex(g => g.CustomerCode);
+            });
+
+            builder.Entity<MobilityGeneralLedger>().ToTable("mobility_general_ledgers");
+            #endregion
+
+            #region-- Master File
+
+            // Station
+            builder.Entity<MobilityStation>(s =>
+            {
+                s.HasIndex(s => s.PosCode).IsUnique();
+                s.HasIndex(s => s.StationCode).IsUnique();
+                s.HasIndex(s => s.StationName).IsUnique();
+            });
+
+            #endregion
+
+            #region--Inventory
+            builder.Entity<MobilityInventory>(i =>
+            {
+                i.HasIndex(i => i.ProductCode);
+                i.HasIndex(i => i.StationCode);
+                i.HasIndex(i => i.TransactionNo);
+            });
+            #endregion
+
             #endregion
 
             #region--Filpride
@@ -387,6 +389,30 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(dr => dr.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
             });
+
+            #region-- Master File
+
+            // Customer
+            builder.Entity<FilprideCustomer>(c =>
+            {
+                c.HasIndex(c => c.CustomerCode).IsUnique();
+                c.HasIndex(c => c.CustomerName);
+            });
+
+            // Supplier
+            builder.Entity<FilprideSupplier>(s =>
+            {
+                s.HasIndex(s => s.SupplierCode).IsUnique();
+                s.HasIndex(s => s.SupplierName).IsUnique();
+            });
+
+            builder.Entity<Hauler>(h =>
+            {
+                h.HasIndex(h => h.HaulerCode).IsUnique();
+                h.HasIndex(h => h.HaulerName).IsUnique();
+            });
+
+            #endregion
 
             #endregion
         }

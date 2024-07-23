@@ -12,5 +12,25 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             _db = db;
         }
+
+        public async Task LogChangesAsync(int id, Dictionary<string, (string OriginalValue, string NewValue)> changes, string modifiedBy, CancellationToken cancellationToken = default)
+        {
+            foreach (var change in changes)
+            {
+                var logReport = new MobilityLogReport
+                {
+                    Id = Guid.NewGuid(),
+                    Reference = nameof(MobilitySalesDetail),
+                    ReferenceId = id,
+                    Description = change.Key,
+                    Module = "Cashier Report",
+                    OriginalValue = change.Value.OriginalValue,
+                    AdjustedValue = change.Value.NewValue,
+                    TimeStamp = DateTime.Now,
+                    ModifiedBy = modifiedBy
+                };
+                await _db.MobilityLogReports.AddAsync(logReport, cancellationToken);
+            }
+        }
     }
 }
