@@ -83,6 +83,10 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 fuelPurchase.PostedBy = postedBy;
                 fuelPurchase.PostedDate = DateTime.Now;
+                var grossAmount = fuelPurchase.Quantity * fuelPurchase.PurchasePrice;
+                var netOfVatPrice = ComputeNetOfVat(fuelPurchase.PurchasePrice);
+                var netOfVatAmount = ComputeNetOfVat(grossAmount);
+                var vatAmount = ComputeVatAmount(grossAmount);
 
                 List<MobilityGeneralLedger> journals = new();
 
@@ -95,7 +99,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = inventoryAcctNo,
                     AccountTitle = inventoryAcctTitle,
-                    Debit = fuelPurchase.Quantity * fuelPurchase.PurchasePrice / 1.12m,
+                    Debit = netOfVatAmount,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
                     ProductCode = fuelPurchase.ProductCode,
@@ -109,7 +113,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = "1010602",
                     AccountTitle = "Vat Input",
-                    Debit = fuelPurchase.Quantity * fuelPurchase.PurchasePrice / 1.12m * 0.12m,
+                    Debit = vatAmount,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
                     JournalReference = nameof(JournalType.Purchase)
@@ -128,7 +132,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     JournalReference = nameof(JournalType.Purchase)
                 });
 
-                decimal totalCost = fuelPurchase.Quantity * fuelPurchase.PurchasePrice;
+                decimal totalCost = fuelPurchase.Quantity * netOfVatPrice;
                 decimal runningCost = previousInventory.RunningCost + totalCost;
                 decimal inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
                 decimal unitCostAverage = runningCost / inventoryBalance;
@@ -141,7 +145,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     ProductCode = fuelPurchase.ProductCode,
                     StationCode = fuelPurchase.StationCode,
                     Quantity = fuelPurchase.Quantity,
-                    UnitCost = fuelPurchase.PurchasePrice,
+                    UnitCost = netOfVatPrice,
                     TotalCost = totalCost,
                     InventoryBalance = inventoryBalance,
                     RunningCost = runningCost,
