@@ -95,7 +95,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = inventoryAcctNo,
                     AccountTitle = inventoryAcctTitle,
-                    Debit = fuelPurchase.Quantity * fuelPurchase.SellingPrice / 1.12m,
+                    Debit = fuelPurchase.Quantity * fuelPurchase.PurchasePrice / 1.12m,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
                     ProductCode = fuelPurchase.ProductCode,
@@ -109,7 +109,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     Particular = $"{fuelPurchase.Quantity:N2} Lit {product.ProductName} @ {fuelPurchase.PurchasePrice:N2}, DR#{fuelPurchase.DrNo}",
                     AccountNumber = "1010602",
                     AccountTitle = "Vat Input",
-                    Debit = fuelPurchase.Quantity * fuelPurchase.SellingPrice / 1.12m * 0.12m,
+                    Debit = fuelPurchase.Quantity * fuelPurchase.PurchasePrice / 1.12m * 0.12m,
                     Credit = 0,
                     StationCode = fuelPurchase.StationCode,
                     JournalReference = nameof(JournalType.Purchase)
@@ -123,7 +123,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     AccountNumber = "2010101",
                     AccountTitle = "Accounts Payables - Trade",
                     Debit = 0,
-                    Credit = fuelPurchase.Quantity * fuelPurchase.SellingPrice,
+                    Credit = fuelPurchase.Quantity * fuelPurchase.PurchasePrice,
                     StationCode = fuelPurchase.StationCode,
                     JournalReference = nameof(JournalType.Purchase)
                 });

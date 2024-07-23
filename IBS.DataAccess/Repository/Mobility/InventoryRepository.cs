@@ -42,15 +42,15 @@ namespace IBS.DataAccess.Repository.Mobility
 
             #region--General Ledger Entries
 
-            var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(model.ProductCode);
+            var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.ProductCode);
             var journals = new List<MobilityGeneralLedger>
             {
                 new() {
                     TransactionDate = model.Date,
                     Reference = model.TransactionNo,
                     Particular = $"Beginning Inventory for {model.ProductCode}",
-                    AccountNumber = cogsAcctNo,
-                    AccountTitle = cogsAcctTitle,
+                    AccountNumber = inventoryAcctNo,
+                    AccountTitle = inventoryAcctTitle,
                     Debit = Math.Round(model.TotalCost, 4),
                     Credit = 0,
                     StationCode = model.StationCode,
