@@ -1,0 +1,173 @@
+﻿@model CustomerInvoicingViewModel
+
+@{
+    ViewData["Title"] = "Customer Invoicing";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Customer Invoicing</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <div class="form-group py-2 col-12">
+                <label class="control-label">DSR List<span class="required">*</span></label>
+                <select asp-for="SalesHeaderId" asp-items="@Model.DsrList" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <option value="" selected disabled>Select DSR</option>
+                </select>
+                <span asp-validation-for="SalesHeaderId" class="text-danger"></span>
+            </div>
+
+            <!-- For PO -->
+            <div class="form-check py-2 col-12">
+                <input asp-for="IncludePo" class="form-check-input" type="checkbox" />
+                <label asp-for="IncludePo" class="form-check-label">Include PO</label>
+            </div>
+            <div id="poFields" class="collapse">
+                @for (int i = 0; i < Model.CustomerPos.Count; i++)
+                {
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Customer List<span class="required">*</span></label>
+                        <select asp-for="@Model.CustomerPos[i].CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%" required>
+                        </select>
+                        <span asp-validation-for="@Model.CustomerPos[i].CustomerId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="@Model.CustomerPos[i].PoAmount" class="form-control border-0 shadow" placeholder="" min="0" required />
+                        <label asp-for="@Model.CustomerPos[i].PoAmount" class="ms-2">PO Amount</label>
+                        <span asp-validation-for="@Model.CustomerPos[i].PoAmount" class="text-danger"></span>
+                    </div>
+                }
+                <button type="button" id="addPoCustomer" class="btn btn-secondary">Add Customer PO</button>
+            </div>
+
+            <!-- For Lubes -->
+            <div class="form-check py-2 col-12">
+                <input asp-for="IncludeLubes" class="form-check-input" type="checkbox" />
+                <label asp-for="IncludeLubes" class="form-check-label">Include Lubes</label>
+            </div>
+            <div id="lubesFields" class="collapse">
+                @for (int i = 0; i < Model.ProductDetails.Count; i++)
+                {
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Product List<span class="required">*</span></label>
+                        <select asp-for="@Model.ProductDetails[i].LubesId" asp-items="@Model.Lubes" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        </select>
+                        <span asp-validation-for="@Model.ProductDetails[i].LubesId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="@Model.ProductDetails[i].Quantity" class="form-control border-0 shadow" placeholder="" min="0" />
+                        <label asp-for="@Model.ProductDetails[i].Quantity" class="ms-2">Quantity</label>
+                        <span asp-validation-for="@Model.ProductDetails[i].Quantity" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="@Model.ProductDetails[i].Price" class="form-control border-0 shadow" placeholder="" min="0" />
+                        <label asp-for="@Model.ProductDetails[i].Price" class="ms-2">Price</label>
+                        <span asp-validation-for="@Model.ProductDetails[i].Price" class="text-danger"></span>
+                    </div>
+                }
+                <button type="button" id="addProductDetail" class="btn btn-secondary">Add Product</button>
+            </div>
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control">Submit</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Mobility" asp-controller="CashierReport" asp-action="Index" class="btn btn-outline-primary border form-control ">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            toggleFields();
+            initializeSelect2();
+
+            $('input[name="IncludePo"]').change(function () {
+                toggleFields();
+            });
+
+            $('input[name="IncludeLubes"]').change(function () {
+                toggleFields();
+            });
+
+            function toggleFields() {
+                if ($('input[name="IncludePo"]').is(':checked')) {
+                    $('#poFields').show();
+                } else {
+                    $('#poFields').hide();
+                }
+
+                if ($('input[name="IncludeLubes"]').is(':checked')) {
+                    $('#lubesFields').show();
+                } else {
+                    $('#lubesFields').hide();
+                }
+            }
+
+            function initializeSelect2() {
+                $('.js-select2').select2({
+                    width: 'resolve'
+                });
+            }
+
+            $('#addPoCustomer').click(function () {
+                var newIndex = $('#poFields .form-group').length;
+                var customerSelect = `<div class="form-group py-2 col-12">
+                    <label class="control-label">Customer List<span class="required">*</span></label>
+                    <select name="CustomerPos[${newIndex}].CustomerId" class="form-select js-select2 border-0 shadow" style="width:100%" required>
+                        @foreach (var customer in Model.Customers)
+                        {
+                            <option value="@customer.Value">@customer.Text</option>
+                        }
+                    </select>
+                    <span class="text-danger"></span>
+                </div>`;
+                var poAmountInput = `<div class="form-floating py-2 col-12">
+                    <input name="CustomerPos[${newIndex}].PoAmount" class="form-control border-0 shadow" placeholder="" min="0" required />
+                    <label class="ms-2">PO Amount</label>
+                    <span class="text-danger"></span>
+                </div>`;
+                $('#poFields').append(customerSelect + poAmountInput);
+                initializeSelect2(); // Initialize select2 on the newly added elements
+            });
+
+            $('#addProductDetail').click(function () {
+                var newIndex = $('#lubesFields .form-group').length;
+                var productSelect = `<div class="form-group py-2 col-12">
+                    <label class="control-label">Product List<span class="required">*</span></label>
+                    <select name="ProductDetails[${newIndex}].LubesId" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        @foreach (var lube in Model.Lubes)
+                        {
+                            <option value="@lube.Value">@lube.Text</option>
+                        }
+                    </select>
+                    <span class="text-danger"></span>
+                </div>`;
+                var quantityInput = `<div class="form-floating py-2 col-12">
+                    <input name="ProductDetails[${newIndex}].Quantity" class="form-control border-0 shadow" placeholder="" min="0" />
+                    <label class="ms-2">Quantity</label>
+                    <span class="text-danger"></span>
+                </div>`;
+                var priceInput = `<div class="form-floating py-2 col-12">
+                    <input name="ProductDetails[${newIndex}].Price" class="form-control border-0 shadow" placeholder="" min="0" />
+                    <label class="ms-2">Price</label>
+                    <span class="text-danger"></span>
+                </div>`;
+                $('#lubesFields').append(productSelect + quantityInput + priceInput);
+                initializeSelect2(); // Initialize select2 on the newly added elements
+            });
+        });
+    </script>
+}

@@ -255,5 +255,47 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             return Json(formattedData);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> CustomerInvoicing(CancellationToken cancellationToken)
+        {
+            var model = new CustomerInvoicingViewModel
+            {
+                DsrList = await _unitOfWork.MobilitySalesHeader.GetDsrList(cancellationToken),
+                Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken),
+                Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken),
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CustomerInvoicing(CustomerInvoicingViewModel viewModel, CancellationToken cancellationToken)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    viewModel.User = _userManager.GetUserName(User);
+                    await _unitOfWork.MobilitySalesHeader.ProcessCustomerInvoicing(viewModel, cancellationToken);
+                    TempData["success"] = "Customer invoicing successfully added";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken);
+                    viewModel.Lubes = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
+                    viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetDsrList(cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return View(viewModel);
+                }
+            }
+
+            viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken);
+            viewModel.Lubes = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
+            viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetDsrList(cancellationToken);
+            TempData["error"] = "The submitted information is invalid.";
+            return View(viewModel);
+        }
     }
 }
