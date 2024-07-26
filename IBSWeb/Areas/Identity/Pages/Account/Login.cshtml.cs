@@ -109,7 +109,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
-            Stations = await _unitOfWork.GetStationListAsyncByCode();
+            Stations = await _unitOfWork.GetMobilityStationListAsyncByCode();
 
             ReturnUrl = returnUrl;
         }
@@ -169,7 +169,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                 }
                 else
                 {
-                    Stations = await _unitOfWork.GetStationListAsyncByCode();
+                    Stations = await _unitOfWork.GetMobilityStationListAsyncByCode();
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     return Page();
                 }

@@ -15,23 +15,21 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task SaveAsync(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetCustomerListAsync(CancellationToken cancellationToken = default);
-
         Task<List<SelectListItem>> GetProductListAsyncByCode(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetProductListAsyncById(CancellationToken cancellationToken = default);
-
-        Task<List<SelectListItem>> GetStationListAsyncByCode(CancellationToken cancellationToken = default);
-
-        Task<List<SelectListItem>> GetStationListAsyncById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetChartOfAccountListAsyncByNo(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetChartOfAccountListAsyncById(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetSupplierListAsyncById(CancellationToken cancellationToken = default);
-
         #region--Mobility
+
+        Task<List<SelectListItem>> GetFilprideCustomerListAsync(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetMobilityStationListAsyncByCode(CancellationToken cancellationToken = default);
 
         IFuelPurchaseRepository MobilityFuelPurchase { get; }
 
@@ -56,6 +54,8 @@ namespace IBS.DataAccess.Repository.IRepository
         #endregion
 
         #region--Filpride
+
+        Task<List<SelectListItem>> GetFilprideSupplierListAsyncById(CancellationToken cancellationToken = default);
 
         IPurchaseOrderRepository FilpridePurchaseOrder { get; }
         IReceivingReportRepository FilprideReceivingReport { get; }

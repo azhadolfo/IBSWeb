@@ -34,7 +34,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             DeliveryReceiptViewModel viewModel = new()
             {
-                Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken),
+                Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken),
                 CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken),
                 Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(cancellationToken)
             };
@@ -77,7 +77,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken);
                     viewModel.Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(cancellationToken);
                     TempData["error"] = ex.Message;
@@ -85,7 +85,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken);
             viewModel.Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
@@ -116,7 +116,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Date = existingRecord.Date,
                     InvoiceNo = existingRecord.InvoiceNo,
                     CustomerId = existingRecord.Customer.CustomerId,
-                    Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken),
+                    Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken),
                     CustomerAddress = existingRecord.Customer.CustomerAddress,
                     CustomerTin = existingRecord.Customer.CustomerTin,
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
@@ -159,7 +159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken);
                     viewModel.Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(cancellationToken);
                     TempData["error"] = ex.Message;
@@ -167,7 +167,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken);
             viewModel.Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";

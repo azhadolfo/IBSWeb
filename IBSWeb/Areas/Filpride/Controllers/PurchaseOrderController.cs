@@ -34,7 +34,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             PurchaseOrderViewModel viewModel = new()
             {
-                Suppliers = await _unitOfWork.GetSupplierListAsyncById(cancellationToken),
+                Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken),
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
             };
 
@@ -71,14 +71,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Suppliers = await _unitOfWork.GetSupplierListAsyncById(cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
                     viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
-            viewModel.Suppliers = await _unitOfWork.GetSupplierListAsyncById(cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
@@ -113,7 +113,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Quantity = existingRecord.Quantity,
                     UnitCost = existingRecord.UnitCost,
                     Remarks = existingRecord.Remarks,
-                    Suppliers = await _unitOfWork.GetSupplierListAsyncById(cancellationToken),
+                    Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken),
                     Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
                 };
 
@@ -141,14 +141,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Suppliers = await _unitOfWork.GetSupplierListAsyncById(cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
                     viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
-            viewModel.Suppliers = await _unitOfWork.GetSupplierListAsyncById(cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);

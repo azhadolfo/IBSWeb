@@ -35,7 +35,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ReceivingReportViewModel viewModel = new()
             {
                 DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
-                Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken),
+                Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken),
             };
 
             return View(viewModel);
@@ -101,14 +101,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
-                    viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
             viewModel.DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
-            viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -137,7 +137,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Date = existingRecord.Date,
                     DeliveryReceiptId = existingRecord.DeliveryReceiptId,
                     DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
-                    Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken),
+                    Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken),
                     CustomerId = existingRecord.CustomerId,
                     SupplierSiNo = existingRecord.SupplierSiNo,
                     SupplierSiDate = existingRecord.SupplierSiDate,
@@ -177,14 +177,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
-                    viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
             viewModel.DeliveryReceipts = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
-            viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }

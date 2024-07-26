@@ -88,7 +88,28 @@ namespace IBS.DataAccess.Repository
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetCustomerListAsync(CancellationToken cancellationToken = default)
+        public void Dispose() => _db.Dispose();
+
+        #region--Mobility
+
+        public async Task<List<SelectListItem>> GetMobilityStationListAsyncByCode(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityStations
+                .OrderBy(s => s.StationId)
+                .Where(s => s.IsActive)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.StationCode,
+                    Text = s.StationCode + " " + s.StationName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        #endregion
+
+        #region--Filpride
+
+        public async Task<List<SelectListItem>> GetFilprideCustomerListAsync(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideCustomers
                 .OrderBy(c => c.CustomerId)
@@ -100,6 +121,34 @@ namespace IBS.DataAccess.Repository
                 })
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityStations
+                .OrderBy(s => s.StationId)
+                .Where(s => s.IsActive)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.StationId.ToString(),
+                    Text = s.StationCode + " " + s.StationName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetFilprideSupplierListAsyncById(CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideSuppliers
+                .OrderBy(s => s.SupplierCode)
+                .Where(s => s.IsActive)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = s.SupplierCode + " " + s.SupplierName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        #endregion
 
         public async Task<List<SelectListItem>> GetProductListAsyncByCode(CancellationToken cancellationToken = default)
         {
@@ -123,32 +172,6 @@ namespace IBS.DataAccess.Repository
                 {
                     Value = p.ProductId.ToString(),
                     Text = p.ProductCode + " " + p.ProductName
-                })
-                .ToListAsync(cancellationToken);
-        }
-
-        public async Task<List<SelectListItem>> GetStationListAsyncByCode(CancellationToken cancellationToken = default)
-        {
-            return await _db.MobilityStations
-                .OrderBy(s => s.StationId)
-                .Where(s => s.IsActive)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.StationCode,
-                    Text = s.StationCode + " " + s.StationName
-                })
-                .ToListAsync(cancellationToken);
-        }
-
-        public async Task<List<SelectListItem>> GetStationListAsyncById(CancellationToken cancellationToken = default)
-        {
-            return await _db.MobilityStations
-                .OrderBy(s => s.StationId)
-                .Where(s => s.IsActive)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.StationId.ToString(),
-                    Text = s.StationCode + " " + s.StationName
                 })
                 .ToListAsync(cancellationToken);
         }
@@ -178,20 +201,5 @@ namespace IBS.DataAccess.Repository
                 })
                 .ToListAsync(cancellationToken);
         }
-
-        public async Task<List<SelectListItem>> GetSupplierListAsyncById(CancellationToken cancellationToken = default)
-        {
-            return await _db.FilprideSuppliers
-                .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.SupplierId.ToString(),
-                    Text = s.SupplierCode + " " + s.SupplierName
-                })
-                .ToListAsync(cancellationToken);
-        }
-
-        public void Dispose() => _db.Dispose();
     }
 }

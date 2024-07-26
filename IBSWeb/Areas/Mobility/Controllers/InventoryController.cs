@@ -30,7 +30,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             MobilityInventory? inventory = new()
             {
                 Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken),
-                Stations = await _unitOfWork.GetStationListAsyncByCode(cancellationToken)
+                Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
 
             return View(inventory);
@@ -66,7 +66,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             MobilityInventory? inventory = new()
             {
                 Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken),
-                Stations = await _unitOfWork.GetStationListAsyncByCode(cancellationToken)
+                Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
 
             return View(inventory);
@@ -94,7 +94,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
 
                 model.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
-                model.Stations = await _unitOfWork.GetStationListAsyncByCode(cancellationToken);
+                model.Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken);
 
                 return View(model);
             }
