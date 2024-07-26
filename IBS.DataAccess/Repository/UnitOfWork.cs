@@ -14,13 +14,11 @@ namespace IBS.DataAccess.Repository
     public class UnitOfWork : IUnitOfWork
     {
         private ApplicationDbContext _db;
-        public ICustomerRepository Customer { get; private set; }
+
         public IProductRepository Product { get; private set; }
         public ICompanyRepository Company { get; private set; }
-        public IStationRepository Station { get; private set; }
-        public ISupplierRepository Supplier { get; private set; }
+
         public IChartOfAccountRepository ChartOfAccount { get; private set; }
-        public IHaulerRepository Hauler { get; private set; }
 
         #region--Mobility
 
@@ -33,31 +31,29 @@ namespace IBS.DataAccess.Repository
         public IOfflineRepository MobilityOffline { get; private set; }
         public IGeneralLedgerRepository MobilityGeneralLedger { get; private set; }
         public IInventoryRepository MobilityInventory { get; private set; }
+        public IStationRepository MobilityStation { get; private set; }
 
         #endregion
 
         #region--Filpride
 
         public IPurchaseOrderRepository FilpridePurchaseOrder { get; private set; }
-
         public IReceivingReportRepository FilprideReceivingReport { get; private set; }
-
         public ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; private set; }
-
         public IDeliveryReceiptRepository FilprideDeliveryReceipt { get; private set; }
+        public ICustomerRepository FilprideCustomer { get; private set; }
+        public ISupplierRepository FilprideSupplier { get; private set; }
+        public IHaulerRepository FilprideHauler { get; private set; }
 
         #endregion
 
         public UnitOfWork(ApplicationDbContext db)
         {
             _db = db;
-            Customer = new CustomerRepository(_db);
+
             Product = new ProductRepository(_db);
             Company = new CompanyRepository(_db);
-            Station = new StationRepository(_db);
-            Supplier = new SupplierRepository(_db);
             ChartOfAccount = new ChartOfAccountRepository(_db);
-            Hauler = new HaulerRepository(_db);
 
             #region--Mobility
 
@@ -70,6 +66,7 @@ namespace IBS.DataAccess.Repository
             MobilityOffline = new OfflineRepository(_db);
             MobilityGeneralLedger = new GeneralLedgerRepository(_db);
             MobilityInventory = new InventoryRepository(_db);
+            MobilityStation = new StationRepository(_db);
 
             #endregion
 
@@ -79,6 +76,9 @@ namespace IBS.DataAccess.Repository
             FilprideReceivingReport = new ReceivingReportRepository(_db);
             FilprideCustomerOrderSlip = new CustomerOrderSlipRepository(_db);
             FilprideDeliveryReceipt = new DeliveryReceiptRepository(_db);
+            FilprideCustomer = new CustomerRepository(_db);
+            FilprideSupplier = new SupplierRepository(_db);
+            FilprideHauler = new HaulerRepository(_db);
 
             #endregion
         }

@@ -2,12 +2,14 @@
 using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
+using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
     [Area(nameof(Mobility))]
+    [CompanyAuthorize(nameof(Mobility))]
     public class GeneralLedgerController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

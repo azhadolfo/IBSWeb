@@ -26,7 +26,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Index()
         {
             IEnumerable<MobilityStation> stations = await _unitOfWork
-                .Station
+                .MobilityStation
                 .GetAllAsync();
             return View(stations);
         }
@@ -42,27 +42,27 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (await _unitOfWork.Station.IsPosCodeExistAsync(model.PosCode, cancellationToken))
+                if (await _unitOfWork.MobilityStation.IsPosCodeExistAsync(model.PosCode, cancellationToken))
                 {
                     ModelState.AddModelError("PosCode", "Station POS Code already exist.");
                     return View(model);
                 }
 
-                if (await _unitOfWork.Station.IsStationCodeExistAsync(model.StationCode, cancellationToken))
+                if (await _unitOfWork.MobilityStation.IsStationCodeExistAsync(model.StationCode, cancellationToken))
                 {
                     ModelState.AddModelError("StationCode", "Station Code already exist.");
                     return View(model);
                 }
 
-                if (await _unitOfWork.Station.IsStationNameExistAsync(model.StationName, cancellationToken))
+                if (await _unitOfWork.MobilityStation.IsStationNameExistAsync(model.StationName, cancellationToken))
                 {
                     ModelState.AddModelError("StationName", "Station Name already exist.");
                     return View(model);
                 }
 
-                model.FolderPath = _unitOfWork.Station.GenerateFolderPath(model.StationName);
+                model.FolderPath = _unitOfWork.MobilityStation.GenerateFolderPath(model.StationName);
                 model.CreatedBy = _userManager.GetUserName(User);
-                await _unitOfWork.Station.AddAsync(model, cancellationToken);
+                await _unitOfWork.MobilityStation.AddAsync(model, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Station created successfully";
                 return RedirectToAction(nameof(Index));
@@ -80,7 +80,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             MobilityStation station = await _unitOfWork
-                .Station
+                .MobilityStation
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
             if (station != null)
@@ -99,7 +99,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 try
                 {
                     model.EditedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.Station.UpdateAsync(model, cancellationToken);
+                    await _unitOfWork.MobilityStation.UpdateAsync(model, cancellationToken);
                     TempData["success"] = "Station updated successfully";
                     return RedirectToAction(nameof(Index));
                 }
@@ -123,7 +123,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             MobilityStation station = await _unitOfWork
-                .Station
+                .MobilityStation
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
             if (station != null)
@@ -143,7 +143,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             MobilityStation station = await _unitOfWork
-                .Station
+                .MobilityStation
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
             if (station != null)
@@ -166,7 +166,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             MobilityStation station = await _unitOfWork
-                .Station
+                .MobilityStation
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
             if (station != null)
@@ -186,7 +186,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             MobilityStation station = await _unitOfWork
-                .Station
+                .MobilityStation
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
             if (station != null)

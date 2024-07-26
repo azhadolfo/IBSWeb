@@ -57,7 +57,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             var product = await _unitOfWork.Product.MapProductToDTO(fuelPurchase.ProductCode, cancellationToken);
-            var station = await _unitOfWork.Station.MapStationToDTO(fuelPurchase.StationCode, cancellationToken);
+            var station = await _unitOfWork.MobilityStation.MapStationToDTO(fuelPurchase.StationCode, cancellationToken);
 
             ViewData["ProductName"] = product.ProductName;
             ViewData["Station"] = $"{station.StationCode} - {station.StationName}";
@@ -163,8 +163,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return BadRequest();
             }
 
-            SupplierDto supplier = await _unitOfWork.Supplier.MapSupplierToDTO(lube.SupplierCode, cancellationToken);
-            StationDto station = await _unitOfWork.Station.MapStationToDTO(lube.StationCode, cancellationToken);
+            SupplierDto supplier = await _unitOfWork.FilprideSupplier.MapSupplierToDTO(lube.SupplierCode, cancellationToken);
+            StationDto station = await _unitOfWork.MobilityStation.MapStationToDTO(lube.StationCode, cancellationToken);
 
             ViewData["SupplierName"] = supplier.SupplierName;
             ViewData["Station"] = $"{station.StationCode} - {station.StationName}";

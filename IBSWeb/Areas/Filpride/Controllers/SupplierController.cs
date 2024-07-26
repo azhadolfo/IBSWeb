@@ -28,7 +28,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index()
         {
-            IEnumerable<FilprideSupplier> suppliers = await _unitOfWork.Supplier
+            IEnumerable<FilprideSupplier> suppliers = await _unitOfWork.FilprideSupplier
                 .GetAllAsync();
 
             return View(suppliers);
@@ -45,13 +45,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (await _unitOfWork.Supplier.IsSupplierExistAsync(model.SupplierName, cancellationToken))
+                if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, cancellationToken))
                 {
                     ModelState.AddModelError("SupplierName", "Supplier already exist.");
                     return View(model);
                 }
 
-                if (await _unitOfWork.Supplier.IsTinNoExistAsync(model.SupplierTin, cancellationToken))
+                if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, cancellationToken))
                 {
                     ModelState.AddModelError("SupplierTin", "Tin number already exist.");
                     return View(model);
@@ -63,13 +63,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "Proof of Registration", model.SupplierName);
 
-                        model.ProofOfRegistrationFilePath = await _unitOfWork.Supplier.SaveProofOfRegistration(file, localPath, cancellationToken);
+                        model.ProofOfRegistrationFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(file, localPath, cancellationToken);
                     }
 
-                    model.SupplierCode = await _unitOfWork.Supplier
+                    model.SupplierCode = await _unitOfWork.FilprideSupplier
                         .GenerateCodeAsync(cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.Supplier.AddAsync(model, cancellationToken);
+                    await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Supplier created successfully";
                     return RedirectToAction(nameof(Index));
@@ -96,7 +96,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideSupplier supplier = await _unitOfWork.Supplier.GetAsync(c => c.SupplierId == id, cancellationToken);
+            FilprideSupplier supplier = await _unitOfWork.FilprideSupplier.GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier != null)
             {
@@ -114,7 +114,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     model.EditedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.Supplier.UpdateAsync(model, cancellationToken);
+                    await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
                     TempData["success"] = "Supplier updated successfully";
                     return RedirectToAction(nameof(Index));
                 }
@@ -138,7 +138,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             FilprideSupplier supplier = await _unitOfWork
-                .Supplier
+                .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier != null)
@@ -158,7 +158,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             FilprideSupplier supplier = await _unitOfWork
-                .Supplier
+                .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier != null)
@@ -181,7 +181,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             FilprideSupplier supplier = await _unitOfWork
-                .Supplier
+                .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier != null)
@@ -201,7 +201,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             FilprideSupplier supplier = await _unitOfWork
-                .Supplier
+                .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier != null)

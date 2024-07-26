@@ -22,7 +22,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var haulers = await _unitOfWork.Hauler
+            var haulers = await _unitOfWork.FilprideHauler
                 .GetAllAsync(null, cancellationToken);
 
             return View(haulers);
@@ -39,13 +39,13 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (ModelState.IsValid)
             {
-                var isHaulerExist = await _unitOfWork.Hauler.IsHaulerNameExistAsync(model.HaulerName, cancellationToken);
+                var isHaulerExist = await _unitOfWork.FilprideHauler.IsHaulerNameExistAsync(model.HaulerName, cancellationToken);
 
                 if (!isHaulerExist)
                 {
-                    model.HaulerCode = await _unitOfWork.Hauler.GenerateCodeAsync(cancellationToken);
+                    model.HaulerCode = await _unitOfWork.FilprideHauler.GenerateCodeAsync(cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.Hauler.AddAsync(model, cancellationToken);
+                    await _unitOfWork.FilprideHauler.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Hauler created successfully";
                     return RedirectToAction(nameof(Index));
@@ -66,7 +66,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var hauler = await _unitOfWork.Hauler.GetAsync(h => h.HaulerId == id, cancellationToken);
+            var hauler = await _unitOfWork.FilprideHauler.GetAsync(h => h.HaulerId == id, cancellationToken);
 
             if (hauler == null)
             {
@@ -84,7 +84,7 @@ namespace IBSWeb.Areas.User.Controllers
                 try
                 {
                     model.EditedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.Hauler.UpdateAsync(model, cancellationToken);
+                    await _unitOfWork.FilprideHauler.UpdateAsync(model, cancellationToken);
                     TempData["success"] = "Hauler updated successfully";
                     return RedirectToAction(nameof(Index));
                 }

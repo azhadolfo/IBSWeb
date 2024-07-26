@@ -36,7 +36,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken),
                 CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken),
-                Haulers = await _unitOfWork.Hauler.GetHaulerListAsync(cancellationToken)
+                Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(cancellationToken)
             };
 
             return View(viewModel);
@@ -79,7 +79,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken);
-                    viewModel.Haulers = await _unitOfWork.Hauler.GetHaulerListAsync(cancellationToken);
+                    viewModel.Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -87,7 +87,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken);
-            viewModel.Haulers = await _unitOfWork.Hauler.GetHaulerListAsync(cancellationToken);
+            viewModel.Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -129,7 +129,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TotalAmount = existingRecord.TotalAmount,
                     DeliveryType = existingRecord.DeliveryType,
                     HaulerId = existingRecord.HaulerId,
-                    Haulers = await _unitOfWork.Hauler.GetHaulerListAsync(cancellationToken),
+                    Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(cancellationToken),
                     Freight = existingRecord.Freight,
                     AuthorityToLoadNo = existingRecord.AuthorityToLoadNo,
                     Remarks = existingRecord.Remarks
@@ -161,7 +161,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken);
-                    viewModel.Haulers = await _unitOfWork.Hauler.GetHaulerListAsync(cancellationToken);
+                    viewModel.Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -169,7 +169,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetCustomerListAsync(cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken);
-            viewModel.Haulers = await _unitOfWork.Hauler.GetHaulerListAsync(cancellationToken);
+            viewModel.Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }

@@ -60,6 +60,7 @@ namespace IBS.DataAccess.Data
         #region--Master File
 
         public DbSet<MobilityStation> MobilityStations { get; set; }
+        public DbSet<MobilityCustomer> MobilityCustomers { get; set; }
 
         #endregion
 
@@ -294,12 +295,18 @@ namespace IBS.DataAccess.Data
 
             #region-- Master File
 
-            // Station
+            // MobilityStation
             builder.Entity<MobilityStation>(s =>
             {
                 s.HasIndex(s => s.PosCode).IsUnique();
                 s.HasIndex(s => s.StationCode).IsUnique();
                 s.HasIndex(s => s.StationName).IsUnique();
+            });
+
+            //FilprideCustomer
+            builder.Entity<MobilityCustomer>(c =>
+            {
+                c.HasIndex(c => c.CustomerCode).IsUnique();
             });
 
             #endregion
@@ -392,14 +399,14 @@ namespace IBS.DataAccess.Data
 
             #region-- Master File
 
-            // Customer
+            // FilprideCustomer
             builder.Entity<FilprideCustomer>(c =>
             {
                 c.HasIndex(c => c.CustomerCode).IsUnique();
                 c.HasIndex(c => c.CustomerName);
             });
 
-            // Supplier
+            // FilprideSupplier
             builder.Entity<FilprideSupplier>(s =>
             {
                 s.HasIndex(s => s.SupplierCode).IsUnique();

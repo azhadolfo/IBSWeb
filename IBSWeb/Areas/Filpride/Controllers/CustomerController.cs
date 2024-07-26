@@ -25,7 +25,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index()
         {
-            IEnumerable<FilprideCustomer> customer = await _unitOfWork.Customer
+            IEnumerable<FilprideCustomer> customer = await _unitOfWork.FilprideCustomer
                 .GetAllAsync();
             return View(customer);
         }
@@ -41,13 +41,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
-                bool IsTinExist = await _unitOfWork.Customer.IsTinNoExistAsync(model.CustomerTin, cancellationToken);
+                bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, cancellationToken);
 
                 if (!IsTinExist)
                 {
-                    model.CustomerCode = await _unitOfWork.Customer.GenerateCodeAsync(model.CustomerType, cancellationToken);
+                    model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.Customer.AddAsync(model, cancellationToken);
+                    await _unitOfWork.FilprideCustomer.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Customer created successfully";
                     return RedirectToAction(nameof(Index));
@@ -68,7 +68,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideCustomer customer = await _unitOfWork.Customer.GetAsync(c => c.CustomerId == id, cancellationToken);
+            FilprideCustomer customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
             {
@@ -86,7 +86,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     model.EditedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.Customer.UpdateAsync(model, cancellationToken);
+                    await _unitOfWork.FilprideCustomer.UpdateAsync(model, cancellationToken);
                     TempData["success"] = "Customer updated successfully";
                     return RedirectToAction(nameof(Index));
                 }
@@ -110,7 +110,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             FilprideCustomer customer = await _unitOfWork
-                .Customer
+                .FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
@@ -130,7 +130,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             FilprideCustomer customer = await _unitOfWork
-                .Customer
+                .FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
@@ -153,7 +153,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             FilprideCustomer customer = await _unitOfWork
-                .Customer
+                .FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
@@ -173,7 +173,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             FilprideCustomer customer = await _unitOfWork
-                .Customer
+                .FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)

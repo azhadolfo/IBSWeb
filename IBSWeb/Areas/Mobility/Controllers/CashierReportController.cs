@@ -115,7 +115,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 return NotFound();
             }
-            var station = await _unitOfWork.Station.MapStationToDTO(stationCode, cancellationToken);
+            var station = await _unitOfWork.MobilityStation.MapStationToDTO(stationCode, cancellationToken);
 
             var sales = await _dbContext.MobilitySalesHeaders
                 .Include(s => s.SalesDetails)

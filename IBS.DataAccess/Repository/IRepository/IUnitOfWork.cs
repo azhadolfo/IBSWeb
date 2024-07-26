@@ -7,23 +7,11 @@ namespace IBS.DataAccess.Repository.IRepository
 {
     public interface IUnitOfWork : IDisposable
     {
-        ICustomerRepository Customer { get; }
-
         IProductRepository Product { get; }
 
         ICompanyRepository Company { get; }
 
-        IStationRepository Station { get; }
-
-        IGeneralLedgerRepository MobilityGeneralLedger { get; }
-
-        ISupplierRepository Supplier { get; }
-
-        IInventoryRepository MobilityInventory { get; }
-
         IChartOfAccountRepository ChartOfAccount { get; }
-
-        IHaulerRepository Hauler { get; }
 
         Task SaveAsync(CancellationToken cancellationToken = default);
 
@@ -59,6 +47,12 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IOfflineRepository MobilityOffline { get; }
 
+        IStationRepository MobilityStation { get; }
+
+        IInventoryRepository MobilityInventory { get; }
+
+        IGeneralLedgerRepository MobilityGeneralLedger { get; }
+
         #endregion
 
         #region--Filpride
@@ -67,6 +61,9 @@ namespace IBS.DataAccess.Repository.IRepository
         IReceivingReportRepository FilprideReceivingReport { get; }
         ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; }
         IDeliveryReceiptRepository FilprideDeliveryReceipt { get; }
+        ISupplierRepository FilprideSupplier { get; }
+        ICustomerRepository FilprideCustomer { get; }
+        IHaulerRepository FilprideHauler { get; }
 
         #endregion
     }

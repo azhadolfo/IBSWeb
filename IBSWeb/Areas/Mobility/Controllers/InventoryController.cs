@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace IBSWeb.Areas.Mobility.Controllers
 {
     [Area(nameof(Mobility))]
+    [CompanyAuthorize(nameof(Mobility))]
     public class InventoryController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -51,7 +52,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             else
             {
                 inventories = await _unitOfWork.MobilityInventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
-                StationDto stationDetails = await _unitOfWork.Station.MapStationToDTO(model.StationCode, cancellationToken);
+                StationDto stationDetails = await _unitOfWork.MobilityStation.MapStationToDTO(model.StationCode, cancellationToken);
                 ViewData["Station"] = $"{stationDetails.StationCode} {stationDetails.StationName.ToUpper()}";
             }
 

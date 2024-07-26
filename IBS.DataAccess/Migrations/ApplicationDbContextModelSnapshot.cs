@@ -638,7 +638,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(50)")
                         .HasColumnName("edited_by");
 
-                    b.Property<DateTime>("EditedDate")
+                    b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
 
@@ -693,7 +693,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(50)")
                         .HasColumnName("edited_by");
 
-                    b.Property<DateTime>("EditedDate")
+                    b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
 
@@ -1151,6 +1151,70 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_mobility_lube_deliveries_stncode");
 
                     b.ToTable("mobility_lube_deliveries", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilityCustomer", b =>
+                {
+                    b.Property<int>("CustomerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerId"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("CustomerCode")
+                        .HasMaxLength(7)
+                        .HasColumnType("varchar(7)")
+                        .HasColumnName("customer_code");
+
+                    b.Property<string>("CustomerCodeName")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("customer_code_name");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("customer_name");
+
+                    b.Property<string>("EditedBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("station_code");
+
+                    b.HasKey("CustomerId")
+                        .HasName("pk_mobility_customers");
+
+                    b.HasIndex("CustomerCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_mobility_customers_customer_code");
+
+                    b.ToTable("mobility_customers", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilityStation", b =>
