@@ -105,6 +105,45 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityStations
+                .OrderBy(s => s.StationId)
+                .Where(s => s.IsActive)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.StationId.ToString(),
+                    Text = s.StationCode + " " + s.StationName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetMobilityCustomerListAsyncById(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityCustomers
+                .OrderBy(c => c.CustomerId)
+                .Where(c => c.IsActive)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CustomerId.ToString(),
+                    Text = c.CustomerCode + " " + c.CustomerCodeName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetMobilityCustomerListAsyncByCode(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityCustomers
+                .OrderBy(c => c.CustomerId)
+                .Where(c => c.IsActive)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CustomerCode,
+                    Text = c.CustomerCode + " " + c.CustomerCodeName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
         #endregion
 
         #region--Filpride
@@ -118,19 +157,6 @@ namespace IBS.DataAccess.Repository
                 {
                     Value = c.CustomerId.ToString(),
                     Text = c.CustomerName
-                })
-                .ToListAsync(cancellationToken);
-        }
-
-        public async Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default)
-        {
-            return await _db.MobilityStations
-                .OrderBy(s => s.StationId)
-                .Where(s => s.IsActive)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.StationId.ToString(),
-                    Text = s.StationCode + " " + s.StationName
                 })
                 .ToListAsync(cancellationToken);
         }

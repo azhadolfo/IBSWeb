@@ -5,6 +5,7 @@ using IBS.Dtos;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -917,7 +918,7 @@ namespace IBS.DataAccess.Repository.Mobility
             return await query.ToListAsync(cancellationToken);
         }
 
-        #region--Log
+        #region--Log Processing
 
         public async Task LogChangesAsync(int id, Dictionary<string, (string OriginalValue, string NewValue)> changes, string modifiedBy, CancellationToken cancellationToken)
         {
@@ -940,5 +941,74 @@ namespace IBS.DataAccess.Repository.Mobility
         }
 
         #endregion
+
+        public async Task<List<SelectListItem>> GetDsrList(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilitySalesHeaders
+                .OrderBy(dsr => dsr.SalesHeaderId)
+                .Where(dsr => dsr.PostedBy != null)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.SalesHeaderId.ToString(),
+                    Text = c.SalesNo
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task ProcessCustomerInvoicing(CustomerInvoicingViewModel viewModel, CancellationToken cancellationToken)
+        {
+            var existingSalesHeader = await GetAsync(s => s.SalesHeaderId == viewModel.SalesHeaderId, cancellationToken);
+
+            if (existingSalesHeader != null)
+            {
+                if (viewModel.IncludePo)
+                {
+                    // Ensure arrays are initialized with the correct size
+                    existingSalesHeader.Customers = new string[viewModel.CustomerPos.Count];
+                    existingSalesHeader.POSalesAmount = new decimal[viewModel.CustomerPos.Count];
+
+                    for (int i = 0; i < viewModel.CustomerPos.Count; i++)
+                    {
+                        existingSalesHeader.Customers[i] = viewModel.CustomerPos[i].CustomerId.ToString();
+                        existingSalesHeader.POSalesAmount[i] = viewModel.CustomerPos[i].PoAmount;
+                        existingSalesHeader.POSalesTotalAmount += existingSalesHeader.POSalesAmount[i];
+                    }
+                }
+
+                if (viewModel.IncludeLubes)
+                {
+                    for (int i = 0; i < viewModel.ProductDetails.Count; i++)
+                    {
+                        var product = await _db.Products.FindAsync(viewModel.ProductDetails[i].LubesId, cancellationToken);
+
+                        var totalAmount = viewModel.ProductDetails[i].Quantity * viewModel.ProductDetails[i].Price;
+
+                        var salesDetail = new MobilitySalesDetail
+                        {
+                            SalesHeaderId = existingSalesHeader.SalesHeaderId,
+                            SalesNo = existingSalesHeader.SalesNo,
+                            Product = product.ProductCode,
+                            StationCode = existingSalesHeader.StationCode,
+                            Particular = $"{product.ProductName}",
+                            Liters = viewModel.ProductDetails[i].Quantity,
+                            Price = viewModel.ProductDetails[i].Price,
+                            Sale = totalAmount,
+                            Value = totalAmount
+                        };
+
+                        existingSalesHeader.LubesTotalAmount += totalAmount;
+
+                        await _db.AddAsync(salesDetail, cancellationToken);
+                    }
+                }
+
+                existingSalesHeader.TotalSales = existingSalesHeader.FuelSalesTotalAmount + existingSalesHeader.LubesTotalAmount - existingSalesHeader.POSalesTotalAmount;
+                existingSalesHeader.GainOrLoss = (existingSalesHeader.ActualCashOnHand > 0 ? existingSalesHeader.ActualCashOnHand : existingSalesHeader.SafeDropTotalAmount) - existingSalesHeader.TotalSales;
+
+                await _db.SaveChangesAsync(cancellationToken);
+
+                ///PENDING Create the log for this changes
+            }
+        }
     }
 }

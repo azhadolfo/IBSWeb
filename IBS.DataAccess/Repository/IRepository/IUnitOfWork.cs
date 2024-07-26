@@ -25,12 +25,6 @@ namespace IBS.DataAccess.Repository.IRepository
 
         #region--Mobility
 
-        Task<List<SelectListItem>> GetFilprideCustomerListAsync(CancellationToken cancellationToken = default);
-
-        Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default);
-
-        Task<List<SelectListItem>> GetMobilityStationListAsyncByCode(CancellationToken cancellationToken = default);
-
         IFuelPurchaseRepository MobilityFuelPurchase { get; }
 
         ILubePurchaseHeaderRepository MobilityLubePurchaseHeader { get; }
@@ -51,11 +45,17 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IGeneralLedgerRepository MobilityGeneralLedger { get; }
 
+        Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetMobilityStationListAsyncByCode(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetMobilityCustomerListAsyncById(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetMobilityCustomerListAsyncByCode(CancellationToken cancellationToken = default);
+
         #endregion
 
         #region--Filpride
-
-        Task<List<SelectListItem>> GetFilprideSupplierListAsyncById(CancellationToken cancellationToken = default);
 
         IPurchaseOrderRepository FilpridePurchaseOrder { get; }
         IReceivingReportRepository FilprideReceivingReport { get; }
@@ -64,6 +64,10 @@ namespace IBS.DataAccess.Repository.IRepository
         ISupplierRepository FilprideSupplier { get; }
         ICustomerRepository FilprideCustomer { get; }
         IHaulerRepository FilprideHauler { get; }
+
+        Task<List<SelectListItem>> GetFilprideCustomerListAsync(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideSupplierListAsyncById(CancellationToken cancellationToken = default);
 
         #endregion
     }

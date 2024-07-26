@@ -1,5 +1,7 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Mobility;
+using IBS.Models.Mobility.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
@@ -18,5 +20,9 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
         Task<(int lubeCount, bool hasPoSales)> ProcessLube(string file, CancellationToken cancellationToken = default);
 
         Task<int> ProcessSafeDrop(string file, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetDsrList(CancellationToken cancellationToken = default);
+
+        Task ProcessCustomerInvoicing(CustomerInvoicingViewModel viewModel, CancellationToken cancellationToken);
     }
 }
