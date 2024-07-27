@@ -558,19 +558,19 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 if (existingDetail.Closing != updatedDetail.Closing)
                 {
-                    changes["Closing"] = (existingDetail.Closing.ToString(), updatedDetail.Closing.ToString());
+                    changes["Closing"] = (existingDetail.Closing.ToString("N4"), updatedDetail.Closing.ToString("N4"));
                     existingDetail.Closing = updatedDetail.Closing;
                 }
 
                 if (existingDetail.Opening != updatedDetail.Opening)
                 {
-                    changes["Opening"] = (existingDetail.Opening.ToString(), updatedDetail.Opening.ToString());
+                    changes["Opening"] = (existingDetail.Opening.ToString("N4"), updatedDetail.Opening.ToString("N4"));
                     existingDetail.Opening = updatedDetail.Opening;
                 }
 
                 if (existingDetail.Price != updatedDetail.Price)
                 {
-                    changes["Price"] = (existingDetail.Price.ToString(), updatedDetail.Price.ToString());
+                    changes["Price"] = (existingDetail.Price.ToString("N4"), updatedDetail.Price.ToString("N4"));
                     existingDetail.PreviousPrice = existingDetail.Price;
                     existingDetail.Price = updatedDetail.Price;
                 }
@@ -597,7 +597,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (existingSalesHeader.ActualCashOnHand != model.ActualCashOnHand)
             {
-                headerChanges["ActualCashOnHand"] = (existingSalesHeader.ActualCashOnHand.ToString(), model.ActualCashOnHand.ToString());
+                headerChanges["ActualCashOnHand"] = (existingSalesHeader.ActualCashOnHand.ToString("N4"), model.ActualCashOnHand.ToString("N4"));
                 existingSalesHeader.ActualCashOnHand = model.ActualCashOnHand;
                 existingSalesHeader.GainOrLoss = model.ActualCashOnHand - existingSalesHeader.TotalSales;
             }
@@ -961,22 +961,36 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (existingSalesHeader != null)
             {
+                var changes = new Dictionary<string, (string OriginalValue, string NewValue)>();
+
                 if (viewModel.IncludePo)
                 {
-                    // Ensure arrays are initialized with the correct size
-                    existingSalesHeader.Customers = new string[viewModel.CustomerPos.Count];
-                    existingSalesHeader.POSalesAmount = new decimal[viewModel.CustomerPos.Count];
+                    var updatedCustomers = new List<string>(existingSalesHeader.Customers ?? new string[0]);
+                    var updatedPOSalesAmount = new List<decimal>(existingSalesHeader.POSalesAmount ?? new decimal[0]);
 
                     for (int i = 0; i < viewModel.CustomerPos.Count; i++)
                     {
-                        existingSalesHeader.Customers[i] = viewModel.CustomerPos[i].CustomerId.ToString();
-                        existingSalesHeader.POSalesAmount[i] = viewModel.CustomerPos[i].PoAmount;
-                        existingSalesHeader.POSalesTotalAmount += existingSalesHeader.POSalesAmount[i];
+                        string customerCodeName = viewModel.CustomerPos[i].CustomerCodeName;
+                        decimal poAmount = viewModel.CustomerPos[i].PoAmount;
+
+                        if (!updatedCustomers.Contains(customerCodeName))
+                        {
+                            updatedCustomers.Add(customerCodeName);
+                            updatedPOSalesAmount.Add(poAmount);
+                            existingSalesHeader.POSalesTotalAmount += poAmount;
+
+                            changes[$"Customers[{updatedCustomers.Count - 1}]"] = (string.Empty, customerCodeName);
+                            changes[$"POSalesAmount[{updatedPOSalesAmount.Count - 1}]"] = ("0", poAmount.ToString());
+                        }
                     }
+
+                    existingSalesHeader.Customers = updatedCustomers.ToArray();
+                    existingSalesHeader.POSalesAmount = updatedPOSalesAmount.ToArray();
                 }
 
                 if (viewModel.IncludeLubes)
                 {
+                    decimal totalLubeSales = 0;
                     for (int i = 0; i < viewModel.ProductDetails.Count; i++)
                     {
                         var product = await _db.Products.FindAsync(viewModel.ProductDetails[i].LubesId, cancellationToken);
@@ -996,18 +1010,27 @@ namespace IBS.DataAccess.Repository.Mobility
                             Value = totalAmount
                         };
 
-                        existingSalesHeader.LubesTotalAmount += totalAmount;
+                        totalLubeSales += totalAmount;
 
                         await _db.AddAsync(salesDetail, cancellationToken);
                     }
+
+                    changes[$"LubesTotalAmount"] = (existingSalesHeader.LubesTotalAmount.ToString("N4"), totalLubeSales.ToString("N4"));
+                    existingSalesHeader.LubesTotalAmount = totalLubeSales;
                 }
+
+                var originalTotalSales = existingSalesHeader.TotalSales;
+                var originalGainOrLoss = existingSalesHeader.GainOrLoss;
 
                 existingSalesHeader.TotalSales = existingSalesHeader.FuelSalesTotalAmount + existingSalesHeader.LubesTotalAmount - existingSalesHeader.POSalesTotalAmount;
                 existingSalesHeader.GainOrLoss = (existingSalesHeader.ActualCashOnHand > 0 ? existingSalesHeader.ActualCashOnHand : existingSalesHeader.SafeDropTotalAmount) - existingSalesHeader.TotalSales;
 
-                await _db.SaveChangesAsync(cancellationToken);
+                if (changes.Count > 0)
+                {
+                    await LogChangesAsync(existingSalesHeader.SalesHeaderId, changes, viewModel.User, cancellationToken);
+                }
 
-                ///PENDING Create the log for this changes
+                await _db.SaveChangesAsync(cancellationToken);
             }
         }
     }

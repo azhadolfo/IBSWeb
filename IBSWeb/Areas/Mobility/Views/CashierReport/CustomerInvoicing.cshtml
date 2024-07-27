@@ -32,9 +32,9 @@
                 {
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Customer List<span class="required">*</span></label>
-                        <select asp-for="@Model.CustomerPos[i].CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%" required>
+                        <select asp-for="@Model.CustomerPos[i].CustomerCodeName" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                         </select>
-                        <span asp-validation-for="@Model.CustomerPos[i].CustomerId" class="text-danger"></span>
+                        <span asp-validation-for="@Model.CustomerPos[i].CustomerCodeName" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="@Model.CustomerPos[i].PoAmount" class="form-control border-0 shadow" placeholder="" min="0" required />
@@ -126,18 +126,18 @@
                 var newIndex = $('#poFields .form-group').length;
                 var customerSelect = `<div class="form-group py-2 col-12">
                     <label class="control-label">Customer List<span class="required">*</span></label>
-                    <select name="CustomerPos[${newIndex}].CustomerId" class="form-select js-select2 border-0 shadow" style="width:100%" required>
+                    <select name="CustomerPos[${newIndex}].CustomerCodeName" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                         @foreach (var customer in Model.Customers)
                         {
                             <option value="@customer.Value">@customer.Text</option>
                         }
                     </select>
-                    <span class="text-danger"></span>
+                    <span class="text-danger" name="CustomerPos[${newIndex}].CustomerCodeName"></span>
                 </div>`;
                 var poAmountInput = `<div class="form-floating py-2 col-12">
                     <input name="CustomerPos[${newIndex}].PoAmount" class="form-control border-0 shadow" placeholder="" min="0" required />
                     <label class="ms-2">PO Amount</label>
-                    <span class="text-danger"></span>
+                    <span class="text-danger" name="CustomerPos[${newIndex}].PoAmount"></span>
                 </div>`;
                 $('#poFields').append(customerSelect + poAmountInput);
                 initializeSelect2(); // Initialize select2 on the newly added elements
@@ -147,23 +147,23 @@
                 var newIndex = $('#lubesFields .form-group').length;
                 var productSelect = `<div class="form-group py-2 col-12">
                     <label class="control-label">Product List<span class="required">*</span></label>
-                    <select name="ProductDetails[${newIndex}].LubesId" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <select name="ProductDetails[${newIndex}].LubesId" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                         @foreach (var lube in Model.Lubes)
                         {
                             <option value="@lube.Value">@lube.Text</option>
                         }
                     </select>
-                    <span class="text-danger"></span>
+                    <span class="text-danger" name="ProductDetails[${newIndex}].LubesId"></span>
                 </div>`;
                 var quantityInput = `<div class="form-floating py-2 col-12">
-                    <input name="ProductDetails[${newIndex}].Quantity" class="form-control border-0 shadow" placeholder="" min="0" />
+                    <input name="ProductDetails[${newIndex}].Quantity" class="form-control border-0 shadow" placeholder="" min="0" required />
                     <label class="ms-2">Quantity</label>
-                    <span class="text-danger"></span>
+                    <span class="text-danger" name="ProductDetails[${newIndex}].Quantity"></span>
                 </div>`;
                 var priceInput = `<div class="form-floating py-2 col-12">
                     <input name="ProductDetails[${newIndex}].Price" class="form-control border-0 shadow" placeholder="" min="0" />
                     <label class="ms-2">Price</label>
-                    <span class="text-danger"></span>
+                    <span class="text-danger" name="ProductDetails[${newIndex}].Price"></span>
                 </div>`;
                 $('#lubesFields').append(productSelect + quantityInput + priceInput);
                 initializeSelect2(); // Initialize select2 on the newly added elements

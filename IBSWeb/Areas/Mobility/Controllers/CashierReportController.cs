@@ -262,7 +262,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var model = new CustomerInvoicingViewModel
             {
                 DsrList = await _unitOfWork.MobilitySalesHeader.GetDsrList(cancellationToken),
-                Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken),
+                Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken),
                 Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken),
             };
 
@@ -283,17 +283,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken);
-                    viewModel.Lubes = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
                     viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetDsrList(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken);
+                    viewModel.Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
-            viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken);
-            viewModel.Lubes = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
             viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetDsrList(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken);
+            viewModel.Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }

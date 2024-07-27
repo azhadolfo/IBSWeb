@@ -4,7 +4,7 @@ namespace IBS.Models.Mobility.ViewModels
 {
     public class CustomerPo
     {
-        public int CustomerId { get; set; }
+        public string CustomerCodeName { get; set; }
         public decimal PoAmount { get; set; }
     }
 
