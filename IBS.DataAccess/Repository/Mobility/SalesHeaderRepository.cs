@@ -58,7 +58,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         Cashier = fuel.xONAME,
                         Shift = fuel.Shift,
                         CreatedBy = "System Generated",
-                        FuelSalesTotalAmount = Math.Round(fuel.Liters * fuel.Price, 4),
+                        FuelSalesTotalAmount = fuel.Calibration == 0 ? Math.Round(fuel.Liters * fuel.Price, 4) : Math.Round((fuel.Liters - fuel.Calibration) * fuel.Price, 4),
                         LubesTotalAmount = Math.Round(lubeSales.Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.BusinessDate == fuel.BusinessDate).Sum(l => l.Amount), 4),
                         SafeDropTotalAmount = Math.Round(safeDropDeposits.Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.BusinessDate == fuel.BusinessDate).Sum(s => s.Amount), 4),
                         POSalesTotalAmount = hasPoSales ? Math.Round(fuelPoSales.Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.BusinessDate == fuel.BusinessDate).Sum(s => s.Amount) + lubePoSales.Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift).Sum(l => l.Amount), 4) : 0,
@@ -568,6 +568,12 @@ namespace IBS.DataAccess.Repository.Mobility
                     existingDetail.Opening = updatedDetail.Opening;
                 }
 
+                if (existingDetail.Calibration != updatedDetail.Calibration)
+                {
+                    changes["Calibration"] = (existingDetail.Calibration.ToString("N4"), updatedDetail.Calibration.ToString("N4"));
+                    existingDetail.Calibration = updatedDetail.Calibration;
+                }
+
                 if (existingDetail.Price != updatedDetail.Price)
                 {
                     changes["Price"] = (existingDetail.Price.ToString("N4"), updatedDetail.Price.ToString("N4"));
@@ -583,7 +589,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     headerModified = true;
                     existingSalesHeader.IsModified = true;
                     existingDetail.Liters = existingDetail.Closing - existingDetail.Opening;
-                    existingDetail.Value = existingDetail.Liters * existingDetail.Price;
+                    existingDetail.Value = existingDetail.Calibration == 0 ? existingDetail.Liters * existingDetail.Price : (existingDetail.Liters - existingDetail.Calibration) * existingDetail.Price;
                 }
             }
 
