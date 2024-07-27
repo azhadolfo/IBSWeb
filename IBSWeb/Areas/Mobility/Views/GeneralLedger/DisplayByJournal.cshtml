@@ -43,7 +43,6 @@
 
 <div class="mb-3 row">
     <div class="col-11">
-        <h4>GENERAL LEDGER BY @ViewData["Journal"] JOURNAL</h4>
     </div>
     <div class="dropdown col-1">
         <button class="btn btn-primary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -60,6 +59,7 @@
 @if (Model.Any())
 {
     <div class="table-responsive">
+        <h4>GENERAL LEDGER BY @ViewData["Journal"] JOURNAL</h4>
         <table id="ledgerTable" class="table">
             <thead>
                 <tr class="table-primary">

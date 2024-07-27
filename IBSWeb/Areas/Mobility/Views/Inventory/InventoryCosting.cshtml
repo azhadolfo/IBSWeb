@@ -64,14 +64,13 @@
     }
 </style>
 
-<div class="mb-2">
-    <h5>STATION: @ViewData["Station"]</h5>
-    <h5>PRODUCT: @ViewData["Product"]</h5>
-</div>
-
 @if (Model.Any())
 {
     <div id="inventory-table" class="table-container">
+        <div class="mb-2">
+            <h5>STATION: @ViewData["Station"]</h5>
+            <h5>PRODUCT: @ViewData["Product"]</h5>
+        </div>
         <table class="table">
             <thead>
                 <tr>

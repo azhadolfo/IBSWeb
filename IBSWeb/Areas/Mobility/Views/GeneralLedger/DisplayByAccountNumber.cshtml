@@ -57,19 +57,14 @@
     }
 </style>
 
-<div class="mb-3 row print-header">
-    <div class="col-11">
+@if (Model.Any())
+{
+    <div class="table-responsive">
         <h5>GENERAL LEDGER BY ACCOUNT NUMBER</h5>
         <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
         <h6>Account No: @ViewData["AccountNo"]</h6>
         <h6>Account Title: @ViewData["AccountName"]</h6>
         <h6>Product Code: @ViewData["ProductCode"]</h6>
-    </div>
-</div>
-
-@if (Model.Any())
-{
-    <div class="table-responsive">
         <table id="ledgerTable" class="table">
             <thead>
                 <tr class="table-primary">
