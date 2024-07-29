@@ -1,6 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject UserManager<IdentityUser> UserManager
-@model FilpridePurchaseOrder
+@model MobilityPurchaseOrder
 
 @{
     ViewData["Title"] = "Preview Purchase Order";
@@ -9,7 +9,7 @@
 <table class="w-100">
     <tbody>
         <tr>
-            <td class="text-end" style="padding: 0 !important;"><img src="~/img/Filpride.jpg" width="130px" /></td>
+            <td style="padding: 0 !important;"><img src="~/img/usa88-logo.png" width="130px" /></td>
         </tr>
         <tr>
             <td class="text-end" style="padding: 0 !important;"><h6 class="series"><b>No.&nbsp;@Html.DisplayFor(model => model.PurchaseOrderNo)</b></h6></td>
@@ -30,10 +30,6 @@
                 <td><b>Address:</b> &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
                 <td></td>
             </tr>
-            <tr>
-                <td><b>TIN No.:</b> &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierTin)</td>
-                <td></td>
-            </tr>
         </tbody>
     </table>
 </div>
@@ -43,7 +39,7 @@
             <tr>
                 <th class="w-25">Product Name</th>
                 <th class="w-25">Quantity</th>
-                <th class="w-25">Price</th>
+                <th class="w-25">Unit Price</th>
                 <th class="w-25">Amount</th>
             </tr>
         </thead>
@@ -51,12 +47,29 @@
             <tr>
                 <td>@Html.DisplayFor(model => model.Product.ProductName)</td>
                 <td>@Html.DisplayFor(model => model.Quantity)</td>
-                <td>@Html.DisplayFor(model => model.UnitCost)</td>
+                <td>@Html.DisplayFor(model => model.UnitPrice)</td>
                 <td>@Html.DisplayFor(model => model.TotalAmount)</td>
             </tr>
         </tbody>
     </table>
 </div>
+<hr />
+
+<div class="table-responsive">
+    <table class="w-100">
+        <tbody>
+            <tr>
+                <td class="w-75"></td>
+                <td class="w-25"><b>Discount:</b> &nbsp;@Html.DisplayFor(model => model.Discount)</td>
+            </tr>
+            <tr>
+                <td class="w-75"></td>
+                <td class="w-25"><b>Total Amount:</b> &nbsp;@Html.DisplayFor(model => model.TotalAmount)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
 <div class="table-responsive mt-5">
     <table class="w-100">
         <thead>
@@ -74,27 +87,6 @@
         </tbody>
     </table>
 </div>
-
-<div class="text-center w-100 mt-5">
-    <p>
-        Series: PO0000000001 - PO9999999999<br />
-        Date and Time Created:&nbsp;@Model.CreatedDate.ToString("MMM dd, yyyy hh:mm tt");
-    </p>
-</div>
-<br />
-
-@if (!Model.IsPrinted)
-{
-    <div class="text-end footer" style="right:8%; bottom:9%;">
-        ORIGINAL COPY
-    </div>
-}
-else
-{
-    <div class="text-end footer" style="right:8%; bottom:9%;">
-        REPRINT COPY
-    </div>
-}
 
 <div class="text-start w-100 footer mt-5">
     <p class="m-0 p-0">
@@ -121,13 +113,13 @@ else
         else
         {
             <div class="col-6 col-md-3">
-                <a asp-area="Filpride" asp-controller="PurchaseOrder" asp-action="Print" asp-route-id="@Model.PurchaseOrderNo" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                <a asp-area="Mobility" asp-controller="PurchaseOrder" asp-action="Print" asp-route-id="@Model.PurchaseOrderNo" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
             </div>
         }
     }
 
     <div class="col-6 col-md-3">
-        <a asp-area="Filpride" asp-controller="PurchaseOrder" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+        <a asp-area="Mobility" asp-controller="PurchaseOrder" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
     </div>
 </div>
 
@@ -145,7 +137,7 @@ else
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Proceed to the controller action
-                    window.location.href = '@Url.Action("Post", "PurchaseOrder", new { area = "Filpride", id = Model.PurchaseOrderNo })';
+                    window.location.href = '@Url.Action("Post", "PurchaseOrder", new { area = "Mobility", id = Model.PurchaseOrderNo })';
                 }
             });
         });

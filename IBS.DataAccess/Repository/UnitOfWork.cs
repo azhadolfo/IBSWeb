@@ -27,17 +27,18 @@ namespace IBS.DataAccess.Repository
         public IFuelPurchaseRepository MobilityFuelPurchase { get; private set; }
         public ILubePurchaseHeaderRepository MobilityLubePurchaseHeader { get; private set; }
         public ILubePurchaseDetailRepository MobilityLubePurchaseDetail { get; private set; }
-        public IPOSalesRepository MobilityPurchaseOrder { get; private set; }
+        public IPOSalesRepository MobilityPOSales { get; private set; }
         public IOfflineRepository MobilityOffline { get; private set; }
         public IGeneralLedgerRepository MobilityGeneralLedger { get; private set; }
         public IInventoryRepository MobilityInventory { get; private set; }
         public IStationRepository MobilityStation { get; private set; }
+        public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
 
         #endregion
 
         #region--Filpride
 
-        public IPurchaseOrderRepository FilpridePurchaseOrder { get; private set; }
+        public Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrder { get; private set; }
         public IReceivingReportRepository FilprideReceivingReport { get; private set; }
         public ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; private set; }
         public IDeliveryReceiptRepository FilprideDeliveryReceipt { get; private set; }
@@ -62,17 +63,18 @@ namespace IBS.DataAccess.Repository
             MobilityFuelPurchase = new FuelPurchaseRepository(_db);
             MobilityLubePurchaseHeader = new LubePurchaseHeaderRepository(_db);
             MobilityLubePurchaseDetail = new LubePurchaseDetailRepository(_db);
-            MobilityPurchaseOrder = new POSalesRepository(_db);
+            MobilityPOSales = new POSalesRepository(_db);
             MobilityOffline = new OfflineRepository(_db);
             MobilityGeneralLedger = new GeneralLedgerRepository(_db);
             MobilityInventory = new InventoryRepository(_db);
             MobilityStation = new StationRepository(_db);
+            MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
 
             #endregion
 
             #region--Filpride
 
-            FilpridePurchaseOrder = new PurchaseOrderRepository(_db);
+            FilpridePurchaseOrder = new Filpride.PurchaseOrderRepository(_db);
             FilprideReceivingReport = new ReceivingReportRepository(_db);
             FilprideCustomerOrderSlip = new CustomerOrderSlipRepository(_db);
             FilprideDeliveryReceipt = new DeliveryReceiptRepository(_db);
@@ -140,6 +142,18 @@ namespace IBS.DataAccess.Repository
                 {
                     Value = c.CustomerCode,
                     Text = c.CustomerCode + " " + c.CustomerCodeName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilitySuppliers
+                .OrderBy(s => s.SupplierId)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = s.SupplierName
                 })
                 .ToListAsync(cancellationToken);
         }

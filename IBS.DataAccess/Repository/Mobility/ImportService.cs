@@ -294,7 +294,7 @@ namespace IBS.DataAccess.Repository.Mobility
                                 }
                                 else if (fileName.Contains("po_sales"))
                                 {
-                                    poSalesCount = await unitOfWork.MobilityPurchaseOrder.ProcessPOSales(file);
+                                    poSalesCount = await unitOfWork.MobilityPOSales.ProcessPOSales(file);
                                 }
 
                                 fileOpened = true; // File opened successfully, exit the loop
