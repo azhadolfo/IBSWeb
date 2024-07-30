@@ -63,10 +63,16 @@
                         <td class="text-end">@Html.DisplayFor(model => item.LitersSold)</td>
                         <td class="text-end">@Html.DisplayFor(model => item.TransactionCount)</td>
                         <td class="text-end">
-                            @Html.DisplayFor(model => item.Price)
                             @if (item.PreviousPrice.HasValue && item.PreviousPrice != item.Price)
                             {
-                                <span class="text-danger">(Price changed from @item.PreviousPrice.Value.ToString("N4"))</span>
+                                <span class="text-danger">
+                                    @Html.DisplayFor(model => item.Price)
+                                    <i class="bi bi-info-circle" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Price corrected from @item.PreviousPrice.Value.ToString("N4")"></i>
+                                </span>
+                            }
+                            else
+                            {
+                                @Html.DisplayFor(model => item.Price)
                             }
                         </td>
                         <td class="text-end">@Html.DisplayFor(model => item.Sale)</td>
@@ -205,6 +211,11 @@
                     window.location.href = '@Url.Action("Post", "CashierReport", new { area = "Mobility", id = Model.SalesNo })';
                 }
             });
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('[data-bs-toggle="popover"]').popover();
         });
     </script>
 }
