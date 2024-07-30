@@ -5,17 +5,17 @@
 }
 
 <div class="mb-3 row">
-    <div class="col-12 mb-3">
-        <h2 class="text-center">CASHIER REPORT</h2>
-        <h5 class="text-center">@ViewData["Station"]</h5>
+    <div class="col-12 mb-3 text-center">
+        <h2>CASHIER REPORT</h2>
+        <h5>@ViewData["Station"]</h5>
     </div>
     <div class="col-10">
         <h6 class="px-2"><b>Cashier:</b> @Model.Cashier</h6>
         <h6 class="px-2"><b>Shift:</b> @Model.Shift</h6>
     </div>
-    <div class="col-2">
-        <h6 class="px-2 text-end"><b>No.</b> @Html.DisplayFor(model => Model.SalesNo)</h6>
-        <h6 class="px-2 text-end"><b>Date:</b> @Html.DisplayFor(model => Model.Date)</h6>
+    <div class="col-2 text-end">
+        <h6 class="px-2"><b>No.</b> @Html.DisplayFor(model => Model.SalesNo)</h6>
+        <h6 class="px-2"><b>Date:</b> @Html.DisplayFor(model => Model.Date)</h6>
     </div>
 </div>
 
@@ -46,7 +46,6 @@
                     <tr>
                         <td>@item.Particular</td>
                         <td class="text-end">@Html.DisplayFor(model => item.Closing)</td>
-
                         <td class="text-end">
                             @if (item.ReferenceNo != null && !Model.IsTransactionNormal)
                             {
@@ -59,7 +58,6 @@
                                 @Html.DisplayFor(model => item.Opening)
                             }
                         </td>
-
                         <td class="text-end">@Html.DisplayFor(model => item.Liters)</td>
                         <td class="text-end">@Html.DisplayFor(model => item.Calibration)</td>
                         <td class="text-end">@Html.DisplayFor(model => item.LitersSold)</td>
@@ -204,7 +202,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Proceed to the controller action
-                    window.location.href = '@Url.Action("Post", "CashierReport", new { area = "Mobility", id = Model.SalesNo, stationCode = Model.StationCode })';
+                    window.location.href = '@Url.Action("Post", "CashierReport", new { area = "Mobility", id = Model.SalesNo })';
                 }
             });
         });

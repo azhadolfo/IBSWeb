@@ -46,6 +46,7 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityLubePurchaseHeader> MobilityLubePurchaseHeaders { get; set; }
         public DbSet<MobilityLubePurchaseDetail> MobilityLubePurchaseDetails { get; set; }
         public DbSet<MobilityPurchaseOrder> MobilityPurchaseOrders { get; set; }
+        public DbSet<MobilityReceivingReport> MobilityReceivingReports { get; set; }
         #endregion
 
         #region --Inventory Entity
@@ -289,6 +290,17 @@ namespace IBS.DataAccess.Data
                 po.HasOne(po => po.Supplier)
                 .WithMany()
                 .HasForeignKey(po => po.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<MobilityReceivingReport>(rr =>
+            {
+                rr.HasIndex(rr => rr.ReceivingReportNo).IsUnique();
+                rr.HasIndex(rr => rr.StationCode);
+
+                rr.HasOne(rr => rr.FilprideDeliveryReceipt)
+                .WithMany()
+                .HasForeignKey(rr => rr.DeliveryReceiptId)
                 .OnDelete(DeleteBehavior.Restrict);
             });
 

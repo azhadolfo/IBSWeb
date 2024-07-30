@@ -33,13 +33,14 @@ namespace IBS.DataAccess.Repository
         public IInventoryRepository MobilityInventory { get; private set; }
         public IStationRepository MobilityStation { get; private set; }
         public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
+        public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
 
         #endregion
 
         #region--Filpride
 
         public Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrder { get; private set; }
-        public IReceivingReportRepository FilprideReceivingReport { get; private set; }
+        public Filpride.IRepository.IReceivingReportRepository FilprideReceivingReport { get; private set; }
         public ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; private set; }
         public IDeliveryReceiptRepository FilprideDeliveryReceipt { get; private set; }
         public ICustomerRepository FilprideCustomer { get; private set; }
@@ -69,13 +70,14 @@ namespace IBS.DataAccess.Repository
             MobilityInventory = new InventoryRepository(_db);
             MobilityStation = new StationRepository(_db);
             MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
+            MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
 
             #endregion
 
             #region--Filpride
 
             FilpridePurchaseOrder = new Filpride.PurchaseOrderRepository(_db);
-            FilprideReceivingReport = new ReceivingReportRepository(_db);
+            FilprideReceivingReport = new Filpride.ReceivingReportRepository(_db);
             FilprideCustomerOrderSlip = new CustomerOrderSlipRepository(_db);
             FilprideDeliveryReceipt = new DeliveryReceiptRepository(_db);
             FilprideCustomer = new CustomerRepository(_db);

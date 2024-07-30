@@ -46,6 +46,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IGeneralLedgerRepository MobilityGeneralLedger { get; }
 
         Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; }
+        Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; }
 
         Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default);
 
@@ -62,7 +63,7 @@ namespace IBS.DataAccess.Repository.IRepository
         #region--Filpride
 
         Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrder { get; }
-        IReceivingReportRepository FilprideReceivingReport { get; }
+        Filpride.IRepository.IReceivingReportRepository FilprideReceivingReport { get; }
         ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; }
         IDeliveryReceiptRepository FilprideDeliveryReceipt { get; }
         ISupplierRepository FilprideSupplier { get; }

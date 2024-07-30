@@ -6,120 +6,121 @@
     ViewData["Title"] = "Preview Purchase Order";
 }
 
-<table class="w-100">
-    <tbody>
-        <tr>
-            <td style="padding: 0 !important;"><img src="~/img/usa88-logo.png" width="130px" /></td>
-        </tr>
-        <tr>
-            <td class="text-end" style="padding: 0 !important;"><h6 class="series"><b>No.&nbsp;@Html.DisplayFor(model => model.PurchaseOrderNo)</b></h6></td>
-        </tr>
-        <tr>
-            <td class="text-center" style="padding: 0 !important;"><h3 class="module-name"><b>PURCHASE ORDER</b></h3></td>
-        </tr>
-    </tbody>
-</table>
-<div class="table-responsive mt-5">
-    <table class="w-100">
-        <tbody>
-            <tr>
-                <td class="w-75"><b>Supplier:</b> &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
-                <td class="w-25 text-end"><b>Date:</b> &nbsp;@Html.DisplayFor(model => model.Date)</td>
-            </tr>
-            <tr>
-                <td><b>Address:</b> &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
-                <td></td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-<div class="table-responsive mt-5">
-    <table class="w-100 text-center">
-        <thead>
-            <tr>
-                <th class="w-25">Product Name</th>
-                <th class="w-25">Quantity</th>
-                <th class="w-25">Unit Price</th>
-                <th class="w-25">Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>@Html.DisplayFor(model => model.Product.ProductName)</td>
-                <td>@Html.DisplayFor(model => model.Quantity)</td>
-                <td>@Html.DisplayFor(model => model.UnitPrice)</td>
-                <td>@Html.DisplayFor(model => model.TotalAmount)</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-<hr />
-
-<div class="table-responsive">
-    <table class="w-100">
-        <tbody>
-            <tr>
-                <td class="w-75"></td>
-                <td class="w-25"><b>Discount:</b> &nbsp;@Html.DisplayFor(model => model.Discount)</td>
-            </tr>
-            <tr>
-                <td class="w-75"></td>
-                <td class="w-25"><b>Total Amount:</b> &nbsp;@Html.DisplayFor(model => model.TotalAmount)</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-<div class="table-responsive mt-5">
-    <table class="w-100">
-        <thead>
-            <tr>
-                <th>@Html.DisplayNameFor(model => model.Remarks)</th>
-                <th></th>
-                <th></th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td colspan="4">@Html.DisplayFor(model => model.Remarks)</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-<div class="text-start w-100 footer mt-5">
-    <p class="m-0 p-0">
-        <em>
-            <strong>Software Name :</strong> Integrated Business System (IBS)
-            <br />
-            <strong>Version :</strong> v1.0.0
-            <br />
-            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
-            <br />
-            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MMM dd, yyyy hh:mm tt")
-        </em>
-    </p>
-</div>
-
-<div class="row pt-2">
-    @{
-        if (Model.PostedBy == null)
-        {
-            <div class="col-6 col-md-3">
-                <a id="approveButton" class="btn btn-primary form-control buttons">Approve</a>
-            </div>
+<div class="container">
+    <div class="row mb-3">
+        <div class="col-12 text-center">
+            <img src="~/img/usa88-logo.png" width="130px" alt="Logo" />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-12 text-end">
+            <h6 class="series"><b>No.&nbsp;@Html.DisplayFor(model => model.PurchaseOrderNo)</b></h6>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h3 class="module-name"><b>PURCHASE ORDER</b></h3>
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <table class="table table-borderless">
+                <tbody>
+                    <tr>
+                        <td><b>Supplier:</b></td>
+                        <td>@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
+                    </tr>
+                    <tr>
+                        <td><b>Address:</b></td>
+                        <td>@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <table class="table table-borderless">
+                <tbody>
+                    <tr>
+                        <td><b>Date:</b></td>
+                        <td style="position:relative;left:20px">@Html.DisplayFor(model => model.Date)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col-12">
+            <table class="table table-striped text-center">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@Html.DisplayFor(model => model.Product.ProductName)</td>
+                        <td>@Html.DisplayFor(model => model.Quantity)</td>
+                        <td>@Html.DisplayFor(model => model.UnitPrice)</td>
+                        <td>@Html.DisplayFor(model => model.TotalAmount)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <hr />
+    <div class="row mt-4">
+        <div class="col-md-6 offset-md-6">
+            <table class="table table-borderless">
+                <tbody>
+                    <tr>
+                        <td><b>Discount:</b></td>
+                        <td>@Html.DisplayFor(model => model.Discount)</td>
+                    </tr>
+                    <tr>
+                        <td><b>Total Amount:</b></td>
+                        <td>@Html.DisplayFor(model => model.TotalAmount)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col-12">
+            <table class="table table-borderless">
+                <thead>
+                    <tr>
+                        <th>@Html.DisplayNameFor(model => model.Remarks)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@Html.DisplayFor(model => model.Remarks)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row pt-2">
+        @{
+            if (Model.PostedBy == null)
+            {
+                <div class="col-6 col-md-3">
+                    <a id="approveButton" class="btn btn-primary form-control buttons">Approve</a>
+                </div>
+            }
+            else
+            {
+                <div class="col-6 col-md-3">
+                    <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                </div>
+            }
         }
-        else
-        {
-            <div class="col-6 col-md-3">
-                <a asp-area="Mobility" asp-controller="PurchaseOrder" asp-action="Print" asp-route-id="@Model.PurchaseOrderNo" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
-            </div>
-        }
-    }
-
-    <div class="col-6 col-md-3">
-        <a asp-area="Mobility" asp-controller="PurchaseOrder" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+        <div class="col-6 col-md-3">
+            <a asp-area="Mobility" asp-controller="PurchaseOrder" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+        </div>
     </div>
 </div>
 

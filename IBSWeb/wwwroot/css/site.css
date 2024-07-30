@@ -442,13 +442,6 @@ bg-success {
         margin: 0 !important;
         padding: 0 !important;
         max-width: 100%;
-        font-family: sans-serif !important;
-        font-size: 12pt !important;
-    }
-
-    h6 {
-        font-family: sans-serif;
-        font-size: 12pt;
     }
 
     .buttons {
