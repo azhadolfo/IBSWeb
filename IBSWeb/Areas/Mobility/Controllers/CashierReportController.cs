@@ -261,7 +261,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var model = new CustomerInvoicingViewModel
             {
-                DsrList = await _unitOfWork.MobilitySalesHeader.GetDsrList(cancellationToken),
+                DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(cancellationToken),
                 Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken),
                 Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken),
             };
@@ -283,7 +283,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetDsrList(cancellationToken);
+                    viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(cancellationToken);
                     viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken);
                     viewModel.Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
@@ -291,7 +291,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
             }
 
-            viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetDsrList(cancellationToken);
+            viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(cancellationToken);
             viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken);
             viewModel.Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";

@@ -948,11 +948,24 @@ namespace IBS.DataAccess.Repository.Mobility
 
         #endregion
 
-        public async Task<List<SelectListItem>> GetDsrList(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetPostedDsrList(CancellationToken cancellationToken = default)
         {
             return await _db.MobilitySalesHeaders
                 .OrderBy(dsr => dsr.SalesHeaderId)
                 .Where(dsr => dsr.PostedBy != null)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.SalesHeaderId.ToString(),
+                    Text = c.SalesNo
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetUnpostedDsrList(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilitySalesHeaders
+                .OrderBy(dsr => dsr.SalesHeaderId)
+                .Where(dsr => dsr.PostedBy == null)
                 .Select(c => new SelectListItem
                 {
                     Value = c.SalesHeaderId.ToString(),
