@@ -89,6 +89,7 @@
                         data: { drId: drId },
                         success: function (data) {
                             $('input[name="InvoiceQuantity"]').val(formatNumber(data.quantity));
+                            $('input[name="ReceivedQuantity"]').val(formatNumber(data.quantity));
                             $('input[name="Product"]').val(data.product);
                             // Set other fields as necessary using the data returned
                         },
@@ -98,6 +99,7 @@
                     });
                 } else {
                     $('input[name="InvoiceQuantity"]').val('');
+                    $('input[name="ReceivedQuantity"]').val('');
                     $('input[name="Product"]').val('');
                     // Clear other fields if necessary
                 }
