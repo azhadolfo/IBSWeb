@@ -39,8 +39,13 @@
                         <td>@Html.DisplayFor(model => model.Remarks)</td>
                     </tr>
                     <tr>
-                        <td><b>Invoice/DR:</b></td>
-                        <td>@Html.DisplayFor(model => model.FilprideDeliveryReceipt.DeliveryReceiptNo)</td>
+                        <td><b>Invoice#:</b></td>
+                        <td>
+                            @if (Model.FilprideDeliveryReceipt.InvoiceNo != Model.FilprideDeliveryReceipt.DeliveryReceiptNo)
+                            {
+                                @Html.DisplayFor(model => model.FilprideDeliveryReceipt.DeliveryReceiptNo)
+                            }
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -50,11 +55,15 @@
                 <tbody>
                     <tr>
                         <td><b>Supplier:</b></td>
-                        <td style="position:relative;right:50px">Filpride</td>
+                        <td style="position:relative;left:40px">Filpride</td>
                     </tr>
                     <tr>
                         <td><b>Plate No:</b></td>
-                        <td style="position:relative;right:50px">@Html.DisplayFor(model => model.PlateNo)</td>
+                        <td style="position:relative;left:40px">@Html.DisplayFor(model => model.PlateNo)</td>
+                    </tr>
+                    <tr>
+                        <td><b>DR#:</b></td>
+                        <td style="position:relative;left:40px">@Html.DisplayFor(model => model.FilprideDeliveryReceipt.DeliveryReceiptNo)</td>
                     </tr>
                 </tbody>
             </table>
