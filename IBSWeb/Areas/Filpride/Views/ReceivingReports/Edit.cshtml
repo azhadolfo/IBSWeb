@@ -1,0 +1,79 @@
+﻿@model ReceivingReport
+
+@{
+    ViewData["Title"] = "Edit Receiving Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Edit Receiving Report</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group mb-3">
+                <label asp-for="Date" class="control-label">Date</label>
+                <input asp-for="Date" type="date" class="form-control" />
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="POId" class="control-label">Suppliers PO No.</label>
+                <select asp-for="POId" class="form-control js-select2" asp-items="@Model.PurchaseOrders" disabled readonly></select>
+                <input type="hidden" asp-for="POId" />
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="SupplierInvoiceNumber" class="control-label"></label>
+                <input asp-for="SupplierInvoiceNumber" class="form-control" />
+                <span asp-validation-for="SupplierInvoiceNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="SupplierInvoiceDate" class="control-label"></label>
+                <input asp-for="SupplierInvoiceDate" type="date" class="form-control" />
+                <span asp-validation-for="SupplierInvoiceDate" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="TruckOrVessels" class="control-label">Truck/Vessels</label>
+                <input asp-for="TruckOrVessels" class="form-control" />
+                <span asp-validation-for="TruckOrVessels" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="QuantityDelivered" class="control-label">Qty Delivered</label>
+                <input asp-for="QuantityDelivered" class="form-control" disabled="@Model.PostedBy != null" readonly="@Model.PostedBy != null" />
+                <input type="hidden" asp-for="QuantityDelivered" />
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="QuantityReceived" class="control-label">Qty Received</label>
+                <input asp-for="QuantityReceived" class="form-control" disabled="@Model.PostedBy != null" readonly="@Model.PostedBy != null" />
+                <input type="hidden" asp-for="QuantityReceived" />
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="OtherRef" class="control-label"></label>
+                <input asp-for="OtherRef" class="form-control" />
+                <span asp-validation-for="OtherRef" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="Remarks" class="control-label">Remarks</label>
+                <textarea asp-for="Remarks" class="form-control" style="height: 100px"></textarea>
+                <input type="hidden" asp-for="Remarks" />
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        setTransactionDate();
+    </script>
+}

@@ -1,0 +1,383 @@
+﻿@model IEnumerable<FilprideSalesBook>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Sales Book";
+    var dateFrom = ViewBag.DateFrom;
+    var dateTo = ViewBag.DateTo;
+    var lastRecord = ViewBag.LastRecord;
+
+    DateTime now = DateTime.Now;
+
+    decimal totalAmount = 0;
+    decimal totalQuantity = 0;
+    decimal totalVatableSales = 0;
+    decimal totalVatableAmount = 0;
+    decimal totalExempted = 0;
+    decimal totalZeroRated = 0;
+    decimal totalDiscount = 0;
+    decimal totalNetSales = 0;
+
+    int numberOfRecords = 0;
+    decimal amountFieldControlTotal = 0;
+}
+<style>
+    body {
+        margin: 0 100 0 0;
+        padding: 0;
+    }
+
+    .container {
+        margin: 0;
+        padding: 0;
+        max-width: 100%;
+    }
+
+    main {
+        margin: 0;
+        padding: 0;
+    }
+
+    footer {
+        display: none;
+        visibility: hidden;
+    }
+</style>
+<br class="br-top" />
+<div class="mx-5">
+<pre>
+TAXPAYER'S NAME: Filpride Resources Inc.
+TIN: 000-216-589-00000
+ADDRESS: 57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan, Olongapo City, 2200 Zambales, Philippines
+
+Accounting System: Accounting Administration System
+Acknowledgement Certificate Control No.: @* @CS.ACCN *@
+Date Issued: @* @CS.DateIssued *@
+</pre>
+<pre id="resultPre">
+Accounting Books File Attributes/Layout Definition
+File Name: Sales Book Report
+File Type: Text File
+Number of Records:                  @numberOfRecords
+Amount Field Control Total:         @amountFieldControlTotal
+Period Covered:                     @dateFrom to @dateTo
+Transaction cut-off Date & Time:    @lastRecord
+Extracted By:                       @UserManager.GetUserName(User).ToUpper()
+
+</pre>
+
+    <h3><b>SALES BOOK</b></h3>
+    <table class="table-hover w-100" style="margin-top:20px;">
+        <thead>
+            <tr class="table-bordered">
+                <th style="padding: 10px 20px 10px 20px;">
+                    @if (ViewBag.SelectedDocument != "DueDate")
+                    {
+                        @Html.DisplayNameFor(model => model.TransactionDate)
+                    }
+                    else
+                    {
+                        @Html.DisplayNameFor(model => model.DueDate)
+                    }
+                </th>
+                <th style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.SerialNo)
+                </th>
+                <th style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.SoldTo)
+                </th>
+                <th style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.TinNo)
+                </th>
+                <th style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.Address)
+                </th>
+                <th style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.Description)
+                </th>
+                <th class="text-end" style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.Amount)
+                </th>
+                <th class="text-end" style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.VatAmount)
+                </th>
+                <th class="text-end" style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.VatableSales)
+                </th>
+                <th class="text-end" style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.VatExemptSales)
+                </th>
+                <th class="text-end" style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.ZeroRated)
+                </th>
+                <th class="text-end" style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.Discount)
+                </th>
+                <th class="text-end" style="padding: 10px 20px 10px 20px;">
+                    @Html.DisplayNameFor(model => model.NetSales)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach (var invoice in Model)
+            {
+                <tr class="align-text-bottom">
+                    <td style="padding: 10px 20px 10px 20px;">
+                        @if (ViewBag.SelectedDocument != "DueDate")
+                        {
+                            @invoice.TransactionDate.ToString("MM/dd/yyyy")
+                        }
+                        else
+                        {
+                            @invoice.DueDate.ToString("MM/dd/yyyy")
+                        }
+                    </td>
+                    <td style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.SerialNo)
+                    </td>
+                    <td style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.SoldTo)
+                    </td>
+                    <td style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.TinNo)
+                    </td>
+                    <td style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.Address)
+                    </td>
+                    <td style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.Description)
+                    </td>
+                    <td class="text-end" style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.Amount)
+                    </td>
+                    <td class="text-end" style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.VatAmount)
+                    </td>
+                    <td class="text-end" style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.VatableSales)
+                    </td>
+                    <td class="text-end" style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.VatExemptSales)
+                    </td>
+                    <td class="text-end" style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.ZeroRated)
+                    </td>
+                    <td class="text-end" style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.Discount)
+                    </td>
+                    <td class="text-end" style="padding: 10px 20px 10px 20px;">
+                        @Html.DisplayFor(model => invoice.NetSales)
+                    </td>
+
+                </tr>
+
+                totalAmount += invoice.Amount;
+                totalVatableSales += invoice.VatableSales;
+                totalVatableAmount += invoice.VatAmount;
+                totalExempted += invoice.VatExemptSales;
+                totalZeroRated += invoice.ZeroRated;
+                totalDiscount += invoice.Discount;
+                totalNetSales += invoice.NetSales;
+            }
+            <tr class="align-text-bottom" style="border-top: 2px solid black;">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="text-center"><b>TOTAL:</b></td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalAmount.ToString("N2")</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalVatableAmount.ToString("N2")</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalVatableSales.ToString("N2")</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalExempted.ToString("N2")</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalZeroRated.ToString("N2")</div></td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalDiscount.ToString("N2")</div></td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalNetSales.ToString("N2")</div></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p style="line-height: 1; margin-top:25px;" class="text-start">
+        <em>
+            <b>Software Name :</b> Accounting Administration System (AAS)
+            <br />
+            <b>Version :</b> @* @CS.Version *@
+            <br />
+            <b>Printed By :</b> @UserManager.GetUserName(User).ToUpper()
+            <br />
+            <b>Date & Time Printed :</b> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+        </em>
+    </p>
+
+    <a class="btn btn-success" onclick="printPage()" id="printButton" style="margin-top:25px;">Print</a>
+    <a asp-action="SalesBook" class="btn" id="otherButton" style="margin-top:25px;">Back</a>
+</div>
+@section Scripts {
+    <script>
+        function printPage() {
+            // Call the print function
+            window.print();
+        }
+    </script>
+    <script>
+        // Get the first row in the table body
+        var firstRow = document.querySelector('tbody tr:first-child');
+
+        // Get all cells in the first row
+        var cells = firstRow.querySelectorAll('td');
+
+        // Initialize total character count
+        var totalCharacters = 0;
+
+        // Get the pre tag element
+        var resultPre = document.getElementById('resultPre');
+
+        // Append the header for the fields
+        resultPre.textContent += 'Field Name          Description         From     To     Length      Example\n';
+
+        // Iterate through each cell in the first row
+        cells.forEach(function (cell, index) {
+            // Calculate the starting and ending character positions for each cell
+            var cellHtml = cell.innerHTML;
+
+            // Exclude spaces from both 'START' and 'END' counts
+            var startChar = totalCharacters + 1;
+            var endChar = startChar + cellHtml.replace(/\s/g, '').length - 1;
+
+            // Update the total character count
+            totalCharacters = endChar + 1; // Add 1 to include the space in the next cell
+
+            var content = cellHtml.trim();
+
+            // Append the result to the pre tag based on the row index
+            switch (index) {
+                case 0: // Transaction Date
+                    resultPre.textContent += padToLength('TransactionDate', 20) +
+                        padToLength('Tran. Date', 20) +
+                        padToLength(startChar.toString(), 9) +
+                        padToLength(endChar.toString(), 7) +
+                        padToLength((endChar - startChar + 1).toString(), 12) +
+                        content + '\n';
+                    break;
+                case 1: // Serial No
+                    resultPre.textContent += padToLength('SerialNo', 20) +
+                        padToLength('Serial Number', 20) +
+                        padToLength(startChar.toString(), 9) +
+                        padToLength(endChar.toString(), 7) +
+                        padToLength((endChar - startChar + 1).toString(), 12) +
+                        content + '\n';
+                    break;
+                case 2: // Sold To
+                    resultPre.textContent += padToLength('SoldTo', 20) +
+                        padToLength('Customer Name', 20) +
+                        padToLength('25', 9) +
+                        padToLength('124', 7) +
+                        padToLength('100', 12) +
+                        content + '\n';
+                    break;
+                case 3: // Tin#
+                    resultPre.textContent += padToLength('TinNo', 20) +
+                        padToLength('Tin#', 20) +
+                        padToLength('126', 9) +
+                        padToLength('145', 7) +
+                        padToLength('20', 12) +
+                        content + '\n';
+                    break;
+                case 4: // Amount
+                    resultPre.textContent += padToLength('Address', 20) +
+                        padToLength('Address', 20) +
+                        padToLength('147', 9) +
+                        padToLength('346', 7) +
+                        padToLength('200', 12) +
+                        content + '\n';
+                    break;
+                case 5: // Address
+                    resultPre.textContent += padToLength('ProductDescription', 20) +
+                        padToLength('Description', 20) +
+                        padToLength('348', 9) +
+                        padToLength('397', 7) +
+                        padToLength('50', 12) +
+                        content + '\n';
+                    break;
+                case 6: // Address
+                    resultPre.textContent += padToLength('Amount', 20) +
+                        padToLength('Amount', 20) +
+                        padToLength('399', 9) +
+                        padToLength('416', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 7: // Vat Amount
+                    resultPre.textContent += padToLength('VatAmount', 20) +
+                        padToLength('Vat Amount', 20) +
+                        padToLength('418', 9) +
+                        padToLength('435', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 8: // Vatable Sales
+                    resultPre.textContent += padToLength('VatableSales', 20) +
+                        padToLength('Vatable Sales', 20) +
+                        padToLength('437', 9) +
+                        padToLength('454', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 9: // VAT Exempt Sales
+                    resultPre.textContent += padToLength('VatExemptSales', 20) +
+                        padToLength('VAT Exempt Sales', 20) +
+                        padToLength('456', 9) +
+                        padToLength('473', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 10: // Zero Rated
+                    resultPre.textContent += padToLength('ZeroRated', 20) +
+                        padToLength('Zero Rated', 20) +
+                        padToLength('475', 9) +
+                        padToLength('492', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 11: // Zero Rated
+                    resultPre.textContent += padToLength('Discount', 20) +
+                        padToLength('Discount', 20) +
+                        padToLength('494', 9) +
+                        padToLength('511', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 12: // Zero Rated
+                    resultPre.textContent += padToLength('NetSales', 20) +
+                        padToLength('Net Sales', 20) +
+                        padToLength('513', 9) +
+                        padToLength('530', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+            }
+        });
+
+        // Function to pad a string to a specific length
+        function padToLength(str, length) {
+            return str + ' '.repeat(Math.max(0, length - str.length));
+        }
+    </script>
+
+    <script>
+        // Get all <tr> elements in the table body (excluding the header row)
+        var allTrElements = document.querySelectorAll('tbody tr');
+
+        // Get the pre tag element
+        var resultPre = document.getElementById('resultPre');
+
+        // Replace the placeholder in the HTML with the actual number of records
+        resultPre.innerHTML = resultPre.innerHTML.replace('@numberOfRecords', (allTrElements.length - 1));
+        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount.ToString("N2")");
+
+    </script>
+
+
+}

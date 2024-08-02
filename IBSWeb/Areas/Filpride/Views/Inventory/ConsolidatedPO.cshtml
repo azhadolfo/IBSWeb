@@ -1,0 +1,164 @@
+﻿@model IEnumerable<FilprideInventory>
+
+@{
+    ViewData["Title"] = "Inventory Report";
+    decimal totalAmount = 0m;
+    decimal totalQty = 0m;
+    decimal totalPrice = 0m;
+}
+
+<div class="mb-3">
+    <h5>Product Name: @ViewData["Product"]</h5>
+</div>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>PO No.</th>
+                <th>Date</th>
+                <th>Particulars</th>
+                <th>Reference</th>
+                <th class="text-end">Quantity</th>
+                <th class="text-end">Cost</th>
+                <th class="text-end">Total</th>
+                <th class="text-end">Inventory Balance</th>
+                <th class="text-end">Unit Cost Average</th>
+                <th class="text-end">Total Balance</th>
+                <th class="text-end">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var distinctInventoryReport = Model.Select(ir => new { ir.POId, ir.ProductId }).Distinct().ToList();
+                foreach (var poId in distinctInventoryReport)
+                {
+                    var inventoryWithSamePOId = Model.Where(ir => ir.POId == poId.POId && ir.ProductId == poId.ProductId).ToList();
+
+                    foreach (var inventory in inventoryWithSamePOId)
+                    {
+                        if (inventory.Particular.StartsWith("Sales") || inventory.Particular.StartsWith("Actual Inventory(Loss)"))
+                        {
+                            totalAmount -= inventory.Total;
+                            totalQty -= inventory.Quantity;
+                            totalPrice = totalAmount != 0 && totalQty != 0 ? totalAmount / totalQty : inventory.Cost;
+                            <tr>
+                                @if (inventory == inventoryWithSamePOId.First())
+                                {
+                                    <td rowspan="@inventoryWithSamePOId.Count"> @Html.DisplayFor(model => inventory.PurchaseOrder.PurchaseOrderNo) </td>
+                                }
+                                <td>@inventory.Date.ToString("MM/dd/yyyy")</td>
+                                <td>@Html.DisplayFor(model => inventory.Particular)</td>
+                                <td>@Html.DisplayFor(model => inventory.Reference)</td>
+                                <td class="text-end">@Html.DisplayFor(model => inventory.Quantity)</td>
+                                <td class="text-end">@Html.DisplayFor(model => inventory.Cost)</td>
+                                <td class="text-end">@Html.DisplayFor(model => inventory.Total)</td>
+                                <td class="text-end">@totalQty.ToString("N2")</td>
+                                <td class="text-end">@totalPrice.ToString("N2")</td>
+                                <td class="text-end">@totalAmount.ToString("N2")</td>
+                                <td>
+                                    @if (inventory.IsValidated)
+                                    {
+                                        <span class="badge text-bg-primary">Validated</span>
+                                    }
+                                    else
+                                    {
+                                        <a href="#" onclick="confirmValidation(@inventory.InventoryId)" class="badge text-bg-warning" title="Click this to validate.">Validate</a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            totalAmount += inventory.Total;
+                            totalQty += inventory.Quantity;
+                            totalPrice = totalAmount != 0 && totalQty != 0 ? totalAmount / totalQty : inventory.Cost;
+                            <tr>
+                                @if (inventory == inventoryWithSamePOId.First())
+                                {
+                                    <td rowspan="@inventoryWithSamePOId.Count"> @Html.DisplayFor(model => inventory.PurchaseOrder.PurchaseOrderNo) </td>
+                                }
+                                <td>@inventory.Date.ToString("MM/dd/yyyy")</td>
+                                <td>@Html.DisplayFor(model => inventory.Particular)</td>
+                                <td>@Html.DisplayFor(model => inventory.Reference)</td>
+                                <td class="text-end">@Html.DisplayFor(model => inventory.Quantity)</td>
+                                <td class="text-end">@Html.DisplayFor(model => inventory.Cost)</td>
+                                <td class="text-end">@Html.DisplayFor(model => inventory.Total)</td>
+                                <td class="text-end">@totalQty.ToString("N2")</td>
+                                <td class="text-end">@totalPrice.ToString("N2")</td>
+                                <td class="text-end">@totalAmount.ToString("N2")</td>
+                                <td>
+                                    @if (inventory.IsValidated)
+                                    {
+                                        <span class="badge text-bg-primary">Validated</span>
+                                    }
+                                    else
+                                    {
+                                        <a href="#" onclick="confirmValidation(@inventory.InventoryId)" class="badge text-bg-warning" title="Click this to validate.">Validate</a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="row mt-5">
+    <div class="col-6 col-md-3">
+        <a onclick="window.print()" id="printButton" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a asp-controller="Inventory" asp-action="InventoryReport" id="otherButton" class="btn btn-outline-primary border form-control buttons">Back</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmValidation(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You are about to validate this inventory.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    validateInventory(id);
+                }
+            });
+        }
+
+        function validateInventory(id) {
+            $.ajax({
+                url: '@Url.Action("ValidateInventory", "Inventory")',
+                type: 'POST',
+                data: { id: id },
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'The record was validated successfully.',
+                        showConfirmButton: false,
+                        timer: 1500 // Close the alert after 1.5 seconds
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to validate inventory.',
+                        showConfirmButton: false,
+                        timer: 1500 // Close the alert after 1.5 seconds
+                    });
+                }
+            });
+        }
+    </script>
+}

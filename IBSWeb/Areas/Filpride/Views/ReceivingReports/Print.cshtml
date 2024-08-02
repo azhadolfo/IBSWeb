@@ -1,0 +1,184 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model ReceivingReport
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@{
+    ViewData["Title"] = "Print Receiving Report";
+}
+
+<br />
+<div class="text-end">
+    <img src="~/img/Filpride.jpg" height="" width="130px" />
+</div>
+<div class="text-center">
+    <h2><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
+    <p style="line-height: 1; margin-top:-7px;">
+        57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
+        Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
+        VAT Reg. TIN: 000-216-589-00000
+    </p>
+</div>
+
+<h3><span style="display: inline-block; margin-top:50px;"><b>RECEIVING REPORT</b></span></h3>
+<div class="text-end" style="margin-top:-50px;">
+    <h6><b>No.&nbsp;@Html.DisplayFor(model => model.ReceivingReportNo)</b></h6>
+</div>
+
+
+<div class="w-100 text-end" style="margin-top:20px; padding-bottom:10px;">
+    <span><b>Date:</b></span>
+    <span class="underline" style="display: inline-block; width: 20%; text-align:center;">@Model.Date.ToString("MM/dd/yyyy")</span><br />
+</div>
+
+<div>
+    <table class="table-bordered w-100">
+        <tbody>
+            <tr>
+                <td colspan="2" style="padding-left:10px;">Supplier: &nbsp; @Html.DisplayFor(model => model.PurchaseOrder.Supplier.SupplierName)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top:20px;">
+    <table class="table-bordered w-100">
+        <tbody>
+            <tr>
+                <td colspan="7" style="padding-left:20px;">DETAILS</td>
+            </tr>
+            <tr>
+                <td class="text-center" style="width:12.5%">PO#</td>
+                <td class="text-center" style="width:12.5%">SUPPLIER INVOICE#/DATE</td>
+                <td class="text-center" style="width:25%">TRUCK/VESSELS</td>
+                <td class="text-center" style="width:12.5%">PRODUCT</td>
+                <td class="text-center" style="width:12.5%">QTY SERVED</td>
+                <td class="text-center" style="width:12.5%">QTY RECEIVED</td>
+                <td class="text-center" style="width:12.5%">GAIN/LOSS</td>
+            </tr>
+            <tr>
+                <td class="text-center p-lg-4">@Html.DisplayFor(model => model.PONo)</td>
+                <td class="text-center p-lg-4">@Html.DisplayFor(model => model.SupplierInvoiceNumber)</td>
+                <td class="text-center p-lg-4">@Html.DisplayFor(model => model.TruckOrVessels)</td>
+                <td class="text-center p-lg-4">@Html.DisplayFor(model => model.PurchaseOrder.Product.ProductName)</td>
+                <td class="text-center p-lg-4">@Html.DisplayFor(model => model.QuantityDelivered)</td>
+                <td class="text-center p-lg-4">@Html.DisplayFor(model => model.QuantityReceived)</td>
+                <td class="text-center p-lg-4">@Html.DisplayFor(model => model.GainOrLoss)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <table class="table-bordered w-100 mt-2">
+        <tbody>
+            <tr>
+                <td colspan="2" style="padding-left:10px;">Other Reference: &nbsp; @Html.DisplayFor(model => model.OtherRef)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top:10px;">
+    <table class="table-bordered w-100">
+        <tbody>
+            <tr>
+                <td class="p-lg-4" colspan="6" style="padding-left:20px;">REMARKS : <pre style="line-height: 1; margin: 0; padding: 0">@Html.DisplayFor(model => model.Remarks)</pre></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="text-center w-100" style="margin-top:10px;">
+    <p>
+        <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br />
+        <span>Acknowledgement Certificate No:</span>
+        <span style="display: inline-block; width:150px;">@* @CS.ACCN *@</span>
+        <span>&nbsp;&nbsp;Date Issued:</span>
+        <span style="display: inline-block; width:50px;">@* @CS.DateIssued *@</span><br />
+        Series: RR0000000001 - RR9999999999
+        Date and Time Created:&nbsp; @Model.CreatedDate.ToString("MM/dd/yyyy")
+    </p>
+</div>
+
+<div class="text-start w-100">
+    <p style="line-height: 1;">
+        <em>
+            <strong>Software Name :</strong> Accounting Administration System (AAS)
+            <br />
+            <strong>Version :</strong> @* @CS.Version *@
+            <br />
+            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+            <br />
+            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+        </em>
+    </p>
+</div>
+
+@* @if (!Model.IsPrinted)
+{
+    <div class="text-end">
+        ORIGINAL COPY
+    </div>
+}
+else
+{
+    <div class="text-end">
+        REPRINT COPY
+    </div>
+} *@
+
+<a asp-action="Printed" class="btn btn-success" asp-route-id="@Model.ReceivingReportId" onclick="printPage()" id="printButton">Print</a>
+<a asp-action="Index" class="btn" id="otherButton">Back</a>
+
+@section Scripts {
+    <script>
+        var originalFontSizes = [];
+
+        function printPage() {
+            var printButton = document.getElementById("printButton");
+            var otherButton = document.getElementById("otherButton");
+
+            // Hide the header and footer
+            document.querySelector("header").style.display = "none";
+
+            // Hide the buttons before printing
+            if (printButton) {
+                printButton.style.visibility = "hidden";
+            }
+            if (otherButton) {
+                otherButton.style.visibility = "hidden";
+            }
+
+            // Get all paragraph elements
+            var paragraphs = document.querySelectorAll("p");
+
+            // Store the original font sizes
+            for (var i = 0; i < paragraphs.length; i++) {
+                originalFontSizes[i] = paragraphs[i].style.fontSize;
+                // Set the font size of all paragraph elements to 12px for printing
+                paragraphs[i].style.fontSize = "12px";
+            }
+
+            // Call the print function
+            window.print();
+
+            // Restore the font sizes
+            for (var i = 0; i < paragraphs.length; i++) {
+                paragraphs[i].style.fontSize = originalFontSizes[i];
+            }
+
+            // Restore the buttons' visibility after printing (optional)
+            if (printButton) {
+                printButton.style.visibility = "visible";
+            }
+            if (otherButton) {
+                otherButton.style.visibility = "visible";
+            }
+
+            // Restore the header and footer's visibility after printing (optional)
+            document.querySelector("header").style.display = "";
+        }
+    </script>
+}
+

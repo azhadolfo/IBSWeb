@@ -1,0 +1,266 @@
+﻿@model IEnumerable<FilprideInventory>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Inventory Book";
+    var dateFrom = ViewBag.DateFrom;
+    var dateTo = ViewBag.DateTo;
+    var lastRecord = ViewBag.LastRecord;
+
+    DateTime now = DateTime.Now;
+
+    decimal totalQuantity = 0;
+    decimal totalPriceUnitAmount = 0;
+    decimal totalAmount = 0;
+
+    int numberOfRecords = 0;
+    decimal amountFieldControlTotal = 0;
+    decimal getLastRecordCost = 0;
+}
+<br class="br-top" />
+<div class="mx-5">
+<pre>
+TAXPAYER'S NAME: Filpride Resources Inc.
+TIN: 000-216-589-00000
+ADDRESS: 57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan, Olongapo City, 2200 Zambales, Philippines
+
+Accounting System: Accounting Administration System
+Acknowledgement Certificate Control No.: @* @CS.ACCN *@
+Date Issued: @* @CS.DateIssued *@
+</pre>
+
+<pre id="resultPre">
+Accounting Books File Attributes/Layout Definition
+File Name: Inventory Book Report
+File Type: Text File
+Number of Records:                  @numberOfRecords
+Amount Field Control Total:         @amountFieldControlTotal
+Period Covered:                     @dateFrom to @dateTo
+Transaction cut-off Date & Time:    @lastRecord
+Extracted By:                       @UserManager.GetUserName(User).ToUpper()
+
+</pre>
+
+    <h3><b>INVENTORY BOOK</b></h3>
+    <table class="table-hover w-100" style="margin-top:20px;">
+        <thead>
+            <tr class="table-bordered">
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Date)
+                </th>
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Product.ProductCode)
+                </th>
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Product.ProductName)
+                </th>
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Product.ProductUnit)
+                </th>
+                <th class="text-end" style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Quantity)
+                </th>
+                <th class="text-end" style="padding: 10px 30px 10px 30px;">
+                    Price Per Unit
+                </th>
+                <th class="text-end" style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Total)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var inventory in Model)
+            {
+                <tr class="align-text-bottom">
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @inventory.Date.ToString("MM/dd/yyyy")
+                    </td>
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => inventory.Product.ProductCode)
+                    </td>
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => inventory.Product.ProductName)
+                    </td>
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => inventory.Product.ProductUnit)
+                    </td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => inventory.Quantity)
+                    </td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => inventory.Cost)
+                    </td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => inventory.Total)
+                    </td>
+                </tr>
+                if (inventory.Particular == "Sales" || inventory.Particular == "Actual Inventory(Loss)")
+                {
+                    totalQuantity -= inventory.Quantity;
+                    totalAmount -= inventory.Total;
+                }
+                else
+                {
+                    totalQuantity += inventory.Quantity;
+                    totalAmount += inventory.Total;
+                }
+                getLastRecordCost = inventory.Cost;
+                if (totalAmount != 0 && totalQuantity != 0)
+                {
+                    totalPriceUnitAmount = totalAmount / totalQuantity;
+                }
+                else
+                {
+                    totalPriceUnitAmount = getLastRecordCost;
+                }
+            }
+            <tr class="align-text-bottom" style="border-top: 2px solid black;">
+                @{
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-center"><b>TOTAL:</b></td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalQuantity.ToString("N2")</td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalPriceUnitAmount.ToString("N2")</td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalAmount.ToString("N2")</td>
+                }
+            </tr>
+        </tbody>
+    </table>
+
+    <p style="line-height: 1; margin-top:25px;" class="text-start">
+        <em>
+            <b>Software Name :</b> Accounting Administration System (AAS)
+            <br />
+            <b>Version :</b> @* @CS.Version *@
+            <br />
+            <b>Printed By :</b> @UserManager.GetUserName(User).ToUpper()
+            <br />
+            <b>Date & Time Printed :</b> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+        </em>
+    </p>
+
+    <a class="btn btn-success" onclick="printPage()" id="printButton" style="margin-top:25px;">Print</a>
+    <a asp-action="InventoryBook" class="btn" id="otherButton" style="margin-top:25px;">Back</a>
+</div>
+@section Scripts {
+    <script>
+        function printPage() {
+            // Call the print function
+            window.print();
+        }
+    </script>
+    <script>
+        // Get the first row in the table body
+        var firstRow = document.querySelector('tbody tr:first-child');
+
+        // Get all cells in the first row
+        var cells = firstRow.querySelectorAll('td');
+
+        // Initialize total character count
+        var totalCharacters = 0;
+
+        // Get the pre tag element
+        var resultPre = document.getElementById('resultPre');
+
+        // Append the header for the fields
+        resultPre.textContent += 'Field Name          Description         From     To     Length      Example\n';
+
+        // Iterate through each cell in the first row
+        cells.forEach(function (cell, index) {
+            // Calculate the starting and ending character positions for each cell
+            var cellHtml = cell.innerHTML;
+
+            // Exclude spaces from both 'START' and 'END' counts
+            var startChar = totalCharacters + 1;
+            var endChar = startChar + cellHtml.replace(/\s/g, '').length - 1;
+
+            // Update the total character count
+            totalCharacters = endChar + 1; // Add 1 to include the space in the next cell
+
+            var content = cellHtml.trim();
+
+            // Append the result to the pre tag based on the row index
+            switch (index) {
+                case 0: // Transaction Date
+                    resultPre.textContent += padToLength('Date', 20) +
+                        padToLength('Date', 20) +
+                        padToLength(startChar.toString(), 9) +
+                        padToLength(endChar.toString(), 7) +
+                        padToLength((endChar - startChar + 1).toString(), 12) +
+                        content + '\n';
+                    break;
+                case 1: // Serial No
+                    resultPre.textContent += padToLength('ProductCode', 20) +
+                        padToLength('Product Code', 20) +
+                        padToLength('12', 9) +
+                        padToLength('31', 7) +
+                        padToLength('20', 12) +
+                        content + '\n';
+                    break;
+                case 2: // Serial No
+                    resultPre.textContent += padToLength('ProductName', 20) +
+                        padToLength('Product Name', 20) +
+                        padToLength('33', 9) +
+                        padToLength('82', 7) +
+                        padToLength('50', 12) +
+                        content + '\n';
+                    break;
+                case 3: // Sold To
+                    resultPre.textContent += padToLength('Unit', 20) +
+                        padToLength('Unit', 20) +
+                        padToLength('84', 9) +
+                        padToLength('85', 7) +
+                        padToLength('2', 12) +
+                        content + '\n';
+                    break;
+                case 4: // Tin#
+                    resultPre.textContent += padToLength('Quantity', 20) +
+                        padToLength('Quantity', 20) +
+                        padToLength('87', 9) +
+                        padToLength('104', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 5: // Amount
+                    resultPre.textContent += padToLength('Price', 20) +
+                        padToLength('Price Per Unit', 20) +
+                        padToLength('106', 9) +
+                        padToLength('123', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 6: // Vat Amount
+                    resultPre.textContent += padToLength('Amount', 20) +
+                        padToLength('Amount', 20) +
+                        padToLength('125', 9) +
+                        padToLength('142', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+            }
+        });
+
+        // Function to pad a string to a specific length
+        function padToLength(str, length) {
+            return str + ' '.repeat(Math.max(0, length - str.length));
+        }
+    </script>
+
+    <script>
+        // Get all <tr> elements in the table body (excluding the header row)
+        var allTrElements = document.querySelectorAll('tbody tr');
+
+        // Get the pre tag element
+        var resultPre = document.getElementById('resultPre');
+
+        console.log("@totalAmount");
+        // Replace the placeholder in the HTML with the actual number of records
+        resultPre.innerHTML = resultPre.innerHTML.replace('@numberOfRecords', (allTrElements.length - 1));
+        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount.ToString("N2")");
+
+    </script>
+
+
+}
