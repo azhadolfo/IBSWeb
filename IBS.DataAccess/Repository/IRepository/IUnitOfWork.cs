@@ -108,6 +108,12 @@ namespace IBS.DataAccess.Repository.IRepository
         IReportRepository FilprideReport { get; }
         #endregion
 
+        #region Master File
+
+        IBankAccountRepository FilprideBankAccount { get; }
+
+        #endregion
+
         #endregion
     }
 }

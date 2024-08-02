@@ -1,8 +1,11 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.AccountsReceivable;
+using IBS.Models.Filpride.Books;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -13,6 +16,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly UserManager<IdentityUser> _userManager;
+
+        private readonly ApplicationDbContext _dbContext;
 
         public SalesInvoiceController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
         {
@@ -262,6 +267,314 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var sales = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
             return View(sales);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
+        {
+            var invoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(s => s.SalesInvoiceId == id, cancellationToken);
+            return PartialView("_PreviewPartialView", invoice);
+        }
+
+        public async Task<IActionResult> Post(int invoiceId, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(s => s.SalesInvoiceId == invoiceId, cancellationToken);
+
+            if (model != null)
+            {
+                try
+                {
+                    if (model.PostedBy == null)
+                    {
+                        model.PostedBy = _userManager.GetUserName(this.User);
+                        model.PostedDate = DateTime.Now;
+
+                        #region --Sales Book Recording
+
+                        var sales = new FilprideSalesBook();
+
+                        if (model.Customer.CustomerType == "Vatable")
+                        {
+                            sales.TransactionDate = model.TransactionDate;
+                            sales.SerialNo = model.SalesInvoiceNo;
+                            sales.SoldTo = model.Customer.CustomerName;
+                            sales.TinNo = model.Customer.CustomerTin;
+                            sales.Address = model.Customer.CustomerAddress;
+                            sales.Description = model.Product.ProductName;
+                            sales.Amount = model.Amount;
+                            sales.VatAmount = model.VatAmount;
+                            sales.VatableSales = model.VatableSales;
+                            sales.Discount = model.Discount;
+                            sales.NetSales = model.NetDiscount / 1.12m;
+                            sales.CreatedBy = model.CreatedBy;
+                            sales.CreatedDate = model.CreatedDate;
+                            sales.DueDate = model.DueDate;
+                            sales.DocumentId = model.SalesInvoiceId;
+                        }
+                        else if (model.Customer.CustomerType == "Exempt")
+                        {
+                            sales.TransactionDate = model.TransactionDate;
+                            sales.SerialNo = model.SalesInvoiceNo;
+                            sales.SoldTo = model.Customer.CustomerName;
+                            sales.TinNo = model.Customer.CustomerTin;
+                            sales.Address = model.Customer.CustomerAddress;
+                            sales.Description = model.Product.ProductName;
+                            sales.Amount = model.Amount;
+                            sales.VatExemptSales = model.Amount;
+                            sales.Discount = model.Discount;
+                            sales.NetSales = model.NetDiscount;
+                            sales.CreatedBy = model.CreatedBy;
+                            sales.CreatedDate = model.CreatedDate;
+                            sales.DueDate = model.DueDate;
+                            sales.DocumentId = model.SalesInvoiceId;
+                        }
+                        else
+                        {
+                            sales.TransactionDate = model.TransactionDate;
+                            sales.SerialNo = model.SalesInvoiceNo;
+                            sales.SoldTo = model.Customer.CustomerName;
+                            sales.TinNo = model.Customer.CustomerTin;
+                            sales.Address = model.Customer.CustomerAddress;
+                            sales.Description = model.Product.ProductName;
+                            sales.Amount = model.Amount;
+                            sales.ZeroRated = model.Amount;
+                            sales.Discount = model.Discount;
+                            sales.NetSales = model.NetDiscount;
+                            sales.CreatedBy = model.CreatedBy;
+                            sales.CreatedDate = model.CreatedDate;
+                            sales.DueDate = model.DueDate;
+                            sales.DocumentId = model.SalesInvoiceId;
+                        }
+
+                        await _dbContext.FilprideSalesBooks.AddAsync(sales, cancellationToken);
+
+                        #endregion --Sales Book Recording
+
+                        #region --General Ledger Book Recording
+
+                        var ledgers = new List<FilprideGeneralLedgerBook>();
+
+                        ledgers.Add(
+                            new FilprideGeneralLedgerBook
+                            {
+                                Date = model.TransactionDate,
+                                Reference = model.SalesInvoiceNo,
+                                Description = model.Product.ProductName,
+                                AccountNo = "1010201",
+                                AccountTitle = "AR-Trade Receivable",
+                                Debit = model.NetDiscount - (model.WithHoldingTaxAmount + model.WithHoldingVatAmount),
+                                Credit = 0,
+                                CreatedBy = model.CreatedBy,
+                                CreatedDate = model.CreatedDate
+                            }
+                        );
+
+                        if (model.WithHoldingTaxAmount > 0)
+                        {
+                            ledgers.Add(
+                                new FilprideGeneralLedgerBook
+                                {
+                                    Date = model.TransactionDate,
+                                    Reference = model.SalesInvoiceNo,
+                                    Description = model.Product.ProductName,
+                                    AccountNo = "1010202",
+                                    AccountTitle = "Deferred Creditable Withholding Tax",
+                                    Debit = model.WithHoldingTaxAmount,
+                                    Credit = 0,
+                                    CreatedBy = model.CreatedBy,
+                                    CreatedDate = model.CreatedDate
+                                }
+                            );
+                        }
+                        if (model.WithHoldingVatAmount > 0)
+                        {
+                            ledgers.Add(
+                                new FilprideGeneralLedgerBook
+                                {
+                                    Date = model.TransactionDate,
+                                    Reference = model.SalesInvoiceNo,
+                                    Description = model.Product.ProductName,
+                                    AccountNo = "1010203",
+                                    AccountTitle = "Deferred Creditable Withholding Vat",
+                                    Debit = model.WithHoldingVatAmount,
+                                    Credit = 0,
+                                    CreatedBy = model.CreatedBy,
+                                    CreatedDate = model.CreatedDate
+                                }
+                            );
+                        }
+                        if (model.Product.ProductName == "Biodiesel")
+                        {
+                            ledgers.Add(
+                                new FilprideGeneralLedgerBook
+                                {
+                                    Date = model.TransactionDate,
+                                    Reference = model.SalesInvoiceNo,
+                                    Description = model.Product.ProductName,
+                                    AccountNo = "4010101",
+                                    AccountTitle = "Sales - Biodiesel",
+                                    Debit = 0,
+                                    Credit = model.VatableSales > 0
+                                                ? model.VatableSales
+                                                : (model.ZeroRated + model.VatExempt) - model.Discount,
+                                    CreatedBy = model.CreatedBy,
+                                    CreatedDate = model.CreatedDate
+                                }
+                            );
+                        }
+                        else if (model.Product.ProductName == "Econogas")
+                        {
+                            ledgers.Add(
+                                new FilprideGeneralLedgerBook
+                                {
+                                    Date = model.TransactionDate,
+                                    Reference = model.SalesInvoiceNo,
+                                    Description = model.Product.ProductName,
+                                    AccountNo = "4010102",
+                                    AccountTitle = "Sales - Econogas",
+                                    Debit = 0,
+                                    Credit = model.VatableSales > 0
+                                                ? model.VatableSales
+                                                : (model.ZeroRated + model.VatExempt) - model.Discount,
+                                    CreatedBy = model.CreatedBy,
+                                    CreatedDate = model.CreatedDate
+                                }
+                            );
+                        }
+                        else if (model.Product.ProductName == "Envirogas")
+                        {
+                            ledgers.Add(
+                                new FilprideGeneralLedgerBook
+                                {
+                                    Date = model.TransactionDate,
+                                    Reference = model.SalesInvoiceNo,
+                                    Description = model.Product.ProductName,
+                                    AccountNo = "4010103",
+                                    AccountTitle = "Sales - Envirogas",
+                                    Debit = 0,
+                                    Credit = model.VatableSales > 0
+                                                ? model.VatableSales
+                                                : (model.ZeroRated + model.VatExempt) - model.Discount,
+                                    CreatedBy = model.CreatedBy,
+                                    CreatedDate = model.CreatedDate
+                                }
+                            );
+                        }
+
+                        if (model.VatAmount > 0)
+                        {
+                            ledgers.Add(
+                                new FilprideGeneralLedgerBook
+                                {
+                                    Date = model.TransactionDate,
+                                    Reference = model.SalesInvoiceNo,
+                                    Description = model.Product.ProductName,
+                                    AccountNo = "2010301",
+                                    AccountTitle = "Vat Output",
+                                    Debit = 0,
+                                    Credit = model.VatAmount,
+                                    CreatedBy = model.CreatedBy,
+                                    CreatedDate = model.CreatedDate
+                                }
+                            );
+                        }
+
+                        if (!_unitOfWork.FilprideSalesInvoice.IsJournalEntriesBalanced(ledgers))
+                        {
+                            throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                        }
+
+                        await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+
+                        #endregion --General Ledger Book Recording
+
+                        #region--Inventory Recording
+
+                        await _unitOfWork.FilprideInventory.AddSalesToInventoryAsync(model, cancellationToken);
+
+                        #endregion
+
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        TempData["success"] = "Sales Invoice has been Posted.";
+                        return RedirectToAction("Index");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction("Index");
+                }
+            }
+
+            return NotFound();
+        }
+
+        public async Task<IActionResult> Void(int invoiceId, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == invoiceId, cancellationToken);
+
+            if (model != null)
+            {
+                if (model.VoidedBy == null)
+                {
+                    if (model.PostedBy != null)
+                    {
+                        model.PostedBy = null;
+                    }
+
+                    model.VoidedBy = _userManager.GetUserName(this.User);
+                    model.VoidedDate = DateTime.Now;
+
+                    //await _generalRepo.RemoveRecords<SalesBook>(sb => sb.SerialNo == model.SINo, cancellationToken);
+                    //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.SINo, cancellationToken);
+                    //await _generalRepo.RemoveRecords<Inventory>(i => i.Reference == model.SINo, cancellationToken);
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Sales Invoice has been Voided.";
+                }
+                return RedirectToAction("Index");
+            }
+
+            return NotFound();
+        }
+
+        public async Task<IActionResult> Cancel(int invoiceId, string cancellationRemarks, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == invoiceId, cancellationToken);
+
+            if (model != null)
+            {
+                if (model.CanceledBy == null)
+                {
+                    model.CanceledBy = _userManager.GetUserName(this.User);
+                    model.CanceledDate = DateTime.Now;
+                    model.Status = "Cancelled";
+
+                    ///PENDING
+                    //model.CancellationRemarks = cancellationRemarks;
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Sales Invoice has been Cancelled.";
+                }
+                return RedirectToAction("Index");
+            }
+
+            return NotFound();
+        }
+
+        public async Task<IActionResult> GetPOs(int productId)
+        {
+            var purchaseOrders = await _dbContext.PurchaseOrders
+                .Where(po => po.ProductId == productId && !po.IsReceived && po.QuantityReceived != 0 && po.PostedBy != null)
+                .ToListAsync();
+
+            if (purchaseOrders != null && purchaseOrders.Count > 0)
+            {
+                var poList = purchaseOrders.Select(po => new { Id = po.PurchaseOrderId, PONumber = po.PurchaseOrderNo }).ToList();
+                return Json(poList);
+            }
+
+            return Json(null);
         }
     }
 }
