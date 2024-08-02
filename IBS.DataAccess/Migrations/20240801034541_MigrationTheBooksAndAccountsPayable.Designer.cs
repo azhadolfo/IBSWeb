@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240801034541_MigrationTheBooksAndAccountsPayable")]
+    partial class MigrationTheBooksAndAccountsPayable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1418,89 +1421,6 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_general_ledger_books", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideInventory", b =>
-                {
-                    b.Property<int>("InventoryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("inventory_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("InventoryId"));
-
-                    b.Property<decimal>("AverageCost")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("average_cost");
-
-                    b.Property<decimal>("Cost")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("cost");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<decimal>("InventoryBalance")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("inventory_balance");
-
-                    b.Property<bool>("IsValidated")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_validated");
-
-                    b.Property<int?>("POId")
-                        .HasColumnType("integer")
-                        .HasColumnName("po_id");
-
-                    b.Property<string>("Particular")
-                        .IsRequired()
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("particular");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer")
-                        .HasColumnName("product_id");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity");
-
-                    b.Property<string>("Reference")
-                        .HasColumnType("varchar(12)")
-                        .HasColumnName("reference");
-
-                    b.Property<decimal>("Total")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("total");
-
-                    b.Property<decimal>("TotalBalance")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("total_balance");
-
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasColumnType("varchar(2)")
-                        .HasColumnName("unit");
-
-                    b.Property<string>("ValidatedBy")
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("validated_by");
-
-                    b.Property<DateTime?>("ValidatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("validated_date");
-
-                    b.HasKey("InventoryId")
-                        .HasName("pk_filpride_inventories");
-
-                    b.HasIndex("POId")
-                        .HasDatabaseName("ix_filpride_inventories_po_id");
-
-                    b.HasIndex("ProductId")
-                        .HasDatabaseName("ix_filpride_inventories_product_id");
-
-                    b.ToTable("filpride_inventories", (string)null);
-                });
-
             modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideJournalBook", b =>
                 {
                     b.Property<int>("JournalBookId")
@@ -2175,56 +2095,6 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_delivery_receipts_invoice_no");
 
                     b.ToTable("filpride_delivery_receipts", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideOffsettings", b =>
-                {
-                    b.Property<int>("OffSettingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("off_setting_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OffSettingId"));
-
-                    b.Property<string>("AccountNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_no");
-
-                    b.Property<string>("AccountTitle")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_title");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<bool>("IsRemoved")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_removed");
-
-                    b.Property<string>("Reference")
-                        .HasColumnType("text")
-                        .HasColumnName("reference");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("source");
-
-                    b.HasKey("OffSettingId")
-                        .HasName("pk_filpride_offsettings");
-
-                    b.ToTable("filpride_offsettings", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.FilpridePurchaseOrder", b =>
@@ -5986,25 +5856,6 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Service");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideInventory", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.AccountsPayable.PurchaseOrder", "PurchaseOrder")
-                        .WithMany()
-                        .HasForeignKey("POId")
-                        .HasConstraintName("fk_filpride_inventories_purchase_orders_po_id");
-
-                    b.HasOne("IBS.Models.MasterFile.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_inventories_products_product_id");
-
-                    b.Navigation("Product");
-
-                    b.Navigation("PurchaseOrder");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.FilprideCustomerOrderSlip", b =>

@@ -30,7 +30,7 @@ namespace IBS.DataAccess.Repository
         public IPOSalesRepository MobilityPOSales { get; private set; }
         public IOfflineRepository MobilityOffline { get; private set; }
         public IGeneralLedgerRepository MobilityGeneralLedger { get; private set; }
-        public IInventoryRepository MobilityInventory { get; private set; }
+        public Mobility.IRepository.IInventoryRepository MobilityInventory { get; private set; }
         public IStationRepository MobilityStation { get; private set; }
         public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
         public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
@@ -46,6 +46,38 @@ namespace IBS.DataAccess.Repository
         public ICustomerRepository FilprideCustomer { get; private set; }
         public ISupplierRepository FilprideSupplier { get; private set; }
         public IHaulerRepository FilprideHauler { get; private set; }
+
+        #endregion
+
+        #region AAS
+
+        #region Accounts Receivable
+        public ISalesInvoiceRepository FilprideSalesInvoice { get; private set; }
+
+        public IServiceInvoiceRepository FilprideServiceInvoice { get; private set; }
+
+        public ICollectionReceiptRepository FilprideCollectionReceipt { get; private set; }
+
+        public IDebitMemoRepository FilprideDebitMemo { get; private set; }
+
+        public ICreditMemoRepository FilprideCreditMemo { get; private set; }
+        #endregion
+
+        #region Accounts Payable
+        public ICheckVoucherRepository FilprideCheckVoucher { get; private set; }
+
+        public IJournalVoucherRepository FilprideJournalVoucher { get; private set; }
+
+        public IPurchaseOrderRepo FilpridePurchaseOrderRepo { get; private set; }
+
+        public IReceivingReportRepo FilprideReceivingReportRepo { get; private set; }
+        #endregion
+
+        #region Books and Report
+        public Filpride.IRepository.IInventoryRepository FilprideInventory { get; private set; }
+
+        public IReportRepository FilprideReport { get; private set; }
+        #endregion
 
         #endregion
 
@@ -67,7 +99,7 @@ namespace IBS.DataAccess.Repository
             MobilityPOSales = new POSalesRepository(_db);
             MobilityOffline = new OfflineRepository(_db);
             MobilityGeneralLedger = new GeneralLedgerRepository(_db);
-            MobilityInventory = new InventoryRepository(_db);
+            MobilityInventory = new Mobility.InventoryRepository(_db);
             MobilityStation = new StationRepository(_db);
             MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
             MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
@@ -83,6 +115,30 @@ namespace IBS.DataAccess.Repository
             FilprideCustomer = new CustomerRepository(_db);
             FilprideSupplier = new SupplierRepository(_db);
             FilprideHauler = new HaulerRepository(_db);
+
+            #endregion
+
+            #region AAS
+
+            #region Accounts Receivable
+            FilprideSalesInvoice = new SalesInvoiceRepository(_db);
+            FilprideServiceInvoice = new ServiceInvoiceRepository(_db);
+            FilprideCollectionReceipt = new CollectionReceiptRepository(_db);
+            FilprideDebitMemo = new DebitMemoRepository(_db);
+            FilprideCreditMemo = new CreditMemoRepository(_db);
+            #endregion
+
+            #region Accounts Payable
+            FilprideCheckVoucher = new CheckVoucherRepository(_db);
+            FilprideJournalVoucher = new JournalVoucherRepository(_db);
+            FilpridePurchaseOrderRepo = new PurchaseOrderRepo(_db);
+            FilprideReceivingReportRepo = new ReceivingReportRepo(_db);
+            #endregion
+
+            #region Books and Report
+            FilprideInventory = new Filpride.InventoryRepository(_db);
+            FilprideReport = new ReportRepository(_db);
+            #endregion
 
             #endregion
         }

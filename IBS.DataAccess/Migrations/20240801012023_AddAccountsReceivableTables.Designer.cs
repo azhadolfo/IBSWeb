@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240801012023_AddAccountsReceivableTables")]
+    partial class AddAccountsReceivableTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,578 +25,7 @@ namespace IBS.DataAccess.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", b =>
-                {
-                    b.Property<int>("CheckVoucherHeaderId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("check_voucher_header_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CheckVoucherHeaderId"));
-
-                    b.Property<string>("AccruedType")
-                        .HasColumnType("text")
-                        .HasColumnName("accrued_type");
-
-                    b.Property<decimal[]>("Amount")
-                        .HasColumnType("numeric[]")
-                        .HasColumnName("amount");
-
-                    b.Property<decimal>("AmountPaid")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount_paid");
-
-                    b.Property<decimal>("AmountPerMonth")
-                        .HasColumnType("numeric(18,2)")
-                        .HasColumnName("amount_per_month");
-
-                    b.Property<int?>("BankId")
-                        .HasColumnType("integer")
-                        .HasColumnName("bank_id");
-
-                    b.Property<string>("CanceledBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("canceled_by");
-
-                    b.Property<DateTime?>("CanceledDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("canceled_date");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("category");
-
-                    b.Property<decimal>("CheckAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("check_amount");
-
-                    b.Property<DateOnly?>("CheckDate")
-                        .HasColumnType("date")
-                        .HasColumnName("check_date");
-
-                    b.Property<string>("CheckNo")
-                        .HasColumnType("text")
-                        .HasColumnName("check_no");
-
-                    b.Property<string>("CheckVoucherHeaderNo")
-                        .HasColumnType("text")
-                        .HasColumnName("check_voucher_header_no");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("CvType")
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("cv_type");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime?>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
-                    b.Property<DateOnly?>("EndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("end_date");
-
-                    b.Property<bool>("IsComplete")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_complete");
-
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_paid");
-
-                    b.Property<DateTime?>("LastCreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_created_date");
-
-                    b.Property<int>("NumberOfMonths")
-                        .HasColumnType("integer")
-                        .HasColumnName("number_of_months");
-
-                    b.Property<int>("NumberOfMonthsCreated")
-                        .HasColumnType("integer")
-                        .HasColumnName("number_of_months_created");
-
-                    b.Property<string[]>("PONo")
-                        .HasColumnType("varchar[]")
-                        .HasColumnName("po_no");
-
-                    b.Property<string>("Particulars")
-                        .HasColumnType("text")
-                        .HasColumnName("particulars");
-
-                    b.Property<string>("Payee")
-                        .HasColumnType("text")
-                        .HasColumnName("payee");
-
-                    b.Property<string>("PostedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("posted_by");
-
-                    b.Property<DateTime?>("PostedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("posted_date");
-
-                    b.Property<string[]>("RRNo")
-                        .HasColumnType("varchar[]")
-                        .HasColumnName("rr_no");
-
-                    b.Property<string>("Reference")
-                        .HasColumnType("text")
-                        .HasColumnName("reference");
-
-                    b.Property<string[]>("SINo")
-                        .HasColumnType("varchar[]")
-                        .HasColumnName("si_no");
-
-                    b.Property<DateOnly?>("StartDate")
-                        .HasColumnType("date")
-                        .HasColumnName("start_date");
-
-                    b.Property<int?>("SupplierId")
-                        .HasColumnType("integer")
-                        .HasColumnName("supplier_id");
-
-                    b.Property<decimal>("Total")
-                        .HasColumnType("numeric(18,2)")
-                        .HasColumnName("total");
-
-                    b.Property<string>("VoidedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("voided_by");
-
-                    b.Property<DateTime?>("VoidedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("voided_date");
-
-                    b.HasKey("CheckVoucherHeaderId")
-                        .HasName("pk_filpride_check_voucher_headers");
-
-                    b.HasIndex("BankId")
-                        .HasDatabaseName("ix_filpride_check_voucher_headers_bank_id");
-
-                    b.HasIndex("SupplierId")
-                        .HasDatabaseName("ix_filpride_check_voucher_headers_supplier_id");
-
-                    b.ToTable("filpride_check_voucher_headers", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideJournalVoucherDetail", b =>
-                {
-                    b.Property<int>("JournalVoucherDetailId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("journal_voucher_detail_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("JournalVoucherDetailId"));
-
-                    b.Property<string>("AccountName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_name");
-
-                    b.Property<string>("AccountNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_no");
-
-                    b.Property<decimal>("Credit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("credit");
-
-                    b.Property<decimal>("Debit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("debit");
-
-                    b.Property<string>("TransactionNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("transaction_no");
-
-                    b.HasKey("JournalVoucherDetailId")
-                        .HasName("pk_filpride_journal_voucher_details");
-
-                    b.ToTable("filpride_journal_voucher_details", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideJournalVoucherHeader", b =>
-                {
-                    b.Property<int>("JournalVoucherHeaderId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("journal_voucher_header_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("JournalVoucherHeaderId"));
-
-                    b.Property<string>("CRNo")
-                        .HasColumnType("text")
-                        .HasColumnName("cr_no");
-
-                    b.Property<int?>("CVId")
-                        .HasColumnType("integer")
-                        .HasColumnName("cv_id");
-
-                    b.Property<string>("CanceledBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("canceled_by");
-
-                    b.Property<DateTime?>("CanceledDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("canceled_date");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime?>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
-                    b.Property<string>("JVReason")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("jv_reason");
-
-                    b.Property<string>("JournalVoucherHeaderNo")
-                        .HasColumnType("text")
-                        .HasColumnName("journal_voucher_header_no");
-
-                    b.Property<string>("Particulars")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("particulars");
-
-                    b.Property<string>("PostedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("posted_by");
-
-                    b.Property<DateTime?>("PostedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("posted_date");
-
-                    b.Property<string>("References")
-                        .HasColumnType("text")
-                        .HasColumnName("references");
-
-                    b.Property<string>("VoidedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("voided_by");
-
-                    b.Property<DateTime?>("VoidedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("voided_date");
-
-                    b.HasKey("JournalVoucherHeaderId")
-                        .HasName("pk_filpride_journal_voucher_headers");
-
-                    b.HasIndex("CVId")
-                        .HasDatabaseName("ix_filpride_journal_voucher_headers_cv_id");
-
-                    b.ToTable("filpride_journal_voucher_headers", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.PurchaseOrder", b =>
-                {
-                    b.Property<int>("PurchaseOrderId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("purchase_order_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PurchaseOrderId"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(18,2)")
-                        .HasColumnName("amount");
-
-                    b.Property<string>("CanceledBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("canceled_by");
-
-                    b.Property<DateTime?>("CanceledDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("canceled_date");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime?>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
-                    b.Property<decimal?>("FinalPrice")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("final_price");
-
-                    b.Property<bool>("IsClosed")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_closed");
-
-                    b.Property<bool>("IsReceived")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_received");
-
-                    b.Property<string>("PostedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("posted_by");
-
-                    b.Property<DateTime?>("PostedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("posted_date");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("price");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer")
-                        .HasColumnName("product_id");
-
-                    b.Property<string>("ProductNo")
-                        .HasColumnType("text")
-                        .HasColumnName("product_no");
-
-                    b.Property<string>("PurchaseOrderNo")
-                        .HasColumnType("text")
-                        .HasColumnName("purchase_order_no");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity");
-
-                    b.Property<decimal>("QuantityReceived")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity_received");
-
-                    b.Property<DateTime>("ReceivedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("received_date");
-
-                    b.Property<string>("Remarks")
-                        .IsRequired()
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("remarks");
-
-                    b.Property<int>("SupplierId")
-                        .HasColumnType("integer")
-                        .HasColumnName("supplier_id");
-
-                    b.Property<int>("SupplierNo")
-                        .HasColumnType("integer")
-                        .HasColumnName("supplier_no");
-
-                    b.Property<string>("Terms")
-                        .IsRequired()
-                        .HasColumnType("varchar(5)")
-                        .HasColumnName("terms");
-
-                    b.Property<string>("VoidedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("voided_by");
-
-                    b.Property<DateTime?>("VoidedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("voided_date");
-
-                    b.HasKey("PurchaseOrderId")
-                        .HasName("pk_purchase_orders");
-
-                    b.HasIndex("ProductId")
-                        .HasDatabaseName("ix_purchase_orders_product_id");
-
-                    b.HasIndex("SupplierId")
-                        .HasDatabaseName("ix_purchase_orders_supplier_id");
-
-                    b.ToTable("purchase_orders", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.ReceivingReport", b =>
-                {
-                    b.Property<int>("ReceivingReportId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("receiving_report_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReceivingReportId"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
-
-                    b.Property<decimal>("AmountPaid")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount_paid");
-
-                    b.Property<string>("CanceledBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("canceled_by");
-
-                    b.Property<DateTime?>("CanceledDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("canceled_date");
-
-                    b.Property<decimal>("CanceledQuantity")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("canceled_quantity");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<DateOnly>("DueDate")
-                        .HasColumnType("date")
-                        .HasColumnName("due_date");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime?>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
-                    b.Property<decimal>("EwtAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("ewt_amount");
-
-                    b.Property<decimal>("GainOrLoss")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("gain_or_loss");
-
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_paid");
-
-                    b.Property<decimal>("NetAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("net_amount");
-
-                    b.Property<decimal>("NetAmountOfEWT")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("net_amount_of_ewt");
-
-                    b.Property<string>("OtherRef")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("other_ref");
-
-                    b.Property<int>("POId")
-                        .HasColumnType("integer")
-                        .HasColumnName("po_id");
-
-                    b.Property<string>("PONo")
-                        .HasColumnType("varchar(12)")
-                        .HasColumnName("po_no");
-
-                    b.Property<DateTime>("PaidDate")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("paid_date");
-
-                    b.Property<string>("PostedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("posted_by");
-
-                    b.Property<DateTime?>("PostedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("posted_date");
-
-                    b.Property<decimal>("QuantityDelivered")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity_delivered");
-
-                    b.Property<decimal>("QuantityReceived")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity_received");
-
-                    b.Property<string>("ReceivingReportNo")
-                        .HasColumnType("text")
-                        .HasColumnName("receiving_report_no");
-
-                    b.Property<string>("Remarks")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("remarks");
-
-                    b.Property<string>("SupplierInvoiceDate")
-                        .HasColumnType("text")
-                        .HasColumnName("supplier_invoice_date");
-
-                    b.Property<string>("SupplierInvoiceNumber")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("supplier_invoice_number");
-
-                    b.Property<string>("TruckOrVessels")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("truck_or_vessels");
-
-                    b.Property<decimal>("VatAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("vat_amount");
-
-                    b.Property<string>("VoidedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("voided_by");
-
-                    b.Property<DateTime?>("VoidedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("voided_date");
-
-                    b.HasKey("ReceivingReportId")
-                        .HasName("pk_receiving_reports");
-
-                    b.HasIndex("POId")
-                        .HasDatabaseName("ix_receiving_reports_po_id");
-
-                    b.ToTable("receiving_reports", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideCollectionReceipt", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideCollectionReceipt", b =>
                 {
                     b.Property<int>("CollectionReceiptId")
                         .ValueGeneratedOnAdd()
@@ -635,6 +67,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("check_no");
 
                     b.Property<string>("CollectionReceiptNo")
+                        .IsRequired()
                         .HasColumnType("varchar(12)")
                         .HasColumnName("collection_receipt_no");
 
@@ -778,7 +211,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_collection_receipts", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideCreditMemo", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideCreditMemo", b =>
                 {
                     b.Property<int>("CreditMemoId")
                         .ValueGeneratedOnAdd()
@@ -816,6 +249,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("credit_amount");
 
                     b.Property<string>("CreditMemoNo")
+                        .IsRequired()
                         .HasColumnType("varchar(12)")
                         .HasColumnName("credit_memo_no");
 
@@ -919,843 +353,6 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_credit_memos_service_invoice_id");
 
                     b.ToTable("filpride_credit_memos", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideSalesInvoice", b =>
-                {
-                    b.Property<int>("SalesInvoiceId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("sales_invoice_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SalesInvoiceId"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
-
-                    b.Property<decimal>("AmountPaid")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount_paid");
-
-                    b.Property<decimal>("Balance")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("balance");
-
-                    b.Property<string>("CanceledBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("canceled_by");
-
-                    b.Property<DateTime?>("CanceledDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("canceled_date");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_id");
-
-                    b.Property<decimal>("Discount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("discount");
-
-                    b.Property<DateOnly>("DueDate")
-                        .HasColumnType("date")
-                        .HasColumnName("due_date");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime?>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_paid");
-
-                    b.Property<bool>("IsTaxAndVatPaid")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_tax_and_vat_paid");
-
-                    b.Property<decimal>("NetDiscount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("net_discount");
-
-                    b.Property<string>("OtherRefNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("other_ref_no");
-
-                    b.Property<string>("PostedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("posted_by");
-
-                    b.Property<DateTime?>("PostedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("posted_date");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer")
-                        .HasColumnName("product_id");
-
-                    b.Property<int>("PurchaseOrderId")
-                        .HasColumnType("integer")
-                        .HasColumnName("purchase_order_id");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity");
-
-                    b.Property<string>("Remarks")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("remarks");
-
-                    b.Property<string>("SalesInvoiceNo")
-                        .HasColumnType("varchar(12)")
-                        .HasColumnName("sales_invoice_no");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("status");
-
-                    b.Property<DateOnly>("TransactionDate")
-                        .HasColumnType("date")
-                        .HasColumnName("transaction_date");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("unit_price");
-
-                    b.Property<decimal>("VatAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("vat_amount");
-
-                    b.Property<decimal>("VatExempt")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("vat_exempt");
-
-                    b.Property<decimal>("VatableSales")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("vatable_sales");
-
-                    b.Property<string>("VoidedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("voided_by");
-
-                    b.Property<DateTime?>("VoidedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("voided_date");
-
-                    b.Property<decimal>("WithHoldingTaxAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("with_holding_tax_amount");
-
-                    b.Property<decimal>("WithHoldingVatAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("with_holding_vat_amount");
-
-                    b.Property<decimal>("ZeroRated")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("zero_rated");
-
-                    b.HasKey("SalesInvoiceId")
-                        .HasName("pk_filpride_sales_invoices");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_filpride_sales_invoices_customer_id");
-
-                    b.HasIndex("ProductId")
-                        .HasDatabaseName("ix_filpride_sales_invoices_product_id");
-
-                    b.HasIndex("PurchaseOrderId")
-                        .HasDatabaseName("ix_filpride_sales_invoices_purchase_order_id");
-
-                    b.ToTable("filpride_sales_invoices", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideServiceInvoice", b =>
-                {
-                    b.Property<int>("ServiceInvoiceId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("service_invoice_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ServiceInvoiceId"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
-
-                    b.Property<decimal>("AmountPaid")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount_paid");
-
-                    b.Property<decimal>("Balance")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("balance");
-
-                    b.Property<string>("CanceledBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("canceled_by");
-
-                    b.Property<DateTime?>("CanceledDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("canceled_date");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<decimal>("CurrentAndPreviousAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("current_and_previous_amount");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_id");
-
-                    b.Property<decimal>("Discount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("discount");
-
-                    b.Property<DateOnly>("DueDate")
-                        .HasColumnType("date")
-                        .HasColumnName("due_date");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime?>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
-                    b.Property<string>("Instructions")
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("instructions");
-
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_paid");
-
-                    b.Property<decimal>("NetAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("net_amount");
-
-                    b.Property<DateOnly>("Period")
-                        .HasColumnType("date")
-                        .HasColumnName("period");
-
-                    b.Property<string>("PostedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("posted_by");
-
-                    b.Property<DateTime?>("PostedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("posted_date");
-
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("integer")
-                        .HasColumnName("service_id");
-
-                    b.Property<string>("ServiceInvoiceNo")
-                        .HasColumnType("varchar(12)")
-                        .HasColumnName("service_invoice_no");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("status");
-
-                    b.Property<decimal>("Total")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("total");
-
-                    b.Property<decimal>("UnearnedAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("unearned_amount");
-
-                    b.Property<decimal>("VatAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("vat_amount");
-
-                    b.Property<string>("VoidedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("voided_by");
-
-                    b.Property<DateTime?>("VoidedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("voided_date");
-
-                    b.Property<decimal>("WithholdingTaxAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("withholding_tax_amount");
-
-                    b.Property<decimal>("WithholdingVatAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("withholding_vat_amount");
-
-                    b.HasKey("ServiceInvoiceId")
-                        .HasName("pk_filpride_service_invoices");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_filpride_service_invoices_customer_id");
-
-                    b.HasIndex("ServiceId")
-                        .HasDatabaseName("ix_filpride_service_invoices_service_id");
-
-                    b.ToTable("filpride_service_invoices", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideCashReceiptBook", b =>
-                {
-                    b.Property<int>("CashReceiptBookId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("cash_receipt_book_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CashReceiptBookId"));
-
-                    b.Property<string>("Bank")
-                        .HasColumnType("text")
-                        .HasColumnName("bank");
-
-                    b.Property<string>("COA")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("coa");
-
-                    b.Property<string>("CheckNo")
-                        .HasColumnType("text")
-                        .HasColumnName("check_no");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<decimal>("Credit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("credit");
-
-                    b.Property<string>("CustomerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_name");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<decimal>("Debit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("debit");
-
-                    b.Property<string>("Particulars")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("particulars");
-
-                    b.Property<string>("RefNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("ref_no");
-
-                    b.HasKey("CashReceiptBookId")
-                        .HasName("pk_filpride_cash_receipt_books");
-
-                    b.ToTable("filpride_cash_receipt_books", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideDisbursementBook", b =>
-                {
-                    b.Property<int>("DisbursementBookId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("disbursement_book_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DisbursementBookId"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
-
-                    b.Property<string>("Bank")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("bank");
-
-                    b.Property<string>("CVNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("cv_no");
-
-                    b.Property<string>("ChartOfAccount")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("chart_of_account");
-
-                    b.Property<string>("CheckDate")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("check_date");
-
-                    b.Property<string>("CheckNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("check_no");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<decimal>("Credit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("credit");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<decimal>("Debit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("debit");
-
-                    b.Property<string>("Particulars")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("particulars");
-
-                    b.Property<string>("Payee")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("payee");
-
-                    b.HasKey("DisbursementBookId")
-                        .HasName("pk_filpride_disbursement_books");
-
-                    b.ToTable("filpride_disbursement_books", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideGeneralLedgerBook", b =>
-                {
-                    b.Property<int>("GeneralLedgerBookId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("general_ledger_book_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("GeneralLedgerBookId"));
-
-                    b.Property<string>("AccountNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_no");
-
-                    b.Property<string>("AccountTitle")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_title");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<decimal>("Credit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("credit");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<decimal>("Debit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("debit");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<bool>("IsPosted")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_posted");
-
-                    b.Property<string>("Reference")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("reference");
-
-                    b.HasKey("GeneralLedgerBookId")
-                        .HasName("pk_filpride_general_ledger_books");
-
-                    b.ToTable("filpride_general_ledger_books", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideInventory", b =>
-                {
-                    b.Property<int>("InventoryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("inventory_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("InventoryId"));
-
-                    b.Property<decimal>("AverageCost")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("average_cost");
-
-                    b.Property<decimal>("Cost")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("cost");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<decimal>("InventoryBalance")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("inventory_balance");
-
-                    b.Property<bool>("IsValidated")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_validated");
-
-                    b.Property<int?>("POId")
-                        .HasColumnType("integer")
-                        .HasColumnName("po_id");
-
-                    b.Property<string>("Particular")
-                        .IsRequired()
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("particular");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer")
-                        .HasColumnName("product_id");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity");
-
-                    b.Property<string>("Reference")
-                        .HasColumnType("varchar(12)")
-                        .HasColumnName("reference");
-
-                    b.Property<decimal>("Total")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("total");
-
-                    b.Property<decimal>("TotalBalance")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("total_balance");
-
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasColumnType("varchar(2)")
-                        .HasColumnName("unit");
-
-                    b.Property<string>("ValidatedBy")
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("validated_by");
-
-                    b.Property<DateTime?>("ValidatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("validated_date");
-
-                    b.HasKey("InventoryId")
-                        .HasName("pk_filpride_inventories");
-
-                    b.HasIndex("POId")
-                        .HasDatabaseName("ix_filpride_inventories_po_id");
-
-                    b.HasIndex("ProductId")
-                        .HasDatabaseName("ix_filpride_inventories_product_id");
-
-                    b.ToTable("filpride_inventories", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideJournalBook", b =>
-                {
-                    b.Property<int>("JournalBookId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("journal_book_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("JournalBookId"));
-
-                    b.Property<string>("AccountTitle")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_title");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<decimal>("Credit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("credit");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<decimal>("Debit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("debit");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("Reference")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("reference");
-
-                    b.HasKey("JournalBookId")
-                        .HasName("pk_filpride_journal_books");
-
-                    b.ToTable("filpride_journal_books", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilpridePurchaseBook", b =>
-                {
-                    b.Property<int>("PurchaseBookId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("purchase_book_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PurchaseBookId"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<decimal>("Discount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("discount");
-
-                    b.Property<string>("DocumentNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("document_no");
-
-                    b.Property<DateOnly>("DueDate")
-                        .HasColumnType("date")
-                        .HasColumnName("due_date");
-
-                    b.Property<decimal>("NetPurchases")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("net_purchases");
-
-                    b.Property<string>("PONo")
-                        .IsRequired()
-                        .HasColumnType("varchar(12)")
-                        .HasColumnName("po_no");
-
-                    b.Property<string>("SupplierAddress")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("supplier_address");
-
-                    b.Property<string>("SupplierName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("supplier_name");
-
-                    b.Property<string>("SupplierTin")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("supplier_tin");
-
-                    b.Property<decimal>("VatAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("vat_amount");
-
-                    b.Property<decimal>("WhtAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("wht_amount");
-
-                    b.HasKey("PurchaseBookId")
-                        .HasName("pk_filpride_purchase_books");
-
-                    b.ToTable("filpride_purchase_books", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideSalesBook", b =>
-                {
-                    b.Property<int>("SalesBookId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("sales_book_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SalesBookId"));
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("address");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<decimal>("Discount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("discount");
-
-                    b.Property<int?>("DocumentId")
-                        .HasColumnType("integer")
-                        .HasColumnName("document_id");
-
-                    b.Property<DateOnly>("DueDate")
-                        .HasColumnType("date")
-                        .HasColumnName("due_date");
-
-                    b.Property<decimal>("NetSales")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("net_sales");
-
-                    b.Property<string>("SerialNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("serial_no");
-
-                    b.Property<string>("SoldTo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("sold_to");
-
-                    b.Property<string>("TinNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("tin_no");
-
-                    b.Property<DateOnly>("TransactionDate")
-                        .HasColumnType("date")
-                        .HasColumnName("transaction_date");
-
-                    b.Property<decimal>("VatAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("vat_amount");
-
-                    b.Property<decimal>("VatExemptSales")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("vat_exempt_sales");
-
-                    b.Property<decimal>("VatableSales")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("vatable_sales");
-
-                    b.Property<decimal>("ZeroRated")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("zero_rated");
-
-                    b.HasKey("SalesBookId")
-                        .HasName("pk_filpride_sales_books");
-
-                    b.ToTable("filpride_sales_books", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideCheckVoucherDetail", b =>
-                {
-                    b.Property<int>("CheckVoucherDetailId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("check_voucher_detail_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CheckVoucherDetailId"));
-
-                    b.Property<string>("AccountName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_name");
-
-                    b.Property<string>("AccountNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_no");
-
-                    b.Property<decimal>("Credit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("credit");
-
-                    b.Property<decimal>("Debit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("debit");
-
-                    b.Property<string>("TransactionNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("transaction_no");
-
-                    b.HasKey("CheckVoucherDetailId")
-                        .HasName("pk_filpride_check_voucher_details");
-
-                    b.ToTable("filpride_check_voucher_details", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.FilprideCustomerOrderSlip", b =>
@@ -1931,6 +528,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("debit_amount");
 
                     b.Property<string>("DebitMemoNo")
+                        .IsRequired()
                         .HasColumnType("varchar(12)")
                         .HasColumnName("debit_memo_no");
 
@@ -2175,56 +773,6 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_delivery_receipts_invoice_no");
 
                     b.ToTable("filpride_delivery_receipts", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideOffsettings", b =>
-                {
-                    b.Property<int>("OffSettingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("off_setting_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OffSettingId"));
-
-                    b.Property<string>("AccountNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_no");
-
-                    b.Property<string>("AccountTitle")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_title");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<bool>("IsRemoved")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_removed");
-
-                    b.Property<string>("Reference")
-                        .HasColumnType("text")
-                        .HasColumnName("reference");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("source");
-
-                    b.HasKey("OffSettingId")
-                        .HasName("pk_filpride_offsettings");
-
-                    b.ToTable("filpride_offsettings", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.FilpridePurchaseOrder", b =>
@@ -2519,6 +1067,309 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_receiving_reports_receiving_report_no");
 
                     b.ToTable("filpride_receiving_reports", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideSalesInvoice", b =>
+                {
+                    b.Property<int>("SalesInvoiceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("sales_invoice_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SalesInvoiceId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount_paid");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("balance");
+
+                    b.Property<string>("CanceledBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("canceled_by");
+
+                    b.Property<DateTime?>("CanceledDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_date");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("discount");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_paid");
+
+                    b.Property<bool>("IsTaxAndVatPaid")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_tax_and_vat_paid");
+
+                    b.Property<decimal>("NetDiscount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("net_discount");
+
+                    b.Property<string>("OtherRefNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("other_ref_no");
+
+                    b.Property<string>("PostedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("posted_by");
+
+                    b.Property<DateTime?>("PostedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("posted_date");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer")
+                        .HasColumnName("product_id");
+
+                    b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("purchase_order_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("remarks");
+
+                    b.Property<string>("SalesInvoiceNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("sales_invoice_no");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<DateOnly>("TransactionDate")
+                        .HasColumnType("date")
+                        .HasColumnName("transaction_date");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("unit_price");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vat_amount");
+
+                    b.Property<decimal>("VatExempt")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vat_exempt");
+
+                    b.Property<decimal>("VatableSales")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vatable_sales");
+
+                    b.Property<string>("VoidedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("voided_by");
+
+                    b.Property<DateTime?>("VoidedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_date");
+
+                    b.Property<decimal>("WithHoldingTaxAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("with_holding_tax_amount");
+
+                    b.Property<decimal>("WithHoldingVatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("with_holding_vat_amount");
+
+                    b.Property<decimal>("ZeroRated")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("zero_rated");
+
+                    b.HasKey("SalesInvoiceId")
+                        .HasName("pk_filpride_sales_invoices");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_filpride_sales_invoices_customer_id");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("ix_filpride_sales_invoices_product_id");
+
+                    b.HasIndex("PurchaseOrderId")
+                        .HasDatabaseName("ix_filpride_sales_invoices_purchase_order_id");
+
+                    b.ToTable("filpride_sales_invoices", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideServiceInvoice", b =>
+                {
+                    b.Property<int>("ServiceInvoiceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("service_invoice_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ServiceInvoiceId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount_paid");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("balance");
+
+                    b.Property<string>("CanceledBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("canceled_by");
+
+                    b.Property<DateTime?>("CanceledDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_date");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<decimal>("CurrentAndPreviousAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("current_and_previous_amount");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("discount");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<string>("Instructions")
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("instructions");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_paid");
+
+                    b.Property<decimal>("NetAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("net_amount");
+
+                    b.Property<DateOnly>("Period")
+                        .HasColumnType("date")
+                        .HasColumnName("period");
+
+                    b.Property<string>("PostedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("posted_by");
+
+                    b.Property<DateTime?>("PostedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("posted_date");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("service_id");
+
+                    b.Property<string>("ServiceInvoiceNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("service_invoice_no");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("total");
+
+                    b.Property<decimal>("UnearnedAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("unearned_amount");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vat_amount");
+
+                    b.Property<string>("VoidedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("voided_by");
+
+                    b.Property<DateTime?>("VoidedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_date");
+
+                    b.Property<decimal>("WithholdingTaxAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("withholding_tax_amount");
+
+                    b.Property<decimal>("WithholdingVatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("withholding_vat_amount");
+
+                    b.HasKey("ServiceInvoiceId")
+                        .HasName("pk_filpride_service_invoices");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_filpride_service_invoices_customer_id");
+
+                    b.HasIndex("ServiceId")
+                        .HasDatabaseName("ix_filpride_service_invoices_service_id");
+
+                    b.ToTable("filpride_service_invoices", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideBankAccount", b =>
@@ -5834,67 +4685,7 @@ namespace IBS.DataAccess.Migrations
                     b.HasDiscriminator().HasValue("ApplicationUser");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideBankAccount", "BankAccount")
-                        .WithMany()
-                        .HasForeignKey("BankId")
-                        .HasConstraintName("fk_filpride_check_voucher_headers_filpride_bank_accounts_bank_");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .HasConstraintName("fk_filpride_check_voucher_headers_filpride_suppliers_supplier_");
-
-                    b.Navigation("BankAccount");
-
-                    b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideJournalVoucherHeader", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", "CheckVoucherHeader")
-                        .WithMany()
-                        .HasForeignKey("CVId")
-                        .HasConstraintName("fk_filpride_journal_voucher_headers_filpride_check_voucher_hea");
-
-                    b.Navigation("CheckVoucherHeader");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.PurchaseOrder", b =>
-                {
-                    b.HasOne("IBS.Models.MasterFile.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_purchase_orders_products_product_id");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_purchase_orders_filpride_suppliers_supplier_id");
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.ReceivingReport", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.AccountsPayable.PurchaseOrder", "PurchaseOrder")
-                        .WithMany()
-                        .HasForeignKey("POId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_receiving_reports_purchase_orders_po_id");
-
-                    b.Navigation("PurchaseOrder");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideCollectionReceipt", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideCollectionReceipt", b =>
                 {
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
                         .WithMany()
@@ -5903,12 +4694,12 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_collection_receipts_filpride_customers_customer_id");
 
-                    b.HasOne("IBS.Models.Filpride.AccountsReceivable.FilprideSalesInvoice", "SalesInvoice")
+                    b.HasOne("IBS.Models.Filpride.FilprideSalesInvoice", "SalesInvoice")
                         .WithMany()
                         .HasForeignKey("SalesInvoiceId")
                         .HasConstraintName("fk_filpride_collection_receipts_filpride_sales_invoices_sales_");
 
-                    b.HasOne("IBS.Models.Filpride.AccountsReceivable.FilprideServiceInvoice", "ServiceInvoice")
+                    b.HasOne("IBS.Models.Filpride.FilprideServiceInvoice", "ServiceInvoice")
                         .WithMany()
                         .HasForeignKey("ServiceInvoiceId")
                         .HasConstraintName("fk_filpride_collection_receipts_filpride_service_invoices_serv");
@@ -5920,14 +4711,14 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("ServiceInvoice");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideCreditMemo", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideCreditMemo", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.AccountsReceivable.FilprideSalesInvoice", "SalesInvoice")
+                    b.HasOne("IBS.Models.Filpride.FilprideSalesInvoice", "SalesInvoice")
                         .WithMany()
                         .HasForeignKey("SalesInvoiceId")
                         .HasConstraintName("fk_filpride_credit_memos_filpride_sales_invoices_sales_invoice");
 
-                    b.HasOne("IBS.Models.Filpride.AccountsReceivable.FilprideServiceInvoice", "ServiceInvoice")
+                    b.HasOne("IBS.Models.Filpride.FilprideServiceInvoice", "ServiceInvoice")
                         .WithMany()
                         .HasForeignKey("ServiceInvoiceId")
                         .HasConstraintName("fk_filpride_credit_memos_filpride_service_invoices_service_inv");
@@ -5935,76 +4726,6 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("SalesInvoice");
 
                     b.Navigation("ServiceInvoice");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideSalesInvoice", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_sales_invoices_filpride_customers_customer_id");
-
-                    b.HasOne("IBS.Models.MasterFile.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_sales_invoices_products_product_id");
-
-                    b.HasOne("IBS.Models.Filpride.FilpridePurchaseOrder", "PurchaseOrder")
-                        .WithMany()
-                        .HasForeignKey("PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_sales_invoices_filpride_purchase_orders_purchase_o");
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Product");
-
-                    b.Navigation("PurchaseOrder");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideServiceInvoice", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_service_invoices_filpride_customers_customer_id");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideService", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_service_invoices_filpride_services_service_id");
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Service");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideInventory", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.AccountsPayable.PurchaseOrder", "PurchaseOrder")
-                        .WithMany()
-                        .HasForeignKey("POId")
-                        .HasConstraintName("fk_filpride_inventories_purchase_orders_po_id");
-
-                    b.HasOne("IBS.Models.MasterFile.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_inventories_products_product_id");
-
-                    b.Navigation("Product");
-
-                    b.Navigation("PurchaseOrder");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.FilprideCustomerOrderSlip", b =>
@@ -6030,12 +4751,12 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.FilprideDebitMemo", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.AccountsReceivable.FilprideSalesInvoice", "SalesInvoice")
+                    b.HasOne("IBS.Models.Filpride.FilprideSalesInvoice", "SalesInvoice")
                         .WithMany()
                         .HasForeignKey("SalesInvoiceId")
                         .HasConstraintName("fk_filpride_debit_memos_filpride_sales_invoices_sales_invoice_");
 
-                    b.HasOne("IBS.Models.Filpride.AccountsReceivable.FilprideServiceInvoice", "ServiceInvoice")
+                    b.HasOne("IBS.Models.Filpride.FilprideServiceInvoice", "ServiceInvoice")
                         .WithMany()
                         .HasForeignKey("ServiceInvoiceId")
                         .HasConstraintName("fk_filpride_debit_memos_filpride_service_invoices_service_invo");
@@ -6114,6 +4835,57 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("DeliveryReceipt");
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideSalesInvoice", b =>
+                {
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_sales_invoices_filpride_customers_customer_id");
+
+                    b.HasOne("IBS.Models.MasterFile.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_sales_invoices_products_product_id");
+
+                    b.HasOne("IBS.Models.Filpride.FilpridePurchaseOrder", "PurchaseOrder")
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_sales_invoices_filpride_purchase_orders_purchase_o");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("PurchaseOrder");
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideServiceInvoice", b =>
+                {
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_service_invoices_filpride_customers_customer_id");
+
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideService", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_service_invoices_filpride_services_service_id");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseDetail", b =>

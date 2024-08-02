@@ -41,7 +41,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IStationRepository MobilityStation { get; }
 
-        IInventoryRepository MobilityInventory { get; }
+        Mobility.IRepository.IInventoryRepository MobilityInventory { get; }
 
         IGeneralLedgerRepository MobilityGeneralLedger { get; }
 
@@ -73,6 +73,40 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<List<SelectListItem>> GetFilprideCustomerListAsync(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetFilprideSupplierListAsyncById(CancellationToken cancellationToken = default);
+
+        #endregion
+
+        #region AAS
+
+        #region Accounts Receivable
+        ISalesInvoiceRepository FilprideSalesInvoice { get; }
+
+        IServiceInvoiceRepository FilprideServiceInvoice { get; }
+
+        ICollectionReceiptRepository FilprideCollectionReceipt { get; }
+
+        IDebitMemoRepository FilprideDebitMemo { get; }
+
+        ICreditMemoRepository FilprideCreditMemo { get; }
+        #endregion
+
+        #region Accounts Payable
+
+        ICheckVoucherRepository FilprideCheckVoucher { get; }
+
+        IJournalVoucherRepository FilprideJournalVoucher { get; }
+
+        IPurchaseOrderRepo FilpridePurchaseOrderRepo { get; }
+
+        IReceivingReportRepo FilprideReceivingReportRepo { get; }
+
+        #endregion
+
+        #region Books and Report
+        Filpride.IRepository.IInventoryRepository FilprideInventory { get; }
+
+        IReportRepository FilprideReport { get; }
+        #endregion
 
         #endregion
     }
