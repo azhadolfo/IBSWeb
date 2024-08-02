@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
@@ -46,6 +47,21 @@ namespace IBS.DataAccess.Repository
         }
 
         public bool IsJournalEntriesBalanced(IEnumerable<MobilityGeneralLedger> journals)
+        {
+            try
+            {
+                decimal totalDebit = journals.Sum(j => j.Debit);
+                decimal totalCredit = journals.Sum(j => j.Credit);
+
+                return totalDebit == totalCredit;
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+        }
+
+        public bool IsJournalEntriesBalanced(IEnumerable<FilprideGeneralLedgerBook> journals)
         {
             try
             {

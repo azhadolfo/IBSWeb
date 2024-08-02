@@ -1,5 +1,8 @@
 ﻿using IBS.Models;
 using IBS.Models.Filpride;
+using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.AccountsReceivable;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
@@ -109,6 +112,44 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FuelSalesView> FuelSalesViews { get; set; }
         public DbSet<GeneralLedgerView> GeneralLedgerViews { get; set; }
+
+        #endregion
+
+        #region AAS Migration
+
+        #region Accounts Receivable
+        public DbSet<FilprideBankAccount> FilprideBankAccounts { get; set; }
+        public DbSet<FilprideService> FilprideServices { get; set; }
+        public DbSet<FilprideCollectionReceipt> FilprideCollectionReceipts { get; set; }
+        public DbSet<FilprideCreditMemo> FilprideCreditMemos { get; set; }
+        public DbSet<FilprideDebitMemo> FilprideDebitMemos { get; set; }
+        public DbSet<FilprideSalesInvoice> FilprideSalesInvoices { get; set; }
+        public DbSet<FilprideServiceInvoice> FilprideServiceInvoices { get; set; }
+        public DbSet<FilprideOffsettings> FilprideOffsettings { get; set; }
+        #endregion
+
+        #region Accounts Payable
+
+        public DbSet<FilprideCheckVoucherHeader> FilprideCheckVoucherHeaders { get; set; }
+        public DbSet<FilprideCheckVoucherDetail> FilprideCheckVoucherDetails { get; set; }
+        public DbSet<FilprideJournalVoucherHeader> FilprideJournalVoucherHeaders { get; set; }
+        public DbSet<FilprideJournalVoucherDetail> FilprideJournalVoucherDetails { get; set; }
+        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+        public DbSet<ReceivingReport> ReceivingReports { get; set; }
+
+        #endregion
+
+        #region Books
+
+        public DbSet<FilprideCashReceiptBook> FilprideCashReceiptBooks { get; set; }
+        public DbSet<FilprideDisbursementBook> FilprideDisbursementBooks { get; set; }
+        public DbSet<FilprideGeneralLedgerBook> FilprideGeneralLedgerBooks { get; set; }
+        public DbSet<FilprideJournalBook> FilprideJournalBooks { get; set; }
+        public DbSet<FilpridePurchaseBook> FilpridePurchaseBooks { get; set; }
+        public DbSet<FilprideSalesBook> FilprideSalesBooks { get; set; }
+        public DbSet<FilprideInventory> FilprideInventories { get; set; }
+
+        #endregion
 
         #endregion
 

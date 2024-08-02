@@ -1,7 +1,8 @@
-﻿using IBS.Models.Mobility;
+﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 
-namespace IBS.DataAccess.Repository.IRepository
+namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
     public interface IInventoryRepository : IRepository<MobilityInventory>
     {
