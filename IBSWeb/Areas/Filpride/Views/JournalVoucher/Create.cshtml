@@ -1,0 +1,426 @@
+﻿@model JournalVoucherVM
+
+@{
+    ViewData["Title"] = "Create Journal Voucher";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Journal Voucher</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Header.Date" class="control-label"></label><span class="required">*</span>
+                        <input asp-for="Header.Date" type="Date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="Header.Date" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="Header.References" type="text" class="form-control" placeholder="" />
+                        <span asp-validation-for="Header.References" class="text-danger"></span>
+                        <label asp-for="Header.References" class="control-label"></label>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label">CV No.</label><span class="required">*</span>
+                        <select asp-for="Header.CVId" asp-items="@Model.Header.CheckVoucherHeaders" class="form-select js-not-retain-value-select2 checkVoucher" style="width:100%">
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="Header.CVId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="Header.Particulars" type="text" class="form-control" placeholder="" />
+                        <label asp-for="Header.Particulars" class="control-label">Particulars<span class="required">*</span></label>
+                        <span asp-validation-for="Header.Particulars" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="Header.CRNo" type="text" class="form-control" placeholder="" />
+                        <label asp-for="Header.CRNo" class="control-label"></label>
+                        <span asp-validation-for="Header.CRNo" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea asp-for="Header.JVReason" type="text" class="form-control" placeholder="Enter JV Reason" style="height: 100px"></textarea>
+                        <label asp-for="Header.JVReason" class="control-label">Reason<span class="required">*</span></label>
+                        <span asp-validation-for="Header.JVReason" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-8 tradeList">
+                    <div class="row pb-3">
+
+                        <div class="table-responsive">
+                            <table class="w-100">
+                                <thead>
+                                    <tr style="border: 1px solid black;">
+                                        <th colspan="2" style="padding-left:20px;">I. PAYEE DETAILS</th>
+                                        <th colspan="1" class="text-end"><b>Date : </b></th>
+                                        <td id="date"></td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="width:11%; padding-left:20px;">Name :</td>
+                                        <td id="name"></td>
+                                        <td style="width:50%;" colspan="2" class="text-nowrap">Other References:</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;">Address :</td>
+                                        <td id="address"></td>
+                                        <td style="width:6%;">PO # :</td>
+                                        <td id="poNo"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;">TIN # :</td>
+                                        <td id="tinNo"></td>
+                                        <td>SI # :</td>
+                                        <td id="siNo"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;" class="text-nowrap"></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-responsive" style="margin-top:20px;">
+                            <table class="w-100">
+                                <thead>
+                                    <tr style="border: 1px solid black;">
+                                        <th colspan="4" style="padding-left:20px;">II. CHECK DETAILS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="width:15%; padding-left:20px;">Payee :</td>
+                                        <td style="width:65%;" id="payee"></td>
+                                        <td class="text-end" id="amount"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;"></td>
+
+                                        <td class="w-25"></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;">Particulars :</td>
+                                        <td id="particulars"></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left:20px;">Check #:</td>
+                                        <td id="checkNo"></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="table-responsive" style="margin-top:20px;">
+                            <table class="w-100">
+                                <thead>
+                                    <tr style="border: 1px solid black;">
+                                        <th colspan="4" style="padding-left:20px;">III. ACCOUNTING ENTRIES</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding-left:20px;"></td>
+                                        <th class="text-end">DEBIT</th>
+                                        <th class="text-end">CREDIT</th>
+                                    </tr>
+                                </tbody>
+                                <tbody id="tableBody"></tbody>
+                                <tbody>
+                                    <tr style="border-bottom:double;"></tr>
+                                    <tr>
+                                        <td class="text-end">TOTAL</td>
+                                        <td class="text-end" id="totalDebit"></td>
+                                        <td class="text-end" id="totalCredit"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+
+                <br />
+                <div class="form-group">
+                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
+                        Add Entry
+                    </button>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th class="w-50">Account No.</th>
+                                <th class="w-25">
+                                    Debit
+                                </th>
+                                <th class="w-25">
+                                    Credit
+                                </th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountingEntriesBody">
+                        </tbody>
+                        <tbody>
+                            <tr>
+                                <td class="text-end">TOTAL:</td>
+                                <td class="totalDebit">0.00</td>
+                                <td class="totalCredit">0.00</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <br />
+                <div class="form-group">
+                    <input type="submit" value="Create" class="btn btn-primary" onclick="validateDebitAndCredit(event)" />
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="AddAccEntry" tabindex="-1" aria-labelledby="AddAccEntryLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="AddAccEntryLabel">Add Accounting Entry</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <label class="control-label">Account No.</label>
+                        <select asp-items="@Model.Header?.COA" class="form-select" style="width: 100%" id="AccountNo">
+                            <option></option>
+                        </select>
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group pt-4">
+                        <label class="control-label">Debit</label>
+                        <input id="Debit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group pt-4">
+                        <label class="control-label">Credit</label>
+                        <input id="Credit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                        <span class="text-danger"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveAccountingEntry()">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $('#AccountTitle').select2({
+            dropdownParent: $('#AddAccEntry')
+        });
+    </script>
+    <script>
+        function saveAccountingEntry() {
+            // Get the values from the modal inputs
+            var accountNumber = $("#AccountNo").val();
+            var accountNumberText = $("#AccountNo option:selected").text();
+            var debit = parseFloat($("#Debit").val().replace(/,/g, '')) || 0.00;
+            var credit = parseFloat($("#Credit").val().replace(/,/g, '')) || 0.00;
+
+            if (debit === 0 && credit === 0) {
+                event.preventDefault();
+                alert('Please input amount');
+                return;
+            } else if (accountNumberText === "") {
+                event.preventDefault();
+                alert('Please select Account No.!');
+                return;
+            }
+
+            // Format debit and credit values with commas and two decimal places
+            var formattedDebit = debit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var formattedCredit = credit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            // Create a new row with the text only and a hidden input for the value
+            var newRow = `<tr>
+                                                    <td>
+                                                        <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
+                                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
+                                                    </td>
+                                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                             </tr>`;
+
+
+            // Append the new row to the table body
+            $("#accountingEntriesBody").append(newRow);
+
+            // Close the modal
+            $("#AddAccEntry").modal("hide");
+
+            // Clear the modal inputs
+            $("#AccountNo").val(""); // Reset the select to its default state
+            $("#AccountNo").trigger("change"); // Trigger change event for the select
+            $("#Debit").val("0.00");
+            $("#Credit").val("0.00");
+
+            updateTotalDebitAndCredit();
+        }
+
+        function updateTotalDebitAndCredit() {
+            var totalDebit = 0;
+            var totalCredit = 0;
+
+            // Loop through each row in the table body and sum up the debit values
+            $("#accountingEntriesBody tr").each(function () {
+                var debitInput = $(this).find("td:eq(1) input").val();
+                var creditInput = $(this).find("td:eq(2) input").val();
+
+                // Ensure debitInput and creditInput are strings before using replace
+                debitInput = debitInput ? String(debitInput) : ""; // convert to string if not null/undefined
+                creditInput = creditInput ? String(creditInput) : "";
+
+                var debit = parseFloat(debitInput.replace(/,/g, '')) || 0;
+                var credit = parseFloat(creditInput.replace(/,/g, '')) || 0;
+
+                totalDebit += debit;
+                totalCredit += credit;
+            });
+
+            // Display the total debit value
+            $(".totalDebit").text(totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            $(".totalCredit").text(totalCredit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        }
+
+        // Function to remove the corresponding row
+        function removeRow(button) {
+            // Get the reference to the button's parent row and remove it
+            $(button).closest("tr").remove();
+            updateTotalDebitAndCredit();
+        }
+
+    </script>
+    <script>
+        $('#AccountNo').select2({
+            dropdownParent: $('#AddAccEntry')
+        });
+    </script>
+    <script>
+        $(function () {
+            $(".checkVoucher").change(function () {
+                var cvId = $(this).val();
+                if (cvId !== "") {
+                    $.ajax({
+                        url: "/JournalVoucher/GetCV",
+                        method: "GET",
+                        data: { id: cvId },
+                        success: function (data) {
+                            if (data !== null) {
+                                $("#tableBody").empty();
+                                $("#cvNo").text(data.cvNo);
+                                $("#date").text(new Date(data.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }));
+                                $("#name").text(data.name);
+                                $("#address").text(data.address);
+                                $("#tinNo").text(data.tinNo);
+                                $("#poNo").text(data.poNo);
+                                $("#siNo").text(data.siNo);
+                                $("#payee").text(data.payee);
+                                $("#amount").text(data.amount);
+                                $("#particulars").text(data.particulars);
+                                $("#checkNo").text(data.checkNo);
+                                $("#totalDebit").text(data.totalDebit);
+                                $("#totalCredit").text(data.totalCredit);
+                            } else {
+                                $("#supplierAddress").text("");
+                                $("#supplierTinNo").text("");
+                                $("#cvNo").text("");
+                                $("#date").text("");
+                                $("#name").text("");
+                                $("#address").text("");
+                                $("#tinNo").text("");
+                                $("#poNo").text("");
+                                $("#siNo").text("");
+                                $("#payee").text("");
+                                $("#amount").text("");
+                                $("#particulars").text("");
+                                $("#checkNo").text("");
+                                $("#totalDebit").text("");
+                                $("#totalCredit").text("");
+                            }
+                            if (data.viewModel !== null) {
+
+                                for (let i = 0; i < data.viewModel.details.length; i++) {
+                                    var row = $("<tr></tr>");
+                                    row.append("<td style='width:60%; padding-left:20px;'>" + data.viewModel.details[i].accountNo + " " + data.viewModel.details[i].accountName + "</td>");
+                                    row.append("<td class='text-end' style='width:7%;'>" + data.viewModel.details[i].debit + "</td>");
+                                    row.append("<td class='text-end' style='width:7%;'>" + data.viewModel.details[i].credit + "</td>");
+                                    $("#tableBody").append(row);
+                                }
+                            }
+                            else {
+                                console.error("Invalid data structure or lengths.");
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error fetching TaxType:', error);
+                        }
+                    });
+                } else {
+                    $("#supplierAddress").text("");
+                    $("#supplierTinNo").text("");
+                    $("#cvNo").text("");
+                    $("#date").text("");
+                    $("#name").text("");
+                    $("#address").text("");
+                    $("#tinNo").text("");
+                    $("#poNo").text("");
+                    $("#siNo").text("");
+                    $("#payee").text("");
+                    $("#amount").text("");
+                    $("#particulars").text("");
+                    $("#checkNo").text("");
+                    $("#tableBody").empty();
+                    $("#totalDebit").text("");
+                    $("#totalCredit").text("");
+                }
+            });
+        });
+    </script>
+    <script>
+        function validateDebitAndCredit(event) {
+            var debit = parseFloat($(".totalDebit").text().replace(/,/g, '')) || 0.00;
+            var credit = parseFloat($(".totalCredit").text().replace(/,/g, '')) || 0.00;
+            if (debit !== credit) {
+                event.preventDefault();
+                alert('Total Debit and Credit do not match.');
+                return;
+            }
+        }
+    </script>
+    <script>
+        setTransactionDate();
+    </script>
+}

@@ -1,0 +1,44 @@
+﻿@model ViewModelBook
+
+@{
+    ViewData["Title"] = "Journal Book";
+    var dateFrom = ViewBag.DateFrom;
+    var dateTo = ViewBag.DateTo;
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+<form id="dynamicForm" method="post">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label asp-for="DateFrom" class="control-label"></label>
+                <input type="date" asp-for="DateFrom" class="form-control" value="@dateFrom" />
+                <span asp-validation-for="DateFrom" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DateTo" class="control-label"></label>
+                <input type="date" asp-for="DateTo" class="form-control" value="@dateTo" />
+                <span asp-validation-for="DateTo" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <button type="button" class="btn btn-primary" onclick="submitForm('JournalBookReport')"><i class="bi bi-printer"></i> Generate</button>
+                <button type="button" class="btn btn-primary" onclick="submitForm('GenerateJournalBookTxtFile')"><i class="bi bi-file-text"></i> Generate as .txt file</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function submitForm(action) {
+            var form = document.getElementById('dynamicForm');
+            form.action = action;
+            form.submit();
+        }
+    </script>
+}

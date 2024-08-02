@@ -1,0 +1,65 @@
+﻿@model ViewModelBook
+
+@{
+    ViewData["Title"] = "Sales Book";
+    var dateFrom = ViewBag.DateFrom;
+    var dateTo = ViewBag.DateTo;
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+<form id="dynamicForm" method="post">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label asp-for="DateFrom" class="control-label"></label>
+                <input type="date" asp-for="DateFrom" class="form-control" value="@dateFrom" />
+                <span asp-validation-for="DateFrom" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="DateTo" class="control-label"></label>
+                <input type="date" asp-for="DateTo" class="form-control" value="@dateTo" />
+                <span asp-validation-for="DateTo" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label class="control-label">Select type of reports</label>
+                <select name="selectedDocument" class="form-control js-select2">
+                    <option value="" selected="Disabled">--Select an option--</option>
+                    <option value="TransactionDate">Sales Book based on Transaction Date</option>
+                    <option value="DueDate">Sales Book based on Due Date</option>
+                    <option value="SI">Sales Invoice</option>
+                    <option value="SV">Service Invoice</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="control-label">Reports of transaction based on:<br />Entries per SV</label>
+                <select name="soaList" class="form-control js-select2" asp-items="@Model.SOA">
+                    <option></option>
+                </select>
+                <label class="control-label">Entries per SI</label>
+                <select name="siList" class="form-control js-select2" asp-items="@Model.SI">
+                    <option></option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <button type="button" class="btn btn-primary" onclick="submitForm('SalesBookReport')"><i class="bi bi-printer"></i> Generate</button>
+                <button type="button" class="btn btn-primary" onclick="submitForm('GenerateSalesBookTxtFile')"><i class="bi bi-file-text"></i> Generate as .txt file</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function submitForm(action) {
+            var form = document.getElementById('dynamicForm');
+            form.action = action;
+            form.submit();
+        }
+    </script>
+}

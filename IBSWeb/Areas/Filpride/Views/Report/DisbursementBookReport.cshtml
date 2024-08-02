@@ -1,0 +1,314 @@
+﻿@model IEnumerable<FilprideDisbursementBook>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Disbursement Book";
+    var dateFrom = ViewBag.DateFrom;
+    var dateTo = ViewBag.DateTo;
+    var lastRecord = ViewBag.LastRecord;
+
+    DateTime now = DateTime.Now;
+
+    decimal totalDebitAmount = 0;
+    decimal totalCreditAmount = 0;
+
+    int numberOfRecords = 0;
+    decimal amountFieldControlTotal = 0;
+}
+<style>
+    body {
+        margin: 0 100 0 0;
+        padding: 0;
+    }
+
+    .container {
+        margin: 0;
+        padding: 0;
+        max-width: 100%;
+    }
+
+    main {
+        margin: 0;
+        padding: 0;
+    }
+
+    footer {
+        display: none;
+        visibility: hidden;
+    }
+</style>
+<br class="br-top" />
+<div class="mx-5">
+<pre>
+TAXPAYER'S NAME: Filpride Resources Inc.
+TIN: 000-216-589-00000
+ADDRESS: 57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan, Olongapo City, 2200 Zambales, Philippines
+
+Accounting System: Accounting Administration System
+Acknowledgement Certificate Control No.: @* @CS.ACCN *@
+Date Issued: @* @CS.DateIssued *@
+</pre>
+
+<pre id="resultPre">
+Accounting Books File Attributes/Layout Definition
+File Name: Disbursement Book Report
+File Type: Text File
+Number of Records:                  @numberOfRecords
+Amount Field Control Total:         @amountFieldControlTotal
+Period Covered:                     @dateFrom to @dateTo
+Transaction cut-off Date & Time:    @lastRecord
+Extracted By:                       @UserManager.GetUserName(User).ToUpper()
+
+</pre>
+
+    <h3><b>DISBURSEMENT BOOK</b></h3>
+    <table class="table-hover w-100" style="margin-top:20px;">
+        <thead>
+            <tr class="table-bordered">
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Date)
+                </th>
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.CVNo)
+                </th>
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Payee)
+                </th>
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Particulars)
+                </th>
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Bank)
+                </th>
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.CheckNo)
+                </th>
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.CheckDate)
+                </th>
+                <th style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.ChartOfAccount)
+                </th>
+                <th class="text-end" style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Debit)
+                </th>
+                <th class="text-end" style="padding: 10px 30px 10px 30px;">
+                    @Html.DisplayNameFor(model => model.Credit)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach (var disbursement in Model)
+            {
+                <tr class="align-text-bottom">
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @disbursement.Date.ToString("MM/dd/yyyy")
+                    </td>
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => disbursement.CVNo)
+                    </td>
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => disbursement.Payee)
+                    </td>
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => disbursement.Particulars)
+                    </td>
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => disbursement.Bank)
+                    </td>
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => disbursement.CheckNo)
+                    </td>
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => disbursement.CheckDate)
+                    </td>
+                    <td style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => disbursement.ChartOfAccount)
+                    </td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => disbursement.Debit)
+                    </td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">
+                        @Html.DisplayFor(model => disbursement.Credit)
+                    </td>
+
+                </tr>
+
+                totalDebitAmount += disbursement.Debit;
+                totalCreditAmount += disbursement.Credit;
+            }
+            <tr class="align-text-bottom" style="border-top: 2px solid black;">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="text-center"><b>TOTAL:</b></td>
+                <td class="text-end" style="padding: 10px 30px 10px 30px;"><div>@totalDebitAmount.ToString("N2")</div></td>
+                <td class="text-end" style="padding: 10px 30px 10px 30px;"><div>@totalCreditAmount.ToString("N2")</div></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p style="line-height: 1; margin-top:25px;" class="text-start">
+        <em>
+            <b>Software Name :</b> Accounting Administration System (AAS)
+            <br />
+            <b>Version :</b> @* @CS.Version *@
+            <br />
+            <b>Printed By :</b> @UserManager.GetUserName(User).ToUpper()
+            <br />
+            <b>Date & Time Printed :</b> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+        </em>
+    </p>
+
+    <a class="btn btn-success" onclick="printPage()" id="printButton" style="margin-top:25px;">Print</a>
+    <a asp-action="DisbursementBook" class="btn" id="otherButton" style="margin-top:25px;">Back</a>
+</div>
+@section Scripts {
+    <script>
+        function printPage() {
+            // Call the print function
+            window.print();
+        }
+    </script>
+    <script>
+        // Get the first row in the table body
+        var firstRow = document.querySelector('tbody tr:first-child');
+
+        // Get all cells in the first row
+        var cells = firstRow.querySelectorAll('td');
+
+        // Initialize total character count
+        var totalCharacters = 0;
+
+        // Get the pre tag element
+        var resultPre = document.getElementById('resultPre');
+
+        // Append the header for the fields
+        resultPre.textContent += 'Field Name          Description         From     To     Length      Example\n';
+
+        // Iterate through each cell in the first row
+        cells.forEach(function (cell, index) {
+            // Calculate the starting and ending character positions for each cell
+            var cellHtml = cell.innerHTML;
+
+            // Exclude spaces from both 'START' and 'END' counts
+            var startChar = totalCharacters + 1;
+            var endChar = startChar + cellHtml.replace(/\s/g, '').length - 1;
+
+            // Update the total character count
+            totalCharacters = endChar + 1; // Add 1 to include the space in the next cell
+
+            var content = cellHtml.trim();
+
+            // Append the result to the pre tag based on the row index
+            switch (index) {
+                case 0: // Transaction Date
+                    resultPre.textContent += padToLength('Date', 20) +
+                        padToLength('Date', 20) +
+                        padToLength(startChar.toString(), 9) +
+                        padToLength(endChar.toString(), 7) +
+                        padToLength((endChar - startChar + 1).toString(), 12) +
+                        content + '\n';
+                    break;
+                case 1: // Serial No
+                    resultPre.textContent += padToLength('CVNo', 20) +
+                        padToLength('CV No.', 20) +
+                        padToLength(startChar.toString(), 9) +
+                        padToLength(endChar.toString(), 7) +
+                        padToLength((endChar - startChar + 1).toString(), 12) +
+                        content + '\n';
+                    break;
+                case 2: // Sold To
+                    resultPre.textContent += padToLength('Payee', 20) +
+                        padToLength('Payee', 20) +
+                        padToLength('25', 9) +
+                        padToLength('124', 7) +
+                        padToLength('100', 12) +
+                        content + '\n';
+                    break;
+                case 3: // Tin#
+                    resultPre.textContent += padToLength('Particulars', 20) +
+                        padToLength('Particulars', 20) +
+                        padToLength('126', 9) +
+                        padToLength('325', 7) +
+                        padToLength('200', 12) +
+                        content + '\n';
+                    break;
+                case 4: // Amount
+                    resultPre.textContent += padToLength('Bank', 20) +
+                        padToLength('Bank', 20) +
+                        padToLength('327', 9) +
+                        padToLength('336', 7) +
+                        padToLength('10', 12) +
+                        content + '\n';
+                    break;
+                case 5: // Vat Amount
+                    resultPre.textContent += padToLength('CheckNo', 20) +
+                        padToLength('Check No', 20) +
+                        padToLength('338', 9) +
+                        padToLength('357', 7) +
+                        padToLength('20', 12) +
+                        content + '\n';
+                    break;
+                case 6: // Vatable Sales
+                    resultPre.textContent += padToLength('CheckDate', 20) +
+                        padToLength('Check Date', 20) +
+                        padToLength('359', 9) +
+                        padToLength('368', 7) +
+                        padToLength('10', 12) +
+                        content + '\n';
+                    break;
+                case 7: // VAT Exempt Sales
+                    resultPre.textContent += padToLength('ChartOfAccount', 20) +
+                        padToLength('Chart Of Account', 20) +
+                        padToLength('370', 9) +
+                        padToLength('469', 7) +
+                        padToLength('100', 12) +
+                        content + '\n';
+                    break;
+                case 8: // Zero Rated
+                    resultPre.textContent += padToLength('Debit', 20) +
+                        padToLength('Debit', 20) +
+                        padToLength('471', 9) +
+                        padToLength('488', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 9: // Zero Rated
+                    resultPre.textContent += padToLength('Credit', 20) +
+                        padToLength('Credit', 20) +
+                        padToLength('490', 9) +
+                        padToLength('507', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+            }
+        });
+
+        // Function to pad a string to a specific length
+        function padToLength(str, length) {
+            return str + ' '.repeat(Math.max(0, length - str.length));
+        }
+    </script>
+
+    <script>
+        // Get all <tr> elements in the table body (excluding the header row)
+        var allTrElements = document.querySelectorAll('tbody tr');
+
+        // Get the pre tag element
+        var resultPre = document.getElementById('resultPre');
+
+        // Replace the placeholder in the HTML with the actual number of records
+        resultPre.innerHTML = resultPre.innerHTML.replace('@numberOfRecords', (allTrElements.length - 1));
+        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalDebitAmount.ToString("N2")");
+
+    </script>
+
+
+}

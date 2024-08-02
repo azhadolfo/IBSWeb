@@ -1,0 +1,500 @@
+﻿@model FilprideCollectionReceipt
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@using Humanizer
+
+@{
+    ViewData["Title"] = "Print Collection Receipt";
+}
+
+<br />
+<div class="text-end">
+    <img src="~/img/Filpride.jpg" height="" width="130px" />
+</div>
+<div class="text-center">
+    <h2><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
+    <p style="line-height: 1; margin-top:-7px;">
+        57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
+        Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
+        VAT Reg. TIN: 000-216-589-00000
+    </p>
+</div>
+
+<h3><span style="display: inline-block;"><b>COLLECTION RECEIPT</b></span></h3>
+<div class="text-end" style="margin-top:-50px;">
+    <h6><b>No.&nbsp;@Html.DisplayFor(model => model.CollectionReceiptNo)</b></h6>
+</div>
+<br />
+
+<div class="w-100 text-end" style="margin-top:-20px; padding-bottom:10px;">
+    <span><b>Date:</b></span>
+    <span class="underline" style="display: inline-block; width: 20%; text-align:center;">@Model.TransactionDate.ToString("MM/dd/yyyy")</span><br />
+</div>
+
+<div>
+    <table class="table-bordered w-100">
+        <tbody>
+            <tr>
+                <td colspan="2" style="padding-left:10px;">
+                    Received from: &nbsp;
+                    @if (Model.SalesInvoiceId != null)
+                    {
+                        @Html.DisplayFor(model => model.SalesInvoice.Customer.CustomerName)
+                    }
+                    else
+                    {
+                        @Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerName)
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" class="w-50" style="padding-left:10px;">
+                    Address: &nbsp;
+                    @if (Model.SalesInvoiceId != null)
+                    {
+                        @Html.DisplayFor(model => model.SalesInvoice.Customer.CustomerAddress)
+                    }
+                    else
+                    {
+                        @Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerAddress)
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-left:10px;">
+                    TIN: &nbsp;
+                    @if (Model.SalesInvoiceId != null)
+                    {
+                        @Html.DisplayFor(model => model.SalesInvoice.Customer.CustomerTin)
+                    }
+                    else
+                    {
+                        @Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerTin)
+                    }
+                </td>
+                <td style="padding-left:10px;">
+                    Buss. Style: &nbsp;
+                    @if (Model.SalesInvoiceId != null)
+                    {
+                        @Html.DisplayFor(model => model.SalesInvoice.Customer.BusinessStyle)
+                    }
+                    else
+                    {
+                        @Html.DisplayFor(model => model.ServiceInvoice.Customer.BusinessStyle)
+                    }
+                </td>
+            </tr>
+            @{
+                decimal convertToWords = Model.Total;
+
+                int integerPart = Convert.ToInt32(Math.Floor(convertToWords));
+                decimal decimalPart = Math.Round((convertToWords - integerPart), 2);
+
+                // Convert integer part to words
+                string integerWords = integerPart.ToWords();
+                integerWords = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(integerWords.ToLower());
+
+                // Convert and format cents value
+                int cents = Convert.ToInt32(decimalPart * 100) % 100;
+                string centsWords = cents.ToWords(); // Use ToWords instead of string formatting
+                centsWords = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(centsWords.ToLower());
+
+                string upperCaseOne = integerWords;
+                string upperCaseTwo = centsWords;
+
+                // Combine words and formatting
+                string words;
+
+                if (cents > 0)
+                {
+                    // If there is a decimal part, include "And" before it
+                    words = $"{upperCaseOne} Pesos and {upperCaseTwo} Centavos Only";
+                }
+                else
+                {
+                    // If there is no decimal part, exclude "And"
+                    words = $"{upperCaseOne} Pesos Only";
+                }
+
+                // Capitalize first letters
+                // words = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(words.ToLower());
+
+                words = words.Replace(" And", "");
+                words = words.Replace("-", " ");
+            }
+            <tr>
+                <td colspan="2" style="padding-left:10px;">The sum of Pesos:<br /> @words</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+                <td style="padding-left:10px;">(₱&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  @Html.DisplayFor(model => model.Total))</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="padding-left:10px;">
+                    IN FULL/PARTIAL payment of:
+                    @if (Model.SalesInvoiceId != null)
+                    {
+                        @Html.DisplayFor(model => model.SalesInvoice.SalesInvoiceNo)
+                    }
+                    else
+                    {
+                        @Html.DisplayFor(model => model.ServiceInvoice.ServiceInvoiceNo)
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="padding-left:10px;">Reference Receipt No.&nbsp; @Html.DisplayFor(model => model.ReferenceNo)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div style="margin-top:10px;">
+    <table class="table-bordered w-100">
+        <tbody>
+            <tr>
+                <td class="text-center" style="width:33%">INVOICE DATE</td>
+                <td class="text-center" style="width:33%">INVOICE #</td>
+                <td class="text-center" style="width:33%">AMOUNT</td>
+            </tr>
+            <tr class="text-center">
+                <td style="width:33%">
+                    @if (Model.SalesInvoiceId != null)
+                    {
+                        @Model.SalesInvoice.TransactionDate.ToString("MM/dd/yyyy")
+                    }
+                    else
+                    {
+                        @Model.ServiceInvoice.CreatedDate.ToString("MM/dd/yyyy")
+                    }
+                </td>
+                <td style="width:33%">
+                    @if (Model.SalesInvoiceId != null)
+                    {
+                        @Html.DisplayFor(model => model.SalesInvoice.SalesInvoiceNo)
+                    }
+                    else
+                    {
+                        @Html.DisplayFor(model => model.ServiceInvoice.ServiceInvoiceNo)
+                    }
+                </td>
+                <td style="width:33%">@Html.DisplayFor(model => model.Total)</td>
+            </tr>
+            <tr>
+                <td style="width:33%">&nbsp;</td>
+                <td style="width:33%"></td>
+                <td style="width:33%"></td>
+            </tr>
+            <tr>
+                <td style="width:33%">&nbsp;</td>
+                <td style="width:33%"></td>
+                <td style="width:33%"></td>
+            </tr>
+            <tr>
+                <td style="width:33%">&nbsp;</td>
+                <td style="width:33%"></td>
+                <td style="width:33%"></td>
+            </tr>
+            <tr>
+                <td style="width:33%">&nbsp;</td>
+                <td style="width:33%"></td>
+                <td style="width:33%"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top:10px;">
+    <table class="table-bordered w-100">
+        <tbody>
+            <tr>
+                <td colspan="6" style="padding-left:20px;">FORM OF PAYMENT</td>
+            </tr>
+            <tr>
+                <td class="text-center" style="width:25%"></td>
+                <td class="text-center" style="width:15%">DATE</td>
+                <td class="text-center" style="width:15%">CHK #</td>
+                <td class="text-center" style="width:15%">BANK</td>
+                <td class="text-center" style="width:15%">BRANCH</td>
+                <td class="text-center" style="width:15%">AMOUNT</td>
+            </tr>
+
+            <tr>
+                <td style="padding-left:20px;">Cash</td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center">
+                    @if (Model.CashAmount != null)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.CashAmount)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding-left:20px;">Check</td>
+                <td class="text-center">
+                    @if (Model.CheckDate != null)
+                    {
+                        <p style="height: 9px;">@Model.CheckDate</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.CheckNo != null)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.CheckNo)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.CheckBank != null)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.CheckBank)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.CheckBranch != null)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.CheckBranch)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.CheckAmount != 0)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.CheckAmount)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding-left:20px;">Manager's Check</td>
+                <td class="text-center">
+                    @if (Model.ManagerCheckDate != null)
+                    {
+                        <p style="height: 9px;">@Model.ManagerCheckDate?.ToString("MM/dd/yyyy")</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.ManagerCheckNo != null)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.ManagerCheckNo)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.ManagerCheckBank != null)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.ManagerCheckBank)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.ManagerCheckBranch != null)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.ManagerCheckBranch)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.ManagerCheckAmount != 0)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.ManagerCheckAmount)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding-left:20px;">EWT</td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center">
+                    @if (Model.EWT != 0)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.EWT)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-left:20px;">WVAT</td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center">
+                    @if (Model.WVAT != 0)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.WVAT)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-left:20px;">TOTAL</td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center">
+                    @if (Model.Total != 0)
+                    {
+                        <p style="height: 9px;">@Html.DisplayFor(model => model.Total)</p>
+                    }
+                    else
+                    {
+                        <p></p>
+                    }
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="text-center w-100" style="margin-top:10px;">
+    <p @* style="line-height: 1;" *@>
+        <em class="p-4"><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong><br /></em>
+        <span>Acknowledgement Certificate No:</span>
+        <span style="display: inline-block; width:150px;">@* @CS.ACCN *@</span>
+        <span>&nbsp;&nbsp;Date Issued:</span>
+        <span style="display: inline-block; width:50px;">@* @CS.DateIssued *@</span><br />
+        Series: CR0000000001 - CR9999999999
+        Date and Time Created:&nbsp;@Model.CreatedDate.ToString("MM/dd/yyyy")
+    </p>
+</div>
+
+<br />
+<div class="text-start footer" style="margin-top:20px;">
+    <p style="line-height: 1;">
+        <em>
+            <strong>Software Name :</strong> Accounting Administration System (AAS)
+            <br />
+            <strong>Version :</strong> @* @CS.Version *@
+            <br />
+            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+            <br />
+            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+        </em>
+    </p>
+</div>
+
+@* @if (!Model.IsPrinted)
+{
+    <div class="text-end">
+        ORIGINAL COPY
+    </div>
+}
+else
+{
+    <div class="text-end">
+        REPRINT COPY
+    </div>
+} *@
+
+<br />
+@* <a asp-action="OfficialReceipt" class="btn btn-success" asp-route-id="@Model.Id" onclick="printPage()" id="printButton">Print</a> *@
+<a asp-action="PrintedCR" asp-route-id="@Model.CollectionReceiptId" class="btn btn-success" onclick="printPage()" id="printButton">Print</a>
+<a asp-action="CollectionIndex" class="btn" id="otherButton">Back</a>
+
+@section Scripts {
+    <script>
+        var originalFontSizes = [];
+
+        function printPage() {
+            var printButton = document.getElementById("printButton");
+            var otherButton = document.getElementById("otherButton");
+
+            // Hide the header and footer
+            document.querySelector("header").style.display = "none";
+
+            // Hide the buttons before printing
+            if (printButton) {
+                printButton.style.visibility = "hidden";
+            }
+            if (otherButton) {
+                otherButton.style.visibility = "hidden";
+            }
+
+            // Get all paragraph elements
+            var paragraphs = document.querySelectorAll("p");
+
+            // Store the original font sizes
+            for (var i = 0; i < paragraphs.length; i++) {
+                originalFontSizes[i] = paragraphs[i].style.fontSize;
+                // Set the font size of all paragraph elements to 12px for printing
+                paragraphs[i].style.fontSize = "12px";
+            }
+
+            // Call the print function
+            window.print();
+
+            // Restore the font sizes
+            for (var i = 0; i < paragraphs.length; i++) {
+                paragraphs[i].style.fontSize = originalFontSizes[i];
+            }
+
+            // Restore the buttons' visibility after printing (optional)
+            if (printButton) {
+                printButton.style.visibility = "visible";
+            }
+            if (otherButton) {
+                otherButton.style.visibility = "visible";
+            }
+
+            // Restore the header and footer's visibility after printing (optional)
+            document.querySelector("header").style.display = "";
+        }
+    </script>
+}

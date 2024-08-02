@@ -1,0 +1,173 @@
+﻿@model IEnumerable<FilprideSalesInvoice>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@{
+    ViewData["Title"] = "Sales Invoice";
+}
+
+<h1>Sales Invoice</h1>
+<hr />
+<p>
+    <a asp-action="Create" class="btn btn-primary rounded-3"><i class="bi bi-plus-lg"></i> New</a>
+</p>
+
+<div class="table-responsive">
+    <table class="table table-hover" id="myOwnTable">
+        <thead>
+            <tr class="text-nowrap">
+                <th>
+                    @Html.DisplayNameFor(model => model.SalesInvoiceNo)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Customer.CustomerName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.TransactionDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Customer.CustomerTerms)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Amount)
+                </th>
+                <th style="width: 25%"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var invoice in Model)
+            {
+                <tr class="align-text-bottom">
+                    <td>
+                        @Html.DisplayFor(model => invoice.SalesInvoiceNo)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(model => invoice.Customer.CustomerName)
+                    </td>
+                    <td>
+                        @invoice.TransactionDate.ToString("MM/dd/yyyy")
+                    </td>
+                    <td>
+                        @Html.DisplayFor(model => invoice.Customer.CustomerTerms)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(model => invoice.Amount)
+                    </td>
+                    <td class="text-center">
+                        @if (invoice.CreatedBy == UserManager.GetUserName(User))
+                        {
+                            if (invoice.PostedBy == null && invoice.VoidedBy == null && invoice.CanceledBy == null)
+                            {
+                                <a asp-action="Edit" asp-route-id="@invoice.SalesInvoiceId" class="btn btn-light">Edit</a>
+                                <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#Preview-@invoice.SalesInvoiceId" data-bs-url="@Url.Action($"Preview/{invoice.SalesInvoiceId}")">
+                                    Preview
+                                </button>
+                                @await Html.PartialAsync("_Preview", invoice)
+                                <a class="btn btn-light" onclick="confirmPost(@invoice.SalesInvoiceId)">Post</a>
+                                <a class="btn btn-light" onclick="confirmCancel(@invoice.SalesInvoiceId)">Cancel</a>
+                            }
+                            if (invoice.PostedBy != null && invoice.VoidedBy == null && invoice.CanceledBy == null)
+                            {
+                                <a asp-action="PrintInvoice" asp-route-id="@invoice.SalesInvoiceId" class="btn btn-light">Print</a>
+                                if (invoice.AmountPaid == 0)
+                                {
+                                    <a class="btn btn-light" onclick="confirmVoid(@invoice.SalesInvoiceId)">Void</a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-light" disabled readonly>Void</button>
+                                }
+                            }
+                        }
+
+                        @if (invoice.VoidedBy != null)
+                        {
+                            <span class="badge rounded-pill bg-danger ">VOIDED</span>
+                        }
+                        else if (invoice.CanceledBy != null)
+                        {
+                            <span class="badge rounded-pill bg-warning ">CANCELLED</span>
+                        }
+                        else
+                        {
+                            @if (invoice.CreatedBy != UserManager.GetUserName(User))
+                            {
+                                <span class="badge rounded-pill bg-info ">VALID</span>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@section Scripts {
+    <script>
+        function confirmPost(invoiceId) {
+            console.log(invoiceId);
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Replace with the actual URL that you want to redirect to
+                    var url = `/SalesInvoice/Post?invoiceId=${invoiceId}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+    <script>
+        function confirmVoid(invoiceId) {
+            console.log(invoiceId);
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Replace with the actual URL that you want to redirect to
+                    var url = `/SalesInvoice/Void?invoiceId=${invoiceId}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+    <script>
+        function confirmCancel(invoiceId) {
+            console.log(invoiceId);
+            Swal.fire({
+                title: "Please Input Remarks",
+                html:
+                    "<input id='cancellationRemarks' type='text' class='swal2-input' placeholder='Remarks'>",
+                focusConfirm: false,
+                allowEscapeKey: false,
+                allowOutsideClick: false,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var cancellationRemarks = $("#cancellationRemarks").val();
+                    // Encode the cancellationRemarks to make it URL safe
+                    var encodedRemarks = encodeURIComponent(cancellationRemarks);
+                    // Append the encoded remarks as a parameter in the URL
+                    var url = `/SalesInvoice/Cancel?invoiceId=${invoiceId}&cancellationRemarks=${encodedRemarks}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+}

@@ -1,0 +1,337 @@
+﻿@model FilprideCollectionReceipt
+
+@{
+    ViewData["Title"] = "Create Collection For Sales";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Single Collection For Sales</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <div class="position-absolute p-2" style="left:40%; width:25%; border:dotted 1px;">
+            <pre>
+            <b>Invoice Details</b>
+Invoice Amount: <span id="amount"></span>
+EWT:            <span id="ewt"></span>
+WVAT:           <span id="wvat"></span>
+=======================================
+Less EWT/WVAT:  <span id="total"></span>
+=======================================
+Amount Paid:    <span id="amountPaid"></span>
+Balance:        <span id="balance"></span>
+
+           </pre>
+        </div>
+        <form asp-action="SingleCollectionCreateForSales" method="post" enctype="multipart/form-data">
+            <div class="col-md-4">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Customers<span class="required">*</span></label>
+                    <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2" style="width:100%" required>
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="CustomerId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="control-label">SI NO.<span class="required">*</span></label>
+                    <select asp-for="SalesInvoiceId" id="invoices" asp-items="@Model.SalesInvoices" class="form-select js-select2" style="width:100%">
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="SalesInvoiceId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="TransactionDate" class="control-label">Transaction Date<span class="required">*</span></label>
+                    <input asp-for="TransactionDate" type="Date" class="form-control" />
+                    <span asp-validation-for="TransactionDate" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="ReferenceNo" id="floatingInput" type="text" class="form-control" placeholder="Reference #" />
+                    <label for="floatingInput" class="control-label">Reference #<span class="required">*</span></label>
+                    <span asp-validation-for="ReferenceNo" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Remarks" id="floatingInput" type="text" class="form-control" placeholder="Optional" />
+                    <label for="floatingInput" class="control-label">Remarks</label>
+                    <span asp-validation-for="Remarks" class="text-danger"></span>
+                </div>
+
+            </div>
+            <table class="table-bordered w-100">
+                <tbody>
+                    <tr>
+                        <td colspan="6" style="padding-left:20px;">FORM OF PAYMENT<span class="required">*</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" style="width:25%"></td>
+                        <td class="text-center" style="width:15%">DATE</td>
+                        <td class="text-center" style="width:15%">CHK #</td>
+                        <td class="text-center" style="width:15%">BANK</td>
+                        <td class="text-center" style="width:15%">BRANCH</td>
+                        <td class="text-center" style="width:15%">AMOUNT</td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding-left:20px;">Cash</td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input asp-for="CashAmount" style="border:none" class="form-control moneyInput" /></td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding-left:20px;">Check</td>
+                        <td><input asp-for="CheckDate" type="date" style="border:none" class="form-control" /></td>
+                        <td><input asp-for="CheckNo" style="border:none" class="form-control" /></td>
+                        <td><input asp-for="CheckBank" style="border:none" class="form-control" /></td>
+                        <td><input asp-for="CheckBranch" style="border:none" class="form-control" /></td>
+                        <td><input asp-for="CheckAmount" style="border:none" class="form-control moneyInput" /></td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding-left:20px;">EWT</td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input asp-for="EWT" style="border:none" class="form-control moneyInput" /></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:20px;">WVAT</td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input asp-for="WVAT" style="border:none" class="form-control moneyInput" /></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="form-group my-3">
+                <label class="form-label fst-italic">If applicable, upload the certificate.</label>
+                <div class="mb-3">
+                    <label for="bir2306" class="form-label">BIR 2306 Form</label>
+                    <input class="form-control form-control-sm w-25" name="bir2306" type="file">
+                </div>
+                <div class="mb-3">
+                    <label for="bir2307" class="form-label">BIR 2307 Form</label>
+                    <input class="form-control form-control-sm w-25" name="bir2307" type="file">
+                </div>
+            </div>
+
+
+            <hr />
+            <div class="form-group">
+                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
+                    Add Entry
+                </button>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="w-100">Account Title</th>
+                            <th class="w-20">
+                                Amount
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="accountingEntriesBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+                <a asp-action="CollectionIndex" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="AddAccEntry" tabindex="-1" aria-labelledby="AddAccEntryLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="AddAccEntryLabel">Add Accounting Entry</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="form-group">
+                            <label class="control-label">Account Title</label>
+                            <select id="AccountTitle" asp-items="@Model.ChartOfAccounts" class="form-select" style="width: 100%">
+                                <option></option>
+                            </select>
+                            <span class="text-danger"></span>
+                        </div>
+                        <div class="form-group pt-4">
+                            <label class="control-label">Amount</label>
+                            <input id="AccountAmount" class="form-control moneyInput" value="" placeholder="0.00" />
+                            <span class="text-danger"></span>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAccountingEntry()">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    @section Scripts {
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
+        <script>
+            $(document).ready(function () {
+                $("#CustomerId").change(function () {
+                    var customerNo = $(this).val();
+
+                    $.ajax({
+                        url: "/Receipt/GetSalesInvoices",
+                        type: "GET",
+                        data: { customerNo: customerNo },
+                        success: function (data) {
+
+                            $("#invoices").empty();
+
+                            // Check if data is an array and not null
+                            if (Array.isArray(data) && data.length > 0) {
+
+                                document.getElementById("amount").innerHTML = "";
+                                document.getElementById("amountPaid").innerHTML = "";
+                                document.getElementById("balance").innerHTML = "";
+
+                                $("#invoices").append('<option>');
+
+                                // Iterate over the array and append options
+                                $.each(data, function (index, item) {
+                                    $("#invoices").append($('<option>', {
+                                        value: item.value,   // Use the correct property for value
+                                        text: item.text      // Use the correct property for text
+                                    }));
+                                });
+                            } else {
+                                // Handle the case where data is null or empty
+                                console.log("No sales invoices found for the selected customer.");
+                            }
+                        }
+                    });
+                });
+            });
+        </script>
+
+        <script>
+            function saveAccountingEntry() {
+                // Get the values from the modal inputs
+                var accountTitle = $("#AccountTitle").val();
+                var accountTitleText = $("#AccountTitle option:selected").text();
+                var accountAmount = parseFloat($("#AccountAmount").val().replace(/,/g, '')) || 0.00;
+
+                if (accountAmount === 0) {
+                    event.preventDefault();
+                    alert('Please input amount');
+                    return;
+                } else if (accountTitleText === "") {
+                    event.preventDefault();
+                    alert('Please select Account No.!');
+                    return;
+                }
+
+                // Format debit and credit values with commas and two decimal places
+                var formattedAmount = accountAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                // Create a new row with the text only and a hidden input for the value
+                var newRow = `<tr>
+                                            <td>
+                                                <input type='hidden' name='accountTitle' value='${accountTitle}' />
+                                                <input type='text' name='accountTitleText' value='${accountTitleText}' style='border:none' readonly />
+                                            </td>
+                                                        <td><input type='text' name='accountAmount' value='${formattedAmount}' style='border:none' readonly /></td>
+                                            <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                         </tr>`;
+
+                // Append the new row to the table body
+                $("#accountingEntriesBody").append(newRow);
+
+                // Close the modal
+                $("#AddAccEntry").modal("hide");
+
+                // Clear the modal inputs
+                $("#AccountTitle").val(""); // Reset the select to its default state
+                $("#AccountTitle").trigger("change"); // Trigger change event for the select
+                $("#AccountAmount").val("");
+            }
+
+
+            // Function to remove the corresponding row
+            function removeRow(button) {
+                // Get the reference to the button's parent row and remove it
+                $(button).closest("tr").remove();
+            }
+
+        </script>
+
+        <script>
+            // Function to handle invoice change event
+            function handleInvoiceChange() {
+                var invoiceNo = $("#invoices").val();
+
+                if (invoiceNo != "") {
+                    $.ajax({
+                        url: "/Receipt/GetInvoiceDetails",
+                        type: "GET",
+                        data: {
+                            invoiceNo: invoiceNo,
+                            isSales: true,      // or false based on your condition
+                            isServices: false   // or true based on your condition
+                        },
+                        success: function (data) {
+                            console.log(data);
+                            document.getElementById("amount").innerHTML = data.amount;
+                            document.getElementById("amountPaid").innerHTML = data.amountPaid;
+                            document.getElementById("balance").innerHTML = data.balance;
+                            document.getElementById("ewt").innerHTML = data.ewt;
+                            document.getElementById("wvat").innerHTML = data.wvat;
+                            document.getElementById("total").innerHTML = data.total;
+                        }
+                    });
+                }
+
+            }
+
+            $(document).ready(function () {
+                // Call the handleInvoiceChange function on page load
+                handleInvoiceChange();
+
+                // Attach event listener to invoice dropdown
+                $("#invoices").change(function () {
+                    // Call the handleInvoiceChange function when the dropdown changes
+                    handleInvoiceChange();
+                });
+            });
+        </script>
+
+        <script>
+            $('#AccountTitle').select2({
+                dropdownParent: $('#AddAccEntry')
+            });
+        </script>
+        <script>
+            setTransactionDate();
+        </script>
+    }

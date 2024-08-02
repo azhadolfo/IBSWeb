@@ -1,0 +1,255 @@
+﻿@model IEnumerable<FilprideSalesBook>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Purchase Journal Book";
+    var dateFrom = ViewBag.DateFrom;
+    var dateTo = ViewBag.DateTo;
+    var lastRecord = ViewBag.LastRecord;
+
+    DateTime now = DateTime.Now;
+    decimal total = 0;
+}
+<style>
+    body {
+        margin: 0 100 0 0;
+        padding: 0;
+    }
+
+    .container {
+        margin: 0;
+        padding: 0;
+        max-width: 100%;
+    }
+
+    main {
+        margin: 0;
+        padding: 0;
+    }
+
+    footer {
+        display: none;
+        visibility: hidden;
+    }
+</style>
+<br class="br-top" />
+<div class="mx-5">
+<pre>
+TAXPAYER'S NAME: Filpride Resources Inc.
+TIN: 000-216-589-00000
+ADDRESS: 57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan, Olongapo City, 2200 Zambales, Philippines
+
+Accounting System: Accounting Administration System
+Acknowledgement Certificate Control No.: @* @CS.ACCN *@
+Date Issued: @* @CS.DateIssued *@
+</pre>
+    @if (ViewBag.SOAList != null)
+    {
+        <h3><b>Reports of transaction based on entries per SOA</b></h3>
+    }
+    else if (ViewBag.SIList != null)
+    {
+        <h3><b>Reports of transaction based on entries per SI</b></h3>
+    }
+
+    <table class="table table-hover" style="margin-top:20px;">
+        <thead>
+            <tr class="table-bordered">
+                <th>Created Date</th>
+                <th>Reference</th>
+                <th>Transaction</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var sales in Model)
+            {
+                <tr class="align-text-bottom">
+                    <td>@sales.CreatedDate.ToString("MM/dd/yyyy")</td>
+                    <td>@sales.SerialNo</td>
+                    <td>@sales.TransactionDate</td>
+                    <td>@sales.Amount</td>
+                </tr>
+
+                total += sales.Amount;
+            }
+            <tr class="align-text-bottom">
+                <td></td>
+                <td></td>
+                <td class="text-end">TOTAL:</td>
+                <td>@total.ToString("N2")</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p style="line-height: 1; margin-top:25px;" class="text-start">
+        <em>
+            <b>Software Name :</b> Accounting Administration System (AAS)
+            <br />
+            <b>Version :</b> @* @CS.Version *@
+            <br />
+            <b>Printed By :</b> @UserManager.GetUserName(User).ToUpper()
+            <br />
+            <b>Date & Time Printed :</b> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+        </em>
+    </p>
+
+    <a class="btn btn-success" onclick="printPage()" id="printButton" style="margin-top:10px;">Print</a>
+    <a asp-action="SalesBook" class="btn" id="otherButton" style="margin-top:10px;">Back</a>
+</div>
+@section Scripts {
+    <script>
+        function printPage() {
+            // Call the print function
+            window.print();
+        }
+    </script>
+    <script>
+        // Get the first row in the table body
+        var firstRow = document.querySelector('tbody tr:first-child');
+
+        // Get all cells in the first row
+        var cells = firstRow.querySelectorAll('td');
+
+        // Initialize total character count
+        var totalCharacters = 0;
+
+        // Get the pre tag element
+        var resultPre = document.getElementById('resultPre');
+
+        // Append the header for the fields
+        resultPre.textContent += 'Field Name          Description         From     To     Length      Example\n';
+
+        // Iterate through each cell in the first row
+        cells.forEach(function (cell, index) {
+            // Calculate the starting and ending character positions for each cell
+            var cellHtml = cell.innerHTML;
+
+            // Exclude spaces from both 'START' and 'END' counts
+            var startChar = totalCharacters + 1;
+            var endChar = startChar + cellHtml.replace(/\s/g, '').length - 1;
+
+            // Update the total character count
+            totalCharacters = endChar + 1; // Add 1 to include the space in the next cell
+
+            var content = cellHtml.trim();
+
+            // Append the result to the pre tag based on the row index
+            switch (index) {
+                case 0: // Transaction Date
+                    resultPre.textContent += padToLength('Date', 20) +
+                        padToLength('Date', 20) +
+                        padToLength(startChar.toString(), 9) +
+                        padToLength(endChar.toString(), 7) +
+                        padToLength((endChar - startChar + 1).toString(), 12) +
+                        content + '\n';
+                    break;
+                case 1: // Serial No
+                    resultPre.textContent += padToLength('SupplierName', 20) +
+                        padToLength('Supplier Name', 20) +
+                        padToLength('12', 9) +
+                        padToLength('61', 7) +
+                        padToLength('50', 12) +
+                        content + '\n';
+                    break;
+                case 2: // Sold To
+                    resultPre.textContent += padToLength('SupplierTin', 20) +
+                        padToLength('Supplier TIN', 20) +
+                        padToLength('63', 9) +
+                        padToLength('82', 7) +
+                        padToLength('20', 12) +
+                        content + '\n';
+                    break;
+                case 3: // Tin#
+                    resultPre.textContent += padToLength('SupplierAddress', 20) +
+                        padToLength('Supplier Address', 20) +
+                        padToLength('84', 9) +
+                        padToLength('283', 7) +
+                        padToLength('200', 12) +
+                        content + '\n';
+                    break;
+                case 4: // Amount
+                    resultPre.textContent += padToLength('PONo', 20) +
+                        padToLength('PO No.', 20) +
+                        padToLength('285', 9) +
+                        padToLength('296', 7) +
+                        padToLength('12', 12) +
+                        content + '\n';
+                    break;
+                case 5: // Vat Amount
+                    resultPre.textContent += padToLength('DocumentNo', 20) +
+                        padToLength('Document No', 20) +
+                        padToLength('298', 9) +
+                        padToLength('309', 7) +
+                        padToLength('12', 12) +
+                        content + '\n';
+                    break;
+                case 6: // Vatable Sales
+                    resultPre.textContent += padToLength('Description', 20) +
+                        padToLength('Description', 20) +
+                        padToLength('311', 9) +
+                        padToLength('360', 7) +
+                        padToLength('50', 12) +
+                        content + '\n';
+                    break;
+                case 7: // VAT Exempt Sales
+                    resultPre.textContent += padToLength('Amount', 20) +
+                        padToLength('Amount', 20) +
+                        padToLength('362', 9) +
+                        padToLength('379', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 8: // Zero Rated
+                    resultPre.textContent += padToLength('VatAmount', 20) +
+                        padToLength('Vat Amount', 20) +
+                        padToLength('381', 9) +
+                        padToLength('398', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 9: // Zero Rated
+                    resultPre.textContent += padToLength('DefAmount', 20) +
+                        padToLength('Def VAT Amount', 20) +
+                        padToLength('400', 9) +
+                        padToLength('417', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 10: // Zero Rated
+                    resultPre.textContent += padToLength('WhtAmount', 20) +
+                        padToLength('WHT Amount', 20) +
+                        padToLength('419', 9) +
+                        padToLength('436', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+                case 11: // Zero Rated
+                    resultPre.textContent += padToLength('NetPurchases', 20) +
+                        padToLength('Net Purchases', 20) +
+                        padToLength('438', 9) +
+                        padToLength('455', 7) +
+                        padToLength('18', 12) +
+                        content + '\n';
+                    break;
+            }
+        });
+
+        // Function to pad a string to a specific length
+        function padToLength(str, length) {
+            return str + ' '.repeat(Math.max(0, length - str.length));
+        }
+    </script>
+
+    <script>
+        // Get all <tr> elements in the table body (excluding the header row)
+        var allTrElements = document.querySelectorAll('tbody tr');
+
+        // Get the pre tag element
+        var resultPre = document.getElementById('resultPre');
+
+    </script>
+
+
+}

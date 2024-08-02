@@ -1,0 +1,187 @@
+﻿@model FilprideCreditMemo
+
+@{
+    ViewData["Title"] = "Edit Credit Memo";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Edit Credit Memo</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <fieldset class="form-group mb-3">
+                <legend>Select Source</legend>
+
+                <div class="form-check form-check-inline mb-3">
+                    <input class="form-check-input" type="radio" asp-for="Source" id="inlineRadio1" value="Sales Invoice" aria-labelledby="labelInlineRadio1" onclick="toggleSelect('siList')" disabled readonly>
+                    <input type="hidden" asp-for="Source" />
+                    <label class="form-check-label" for="inlineRadio1" id="labelInlineRadio1">Sales Invoice</label>
+                </div>
+
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" asp-for="Source" id="inlineRadio2" value="Service Invoice" aria-labelledby="labelInlineRadio2" onclick="toggleSelect('svList')" disabled readonly>
+                    <label class="form-check-label" for="inlineRadio2" id="labelInlineRadio2">Service Invoice</label>
+                </div>
+                <br />
+                <span asp-validation-for="Source" class="text-danger"></span>
+            </fieldset>
+            <div class="form-group mb-3">
+                <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
+                <input asp-for="TransactionDate" type="Date" class="form-control" />
+                <span asp-validation-for="TransactionDate" class="text-danger"></span>
+            </div>
+            <div class="form-group" id="siList">
+                <div class="form-group mb-3">
+                    <label asp-for="SalesInvoiceId" class="control-label"></label><span class="required">*</span>
+                    <select asp-for="SalesInvoiceId" asp-items="@Model.SalesInvoices" class="form-control js-select2" style="width:100%" required>
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="SalesInvoiceId" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Quantity<span class="required">*</span></label>
+                    <input asp-for="Quantity" class="form-control money" placeholder="0.00" required />
+                    <span asp-validation-for="Quantity" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="AdjustedPrice" class="control-label"></label><span class="required">*</span>
+                    <input asp-for="AdjustedPrice" class="form-control money" placeholder="0.00" required />
+                    <span asp-validation-for="AdjustedPrice" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group" id="svList" style="display: none;">
+                <div class="form-group mb-3">
+                    <label asp-for="ServiceInvoiceId" class="control-label"></label><span class="required">*</span>
+                    <select asp-for="ServiceInvoiceId" asp-items="@Model.ServiceInvoices" class="form-control js-select2" style="width:100%" required>
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="ServiceInvoiceId" class="text-danger"></span>
+                </div>
+                <div class="row g-2 mt-3">
+                    <div class="col-sm mb-3">
+                        <label asp-for="Period" class="control-label"></label><span class="required">*</span>
+                        <input asp-for="Period" type="month" class="form-control period" required />
+                        <span asp-validation-for="Period" class="text-danger"></span>
+                    </div>
+                    <div class="col-sm">
+                        <label asp-for="Amount" class="control-label"></label><span class="required">*</span>
+                        <input asp-for="Amount" class="form-control money amount" placeholder="0.00" required />
+                        <span asp-validation-for="Amount" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Description" id="floatingInput" type="text" class="form-control" placeholder="Optional" />
+                <label for="floatingInput" class="control-label">Description<span class="required">*</span></label>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <textarea asp-for="Remarks" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
+                <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
+                <span asp-validation-for="Remarks" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        window.onload = function () {
+            var inlineRadio1 = document.getElementById('inlineRadio1');
+            var inlineRadio2 = document.getElementById('inlineRadio2');
+
+            // Check the default radio button on page load
+            if (inlineRadio1.checked) {
+                document.getElementById('siList').style.display = 'block';
+                document.getElementById('svList').style.display = 'none';
+            } else if (inlineRadio2.checked) {
+                document.getElementById('siList').style.display = 'none';
+                document.getElementById('svList').style.display = 'block';
+            }
+        };
+
+        function toggleSelect(id) {
+            var siList = document.getElementById('siList');
+            var svList = document.getElementById('svList');
+            var inlineRadio1 = document.getElementById('inlineRadio1');
+            var inlineRadio2 = document.getElementById('inlineRadio2');
+
+            if (id === 'siList') {
+                siList.style.display = 'block';
+                svList.style.display = 'none';
+                inlineRadio1.checked = true;
+                inlineRadio2.checked = false;
+                $(".amount").val("");
+                $(".js-select2").val(null).trigger('change');
+                $(".period").prop('defaultValue', '0001-01');
+                $(".period").val($(".period").prop('defaultValue'));
+            } else if (id === 'svList') {
+                siList.style.display = 'none';
+                svList.style.display = 'block';
+                inlineRadio1.checked = false;
+                inlineRadio2.checked = true;
+                $("#Quantity").val("");
+                $("#AdjustedPrice").val("");
+                $(".js-select2").val(null).trigger('change');
+            }
+        }
+    </script>
+    <script>
+        $("#ServiceInvoiceId").change(function () {
+            var svId = $(this).val();
+            console.log(svId); // Add this line for debugging
+            if (svId !== "") {
+                // Make an AJAX request to get the customer details based on the selected CustomerId
+                $.ajax({
+                    url: "/CreditMemo/GetSVDetails", // Replace with the actual controller and action names
+                    method: "GET",
+                    data: { svId: svId },
+                    success: function (data) {
+                        if (data) {
+                            var forrmattedDate = formatDateToMonth(data.period);
+                            $("#Period").val(forrmattedDate);
+                        } else {
+                            $("#Period").empty();
+                            $("#Amount").empty();
+                        }
+                    }
+                });
+            } else {
+                // Clear the fields if no customer is selected
+                $("#periodContainer").empty();
+                $("#amountContainer").empty();
+            }
+        });
+
+        function formatDateToMonth(dateString) {
+            // Parse the date string to a Date object
+            const date = new Date(dateString);
+
+            // Get the year and month from the date object
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Adding 1 because month index starts from 0
+
+            // Return the formatted date string in yyyy-MM format
+            return `${year}-${month}`;
+        }
+    </script>
+    <script>
+        setTransactionDate();
+    </script>
+}
+

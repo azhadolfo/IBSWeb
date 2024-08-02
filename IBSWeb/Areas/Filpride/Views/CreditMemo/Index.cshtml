@@ -1,0 +1,176 @@
+﻿@model IEnumerable<FilprideCreditMemo>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Credit Memo";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Credit Memo</h1>
+<hr />
+<p>
+    <a asp-action="Create" class="btn btn-primary rounded-3"><i class="bi bi-plus-lg"></i> New</a>
+</p>
+
+<div class="table-responsive">
+    <table class="table table-hover" id="myOwnTable">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.CreditMemoNo)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.TransactionDate)
+                </th>
+                <th>
+                    Invoice No
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Source)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.CreditAmount)
+                </th>
+                <th style="width: 25%"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.CreditMemoNo)
+                    </td>
+                    <td>
+                        @item.TransactionDate.ToString("MM/dd/yyyy")
+                    </td>
+                    @if (item.Source == "Sales Invoice")
+                    {
+                        <td>
+                            @Html.DisplayFor(modelItem => item.SalesInvoice.SalesInvoiceNo)
+                        </td>
+                    }
+                    else
+                    {
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ServiceInvoice.ServiceInvoiceNo)
+                        </td>
+                    }
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Source)
+                    </td>
+                    <td>
+                        @Math.Abs(item.CreditAmount).ToString("N2")
+                    </td>
+                    <td>
+                        @if (item.CreatedBy == UserManager.GetUserName(User))
+                        {
+                            if (item.PostedBy == null && item.VoidedBy == null && item.CanceledBy == null)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.CreditMemoId" class="btn btn-light">Edit</a>
+                                <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#Preview-@item.CreditMemoId" data-bs-url="@Url.Action($"Preview/{item.CreditMemoId}")">
+                                    Preview
+                                </button>
+                                @await Html.PartialAsync("_Preview", item)
+                                <a class="btn btn-light" onclick="confirmPost(@item.CreditMemoId)">Post</a>
+                                <a class="btn btn-light" onclick="confirmCancel(@item.CreditMemoId)">Cancel</a>
+                            }
+                            if (item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null)
+                            {
+                                <a asp-action="Print" asp-route-id="@item.CreditMemoId" class="btn btn-light">Print</a>
+                                <a class="btn btn-light" onclick="confirmVoid(@item.CreditMemoId)">Void</a>
+                            }
+                        }
+
+                        @if (item.VoidedBy != null)
+                        {
+                            <span class="badge rounded-pill bg-danger ">VOIDED</span>
+                        }
+                        else if (item.CanceledBy != null)
+                        {
+                            <span class="badge rounded-pill bg-warning ">CANCELLED</span>
+                        }
+                        else
+                        {
+                            @if (item.CreatedBy != UserManager.GetUserName(User))
+                            {
+                                <span class="badge rounded-pill bg-info ">VALID</span>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmPost(id) {
+            console.log(id);
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Replace with the actual URL that you want to redirect to
+                    var url = `/CreditMemo/Post?id=${id}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+    <script>
+        function confirmVoid(id) {
+            console.log(id);
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Replace with the actual URL that you want to redirect to
+                    var url = `/CreditMemo/Void?id=${id}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+    <script>
+        function confirmCancel(id) {
+            console.log(id);
+            Swal.fire({
+                title: "Please Input Remarks",
+                html:
+                    "<input id='cancellationRemarks' type='text' class='swal2-input' placeholder='Remarks'>",
+                focusConfirm: false,
+                allowEscapeKey: false,
+                allowOutsideClick: false,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var cancellationRemarks = $("#cancellationRemarks").val();
+                    // Encode the cancellationRemarks to make it URL safe
+                    var encodedRemarks = encodeURIComponent(cancellationRemarks);
+                    // Append the encoded remarks as a parameter in the URL
+                    var url = `/CreditMemo/Cancel?id=${id}&cancellationRemarks=${encodedRemarks}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+}

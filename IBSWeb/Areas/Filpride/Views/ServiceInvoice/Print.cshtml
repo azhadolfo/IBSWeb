@@ -1,0 +1,278 @@
+﻿@model FilprideServiceInvoice
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@{
+    ViewData["Title"] = "Print Service Invoice";
+}
+
+<table class="w-100">
+    <tbody>
+        <tr>
+            <td class="text-end" style="padding: 0 !important;"><img src="~/img/Filpride.jpg" width="130px" /></td>
+        </tr>
+        <tr style="margin: 0 !important;">
+            <td class="text-center" style="padding: 0 !important;">
+                <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
+                <p style="margin: 0; padding: 0; line-height: 1;">
+                    57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
+                    Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
+                    VAT Reg. TIN: 000-216-589-00000
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td class="text-end" style="padding: 0 !important;"><h6 class="series"><b>No.&nbsp;@Html.DisplayFor(model => model.ServiceInvoiceNo)</b></h6></td>
+        </tr>
+        <tr>
+            <td class="text-center" style="padding: 0 !important;"><h3 class="module-name"><b>SERVICE INVOICE</b></h3></td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="table-responsive">
+    <table class="w-100">
+        <tbody>
+            <tr>
+                <td>
+                    <span><b>Billed To:</b></span>
+                    &nbsp; @Html.DisplayFor(model => model.Customer.CustomerName) &nbsp;<br />
+
+                    <span><b>Address:</b></span>
+                    &nbsp; @Html.DisplayFor(model => model.Customer.CustomerAddress) &nbsp;<br />
+
+                    <span><b>TIN:</b></span>
+                    &nbsp; @Html.DisplayFor(model => model.Customer.CustomerTin) &nbsp;<br />
+
+                    <span><b>Business Style:</b></span>
+                    &nbsp; @Html.DisplayFor(model => model.Customer.BusinessStyle) &nbsp;
+                </td>
+
+                <td class="w-25 text-nowrap">
+
+                    <b>Invoice Date:</b>
+                    &nbsp; <span id="soaDate">@Model.CreatedDate.ToString("MM/dd/yyyy")</span>
+                    <br />
+                    <b>Terms:</b>&nbsp;<span id="terms"></span>&nbsp;<br />
+                    <b>Due Date:</b>&nbsp; <span id="dueDate">@Model.DueDate.ToString("MM/dd/yyyy")</span><br />
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="table-responsive" style="margin-top:20px;">
+    <table class="table-bordered w-100 text-center">
+        <tbody>
+            <tr>
+                <td><b>PARTICULAR</b></td>
+                <td><b>PERIOD</b></td>
+                <td><b>AMOUNT</b></td>
+            </tr>
+
+            <tr style="height:80px;">
+                <td>@Html.DisplayFor(model => model.Service.Name)</td>
+
+                <td class="pt-2">
+                    <p style="line-height:15px">
+                        @Model.Period.ToString("MMMM yyyy")
+                    </p>
+                </td>
+                <td class="pt-2">
+                    <p style="line-height:15px">
+                        @Html.DisplayFor(model => model.Amount)
+                    </p>
+                </td>
+
+            </tr>
+
+        </tbody>
+    </table>
+</div>
+
+<p style="line-height: 1; margin-top:20px;">
+    Please attach BIR Form 2306 and 2307 to your payment if you deducted Expanded Withholding Tax and Vat.
+</p>
+
+<div style="margin-top:20px;">
+    <table class="w-100">
+        <tbody>
+            <tr>
+                <td style="width:33%; vertical-align: top;" class="border-1">
+                    <p class="mb-0" style="margin:10px;">INSTRUCTIONS: <br />@Html.DisplayFor(model => model.Instructions)</p>
+                </td>
+                <td style="width:33%;">
+                    <table class="table-bordered w-100">
+                        <tbody class="text-nowrap">
+                            <tr>
+                                <td><p style="margin-left:8%;" class="mb-0"><b>Vatable Sales: </b></p></td>
+                                <td class="text-end">
+                                    @if (Model.Customer.CustomerType == "Vatable")
+                                    {
+                                        <p class="mb-0">@Html.DisplayFor(model => model.NetAmount)</p>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><p style="margin-left:8%;" class="mb-0"><b>Zero-Rated Sales: </b></p></td>
+
+                                <td class="text-end">
+                                    @if (Model.Customer.CustomerType == "Zero Rated")
+                                    {
+                                        if (Model.Discount > 0)
+                                        {
+                                            <p class="mb-0">@Html.DisplayFor(model => model.NetAmount)</p>
+                                        }
+                                        else
+                                        {
+                                            <p class="mb-0">@Html.DisplayFor(model => model.Total)</p>
+                                        }
+
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><p style="margin-left:8%;" class="mb-0"><b>VAT-Exempt Sales: </b></p></td>
+
+                                <td class="text-end">
+                                    @if (Model.Customer.CustomerType == "Exempt")
+                                    {
+                                        if (Model.Discount > 0)
+                                        {
+                                            <p class="mb-0">@Html.DisplayFor(model => model.NetAmount)</p>
+                                        }
+                                        else
+                                        {
+                                            <p class="mb-0">@Html.DisplayFor(model => model.Total)</p>
+                                        }
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><p style="margin-left:8%;" class="mb-0"><b>VAT Amount: </b></p></td>
+
+                                <td class="text-end">
+                                    @if (Model.Customer.CustomerType == "Vatable")
+                                    {
+                                        <p class="mb-0">@Html.DisplayFor(model => model.VatAmount)</p>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><p style="margin-left:8%;" class="mb-0"><b>Discount: </b></p></td>
+                                <td class="text-end">
+
+                                    @if (Model.Discount > 0)
+                                    {
+                                        <p class="mb-0">@Html.DisplayFor(model => model.Discount)</p>
+                                    }
+
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><p style="margin-left:8%;" class="mb-0"><b>TOTAL SALES: </b></p></td>
+                                <td class="text-end"><p class="mb-0">@Html.DisplayFor(model => model.Total)</p></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<p style="margin-top:20px;" class="p-italic">
+    This is a system generated invoice, no signature required.
+</p>
+
+<p class="text-center w-100">
+    <span>Acknowledgement Certificate No:</span>
+    <span style="display: inline-block; width:150px;">@* @CS.ACCN *@</span>
+    <span>&nbsp;&nbsp;Date Issued:</span>
+    <span style="display: inline-block; width:50px;">@* @CS.DateIssued *@</span><br />
+    Series: SV0000000001 - SV9999999999
+    Date and Time Created:&nbsp;@Model.CreatedDate.ToString("MM/dd/yyyy")
+</p>
+
+@* @if (!Model.IsPrinted)
+{
+    <div class="text-end">
+        ORIGINAL COPY
+    </div>
+}
+else
+{
+    <div class="text-end">
+        REPRINT COPY
+    </div>
+} *@
+
+<div class="text-start w-100 footer">
+    <p style="line-height: 1;">
+        <em>
+            <strong>Software Name :</strong> Accounting Administration System (AAS)
+            <br />
+            <strong>Version :</strong> @* @CS.Version *@
+            <br />
+            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+            <br />
+            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+        </em>
+    </p>
+</div>
+
+<div>
+    <a asp-action="PrintedSOA" asp-route-id="@Model.ServiceInvoiceId" class="btn btn-success" onclick="printPage()" id="printButton">Print</a>
+    <a asp-action="Index" class="btn" id="otherButton">Back</a>
+</div>
+
+@section Scripts {
+    <script>
+        var originalFontSizes = [];
+
+        function printPage() {
+            var printButton = document.getElementById("printButton");
+            var otherButton = document.getElementById("otherButton");
+
+            // Hide the header and footer
+            document.querySelector("header").style.display = "none";
+
+            // Hide the buttons before printing
+            if (printButton) {
+                printButton.style.visibility = "hidden";
+            }
+            if (otherButton) {
+                otherButton.style.visibility = "hidden";
+            }
+
+            // Get all paragraph elements
+            var paragraphs = document.querySelectorAll("p");
+
+            // Store the original font sizes
+            for (var i = 0; i < paragraphs.length; i++) {
+                originalFontSizes[i] = paragraphs[i].style.fontSize;
+                // Set the font size of all paragraph elements to 12px for printing
+                paragraphs[i].style.fontSize = "12px";
+            }
+
+            // Call the print function
+            window.print();
+
+            // Restore the font sizes
+            for (var i = 0; i < paragraphs.length; i++) {
+                paragraphs[i].style.fontSize = originalFontSizes[i];
+            }
+
+            // Restore the buttons' visibility after printing (optional)
+            if (printButton) {
+                printButton.style.visibility = "visible";
+            }
+            if (otherButton) {
+                otherButton.style.visibility = "visible";
+            }
+
+            // Restore the header and footer's visibility after printing (optional)
+            document.querySelector("header").style.display = "";
+        }
+    </script>
+}
