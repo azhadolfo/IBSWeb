@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IBS.Models.Filpride.ViewModels
 {
-    public class CheckTradeViewModel
+    public class CheckVoucherTradeViewModel
     {
         public int CVId { get; set; }
 

@@ -79,6 +79,12 @@ namespace IBS.DataAccess.Repository
         public IReportRepository FilprideReport { get; private set; }
         #endregion
 
+        #region Master File
+
+        public IBankAccountRepository FilprideBankAccount { get; private set; }
+
+        #endregion
+
         #endregion
 
         public UnitOfWork(ApplicationDbContext db)
