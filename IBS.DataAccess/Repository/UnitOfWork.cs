@@ -83,6 +83,8 @@ namespace IBS.DataAccess.Repository
 
         public IBankAccountRepository FilprideBankAccount { get; private set; }
 
+        public IServiceRepository FilprideService { get; private set; }
+
         #endregion
 
         #endregion
@@ -144,7 +146,13 @@ namespace IBS.DataAccess.Repository
             #region Books and Report
             FilprideInventory = new Filpride.InventoryRepository(_db);
             FilprideReport = new ReportRepository(_db);
+            #endregion
+
+            #region Master File
+
             FilprideBankAccount = new BankAccountRepository(_db);
+            FilprideService = new ServiceRepository(_db);
+
             #endregion
 
             #endregion

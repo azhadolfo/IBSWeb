@@ -112,6 +112,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IBankAccountRepository FilprideBankAccount { get; }
 
+        IServiceRepository FilprideService { get; }
+
         #endregion
 
         #endregion
