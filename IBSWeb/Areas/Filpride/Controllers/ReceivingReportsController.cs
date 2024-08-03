@@ -92,8 +92,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.CreatedBy = _userManager.GetUserName(this.User);
                 model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
 
-                ///PENDING - leo
-                //model.PONo = await _receivingReportRepo.GetPONoAsync(model.POId, cancellationToken);
+                var existingPo = await _unitOfWork.FilpridePurchaseOrderRepo.GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
+
+                model.PONo = existingPo.PurchaseOrderNo;
 
                 model.DueDate = await _unitOfWork.FilprideReceivingReportRepo.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
 
@@ -195,8 +196,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Date = model.Date;
                 existingModel.POId = model.POId;
 
-                ///PENDING - leo
-                //existingModel.PONo = await _receivingReportRepo.GetPONoAsync(model.POId, cancellationToken);
+                var existingPo = await _unitOfWork.FilpridePurchaseOrderRepo.GetAsync(po => po.PurchaseOrderId == model.POId);
+
+                existingModel.PONo = existingPo.PurchaseOrderNo;
 
                 existingModel.DueDate = await _unitOfWork.FilprideReceivingReportRepo.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
                 existingModel.SupplierInvoiceNumber = model.SupplierInvoiceNumber;

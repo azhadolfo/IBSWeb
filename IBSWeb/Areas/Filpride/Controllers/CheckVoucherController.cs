@@ -126,12 +126,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         SupplierAddress = supplier.SupplierAddress,
                         SupplierTinNo = supplier.SupplierTin,
                         TaxType = supplier.TaxType,
-                        ///PENDING CV
-                        //Category = supplier.Category,
-                        //TaxPercent = supplier.WithholdingTaxPercent,
-                        //VatType = supplier.VatType,
-                        //DefaultExpense = supplier.DefaultExpenseNumber,
-                        //WithholdingTax = supplier.WithholdingTaxtitle
+                        Category = supplier.Category,
+                        TaxPercent = supplier.WithholdingTaxPercent,
+                        VatType = supplier.VatType,
+                        DefaultExpense = supplier.DefaultExpenseNumber,
+                        WithholdingTax = supplier.WithholdingTaxtitle
                     });
                 }
                 return Json(null);
@@ -592,7 +591,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
 
-                    ///PENDING - leo
+                    ///PENDING - further discussion
                     //await _generalRepo.RemoveRecords<DisbursementBook>(db => db.CVNo == model.CVNo);
                     //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.CVNo);
 
@@ -616,7 +615,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
 
-                    ///PENDING - leo
+                    ///PENDING - further discussion
                     //model.CancellationRemarks = cancellationRemarks;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -641,13 +640,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            ///PENDING - leo
             model.Suppliers = await _dbContext.FilprideSuppliers
                 .Where(supp => supp.Category == "Trade")
                 .Select(sup => new SelectListItem
                 {
-                    Value = sup.Id.ToString(),
-                    Text = sup.Name
+                    Value = sup.SupplierId.ToString(),
+                    Text = sup.SupplierName
                 })
                 .ToListAsync();
             model.BankAccounts = await _dbContext.FilprideBankAccounts
@@ -686,15 +684,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync(cancellationToken);
 
-                            ///PENDING - leo
-                            //viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                            //    .Where(supp => supp.Category == "Trade")
-                            //    .Select(sup => new SelectListItem
-                            //    {
-                            //        Value = sup.Id.ToString(),
-                            //        Text = sup.Name
-                            //    })
-                            //    .ToListAsync();
+                            viewModel.Suppliers = await _dbContext.FilprideSuppliers
+                                .Where(supp => supp.Category == "Trade")
+                                .Select(sup => new SelectListItem
+                                {
+                                    Value = sup.SupplierId.ToString(),
+                                    Text = sup.SupplierName
+                                })
+                                .ToListAsync();
 
                             viewModel.PONo = await _dbContext.PurchaseOrders
                                 .Where(po => po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
@@ -846,15 +843,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
 
-                    /// PENDING - leo
-                    //viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                    //        .Where(supp => supp.Category == "Trade")
-                    //        .Select(sup => new SelectListItem
-                    //        {
-                    //            Value = sup.Id.ToString(),
-                    //            Text = sup.Name
-                    //        })
-                    //        .ToListAsync();
+                    viewModel.Suppliers = await _dbContext.FilprideSuppliers
+                            .Where(supp => supp.Category == "Trade")
+                            .Select(sup => new SelectListItem
+                            {
+                                Value = sup.SupplierId.ToString(),
+                                Text = sup.SupplierName
+                            })
+                            .ToListAsync();
 
                     viewModel.PONo = await _dbContext.PurchaseOrders
                                 .Where(po => po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
@@ -895,15 +891,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            /// PENDING - leo
-            //viewModel.Suppliers = await _dbContext.Suppliers
-            //    .Where(supp => supp.Category == "Trade")
-            //    .Select(sup => new SelectListItem
-            //    {
-            //        Value = sup.Id.ToString(),
-            //        Text = sup.Name
-            //    })
-            //    .ToListAsync();
+            viewModel.Suppliers = await _dbContext.FilprideSuppliers
+                .Where(supp => supp.Category == "Trade")
+                .Select(sup => new SelectListItem
+                {
+                    Value = sup.SupplierId.ToString(),
+                    Text = sup.SupplierName
+                })
+                .ToListAsync();
 
             viewModel.PONo = await _dbContext.PurchaseOrders
                 .Where(po => po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
@@ -949,15 +944,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            ///PENDING - leo
-            //viewModel.Suppliers = await _dbContext.FilprideSuppliers
-            //    .Where(supp => supp.Category == "Non-Trade")
-            //    .Select(sup => new SelectListItem
-            //    {
-            //        Value = sup.Id.ToString(),
-            //        Text = sup.Name
-            //    })
-            //    .ToListAsync();
+            viewModel.Suppliers = await _dbContext.FilprideSuppliers
+                .Where(supp => supp.Category == "Non-Trade")
+                .Select(sup => new SelectListItem
+                {
+                    Value = sup.SupplierId.ToString(),
+                    Text = sup.SupplierName
+                })
+                .ToListAsync();
 
             return View(viewModel);
         }
@@ -1077,15 +1071,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
 
-                    ///PENDING - leo
-                    //viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                    //    .Where(supp => supp.Category == "Non-Trade")
-                    //    .Select(sup => new SelectListItem
-                    //    {
-                    //        Value = sup.Id.ToString(),
-                    //        Text = sup.Name
-                    //    })
-                    //    .ToListAsync();
+                    viewModel.Suppliers = await _dbContext.FilprideSuppliers
+                        .Where(supp => supp.Category == "Non-Trade")
+                        .Select(sup => new SelectListItem
+                        {
+                            Value = sup.SupplierId.ToString(),
+                            Text = sup.SupplierName
+                        })
+                        .ToListAsync();
 
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -1101,15 +1094,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            /// PENDING - leo
-            //viewModel.Suppliers = await _dbContext.FilprideSuppliers
-            //    .Where(supp => supp.Category == "Non-Trade")
-            //    .Select(sup => new SelectListItem
-            //    {
-            //        Value = sup.Id.ToString(),
-            //        Text = sup.Name
-            //    })
-            //    .ToListAsync();
+            viewModel.Suppliers = await _dbContext.FilprideSuppliers
+                .Where(supp => supp.Category == "Non-Trade")
+                .Select(sup => new SelectListItem
+                {
+                    Value = sup.SupplierId.ToString(),
+                    Text = sup.SupplierName
+                })
+                .ToListAsync();
 
             TempData["error"] = "The information provided was invalid.";
             return View(viewModel);
