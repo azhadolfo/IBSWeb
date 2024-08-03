@@ -7,103 +7,112 @@
     decimal totalPrice = 0m;
 }
 
-<div class="mb-3">
-    <h5>Product Name: @ViewData["Product"]</h5>
-</div>
-
-<div class="table-responsive">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>PO No.</th>
-                <th>Date</th>
-                <th>Particulars</th>
-                <th>Reference</th>
-                <th class="text-end">Quantity</th>
-                <th class="text-end">Cost</th>
-                <th class="text-end">Total</th>
-                <th class="text-end">Inventory Balance</th>
-                <th class="text-end">Unit Cost Average</th>
-                <th class="text-end">Total Balance</th>
-                <th class="text-end">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @{
-                var distinctInventoryReport = Model.Select(ir => new { ir.POId, ir.ProductId }).Distinct().ToList();
-                foreach (var poId in distinctInventoryReport)
-                {
-                    var inventoryWithSamePOId = Model.Where(ir => ir.POId == poId.POId && ir.ProductId == poId.ProductId).ToList();
-
-                    foreach (var inventory in inventoryWithSamePOId)
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">INVENTORY REPORT</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+        </div>
+        <table class="table table-bordered table-striped" id="dataTable">
+            <thead>
+                <tr>
+                    <th>PO No.</th>
+                    <th>Date</th>
+                    <th>Particulars</th>
+                    <th>Reference</th>
+                    <th class="text-end">Quantity</th>
+                    <th class="text-end">Cost</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Inventory Balance</th>
+                    <th class="text-end">Unit Cost Average</th>
+                    <th class="text-end">Total Balance</th>
+                    <th class="text-end">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var distinctInventoryReport = Model.Select(ir => new { ir.POId, ir.ProductId }).Distinct().ToList();
+                    foreach (var poId in distinctInventoryReport)
                     {
-                        if (inventory.Particular.StartsWith("Sales") || inventory.Particular.StartsWith("Actual Inventory(Loss)"))
+                        var inventoryWithSamePOId = Model.Where(ir => ir.POId == poId.POId && ir.ProductId == poId.ProductId).ToList();
+
+                        foreach (var inventory in inventoryWithSamePOId)
                         {
-                            totalAmount -= inventory.Total;
-                            totalQty -= inventory.Quantity;
-                            totalPrice = totalAmount != 0 && totalQty != 0 ? totalAmount / totalQty : inventory.Cost;
-                            <tr>
-                                @if (inventory == inventoryWithSamePOId.First())
-                                {
-                                    <td rowspan="@inventoryWithSamePOId.Count"> @Html.DisplayFor(model => inventory.PurchaseOrder.PurchaseOrderNo) </td>
-                                }
-                                <td>@inventory.Date.ToString("MM/dd/yyyy")</td>
-                                <td>@Html.DisplayFor(model => inventory.Particular)</td>
-                                <td>@Html.DisplayFor(model => inventory.Reference)</td>
-                                <td class="text-end">@Html.DisplayFor(model => inventory.Quantity)</td>
-                                <td class="text-end">@Html.DisplayFor(model => inventory.Cost)</td>
-                                <td class="text-end">@Html.DisplayFor(model => inventory.Total)</td>
-                                <td class="text-end">@totalQty.ToString("N2")</td>
-                                <td class="text-end">@totalPrice.ToString("N2")</td>
-                                <td class="text-end">@totalAmount.ToString("N2")</td>
-                                <td>
-                                    @if (inventory.IsValidated)
+                            if (inventory.Particular.StartsWith("Sales") || inventory.Particular.StartsWith("Actual Inventory(Loss)"))
+                            {
+                                totalAmount -= inventory.Total;
+                                totalQty -= inventory.Quantity;
+                                totalPrice = totalAmount != 0 && totalQty != 0 ? totalAmount / totalQty : inventory.Cost;
+                                <tr>
+                                    @if (inventory == inventoryWithSamePOId.First())
                                     {
-                                        <span class="badge text-bg-primary">Validated</span>
+                                        <td rowspan="@inventoryWithSamePOId.Count"> @Html.DisplayFor(model => inventory.PurchaseOrder.PurchaseOrderNo) </td>
                                     }
-                                    else
+                                    <td>@inventory.Date.ToString("MM/dd/yyyy")</td>
+                                    <td>@Html.DisplayFor(model => inventory.Particular)</td>
+                                    <td>@Html.DisplayFor(model => inventory.Reference)</td>
+                                    <td class="text-end">@Html.DisplayFor(model => inventory.Quantity)</td>
+                                    <td class="text-end">@Html.DisplayFor(model => inventory.Cost)</td>
+                                    <td class="text-end">@Html.DisplayFor(model => inventory.Total)</td>
+                                    <td class="text-end">@totalQty.ToString("N2")</td>
+                                    <td class="text-end">@totalPrice.ToString("N2")</td>
+                                    <td class="text-end">@totalAmount.ToString("N2")</td>
+                                    <td>
+                                        @if (inventory.IsValidated)
+                                        {
+                                            <span class="badge text-bg-primary">Validated</span>
+                                        }
+                                        else
+                                        {
+                                            <a href="#" onclick="confirmValidation(@inventory.InventoryId)" class="badge text-bg-warning" title="Click this to validate.">Validate</a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                totalAmount += inventory.Total;
+                                totalQty += inventory.Quantity;
+                                totalPrice = totalAmount != 0 && totalQty != 0 ? totalAmount / totalQty : inventory.Cost;
+                                <tr>
+                                    @if (inventory == inventoryWithSamePOId.First())
                                     {
-                                        <a href="#" onclick="confirmValidation(@inventory.InventoryId)" class="badge text-bg-warning" title="Click this to validate.">Validate</a>
+                                        <td rowspan="@inventoryWithSamePOId.Count"> @Html.DisplayFor(model => inventory.PurchaseOrder.PurchaseOrderNo) </td>
                                     }
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            totalAmount += inventory.Total;
-                            totalQty += inventory.Quantity;
-                            totalPrice = totalAmount != 0 && totalQty != 0 ? totalAmount / totalQty : inventory.Cost;
-                            <tr>
-                                @if (inventory == inventoryWithSamePOId.First())
-                                {
-                                    <td rowspan="@inventoryWithSamePOId.Count"> @Html.DisplayFor(model => inventory.PurchaseOrder.PurchaseOrderNo) </td>
-                                }
-                                <td>@inventory.Date.ToString("MM/dd/yyyy")</td>
-                                <td>@Html.DisplayFor(model => inventory.Particular)</td>
-                                <td>@Html.DisplayFor(model => inventory.Reference)</td>
-                                <td class="text-end">@Html.DisplayFor(model => inventory.Quantity)</td>
-                                <td class="text-end">@Html.DisplayFor(model => inventory.Cost)</td>
-                                <td class="text-end">@Html.DisplayFor(model => inventory.Total)</td>
-                                <td class="text-end">@totalQty.ToString("N2")</td>
-                                <td class="text-end">@totalPrice.ToString("N2")</td>
-                                <td class="text-end">@totalAmount.ToString("N2")</td>
-                                <td>
-                                    @if (inventory.IsValidated)
-                                    {
-                                        <span class="badge text-bg-primary">Validated</span>
-                                    }
-                                    else
-                                    {
-                                        <a href="#" onclick="confirmValidation(@inventory.InventoryId)" class="badge text-bg-warning" title="Click this to validate.">Validate</a>
-                                    }
-                                </td>
-                            </tr>
+                                    <td>@inventory.Date.ToString("MM/dd/yyyy")</td>
+                                    <td>@Html.DisplayFor(model => inventory.Particular)</td>
+                                    <td>@Html.DisplayFor(model => inventory.Reference)</td>
+                                    <td class="text-end">@Html.DisplayFor(model => inventory.Quantity)</td>
+                                    <td class="text-end">@Html.DisplayFor(model => inventory.Cost)</td>
+                                    <td class="text-end">@Html.DisplayFor(model => inventory.Total)</td>
+                                    <td class="text-end">@totalQty.ToString("N2")</td>
+                                    <td class="text-end">@totalPrice.ToString("N2")</td>
+                                    <td class="text-end">@totalAmount.ToString("N2")</td>
+                                    <td>
+                                        @if (inventory.IsValidated)
+                                        {
+                                            <span class="badge text-bg-primary">Validated</span>
+                                        }
+                                        else
+                                        {
+                                            <a href="#" onclick="confirmValidation(@inventory.InventoryId)" class="badge text-bg-warning" title="Click this to validate.">Validate</a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
                         }
                     }
                 }
-            }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="row mt-5">

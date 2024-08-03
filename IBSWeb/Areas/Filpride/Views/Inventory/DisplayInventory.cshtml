@@ -7,90 +7,39 @@
     decimal totalPrice = 0m;
 }
 
-<div class="mb-3">
-    <h5>Product Name: @ViewData["Product"]</h5>
-</div>
-
-<div class="table-responsive">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Particulars</th>
-                <th>Reference</th>
-                <th class="text-end">Quantity</th>
-                <th class="text-end">Cost</th>
-                <th class="text-end">Total</th>
-                <th class="text-end">Inventory Balance</th>
-                <th class="text-end">Unit Cost Average</th>
-                <th class="text-end">Total Balance</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (ViewBag.ProductId != null && ViewBag.POId != null)
-            {
-                @foreach (var obj in Model.OrderBy(ir => ir.Date))
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">INVENTORY REPORT</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+        </div>
+        <table class="table table-bordered table-striped" id="dataTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Particulars</th>
+                    <th>Reference</th>
+                    <th class="text-end">Quantity</th>
+                    <th class="text-end">Cost</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Inventory Balance</th>
+                    <th class="text-end">Unit Cost Average</th>
+                    <th class="text-end">Total Balance</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (ViewBag.ProductId != null && ViewBag.POId != null)
                 {
-                    <tr>
-                        <td>@obj.Date.ToString("MM/dd/yyyy")</td>
-                        <td>@Html.DisplayFor(model => obj.Particular)</td>
-                        <td>@Html.DisplayFor(model => obj.Reference)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Cost)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Total)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.InventoryBalance)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.AverageCost)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.TotalBalance)</td>
-                        <td>
-                            @if (obj.IsValidated)
-                            {
-                                <span class="badge text-bg-primary">Validated</span>
-                            }
-                            else
-                            {
-                                <a href="#" onclick="confirmValidation(@obj.InventoryId)" class="badge text-bg-warning" title="Click this to validate.">Validate</a>
-                            }
-                        </td>
-                    </tr>
-                }
-            }
-            else
-            {
-                @foreach (var obj in Model.Where(ir => ir.Particular.StartsWith("Beginning Balance")).OrderBy(ir => ir.Date).ThenBy(ir => ir.InventoryId))
-                {
-                    totalAmount += obj.Total;
-                    totalQty += obj.Quantity;
-                    totalPrice = totalAmount != 0 && totalQty != 0 ? totalAmount / totalQty : obj.Cost;
-                    <tr>
-                        <td>@obj.Date.ToString("MM/dd/yyyy")</td>
-                        <td>@Html.DisplayFor(model => obj.Particular)</td>
-                        <td>@Html.DisplayFor(model => obj.Reference)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Cost)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Total)</td>
-                        <td class="text-end">@totalQty.ToString("N2")</td>
-                        <td class="text-end">@totalPrice.ToString("N2")</td>
-                        <td class="text-end">@totalAmount.ToString("N2")</td>
-                        <td>
-                            @if (obj.IsValidated)
-                            {
-                                <span class="badge text-bg-primary">Validated</span>
-                            }
-                            else
-                            {
-                                <a href="#" onclick="confirmValidation(@obj.InventoryId)" class="badge text-bg-warning" title="Click this to validate.">Validate</a>
-                            }
-                        </td>
-                    </tr>
-                }
-                @foreach (var obj in Model.Where(ir => !ir.Particular.StartsWith("Beginning Balance")).OrderBy(ir => ir.Date).ThenBy(ir => ir.InventoryId))
-                {
-                    if (obj.Particular.StartsWith("Sales") || obj.Particular.StartsWith("Actual Inventory(Loss)"))
+                    @foreach (var obj in Model.OrderBy(ir => ir.Date))
                     {
-                        totalAmount -= obj.Total;
-                        totalQty -= obj.Quantity;
-                        totalPrice = totalAmount != 0 && totalQty != 0 ? totalAmount / totalQty : obj.Cost;
                         <tr>
                             <td>@obj.Date.ToString("MM/dd/yyyy")</td>
                             <td>@Html.DisplayFor(model => obj.Particular)</td>
@@ -98,9 +47,9 @@
                             <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
                             <td class="text-end">@Html.DisplayFor(model => obj.Cost)</td>
                             <td class="text-end">@Html.DisplayFor(model => obj.Total)</td>
-                            <td class="text-end">@totalQty.ToString("N2")</td>
-                            <td class="text-end">@totalPrice.ToString("N2")</td>
-                            <td class="text-end">@totalAmount.ToString("N2")</td>
+                            <td class="text-end">@Html.DisplayFor(model => obj.InventoryBalance)</td>
+                            <td class="text-end">@Html.DisplayFor(model => obj.AverageCost)</td>
+                            <td class="text-end">@Html.DisplayFor(model => obj.TotalBalance)</td>
                             <td>
                                 @if (obj.IsValidated)
                                 {
@@ -113,7 +62,10 @@
                             </td>
                         </tr>
                     }
-                    else
+                }
+                else
+                {
+                    @foreach (var obj in Model.Where(ir => ir.Particular.StartsWith("Beginning Balance")).OrderBy(ir => ir.Date).ThenBy(ir => ir.InventoryId))
                     {
                         totalAmount += obj.Total;
                         totalQty += obj.Quantity;
@@ -140,10 +92,67 @@
                             </td>
                         </tr>
                     }
+                    @foreach (var obj in Model.Where(ir => !ir.Particular.StartsWith("Beginning Balance")).OrderBy(ir => ir.Date).ThenBy(ir => ir.InventoryId))
+                    {
+                        if (obj.Particular.StartsWith("Sales") || obj.Particular.StartsWith("Actual Inventory(Loss)"))
+                        {
+                            totalAmount -= obj.Total;
+                            totalQty -= obj.Quantity;
+                            totalPrice = totalAmount != 0 && totalQty != 0 ? totalAmount / totalQty : obj.Cost;
+                            <tr>
+                                <td>@obj.Date.ToString("MM/dd/yyyy")</td>
+                                <td>@Html.DisplayFor(model => obj.Particular)</td>
+                                <td>@Html.DisplayFor(model => obj.Reference)</td>
+                                <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
+                                <td class="text-end">@Html.DisplayFor(model => obj.Cost)</td>
+                                <td class="text-end">@Html.DisplayFor(model => obj.Total)</td>
+                                <td class="text-end">@totalQty.ToString("N2")</td>
+                                <td class="text-end">@totalPrice.ToString("N2")</td>
+                                <td class="text-end">@totalAmount.ToString("N2")</td>
+                                <td>
+                                    @if (obj.IsValidated)
+                                    {
+                                        <span class="badge text-bg-primary">Validated</span>
+                                    }
+                                    else
+                                    {
+                                        <a href="#" onclick="confirmValidation(@obj.InventoryId)" class="badge text-bg-warning" title="Click this to validate.">Validate</a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            totalAmount += obj.Total;
+                            totalQty += obj.Quantity;
+                            totalPrice = totalAmount != 0 && totalQty != 0 ? totalAmount / totalQty : obj.Cost;
+                            <tr>
+                                <td>@obj.Date.ToString("MM/dd/yyyy")</td>
+                                <td>@Html.DisplayFor(model => obj.Particular)</td>
+                                <td>@Html.DisplayFor(model => obj.Reference)</td>
+                                <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
+                                <td class="text-end">@Html.DisplayFor(model => obj.Cost)</td>
+                                <td class="text-end">@Html.DisplayFor(model => obj.Total)</td>
+                                <td class="text-end">@totalQty.ToString("N2")</td>
+                                <td class="text-end">@totalPrice.ToString("N2")</td>
+                                <td class="text-end">@totalAmount.ToString("N2")</td>
+                                <td>
+                                    @if (obj.IsValidated)
+                                    {
+                                        <span class="badge text-bg-primary">Validated</span>
+                                    }
+                                    else
+                                    {
+                                        <a href="#" onclick="confirmValidation(@obj.InventoryId)" class="badge text-bg-warning" title="Click this to validate.">Validate</a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
                 }
-            }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="row mt-5">

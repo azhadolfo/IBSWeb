@@ -238,11 +238,11 @@
                                     </a>
                                     <ul class="dropdown-menu">
                                         <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="PurchaseOrder" asp-action="Index">Purchase Order</a>
+                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="PurchaseOrders" asp-action="Index">Purchase Order</a>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Index">Receiving Report</a>
+                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="ReceivingReports" asp-action="Index">Receiving Report</a>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li class="nav-item dropend">
@@ -272,7 +272,7 @@
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="DebitMemo" asp-action="Index">Debit Memo</a>
+                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index">Journal Voucher</a>
                                         </li>
                                     </ul>
                                 </li>
@@ -326,20 +326,6 @@
                                 </li>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Report
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="TrialBalance">Trial Balance</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Inventory" asp-action="InventoryReport">Inventory</a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         Books
                                     </a>
                                     <ul class="dropdown-menu">
@@ -372,17 +358,21 @@
                                         </li>
                                     </ul>
                                 </li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Report
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="User" asp-controller="Report" asp-action="TrialBalance">Trial Balance</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Inventory" asp-action="InventoryReport">Inventory</a>
+                                        </li>
+                                    </ul>
+                                </li>
                             }
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Report
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li class="nav-item">
-                                        <a class="dropdown-item text-dark" asp-area="User" asp-controller="Report" asp-action="TrialBalance">Trial Balance</a>
-                                    </li>
-                                </ul>
-                            </li>
+                            
                             @if (User.IsInRole("Admin"))
                             {
                                 <li class="nav-item">

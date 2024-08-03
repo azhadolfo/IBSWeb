@@ -7,116 +7,127 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     var model = new FilprideCollectionReceipt();
 }
-<h1>Collection Receipt</h1>
-<hr />
 
-<div class="table-responsive">
-    <table class="table table-hover" id="myOwnTable">
-        <thead>
-            <tr>
-                <th>
-                    CR No.
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.TransactionDate)
-                </th>
-                <th>
-                    Invoice No.
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Customers)
-                </th>
-                <th class="text-end">
-                    @Html.DisplayNameFor(model => model.Total)
-                </th>
-                <th style="width: 25%"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">COLLECTION RECEIPT</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+        </div>
+        <table class="table table-bordered table-striped" id="dataTable">
+            <thead>
                 <tr>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.CollectionReceiptNo)
-                    </td>
-                    <td>
-                        @item.TransactionDate.ToString("MM/dd/yyyy")
-                    </td>
-                    <td>
-                        @if (item.SalesInvoiceId != null)
-                        {
-                            @Html.DisplayFor(modelItem => item.SINo)
-                        }
-                        else if (item.MultipleSIId != null)
-                        {
-                            for (int i = 0; i < item.MultipleSI.Length; i++)
-                            {
-                                var siNo = $"{item.MultipleSI[i]}, ";
-                                @siNo
-                            }
-                        }
-                        else
-                        {
-                            @Html.DisplayFor(modelItem => item.SVNo)
-                        }
-                    </td>
-                    <td>
-                        @if (item.SalesInvoiceId != null)
-                        {
-                            @Html.DisplayFor(modelItem => item.SalesInvoice.Customer.CustomerName)
-                        }
-                        else if (item.MultipleSIId != null)
-                        {
-                            @Html.DisplayFor(modelItem => item.Customer.CustomerName)
-                        }
-                        else
-                        {
-                            @Html.DisplayFor(modelItem => item.ServiceInvoice.Customer.CustomerName)
-                        }
-                    </td>
-                    <td class="text-end px-4">
-                        @Html.DisplayFor(modelItem => item.Total)
-                    </td>
-                    <td>
-                        @if (item.CreatedBy == UserManager.GetUserName(User))
-                        {
-                            if (item.PostedBy == null && item.VoidedBy == null && item.CanceledBy == null)
-                            {
-                                <a asp-action="CollectionEdit" asp-route-id="@item.CollectionReceiptId" class="btn btn-light" title="Feature coming soon">Edit</a>
-                                <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#Preview-@item.CollectionReceiptId" data-bs-url="@Url.Action($"Preview/{item.CollectionReceiptId}")">
-                                    Preview
-                                </button>
-                                @await Html.PartialAsync("_Preview", item)
-                                <a class="btn btn-light" onclick="confirmPost(@item.CollectionReceiptId)">Post</a>
-                                <a class="btn btn-light" onclick="confirmCancel(@item.CollectionReceiptId)">Cancel</a>
-                            }
-                            if (item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null)
-                            {
-                                <a asp-action="CollectionPrint" asp-route-id="@item.CollectionReceiptId" class="btn btn-light">Print</a>
-                                <a class="btn btn-light" onclick="confirmVoid(@item.CollectionReceiptId)">Void</a>
-                            }
-                        }
-
-                        @if (item.VoidedBy != null)
-                        {
-                            <span class="badge rounded-pill bg-danger ">VOIDED</span>
-                        }
-                        else if (item.CanceledBy != null)
-                        {
-                            <span class="badge rounded-pill bg-warning ">CANCELLED</span>
-                        }
-                        else
-                        {
-                            @if (item.CreatedBy != UserManager.GetUserName(User))
-                            {
-                                <span class="badge rounded-pill bg-info ">VALID</span>
-                            }
-                        }
-                    </td>
+                    <th>
+                        CR No.
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.TransactionDate)
+                    </th>
+                    <th>
+                        Invoice No.
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Customers)
+                    </th>
+                    <th class="text-end">
+                        @Html.DisplayNameFor(model => model.Total)
+                    </th>
+                    <th style="width: 25%"></th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CollectionReceiptNo)
+                        </td>
+                        <td>
+                            @item.TransactionDate.ToString("MM/dd/yyyy")
+                        </td>
+                        <td>
+                            @if (item.SalesInvoiceId != null)
+                            {
+                                @Html.DisplayFor(modelItem => item.SINo)
+                            }
+                            else if (item.MultipleSIId != null)
+                            {
+                                for (int i = 0; i < item.MultipleSI.Length; i++)
+                                {
+                                    var siNo = $"{item.MultipleSI[i]}, ";
+                                    @siNo
+                                }
+                            }
+                            else
+                            {
+                                @Html.DisplayFor(modelItem => item.SVNo)
+                            }
+                        </td>
+                        <td>
+                            @if (item.SalesInvoiceId != null)
+                            {
+                                @Html.DisplayFor(modelItem => item.SalesInvoice.Customer.CustomerName)
+                            }
+                            else if (item.MultipleSIId != null)
+                            {
+                                @Html.DisplayFor(modelItem => item.Customer.CustomerName)
+                            }
+                            else
+                            {
+                                @Html.DisplayFor(modelItem => item.ServiceInvoice.Customer.CustomerName)
+                            }
+                        </td>
+                        <td class="text-end px-4">
+                            @Html.DisplayFor(modelItem => item.Total)
+                        </td>
+                        <td>
+                            @if (item.CreatedBy == UserManager.GetUserName(User))
+                            {
+                                if (item.PostedBy == null && item.VoidedBy == null && item.CanceledBy == null)
+                                {
+                                    <a asp-action="CollectionEdit" asp-route-id="@item.CollectionReceiptId" class="btn btn-light" title="Feature coming soon">Edit</a>
+                                    <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#Preview-@item.CollectionReceiptId" data-bs-url="@Url.Action($"Preview/{item.CollectionReceiptId}")">
+                                        Preview
+                                    </button>
+                                    @await Html.PartialAsync("_Preview", item)
+                                    <a class="btn btn-light" onclick="confirmPost(@item.CollectionReceiptId)">Post</a>
+                                    <a class="btn btn-light" onclick="confirmCancel(@item.CollectionReceiptId)">Cancel</a>
+                                }
+                                if (item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null)
+                                {
+                                    <a asp-action="CollectionPrint" asp-route-id="@item.CollectionReceiptId" class="btn btn-light">Print</a>
+                                    <a class="btn btn-light" onclick="confirmVoid(@item.CollectionReceiptId)">Void</a>
+                                }
+                            }
+
+                            @if (item.VoidedBy != null)
+                            {
+                                <span class="badge rounded-pill bg-danger ">VOIDED</span>
+                            }
+                            else if (item.CanceledBy != null)
+                            {
+                                <span class="badge rounded-pill bg-warning ">CANCELLED</span>
+                            }
+                            else
+                            {
+                                @if (item.CreatedBy != UserManager.GetUserName(User))
+                                {
+                                    <span class="badge rounded-pill bg-info ">VALID</span>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @section Scripts {

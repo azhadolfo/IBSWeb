@@ -21,66 +21,64 @@
     <div class="card-body p-4">
         <form method="post" enctype="multipart/form-data">
             <div class="row">
-                <div class="col-md-4">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <div class="form-group mb-3">
-                        <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                        <input asp-for="TransactionDate" type="Date" class="form-control" />
-                        <span asp-validation-for="TransactionDate" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="control-label">CV #<span class="required">*</span></label>
-                        <select asp-for="CvId" asp-items="@Model.CheckVouchers" class="form-select js-select2" required>
-                            <option></option>
-                        </select>
-                        <span asp-validation-for="CvId" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <input asp-for="Payee" type="text" class="form-control" placeholder="Optional" readonly />
-                        <label asp-for="Payee" class="control-label"></label>
-                        <span asp-validation-for="Payee" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <input asp-for="PayeeAddress" type="text" class="form-control" placeholder="Optional" readonly />
-                        <label asp-for="PayeeAddress" class="control-label"></label>
-                        <span asp-validation-for="PayeeAddress" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <input asp-for="PayeeTin" type="text" class="form-control" placeholder="Optional" readonly />
-                        <label asp-for="PayeeTin" class="control-label"></label>
-                        <span asp-validation-for="PayeeTin" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label asp-for="Total" class="control-label"></label><span class="required">*</span>
-                        <input asp-for="Total" class="form-control money" value="" placeholder="0.00" />
-                        <span asp-validation-for="Total" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="control-label">Bank Account<span class="required">*</span></label>
-                        <select asp-for="BankId" asp-items="@Model.Banks" class="form-select js-select2" required>
-                            <option></option>
-                        </select>
-                        <span asp-validation-for="BankId" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <input asp-for="CheckNo" type="text" class="form-control" placeholder="Input check #" />
-                        <label asp-for="CheckNo" class="control-label">Check No.<span class="required">*</span></label>
-                        <span asp-validation-for="CheckNo" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label asp-for="CheckDate" class="control-label"></label><span class="required">*</span>
-                        <input asp-for="CheckDate" type="Date" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" />
-                        <span asp-validation-for="CheckDate" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="control-label">Upload File (Optional)</label>
-                        <input name="file" type="file" class="form-control" />
-                    </div>
-                    <div class="form-floating mb-3">
-                        <textarea asp-for="Particulars" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
-                        <label asp-for="Particulars" class="control-label">Particulars<span class="required">*</span></label>
-                        <span asp-validation-for="Particulars" class="text-danger"></span>
-                    </div>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group mb-3">
+                    <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
+                    <input asp-for="TransactionDate" type="Date" class="form-control" />
+                    <span asp-validation-for="TransactionDate" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">CV #<span class="required">*</span></label>
+                    <select asp-for="CvId" asp-items="@Model.CheckVouchers" class="form-select js-select2" required>
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="CvId" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Payee" type="text" class="form-control" placeholder="Optional" readonly />
+                    <label asp-for="Payee" class="control-label"></label>
+                    <span asp-validation-for="Payee" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="PayeeAddress" type="text" class="form-control" placeholder="Optional" readonly />
+                    <label asp-for="PayeeAddress" class="control-label"></label>
+                    <span asp-validation-for="PayeeAddress" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="PayeeTin" type="text" class="form-control" placeholder="Optional" readonly />
+                    <label asp-for="PayeeTin" class="control-label"></label>
+                    <span asp-validation-for="PayeeTin" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Total" class="control-label"></label><span class="required">*</span>
+                    <input asp-for="Total" class="form-control money" value="" placeholder="0.00" />
+                    <span asp-validation-for="Total" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Bank Account<span class="required">*</span></label>
+                    <select asp-for="BankId" asp-items="@Model.Banks" class="form-select js-select2" required>
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="BankId" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="CheckNo" type="text" class="form-control" placeholder="Input check #" />
+                    <label asp-for="CheckNo" class="control-label">Check No.<span class="required">*</span></label>
+                    <span asp-validation-for="CheckNo" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="CheckDate" class="control-label"></label><span class="required">*</span>
+                    <input asp-for="CheckDate" type="Date" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" />
+                    <span asp-validation-for="CheckDate" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Upload File (Optional)</label>
+                    <input name="file" type="file" class="form-control" />
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea asp-for="Particulars" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
+                    <label asp-for="Particulars" class="control-label">Particulars<span class="required">*</span></label>
+                    <span asp-validation-for="Particulars" class="text-danger"></span>
                 </div>
                 <div class="form-group">
                     <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
@@ -266,14 +264,14 @@
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
-                                                                    <td>
-                                                                        <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
-                                                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                                                    </td>
-                                                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                                             </tr>`;
+                                                                            <td>
+                                                                                <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
+                                                                                <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
+                                                                            </td>
+                                                                            <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                                                            <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                                                            <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                                                     </tr>`;
 
             // Append the new row to the table body
             $("#accountingEntriesBody").append(newRow);
