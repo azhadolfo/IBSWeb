@@ -93,7 +93,6 @@
                             <input asp-for="Discount" class="form-control moneyInput" />
                             <span asp-validation-for="Discount" class="text-danger"></span>
                         </div>
-
                     </div>
 
                     <div class="col">
@@ -116,11 +115,9 @@
                             <label asp-for="OtherRefNo" class="control-label">Other Ref No.<span class="required">*</span></label>
                             <span asp-validation-for="OtherRefNo" class="text-danger"></span>
                         </div>
-
                     </div>
                 </div>
             </div>
-
 
             <div class="form-floating mb-3">
                 <textarea asp-for="Remarks" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
@@ -147,7 +144,7 @@
                 if (customerId !== "") {
                     // Make an AJAX request to get the customer details based on the selected CustomerId
                     $.ajax({
-                        url: "/SalesInvoice/GetCustomerDetails", // Replace with the actual controller and action names
+                        url: '@Url.Action("GetCustomerDetails", "SalesInvoice")', // Replace with the actual controller and action names
                         method: "GET",
                         data: { customerId: customerId },
                         success: function (data) {
@@ -191,7 +188,7 @@
                 if (productId !== "") {
                     // Make an AJAX request to get the customer details based on the selected CustomerId
                     $.ajax({
-                        url: "/SalesInvoice/GetProductDetails", // Replace with the actual controller and action names
+                        url: '@Url.Action("GetProductDetails", "SalesInvoice")', // Replace with the actual controller and action names
                         method: "GET",
                         data: { productId: productId },
                         success: function (data) {
@@ -221,25 +218,25 @@
                 if (productId !== "") {
                     // Make an AJAX request to get the POs based on the selected SupplierId
                     $.ajax({
-                        url: "/SalesInvoice/GetPOs",
+                        url: '@Url.Action("GetPOs", "SalesInvoice")',
                         method: "GET",
                         data: { productId: productId }, // Corrected parameter name
                         success: function (data) {
                             if (data) {
                                 // Clear existing options
-                                $("#POId").empty();
+                                $("#PurchaseOrderId").empty();
                                 // Add new options based on the fetched data
                                 $.each(data, function (index, po) {
                                     if (po && po.poNumber) { // Adjust property name to poNumber
                                         console.log(po.id)
-                                        $('#POId').append('<option value="' + po.id + '">' + po.poNumber + '</option>'); // Adjust property names
+                                        $('#PurchaseOrderId').append('<option value="' + po.id + '">' + po.poNumber + '</option>'); // Adjust property names
                                     } else {
                                         console.error("Invalid PO object:", po);
                                     }
                                 });
                             } else {
                                 // Clear the fields if no POs are found
-                                $("#POId").empty();
+                                $("#PurchaseOrderId").empty();
                             }
                         },
                         error: function (xhr, status, error) {
@@ -248,7 +245,7 @@
                     });
                 } else {
                     // Clear the fields if no supplier is selected
-                    $("#POId").empty();
+                    $("#PurchaseOrderId").empty();
                 }
             });
         });

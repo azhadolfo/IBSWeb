@@ -642,14 +642,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             ///PENDING - leo
-            model.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Category == "Trade")
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.Id.ToString(),
-                    Text = sup.Name
-                })
-                .ToListAsync();
+            //model.Suppliers = await _dbContext.FilprideSuppliers
+            //    .Where(supp => supp.Category == "Trade")
+            //    .Select(sup => new SelectListItem
+            //    {
+            //        Value = sup.Id.ToString(),
+            //        Text = sup.Name
+            //    })
+            //    .ToListAsync();
             model.BankAccounts = await _dbContext.FilprideBankAccounts
                 .Select(ba => new SelectListItem
                 {
