@@ -379,7 +379,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
 
-                    ///PENDING
+                    ///PENDING - leo
                     //if (findJVInJB.Any())
                     //{
                     //    await _generalRepo.RemoveRecords<JournalBook>(crb => crb.Reference == model.JVNo);

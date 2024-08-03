@@ -22,11 +22,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        public CheckVoucherController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        public CheckVoucherController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -364,12 +367,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 SupplierTinNo = existingHeaderModel.Supplier.SupplierTin,
                 Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken),
                 RRSeries = existingHeaderModel.RRNo,
-                ///PENDING
-                //RR = await _generalRepo.GetReceivingReportListAsync(existingHeaderModel.RRNo, cancellationToken),
+                RR = await _unitOfWork.FilprideReceivingReportRepo.GetReceivingReportListAsync(existingHeaderModel.RRNo, cancellationToken),
                 POSeries = existingHeaderModel.PONo,
-                //PONo = await _generalRepo.GetPurchaseOrderListAsync(cancellationToken),
+                PONo = await _unitOfWork.FilpridePurchaseOrderRepo.GetPurchaseOrderListAsync(cancellationToken),
                 TransactionDate = existingHeaderModel.Date,
-                //BankAccounts = await _generalRepo.GetBankAccountListAsync(cancellationToken),
+                BankAccounts = await _unitOfWork.FilprideBankAccount.GetBankAccountListAsync(cancellationToken),
                 BankId = existingHeaderModel.BankId,
                 CheckNo = existingHeaderModel.CheckNo,
                 CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
@@ -537,27 +539,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Uploading file --
 
-                    /// PENDING
-                    //if (file != null && file.Length > 0)
-                    //{
-                    //    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", viewModel.CVNo);
+                    if (file != null && file.Length > 0)
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", viewModel.CVNo);
 
-                    //    if (!Directory.Exists(uploadsFolder))
-                    //    {
-                    //        Directory.CreateDirectory(uploadsFolder);
-                    //    }
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                    //    string fileName = Path.GetFileName(file.FileName);
-                    //    string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(file.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                    //    using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                    //    {
-                    //        await file.CopyToAsync(stream);
-                    //    }
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
 
-                    //    //if necessary add field to store location path
-                    //    // model.Header.SupportingFilePath = fileSavePath
-                    //}
+                        //if necessary add field to store location path
+                        // model.Header.SupportingFilePath = fileSavePath
+                    }
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     TempData["success"] = "Trade edited successfully";
@@ -591,7 +592,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
 
-                    ///PENDING
+                    ///PENDING - leo
                     //await _generalRepo.RemoveRecords<DisbursementBook>(db => db.CVNo == model.CVNo);
                     //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.CVNo);
 
@@ -614,7 +615,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
-                    ///PENDING
+
+                    ///PENDING - leo
                     //model.CancellationRemarks = cancellationRemarks;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -639,15 +641,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            ///PENDING
-            //model.Suppliers = await _dbContext.FilprideSuppliers
-            //    .Where(supp => supp.Category == "Trade")
-            //    .Select(sup => new SelectListItem
-            //    {
-            //        Value = sup.Id.ToString(),
-            //        Text = sup.Name
-            //    })
-            //    .ToListAsync();
+            ///PENDING - leo
+            model.Suppliers = await _dbContext.FilprideSuppliers
+                .Where(supp => supp.Category == "Trade")
+                .Select(sup => new SelectListItem
+                {
+                    Value = sup.Id.ToString(),
+                    Text = sup.Name
+                })
+                .ToListAsync();
             model.BankAccounts = await _dbContext.FilprideBankAccounts
                 .Select(ba => new SelectListItem
                 {
@@ -684,7 +686,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync(cancellationToken);
 
-                            ///PENDING
+                            ///PENDING - leo
                             //viewModel.Suppliers = await _dbContext.FilprideSuppliers
                             //    .Where(supp => supp.Category == "Trade")
                             //    .Select(sup => new SelectListItem
@@ -808,27 +810,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region -- Uploading file --
                     foreach (var item in cvh.ToList())
                     {
-                        ///PENDING
-                        //if (file != null && file.Length > 0)
-                        //{
-                        //    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", item.CVNo);
+                        if (file != null && file.Length > 0)
+                        {
+                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", item.CheckVoucherHeaderNo);
 
-                        //    if (!Directory.Exists(uploadsFolder))
-                        //    {
-                        //        Directory.CreateDirectory(uploadsFolder);
-                        //    }
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
 
-                        //    string fileName = Path.GetFileName(file.FileName);
-                        //    string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                            string fileName = Path.GetFileName(file.FileName);
+                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                        //    using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        //    {
-                        //        await file.CopyToAsync(stream);
-                        //    }
+                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                            {
+                                await file.CopyToAsync(stream);
+                            }
 
-                        //    //if necessary add field to store location path
-                        //    // model.Header.SupportingFilePath = fileSavePath
-                        //}
+                            //if necessary add field to store location path
+                            // model.Header.SupportingFilePath = fileSavePath
+                        }
                     }
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     return RedirectToAction("Index");
@@ -845,7 +846,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
 
-                    /// PENDING
+                    /// PENDING - leo
                     //viewModel.Suppliers = await _dbContext.FilprideSuppliers
                     //        .Where(supp => supp.Category == "Trade")
                     //        .Select(sup => new SelectListItem
@@ -894,7 +895,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            /// PENDING
+            /// PENDING - leo
             //viewModel.Suppliers = await _dbContext.Suppliers
             //    .Where(supp => supp.Category == "Trade")
             //    .Select(sup => new SelectListItem
@@ -948,7 +949,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            ///PENDING
+            ///PENDING - leo
             //viewModel.Suppliers = await _dbContext.FilprideSuppliers
             //    .Where(supp => supp.Category == "Non-Trade")
             //    .Select(sup => new SelectListItem
@@ -1042,24 +1043,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region -- Uploading file --
                     if (file != null && file.Length > 0)
                     {
-                        ///PENDING
-                        //string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", checkVoucherHeader.CVNo);
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", checkVoucherHeader.CheckVoucherHeaderNo);
 
-                        //if (!Directory.Exists(uploadsFolder))
-                        //{
-                        //    Directory.CreateDirectory(uploadsFolder);
-                        //}
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                        //string fileName = Path.GetFileName(file.FileName);
-                        //string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(file.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                        //using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        //{
-                        //    await file.CopyToAsync(stream);
-                        //}
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
 
-                        ////if necessary add field to store location path
-                        //// model.Header.SupportingFilePath = fileSavePath
+                        //if necessary add field to store location path
+                        // model.Header.SupportingFilePath = fileSavePath
                     }
                     #endregion -- Uploading file --
 
@@ -1077,7 +1077,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
 
-                    ///PENDING
+                    ///PENDING - leo
                     //viewModel.Suppliers = await _dbContext.FilprideSuppliers
                     //    .Where(supp => supp.Category == "Non-Trade")
                     //    .Select(sup => new SelectListItem
@@ -1101,7 +1101,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            /// PENDING
+            /// PENDING - leo
             //viewModel.Suppliers = await _dbContext.FilprideSuppliers
             //    .Where(supp => supp.Category == "Non-Trade")
             //    .Select(sup => new SelectListItem
@@ -1211,24 +1211,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region -- Uploading file --
                     if (file != null && file.Length > 0)
                     {
-                        /// PENDING
-                        //string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", checkVoucherHeader.CVNo);
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", checkVoucherHeader.CheckVoucherHeaderNo);
 
-                        //if (!Directory.Exists(uploadsFolder))
-                        //{
-                        //    Directory.CreateDirectory(uploadsFolder);
-                        //}
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                        //string fileName = Path.GetFileName(file.FileName);
-                        //string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(file.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                        //using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        //{
-                        //    await file.CopyToAsync(stream);
-                        //}
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
 
-                        ////if necessary add field to store location path
-                        //// model.Header.SupportingFilePath = fileSavePath
+                        //if necessary add field to store location path
+                        // model.Header.SupportingFilePath = fileSavePath
                     }
                     #endregion -- Uploading file --
 
@@ -1505,21 +1504,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (file != null && file.Length > 0)
                     {
-                        ///PENDING
-                        //string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", existingModel.CVNo);
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", existingModel.CheckVoucherHeaderNo);
 
-                        //if (!Directory.Exists(uploadsFolder))
-                        //{
-                        //    Directory.CreateDirectory(uploadsFolder);
-                        //}
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                        //string fileName = Path.GetFileName(file.FileName);
-                        //string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(file.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                        //using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        //{
-                        //    await file.CopyToAsync(stream);
-                        //}
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
 
                         //if necessary add field to store location path
                         // model.Header.SupportingFilePath = fileSavePath
@@ -1762,21 +1760,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (file != null && file.Length > 0)
                     {
-                        ///PENDING
-                        //string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", existingHeaderModel.CVNo);
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", existingHeaderModel.CheckVoucherHeaderNo);
 
-                        //if (!Directory.Exists(uploadsFolder))
-                        //{
-                        //    Directory.CreateDirectory(uploadsFolder);
-                        //}
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                        //string fileName = Path.GetFileName(file.FileName);
-                        //string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(file.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                        //using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        //{
-                        //    await file.CopyToAsync(stream);
-                        //}
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
 
                         //if necessary add field to store location path
                         // model.Header.SupportingFilePath = fileSavePath

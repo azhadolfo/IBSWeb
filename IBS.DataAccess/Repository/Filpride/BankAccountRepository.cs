@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.MasterFile;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -12,6 +13,17 @@ namespace IBS.DataAccess.Repository.Filpride
         public BankAccountRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
+        }
+
+        public async Task<List<SelectListItem>> GetBankAccountListAsync(CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideBankAccounts
+                 .Select(ba => new SelectListItem
+                 {
+                     Value = ba.BankAccountId.ToString(),
+                     Text = ba.AccountName
+                 })
+                 .ToListAsync(cancellationToken);
         }
 
         public async Task<bool> IsBankAccountNameExist(string accountName, CancellationToken cancellationToken = default)
