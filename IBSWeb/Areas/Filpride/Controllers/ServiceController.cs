@@ -86,12 +86,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                ///PENDING
-                //if (await _serviceRepo.IsServicesExist(services.Name, cancellationToken))
-                //{
-                //    ModelState.AddModelError("Name", "Services already exist!");
-                //    return View(services);
-                //}
+                if (await _unitOfWork.FilprideService.IsServicesExist(services.Name, cancellationToken))
+                {
+                    ModelState.AddModelError("Name", "Services already exist!");
+                    return View(services);
+                }
 
                 var currentAndPrevious = await _dbContext.ChartOfAccounts
                     .FindAsync(services.CurrentAndPreviousId, cancellationToken);
@@ -107,8 +106,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 services.CreatedBy = _userManager.GetUserName(this.User).ToUpper();
 
-                ///PENDING
-                //services.AccountNumber = await _serviceRepo.GetLastNumber(cancellationToken);
+                services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
 
                 TempData["success"] = "Services created successfully";
 
