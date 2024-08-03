@@ -4,92 +4,97 @@
     ViewData["Title"] = "Actual Inventory";
 }
 
-<h1>Create</h1>
-<h4>Actual Inventory</h4>
-<hr />
-
-<form method="post">
-    <div class="row">
-        <div class="col-md-4">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group mb-3">
-                <label asp-for="Date" class="control-label"></label><span class="required">*</span>
-                <input type="date" asp-for="Date" class="form-control" required />
-                <span asp-validation-for="Date" class="text-danger"></span>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Actual Inventory</h2>
             </div>
-            <div class="form-group mb-3">
-                <label asp-for="ProductId" class="control-label">Product Name</label><span class="required">*</span>
-                <select asp-for="ProductId" class="form-control js-select2" asp-items="@Model.ProductList">
-                    <option></option>
-                </select>
-                <span asp-validation-for="ProductId" class="text-danger"></span>
-            </div>
-            <div class="form-group mb-3">
-                <label asp-for="POId" class="control-label">Suppliers PO No.<span class="required">*</span></label>
-                <select asp-for="POId" class="form-control js-select2" asp-items="@Model.PO">
-                    <option></option>
-                </select>
-                <span asp-validation-for="POId" class="text-danger"></span>
-            </div>
-            <input asp-for="AverageCost" class="averageCost" type="hidden" />
-            <input asp-for="TotalBalance" type="hidden" />
-            <div class="form-group mb-3">
-                <label asp-for="PerBook" class="control-label"></label>
-                <input asp-for="PerBook" class="form-control money" value="" placeholder="0.00" readonly />
-            </div>
-            <div class="form-group mb-3">
-                <label asp-for="ActualVolume" class="control-label"></label><span class="required">*</span>
-                <input asp-for="ActualVolume" class="form-control money" value="" placeholder="0.00" />
-                <span asp-validation-for="ActualVolume" class="text-danger"></span>
-            </div>
-            <div class="form-group mb-3">
-                <label asp-for="Variance" class="control-label"></label>
-                <input asp-for="Variance" class="form-control money" value="" placeholder="0.00" readonly />
-            </div>
-        </div>
-
-        <div class="form-group">
-            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
-                Add Entry
-            </button>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th class="w-50">Account No.</th>
-                        <th class="w-25">
-                            Debit
-                        </th>
-                        <th class="w-25">
-                            Credit
-                        </th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="accountingEntriesBody">
-                    <tr>
-                        <input type="hidden" name="AccountNumber" class="accountNumber" value="" />
-                        <td><input type="text" name="AccountTitle" value="" class="w-100 accountTitle" style="border:none" readonly /></td>
-                        <td><input type="text" name="Debit" value="0.00" class="w-100 debit" style="border:none" readonly /></td>
-                        <td><input type="text" name="Credit" value="0.00" class="w-100 credit" style="border:none" readonly /></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-                <tbody>
-                    <tr>
-                        <td class="text-end">TOTAL:</td>
-                        <td class="totalDebit">0.00</td>
-                        <td class="totalCredit">0.00</td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="form-group">
-            <input type="submit" value="Create" class="btn btn-primary" onclick="validateDebitAndCredit(event)" />
         </div>
     </div>
-</form>
+    <div class="card-body p-4">
+        <form method="post">
+            <div class="row">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group mb-3">
+                    <label asp-for="Date" class="control-label"></label><span class="required">*</span>
+                    <input type="date" asp-for="Date" class="form-control" required />
+                    <span asp-validation-for="Date" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="ProductId" class="control-label">Product Name</label><span class="required">*</span>
+                    <select asp-for="ProductId" class="form-control js-select2" asp-items="@Model.ProductList">
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="ProductId" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="POId" class="control-label">Suppliers PO No.<span class="required">*</span></label>
+                    <select asp-for="POId" class="form-control js-select2" asp-items="@Model.PO">
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="POId" class="text-danger"></span>
+                </div>
+                <input asp-for="AverageCost" class="averageCost" type="hidden" />
+                <input asp-for="TotalBalance" type="hidden" />
+                <div class="form-group mb-3">
+                    <label asp-for="PerBook" class="control-label"></label>
+                    <input asp-for="PerBook" class="form-control money" value="" placeholder="0.00" readonly />
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="ActualVolume" class="control-label"></label><span class="required">*</span>
+                    <input asp-for="ActualVolume" class="form-control money" value="" placeholder="0.00" />
+                    <span asp-validation-for="ActualVolume" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Variance" class="control-label"></label>
+                    <input asp-for="Variance" class="form-control money" value="" placeholder="0.00" readonly />
+                </div>
+
+                <div class="form-group">
+                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
+                        Add Entry
+                    </button>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th class="w-50">Account No.</th>
+                                <th class="w-25">
+                                    Debit
+                                </th>
+                                <th class="w-25">
+                                    Credit
+                                </th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountingEntriesBody">
+                            <tr>
+                                <input type="hidden" name="AccountNumber" class="accountNumber" value="" />
+                                <td><input type="text" name="AccountTitle" value="" class="w-100 accountTitle" style="border:none" readonly /></td>
+                                <td><input type="text" name="Debit" value="0.00" class="w-100 debit" style="border:none" readonly /></td>
+                                <td><input type="text" name="Credit" value="0.00" class="w-100 credit" style="border:none" readonly /></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                        <tbody>
+                            <tr>
+                                <td class="text-end">TOTAL:</td>
+                                <td class="totalDebit">0.00</td>
+                                <td class="totalCredit">0.00</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Create" class="btn btn-primary" onclick="validateDebitAndCredit(event)" />
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- Modal -->
 <div class="modal fade" id="AddAccEntry" data-bs-backdrop="static" tabindex="-1" aria-labelledby="AddAccEntryLabel" aria-hidden="true">
@@ -240,14 +245,14 @@
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
-                                    <td>
-                                        <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
-                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                    </td>
-                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                             </tr>`;
+                                            <td>
+                                                <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
+                                                <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
+                                            </td>
+                                            <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                            <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                            <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                     </tr>`;
 
 
             // Append the new row to the table body

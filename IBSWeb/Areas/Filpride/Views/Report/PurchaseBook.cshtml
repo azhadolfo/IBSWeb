@@ -6,55 +6,59 @@
     var dateTo = ViewBag.DateTo;
 }
 
-<h1>@ViewData["Title"]</h1>
-<hr />
-
-<form id="dynamicForm" method="post">
-    <div class="row">
-        <div class="col-md-4">
-            <div class="mb-3">
-                <label asp-for="DateFrom" class="control-label"></label>
-                <input type="date" asp-for="DateFrom" class="form-control" value="@dateFrom" />
-                <span asp-validation-for="DateFrom" class="text-danger"></span>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">PURCHASE BOOK</h2>
             </div>
-            <div class="mb-3">
-                <label asp-for="DateTo" class="control-label"></label>
-                <input type="date" asp-for="DateTo" class="form-control" value="@dateTo" />
-                <span asp-validation-for="DateTo" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label class="control-label">Select type of reports</label>
-                <select name="selectedFiltering" class="form-control js-select2">
-                    <option value="" selected="Disabled">--Select an option--</option>
-                    <option value="RRDate">Purchase Book based on RR Date</option>
-                    <option value="DueDate">Purchase Book based on Due Date</option>
-                    <option value="UnpostedRR">Unposted RR (Show Quantity)</option>
-                    <option value="POLiquidation">PO Liquidation (Based on Due Date)</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <p class="control-label">PO Liquidation Per PO</p>
-            <div class="form-group mb-3">
-                <label class="control-label">PO# From:</label>
-                <select name="poListFrom" class="form-control js-select2" asp-items="@Model.PO">
-                    <option></option>
-                </select>
-            </div>
-            <div class="form-group mb-3">
-                <label class="control-label">PO# To:</label>
-                <select name="poListTo" class="form-control js-select2" asp-items="@Model.PO">
-                    <option></option>
-                </select>
-            </div>
-        </div>
-        <div class="mb-3">
-            <button type="button" class="btn btn-primary" onclick="submitForm('PurchaseBookReport')"><i class="bi bi-printer"></i> Generate</button>
-            <button type="button" class="btn btn-primary" onclick="submitForm('GeneratePurchaseBookTxtFile')"><i class="bi bi-file-text"></i> Generate as .txt file</button>
         </div>
     </div>
-</form>
+    <div class="card-body p-4">
+        <form id="dynamicForm" method="post">
+            <div class="row">
+                <div class="mb-3">
+                    <label asp-for="DateFrom" class="control-label"></label>
+                    <input type="date" asp-for="DateFrom" class="form-control" value="@dateFrom" />
+                    <span asp-validation-for="DateFrom" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="DateTo" class="control-label"></label>
+                    <input type="date" asp-for="DateTo" class="form-control" value="@dateTo" />
+                    <span asp-validation-for="DateTo" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label class="control-label">Select type of reports</label>
+                    <select name="selectedFiltering" class="form-control js-select2">
+                        <option value="" selected="Disabled">--Select an option--</option>
+                        <option value="RRDate">Purchase Book based on RR Date</option>
+                        <option value="DueDate">Purchase Book based on Due Date</option>
+                        <option value="UnpostedRR">Unposted RR (Show Quantity)</option>
+                        <option value="POLiquidation">PO Liquidation (Based on Due Date)</option>
+                    </select>
+                </div>
+
+                <p class="control-label">PO Liquidation Per PO</p>
+                <div class="form-group mb-3">
+                    <label class="control-label">PO# From:</label>
+                    <select name="poListFrom" class="form-control js-select2" asp-items="@Model.PO">
+                        <option></option>
+                    </select>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">PO# To:</label>
+                    <select name="poListTo" class="form-control js-select2" asp-items="@Model.PO">
+                        <option></option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary" onclick="submitForm('PurchaseBookReport')"><i class="bi bi-printer"></i> Generate</button>
+                    <button type="button" class="btn btn-primary" onclick="submitForm('GeneratePurchaseBookTxtFile')"><i class="bi bi-file-text"></i> Generate as .txt file</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
 @section Scripts {
     @{

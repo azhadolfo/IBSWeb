@@ -36,54 +36,58 @@
            </pre>
         </div>
         <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group mb-3">
-                <label asp-for="Date" class="control-label"></label><span class="required">*</span>
-                <input asp-for="Date" type="date" class="form-control" />
-                <span asp-validation-for="Date" class="text-danger"></span>
-            </div>
-            <div class="form-group mb-3">
-                <label asp-for="POId" class="control-label">Suppliers PO No.</label><span class="required">*</span>
-                <select asp-for="POId" class="form-control js-select2" asp-items="@Model.PurchaseOrders" style="width:100%">
-                    <option></option>
-                </select>
-                <span asp-validation-for="POId" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="SupplierInvoiceNumber" class="form-control" placeholder="" />
-                <label asp-for="SupplierInvoiceNumber" class="control-label"></label>
-            </div>
-            <div class="form-group mb-3">
-                <label asp-for="SupplierInvoiceDate" class="control-label"></label>
-                <input asp-for="SupplierInvoiceDate" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="TruckOrVessels" class="form-control" placeholder="" />
-                <label asp-for="TruckOrVessels" class="control-label">Truck/Vessels<span class="required">*</span></label>
-                <span asp-validation-for="TruckOrVessels" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="QuantityDelivered" class="form-control" placeholder="" />
-                <label asp-for="QuantityDelivered" class="control-label">Qty Delivered<span class="required">*</span></label>
-                <span asp-validation-for="QuantityDelivered" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="QuantityReceived" class="form-control" placeholder="" />
-                <label asp-for="QuantityReceived" class="control-label">Qty Received<span class="required">*</span></label>
-                <span asp-validation-for="QuantityReceived" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="OtherRef" class="form-control" placeholder="" />
-                <label asp-for="OtherRef" class="control-label"></label>
-            </div>
-            <div class="form-floating mb-3">
-                <textarea asp-for="Remarks" class="form-control" placeholder="" style="height: 100px"></textarea>
-                <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
-                <span asp-validation-for="Remarks" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+            <div class="row">
+                <div class="col-md-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Date" class="control-label"></label><span class="required">*</span>
+                        <input asp-for="Date" type="date" class="form-control" />
+                        <span asp-validation-for="Date" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="POId" class="control-label">Suppliers PO No.</label><span class="required">*</span>
+                        <select asp-for="POId" class="form-control js-select2" asp-items="@Model.PurchaseOrders" style="width:100%">
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="POId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="SupplierInvoiceNumber" class="form-control" placeholder="" />
+                        <label asp-for="SupplierInvoiceNumber" class="control-label"></label>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="SupplierInvoiceDate" class="control-label"></label>
+                        <input asp-for="SupplierInvoiceDate" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="TruckOrVessels" class="form-control" placeholder="" />
+                        <label asp-for="TruckOrVessels" class="control-label">Truck/Vessels<span class="required">*</span></label>
+                        <span asp-validation-for="TruckOrVessels" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="QuantityDelivered" class="form-control" placeholder="" />
+                        <label asp-for="QuantityDelivered" class="control-label">Qty Delivered<span class="required">*</span></label>
+                        <span asp-validation-for="QuantityDelivered" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="QuantityReceived" class="form-control" placeholder="" />
+                        <label asp-for="QuantityReceived" class="control-label">Qty Received<span class="required">*</span></label>
+                        <span asp-validation-for="QuantityReceived" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="OtherRef" class="form-control" placeholder="" />
+                    <label asp-for="OtherRef" class="control-label"></label>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea asp-for="Remarks" class="form-control" placeholder="" style="height: 100px"></textarea>
+                    <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
+                    <span asp-validation-for="Remarks" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Create" class="btn btn-primary" />
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                </div>
             </div>
         </form>
     </div>

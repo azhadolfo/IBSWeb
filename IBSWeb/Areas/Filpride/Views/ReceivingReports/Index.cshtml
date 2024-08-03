@@ -7,103 +7,115 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Receiving Report</h1>
-<hr />
-<p>
-    <a asp-action="Create" class="btn btn-primary rounded-3"><i class="bi bi-plus-lg"></i> New</a>
-</p>
-
-<div class="table-responsive">
-    <table class="table table-hover" id="myOwnTable">
-        <thead>
-            <tr>
-                <th>
-                    @Html.DisplayNameFor(model => model.ReceivingReportNo)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Date)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.PurchaseOrder.PurchaseOrderNo)
-                </th>
-                <th>
-                    Delivered
-                </th>
-                <th>
-                    Received
-                </th>
-                <th style="width:25%"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">RECEIVING REPORT</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+            <div class="col-6 text-end">
+                <a asp-area="Filpride" asp-controller="ReceivingReports" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create New
+                </a>
+            </div>
+        </div>
+        <table class="table table-bordered table-striped" id="dataTable">
+            <thead>
                 <tr>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.ReceivingReportNo)
-                    </td>
-                    <td>
-                        @item.Date.ToString("MM/dd/yyyy")
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.PurchaseOrder.PurchaseOrderNo)
-                    </td>
-                    <td>
-                        @item.QuantityDelivered.ToString("N0")
-                    </td>
-                    <td>
-                        @item.QuantityReceived.ToString("N0")
-                    </td>
-                    <td class="text-center">
-                        @if (item.CreatedBy == UserManager.GetUserName(User))
-                        {
-                            if (item.VoidedBy == null && item.CanceledBy == null)
-                            {
-                                <a asp-action="Edit" asp-route-id="@item.ReceivingReportId" class="btn btn-light">Edit</a>
-                            }
-                            if (item.PostedBy == null && item.VoidedBy == null && item.CanceledBy == null)
-                            {
-                                <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#Preview-@item.ReceivingReportId" data-bs-url="@Url.Action($"Preview/{item.ReceivingReportId}")">
-                                    Preview
-                                </button>
-                                @await Html.PartialAsync("_Preview", item)
-                                <a class="btn btn-light" onclick="confirmPost(@item.ReceivingReportId)">Post</a>
-                                <a class="btn btn-light" onclick="confirmCancel(@item.ReceivingReportId)">Cancel</a>
-                            }
-                            if (item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null)
-                            {
-                                <a asp-action="Print" asp-route-id="@item.ReceivingReportId" class="btn btn-light">Print</a>
-                                if (item.AmountPaid == 0)
-                                {
-                                    <a class="btn btn-light" onclick="confirmVoid(@item.ReceivingReportId)">Void</a>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-light" disabled readonly>Void</button>
-                                }
-                            }
-                        }
-
-                        @if (item.VoidedBy != null)
-                        {
-                            <span class="badge rounded-pill bg-danger ">VOIDED</span>
-                        }
-                        else if (item.CanceledBy != null)
-                        {
-                            <span class="badge rounded-pill bg-warning ">CANCELLED</span>
-                        }
-                        else
-                        {
-                            @if (item.CreatedBy != UserManager.GetUserName(User))
-                            {
-                                <span class="badge rounded-pill bg-info ">VALID</span>
-                            }
-                        }
-                    </td>
+                    <th>
+                        @Html.DisplayNameFor(model => model.ReceivingReportNo)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Date)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.PurchaseOrder.PurchaseOrderNo)
+                    </th>
+                    <th>
+                        Delivered
+                    </th>
+                    <th>
+                        Received
+                    </th>
+                    <th style="width:25%"></th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ReceivingReportNo)
+                        </td>
+                        <td>
+                            @item.Date.ToString("MM/dd/yyyy")
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.PurchaseOrder.PurchaseOrderNo)
+                        </td>
+                        <td>
+                            @item.QuantityDelivered.ToString("N0")
+                        </td>
+                        <td>
+                            @item.QuantityReceived.ToString("N0")
+                        </td>
+                        <td class="text-center">
+                            @if (item.CreatedBy == UserManager.GetUserName(User))
+                            {
+                                if (item.VoidedBy == null && item.CanceledBy == null)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.ReceivingReportId" class="btn btn-light">Edit</a>
+                                }
+                                if (item.PostedBy == null && item.VoidedBy == null && item.CanceledBy == null)
+                                {
+                                    <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#Preview-@item.ReceivingReportId" data-bs-url="@Url.Action($"Preview/{item.ReceivingReportId}")">
+                                        Preview
+                                    </button>
+                                    @await Html.PartialAsync("_Preview", item)
+                                    <a class="btn btn-light" onclick="confirmPost(@item.ReceivingReportId)">Post</a>
+                                    <a class="btn btn-light" onclick="confirmCancel(@item.ReceivingReportId)">Cancel</a>
+                                }
+                                if (item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null)
+                                {
+                                    <a asp-action="Print" asp-route-id="@item.ReceivingReportId" class="btn btn-light">Print</a>
+                                    if (item.AmountPaid == 0)
+                                    {
+                                        <a class="btn btn-light" onclick="confirmVoid(@item.ReceivingReportId)">Void</a>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-light" disabled readonly>Void</button>
+                                    }
+                                }
+                            }
+
+                            @if (item.VoidedBy != null)
+                            {
+                                <span class="badge rounded-pill bg-danger ">VOIDED</span>
+                            }
+                            else if (item.CanceledBy != null)
+                            {
+                                <span class="badge rounded-pill bg-warning ">CANCELLED</span>
+                            }
+                            else
+                            {
+                                @if (item.CreatedBy != UserManager.GetUserName(User))
+                                {
+                                    <span class="badge rounded-pill bg-info ">VALID</span>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @section Scripts {
