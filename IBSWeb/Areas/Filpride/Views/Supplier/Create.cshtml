@@ -153,4 +153,67 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        function toggleExemptionFields(selectElement) {
+            const exemptionFields = document.getElementById("exemptionFields");
+            const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
+            var inlineRadio2 = document.getElementById('inlineRadio2');
+
+            if (selectElement.value === "Exempt") {
+                exemptionFields.style.display = "block";
+                withHoldingTaxPercent.style.display = "none";
+                $(".withHoldingTaxPercent").val(null).trigger('change');
+            } else if (selectElement.value === "Withholding Tax" && inlineRadio2.checked === true) {
+                withHoldingTaxPercent.style.display = "block";
+                exemptionFields.style.display = "none";
+            } else {
+                exemptionFields.style.display = "none";
+            }
+        }
+
+        function toggleValidityDate(radioButton) {
+            const validityDateField = document.getElementById("validityDateField");
+            validityDateField.style.display = radioButton.value === "Permanent" ? "none" : "block";
+        }
+
+        window.onload = function () {
+            var inlineRadio1 = document.getElementById('inlineRadio1');
+            var inlineRadio2 = document.getElementById('inlineRadio2');
+
+            // Check the default radio button on page load
+            if (inlineRadio1.checked) {
+                document.getElementById('tradeList').style.display = 'block';
+                document.getElementById('nonTradeList').style.display = 'none';
+            } else if (inlineRadio2.checked) {
+                document.getElementById('tradeList').style.display = 'none';
+                document.getElementById('nonTradeList').style.display = 'block';
+            }
+        };
+
+        function toggleSelect(id) {
+            var tradeList = document.getElementById('tradeList');
+            var nonTradeList = document.getElementById('nonTradeList');
+            var inlineRadio1 = document.getElementById('inlineRadio1');
+            var inlineRadio2 = document.getElementById('inlineRadio2');
+            const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
+
+            if (id === 'tradeList') {
+                tradeList.style.display = 'block';
+                nonTradeList.style.display = 'none';
+                inlineRadio1.checked = true;
+                inlineRadio2.checked = false;
+                $("#DefaultExpenseNumber").val(null).trigger('change');
+                $(".withHoldingTaxPercent").val(null).trigger('change');
+                withHoldingTaxPercent.style.display = 'none';
+            } else if (id === 'nonTradeList') {
+                tradeList.style.display = 'none';
+                nonTradeList.style.display = 'block';
+                inlineRadio1.checked = false;
+                inlineRadio2.checked = true;
+                $("#TradeName").val("");
+                withHoldingTaxPercent.style.display = 'block';
+                $("#TaxType").val(null).trigger('change');
+            }
+        }
+    </script>
 }
