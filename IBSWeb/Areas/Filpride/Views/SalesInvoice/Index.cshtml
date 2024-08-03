@@ -7,101 +7,114 @@
     ViewData["Title"] = "Sales Invoice";
 }
 
-<h1>Sales Invoice</h1>
-<hr />
-<p>
-    <a asp-action="Create" class="btn btn-primary rounded-3"><i class="bi bi-plus-lg"></i> New</a>
-</p>
-
-<div class="table-responsive">
-    <table class="table table-hover" id="myOwnTable">
-        <thead>
-            <tr class="text-nowrap">
-                <th>
-                    @Html.DisplayNameFor(model => model.SalesInvoiceNo)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Customer.CustomerName)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.TransactionDate)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Customer.CustomerTerms)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Amount)
-                </th>
-                <th style="width: 25%"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var invoice in Model)
-            {
-                <tr class="align-text-bottom">
-                    <td>
-                        @Html.DisplayFor(model => invoice.SalesInvoiceNo)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(model => invoice.Customer.CustomerName)
-                    </td>
-                    <td>
-                        @invoice.TransactionDate.ToString("MM/dd/yyyy")
-                    </td>
-                    <td>
-                        @Html.DisplayFor(model => invoice.Customer.CustomerTerms)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(model => invoice.Amount)
-                    </td>
-                    <td class="text-center">
-                        @if (invoice.CreatedBy == UserManager.GetUserName(User))
-                        {
-                            if (invoice.PostedBy == null && invoice.VoidedBy == null && invoice.CanceledBy == null)
-                            {
-                                <a asp-action="Edit" asp-route-id="@invoice.SalesInvoiceId" class="btn btn-light">Edit</a>
-                                <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#Preview-@invoice.SalesInvoiceId" data-bs-url="@Url.Action($"Preview/{invoice.SalesInvoiceId}")">
-                                    Preview
-                                </button>
-                                @await Html.PartialAsync("_Preview", invoice)
-                                <a class="btn btn-light" onclick="confirmPost(@invoice.SalesInvoiceId)">Post</a>
-                                <a class="btn btn-light" onclick="confirmCancel(@invoice.SalesInvoiceId)">Cancel</a>
-                            }
-                            if (invoice.PostedBy != null && invoice.VoidedBy == null && invoice.CanceledBy == null)
-                            {
-                                <a asp-action="PrintInvoice" asp-route-id="@invoice.SalesInvoiceId" class="btn btn-light">Print</a>
-                                if (invoice.AmountPaid == 0)
-                                {
-                                    <a class="btn btn-light" onclick="confirmVoid(@invoice.SalesInvoiceId)">Void</a>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-light" disabled readonly>Void</button>
-                                }
-                            }
-                        }
-
-                        @if (invoice.VoidedBy != null)
-                        {
-                            <span class="badge rounded-pill bg-danger ">VOIDED</span>
-                        }
-                        else if (invoice.CanceledBy != null)
-                        {
-                            <span class="badge rounded-pill bg-warning ">CANCELLED</span>
-                        }
-                        else
-                        {
-                            @if (invoice.CreatedBy != UserManager.GetUserName(User))
-                            {
-                                <span class="badge rounded-pill bg-info ">VALID</span>
-                            }
-                        }
-                    </td>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">SALES INVOICE</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+            <div class="col-6 text-end">
+                <a asp-area="Filpride" asp-controller="SalesInvoice" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create New
+                </a>
+            </div>
+        </div>
+        <table class="table table-bordered table-striped" id="dataTable">
+            <thead>
+                <tr class="text-nowrap">
+                    <th>
+                        @Html.DisplayNameFor(model => model.SalesInvoiceNo)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Customer.CustomerName)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.TransactionDate)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Customer.CustomerTerms)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Amount)
+                    </th>
+                    <th style="width: 25%"></th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var invoice in Model)
+                {
+                    <tr class="align-text-bottom">
+                        <td>
+                            @Html.DisplayFor(model => invoice.SalesInvoiceNo)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => invoice.Customer.CustomerName)
+                        </td>
+                        <td>
+                            @invoice.TransactionDate.ToString("MM/dd/yyyy")
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => invoice.Customer.CustomerTerms)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => invoice.Amount)
+                        </td>
+                        <td class="text-center">
+                            @if (invoice.CreatedBy == UserManager.GetUserName(User))
+                            {
+                                if (invoice.PostedBy == null && invoice.VoidedBy == null && invoice.CanceledBy == null)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@invoice.SalesInvoiceId" class="btn btn-light">Edit</a>
+                                    <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#Preview-@invoice.SalesInvoiceId" data-bs-url="@Url.Action($"Preview/{invoice.SalesInvoiceId}")">
+                                        Preview
+                                    </button>
+                                    @await Html.PartialAsync("_Preview", invoice)
+                                    <a class="btn btn-light" onclick="confirmPost(@invoice.SalesInvoiceId)">Post</a>
+                                    <a class="btn btn-light" onclick="confirmCancel(@invoice.SalesInvoiceId)">Cancel</a>
+                                }
+                                if (invoice.PostedBy != null && invoice.VoidedBy == null && invoice.CanceledBy == null)
+                                {
+                                    <a asp-action="PrintInvoice" asp-route-id="@invoice.SalesInvoiceId" class="btn btn-light">Print</a>
+                                    if (invoice.AmountPaid == 0)
+                                    {
+                                        <a class="btn btn-light" onclick="confirmVoid(@invoice.SalesInvoiceId)">Void</a>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-light" disabled readonly>Void</button>
+                                    }
+                                }
+                            }
+
+                            @if (invoice.VoidedBy != null)
+                            {
+                                <span class="badge rounded-pill bg-danger ">VOIDED</span>
+                            }
+                            else if (invoice.CanceledBy != null)
+                            {
+                                <span class="badge rounded-pill bg-warning ">CANCELLED</span>
+                            }
+                            else
+                            {
+                                @if (invoice.CreatedBy != UserManager.GetUserName(User))
+                                {
+                                    <span class="badge rounded-pill bg-info ">VALID</span>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+
 @section Scripts {
     <script>
         function confirmPost(invoiceId) {

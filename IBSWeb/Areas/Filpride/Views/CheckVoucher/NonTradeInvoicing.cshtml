@@ -16,58 +16,56 @@
         <div class="card-body p-4">
             <form method="post" enctype="multipart/form-data">
                 <div class="row">
-                    <div class="col-md-4">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                        <div class="form-group mb-3">
-                            <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                            <input asp-for="TransactionDate" type="Date" class="form-control" />
-                            <span asp-validation-for="TransactionDate" class="text-danger"></span>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="control-label">Supplier<span class="required">*</span></label>
-                            <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 supplier" style="width:100%" required>
-                                <option></option>
-                            </select>
-                            <span asp-validation-for="SupplierId" class="text-danger"></span>
-                        </div>
-                        <input asp-for="SupplierName" type="hidden" />
-                        <div class="form-floating mb-3">
-                            <input asp-for="SupplierAddress" type="text" class="form-control" placeholder="Optional" readonly />
-                            <label asp-for="SupplierAddress" class="control-label"></label>
-                            <span asp-validation-for="SupplierAddress" class="text-danger"></span>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input asp-for="SupplierTinNo" type="text" class="form-control" placeholder="Optional" readonly />
-                            <label asp-for="SupplierTinNo" class="control-label"></label>
-                            <span asp-validation-for="SupplierTinNo" class="text-danger"></span>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <textarea asp-for="PoNo" class="form-control" placeholder="Input si no" style="height: 100px"></textarea>
-                            <label asp-for="PoNo" class="control-label">PO No</label>
-                            <span asp-validation-for="PoNo" class="text-danger"></span>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <textarea asp-for="SiNo" class="form-control" placeholder="Input po no" style="height: 100px"></textarea>
-                            <label asp-for="SiNo" class="control-label">SI No</label>
-                            <span asp-validation-for="SiNo" class="text-danger"></span>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label asp-for="Total" class="control-label"></label><span class="required">*</span>
-                            <input asp-for="Total" class="form-control money inputAmount" value="" placeholder="0.00" />
-                            <span asp-validation-for="Total" class="text-danger"></span>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="control-label">Upload File (Optional)</label>
-                            <input name="file" type="file" class="form-control" />
-                        </div>
-                        <div class="form-floating mb-3">
-                            <textarea asp-for="Particulars" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
-                            <label asp-for="Particulars" class="control-label">Particulars<span class="required">*</span></label>
-                            <span asp-validation-for="Particulars" class="text-danger"></span>
-                        </div>
-                        <input type="hidden" id="StartDate" name="StartDate" />
-                        <input type="hidden" id="NumberOfYears" name="NumberOfYears" value="0" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group mb-3">
+                        <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
+                        <input asp-for="TransactionDate" type="Date" class="form-control" />
+                        <span asp-validation-for="TransactionDate" class="text-danger"></span>
                     </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label">Supplier<span class="required">*</span></label>
+                        <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 supplier" style="width:100%" required>
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="SupplierId" class="text-danger"></span>
+                    </div>
+                    <input asp-for="SupplierName" type="hidden" />
+                    <div class="form-floating mb-3">
+                        <input asp-for="SupplierAddress" type="text" class="form-control" placeholder="Optional" readonly />
+                        <label asp-for="SupplierAddress" class="control-label"></label>
+                        <span asp-validation-for="SupplierAddress" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="SupplierTinNo" type="text" class="form-control" placeholder="Optional" readonly />
+                        <label asp-for="SupplierTinNo" class="control-label"></label>
+                        <span asp-validation-for="SupplierTinNo" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea asp-for="PoNo" class="form-control" placeholder="Input si no" style="height: 100px"></textarea>
+                        <label asp-for="PoNo" class="control-label">PO No</label>
+                        <span asp-validation-for="PoNo" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea asp-for="SiNo" class="form-control" placeholder="Input po no" style="height: 100px"></textarea>
+                        <label asp-for="SiNo" class="control-label">SI No</label>
+                        <span asp-validation-for="SiNo" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Total" class="control-label"></label><span class="required">*</span>
+                        <input asp-for="Total" class="form-control money inputAmount" value="" placeholder="0.00" />
+                        <span asp-validation-for="Total" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="control-label">Upload File (Optional)</label>
+                        <input name="file" type="file" class="form-control" />
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea asp-for="Particulars" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
+                        <label asp-for="Particulars" class="control-label">Particulars<span class="required">*</span></label>
+                        <span asp-validation-for="Particulars" class="text-danger"></span>
+                    </div>
+                    <input type="hidden" id="StartDate" name="StartDate" />
+                    <input type="hidden" id="NumberOfYears" name="NumberOfYears" value="0" />
                     <div class="form-group">
                         <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
                             Add Entry
@@ -338,14 +336,14 @@
 
                 // Create a new row with the text only and a hidden input for the value
                 var newRow = `<tr>
-                                                                    <td>
-                                                                        <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
-                                                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                                                    </td>
-                                                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                                             </tr>`;
+                                                                                <td>
+                                                                                    <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
+                                                                                    <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
+                                                                                </td>
+                                                                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                                                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                                                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                                                         </tr>`;
 
                 // Append the new row to the table body
                 $("#accountingEntriesBody").append(newRow);
