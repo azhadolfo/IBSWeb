@@ -21,11 +21,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        public CollectionReceiptController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        public CollectionReceiptController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -115,48 +118,47 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    ///PENDING
-                    //if (bir2306 != null && bir2306.Length > 0)
-                    //{
-                    //    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+                    if (bir2306 != null && bir2306.Length > 0)
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
 
-                    //    if (!Directory.Exists(uploadsFolder))
-                    //    {
-                    //        Directory.CreateDirectory(uploadsFolder);
-                    //    }
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                    //    string fileName = Path.GetFileName(bir2306.FileName);
-                    //    string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(bir2306.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                    //    using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                    //    {
-                    //        await bir2306.CopyToAsync(stream);
-                    //    }
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await bir2306.CopyToAsync(stream);
+                        }
 
-                    //    model.F2306FilePath = fileSavePath;
-                    //    model.IsCertificateUpload = true;
-                    //}
+                        model.F2306FilePath = fileSavePath;
+                        model.IsCertificateUpload = true;
+                    }
 
-                    //if (bir2307 != null && bir2307.Length > 0)
-                    //{
-                    //    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
+                    if (bir2307 != null && bir2307.Length > 0)
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
 
-                    //    if (!Directory.Exists(uploadsFolder))
-                    //    {
-                    //        Directory.CreateDirectory(uploadsFolder);
-                    //    }
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                    //    string fileName = Path.GetFileName(bir2307.FileName);
-                    //    string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(bir2307.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                    //    using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                    //    {
-                    //        await bir2307.CopyToAsync(stream);
-                    //    }
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await bir2307.CopyToAsync(stream);
+                        }
 
-                    //    model.F2307FilePath = fileSavePath;
-                    //    model.IsCertificateUpload = true;
-                    //}
+                        model.F2307FilePath = fileSavePath;
+                        model.IsCertificateUpload = true;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -303,48 +305,47 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    ///PENDING
-                    //if (bir2306 != null && bir2306.Length > 0)
-                    //{
-                    //    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+                    if (bir2306 != null && bir2306.Length > 0)
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
 
-                    //    if (!Directory.Exists(uploadsFolder))
-                    //    {
-                    //        Directory.CreateDirectory(uploadsFolder);
-                    //    }
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                    //    string fileName = Path.GetFileName(bir2306.FileName);
-                    //    string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(bir2306.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                    //    using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                    //    {
-                    //        await bir2306.CopyToAsync(stream);
-                    //    }
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await bir2306.CopyToAsync(stream);
+                        }
 
-                    //    model.F2306FilePath = fileSavePath;
-                    //    model.IsCertificateUpload = true;
-                    //}
+                        model.F2306FilePath = fileSavePath;
+                        model.IsCertificateUpload = true;
+                    }
 
-                    //if (bir2307 != null && bir2307.Length > 0)
-                    //{
-                    //    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
+                    if (bir2307 != null && bir2307.Length > 0)
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
 
-                    //    if (!Directory.Exists(uploadsFolder))
-                    //    {
-                    //        Directory.CreateDirectory(uploadsFolder);
-                    //    }
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                    //    string fileName = Path.GetFileName(bir2307.FileName);
-                    //    string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(bir2307.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                    //    using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                    //    {
-                    //        await bir2307.CopyToAsync(stream);
-                    //    }
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await bir2307.CopyToAsync(stream);
+                        }
 
-                    //    model.F2307FilePath = fileSavePath;
-                    //    model.IsCertificateUpload = true;
-                    //}
+                        model.F2307FilePath = fileSavePath;
+                        model.IsCertificateUpload = true;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -476,48 +477,47 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    ///PENDING
-                    //if (bir2306 != null && bir2306.Length > 0)
-                    //{
-                    //    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+                    if (bir2306 != null && bir2306.Length > 0)
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
 
-                    //    if (!Directory.Exists(uploadsFolder))
-                    //    {
-                    //        Directory.CreateDirectory(uploadsFolder);
-                    //    }
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                    //    string fileName = Path.GetFileName(bir2306.FileName);
-                    //    string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(bir2306.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                    //    using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                    //    {
-                    //        await bir2306.CopyToAsync(stream);
-                    //    }
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await bir2306.CopyToAsync(stream);
+                        }
 
-                    //    model.F2306FilePath = fileSavePath;
-                    //    model.IsCertificateUpload = true;
-                    //}
+                        model.F2306FilePath = fileSavePath;
+                        model.IsCertificateUpload = true;
+                    }
 
-                    //if (bir2307 != null && bir2307.Length > 0)
-                    //{
-                    //    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
+                    if (bir2307 != null && bir2307.Length > 0)
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
 
-                    //    if (!Directory.Exists(uploadsFolder))
-                    //    {
-                    //        Directory.CreateDirectory(uploadsFolder);
-                    //    }
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                    //    string fileName = Path.GetFileName(bir2307.FileName);
-                    //    string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(bir2307.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                    //    using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                    //    {
-                    //        await bir2307.CopyToAsync(stream);
-                    //    }
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await bir2307.CopyToAsync(stream);
+                        }
 
-                    //    model.F2307FilePath = fileSavePath;
-                    //    model.IsCertificateUpload = true;
-                    //}
+                        model.F2307FilePath = fileSavePath;
+                        model.IsCertificateUpload = true;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -783,48 +783,47 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    ///PENDING
-                    //if (bir2306 != null && bir2306.Length > 0)
-                    //{
-                    //    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+                    if (bir2306 != null && bir2306.Length > 0)
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
 
-                    //    if (!Directory.Exists(uploadsFolder))
-                    //    {
-                    //        Directory.CreateDirectory(uploadsFolder);
-                    //    }
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                    //    string fileName = Path.GetFileName(bir2306.FileName);
-                    //    string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(bir2306.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                    //    using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                    //    {
-                    //        await bir2306.CopyToAsync(stream);
-                    //    }
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await bir2306.CopyToAsync(stream);
+                        }
 
-                    //    existingModel.F2306FilePath = fileSavePath;
-                    //    existingModel.IsCertificateUpload = true;
-                    //}
+                        existingModel.F2306FilePath = fileSavePath;
+                        existingModel.IsCertificateUpload = true;
+                    }
 
-                    //if (bir2307 != null && bir2307.Length > 0)
-                    //{
-                    //    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
+                    if (bir2307 != null && bir2307.Length > 0)
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
 
-                    //    if (!Directory.Exists(uploadsFolder))
-                    //    {
-                    //        Directory.CreateDirectory(uploadsFolder);
-                    //    }
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
 
-                    //    string fileName = Path.GetFileName(bir2307.FileName);
-                    //    string fileSavePath = Path.Combine(uploadsFolder, fileName);
+                        string fileName = Path.GetFileName(bir2307.FileName);
+                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
 
-                    //    using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                    //    {
-                    //        await bir2307.CopyToAsync(stream);
-                    //    }
+                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        {
+                            await bir2307.CopyToAsync(stream);
+                        }
 
-                    //    existingModel.F2307FilePath = fileSavePath;
-                    //    existingModel.IsCertificateUpload = true;
-                    //}
+                        existingModel.F2307FilePath = fileSavePath;
+                        existingModel.IsCertificateUpload = true;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -943,15 +942,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         List<FilprideOffsettings>? offset = new List<FilprideOffsettings>();
 
-                        ///PENDING
-                        //if (model.SalesInvoiceId != null)
-                        //{
-                        //    offset = await _receiptRepo.GetOffsettingAsync(model.CRNo, model.SINo, cancellationToken);
-                        //}
-                        //else
-                        //{
-                        //    offset = await _receiptRepo.GetOffsettingAsync(model.CRNo, model.SVNo, cancellationToken);
-                        //}
+                        if (model.SalesInvoiceId != null)
+                        {
+                            offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo, model.SINo, cancellationToken);
+                        }
+                        else
+                        {
+                            offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo, model.SVNo, cancellationToken);
+                        }
 
                         decimal offsetAmount = 0;
 
@@ -1245,19 +1243,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #endregion --Cash Receipt Book Recording
 
-                        ///PENDING
-                        //if (model.SalesInvoiceId != null)
-                        //{
-                        //    await _receiptRepo.UpdateInvoice(model.SalesInvoice.Id, model.Total, offsetAmount, cancellationToken);
-                        //}
-                        //else if (model.MultipleSIId != null)
-                        //{
-                        //    await _receiptRepo.UpdateMultipleInvoice(model.MultipleSI, model.SIMultipleAmount, offsetAmount, cancellationToken);
-                        //}
-                        //else
-                        //{
-                        //    await _receiptRepo.UpdateSv(model.ServiceInvoice.Id, model.Total, offsetAmount, cancellationToken);
-                        //}
+                        if (model.SalesInvoiceId != null)
+                        {
+                            await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(model.SalesInvoice.SalesInvoiceId, model.Total, offsetAmount, cancellationToken);
+                        }
+                        else if (model.MultipleSIId != null)
+                        {
+                            await _unitOfWork.FilprideCollectionReceipt.UpdateMutipleInvoice(model.MultipleSI, model.SIMultipleAmount, offsetAmount, cancellationToken);
+                        }
+                        else
+                        {
+                            await _unitOfWork.FilprideCollectionReceipt.UpdateSV(model.ServiceInvoice.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
+                        }
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Collection Receipt has been Posted.";
@@ -1297,11 +1294,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var findOffsetting = await _dbContext.FilprideOffsettings.Where(offset => offset.Source == model.CollectionReceiptNo && offset.Reference == series).ToListAsync(cancellationToken);
 
-                        ///PENDING
+                        ///PENDING - further discussion
                         //await _generalRepo.RemoveRecords<CashReceiptBook>(crb => crb.RefNo == model.CRNo, cancellationToken);
                         //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.CRNo, cancellationToken);
 
-                        ///PENDING
+                        ///PENDING - further discussion
                         //if (findOffsetting.Any())
                         //{
                         //    await _generalRepo.RemoveRecords<Offsetting>(offset => offset.Source == model.CRNo && offset.Reference == series, cancellationToken);

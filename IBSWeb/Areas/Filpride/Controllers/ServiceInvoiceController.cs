@@ -97,9 +97,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 model.CreatedBy = _userManager.GetUserName(this.User);
 
-                ///PENDING
-                //model.ServiceNo = services.Number;
-
                 model.Total = model.Amount;
 
                 if (customer.CustomerType == "Vatable")
@@ -454,7 +451,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
 
-                    ///PENDING
+                    ///PENDING - further discussion
                     //await _generalRepo.RemoveRecords<SalesBook>(gl => gl.SerialNo == model.SVNo, cancellationToken);
                     //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.SVNo, cancellationToken);
 

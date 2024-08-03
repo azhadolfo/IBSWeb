@@ -648,6 +648,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = sup.SupplierName
                 })
                 .ToListAsync();
+                
             model.BankAccounts = await _dbContext.FilprideBankAccounts
                 .Select(ba => new SelectListItem
                 {

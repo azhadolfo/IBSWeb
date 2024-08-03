@@ -875,7 +875,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
 
-                    ///PENDING
+                    ///PENDING - further discussion
                     //await _generalRepo.RemoveRecords<SalesBook>(crb => crb.SerialNo == model.CMNo);
                     //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.CMNo);
 
@@ -898,6 +898,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
+
                     ///PENDING
                     //model.CancellationRemarks = cancellationRemarks;
 
