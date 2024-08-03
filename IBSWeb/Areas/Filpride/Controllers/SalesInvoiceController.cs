@@ -38,7 +38,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             FilprideSalesInvoice viewModel = new()
             {
-                Customers = await _unitOfWork.GetProductListAsyncById(cancellationToken),
+                Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken),
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
             };
 
@@ -143,10 +143,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new
                 {
                     SoldTo = customer.CustomerName,
-                    customer.CustomerAddress,
-                    customer.CustomerTin,
+                    Address = customer.CustomerAddress,
+                    TinNo = customer.CustomerTin,
                     customer.BusinessStyle,
-                    customer.CustomerTerms,
+                    Terms = customer.CustomerTerms,
                     customer.CustomerType,
                     customer.WithHoldingTax
                 });
