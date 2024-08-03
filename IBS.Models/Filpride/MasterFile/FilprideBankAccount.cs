@@ -11,6 +11,8 @@ namespace IBS.Models.Filpride.MasterFile
 
         public string BankAccountNo { get; set; }
 
+        public int SeriesNumber { get; set; }
+
         public string Bank { get; set; }
         public string Branch { get; set; }
 

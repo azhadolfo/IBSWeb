@@ -28,10 +28,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var banks = await _unitOfWork.FilprideBankAccount
+            try
+            {
+                var banks = await _unitOfWork.FilprideBankAccount
                 .GetAllAsync(null, cancellationToken);
-
-            return View(banks);
+                return View(banks);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return View();
+            }
         }
 
         [HttpGet]
@@ -66,17 +73,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var generatedAccountNo = 0L;
 
-                ///PENDING Bank Account
-                //if (checkLastAccountNo != null)
-                //{
-                //    // Increment the last serial by one and return it
-                //    generatedAccountNo = checkLastAccountNo.SeriesNumber + 1L;
-                //}
-                //else
-                //{
-                //    // If there are no existing records, you can start with a default value like 1
-                //    generatedAccountNo = 1L;
-                //}
+                if (checkLastAccountNo != null)
+                {
+                    // Increment the last serial by one and return it
+                    generatedAccountNo = checkLastAccountNo.SeriesNumber + 1L;
+                }
+                else
+                {
+                    // If there are no existing records, you can start with a default value like 1
+                    generatedAccountNo = 1L;
+                }
 
                 model.AccountNoCOA = "1010101" + generatedAccountNo.ToString("D2");
 
