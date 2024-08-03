@@ -94,7 +94,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.CreatedBy = _userManager.GetUserName(this.User);
                 model.Amount = model.Quantity * model.Price;
 
-                ///PENDING
+                ///PENDING - leo
                 //model.SupplierNo = await _unitOfWork.GetSupplierNoAsync(model.SupplierId, cancellationToken);
                 //model.ProductNo = await _purchaseOrderRepo.GetProductNoAsync(model.ProductId, cancellationToken);
 
@@ -181,7 +181,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Amount = model.Quantity * model.Price;
                 existingModel.Remarks = model.Remarks;
 
-                ///PENDING
+                ///PENDING - leo
                 //existingModel.SupplierNo = await _purchaseOrderRepo.GetSupplierNoAsync(model.SupplierId, cancellationToken);
                 //existingModel.ProductNo = await _purchaseOrderRepo.GetProductNoAsync(model.ProductId, cancellationToken);
 
@@ -268,7 +268,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
 
-                    ///PENDING
+                    ///PENDING - leo
                     //model.CancellationRemarks = cancellationRemarks;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);

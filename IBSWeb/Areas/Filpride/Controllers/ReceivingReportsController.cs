@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.CreatedBy = _userManager.GetUserName(this.User);
                 model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
 
-                ///PENDING
+                ///PENDING - leo
                 //model.PONo = await _receivingReportRepo.GetPONoAsync(model.POId, cancellationToken);
 
                 model.DueDate = await _unitOfWork.FilprideReceivingReportRepo.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
@@ -195,7 +195,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Date = model.Date;
                 existingModel.POId = model.POId;
 
-                ///PENDING
+                ///PENDING - leo
                 //existingModel.PONo = await _receivingReportRepo.GetPONoAsync(model.POId, cancellationToken);
 
                 existingModel.DueDate = await _unitOfWork.FilprideReceivingReportRepo.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
@@ -437,7 +437,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
 
-                    ///PENDING
+                    ///PENDING - leo
                     //await _generalRepo.RemoveRecords<PurchaseJournalBook>(pb => pb.DocumentNo == model.RRNo, cancellationToken);
                     //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.RRNo, cancellationToken);
                     //await _generalRepo.RemoveRecords<Inventory>(i => i.Reference == model.RRNo, cancellationToken);
@@ -467,7 +467,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.QuantityDelivered = 0;
                     model.QuantityReceived = 0;
 
-                    ///PENDING
+                    ///PENDING - leo
                     //model.CancellationRemarks = cancellationRemarks;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);

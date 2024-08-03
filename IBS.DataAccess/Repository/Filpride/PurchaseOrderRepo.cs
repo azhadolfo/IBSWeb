@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -57,6 +58,17 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             return await query.ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetPurchaseOrderListAsync(CancellationToken cancellationToken = default)
+        {
+            return await _db.PurchaseOrders
+                .Select(po => new SelectListItem
+                {
+                    Value = po.PurchaseOrderNo,
+                    Text = po.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
         }
     }
 }

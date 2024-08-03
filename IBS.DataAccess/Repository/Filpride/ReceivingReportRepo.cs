@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -83,6 +84,23 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 return "RR0000000001";
             }
+        }
+
+        public async Task<List<SelectListItem>> GetReceivingReportListAsync(string[] rrNos, CancellationToken cancellationToken = default)
+        {
+            var rrNoHashSet = new HashSet<string>(rrNos);
+
+            var rrList = await _db.ReceivingReports
+                .OrderBy(rr => rrNoHashSet.Contains(rr.ReceivingReportNo) ? Array.IndexOf(rrNos, rr.ReceivingReportNo) : int.MaxValue) // Order by index in rrNos array if present in HashSet
+                .ThenBy(rr => rr.ReceivingReportId) // Secondary ordering by Id
+                .Select(rr => new SelectListItem
+                {
+                    Value = rr.ReceivingReportNo,
+                    Text = rr.ReceivingReportNo
+                })
+                .ToListAsync(cancellationToken);
+
+            return rrList;
         }
 
         public async Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
