@@ -29,13 +29,13 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<bool> IsBankAccountNameExist(string accountName, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideBankAccounts
-                .AnyAsync(b => string.Equals(b.AccountName, accountName, StringComparison.CurrentCultureIgnoreCase));
+                .AnyAsync(b => b.AccountName == accountName);
         }
 
         public async Task<bool> IsBankAccountNoExist(string accountNo, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideBankAccounts
-                .AnyAsync(b => string.Equals(b.AccountNo, accountNo, StringComparison.CurrentCultureIgnoreCase));
+                .AnyAsync(b => b.AccountNo == accountNo);
         }
     }
 }

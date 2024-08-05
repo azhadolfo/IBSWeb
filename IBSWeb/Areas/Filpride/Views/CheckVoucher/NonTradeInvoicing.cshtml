@@ -32,22 +32,22 @@
                     <input asp-for="SupplierName" type="hidden" />
                     <div class="form-floating mb-3">
                         <input asp-for="SupplierAddress" type="text" class="form-control" placeholder="Optional" readonly />
-                        <label asp-for="SupplierAddress" class="control-label"></label>
+                        <label asp-for="SupplierAddress" class="control-label ms-2"></label>
                         <span asp-validation-for="SupplierAddress" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
                         <input asp-for="SupplierTinNo" type="text" class="form-control" placeholder="Optional" readonly />
-                        <label asp-for="SupplierTinNo" class="control-label"></label>
+                        <label asp-for="SupplierTinNo" class="control-label ms-2"></label>
                         <span asp-validation-for="SupplierTinNo" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
                         <textarea asp-for="PoNo" class="form-control" placeholder="Input si no" style="height: 100px"></textarea>
-                        <label asp-for="PoNo" class="control-label">PO No</label>
+                        <label asp-for="PoNo" class="control-label ms-2">PO No</label>
                         <span asp-validation-for="PoNo" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
                         <textarea asp-for="SiNo" class="form-control" placeholder="Input po no" style="height: 100px"></textarea>
-                        <label asp-for="SiNo" class="control-label">SI No</label>
+                        <label asp-for="SiNo" class="control-label ms-2">SI No</label>
                         <span asp-validation-for="SiNo" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-3">
@@ -61,7 +61,7 @@
                     </div>
                     <div class="form-floating mb-3">
                         <textarea asp-for="Particulars" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
-                        <label asp-for="Particulars" class="control-label">Particulars<span class="required">*</span></label>
+                        <label asp-for="Particulars" class="control-label ms-2">Particulars<span class="required">*</span></label>
                         <span asp-validation-for="Particulars" class="text-danger"></span>
                     </div>
                     <input type="hidden" id="StartDate" name="StartDate" />
@@ -157,12 +157,12 @@
                         </div>
                         <div class="form-group pt-4">
                             <label class="control-label">Debit</label>
-                            <input id="Debit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                            <input id="debit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
                             <span class="text-danger"></span>
                         </div>
                         <div class="form-group pt-4">
                             <label class="control-label">Credit</label>
-                            <input id="Credit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                            <input id="credit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
                             <span class="text-danger"></span>
                         </div>
                     </form>
@@ -195,7 +195,7 @@
 
                 if (supplierId !== "") {
                     $.ajax({
-                        url: "/CheckVoucher/GetSupplierDetails", // Replace with the actual controller and action names
+                        url: "/Filpride/CheckVoucher/GetSupplierDetails", // Replace with the actual controller and action names
                         method: "GET",
                         data: { supplierId: supplierId },
                         success: function (data) {
@@ -210,9 +210,9 @@
                                 $(".vatInputDebit").hide(); // Hide the EWT table rows
                             }
                             if (data) {
-                                $("#SupplierName").val(data.supplierName);
-                                $("#SupplierAddress").val(data.supplierAddress);
-                                $("#SupplierTinNo").val(data.supplierTinNo);
+                                $("#SupplierName").val(data.name);
+                                $("#SupplierAddress").val(data.address);
+                                $("#SupplierTinNo").val(data.tinNo);
                                 $(".defaultExpenseNumber").val(data.defaultExpense !== null ? data.defaultExpense.split(' ')[0] : null);
                                 $(".defaultExpenseTitle").val(data.defaultExpense !== null ? data.defaultExpense.replace(/^\s*\S+\s*/, '').trim() : null);
                                 $(".withholdingTaxNumber").val(data.withholdingTax !== null ? data.withholdingTax.split(' ')[0] : null);
@@ -312,8 +312,8 @@
                 // Get the values from the modal inputs
                 var accountNumber = $("#AccountNo").val();
                 var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
-                var debit = parseFloat($("#Debit").val().replace(/,/g, '')) || 0.00;
-                var credit = parseFloat($("#Credit").val().replace(/,/g, '')) || 0.00;
+                var debit = parseFloat($("#debit").val().replace(/,/g, '')) || 0.00;
+                var credit = parseFloat($("#credit").val().replace(/,/g, '')) || 0.00;
 
                 if (debit === 0 && credit === 0) {
                     event.preventDefault();

@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240805025522_RemoveBankAccountNoFieldInModelBankAccount")]
+    partial class RemoveBankAccountNoFieldInModelBankAccount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1922,6 +1925,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("current_and_previous_amount");
 
+                    b.Property<string>("DMNo")
+                        .HasColumnType("text")
+                        .HasColumnName("dm_no");
+
                     b.Property<decimal>("DebitAmount")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("debit_amount");
@@ -1967,6 +1974,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("SalesInvoiceId")
                         .HasColumnType("integer")
                         .HasColumnName("sales_invoice_id");
+
+                    b.Property<long>("SeriesNumber")
+                        .HasColumnType("bigint")
+                        .HasColumnName("series_number");
 
                     b.Property<int?>("ServiceInvoiceId")
                         .HasColumnType("integer")
@@ -2692,6 +2703,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("percent");
 
                     b.Property<string>("ServiceNo")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("service_no");
 

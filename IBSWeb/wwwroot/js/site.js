@@ -11,6 +11,14 @@ $(document).ready(function () {
     });
 });
 
+$(document).ready(function () {
+    $('.js-multiple').select2({
+        placeholder: "Select an option",
+        allowClear: true,
+        width: 'resolve'
+    });
+});
+
 // hack to fix jquery 3.6 focus security patch that bugs auto search in select-2
 $(document).on('select2:open', () => {
     document.querySelector('.select2-search__field').focus();
@@ -50,3 +58,15 @@ function setTransactionDate() {
         transactionDateField.value = currentDate;
     }
 }
+
+// Dynamic date to in books
+document.addEventListener('DOMContentLoaded', function () {
+    var dateFromInput = document.getElementById('DateFrom');
+    var dateToInput = document.getElementById('DateTo');
+
+    // Add an event listener to DateFrom input
+    dateFromInput?.addEventListener('change', function () {
+        // Set DateTo input value to DateFrom input value
+        dateToInput.value = dateFromInput.value;
+    });
+});
