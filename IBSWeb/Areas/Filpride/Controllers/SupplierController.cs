@@ -82,7 +82,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    if (file != null || file.Length > 0)
+                    if (file != null && file.Length > 0)
                     {
                         string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "Proof of Registration", model.SupplierName);
 

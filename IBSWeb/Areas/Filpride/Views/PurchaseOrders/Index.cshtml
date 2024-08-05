@@ -95,7 +95,7 @@
                                     <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#ClosePO-@item.PurchaseOrderId" data-bs-url="@Url.Action($"ClosePO/{item.PurchaseOrderId}")">
                                         Close
                                     </button>
-                                    @await Html.PartialAsync("_ClosePOPartialView", item)
+                                    @await Html.PartialAsync("_Preview", item)
                                 }
                             }
 
@@ -140,8 +140,7 @@
                 confirmButtonText: 'Yes'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Replace with the actual URL that you want to redirect to
-                    var url = `/PurchaseOrder/Post?id=${id}`;
+                    var url = `@Url.Action("Post", "PurchaseOrders", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
@@ -161,7 +160,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/PurchaseOrder/Void?id=${id}`;
+                    var url = `@Url.Action("Void", "PurchaseOrders", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
@@ -188,7 +187,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `/PurchaseOrder/Cancel?id=${id}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `@Url.Action("Cancel", "PurchaseOrders", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })

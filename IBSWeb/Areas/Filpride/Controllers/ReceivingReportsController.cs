@@ -119,6 +119,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _dbContext.AddAsync(model, cancellationToken);
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
+                TempData["success"] = "Receiving Report created successfully";
+
                 return RedirectToAction("Index");
             }
 
@@ -498,12 +500,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var rrNotPosted = await _dbContext
                 .ReceivingReports
-                .Where(rr => rr.PONo == po.PurchaseOrderNo && rr.PostedBy != null && rr.CanceledBy != null)
+                .Where(rr => rr.PONo == po.PurchaseOrderNo && rr.PostedBy == null && rr.CanceledBy == null)
                 .ToListAsync(cancellationToken);
 
             var rrCanceled = await _dbContext
                 .ReceivingReports
-                .Where(rr => rr.PONo == po.PurchaseOrderNo && rr.PostedBy != null)
+                .Where(rr => rr.PONo == po.PurchaseOrderNo && rr.CanceledBy != null)
                 .ToListAsync(cancellationToken);
 
             if (po != null)

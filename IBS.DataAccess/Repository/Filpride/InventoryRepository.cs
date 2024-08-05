@@ -371,12 +371,12 @@ namespace IBS.DataAccess.Repository.Filpride
                     .OrderByDescending(i => i.Date)
                     .ThenByDescending(i => i.ProductId)
                     .ToListAsync();
-
-                var findRR = await _db.ReceivingReports
-                    .Where(rr => rr.POId == previousInventory.POId)
-                    .ToListAsync(cancellationToken);
                 if (previousInventory != null && previousInventoryList.Any())
                 {
+                    var findRR = await _db.ReceivingReports
+                    .Where(rr => rr.POId == previousInventory.POId)
+                    .ToListAsync(cancellationToken);
+
                     #region -- Inventory Entry --
 
                     var _journalVoucherRepo = new JournalVoucherRepository(_db);

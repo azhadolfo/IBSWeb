@@ -32,7 +32,6 @@
 =====================================================================
    Remaining Quantity (Including posted and unposted RR):  <span id="remainingQuantity"></span>
 =====================================================================
-
            </pre>
         </div>
         <form asp-action="Create">
@@ -109,7 +108,7 @@
             console.log(id);
             if (id != "") {
                 $.ajax({
-                    url: "/ReceivingReport/GetLiquidations",
+                    url: "@Url.Action("GetLiquidations", "ReceivingReports")",
                     type: "GET",
                     data: { id: id },
                     success: function (data) {
@@ -154,21 +153,21 @@
                         for (var i = 0; i < rrListPostedOnly.length; i++) {
                             var rrPostedOnly = rrListPostedOnly[i];
                             var list = document.createElement("li");
-                            list.textContent = rrPostedOnly.quantityReceived < rrPostedOnly.quantityDelivered ? "RR No: " + rrPostedOnly.rrNo + " - Quantity: -" + rrPostedOnly.quantityReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "RR No: " + rrPostedOnly.rrNo + " - Quantity: -" + rrPostedOnly.quantityDelivered.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            list.textContent = rrPostedOnly.quantityReceived < rrPostedOnly.quantityDelivered ? "RR No: " + rrPostedOnly.receivingReportNo + " - Quantity: -" + rrPostedOnly.quantityReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "RR No: " + rrPostedOnly.receivingReportNo + " - Quantity: -" + rrPostedOnly.quantityDelivered.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             rrListPostedOnlyUl.appendChild(list);
                         }
 
                         for (var i = 0; i < rrListNotPosted.length; i++) {
                             var rrNotPosted = rrListNotPosted[i];
                             var li = document.createElement("li");
-                            li.textContent = rrNotPosted.quantityReceived < rrNotPosted.quantityDelivered ? "RR No: " + rrNotPosted.rrNo + " - Quantity: -" + rrNotPosted.quantityReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "RR No: " + rrNotPosted.rrNo + " - Quantity: -" + rrNotPosted.quantityDelivered.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            li.textContent = rrNotPosted.quantityReceived < rrNotPosted.quantityDelivered ? "RR No: " + rrNotPosted.receivingReportNo + " - Quantity: -" + rrNotPosted.quantityReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "RR No: " + rrNotPosted.receivingReportNo + " - Quantity: -" + rrNotPosted.quantityDelivered.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             rrListNotPostedUl.appendChild(li);
                         }
 
                         for (var i = 0; i < rrListCanceled.length; i++) {
                             var rrCanceled = rrListCanceled[i];
                             var listed = document.createElement("li");
-                            listed.textContent = rrCanceled.quantityReceived < rrCanceled.quantityDelivered ? "RR No: " + rrCanceled.rrNo + " - Quantity: -" + rrCanceled.canceledQuantity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " (Cancelled)" : "RR No: " + rrCanceled.rrNo + " - Quantity: -" + rrCanceled.canceledQuantity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " (Cancelled)";
+                            listed.textContent = rrCanceled.quantityReceived < rrCanceled.quantityDelivered ? "RR No: " + rrCanceled.receivingReportNo + " - Quantity: -" + rrCanceled.canceledQuantity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " (Cancelled)" : "RR No: " + rrCanceled.receivingReportNo + " - Quantity: -" + rrCanceled.canceledQuantity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " (Cancelled)";
                             rrListCanceledUl.appendChild(listed);
                         }
                     }
@@ -179,7 +178,6 @@
         function formatNumberWithCommas(number) {
             return number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
-
 
         $(document).ready(function () {
             // Call the handleInvoiceChange function on page load

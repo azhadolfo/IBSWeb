@@ -3,6 +3,7 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -155,6 +156,32 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 throw new ArgumentException("No record found.");
             }
+        }
+
+        public override async Task<ReceivingReport> GetAsync(Expression<Func<ReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(po => po.Product)
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(po => po.Supplier)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public override async Task<IEnumerable<ReceivingReport>> GetAllAsync(Expression<Func<ReceivingReport, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<ReceivingReport> query = dbSet
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(po => po.Product)
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(po => po.Supplier);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
     }
 }

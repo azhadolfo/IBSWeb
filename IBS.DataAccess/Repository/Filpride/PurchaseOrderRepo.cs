@@ -1,6 +1,5 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -19,8 +18,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
         {
-            FilpridePurchaseOrder? lastPo = await _db
-                .FilpridePurchaseOrders
+            PurchaseOrder? lastPo = await _db
+                .PurchaseOrders
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 

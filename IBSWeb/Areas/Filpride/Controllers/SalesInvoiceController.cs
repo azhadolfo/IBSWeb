@@ -19,10 +19,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        public SalesInvoiceController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
+        public SalesInvoiceController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _dbContext = dbContext;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -106,7 +107,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
                         }
 
+                        await _unitOfWork.FilprideSalesInvoice.AddAsync(model, cancellationToken);
                         await _unitOfWork.SaveAsync(cancellationToken);
+                        TempData["success"] = "Sales invoice created successfully";
                         return RedirectToAction(nameof(Index));
                     }
                     else
@@ -565,7 +568,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> GetPOs(int productId)
         {
             var purchaseOrders = await _dbContext.PurchaseOrders
-                .Where(po => po.ProductId == productId && !po.IsReceived && po.QuantityReceived != 0 && po.PostedBy != null)
+                .Where(po => po.ProductId == productId && po.QuantityReceived != 0 && po.PostedBy != null)
                 .ToListAsync();
 
             if (purchaseOrders != null && purchaseOrders.Count > 0)

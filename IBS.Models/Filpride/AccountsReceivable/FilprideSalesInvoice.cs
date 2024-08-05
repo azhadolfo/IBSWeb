@@ -1,4 +1,5 @@
-﻿using IBS.Models.Filpride.MasterFile;
+﻿using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
@@ -118,7 +119,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public DateOnly DueDate { get; set; }
 
         [ForeignKey(nameof(PurchaseOrderId))]
-        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
+        public PurchaseOrder? PurchaseOrder { get; set; }
 
         [Display(Name = "PO No.")]
         public int PurchaseOrderId { get; set; }

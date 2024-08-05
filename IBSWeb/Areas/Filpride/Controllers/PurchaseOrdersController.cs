@@ -55,13 +55,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            viewModel.Products = await _dbContext.Products
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ProductId.ToString(),
-                    Text = s.ProductName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             return View(viewModel);
         }
@@ -78,13 +72,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            model.Products = await _dbContext.Products
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ProductId.ToString(),
-                    Text = s.ProductName
-                })
-                .ToListAsync(cancellationToken);
+            model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -249,7 +237,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
-        public async Task<IActionResult> Cancel(int id, string cancellationRemarks, CancellationToken cancellationToken)
+        public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var model = await _dbContext.PurchaseOrders.FindAsync(id, cancellationToken);
 

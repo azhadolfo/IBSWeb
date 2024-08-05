@@ -28,7 +28,7 @@
         <table class="table table-bordered table-striped" id="dataTable">
             <thead>
                 <tr>
-                    <th>
+                    <th class="text-start">
                         @Html.DisplayNameFor(model => model.ReceivingReportNo)
                     </th>
                     <th>
@@ -50,7 +50,7 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td>
+                        <td class="text-start">
                             @Html.DisplayFor(modelItem => item.ReceivingReportNo)
                         </td>
                         <td>
@@ -60,10 +60,10 @@
                             @Html.DisplayFor(modelItem => item.PurchaseOrder.PurchaseOrderNo)
                         </td>
                         <td>
-                            @item.QuantityDelivered.ToString("N0")
+                            @item.QuantityDelivered.ToString("N4")
                         </td>
                         <td>
-                            @item.QuantityReceived.ToString("N0")
+                            @item.QuantityReceived.ToString("N4")
                         </td>
                         <td class="text-center">
                             @if (item.CreatedBy == UserManager.GetUserName(User))
@@ -133,7 +133,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/ReceivingReport/Post?id=${id}`;
+                    var url = `@Url.Action("Post", "ReceivingReports", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
@@ -153,7 +153,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/ReceivingReport/Void?id=${id}`;
+                    var url = `@Url.Action("Void", "ReceivingReports", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
@@ -180,7 +180,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `/ReceivingReport/Cancel?id=${id}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `@Url.Action("Cancel", "ReceivingReports", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })

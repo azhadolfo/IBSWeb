@@ -130,7 +130,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/SalesInvoice/Post?invoiceId=${invoiceId}`;
+                    var url = `@Url.Action("Post", "SalesInvoice", new { area = "Filpride" })/${invoiceId}`;
                     window.location.href = url;
                 }
             })
@@ -150,7 +150,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/SalesInvoice/Void?invoiceId=${invoiceId}`;
+                    var url = `@Url.Action("Void", "SalesInvoice", new { area = "Filpride" })/${invoiceId}`;
                     window.location.href = url;
                 }
             })
@@ -177,7 +177,8 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `/SalesInvoice/Cancel?invoiceId=${invoiceId}&cancellationRemarks=${encodedRemarks}`;
+                    //var url = `/SalesInvoice/Cancel?invoiceId=${invoiceId}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `@Url.Action("Cancel", "SalesInvoice", new { area = "Filpride" })/${invoiceId}`;
                     window.location.href = url;
                 }
             })
