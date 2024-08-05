@@ -19,6 +19,7 @@
             <div class="mb-3">
                 <div class="row">
                     <div class="col">
+                        <input asp-for="SalesInvoiceId" type="hidden" />
                         <div class="form-group mb-3">
                             <label asp-for="SalesInvoiceNo" class="control-label"></label>
                             <input asp-for="SalesInvoiceNo" class="form-control" disabled readonly />
@@ -133,7 +134,7 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-<script>
+    <script>
         $(function () {
             $("#CustomerId").change(function () {
                 var customerId = $(this).val();
@@ -206,8 +207,8 @@
                 }
             });
         });
-</script>
-<script>
+    </script>
+    <script>
         $(document).ready(function () {
             $(".GetPOList").each(function () {
                 var productId = $(this).val();
@@ -253,7 +254,7 @@
                 $("#PurchaseOrderId").empty();
             }
         }
-</script>
+    </script>
     <script>
         setTransactionDate();
     </script>

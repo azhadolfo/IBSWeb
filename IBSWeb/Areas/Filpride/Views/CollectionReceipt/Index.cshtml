@@ -92,7 +92,7 @@
                             {
                                 if (item.PostedBy == null && item.VoidedBy == null && item.CanceledBy == null)
                                 {
-                                    <a asp-action="CollectionEdit" asp-route-id="@item.CollectionReceiptId" class="btn btn-light" title="Feature coming soon">Edit</a>
+                                    <a asp-action="Edit" asp-route-id="@item.CollectionReceiptId" class="btn btn-light" title="Feature coming soon">Edit</a>
                                     <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#Preview-@item.CollectionReceiptId" data-bs-url="@Url.Action($"Preview/{item.CollectionReceiptId}")">
                                         Preview
                                     </button>
@@ -102,7 +102,7 @@
                                 }
                                 if (item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null)
                                 {
-                                    <a asp-action="CollectionPrint" asp-route-id="@item.CollectionReceiptId" class="btn btn-light">Print</a>
+                                    <a asp-action="Print" asp-route-id="@item.CollectionReceiptId" class="btn btn-light">Print</a>
                                     <a class="btn btn-light" onclick="confirmVoid(@item.CollectionReceiptId)">Void</a>
                                 }
                             }
@@ -145,7 +145,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/Receipt/Post?itemId=${itemId}`;
+                    var url = `/Filpride/CollectionReceipt/Post?itemId=${itemId}`;
                     window.location.href = url;
                 }
             })
@@ -165,7 +165,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/Receipt/Void?itemId=${itemId}`;
+                    var url = `/Filpride/CollectionReceipt/Void?itemId=${itemId}`;
                     window.location.href = url;
                 }
             })
@@ -192,7 +192,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `/Receipt/Cancel?itemId=${itemId}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `/Filpride/CollectionReceipt/Cancel?itemId=${itemId}&cancellationRemarks=${encodedRemarks}`;
                     window.location.href = url;
                 }
             })

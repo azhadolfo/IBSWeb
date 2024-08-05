@@ -151,7 +151,7 @@ Balance:        <span id="balance"></span>
             <br />
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
-                <a asp-action="CollectionIndex" class="btn btn-secondary">Back to List</a>
+                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
             </div>
         </form>
     </div>
@@ -202,7 +202,7 @@ Balance:        <span id="balance"></span>
                     var customerNo = $(this).val();
 
                     $.ajax({
-                        url: "/Receipt/GetSalesInvoices",
+                        url: "/Filpride/CollectionReceipt/GetSalesInvoices",
                         type: "GET",
                         data: { customerNo: customerNo },
                         success: function (data) {
@@ -293,7 +293,7 @@ Balance:        <span id="balance"></span>
 
                 if (invoiceNo != "") {
                     $.ajax({
-                        url: "/Receipt/GetInvoiceDetails",
+                        url: "/Filpride/CollectionReceipt/GetInvoiceDetails",
                         type: "GET",
                         data: {
                             invoiceNo: invoiceNo,

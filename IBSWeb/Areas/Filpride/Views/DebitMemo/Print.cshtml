@@ -21,9 +21,8 @@
 
     <h3><span style="display: inline-block;"><b>DEBIT MEMO</b></span></h3>
     <div class="text-end" style="margin-top:-60px;">
-        <h6><b>No.&nbsp; @Html.DisplayFor(model => model.DMNo)</b></h6>
+        <h6><b>No.&nbsp; @Html.DisplayFor(model => model.DebitMemoNo)</b></h6>
     </div>
-
 </div>
 <br />
 @if (Model.Source == "Sales Invoice")
@@ -80,7 +79,6 @@
                     <td>@Html.DisplayFor(model => model.Description)</td>
                     <td>@Html.DisplayFor(model => model.DebitAmount)</td>
                 </tr>
-
             </tbody>
         </table>
     </div>
@@ -103,7 +101,6 @@
                                                 <p style="height: 9px;">@Html.DisplayFor(model => model.VatableSales)</p>
                                             }
                                         </td>
-
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
@@ -228,7 +225,6 @@ else if (Model.Source == "Service Invoice")
                                         {
                                             <td class="text-end"></td>
                                         }
-
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
@@ -240,7 +236,6 @@ else if (Model.Source == "Service Invoice")
                                         {
                                             <td class="text-end"></td>
                                         }
-
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT-Exempt Sales: </b></p></td>
@@ -285,7 +280,6 @@ else if (Model.Source == "Service Invoice")
     </p>
 </div>
 
-
 <br />
 <div class="text-center w-100" style="margin-top:20px;">
     <p>
@@ -315,20 +309,20 @@ else if (Model.Source == "Service Invoice")
 </div>
 
 @* @if (!Model.IsPrinted)
-{
-    <div class="text-end">
-        ORIGINAL COPY
-    </div>
-}
-else
-{
-    <div class="text-end">
-        REPRINT COPY
-    </div>
-} *@
+    {
+        <div class="text-end">
+            ORIGINAL COPY
+        </div>
+    }
+    else
+    {
+        <div class="text-end">
+            REPRINT COPY
+        </div>
+    } *@
 
 <div>
-    <a asp-action="PrintedDM" asp-route-id="@Model.DebitMemoId" class="btn btn-success" onclick="printPage()" id="printButton">Print</a>
+    <a class="btn btn-success" onclick="printPage()" id="printButton">Print</a>
     <a asp-action="Index" class="btn" id="otherButton">Back</a>
 </div>
 

@@ -119,7 +119,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                   .ToList();
                     if (existingSIDMs.Count > 0)
                     {
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DMNo}");
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
                         return View(model);
                     }
 
@@ -141,7 +141,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                   .ToList();
                     if (existingSVDMs.Count > 0)
                     {
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DMNo}");
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
                         return View(model);
                     }
 
@@ -157,7 +157,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var generateDMNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(cancellationToken);
-                model.DMNo = generateDMNo;
+                model.DebitMemoNo = generateDMNo;
                 model.CreatedBy = _userManager.GetUserName(this.User);
 
                 if (model.Source == "Sales Invoice")
@@ -166,7 +166,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     model.DebitAmount = (decimal)(model.Quantity * model.AdjustedPrice);
 
-                    if (existingSalesInvoice.Customer.CustomerType == "Vatable")
+                    if (existingSalesInvoice.Customer.VatType == "Vatable")
                     {
                         model.VatableSales = model.DebitAmount / 1.12m;
                         model.VatAmount = model.DebitAmount - model.VatableSales;
@@ -203,7 +203,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     model.DebitAmount = model.Amount ?? 0;
 
-                    if (existingSv.Customer.CustomerType == "Vatable")
+                    if (existingSv.Customer.VatType == "Vatable")
                     {
                         model.VatableSales = model.DebitAmount / 1.12m;
                         model.VatAmount = model.DebitAmount - model.VatableSales;
@@ -223,6 +223,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.AddAsync(model, cancellationToken);
                 await _dbContext.SaveChangesAsync(cancellationToken);
+
+                TempData["success"] = "Debit memo created successfully.";
 
                 return RedirectToAction("Index");
             }
@@ -257,7 +259,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
-                    if (model.PostedBy != null)
+                    if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
                         model.PostedDate = DateTime.Now;
@@ -278,10 +280,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             var sales = new FilprideSalesBook();
 
-                            if (model.SalesInvoice.Customer.CustomerType == "Vatable")
+                            if (model.SalesInvoice.Customer.VatType == "Vatable")
                             {
                                 sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.DMNo;
+                                sales.SerialNo = model.DebitMemoNo;
                                 sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
                                 sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
                                 sales.Address = model.SalesInvoice.Customer.CustomerAddress;
@@ -296,10 +298,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.DueDate = existingSI.DueDate;
                                 sales.DocumentId = model.SalesInvoiceId;
                             }
-                            else if (model.SalesInvoice.Customer.CustomerType == "Exempt")
+                            else if (model.SalesInvoice.Customer.VatType == "Exempt")
                             {
                                 sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.DMNo;
+                                sales.SerialNo = model.DebitMemoNo;
                                 sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
                                 sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
                                 sales.Address = model.SalesInvoice.Customer.CustomerAddress;
@@ -316,7 +318,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             else
                             {
                                 sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.DMNo;
+                                sales.SerialNo = model.DebitMemoNo;
                                 sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
                                 sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
                                 sales.Address = model.SalesInvoice.Customer.CustomerAddress;
@@ -342,7 +344,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 new FilprideGeneralLedgerBook
                                 {
                                     Date = model.TransactionDate,
-                                    Reference = model.DMNo,
+                                    Reference = model.DebitMemoNo,
                                     Description = model.SalesInvoice.Product.ProductName,
                                     AccountNo = "1010201",
                                     AccountTitle = "AR-Trade Receivable",
@@ -359,7 +361,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DMNo,
+                                        Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "1010202",
                                         AccountTitle = "Deferred Creditable Withholding Tax",
@@ -376,7 +378,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DMNo,
+                                        Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "1010203",
                                         AccountTitle = "Deferred Creditable Withholding Vat",
@@ -387,13 +389,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     }
                                 );
                             }
-                            if (model.SalesInvoice.Product.ProductName == "Biodiesel")
+                            if (model.SalesInvoice.Product.ProductName == "BIODIESEL")
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DMNo,
+                                        Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "4010101",
                                         AccountTitle = "Sales - Biodiesel",
@@ -406,13 +408,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     }
                                 );
                             }
-                            else if (model.SalesInvoice.Product.ProductName == "Econogas")
+                            else if (model.SalesInvoice.Product.ProductName == "ECONOGAS")
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DMNo,
+                                        Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "4010102",
                                         AccountTitle = "Sales - Econogas",
@@ -425,13 +427,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     }
                                 );
                             }
-                            else if (model.SalesInvoice.Product.ProductName == "Envirogas")
+                            else if (model.SalesInvoice.Product.ProductName == "ENVIROGAS")
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DMNo,
+                                        Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "4010103",
                                         AccountTitle = "Sales - Envirogas",
@@ -451,7 +453,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DMNo,
+                                        Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "2010301",
                                         AccountTitle = "Vat Output",
@@ -489,7 +491,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             viewModelDMCM.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
-                            if (existingSv.Customer.CustomerType == "Vatable")
+                            if (existingSv.Customer.VatType == "Vatable")
                             {
                                 viewModelDMCM.Total = model.Amount ?? 0;
                                 viewModelDMCM.NetAmount = (model.Amount ?? 0 - existingSv.Discount) / 1.12m;
@@ -510,7 +512,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 }
                             }
 
-                            if (existingSv.Customer.CustomerType == "Vatable")
+                            if (existingSv.Customer.VatType == "Vatable")
                             {
                                 var total = Math.Round(model.Amount ?? 0 / 1.12m, 2);
 
@@ -530,10 +532,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             var sales = new FilprideSalesBook();
 
-                            if (model.ServiceInvoice.Customer.CustomerType == "Vatable")
+                            if (model.ServiceInvoice.Customer.VatType == "Vatable")
                             {
                                 sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.DMNo;
+                                sales.SerialNo = model.DebitMemoNo;
                                 sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
                                 sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
                                 sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
@@ -548,10 +550,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.DueDate = existingSv.DueDate;
                                 sales.DocumentId = existingSv.ServiceInvoiceId;
                             }
-                            else if (model.ServiceInvoice.Customer.CustomerType == "Exempt")
+                            else if (model.ServiceInvoice.Customer.VatType == "Exempt")
                             {
                                 sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.DMNo;
+                                sales.SerialNo = model.DebitMemoNo;
                                 sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
                                 sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
                                 sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
@@ -568,7 +570,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             else
                             {
                                 sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.DMNo;
+                                sales.SerialNo = model.DebitMemoNo;
                                 sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
                                 sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
                                 sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
@@ -594,7 +596,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = viewModelDMCM.Period,
-                                        Reference = model.DMNo,
+                                        Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
                                         AccountNo = "1010204",
                                         AccountTitle = "AR-Non Trade Receivable",
@@ -610,7 +612,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = viewModelDMCM.Period,
-                                        Reference = model.DMNo,
+                                        Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
                                         AccountNo = "1010202",
                                         AccountTitle = "Deferred Creditable Withholding Tax",
@@ -627,7 +629,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = viewModelDMCM.Period,
-                                        Reference = model.DMNo,
+                                        Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
                                         AccountNo = "1010203",
                                         AccountTitle = "Deferred Creditable Withholding Vat",
@@ -644,7 +646,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 ledgers.Add(new FilprideGeneralLedgerBook
                                 {
                                     Date = viewModelDMCM.Period,
-                                    Reference = model.DMNo,
+                                    Reference = model.DebitMemoNo,
                                     Description = model.ServiceInvoice.Service.Name,
                                     AccountNo = model.ServiceInvoice.Service.CurrentAndPreviousNo,
                                     AccountTitle = model.ServiceInvoice.Service.CurrentAndPreviousTitle,
@@ -661,7 +663,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = viewModelDMCM.Period,
-                                        Reference = model.DMNo,
+                                        Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
                                         AccountNo = "2010304",
                                         AccountTitle = "Deferred Vat Output",
@@ -715,8 +717,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedDate = DateTime.Now;
 
                     ///PENDING - further discussion
-                    //await _generalRepo.RemoveRecords<SalesBook>(crb => crb.SerialNo == model.DMNo);
-                    //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.DMNo);
+                    //await _generalRepo.RemoveRecords<SalesBook>(crb => crb.SerialNo == model.DebitMemoNo);
+                    //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo);
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Debit Memo has been Voided.";
@@ -863,7 +865,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingDM.DebitAmount = (decimal)(model.Quantity * model.AdjustedPrice);
 
-                    if (existingSalesInvoice.Customer.CustomerType == "Vatable")
+                    if (existingSalesInvoice.Customer.VatType == "Vatable")
                     {
                         existingDM.VatableSales = existingDM.DebitAmount / 1.12m;
                         existingDM.VatAmount = existingDM.DebitAmount - existingDM.VatableSales;
@@ -910,7 +912,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingDM.DebitAmount = model.Amount ?? 0;
 
-                    if (existingSv.Customer.CustomerType == "Vatable")
+                    if (existingSv.Customer.VatType == "Vatable")
                     {
                         existingDM.VatableSales = existingDM.DebitAmount / 1.12m;
                         existingDM.VatAmount = existingDM.DebitAmount - existingDM.VatableSales;

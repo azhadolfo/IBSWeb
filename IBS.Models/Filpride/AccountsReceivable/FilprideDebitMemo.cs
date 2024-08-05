@@ -11,10 +11,6 @@ namespace IBS.Models.Filpride
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int DebitMemoId { get; set; }
 
-        [Column(TypeName = "varchar(12)")]
-        [Display(Name = "DM No")]
-        public string? DebitMemoNo { get; set; }
-
         [Display(Name = "SI No")]
         public int? SalesInvoiceId { get; set; }
 
@@ -33,8 +29,9 @@ namespace IBS.Models.Filpride
         [NotMapped]
         public List<SelectListItem>? ServiceInvoices { get; set; }
 
-        public string? DMNo { get; set; }
-        public long SeriesNumber { get; set; }
+        [Column(TypeName = "varchar(12)")]
+        [Display(Name = "DM No")]
+        public string? DebitMemoNo { get; set; }
 
         [Column(TypeName = "date")]
         [Display(Name = "Transaction Date")]

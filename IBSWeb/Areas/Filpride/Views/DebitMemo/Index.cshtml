@@ -29,7 +29,7 @@
             <thead>
                 <tr>
                     <th>
-                        @Html.DisplayNameFor(model => model.DMNo)
+                        @Html.DisplayNameFor(model => model.DebitMemoNo)
                     </th>
                     <th>
                         @Html.DisplayNameFor(model => model.TransactionDate)
@@ -51,7 +51,7 @@
                 {
                     <tr>
                         <td>
-                            @Html.DisplayFor(modelItem => item.DMNo)
+                            @Html.DisplayFor(modelItem => item.DebitMemoNo)
                         </td>
                         <td>
                             @item.TransactionDate.ToString("MM/dd/yyyy")
@@ -132,7 +132,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/DebitMemo/Post?id=${id}`;
+                    var url = `/Filpride/DebitMemo/Post?id=${id}`;
                     window.location.href = url;
                 }
             })
@@ -152,7 +152,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/DebitMemo/Void?id=${id}`;
+                    var url = `/Filpride/DebitMemo/Void?id=${id}`;
                     window.location.href = url;
                 }
             })
@@ -179,7 +179,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `/DebitMemo/Cancel?id=${id}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `/Filpride/DebitMemo/Cancel?id=${id}&cancellationRemarks=${encodedRemarks}`;
                     window.location.href = url;
                 }
             })

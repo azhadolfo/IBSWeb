@@ -3,6 +3,7 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -213,6 +214,42 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 throw new ArgumentException("", "No record found");
             }
+        }
+
+        public override async Task<IEnumerable<FilprideCollectionReceipt>> GetAllAsync(Expression<Func<FilprideCollectionReceipt, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<FilprideCollectionReceipt> query = dbSet
+                .Include(cr => cr.Customer)
+                .Include(cr => cr.SalesInvoice)
+                .ThenInclude(s => s.Customer)
+                .Include(cr => cr.SalesInvoice)
+                .ThenInclude(s => s.Product)
+                .Include(cr => cr.ServiceInvoice)
+                .ThenInclude(sv => sv.Customer)
+                .Include(cr => cr.ServiceInvoice)
+                .ThenInclude(sv => sv.Service);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
+        }
+
+        public override async Task<FilprideCollectionReceipt> GetAsync(Expression<Func<FilprideCollectionReceipt, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                .Include(cr => cr.Customer)
+                .Include(cr => cr.SalesInvoice)
+                .ThenInclude(s => s.Customer)
+                .Include(cr => cr.SalesInvoice)
+                .ThenInclude(s => s.Product)
+                .Include(cr => cr.ServiceInvoice)
+                .ThenInclude(sv => sv.Customer)
+                .Include(cr => cr.ServiceInvoice)
+                .ThenInclude(sv => sv.Service)
+                .FirstOrDefaultAsync(cancellationToken);
         }
     }
 }
