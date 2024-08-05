@@ -28,7 +28,7 @@
             </pre>
             </div>
 
-            <form asp-action="CollectionCreateForService" method="post" enctype="multipart/form-data">
+            <form asp-action="CreateForService" method="post" enctype="multipart/form-data">
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group mb-3">
@@ -151,7 +151,7 @@
                 <br />
                 <div class="form-group">
                     <input type="submit" value="Create" class="btn btn-primary" />
-                    <a asp-action="CollectionIndex" class="btn btn-secondary">Back to List</a>
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
                 </div>
             </form>
         </div>
@@ -202,7 +202,7 @@
                     var customerNo = $(this).val();
 
                     $.ajax({
-                        url: "/Receipt/GetServiceInvoices",
+                        url: '/Filpride/CollectionReceipt/GetServiceInvoices',
                         type: "GET",
                         data: { customerNo: customerNo },
                         success: function (data) {
@@ -293,7 +293,7 @@
 
                 if (invoiceNo != "") {
                     $.ajax({
-                        url: "/Receipt/GetInvoiceDetails",
+                        url: '/Filpride/CollectionReceipt/GetInvoiceDetails',
                         type: "GET",
                         data: {
                             invoiceNo: invoiceNo,

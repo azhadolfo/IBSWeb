@@ -11,7 +11,7 @@ namespace IBS.Models.Filpride.MasterFile
         public int ServiceId { get; set; }
 
         [Display(Name = "Service No")]
-        public string ServiceNo { get; set; }
+        public string? ServiceNo { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string? CurrentAndPreviousNo { get; set; }

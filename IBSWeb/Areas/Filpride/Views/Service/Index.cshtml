@@ -26,7 +26,7 @@
         <table class="table table-bordered table-striped" id="dataTable">
             <thead>
                 <tr>
-                    <th>
+                    <th class="text-start">
                         @Html.DisplayNameFor(model => model.ServiceNo)
                     </th>
                     <th>
@@ -48,7 +48,7 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td>
+                        <td class="text-start">
                             @Html.DisplayFor(modelItem => item.ServiceNo)
                         </td>
                         <td>

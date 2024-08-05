@@ -247,7 +247,7 @@
                 <br />
                 <div class="form-group">
                     <input type="submit" value="Create" class="btn btn-primary" />
-                    <a asp-action="CollectionIndex" class="btn btn-secondary">Back to List</a>
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
                 </div>
             </div>
         </form>
@@ -299,7 +299,7 @@
                     var customerNo = $(this).val();
 
                     $.ajax({
-                        url: "/Receipt/GetSalesInvoices",
+                        url: "/Filpride/CollectionReceipt/GetSalesInvoices",
                         type: "GET",
                         data: { customerNo: customerNo },
                         success: function (data) {
@@ -388,7 +388,7 @@
                     siNos.forEach(function (siNo) {
                         currentSiNo = siNo;
                         $.ajax({
-                            url: "/Receipt/GetMultipleInvoiceDetails",
+                            url: "/Filpride/CollectionReceipt/GetMultipleInvoiceDetails",
                             type: "GET",
                             data: {
                                 siNo: currentSiNo,

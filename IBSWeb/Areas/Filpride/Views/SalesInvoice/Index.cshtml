@@ -80,7 +80,7 @@
                                 }
                                 if (invoice.PostedBy != null && invoice.VoidedBy == null && invoice.CanceledBy == null)
                                 {
-                                    <a asp-action="PrintInvoice" asp-route-id="@invoice.SalesInvoiceId" class="btn btn-light">Print</a>
+                                    <a asp-action="Print" asp-route-id="@invoice.SalesInvoiceId" class="btn btn-light">Print</a>
                                     if (invoice.AmountPaid == 0)
                                     {
                                         <a class="btn btn-light" onclick="confirmVoid(@invoice.SalesInvoiceId)">Void</a>
@@ -117,8 +117,8 @@
 
 @section Scripts {
     <script>
-        function confirmPost(invoiceId) {
-            console.log(invoiceId);
+        function confirmPost(id) {
+            console.log(id);
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
@@ -130,15 +130,14 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Post", "SalesInvoice", new { area = "Filpride" })/${invoiceId}`;
+                    var url = `@Url.Action("Post", "SalesInvoice", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
         }
     </script>
     <script>
-        function confirmVoid(invoiceId) {
-            console.log(invoiceId);
+        function confirmVoid(id) {
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
@@ -150,15 +149,14 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Void", "SalesInvoice", new { area = "Filpride" })/${invoiceId}`;
+                    var url = `@Url.Action("Void", "SalesInvoice", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
         }
     </script>
     <script>
-        function confirmCancel(invoiceId) {
-            console.log(invoiceId);
+        function confirmCancel(id) {
             Swal.fire({
                 title: "Please Input Remarks",
                 html:
@@ -178,7 +176,7 @@
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
                     //var url = `/SalesInvoice/Cancel?invoiceId=${invoiceId}&cancellationRemarks=${encodedRemarks}`;
-                    var url = `@Url.Action("Cancel", "SalesInvoice", new { area = "Filpride" })/${invoiceId}`;
+                    var url = `@Url.Action("Cancel", "SalesInvoice", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })

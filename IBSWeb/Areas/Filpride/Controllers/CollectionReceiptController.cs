@@ -201,7 +201,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion --Offsetting function
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
-                return RedirectToAction("CollectionIndex");
+                return RedirectToAction(nameof(Index));
             }
             else
             {
@@ -388,7 +388,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion --Offsetting function
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
-                return RedirectToAction("CollectionIndex");
+                return RedirectToAction(nameof(Index));
             }
             else
             {
@@ -560,7 +560,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion --Offsetting function
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
-                return RedirectToAction("CollectionIndex");
+                TempData["success"] = "Collection receipt created successfully.";
+                return RedirectToAction(nameof(Index));
             }
             else
             {
@@ -661,8 +662,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (isSales)
             {
                 var si = await _dbContext
-                .FilprideServiceInvoices
-                .FirstOrDefaultAsync(si => siNo.Contains(si.ServiceInvoiceId), cancellationToken);
+                .FilprideSalesInvoices
+                .FirstOrDefaultAsync(si => siNo.Contains(si.SalesInvoiceId), cancellationToken);
 
                 //var amountPaid = 0m;
                 //var amount = 0m;
@@ -918,7 +919,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion --Offsetting function
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
-                return RedirectToAction("CollectionIndex");
+                return RedirectToAction(nameof(Index));
             }
             else
             {
@@ -1260,12 +1261,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TempData["success"] = "Collection Receipt has been Posted.";
                     }
 
-                    return RedirectToAction("CollectionIndex");
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
                     TempData["error"] = ex.Message;
-                    return RedirectToAction("CollectionIndex");
+                    return RedirectToAction(nameof(Index));
                 }
             }
 
@@ -1322,7 +1323,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TempData["error"] = ex.Message;
                     }
                 }
-                return RedirectToAction("CollectionIndex");
+                return RedirectToAction(nameof(Index));
             }
 
             return NotFound();
@@ -1345,7 +1346,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Collection Receipt has been Cancelled.";
                 }
-                return RedirectToAction("CollectionIndex");
+                return RedirectToAction(nameof(Index));
             }
 
             return NotFound();

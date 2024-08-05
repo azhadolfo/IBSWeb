@@ -156,7 +156,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(model);
         }
 
-        public async Task<IActionResult> Generate(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
         {
             var soa = await _unitOfWork.FilprideServiceInvoice
                 .GetAsync(s => s.ServiceId == id, cancellationToken);
@@ -202,7 +202,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var postedDate = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
-                        if (customer.CustomerType == "Vatable")
+                        if (customer.VatType == "Vatable")
                         {
                             model.Total = model.Amount;
                             model.NetAmount = (model.Amount - model.Discount) / 1.12m;
@@ -223,7 +223,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
                         }
 
-                        if (customer.CustomerType == "Vatable")
+                        if (customer.VatType == "Vatable")
                         {
                             var total = Math.Round(model.Amount / 1.12m, 2);
 
@@ -241,7 +241,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var sales = new FilprideSalesBook();
 
-                        if (model.Customer.CustomerType == "Vatable")
+                        if (model.Customer.VatType == "Vatable")
                         {
                             sales.TransactionDate = postedDate;
                             sales.SerialNo = model.ServiceInvoiceNo;
@@ -259,7 +259,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             sales.DueDate = model.DueDate;
                             sales.DocumentId = model.ServiceInvoiceId;
                         }
-                        else if (model.Customer.CustomerType == "Exempt")
+                        else if (model.Customer.VatType == "Exempt")
                         {
                             sales.TransactionDate = postedDate;
                             sales.SerialNo = model.ServiceInvoiceNo;
@@ -360,7 +360,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                    AccountNo = model.Service.CurrentAndPreviousNo,
                                    AccountTitle = model.Service.CurrentAndPreviousTitle,
                                    Debit = 0,
-                                   Credit = Math.Round(model.Total / 1.12m, 2),
+                                   Credit = Math.Round(model.NetAmount),
                                    CreatedBy = model.CreatedBy,
                                    CreatedDate = model.CreatedDate
                                }
@@ -411,6 +411,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return null;
         }
+
+
 
         public async Task<IActionResult> Cancel(int id, string cancellationRemarks, CancellationToken cancellationToken)
         {

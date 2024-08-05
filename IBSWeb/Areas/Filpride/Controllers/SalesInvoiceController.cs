@@ -202,6 +202,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
+                    existingRecord.TransactionDate = model.TransactionDate;
+                    existingRecord.OtherRefNo = model.OtherRefNo;
+                    existingRecord.PurchaseOrderId = model.PurchaseOrderId;
+                    existingRecord.Quantity = model.Quantity;
+                    existingRecord.UnitPrice = model.UnitPrice;
+                    existingRecord.Remarks = model.Remarks;
+                    existingRecord.Discount = model.Discount;
+                    existingRecord.Amount = model.Quantity * model.UnitPrice;
+                    existingRecord.ProductId = model.ProductId;
+
                     if (existingRecord.Amount >= model.Discount)
                     {
                         if (existingRecord.Customer.CustomerType == "Vatable")
@@ -266,7 +276,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(model);
         }
 
-        public async Task<IActionResult> PrintInvoice(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
         {
             var sales = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
             return View(sales);
@@ -279,9 +289,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return PartialView("_PreviewPartialView", invoice);
         }
 
-        public async Task<IActionResult> Post(int invoiceId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(s => s.SalesInvoiceId == invoiceId, cancellationToken);
+            var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(s => s.SalesInvoiceId == id, cancellationToken);
 
             if (model != null)
             {
@@ -406,7 +416,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 }
                             );
                         }
-                        if (model.Product.ProductName == "Biodiesel")
+                        if (model.Product.ProductName == "BIODIESEL")
                         {
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
@@ -425,7 +435,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 }
                             );
                         }
-                        else if (model.Product.ProductName == "Econogas")
+                        else if (model.Product.ProductName == "ECONOGAS")
                         {
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
@@ -444,7 +454,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 }
                             );
                         }
-                        else if (model.Product.ProductName == "Envirogas")
+                        else if (model.Product.ProductName == "ENVIROGAS")
                         {
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
@@ -512,9 +522,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
-        public async Task<IActionResult> Void(int invoiceId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == invoiceId, cancellationToken);
+            var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
 
             if (model != null)
             {
@@ -541,9 +551,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
-        public async Task<IActionResult> Cancel(int invoiceId, string cancellationRemarks, CancellationToken cancellationToken)
+        public async Task<IActionResult> Cancel(int id, string cancellationRemarks, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == invoiceId, cancellationToken);
+            var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
 
             if (model != null)
             {
