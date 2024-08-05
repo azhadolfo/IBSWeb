@@ -195,7 +195,7 @@
 
                 if (supplierId !== "") {
                     $.ajax({
-                        url: "/CheckVoucher/GetSupplierDetails", // Replace with the actual controller and action names
+                        url: "/Filpride/CheckVoucher/GetSupplierDetails", // Replace with the actual controller and action names
                         method: "GET",
                         data: { supplierId: supplierId },
                         success: function (data) {
@@ -210,9 +210,9 @@
                                 $(".vatInputDebit").hide(); // Hide the EWT table rows
                             }
                             if (data) {
-                                $("#SupplierName").val(data.supplierName);
-                                $("#SupplierAddress").val(data.supplierAddress);
-                                $("#SupplierTinNo").val(data.supplierTinNo);
+                                $("#SupplierName").val(data.name);
+                                $("#SupplierAddress").val(data.address);
+                                $("#SupplierTinNo").val(data.tinNo);
                                 $(".defaultExpenseNumber").val(data.defaultExpense !== null ? data.defaultExpense.split(' ')[0] : null);
                                 $(".defaultExpenseTitle").val(data.defaultExpense !== null ? data.defaultExpense.replace(/^\s*\S+\s*/, '').trim() : null);
                                 $(".withholdingTaxNumber").val(data.withholdingTax !== null ? data.withholdingTax.split(' ')[0] : null);

@@ -156,15 +156,14 @@
                 var supplierId = $(this).val();
                 if (supplierId !== "") {
                     $.ajax({
-                        url: "/CheckVoucher/GetSupplierDetails", // Replace with the actual controller and action names
+                        url: "/Filpride/CheckVoucher/GetSupplierDetails", // Replace with the actual controller and action names
                         method: "GET",
                         data: { supplierId: supplierId },
                         success: function (data) {
-                            console.log(data);
                             if (data) {
-                                $("#SupplierName").val(data.supplierName);
-                                $("#SupplierAddress").val(data.supplierAddress);
-                                $("#SupplierTinNo").val(data.supplierTinNo);
+                                $("#SupplierName").val(data.name);
+                                $("#SupplierAddress").val(data.address);
+                                $("#SupplierTinNo").val(data.tinNo);
                             } else {
                                 $("#SupplierName").val("");
                                 $("#SupplierAddress").val("");
