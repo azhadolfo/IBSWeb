@@ -9,8 +9,6 @@ namespace IBS.Models.Filpride.MasterFile
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int BankAccountId { get; set; }
 
-        public string BankAccountNo { get; set; }
-
         public int SeriesNumber { get; set; }
 
         public string Bank { get; set; }
