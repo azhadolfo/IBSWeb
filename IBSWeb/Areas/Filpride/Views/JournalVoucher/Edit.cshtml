@@ -228,12 +228,12 @@
                     </div>
                     <div class="form-group pt-4">
                         <label class="control-label">Debit</label>
-                        <input id="Debit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                        <input id="debit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
                         <span class="text-danger"></span>
                     </div>
                     <div class="form-group pt-4">
                         <label class="control-label">Credit</label>
-                        <input id="Credit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                        <input id="credit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
                         <span class="text-danger"></span>
                     </div>
                 </form>
@@ -265,8 +265,8 @@
             // Get the values from the modal inputs
             var accountNumber = $("#AccountNo").val();
             var accountNumberText = $("#AccountNo option:selected").text();
-            var debit = parseFloat($("#Debit").val().replace(/,/g, '')) || 0.00;
-            var credit = parseFloat($("#Credit").val().replace(/,/g, '')) || 0.00;
+            var debit = parseFloat($("#debit").val().replace(/,/g, '')) || 0.00;
+            var credit = parseFloat($("#credit").val().replace(/,/g, '')) || 0.00;
 
             if (debit === 0 && credit === 0) {
                 event.preventDefault();
@@ -352,7 +352,7 @@
             function cvDetails(cvId) {
                 if (cvId !== "") {
                     $.ajax({
-                        url: "/JournalVoucher/GetCV",
+                        url: "/Filpride/JournalVoucher/GetCV",
                         method: "GET",
                         data: { id: cvId },
                         success: function (data) {
