@@ -68,14 +68,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         public async Task<IActionResult> SingleCollectionCreateForSales(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
-            model.Customers = await _dbContext.FilprideCustomers
-               .OrderBy(c => c.CustomerId)
-               .Select(s => new SelectListItem
-               {
-                   Value = s.CustomerCode.ToString(),
-                   Text = s.CustomerName
-               })
-               .ToListAsync(cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
 
             model.SalesInvoices = await _dbContext.FilprideSalesInvoices
                 .Where(si => !si.IsPaid && si.CustomerId == model.CustomerId && si.PostedBy != null)
@@ -240,14 +233,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         public async Task<IActionResult> MultipleCollectionCreateForSales(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
-            model.Customers = await _dbContext.FilprideCustomers
-               .OrderBy(c => c.CustomerId)
-               .Select(s => new SelectListItem
-               {
-                   Value = s.CustomerName.ToString(),
-                   Text = s.CustomerName
-               })
-               .ToListAsync(cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
 
             model.SalesInvoices = await _dbContext.FilprideSalesInvoices
                 .Where(si => !si.IsPaid && si.CustomerId == model.CustomerId && si.PostedBy != null)
@@ -402,24 +388,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var viewModel = new FilprideCollectionReceipt();
 
-            viewModel.Customers = await _dbContext.FilprideCustomers
-               .OrderBy(c => c.CustomerId)
-               .Select(s => new SelectListItem
-               {
-                   Value = s.CustomerId.ToString(),
-                   Text = s.CustomerName
-               })
-               .ToListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
 
-            viewModel.ChartOfAccounts = await _dbContext.ChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             return View(viewModel);
         }
@@ -629,12 +600,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 return Json(new
                 {
-                    Amount = si.NetDiscount.ToString("N2"),
-                    AmountPaid = si.AmountPaid.ToString("N2"),
-                    Balance = si.Balance.ToString("N2"),
-                    Ewt = si.WithHoldingTaxAmount.ToString("N2"),
-                    Wvat = si.WithHoldingVatAmount.ToString("N2"),
-                    Total = (si.NetDiscount - (si.WithHoldingTaxAmount + si.WithHoldingVatAmount)).ToString("N2")
+                    Amount = si.NetDiscount.ToString("N4"),
+                    AmountPaid = si.AmountPaid.ToString("N4"),
+                    Balance = si.Balance.ToString(" "),
+                    Ewt = si.WithHoldingTaxAmount.ToString("N4"),
+                    Wvat = si.WithHoldingVatAmount.ToString("N4"),
+                    Total = (si.NetDiscount - (si.WithHoldingTaxAmount + si.WithHoldingVatAmount)).ToString("N4")
                 });
             }
             else if (isServices && !isSales)
@@ -645,12 +616,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 return Json(new
                 {
-                    Amount = sv.Total.ToString("N2"),
-                    AmountPaid = sv.AmountPaid.ToString("N2"),
-                    Balance = sv.Balance.ToString("N2"),
-                    Ewt = sv.WithholdingTaxAmount.ToString("N2"),
-                    Wvat = sv.WithholdingVatAmount.ToString("N2"),
-                    Total = (sv.Total - (sv.WithholdingTaxAmount + sv.WithholdingVatAmount)).ToString("N2")
+                    Amount = sv.Total.ToString("N4"),
+                    AmountPaid = sv.AmountPaid.ToString("N4"),
+                    Balance = sv.Balance.ToString("N4"),
+                    Ewt = sv.WithholdingTaxAmount.ToString("N4"),
+                    Wvat = sv.WithholdingVatAmount.ToString("N4"),
+                    Total = (sv.Total - (sv.WithholdingTaxAmount + sv.WithholdingVatAmount)).ToString("N4")
                 });
             }
             return Json(null);
