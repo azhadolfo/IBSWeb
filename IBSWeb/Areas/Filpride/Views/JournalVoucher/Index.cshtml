@@ -123,7 +123,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/JournalVoucher/Post?id=${id}`;
+                    var url = `/Filpride/JournalVoucher/Post?id=${id}`;
                     window.location.href = url;
                 }
             })
@@ -143,7 +143,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/JournalVoucher/Void?Id=${Id}`;
+                    var url = `/Filpride/JournalVoucher/Void?Id=${Id}`;
                     window.location.href = url;
                 }
             })
@@ -170,7 +170,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `/JournalVoucher/Cancel?Id=${Id}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `/Filpride/JournalVoucher/Cancel?Id=${Id}&cancellationRemarks=${encodedRemarks}`;
                     window.location.href = url;
                 }
             })

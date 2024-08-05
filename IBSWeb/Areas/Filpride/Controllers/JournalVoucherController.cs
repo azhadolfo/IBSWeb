@@ -428,7 +428,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return NotFound();
             }
-            var exisitngJV = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(id, cancellationToken);
             var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders
                 .Include(jv => jv.CheckVoucherHeader)
                 .FirstOrDefaultAsync(cvh => cvh.CVId == id, cancellationToken);
@@ -445,8 +444,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
             var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
             var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
-            var poIds = _dbContext.PurchaseOrders.Where(model => exisitngJV.CheckVoucherHeader.PONo.Contains(model.PurchaseOrderNo)).Select(model => model.PurchaseOrderId).ToArray();
-            var rrIds = _dbContext.ReceivingReports.Where(model => exisitngJV.CheckVoucherHeader.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
+            var poIds = _dbContext.PurchaseOrders.Where(model => existingHeaderModel.CheckVoucherHeader.PONo.Contains(model.PurchaseOrderNo)).Select(model => model.PurchaseOrderId).ToArray();
+            var rrIds = _dbContext.ReceivingReports.Where(model => existingHeaderModel.CheckVoucherHeader.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
 
             var coa = await _dbContext.ChartOfAccounts
                         .Where(coa => !new[] { "2010102", "2010101", "1010101" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && coa.Level == 4 || coa.Level == 5)
