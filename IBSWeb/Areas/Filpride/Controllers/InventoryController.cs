@@ -38,14 +38,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             BeginningInventoryViewModel? viewModel = new();
 
-            viewModel.ProductList = await _dbContext.Products
-                .OrderBy(p => p.ProductCode)
-                .Select(p => new SelectListItem
-                {
-                    Value = p.ProductId.ToString(),
-                    Text = $"{p.ProductCode} {p.ProductName}"
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             viewModel.PO = await _dbContext.PurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
@@ -70,14 +63,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (hasBeginningInventory)
                     {
-                        viewModel.ProductList = await _dbContext.Products
-                            .OrderBy(p => p.ProductCode)
-                            .Select(p => new SelectListItem
-                            {
-                                Value = p.ProductId.ToString(),
-                                Text = $"{p.ProductCode} {p.ProductName}"
-                            })
-                            .ToListAsync(cancellationToken);
+                        viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
                         TempData["error"] = "Beginning Inventory for this product already exists. Please contact MIS if you think this was a mistake.";
                         return View(viewModel);
@@ -94,14 +80,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            viewModel.ProductList = await _dbContext.Products
-                .OrderBy(p => p.ProductCode)
-                .Select(p => new SelectListItem
-                {
-                    Value = p.ProductId.ToString(),
-                    Text = $"{p.ProductCode} {p.ProductName}"
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             viewModel.PO = await _dbContext.PurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
@@ -120,14 +99,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             InventoryReportViewModel viewModel = new InventoryReportViewModel();
 
-            viewModel.Products = await _dbContext.Products
-                .OrderBy(p => p.ProductCode)
-                .Select(p => new SelectListItem
-                {
-                    Value = p.ProductId.ToString(),
-                    Text = $"{p.ProductCode} {p.ProductName}"
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             viewModel.PO = await _dbContext.PurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
@@ -224,14 +196,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             ActualInventoryViewModel? viewModel = new();
 
-            viewModel.ProductList = await _dbContext.Products
-                .OrderBy(p => p.ProductCode)
-                .Select(p => new SelectListItem
-                {
-                    Value = p.ProductId.ToString(),
-                    Text = $"{p.ProductCode} {p.ProductName}"
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             viewModel.COA = await _dbContext.ChartOfAccounts
                 .Where(coa => coa.Level == 4 && (coa.AccountName.StartsWith("AR-Non Trade Receivable") || coa.AccountName.StartsWith("Cost of Goods Sold") || coa.AccountNumber.StartsWith("6010103")))
@@ -285,14 +250,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.ProductList = await _dbContext.Products
-                        .OrderBy(p => p.ProductCode)
-                        .Select(p => new SelectListItem
-                        {
-                            Value = p.ProductId.ToString(),
-                            Text = $"{p.ProductCode} {p.ProductName}"
-                        })
-                        .ToListAsync(cancellationToken);
+                    viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
                     viewModel.PO = await _dbContext.PurchaseOrders
                         .OrderBy(p => p.PurchaseOrderNo)
@@ -317,14 +275,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            viewModel.ProductList = await _dbContext.Products
-                .OrderBy(p => p.ProductCode)
-                .Select(p => new SelectListItem
-                {
-                    Value = p.ProductId.ToString(),
-                    Text = $"{p.ProductCode} {p.ProductName}"
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             viewModel.COA = await _dbContext.ChartOfAccounts
                 .Where(coa => coa.Level == 4 && (coa.AccountName.StartsWith("AR-Non Trade Receivable") || coa.AccountName.StartsWith("Cost of Goods Sold") || coa.AccountNumber.StartsWith("6010103")))

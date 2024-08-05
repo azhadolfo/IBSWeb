@@ -47,13 +47,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var viewModel = new PurchaseOrder();
-            viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Select(s => new SelectListItem
-                {
-                    Value = s.SupplierId.ToString(),
-                    Text = s.SupplierName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
 
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
@@ -64,13 +58,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PurchaseOrder model, CancellationToken cancellationToken)
         {
-            model.Suppliers = await _dbContext.FilprideSuppliers
-                .Select(s => new SelectListItem
-                {
-                    Value = s.SupplierId.ToString(),
-                    Text = s.SupplierName
-                })
-                .ToListAsync(cancellationToken);
+            model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
 
             model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
@@ -108,21 +96,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            purchaseOrder.Suppliers = await _dbContext.FilprideSuppliers
-                .Select(s => new SelectListItem
-                {
-                    Value = s.SupplierId.ToString(),
-                    Text = s.SupplierName
-                })
-                .ToListAsync(cancellationToken);
+            purchaseOrder.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
 
-            purchaseOrder.Products = await _dbContext.Products
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ProductId.ToString(),
-                    Text = s.ProductName
-                })
-                .ToListAsync(cancellationToken);
+            purchaseOrder.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             ViewBag.PurchaseOrders = purchaseOrder.Quantity;
 
@@ -141,21 +117,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                model.Suppliers = await _dbContext.FilprideSuppliers
-                .Select(s => new SelectListItem
-                {
-                    Value = s.SupplierId.ToString(),
-                    Text = s.SupplierName
-                })
-                .ToListAsync(cancellationToken);
+                model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
 
-                model.Products = await _dbContext.Products
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ProductId.ToString(),
-                    Text = s.ProductName
-                })
-                .ToListAsync(cancellationToken);
+                model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
                 existingModel.Date = model.Date;
                 existingModel.SupplierId = model.SupplierId;
