@@ -477,11 +477,11 @@ bg-success {
 
 /* For navbar dropdown */
 
-.dropdown .dropdown-menu {
+.dropdown-layout .dropdown-menu {
     display: none;
 }
 
-.dropdown:hover > .dropdown-menu, .dropend:hover > .dropdown-menu {
+.dropdown-layout:hover > .dropdown-menu, .dropend:hover > .dropdown-menu {
     display: block;
 }
 
