@@ -122,9 +122,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     return Json(new
                     {
-                        SupplierName = supplier.SupplierName,
-                        SupplierAddress = supplier.SupplierAddress,
-                        SupplierTinNo = supplier.SupplierTin,
+                        Name = supplier.SupplierName,
+                        Address = supplier.SupplierAddress,
+                        TinNo = supplier.SupplierTin,
                         TaxType = supplier.TaxType,
                         Category = supplier.Category,
                         TaxPercent = supplier.WithholdingTaxPercent,
@@ -268,7 +268,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 );
                         }
 
-                        if (_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))
+                        if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))
                         {
                             throw new ArgumentException("Debit and Credit is not equal, check your entries.");
                         }
@@ -648,7 +648,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = sup.SupplierName
                 })
                 .ToListAsync();
-                
+
             model.BankAccounts = await _dbContext.FilprideBankAccounts
                 .Select(ba => new SelectListItem
                 {
