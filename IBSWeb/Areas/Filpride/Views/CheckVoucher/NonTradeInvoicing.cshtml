@@ -32,22 +32,22 @@
                     <input asp-for="SupplierName" type="hidden" />
                     <div class="form-floating mb-3">
                         <input asp-for="SupplierAddress" type="text" class="form-control" placeholder="Optional" readonly />
-                        <label asp-for="SupplierAddress" class="control-label"></label>
+                        <label asp-for="SupplierAddress" class="control-label ms-2"></label>
                         <span asp-validation-for="SupplierAddress" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
                         <input asp-for="SupplierTinNo" type="text" class="form-control" placeholder="Optional" readonly />
-                        <label asp-for="SupplierTinNo" class="control-label"></label>
+                        <label asp-for="SupplierTinNo" class="control-label ms-2"></label>
                         <span asp-validation-for="SupplierTinNo" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
                         <textarea asp-for="PoNo" class="form-control" placeholder="Input si no" style="height: 100px"></textarea>
-                        <label asp-for="PoNo" class="control-label">PO No</label>
+                        <label asp-for="PoNo" class="control-label ms-2">PO No</label>
                         <span asp-validation-for="PoNo" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
                         <textarea asp-for="SiNo" class="form-control" placeholder="Input po no" style="height: 100px"></textarea>
-                        <label asp-for="SiNo" class="control-label">SI No</label>
+                        <label asp-for="SiNo" class="control-label ms-2">SI No</label>
                         <span asp-validation-for="SiNo" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-3">
@@ -61,7 +61,7 @@
                     </div>
                     <div class="form-floating mb-3">
                         <textarea asp-for="Particulars" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
-                        <label asp-for="Particulars" class="control-label">Particulars<span class="required">*</span></label>
+                        <label asp-for="Particulars" class="control-label ms-2">Particulars<span class="required">*</span></label>
                         <span asp-validation-for="Particulars" class="text-danger"></span>
                     </div>
                     <input type="hidden" id="StartDate" name="StartDate" />

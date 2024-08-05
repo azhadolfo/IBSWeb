@@ -58,3 +58,15 @@ function setTransactionDate() {
         transactionDateField.value = currentDate;
     }
 }
+
+// Dynamic date to in books
+document.addEventListener('DOMContentLoaded', function () {
+    var dateFromInput = document.getElementById('DateFrom');
+    var dateToInput = document.getElementById('DateTo');
+
+    // Add an event listener to DateFrom input
+    dateFromInput?.addEventListener('change', function () {
+        // Set DateTo input value to DateFrom input value
+        dateToInput.value = dateFromInput.value;
+    });
+});
