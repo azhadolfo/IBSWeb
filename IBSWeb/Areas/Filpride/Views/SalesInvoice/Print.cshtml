@@ -241,9 +241,9 @@
                             <td class="text-end">
                                 @{
                                     var totalSales = Model.VatableSales + Model.VatAmount;
-                                    var formattedTotalSales = String.Format("{0:N2}", totalSales);
+                                    var formattedTotalSales = String.Format("{0:N4}", totalSales);
                                     var otherDiscount = Model.Amount - Model.Discount;
-                                    var formattedOtherDiscount = String.Format("{0:N2}", otherDiscount);
+                                    var formattedOtherDiscount = String.Format("{0:N4}", otherDiscount);
                                 }
                                 @if (Model.Discount == 0)
                                 {
@@ -253,7 +253,7 @@
                                     }
                                     else
                                     {
-                                        @Model.Amount.ToString("N2")
+                                        @Model.Amount.ToString("N4")
                                     }
                                 }
                                 else

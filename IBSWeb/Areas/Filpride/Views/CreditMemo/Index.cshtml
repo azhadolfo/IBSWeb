@@ -72,7 +72,7 @@
                             @Html.DisplayFor(modelItem => item.Source)
                         </td>
                         <td>
-                            @Math.Abs(item.CreditAmount).ToString("N2")
+                            @Math.Abs(item.CreditAmount).ToString("N4")
                         </td>
                         <td class="text-center">
                             @if (item.CreatedBy == UserManager.GetUserName(User) && item.VoidedBy == null && item.CanceledBy == null)

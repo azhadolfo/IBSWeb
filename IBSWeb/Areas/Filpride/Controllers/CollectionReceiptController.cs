@@ -648,10 +648,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     Amount = si.Amount,
                     AmountPaid = si.AmountPaid
-                    //Balance = si.Balance.ToString("N2"),
-                    //Ewt = si.WithHoldingTaxAmount.ToString("N2"),
-                    //Wvat = si.WithHoldingVatAmount.ToString("N2"),
-                    //Total = (si.NetDiscount - (si.WithHoldingTaxAmount + si.WithHoldingVatAmount)).ToString("N2")
+                    //Balance = si.Balance.ToString("N4"),
+                    //Ewt = si.WithHoldingTaxAmount.ToString("N4"),
+                    //Wvat = si.WithHoldingVatAmount.ToString("N4"),
+                    //Total = (si.NetDiscount - (si.WithHoldingTaxAmount + si.WithHoldingVatAmount)).ToString("N4")
                 });
             }
             return Json(null);

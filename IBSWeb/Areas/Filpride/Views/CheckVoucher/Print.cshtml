@@ -232,8 +232,8 @@
             <tr style="border-bottom:double;"></tr>
             <tr>
                 <td></td>
-                <td class="text-end">@Model.Details.Sum(d => d.Debit).ToString("N2")</td>
-                <td class="text-end">@Model.Details.Sum(d => d.Credit).ToString("N2")</td>
+                <td class="text-end">@Model.Details.Sum(d => d.Debit).ToString("N4")</td>
+                <td class="text-end">@Model.Details.Sum(d => d.Credit).ToString("N4")</td>
             </tr>
         </tbody>
     </table>
