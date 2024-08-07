@@ -70,7 +70,11 @@
                             @data.CreatedDate.ToString("MM/dd/yyyy")
                         </td>
                         <td>
-                            <a asp-action="Edit" class="btn btn-light" asp-route-id="@data.BankAccountId">Edit</a>
+                            <div class="w-100 btn-group" role="group">
+                                <a asp-area="Filpride" asp-controller="BankAccount" asp-action="Edit" asp-route-id="@data.BankAccountId" class="btn btn-primary mx-2">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 }

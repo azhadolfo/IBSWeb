@@ -54,9 +54,14 @@
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control">Save</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Filpride" asp-controller="ServiceInvoice" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                </div>
             </div>
         </form>
     </div>

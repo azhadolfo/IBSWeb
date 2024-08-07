@@ -48,9 +48,13 @@
                         <option></option>
                     </select>
                 </div>
-                <div class="mb-3">
-                    <button type="button" class="btn btn-primary" onclick="submitForm('SalesBookReport')"><i class="bi bi-printer"></i> Generate</button>
-                    <button type="button" class="btn btn-primary" onclick="submitForm('GenerateSalesBookTxtFile')"><i class="bi bi-file-text"></i> Generate as .txt file</button>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                    <button type="button" class="btn btn-primary form-control" onclick="submitForm('SalesBookReport')"><i class="bi bi-printer"></i> Generate</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                    <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateSalesBookTxtFile')"><i class="bi bi-file-text"></i> Generate as .txt file</button>
+                    </div>
                 </div>
             </div>
         </form>
