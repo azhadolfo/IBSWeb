@@ -27,9 +27,13 @@
                     <input type="date" asp-for="DateTo" class="form-control" value="@dateTo" />
                     <span asp-validation-for="DateTo" class="text-danger"></span>
                 </div>
-                <div class="mb-3">
-                    <button type="button" class="btn btn-primary" onclick="submitForm('GeneralLedgerBookReport')"><i class="bi bi-printer"></i> Generate</button>
-                    <button type="button" class="btn btn-primary" onclick="submitForm('GenerateGeneralLedgerBookTxtFile')"><i class="bi bi-file-text"></i> Generate as .txt file</button>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                    <button type="button" class="btn btn-primary form-control" onclick="submitForm('GeneralLedgerBookReport')"><i class="bi bi-printer"></i> Generate</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                    <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateGeneralLedgerBookTxtFile')"><i class="bi bi-file-text"></i> Generate as .txt file</button>
+                    </div>
                 </div>
             </div>
         </form>
