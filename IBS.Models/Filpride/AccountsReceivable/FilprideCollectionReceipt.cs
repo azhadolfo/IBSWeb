@@ -135,5 +135,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [Column(TypeName = "numeric[]")]
         public decimal[]? SIMultipleAmount { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

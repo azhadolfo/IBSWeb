@@ -5,8 +5,8 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface IServiceRepository : IRepository<FilprideService>
     {
-        Task<string> GetLastNumber(CancellationToken cancellationToken = default);
+        Task<string> GetLastNumber(string company, CancellationToken cancellationToken = default);
 
-        Task<bool> IsServicesExist(string serviceName, CancellationToken cancellationToken = default);
+        Task<bool> IsServicesExist(string serviceName, string company, CancellationToken cancellationToken = default);
     }
 }

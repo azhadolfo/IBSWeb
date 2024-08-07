@@ -21,6 +21,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _userManager = userManager;
         }
 
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
             var rrList = await _unitOfWork.FilprideReceivingReport
@@ -32,10 +39,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             ReceivingReportViewModel viewModel = new()
             {
                 DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
-                Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken),
+                Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
             };
 
             return View(viewModel);
@@ -44,6 +53,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ReceivingReportViewModel viewModel, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (ModelState.IsValid)
             {
                 try
@@ -101,14 +112,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
-                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
             viewModel.DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -120,6 +131,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return NotFound();
             }
+
+            var companyClaims = await GetCompanyClaimAsync();
 
             try
             {
@@ -137,7 +150,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Date = existingRecord.Date,
                     DeliveryReceiptId = existingRecord.DeliveryReceiptId,
                     DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
-                    Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken),
+                    Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                     CustomerId = existingRecord.CustomerId,
                     SupplierSiNo = existingRecord.SupplierSiNo,
                     SupplierSiDate = existingRecord.SupplierSiDate,
@@ -164,6 +177,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(ReceivingReportViewModel viewModel, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (ModelState.IsValid)
             {
                 try
@@ -177,14 +192,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.DeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
-                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
             viewModel.DeliveryReceipts = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }

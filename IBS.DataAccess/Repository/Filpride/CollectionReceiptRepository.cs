@@ -16,10 +16,11 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
         {
             FilprideCollectionReceipt? lastCv = await _db
                 .FilprideCollectionReceipts
+                .Where(c => c.Company == company)
                 .OrderBy(c => c.CollectionReceiptNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -37,11 +38,11 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<List<FilprideOffsettings>> GetOffsettings(string source, string reference, CancellationToken cancellationToken = default)
+        public async Task<List<FilprideOffsettings>> GetOffsettings(string source, string reference, string company, CancellationToken cancellationToken = default)
         {
             var result = await _db
                 .FilprideOffsettings
-                .Where(o => o.Source == source && o.Reference == reference)
+                .Where(o => o.Company == company && o.Source == source && o.Reference == reference)
                 .ToListAsync(cancellationToken);
 
             if (result != null)

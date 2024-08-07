@@ -6,20 +6,20 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface IReportRepository : IRepository<FilprideGeneralLedgerBook>
     {
-        List<FilprideSalesBook> GetSalesBooks(DateOnly dateFrom, DateOnly dateTo, string? selectedDocument);
+        List<FilprideSalesBook> GetSalesBooks(DateOnly dateFrom, DateOnly dateTo, string? selectedDocument, string company);
 
-        List<FilprideCashReceiptBook> GetCashReceiptBooks(DateOnly dateFrom, DateOnly dateTo);
+        List<FilprideCashReceiptBook> GetCashReceiptBooks(DateOnly dateFrom, DateOnly dateTo, string company);
 
-        List<FilpridePurchaseBook> GetPurchaseBooks(DateOnly dateFrom, DateOnly dateTo, string? selectedFiltering);
+        List<FilpridePurchaseBook> GetPurchaseBooks(DateOnly dateFrom, DateOnly dateTo, string? selectedFiltering, string company);
 
-        Task<List<ReceivingReport>> GetReceivingReportAsync(DateOnly? dateFrom, DateOnly? dateTo, string? selectedFiltering);
+        Task<List<ReceivingReport>> GetReceivingReportAsync(DateOnly? dateFrom, DateOnly? dateTo, string? selectedFiltering, string company);
 
-        List<FilprideInventory> GetInventoryBooks(DateOnly dateFrom, DateOnly dateTo);
+        List<FilprideInventory> GetInventoryBooks(DateOnly dateFrom, DateOnly dateTo, string company);
 
-        List<FilprideGeneralLedgerBook> GetGeneralLedgerBooks(DateOnly dateFrom, DateOnly dateTo);
+        List<FilprideGeneralLedgerBook> GetGeneralLedgerBooks(DateOnly dateFrom, DateOnly dateTo, string company);
 
-        List<FilprideDisbursementBook> GetDisbursementBooks(DateOnly dateFrom, DateOnly dateTo);
+        List<FilprideDisbursementBook> GetDisbursementBooks(DateOnly dateFrom, DateOnly dateTo, string company);
 
-        List<FilprideJournalBook> GetJournalBooks(DateOnly dateFrom, DateOnly dateTo);
+        List<FilprideJournalBook> GetJournalBooks(DateOnly dateFrom, DateOnly dateTo, string company);
     }
 }

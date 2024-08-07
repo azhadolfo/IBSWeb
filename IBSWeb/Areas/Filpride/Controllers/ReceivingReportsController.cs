@@ -27,10 +27,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var rr = await _unitOfWork.FilprideReceivingReportRepo
-                .GetAllAsync(null, cancellationToken);
+                .GetAllAsync(rr => rr.Company == companyClaims, cancellationToken);
 
             return View(rr);
         }
@@ -39,8 +48,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var viewModel = new ReceivingReport();
+            var companyClaims = await GetCompanyClaimAsync();
+
             viewModel.PurchaseOrders = await _dbContext.PurchaseOrders
-                .Where(po => !po.IsReceived && po.PostedBy != null && !po.IsClosed)
+                .Where(po => po.Company == companyClaims && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
@@ -55,8 +66,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ReceivingReport model, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             model.PurchaseOrders = await _dbContext.PurchaseOrders
-                .Where(po => !po.IsReceived && po.PostedBy != null)
+                .Where(po => po.Company == companyClaims && !po.IsReceived && po.PostedBy != null)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
@@ -76,7 +89,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion --Retrieve PO
 
                 var rr = _dbContext.ReceivingReports
-                .Where(rr => rr.PONo == po.PurchaseOrderNo)
+                .Where(rr => rr.Company == companyClaims && rr.PONo == po.PurchaseOrderNo)
                 .ToList();
 
                 var totalAmountRR = po.Quantity - po.QuantityReceived;
@@ -87,8 +100,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(model);
                 }
 
-                var generatedRR = await _unitOfWork.FilprideReceivingReportRepo.GenerateCodeAsync(cancellationToken);
-                model.ReceivingReportNo = generatedRR;
+                model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReportRepo.GenerateCodeAsync(companyClaims, cancellationToken);
                 model.CreatedBy = _userManager.GetUserName(this.User);
                 model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
 
@@ -116,6 +128,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.NetAmountOfEWT = model.Amount - model.EwtAmount;
                 }
 
+                model.Company = companyClaims;
+
                 await _dbContext.AddAsync(model, cancellationToken);
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -136,6 +150,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var companyClaims = await GetCompanyClaimAsync();
+
             var receivingReport = await _dbContext.ReceivingReports.FindAsync(id, cancellationToken);
             if (receivingReport == null)
             {
@@ -143,6 +159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             receivingReport.PurchaseOrders = await _dbContext.PurchaseOrders
+                .Where(rr => rr.Company == companyClaims)
                 .Select(s => new SelectListItem
                 {
                     Value = s.PurchaseOrderId.ToString(),
@@ -157,8 +174,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Edit(ReceivingReport model, CancellationToken cancellationToken)
         {
             var existingModel = await _dbContext.ReceivingReports.FindAsync(model.ReceivingReportId, cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
 
             existingModel.PurchaseOrders = await _dbContext.PurchaseOrders
+                .Where(s => s.Company == companyClaims)
                 .Select(s => new SelectListItem
                 {
                     Value = s.PurchaseOrderId.ToString(),
@@ -184,7 +203,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion --Retrieve PO
 
                 var rr = _dbContext.ReceivingReports
-                .Where(rr => rr.PONo == po.PurchaseOrderNo)
+                .Where(rr => rr.Company == companyClaims && rr.PONo == po.PurchaseOrderNo)
                 .ToList();
 
                 var totalAmountRR = po.Quantity - po.QuantityReceived;
@@ -285,7 +304,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = model.NetAmount,
                                 Credit = 0,
                                 CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedDate = model.CreatedDate,
+                                Company = model.Company
                             });
                         }
                         else if (model.PurchaseOrder.Product.ProductName == "Econogas")
@@ -300,7 +320,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = model.NetAmount,
                                 Credit = 0,
                                 CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedDate = model.CreatedDate,
+                                Company = model.Company
                             });
                         }
                         else
@@ -315,7 +336,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = model.NetAmount,
                                 Credit = 0,
                                 CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedDate = model.CreatedDate,
+                                Company = model.Company
                             });
                         }
 
@@ -331,7 +353,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = model.VatAmount,
                                 Credit = 0,
                                 CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedDate = model.CreatedDate,
+                                Company = model.Company
                             });
                         }
 
@@ -347,7 +370,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = 0,
                                 Credit = model.EwtAmount,
                                 CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedDate = model.CreatedDate,
+                                Company = model.Company
                             });
                         }
 
@@ -361,7 +385,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = 0,
                             Credit = model.Amount - model.EwtAmount,
                             CreatedBy = model.CreatedBy,
-                            CreatedDate = model.CreatedDate
+                            CreatedDate = model.CreatedDate,
+                            Company = model.Company
                         });
 
                         if (!_unitOfWork.FilprideReceivingReportRepo.IsJournalEntriesBalanced(ledgers))
@@ -399,7 +424,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             NetPurchases = model.NetAmount,
                             CreatedBy = model.CreatedBy,
                             PONo = model.PurchaseOrder.PurchaseOrderNo,
-                            DueDate = model.DueDate
+                            DueDate = model.DueDate,
+                            Company = model.Company
                         });
 
                         await _dbContext.AddRangeAsync(purchaseBook, cancellationToken);
@@ -490,22 +516,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var rrPostedOnly = await _dbContext
                 .ReceivingReports
-                .Where(rr => rr.PONo == po.PurchaseOrderNo && rr.PostedBy != null)
+                .Where(rr => rr.Company == po.Company && rr.PONo == po.PurchaseOrderNo && rr.PostedBy != null)
                 .ToListAsync(cancellationToken);
 
             var rr = await _dbContext
                 .ReceivingReports
-                .Where(rr => rr.PONo == po.PurchaseOrderNo)
+                .Where(rr => rr.Company == po.Company && rr.PONo == po.PurchaseOrderNo)
                 .ToListAsync(cancellationToken);
 
             var rrNotPosted = await _dbContext
                 .ReceivingReports
-                .Where(rr => rr.PONo == po.PurchaseOrderNo && rr.PostedBy == null && rr.CanceledBy == null)
+                .Where(rr => rr.Company == po.Company && rr.PONo == po.PurchaseOrderNo && rr.PostedBy == null && rr.CanceledBy == null)
                 .ToListAsync(cancellationToken);
 
             var rrCanceled = await _dbContext
                 .ReceivingReports
-                .Where(rr => rr.PONo == po.PurchaseOrderNo && rr.CanceledBy != null)
+                .Where(rr => rr.Company == po.Company && rr.PONo == po.PurchaseOrderNo && rr.CanceledBy != null)
                 .ToListAsync(cancellationToken);
 
             if (po != null)

@@ -6,7 +6,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface IReceivingReportRepo : IRepository<ReceivingReport>
     {
-        Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default);
 
         Task<int> UpdatePOAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default);
 
@@ -14,6 +14,6 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task<DateOnly> ComputeDueDateAsync(int poId, DateOnly rrDate, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetReceivingReportListAsync(string[] rrNos, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetReceivingReportListAsync(string[] rrNos, string company, CancellationToken cancellationToken = default);
     }
 }

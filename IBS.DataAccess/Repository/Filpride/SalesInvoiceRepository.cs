@@ -61,10 +61,11 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
         {
             FilprideSalesInvoice? lastSi = await _db
                 .FilprideSalesInvoices
+                .Where(c => c.Company == company)
                 .OrderBy(c => c.SalesInvoiceNo)
                 .LastOrDefaultAsync(cancellationToken);
 

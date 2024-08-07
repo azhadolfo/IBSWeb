@@ -54,6 +54,8 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
         public List<SelectListItem> Stations { get; set; }
 
+        public List<SelectListItem> Companies { get; set; }
+
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
@@ -110,6 +112,8 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
             Stations = await _unitOfWork.GetMobilityStationListAsyncByCode();
+
+            Companies = await _unitOfWork.GetCompanyListAsyncByName();
 
             ReturnUrl = returnUrl;
         }

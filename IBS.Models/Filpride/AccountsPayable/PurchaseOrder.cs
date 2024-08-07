@@ -78,5 +78,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [NotMapped]
         public List<ReceivingReport>? RrList { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

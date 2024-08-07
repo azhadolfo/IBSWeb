@@ -98,5 +98,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [NotMapped]
         public List<SelectListItem>? Services { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

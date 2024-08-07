@@ -10,6 +10,6 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task<bool> IsBankAccountNameExist(string accountName, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetBankAccountListAsync(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetBankAccountListAsync(string company, CancellationToken cancellationToken = default);
     }
 }

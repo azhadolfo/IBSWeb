@@ -15,11 +15,12 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
         {
             Hauler? lastHauler = await _db
                 .Haulers
                 .OrderBy(c => c.HaulerId)
+                .Where(c => c.Company == company)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastHauler != null)
@@ -37,10 +38,10 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<bool> IsHaulerNameExistAsync(string haulerName, CancellationToken cancellationToken)
+        public async Task<bool> IsHaulerNameExistAsync(string haulerName, string company, CancellationToken cancellationToken)
         {
             return await _db.Haulers
-                .AnyAsync(c => c.HaulerName == haulerName, cancellationToken);
+                .AnyAsync(c => c.Company == company && c.HaulerName == haulerName, cancellationToken);
         }
 
         public async Task UpdateAsync(Hauler model, CancellationToken cancellationToken = default)
@@ -63,10 +64,11 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<List<SelectListItem>> GetHaulerListAsync(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetHaulerListAsync(string company, CancellationToken cancellationToken = default)
         {
             return await _db.Haulers
                 .OrderBy(h => h.HaulerId)
+                .Where(h => h.Company == company)
                 .Select(h => new SelectListItem
                 {
                     Value = h.HaulerId.ToString(),

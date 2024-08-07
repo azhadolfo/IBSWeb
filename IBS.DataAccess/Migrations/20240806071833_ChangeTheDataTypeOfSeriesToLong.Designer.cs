@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240806071833_ChangeTheDataTypeOfSeriesToLong")]
+    partial class ChangeTheDataTypeOfSeriesToLong
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -224,10 +227,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("debit");
 
-                    b.Property<int>("JournalVoucherHeaderId")
-                        .HasColumnType("integer")
-                        .HasColumnName("journal_voucher_header_id");
-
                     b.Property<string>("TransactionNo")
                         .IsRequired()
                         .HasColumnType("text")
@@ -235,9 +234,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("JournalVoucherDetailId")
                         .HasName("pk_filpride_journal_voucher_details");
-
-                    b.HasIndex("JournalVoucherHeaderId")
-                        .HasDatabaseName("ix_filpride_journal_voucher_details_journal_voucher_header_id");
 
                     b.ToTable("filpride_journal_voucher_details", (string)null);
                 });
@@ -1821,10 +1817,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("account_no");
 
-                    b.Property<int>("CheckVoucherHeaderId")
-                        .HasColumnType("integer")
-                        .HasColumnName("check_voucher_header_id");
-
                     b.Property<decimal>("Credit")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("credit");
@@ -1840,9 +1832,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("CheckVoucherDetailId")
                         .HasName("pk_filpride_check_voucher_details");
-
-                    b.HasIndex("CheckVoucherHeaderId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_check_voucher_header_id");
 
                     b.ToTable("filpride_check_voucher_details", (string)null);
                 });
@@ -2286,11 +2275,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("company");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
                         .HasColumnName("created_by");
@@ -2640,6 +2624,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("bank");
 
+                    b.Property<string>("BankCode")
+                        .HasColumnType("text")
+                        .HasColumnName("bank_code");
+
                     b.Property<string>("Branch")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2657,6 +2645,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
+
+                    b.Property<long>("SeriesNumber")
+                        .HasColumnType("bigint")
+                        .HasColumnName("series_number");
 
                     b.HasKey("BankAccountId")
                         .HasName("pk_filpride_bank_accounts");
@@ -2749,6 +2741,7 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_filpride_customers");
 
                     b.HasIndex("CustomerCode")
+                        .IsUnique()
                         .HasDatabaseName("ix_filpride_customers_customer_code");
 
                     b.HasIndex("CustomerName")
@@ -2928,9 +2921,11 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_filpride_suppliers");
 
                     b.HasIndex("SupplierCode")
+                        .IsUnique()
                         .HasDatabaseName("ix_filpride_suppliers_supplier_code");
 
                     b.HasIndex("SupplierName")
+                        .IsUnique()
                         .HasDatabaseName("ix_filpride_suppliers_supplier_name");
 
                     b.ToTable("filpride_suppliers", (string)null);
@@ -2989,9 +2984,11 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_haulers");
 
                     b.HasIndex("HaulerCode")
+                        .IsUnique()
                         .HasDatabaseName("ix_haulers_hauler_code");
 
                     b.HasIndex("HaulerName")
+                        .IsUnique()
                         .HasDatabaseName("ix_haulers_hauler_name");
 
                     b.ToTable("haulers", (string)null);
@@ -5990,18 +5987,6 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideJournalVoucherDetail", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideJournalVoucherHeader", "JournalVoucherHeader")
-                        .WithMany()
-                        .HasForeignKey("JournalVoucherHeaderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_journal_voucher_details_filpride_journal_voucher_h");
-
-                    b.Navigation("JournalVoucherHeader");
-                });
-
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideJournalVoucherHeader", b =>
                 {
                     b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", "CheckVoucherHeader")
@@ -6156,18 +6141,6 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("PurchaseOrder");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideCheckVoucherDetail", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", "CheckVoucherHeader")
-                        .WithMany()
-                        .HasForeignKey("CheckVoucherHeaderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_check_voucher_heade");
-
-                    b.Navigation("CheckVoucherHeader");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.FilprideCustomerOrderSlip", b =>

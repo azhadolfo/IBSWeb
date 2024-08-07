@@ -144,7 +144,7 @@
                                     </ul>
                                 </li>
                             }
-                            else if (selectedCompany == "Filpride")
+                            else
                             {
                                 @*<li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -369,9 +369,6 @@
 
                             @if (User.IsInRole("Admin"))
                             {
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-area="Admin" asp-controller="AppRole" asp-action="Index">Role</a>
-                                </li>
                                 <li class="nav-item dropdown-layout">
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         Admin Master File
@@ -382,12 +379,17 @@
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="User" asp-controller="ChartOfAccount" asp-action="Index">Chart Of Account</a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li class="nav-item">
                                             <a class="dropdown-item text-dark" asp-area="User" asp-controller="Product" asp-action="Index">Product</a>
                                         </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="Admin" asp-controller="AppRole" asp-action="Index">Role</a>
+                                        </li>
                                     </ul>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-area="User" asp-controller="ChartOfAccount" asp-action="Index">Chart Of Account</a>
                                 </li>
                             }
                         </ul>

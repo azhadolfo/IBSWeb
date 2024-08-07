@@ -17,7 +17,7 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task AddActualInventory(ActualInventoryViewModel viewModel, CancellationToken cancellationToken = default)
+        public async Task AddActualInventory(ActualInventoryViewModel viewModel, string company, CancellationToken cancellationToken = default)
         {
             #region -- Actual Inventory Entry --
 
@@ -38,6 +38,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 AverageCost = totalBalance / inventoryBalance,
                 TotalBalance = totalBalance,
                 POId = viewModel.POId,
+                Company = company
             };
             await _db.FilprideInventories.AddAsync(inventory, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
@@ -71,7 +72,7 @@ namespace IBS.DataAccess.Repository.Filpride
             #endregion -- General Book Entry --
         }
 
-        public async Task AddBeginningInventory(BeginningInventoryViewModel viewModel, CancellationToken cancellationToken = default)
+        public async Task AddBeginningInventory(BeginningInventoryViewModel viewModel, string company, CancellationToken cancellationToken = default)
         {
             FilprideInventory inventory = new()
             {
@@ -87,7 +88,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 TotalBalance = viewModel.Quantity * viewModel.Cost,
                 IsValidated = true,
                 ValidatedBy = "Ako",
-                ValidatedDate = DateTime.Now
+                ValidatedDate = DateTime.Now,
+                Company = company
             };
 
             await _db.FilprideInventories.AddAsync(inventory, cancellationToken);
@@ -97,7 +99,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task AddPurchaseToInventoryAsync(ReceivingReport receivingReport, CancellationToken cancellationToken = default)
         {
             var sortedInventory = await _db.FilprideInventories
-            .Where(i => i.ProductId == receivingReport.PurchaseOrder.Product.ProductId && i.POId == receivingReport.POId)
+            .Where(i => i.Company == receivingReport.Company && i.ProductId == receivingReport.PurchaseOrder.Product.ProductId && i.POId == receivingReport.POId)
             .OrderBy(i => i.Date)
             .ThenBy(i => i.ProductId)
             .ToListAsync(cancellationToken);
@@ -125,12 +127,11 @@ namespace IBS.DataAccess.Repository.Filpride
                 Quantity = receivingReport.QuantityReceived,
                 Cost = receivingReport.PurchaseOrder.Price / 1.12m, //unit cost
                 IsValidated = true,
-                ValidatedBy = "Ako",
-                ValidatedDate = DateTime.Now,
                 Total = total,
                 InventoryBalance = inventoryBalance,
                 TotalBalance = totalBalance,
-                AverageCost = averageCost
+                AverageCost = averageCost,
+                Company = receivingReport.Company
             };
 
             foreach (var transaction in sortedInventory.Skip(1))
@@ -200,7 +201,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task AddSalesToInventoryAsync(FilprideSalesInvoice salesInvoice, CancellationToken cancellationToken = default)
         {
             var sortedInventory = await _db.FilprideInventories
-            .Where(i => i.ProductId == salesInvoice.Product.ProductId && i.POId == salesInvoice.PurchaseOrderId)
+            .Where(i => i.Company == salesInvoice.Company && i.ProductId == salesInvoice.Product.ProductId && i.POId == salesInvoice.PurchaseOrderId)
             .OrderBy(i => i.Date)
             .ThenBy(i => i.ProductId)
             .ToListAsync(cancellationToken);
@@ -244,7 +245,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Total = total,
                     InventoryBalance = inventoryBalance,
                     TotalBalance = totalBalance,
-                    AverageCost = averageCost
+                    AverageCost = averageCost,
+                    Company = salesInvoice.Company
                 };
 
                 foreach (var transaction in sortedInventory.Skip(1))
@@ -316,6 +318,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = salesInvoice.Product.ProductCode == "PET001" ? "Cost of Goods Sold - Biodiesel" : salesInvoice.Product.ProductCode == "PET002" ? "Cost of Goods Sold - Econogas" : "Cost of Goods Sold - Envirogas",
                         Debit = inventory.Total,
                         Credit = 0,
+                        Company = salesInvoice.Company,
                         CreatedBy = salesInvoice.CreatedBy,
                         CreatedDate = salesInvoice.CreatedDate
                     },
@@ -328,6 +331,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         AccountTitle = salesInvoice.Product.ProductCode == "PET001" ? "Inventory - Biodiesel" : salesInvoice.Product.ProductCode == "PET002" ? "Inventory - Econogas" : "Inventory - Envirogas",
                         Debit = 0,
                         Credit = inventory.Total,
+                        Company = salesInvoice.Company,
                         CreatedBy = salesInvoice.CreatedBy,
                         CreatedDate = salesInvoice.CreatedDate
                     }
@@ -354,20 +358,21 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task ChangePriceToInventoryAsync(PurchaseChangePriceViewModel viewModel, CancellationToken cancellationToken = default)
         {
+            try
             {
                 var existingPO = await _db.PurchaseOrders
                 .Include(po => po.Supplier)
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == viewModel.POId, cancellationToken);
 
                 var previousInventory = await _db.FilprideInventories
-                    .Where(i => i.ProductId == existingPO.ProductId && i.POId == viewModel.POId)
+                    .Where(i => i.Company == existingPO.Company && i.ProductId == existingPO.ProductId && i.POId == viewModel.POId)
                     .OrderByDescending(i => i.Date)
                     .ThenByDescending(i => i.ProductId)
                     .Include(i => i.Product)
                     .FirstOrDefaultAsync(cancellationToken);
 
                 var previousInventoryList = await _db.FilprideInventories
-                    .Where(i => i.ProductId == existingPO.ProductId && i.POId == viewModel.POId)
+                    .Where(i => i.Company == existingPO.Company && i.ProductId == existingPO.ProductId && i.POId == viewModel.POId)
                     .OrderByDescending(i => i.Date)
                     .ThenByDescending(i => i.ProductId)
                     .ToListAsync();
@@ -380,7 +385,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     #region -- Inventory Entry --
 
                     var _journalVoucherRepo = new JournalVoucherRepository(_db);
-                    var generateJVNo = await _journalVoucherRepo.GenerateCodeAsync(cancellationToken);
+                    var generateJVNo = await _journalVoucherRepo.GenerateCodeAsync(previousInventory.Company, cancellationToken);
                     FilprideInventory inventory = new()
                     {
                         Date = DateOnly.FromDateTime(DateTime.Now),
@@ -392,7 +397,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Cost = 0,
                         IsValidated = true,
                         ValidatedBy = "Ako",
-                        ValidatedDate = DateTime.Now
+                        ValidatedDate = DateTime.Now,
+                        Company = existingPO.Company
                     };
 
                     viewModel.FinalPrice /= 1.12m;
@@ -413,21 +419,22 @@ namespace IBS.DataAccess.Repository.Filpride
 
                     #region -- Journal Voucher Entry --
 
-                    var journalVoucherHeader = new List<FilprideJournalVoucherHeader>
-                {
-                    new FilprideJournalVoucherHeader
+                    var journalVoucherHeader = new FilprideJournalVoucherHeader
                     {
                         Date = DateOnly.FromDateTime(DateTime.Now),
                         JournalVoucherHeaderNo = generateJVNo,
                         References = "",
-                        Particulars = $"Change price of {existingPO.PurchaseOrderNo} from {existingPO.Price} to {existingPO.FinalPrice }",
+                        Particulars = $"Change price of {existingPO.PurchaseOrderNo} from {existingPO.Price} to {existingPO.FinalPrice}",
                         CRNo = "",
                         JVReason = "Change Price",
                         CreatedBy = "Ako",
                         PostedBy = "Ako",
-                        PostedDate = DateTime.Now
-                    },
-                };
+                        PostedDate = DateTime.Now,
+                        Company = existingPO.Company
+                    };
+
+                    await _db.FilprideJournalVoucherHeaders.AddAsync(journalVoucherHeader, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
 
                     #region -- JV Detail Entry --
 
@@ -443,7 +450,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountName = previousInventory.Product.ProductCode == "PET001" ? "Inventory - Biodiesel" : previousInventory.Product.ProductCode == "PET002" ? "Inventory - Econogas" : "Inventory - Envirogas",
                             TransactionNo = generateJVNo,
                             Debit = Math.Abs(productAmount),
-                            Credit = 0
+                            Credit = 0,
+                            JournalVoucherHeaderId = journalVoucherHeader.JournalVoucherHeaderId
                         },
                         new FilprideJournalVoucherDetail
                         {
@@ -451,7 +459,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountName = "Vat Input",
                             TransactionNo = generateJVNo,
                             Debit = Math.Abs(vatInput),
-                            Credit = 0
+                            Credit = 0,
+                            JournalVoucherHeaderId = journalVoucherHeader.JournalVoucherHeaderId
                         },
                         new FilprideJournalVoucherDetail
                         {
@@ -459,7 +468,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountName = "Expanded Witholding Tax 1%",
                             TransactionNo = generateJVNo,
                             Debit = 0,
-                            Credit = Math.Abs(wht)
+                            Credit = Math.Abs(wht),
+                            JournalVoucherHeaderId = journalVoucherHeader.JournalVoucherHeaderId
                         },
                         new FilprideJournalVoucherDetail
                         {
@@ -467,11 +477,12 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountName = "AP-Trade Payable",
                             TransactionNo = generateJVNo,
                             Debit = 0,
-                            Credit = Math.Abs(apTradePayable)
+                            Credit = Math.Abs(apTradePayable),
+                            JournalVoucherHeaderId = journalVoucherHeader.JournalVoucherHeaderId
                         }
                     };
 
-                        await _db.AddRangeAsync(journalVoucherDetail, cancellationToken);
+                        await _db.FilprideJournalVoucherDetails.AddRangeAsync(journalVoucherDetail, cancellationToken);
 
                         #endregion -- JV Detail Entry --
                     }
@@ -487,7 +498,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountName = previousInventory.Product.ProductCode == "PET001" ? "Inventory - Biodiesel" : previousInventory.Product.ProductCode == "PET002" ? "Inventory - Econogas" : "Inventory - Envirogas",
                             TransactionNo = generateJVNo,
                             Debit = 0,
-                            Credit = Math.Abs(productAmount)
+                            Credit = Math.Abs(productAmount),
+                            JournalVoucherHeaderId = journalVoucherHeader.JournalVoucherHeaderId
                         },
                         new FilprideJournalVoucherDetail
                         {
@@ -495,7 +507,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountName = "Vat Input",
                             TransactionNo = generateJVNo,
                             Debit = 0,
-                            Credit = Math.Abs(vatInput)
+                            Credit = Math.Abs(vatInput),
+                            JournalVoucherHeaderId = journalVoucherHeader.JournalVoucherHeaderId
                         },
                         new FilprideJournalVoucherDetail
                         {
@@ -503,7 +516,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountName = "Expanded Witholding Tax 1%",
                             TransactionNo = generateJVNo,
                             Debit = Math.Abs(wht),
-                            Credit = 0
+                            Credit = 0,
+                            JournalVoucherHeaderId = journalVoucherHeader.JournalVoucherHeaderId
                         },
                         new FilprideJournalVoucherDetail
                         {
@@ -511,7 +525,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountName = "AP-Trade Payable",
                             TransactionNo = generateJVNo,
                             Debit = Math.Abs(apTradePayable),
-                            Credit = 0
+                            Credit = 0,
+                            JournalVoucherHeaderId = journalVoucherHeader.JournalVoucherHeaderId
                         }
                     };
 
@@ -521,8 +536,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     }
 
                     #endregion -- JV Detail Entry --
-
-                    await _db.AddRangeAsync(journalVoucherHeader, cancellationToken);
 
                     #endregion -- Journal Voucher Entry --
 
@@ -543,7 +556,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(productAmount),
                             Credit = 0,
                             CreatedBy = "ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company,
                         },
                         new FilprideJournalBook
                         {
@@ -554,7 +568,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(vatInput),
                             Credit = 0,
                             CreatedBy = "ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company,
                         },
                         new FilprideJournalBook
                         {
@@ -565,7 +580,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(wht),
                             CreatedBy = "ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         },
                         new FilprideJournalBook
                         {
@@ -576,7 +592,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(apTradePayable),
                             CreatedBy = "ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company,
                         }
                     };
                         await _db.AddRangeAsync(journalBook, cancellationToken);
@@ -598,7 +615,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(productAmount),
                             CreatedBy = "ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         },
                         new FilprideJournalBook
                         {
@@ -609,7 +627,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(vatInput),
                             CreatedBy = "ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         },
                         new FilprideJournalBook
                         {
@@ -620,7 +639,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(wht),
                             Credit = 0,
                             CreatedBy = "ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         },
                         new FilprideJournalBook
                         {
@@ -631,7 +651,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(apTradePayable),
                             Credit = 0,
                             CreatedBy = "ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         }
                     };
                         await _db.AddRangeAsync(journalBook, cancellationToken);
@@ -661,7 +682,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             PONo = existingPO.PurchaseOrderNo,
                             DueDate = DateOnly.FromDateTime(DateTime.MinValue),
                             CreatedBy = "Ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         }
                     };
 
@@ -685,7 +707,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(productAmount),
                             Credit = 0,
                             CreatedBy = "Ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
                         {
@@ -697,7 +720,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(vatInput),
                             Credit = 0,
                             CreatedBy = "Ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
                         {
@@ -709,7 +733,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(wht),
                             CreatedBy = "Ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
                         {
@@ -721,7 +746,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(apTradePayable),
                             CreatedBy = "Ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         }
                     };
                         await _db.AddRangeAsync(ledgers, cancellationToken);
@@ -744,7 +770,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(productAmount),
                             CreatedBy = "Ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
                         {
@@ -756,7 +783,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(vatInput),
                             CreatedBy = "Ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
                         {
@@ -768,7 +796,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(wht),
                             Credit = 0,
                             CreatedBy = "Ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
                         {
@@ -780,7 +809,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(apTradePayable),
                             Credit = 0,
                             CreatedBy = "Ako",
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = inventory.Company
                         }
                     };
                         await _db.AddRangeAsync(ledgers, cancellationToken);
@@ -799,12 +829,16 @@ namespace IBS.DataAccess.Repository.Filpride
                     throw new InvalidOperationException($"Beginning inventory for this product '{existingPO.Product.ProductName}' not found!");
                 }
             }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
-        public async Task<bool> HasAlreadyBeginningInventory(int productId, int poId, CancellationToken cancellationToken = default)
+        public async Task<bool> HasAlreadyBeginningInventory(int productId, int poId, string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideInventories
-                .AnyAsync(i => i.ProductId == productId && i.POId == poId, cancellationToken);
+                .AnyAsync(i => i.Company == company && i.ProductId == productId && i.POId == poId, cancellationToken);
         }
     }
 }

@@ -101,5 +101,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal NetAmountOfEWT { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

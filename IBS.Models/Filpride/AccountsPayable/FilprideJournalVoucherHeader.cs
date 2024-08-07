@@ -37,5 +37,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [NotMapped]
         public List<SelectListItem>? COA { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

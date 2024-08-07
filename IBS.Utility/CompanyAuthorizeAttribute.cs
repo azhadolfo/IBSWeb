@@ -17,9 +17,12 @@ namespace IBS.Utility
         {
             var companyClaim = context.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
 
-            if (!string.Equals(companyClaim, _company, StringComparison.OrdinalIgnoreCase))
+            if (_company == "Mobility" || companyClaim == "Mobility")
             {
-                context.Result = new ForbidResult();
+                if (!string.Equals(companyClaim, _company, StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Result = new ForbidResult();
+                }
             }
         }
     }

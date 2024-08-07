@@ -235,11 +235,11 @@ namespace IBS.DataAccess.Repository
 
         #region--Filpride
 
-        public async Task<List<SelectListItem>> GetFilprideCustomerListAsync(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetFilprideCustomerListAsync(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideCustomers
                 .OrderBy(c => c.CustomerId)
-                .Where(c => c.IsActive)
+                .Where(c => c.IsActive && c.Company == company)
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),
@@ -248,11 +248,11 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetFilprideSupplierListAsyncById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetFilprideSupplierListAsyncById(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive)
+                .Where(s => s.IsActive && s.Company == company)
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
@@ -311,6 +311,19 @@ namespace IBS.DataAccess.Repository
                 {
                     Value = c.AccountNumber,
                     Text = c.AccountNumber + " " + c.AccountName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetCompanyListAsyncByName(CancellationToken cancellationToken = default)
+        {
+            return await _db.Companies
+                .OrderBy(c => c.CompanyCode)
+                .Where(c => c.IsActive)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CompanyName,
+                    Text = c.CompanyCode + " " + c.CompanyName
                 })
                 .ToListAsync(cancellationToken);
         }

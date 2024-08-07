@@ -94,5 +94,7 @@ namespace IBS.Models.Filpride
         public decimal UnearnedAmount { get; set; }
 
         public int ServicesId { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

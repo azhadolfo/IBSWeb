@@ -94,5 +94,7 @@ namespace IBS.Models.Filpride.MasterFile
         [Display(Name = "Validity Date")]
         [Column(TypeName = "date")]
         public DateTime? ValidityDate { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

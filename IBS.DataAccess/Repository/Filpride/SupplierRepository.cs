@@ -15,10 +15,11 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
         {
             FilprideSupplier? lastSupplier = await _db
                 .FilprideSuppliers
+                .Where(s => s.Company == company)
                 .OrderBy(s => s.SupplierId)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -39,16 +40,16 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<bool> IsSupplierExistAsync(string supplierName, CancellationToken cancellationToken = default)
+        public async Task<bool> IsSupplierExistAsync(string supplierName, string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideSuppliers
-                .AnyAsync(s => s.SupplierName == supplierName, cancellationToken);
+                .AnyAsync(s => s.Company == company && s.SupplierName == supplierName, cancellationToken);
         }
 
-        public async Task<bool> IsTinNoExistAsync(string tin, CancellationToken cancellationToken = default)
+        public async Task<bool> IsTinNoExistAsync(string tin, string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideSuppliers
-                .AnyAsync(s => s.SupplierTin == tin, cancellationToken);
+                .AnyAsync(s => s.Company == company && s.SupplierTin == tin, cancellationToken);
         }
 
         public async Task<string> SaveProofOfRegistration(IFormFile file, string localPath, CancellationToken cancellationToken = default)

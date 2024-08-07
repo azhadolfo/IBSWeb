@@ -20,6 +20,13 @@ namespace IBSWeb.Areas.User.Controllers
             _userManager = userManager;
         }
 
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
             var haulers = await _unitOfWork.FilprideHauler
@@ -39,11 +46,13 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (ModelState.IsValid)
             {
-                var isHaulerExist = await _unitOfWork.FilprideHauler.IsHaulerNameExistAsync(model.HaulerName, cancellationToken);
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var isHaulerExist = await _unitOfWork.FilprideHauler.IsHaulerNameExistAsync(model.HaulerName, companyClaims, cancellationToken);
 
                 if (!isHaulerExist)
                 {
-                    model.HaulerCode = await _unitOfWork.FilprideHauler.GenerateCodeAsync(cancellationToken);
+                    model.HaulerCode = await _unitOfWork.FilprideHauler.GenerateCodeAsync(companyClaims, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideHauler.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);

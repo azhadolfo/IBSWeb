@@ -9,12 +9,8 @@ namespace IBS.Models.Filpride.MasterFile
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int BankAccountId { get; set; }
 
-        public int SeriesNumber { get; set; }
-
         public string Bank { get; set; }
         public string Branch { get; set; }
-
-        public string? BankCode { get; set; }
 
         [Display(Name = "Account No")]
         public string AccountNo { get; set; }
@@ -30,5 +26,7 @@ namespace IBS.Models.Filpride.MasterFile
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         public string? AccountNoCOA { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

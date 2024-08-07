@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using IBS.Models.Filpride.AccountsPayable;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride
@@ -21,5 +22,10 @@ namespace IBS.Models.Filpride
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Credit { get; set; }
+
+        public int CheckVoucherHeaderId { get; set; }
+
+        [ForeignKey(nameof(CheckVoucherHeaderId))]
+        public FilprideCheckVoucherHeader? CheckVoucherHeader { get; set; }
     }
 }

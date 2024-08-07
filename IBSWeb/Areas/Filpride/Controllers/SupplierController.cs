@@ -32,10 +32,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _dbContext = dbContext;
         }
 
-        public async Task<IActionResult> Index()
+        private async Task<string> GetCompanyClaimAsync()
         {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
             IEnumerable<FilprideSupplier> suppliers = await _unitOfWork.FilprideSupplier
-                .GetAllAsync();
+                .GetAllAsync(c => c.Company == companyClaims, cancellationToken);
 
             return View(suppliers);
         }
@@ -68,13 +77,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, cancellationToken))
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, companyClaims, cancellationToken))
                 {
                     ModelState.AddModelError("SupplierName", "Supplier already exist.");
                     return View(model);
                 }
 
-                if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, cancellationToken))
+                if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, companyClaims, cancellationToken))
                 {
                     ModelState.AddModelError("SupplierTin", "Tin number already exist.");
                     return View(model);
@@ -90,8 +101,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     model.SupplierCode = await _unitOfWork.FilprideSupplier
-                        .GenerateCodeAsync(cancellationToken);
+                        .GenerateCodeAsync(companyClaims, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
+                    model.Company = companyClaims;
                     await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Supplier created successfully";

@@ -66,10 +66,11 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
         {
             ReceivingReport? lastRr = await _db
                 .ReceivingReports
+                .Where(rr => rr.Company == company)
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -87,13 +88,14 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<List<SelectListItem>> GetReceivingReportListAsync(string[] rrNos, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetReceivingReportListAsync(string[] rrNos, string company, CancellationToken cancellationToken = default)
         {
             var rrNoHashSet = new HashSet<string>(rrNos);
 
             var rrList = await _db.ReceivingReports
                 .OrderBy(rr => rrNoHashSet.Contains(rr.ReceivingReportNo) ? Array.IndexOf(rrNos, rr.ReceivingReportNo) : int.MaxValue) // Order by index in rrNos array if present in HashSet
                 .ThenBy(rr => rr.ReceivingReportId) // Secondary ordering by Id
+                .Where(rr => rr.Company == company)
                 .Select(rr => new SelectListItem
                 {
                     Value = rr.ReceivingReportNo,

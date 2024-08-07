@@ -42,5 +42,7 @@ namespace IBS.Models.Filpride.Books
 
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+
+        public string Company { get; set; } = string.Empty;
     }
 }

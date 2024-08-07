@@ -15,6 +15,7 @@
     </div>
     <div class="card-body p-4">
         <form asp-action="Edit">
+            <input asp-for="DebitMemoId" type="hidden" />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <fieldset class="form-group mb-3">
                 <legend>Select Source</legend>
@@ -64,7 +65,7 @@
                 <div class="row g-2 mt-3">
                     <div class="col-sm mb-3">
                         <label asp-for="Period" class="control-label"></label><span class="required">*</span>
-                        <input asp-for="Period" type="month" class="form-control" required />
+                        <input asp-for="Period" type="month" class="form-control" readonly />
                         <span asp-validation-for="Period" class="text-danger"></span>
                     </div>
                     <div class="col-sm">
