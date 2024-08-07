@@ -247,9 +247,13 @@
                 }
 
                 @* "end" hidden input to add value when submit form *@
-                <div class="form-group">
-                    <input type="submit" value="Save" class="btn btn-primary" onclick="validateDebitAndCredit(event)" />
-                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Save</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
                 </div>
             </div>
         </form>
