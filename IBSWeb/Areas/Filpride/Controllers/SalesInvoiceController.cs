@@ -26,10 +26,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _dbContext = dbContext;
         }
 
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var salesInvoices = await _unitOfWork.FilprideSalesInvoice
-                .GetAllAsync(null, cancellationToken);
+                .GetAllAsync(si => si.Company == companyClaims, cancellationToken);
 
             return View(salesInvoices);
         }
@@ -37,9 +46,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             FilprideSalesInvoice viewModel = new()
             {
-                Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken),
+                Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
             };
 
@@ -49,6 +60,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(FilprideSalesInvoice model, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (ModelState.IsValid)
             {
                 try
@@ -58,10 +71,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingCustomer = await _unitOfWork.FilprideCustomer
                         .GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
 
-                    model.SalesInvoiceNo = await _unitOfWork.FilprideSalesInvoice.GenerateCodeAsync(cancellationToken);
+                    model.SalesInvoiceNo = await _unitOfWork.FilprideSalesInvoice.GenerateCodeAsync(companyClaims, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
                     model.Amount = model.Quantity * model.UnitPrice;
                     model.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingCustomer.CustomerTerms, model.TransactionDate);
+                    model.Company = companyClaims;
 
                     if (model.Amount >= model.Discount)
                     {
@@ -114,7 +128,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     else
                     {
-                        model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
+                        model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                         model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                         TempData["error"] = "Please input below or exact amount based on the Sales Invoice";
                         return View(model);
@@ -124,14 +138,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
+                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
             model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(model);
@@ -177,8 +191,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
+                var companyClaims = await GetCompanyClaimAsync();
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
-                salesInvoice.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
+                salesInvoice.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                 salesInvoice.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                 return View(salesInvoice);
             }
@@ -191,6 +206,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(FilprideSalesInvoice model, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (ModelState.IsValid)
             {
                 try
@@ -263,14 +280,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
+                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
             model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(model);
@@ -323,6 +340,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             sales.CreatedDate = model.CreatedDate;
                             sales.DueDate = model.DueDate;
                             sales.DocumentId = model.SalesInvoiceId;
+                            sales.Company = model.Company;
                         }
                         else if (model.Customer.CustomerType == "Exempt")
                         {
@@ -340,6 +358,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             sales.CreatedDate = model.CreatedDate;
                             sales.DueDate = model.DueDate;
                             sales.DocumentId = model.SalesInvoiceId;
+                            sales.Company = model.Company;
                         }
                         else
                         {
@@ -357,6 +376,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             sales.CreatedDate = model.CreatedDate;
                             sales.DueDate = model.DueDate;
                             sales.DocumentId = model.SalesInvoiceId;
+                            sales.Company = model.Company;
                         }
 
                         await _dbContext.FilprideSalesBooks.AddAsync(sales, cancellationToken);
@@ -377,6 +397,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 AccountTitle = "AR-Trade Receivable",
                                 Debit = model.NetDiscount - (model.WithHoldingTaxAmount + model.WithHoldingVatAmount),
                                 Credit = 0,
+                                Company = model.Company,
                                 CreatedBy = model.CreatedBy,
                                 CreatedDate = model.CreatedDate
                             }
@@ -394,6 +415,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     AccountTitle = "Deferred Creditable Withholding Tax",
                                     Debit = model.WithHoldingTaxAmount,
                                     Credit = 0,
+                                    Company = model.Company,
                                     CreatedBy = model.CreatedBy,
                                     CreatedDate = model.CreatedDate
                                 }
@@ -411,6 +433,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     AccountTitle = "Deferred Creditable Withholding Vat",
                                     Debit = model.WithHoldingVatAmount,
                                     Credit = 0,
+                                    Company = model.Company,
                                     CreatedBy = model.CreatedBy,
                                     CreatedDate = model.CreatedDate
                                 }
@@ -430,6 +453,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Credit = model.VatableSales > 0
                                                 ? model.VatableSales
                                                 : (model.ZeroRated + model.VatExempt) - model.Discount,
+                                    Company = model.Company,
                                     CreatedBy = model.CreatedBy,
                                     CreatedDate = model.CreatedDate
                                 }
@@ -449,6 +473,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Credit = model.VatableSales > 0
                                                 ? model.VatableSales
                                                 : (model.ZeroRated + model.VatExempt) - model.Discount,
+                                    Company = model.Company,
                                     CreatedBy = model.CreatedBy,
                                     CreatedDate = model.CreatedDate
                                 }
@@ -468,6 +493,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Credit = model.VatableSales > 0
                                                 ? model.VatableSales
                                                 : (model.ZeroRated + model.VatExempt) - model.Discount,
+                                    Company = model.Company,
                                     CreatedBy = model.CreatedBy,
                                     CreatedDate = model.CreatedDate
                                 }
@@ -486,6 +512,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     AccountTitle = "Vat Output",
                                     Debit = 0,
                                     Credit = model.VatAmount,
+                                    Company = model.Company,
                                     CreatedBy = model.CreatedBy,
                                     CreatedDate = model.CreatedDate
                                 }
@@ -577,8 +604,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetPOs(int productId)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var purchaseOrders = await _dbContext.PurchaseOrders
-                .Where(po => po.ProductId == productId && po.QuantityReceived != 0 && po.PostedBy != null)
+                .Where(po => po.Company == companyClaims && po.ProductId == productId && po.QuantityReceived != 0 && po.PostedBy != null)
                 .ToListAsync();
 
             if (purchaseOrders != null && purchaseOrders.Count > 0)

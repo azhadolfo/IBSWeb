@@ -25,10 +25,8 @@
                         </div>
                         <div class="mb-3">
                             <label for="company" class="form-label">Select Company</label>
-                            <select asp-for="Input.Company" class="form-select js-select2" style="width:100%" id="company-select">
+                            <select asp-for="Input.Company" asp-items="@Model.Companies" class="form-select js-select2" style="width:100%" id="company-select">
                                 <option value="" selected disabled>Select company</option>
-                                <option value="Filpride">Filpride</option>
-                                <option value="Mobility">Mobility</option>
                             </select>
                             <span asp-validation-for="Input.Company" class="text-danger"></span>
                         </div>

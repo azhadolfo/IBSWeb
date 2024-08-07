@@ -6,8 +6,8 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface IPurchaseOrderRepo : IRepository<PurchaseOrder>
     {
-        Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetPurchaseOrderListAsync(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetPurchaseOrderListAsync(string company, CancellationToken cancellationToken = default);
     }
 }

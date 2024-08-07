@@ -115,5 +115,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public decimal AmountPaid { get; set; }
 
         public bool IsPaid { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

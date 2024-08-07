@@ -5,7 +5,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface ICheckVoucherRepository : IRepository<FilprideCheckVoucherHeader>
     {
-        Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default);
 
         Task UpdateInvoicingVoucher(decimal paymentAmount, int invoiceVoucherId, CancellationToken cancellationToken = default);
     }

@@ -28,9 +28,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var cm = await _unitOfWork.FilprideCreditMemo.GetAllAsync(null, cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
+            var cm = await _unitOfWork.FilprideCreditMemo.GetAllAsync(x => x.Company == companyClaims, cancellationToken);
 
             return View(cm);
         }
@@ -38,8 +46,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var viewModel = new FilprideCreditMemo();
+            var companyClaims = await GetCompanyClaimAsync();
+
             viewModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.PostedBy != null)
+                .Where(si => si.Company == companyClaims && si.PostedBy != null)
                 .Select(si => new SelectListItem
                 {
                     Value = si.SalesInvoiceId.ToString(),
@@ -47,7 +57,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
             viewModel.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(sv => sv.PostedBy != null)
+                .Where(sv => sv.Company == companyClaims && sv.PostedBy != null)
                 .Select(sv => new SelectListItem
                 {
                     Value = sv.ServiceInvoiceId.ToString(),
@@ -62,8 +72,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideCreditMemo model, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             model.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.PostedBy != null)
+                .Where(si => si.Company == companyClaims && si.PostedBy != null)
                 .Select(si => new SelectListItem
                 {
                     Value = si.SalesInvoiceId.ToString(),
@@ -71,7 +83,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
             model.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(sv => sv.PostedBy != null)
+                .Where(sv => sv.Company == companyClaims && sv.PostedBy != null)
                 .Select(sv => new SelectListItem
                 {
                     Value = sv.ServiceInvoiceId.ToString(),
@@ -155,10 +167,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                var generatedCM = await _unitOfWork.FilprideCreditMemo.GenerateCodeAsync(cancellationToken);
-
-                model.CreditMemoNo = generatedCM;
+                model.CreditMemoNo = await _unitOfWork.FilprideCreditMemo.GenerateCodeAsync(companyClaims, cancellationToken);
                 model.CreatedBy = _userManager.GetUserName(this.User);
+                model.Company = companyClaims;
 
                 if (model.Source == "Sales Invoice")
                 {
@@ -238,6 +249,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var companyClaims = await GetCompanyClaimAsync();
+
             var creditMemo = await _unitOfWork.FilprideCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
 
             if (creditMemo == null)
@@ -246,7 +259,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             creditMemo.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.PostedBy != null)
+                .Where(si => si.Company == companyClaims && si.PostedBy != null)
                 .Select(si => new SelectListItem
                 {
                     Value = si.SalesInvoiceId.ToString(),
@@ -254,7 +267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
             creditMemo.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(sv => sv.PostedBy != null)
+                .Where(sv => sv.Company == companyClaims && sv.PostedBy != null)
                 .Select(sv => new SelectListItem
                 {
                     Value = sv.ServiceId.ToString(),
@@ -458,6 +471,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSI.DueDate;
                                 sales.DocumentId = model.SalesInvoiceId;
+                                sales.Company = model.Company;
                             }
                             else if (model.SalesInvoice.Customer.VatType == "Exempt")
                             {
@@ -475,6 +489,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSI.DueDate;
                                 sales.DocumentId = model.SalesInvoiceId;
+                                sales.Company = model.Company;
                             }
                             else
                             {
@@ -492,6 +507,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSI.DueDate;
                                 sales.DocumentId = model.SalesInvoiceId;
+                                sales.Company = model.Company;
                             }
                             await _dbContext.AddAsync(sales, cancellationToken);
 
@@ -511,6 +527,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     AccountTitle = "AR-Trade Receivable",
                                     Debit = 0,
                                     Credit = Math.Abs(model.CreditAmount - (model.WithHoldingTaxAmount + model.WithHoldingVatAmount)),
+                                    Company = model.Company,
                                     CreatedBy = model.CreatedBy,
                                     CreatedDate = model.CreatedDate
                                 }
@@ -528,6 +545,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountTitle = "Deferred Creditable Withholding Tax",
                                         Debit = 0,
                                         Credit = Math.Abs(model.WithHoldingTaxAmount),
+                                        Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }
@@ -545,6 +563,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountTitle = "Deferred Creditable Withholding Vat",
                                         Debit = 0,
                                         Credit = Math.Abs(model.WithHoldingVatAmount),
+                                        Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }
@@ -565,6 +584,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     : Math.Abs(model.CreditAmount),
                                         CreatedBy = model.CreatedBy,
                                         Credit = 0,
+                                        Company = model.Company,
                                         CreatedDate = model.CreatedDate
                                     }
                                 );
@@ -583,6 +603,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     ? Math.Abs(model.VatableSales)
                                                     : Math.Abs(model.CreditAmount),
                                         Credit = 0,
+                                        Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }
@@ -602,6 +623,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                     ? Math.Abs(model.VatableSales)
                                                     : Math.Abs(model.CreditAmount),
                                         Credit = 0,
+                                        Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }
@@ -620,6 +642,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountTitle = "Vat Output",
                                         Debit = Math.Abs(model.VatAmount),
                                         Credit = 0,
+                                        Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }
@@ -710,6 +733,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSv.DueDate;
                                 sales.DocumentId = model.ServiceInvoiceId;
+                                sales.Company = model.Company;
                             }
                             else if (model.ServiceInvoice.Customer.VatType == "Exempt")
                             {
@@ -727,6 +751,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSv.DueDate;
                                 sales.DocumentId = model.ServiceInvoiceId;
+                                sales.Company = model.Company;
                             }
                             else
                             {
@@ -744,6 +769,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSv.DueDate;
                                 sales.DocumentId = model.ServiceInvoiceId;
+                                sales.Company = model.Company;
                             }
                             await _dbContext.AddAsync(sales, cancellationToken);
 
@@ -763,6 +789,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountTitle = "AR-Non Trade Receivable",
                                         Debit = 0,
                                         Credit = Math.Abs(model.CreditAmount - (model.WithHoldingTaxAmount + model.WithHoldingVatAmount)),
+                                        Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }
@@ -779,6 +806,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountTitle = "Deferred Creditable Withholding Tax",
                                         Debit = 0,
                                         Credit = Math.Abs(model.WithHoldingTaxAmount),
+                                        Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }
@@ -796,6 +824,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountTitle = "Deferred Creditable Withholding Vat",
                                         Debit = 0,
                                         Credit = Math.Abs(model.WithHoldingVatAmount),
+                                        Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }
@@ -811,6 +840,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 AccountTitle = model.ServiceInvoice.Service.CurrentAndPreviousTitle,
                                 Debit = Math.Round(viewModelDMCM.NetAmount),
                                 Credit = 0,
+                                Company = model.Company,
                                 CreatedBy = model.CreatedBy,
                                 CreatedDate = model.CreatedDate
                             });
@@ -827,6 +857,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountTitle = "Deferred Vat Output",
                                         Debit = Math.Abs(model.VatAmount),
                                         Credit = 0,
+                                        Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }

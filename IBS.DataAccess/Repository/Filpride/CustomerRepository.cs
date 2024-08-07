@@ -15,11 +15,11 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string customerType, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string customerType, string company, CancellationToken cancellationToken = default)
         {
             FilprideCustomer? lastCustomer = await _db
                 .FilprideCustomers
-                .Where(c => c.CustomerType == customerType)
+                .Where(c => c.Company == company && c.CustomerType == customerType)
                 .OrderBy(c => c.CustomerId)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -49,10 +49,10 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<bool> IsTinNoExistAsync(string tin, CancellationToken cancellationToken = default)
+        public async Task<bool> IsTinNoExistAsync(string tin, string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideCustomers
-                .AnyAsync(c => c.CustomerTin == tin, cancellationToken);
+                .AnyAsync(c => c.Company == company && c.CustomerTin == tin, cancellationToken);
         }
 
         public async Task UpdateAsync(FilprideCustomer model, CancellationToken cancellationToken = default)

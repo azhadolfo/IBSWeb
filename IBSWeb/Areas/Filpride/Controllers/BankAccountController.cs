@@ -26,12 +26,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _userManager = userManager;
         }
 
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
             try
             {
+                var companyClaims = await GetCompanyClaimAsync();
+
                 var banks = await _unitOfWork.FilprideBankAccount
-                .GetAllAsync(null, cancellationToken);
+                .GetAllAsync(b => b.Company == companyClaims, cancellationToken);
                 return View(banks);
             }
             catch (Exception ex)
@@ -64,29 +73,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(model);
                 }
 
-                var checkLastAccountNo = await _dbContext
-                .FilprideBankAccounts
-                .OrderBy(bank => bank.BankAccountId)
-                .LastOrDefaultAsync(cancellationToken);
+                model.Company = await GetCompanyClaimAsync();
 
-                #region -- Generate AccountNo --
+                #region Generate Account No
 
-                var generatedAccountNo = 0L;
+                var lastCibAccount = await _dbContext.ChartOfAccounts
+                    .Where(coa => coa.Level == 5 && coa.AccountNumber.StartsWith("1010101"))
+                    .OrderByDescending(coa => coa.AccountNumber)
+                    .FirstOrDefaultAsync(cancellationToken);
 
-                if (checkLastAccountNo != null)
+                if (lastCibAccount != null)
                 {
-                    // Increment the last serial by one and return it
-                    generatedAccountNo = checkLastAccountNo.SeriesNumber + 1L;
+                    var lastAccountNumber = lastCibAccount.AccountNumber;
+                    model.AccountNoCOA = (long.Parse(lastAccountNumber) + 1).ToString();
                 }
                 else
                 {
-                    // If there are no existing records, you can start with a default value like 1
-                    generatedAccountNo = 1L;
+                    model.AccountNoCOA = "101010101";
                 }
 
-                model.AccountNoCOA = "1010101" + generatedAccountNo.ToString("D2");
-
-                #endregion -- Generate AccountNo --
+                #endregion Generate Account No
 
                 model.CreatedBy = _userManager.GetUserName(this.User);
 

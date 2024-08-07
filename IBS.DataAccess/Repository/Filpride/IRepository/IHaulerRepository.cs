@@ -6,12 +6,12 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface IHaulerRepository : IRepository<Hauler>
     {
-        Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default);
 
-        Task<bool> IsHaulerNameExistAsync(string haulerName, CancellationToken cancellationToken);
+        Task<bool> IsHaulerNameExistAsync(string haulerName, string company, CancellationToken cancellationToken);
 
         Task UpdateAsync(Hauler model, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetHaulerListAsync(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetHaulerListAsync(string company, CancellationToken cancellationToken = default);
     }
 }

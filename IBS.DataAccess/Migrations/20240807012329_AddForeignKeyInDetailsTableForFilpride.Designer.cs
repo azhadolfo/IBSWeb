@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240807012329_AddForeignKeyInDetailsTableForFilpride")]
+    partial class AddForeignKeyInDetailsTableForFilpride
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2286,11 +2289,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount");
 
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("company");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
                         .HasColumnName("created_by");
@@ -2749,6 +2747,7 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_filpride_customers");
 
                     b.HasIndex("CustomerCode")
+                        .IsUnique()
                         .HasDatabaseName("ix_filpride_customers_customer_code");
 
                     b.HasIndex("CustomerName")
@@ -2928,9 +2927,11 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_filpride_suppliers");
 
                     b.HasIndex("SupplierCode")
+                        .IsUnique()
                         .HasDatabaseName("ix_filpride_suppliers_supplier_code");
 
                     b.HasIndex("SupplierName")
+                        .IsUnique()
                         .HasDatabaseName("ix_filpride_suppliers_supplier_name");
 
                     b.ToTable("filpride_suppliers", (string)null);
@@ -2989,9 +2990,11 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_haulers");
 
                     b.HasIndex("HaulerCode")
+                        .IsUnique()
                         .HasDatabaseName("ix_haulers_hauler_code");
 
                     b.HasIndex("HaulerName")
+                        .IsUnique()
                         .HasDatabaseName("ix_haulers_hauler_name");
 
                     b.ToTable("haulers", (string)null);

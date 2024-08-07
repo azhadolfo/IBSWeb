@@ -28,6 +28,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public IActionResult Index()
         {
             return View();
@@ -40,8 +47,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
+            var companyClaims = await GetCompanyClaimAsync();
+
             viewModel.PO = await _dbContext.PurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
+                .Where(p => p.Company == companyClaims)
                 .Select(p => new SelectListItem
                 {
                     Value = p.PurchaseOrderId.ToString(),
@@ -55,11 +65,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         public async Task<IActionResult> BeginningInventory(BeginningInventoryViewModel viewModel, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var hasBeginningInventory = await _unitOfWork.FilprideInventory.HasAlreadyBeginningInventory(viewModel.ProductId, viewModel.POId, cancellationToken);
+                    var hasBeginningInventory = await _unitOfWork.FilprideInventory.HasAlreadyBeginningInventory(viewModel.ProductId, viewModel.POId, companyClaims, cancellationToken);
 
                     if (hasBeginningInventory)
                     {
@@ -69,7 +80,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return View(viewModel);
                     }
 
-                    await _unitOfWork.FilprideInventory.AddBeginningInventory(viewModel, cancellationToken);
+                    await _unitOfWork.FilprideInventory.AddBeginningInventory(viewModel, companyClaims, cancellationToken);
                     TempData["success"] = "Beginning balance created successfully";
                     return RedirectToAction(nameof(BeginningInventory));
                 }
@@ -84,6 +95,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.PO = await _dbContext.PurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
+                .Where(p => p.Company == companyClaims)
                 .Select(p => new SelectListItem
                 {
                     Value = p.PurchaseOrderId.ToString(),
@@ -99,13 +111,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             InventoryReportViewModel viewModel = new InventoryReportViewModel();
 
+            var companyClaims = await GetCompanyClaimAsync();
+
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             viewModel.PO = await _dbContext.PurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
+                .Where(p => p.Company == companyClaims)
                 .Select(p => new SelectListItem
                 {
-                    Value = p.ProductId.ToString(),
+                    Value = p.PurchaseOrderId.ToString(),
                     Text = p.PurchaseOrderNo
                 })
                 .ToListAsync(cancellationToken);
@@ -117,6 +132,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
+                var companyClaims = await GetCompanyClaimAsync();
+
                 var dateFrom = viewModel.DateTo.AddDays(-viewModel.DateTo.Day + 1);
 
                 var previousMonth = viewModel.DateTo.Month - 1;
@@ -124,19 +141,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var endingBalance = await _dbContext.FilprideInventories
                     .OrderBy(e => e.Date)
                     .ThenBy(e => e.InventoryId)
-                    .LastOrDefaultAsync(e => (viewModel.POId == null || e.POId == viewModel.POId) && e.Date.Month == previousMonth, cancellationToken);
+                    .Where(e => e.Company == companyClaims)
+                    .LastOrDefaultAsync(e => viewModel.POId == null || e.POId == viewModel.POId && e.Date.Month == previousMonth, cancellationToken);
 
                 List<FilprideInventory> inventories = new List<FilprideInventory>();
                 if (endingBalance != null)
                 {
                     inventories = await _dbContext.FilprideInventories
-                       .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId) || i.InventoryId == endingBalance.InventoryId)
+                       .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId) || i.InventoryId == endingBalance.InventoryId)
                        .ToListAsync(cancellationToken);
                 }
                 else
                 {
                     inventories = await _dbContext.FilprideInventories
-                       .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId))
+                       .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId))
                        .ToListAsync(cancellationToken);
                 }
 
@@ -157,13 +175,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
+                var companyClaims = await GetCompanyClaimAsync();
                 var dateFrom = viewModel.DateTo.AddDays(-viewModel.DateTo.Day + 1);
                 List<FilprideInventory> inventories = new List<FilprideInventory>();
                 if (viewModel.POId == null)
                 {
                     inventories = await _dbContext.FilprideInventories
                         .Include(i => i.PurchaseOrder)
-                        .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.ProductId == viewModel.ProductId)
+                        .Where(i => i.Company == companyClaims && i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.ProductId == viewModel.ProductId)
                         .OrderBy(i => i.Date)
                         .ThenBy(i => i.InventoryId)
                         .ToListAsync(cancellationToken);
@@ -172,7 +191,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     inventories = await _dbContext.FilprideInventories
                         .Include(i => i.PurchaseOrder)
-                        .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.ProductId == viewModel.ProductId && i.POId == viewModel.POId)
+                        .Where(i => i.Company == companyClaims && i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.ProductId == viewModel.ProductId && i.POId == viewModel.POId)
                         .OrderBy(i => i.Date)
                         .ThenBy(i => i.InventoryId)
                         .ToListAsync(cancellationToken);
@@ -197,6 +216,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ActualInventoryViewModel? viewModel = new();
 
             viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.COA = await _dbContext.ChartOfAccounts
                 .Where(coa => coa.Level == 4 && (coa.AccountName.StartsWith("AR-Non Trade Receivable") || coa.AccountName.StartsWith("Cost of Goods Sold") || coa.AccountNumber.StartsWith("6010103")))
@@ -208,6 +228,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
             viewModel.PO = await _dbContext.PurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
+                .Where(p => p.Company == companyClaims)
                 .Select(p => new SelectListItem
                 {
                     Value = p.PurchaseOrderId.ToString(),
@@ -240,11 +261,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         public async Task<IActionResult> ActualInventory(ActualInventoryViewModel viewModel, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await _unitOfWork.FilprideInventory.AddActualInventory(viewModel, cancellationToken);
+                    await _unitOfWork.FilprideInventory.AddActualInventory(viewModel, companyClaims, cancellationToken);
                     TempData["success"] = "Actual inventory created successfully";
                     return RedirectToAction(nameof(ActualInventory));
                 }
@@ -254,6 +276,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     viewModel.PO = await _dbContext.PurchaseOrders
                         .OrderBy(p => p.PurchaseOrderNo)
+                        .Where(p => p.Company == companyClaims)
                         .Select(p => new SelectListItem
                         {
                             Value = p.PurchaseOrderId.ToString(),
@@ -312,15 +335,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var header = new FilprideJournalVoucherHeader
                     {
-                        JournalVoucherHeaderNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(cancellationToken),
+                        JournalVoucherHeaderNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(inventory.Company, cancellationToken),
                         JVReason = "Actual Inventory",
                         Particulars = inventory.Particular,
                         Date = inventory.Date,
                         CreatedBy = _userManager.GetUserName(this.User),
                         CreatedDate = DateTime.Now,
                         PostedBy = _userManager.GetUserName(this.User),
-                        PostedDate = DateTime.Now
+                        PostedDate = DateTime.Now,
+                        Company = inventory.Company
                     };
+
+                    await _dbContext.FilprideJournalVoucherHeaders.AddAsync(header, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
 
                     var details = new List<FilprideJournalVoucherDetail>();
 
@@ -334,6 +361,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             AccountNo = entry.AccountNo,
                             AccountName = entry.AccountTitle,
                             TransactionNo = header.JournalVoucherHeaderNo,
+                            JournalVoucherHeaderId = header.JournalVoucherHeaderId,
                             Debit = entry.Debit,
                             Credit = entry.Credit
                         });
@@ -343,7 +371,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     inventory.ValidatedBy = _userManager.GetUserName(this.User);
                     inventory.ValidatedDate = DateTime.Now;
 
-                    await _dbContext.FilprideJournalVoucherHeaders.AddAsync(header, cancellationToken);
                     await _dbContext.FilprideJournalVoucherDetails.AddRangeAsync(details, cancellationToken);
 
                     #endregion -- Journal Voucher entry --
@@ -363,7 +390,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = Math.Abs(entry.Debit),
                             Credit = Math.Abs(entry.Credit),
                             CreatedBy = _userManager.GetUserName(this.User),
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            Company = entry.Company,
                         });
                     }
                     await _dbContext.AddRangeAsync(journalBook, cancellationToken);

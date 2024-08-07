@@ -473,21 +473,21 @@ namespace IBS.DataAccess.Data
             // FilprideCustomer
             builder.Entity<FilprideCustomer>(c =>
             {
-                c.HasIndex(c => c.CustomerCode).IsUnique();
+                c.HasIndex(c => c.CustomerCode);
                 c.HasIndex(c => c.CustomerName);
             });
 
             // FilprideSupplier
             builder.Entity<FilprideSupplier>(s =>
             {
-                s.HasIndex(s => s.SupplierCode).IsUnique();
-                s.HasIndex(s => s.SupplierName).IsUnique();
+                s.HasIndex(s => s.SupplierCode);
+                s.HasIndex(s => s.SupplierName);
             });
 
             builder.Entity<Hauler>(h =>
             {
-                h.HasIndex(h => h.HaulerCode).IsUnique();
-                h.HasIndex(h => h.HaulerName).IsUnique();
+                h.HasIndex(h => h.HaulerCode);
+                h.HasIndex(h => h.HaulerName);
             });
 
             #endregion

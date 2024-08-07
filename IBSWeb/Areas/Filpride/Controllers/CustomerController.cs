@@ -23,10 +23,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
+        private async Task<string> GetCompanyClaimAsync()
         {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
             IEnumerable<FilprideCustomer> customer = await _unitOfWork.FilprideCustomer
-                .GetAllAsync();
+                .GetAllAsync(c => c.Company == companyClaims, cancellationToken);
             return View(customer);
         }
 
@@ -41,11 +50,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
-                bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, cancellationToken);
+                var companyClaims = await GetCompanyClaimAsync();
+
+                bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
 
                 if (!IsTinExist)
                 {
-                    model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, cancellationToken);
+                    model.Company = companyClaims;
+                    model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, companyClaims, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideCustomer.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);

@@ -71,5 +71,7 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Display(Name = "Edited Date")]
         public DateTime? EditedDate { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

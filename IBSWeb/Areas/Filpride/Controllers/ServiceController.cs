@@ -26,10 +26,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             return _dbContext.FilprideServices != null ?
-                        View(await _dbContext.FilprideServices.ToListAsync(cancellationToken)) :
+                        View(await _dbContext.FilprideServices.Where(s => s.Company == companyClaims).ToListAsync(cancellationToken)) :
                         Problem("Entity set 'ApplicationDbContext.Services'  is null.");
         }
 
@@ -84,9 +93,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (ModelState.IsValid)
             {
-                if (await _unitOfWork.FilprideService.IsServicesExist(services.Name, cancellationToken))
+                if (await _unitOfWork.FilprideService.IsServicesExist(services.Name, companyClaims, cancellationToken))
                 {
                     ModelState.AddModelError("Name", "Services already exist!");
                     return View(services);
@@ -104,9 +115,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 services.UnearnedNo = unearned.AccountNumber;
                 services.UnearnedTitle = unearned.AccountName;
 
+                services.Company = companyClaims;
+
                 services.CreatedBy = _userManager.GetUserName(this.User).ToUpper();
 
-                services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
+                services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(companyClaims, cancellationToken);
 
                 TempData["success"] = "Services created successfully";
 

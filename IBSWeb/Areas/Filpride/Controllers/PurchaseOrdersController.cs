@@ -27,17 +27,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepo.GetAllAsync(null, cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepo.GetAllAsync(po => po.Company == companyClaims, cancellationToken);
 
             foreach (var po in purchaseOrders)
             {
-                var rrList = await _dbContext.ReceivingReports
-                    .Where(rr => rr.PONo == po.PurchaseOrderNo)
+                po.RrList = await _dbContext.ReceivingReports
+                    .Where(rr => rr.Company == companyClaims && rr.PONo == po.PurchaseOrderNo)
                     .ToListAsync(cancellationToken);
-
-                po.RrList = rrList;
             }
 
             return View(purchaseOrders);
@@ -47,7 +54,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var viewModel = new PurchaseOrder();
-            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
 
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
@@ -58,21 +67,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PurchaseOrder model, CancellationToken cancellationToken)
         {
-            model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
 
             model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
+            model.Company = companyClaims;
+
             if (ModelState.IsValid)
             {
-                var generatedPO = await _unitOfWork.FilpridePurchaseOrderRepo.GenerateCodeAsync(cancellationToken);
-
-                model.PurchaseOrderNo = generatedPO;
+                model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrderRepo.GenerateCodeAsync(companyClaims, cancellationToken);
                 model.CreatedBy = _userManager.GetUserName(this.User);
                 model.Amount = model.Quantity * model.Price;
 
                 await _dbContext.AddAsync(model, cancellationToken);
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
+
+                TempData["success"] = "Purchase Order created successfully";
                 return RedirectToAction("Index");
             }
             else
@@ -90,13 +103,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var companyClaims = await GetCompanyClaimAsync();
+
             var purchaseOrder = await _unitOfWork.FilpridePurchaseOrderRepo.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
             if (purchaseOrder == null)
             {
                 return NotFound();
             }
 
-            purchaseOrder.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
+            purchaseOrder.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
 
             purchaseOrder.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
@@ -112,12 +127,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var existingModel = await _dbContext.PurchaseOrders.FindAsync(model.PurchaseOrderId, cancellationToken);
 
+                var companyClaims = await GetCompanyClaimAsync();
+
                 if (existingModel == null)
                 {
                     return NotFound();
                 }
 
-                model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(cancellationToken);
+                model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
 
                 model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
@@ -236,8 +253,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             PurchaseChangePriceViewModel po = new();
 
+            var companyClaims = await GetCompanyClaimAsync();
+
             po.PO = await _dbContext.PurchaseOrders
-                .Where(po => po.FinalPrice == 0 || po.FinalPrice == null && po.PostedBy != null)
+                .Where(po => po.FinalPrice == 0 || po.FinalPrice == null && po.Company == companyClaims && po.PostedBy != null)
                 .Select(s => new SelectListItem
                 {
                     Value = s.PurchaseOrderId.ToString(),
@@ -251,6 +270,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         public async Task<IActionResult> ChangePrice(PurchaseChangePriceViewModel model, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (ModelState.IsValid)
             {
                 try
@@ -272,7 +293,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     model.PO = await _dbContext.PurchaseOrders
-                        .Where(po => po.FinalPrice == 0 || po.FinalPrice == null && po.PostedBy != null)
+                        .Where(po => po.Company == companyClaims && po.FinalPrice == 0 || po.FinalPrice == null && po.PostedBy != null)
                         .Select(s => new SelectListItem
                         {
                             Value = s.PurchaseOrderId.ToString(),
@@ -285,7 +306,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
             model.PO = await _dbContext.PurchaseOrders
-                .Where(po => po.FinalPrice == 0 || po.FinalPrice == null && po.PostedBy != null)
+                .Where(po => po.Company == companyClaims && po.FinalPrice == 0 || po.FinalPrice == null && po.PostedBy != null)
                 .Select(s => new SelectListItem
                 {
                     Value = s.PurchaseOrderId.ToString(),

@@ -27,12 +27,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<IActionResult> SalesBook()
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var viewModel = new ViewModelBook
             {
                 SOA = await _dbContext.FilprideServiceInvoices
-                .Where(soa => soa.PostedBy != null)
+                .Where(soa => soa.PostedBy != null && soa.Company == companyClaims)
                 .Select(soa => new SelectListItem
                 {
                     Value = soa.ServiceInvoiceId.ToString(),
@@ -40,7 +49,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(),
                 SI = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.PostedBy != null)
+                .Where(si => si.PostedBy != null && si.Company == companyClaims)
                 .Select(soa => new SelectListItem
                 {
                     Value = soa.SalesInvoiceId.ToString(),
@@ -52,10 +61,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public IActionResult SalesBookReport(ViewModelBook model, string? selectedDocument, string? soaList, string? siList)
+        public async Task<IActionResult> SalesBookReport(ViewModelBook model, string? selectedDocument, string? soaList, string? siList)
         {
             ViewBag.DateFrom = model.DateFrom.ToString();
             ViewBag.DateTo = model.DateTo;
+
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (ModelState.IsValid)
             {
                 try
@@ -65,7 +77,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return RedirectToAction("TransactionReportsInSOA", new { soaList = soaList, siList = siList });
                     }
 
-                    var salesBook = _unitOfWork.FilprideReport.GetSalesBooks(model.DateFrom, model.DateTo, selectedDocument);
+                    var salesBook = _unitOfWork.FilprideReport.GetSalesBooks(model.DateFrom, model.DateTo, companyClaims, selectedDocument);
                     var lastRecord = salesBook.LastOrDefault();
                     if (lastRecord != null)
                     {
@@ -104,15 +116,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        public IActionResult CashReceiptBookReport(ViewModelBook model)
+        public async Task<IActionResult> CashReceiptBookReport(ViewModelBook model)
         {
             ViewBag.DateFrom = model.DateFrom;
             ViewBag.DateTo = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var cashReceiptBooks = _unitOfWork.FilprideReport.GetCashReceiptBooks(model.DateFrom, model.DateTo);
+                    var cashReceiptBooks = _unitOfWork.FilprideReport.GetCashReceiptBooks(model.DateFrom, model.DateTo, companyClaims);
                     var lastRecord = cashReceiptBooks.LastOrDefault();
                     if (lastRecord != null)
                     {
@@ -134,10 +147,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> PurchaseBook()
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var viewModel = new ViewModelBook
             {
                 PO = await _dbContext.PurchaseOrders
-                .Where(po => po.PostedBy != null)
+                .Where(po => po.PostedBy != null && po.Company == companyClaims)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
@@ -149,10 +164,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public IActionResult PurchaseBookReport(ViewModelBook model, string? selectedFiltering, string? poListFrom, string? poListTo)
+        public async Task<IActionResult> PurchaseBookReport(ViewModelBook model, string? selectedFiltering, string? poListFrom, string? poListTo)
         {
             ViewBag.DateFrom = model.DateFrom;
             ViewBag.DateTo = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (ModelState.IsValid)
             {
                 try
@@ -172,7 +189,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return RedirectToAction("GetRR", new { DateFrom = model.DateFrom, DateTo = model.DateTo, selectedFiltering });
                     }
 
-                    var purchaseOrders = _unitOfWork.FilprideReport.GetPurchaseBooks(model.DateFrom, model.DateTo, selectedFiltering);
+                    var purchaseOrders = _unitOfWork.FilprideReport.GetPurchaseBooks(model.DateFrom, model.DateTo, selectedFiltering, companyClaims);
                     var lastRecord = purchaseOrders.LastOrDefault();
                     if (lastRecord != null)
                     {
@@ -193,11 +210,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(PurchaseBook));
         }
 
-        public IActionResult GetRR(DateOnly? dateFrom, DateOnly? dateTo, string selectedFiltering)
+        public async Task<IActionResult> GetRR(DateOnly? dateFrom, DateOnly? dateTo, string selectedFiltering)
         {
             ViewBag.DateFrom = dateFrom;
             ViewBag.DateTo = dateTo;
             ViewBag.SelectedFiltering = selectedFiltering;
+            var companyClaims = await GetCompanyClaimAsync();
 
             if (dateFrom == default && dateTo == default)
             {
@@ -210,7 +228,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction("PurchaseBook");
             }
 
-            var receivingReport = _unitOfWork.FilprideReport.GetReceivingReportAsync(dateFrom, dateTo, selectedFiltering);
+            var receivingReport = _unitOfWork.FilprideReport.GetReceivingReportAsync(dateFrom, dateTo, selectedFiltering, companyClaims);
             return View(receivingReport);
         }
 
@@ -243,16 +261,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        public IActionResult InventoryBookReport(ViewModelBook model)
+        public async Task<IActionResult> InventoryBookReportAsync(ViewModelBook model)
         {
             ViewBag.DateTo = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
             {
                 try
                 {
                     var dateFrom = model.DateTo.AddDays(-model.DateTo.Day + 1);
                     ViewBag.DateFrom = dateFrom;
-                    var inventoryBooks = _unitOfWork.FilprideReport.GetInventoryBooks(dateFrom, model.DateTo);
+                    var inventoryBooks = _unitOfWork.FilprideReport.GetInventoryBooks(dateFrom, model.DateTo, companyClaims);
                     var lastRecord = inventoryBooks.LastOrDefault();
                     if (lastRecord != null)
                     {
@@ -277,15 +296,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        public IActionResult GeneralLedgerBookReport(ViewModelBook model)
+        public async Task<IActionResult> GeneralLedgerBookReportAsync(ViewModelBook model)
         {
             ViewBag.DateFrom = model.DateFrom;
             ViewBag.DateTo = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var inventoryBooks = _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo);
+                    var inventoryBooks = _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
                     var lastRecord = inventoryBooks.LastOrDefault();
                     if (lastRecord != null)
                     {
@@ -310,15 +330,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        public IActionResult DisbursementBookReport(ViewModelBook model)
+        public async Task<IActionResult> DisbursementBookReport(ViewModelBook model)
         {
             ViewBag.DateFrom = model.DateFrom;
             ViewBag.DateTo = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var disbursementBooks = _unitOfWork.FilprideReport.GetDisbursementBooks(model.DateFrom, model.DateTo);
+                    var disbursementBooks = _unitOfWork.FilprideReport.GetDisbursementBooks(model.DateFrom, model.DateTo, companyClaims);
                     var lastRecord = disbursementBooks.LastOrDefault();
                     if (lastRecord != null)
                     {
@@ -343,15 +365,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        public IActionResult JournalBookReport(ViewModelBook model)
+        public async Task<IActionResult> JournalBookReportAsync(ViewModelBook model)
         {
             ViewBag.DateFrom = model.DateFrom;
             ViewBag.DateTo = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var journalBooks = _unitOfWork.FilprideReport.GetJournalBooks(model.DateFrom, model.DateTo);
+                    var journalBooks = _unitOfWork.FilprideReport.GetJournalBooks(model.DateFrom, model.DateTo, companyClaims);
                     var lastRecord = journalBooks.LastOrDefault();
                     if (lastRecord != null)
                     {
@@ -373,7 +397,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate Disbursement Book .Txt File --
 
-        public IActionResult GenerateDisbursementBookTxtFile(ViewModelBook model)
+        public async Task<IActionResult> GenerateDisbursementBookTxtFile(ViewModelBook model)
         {
             if (ModelState.IsValid)
             {
@@ -382,8 +406,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
                     var extractedBy = _userManager.GetUserName(this.User);
+                    var companyClaims = await GetCompanyClaimAsync();
 
-                    var disbursementBooks = _unitOfWork.FilprideReport.GetDisbursementBooks(model.DateFrom, model.DateTo);
+                    var disbursementBooks = _unitOfWork.FilprideReport.GetDisbursementBooks(model.DateFrom, model.DateTo, companyClaims);
                     if (disbursementBooks.Count == 0)
                     {
                         TempData["error"] = "No Record Found";
@@ -466,7 +491,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate Cash Receipt Book .Txt File --
 
-        public IActionResult GenerateCashReceiptBookTxtFile(ViewModelBook model)
+        public async Task<IActionResult> GenerateCashReceiptBookTxtFile(ViewModelBook model)
         {
             if (ModelState.IsValid)
             {
@@ -475,8 +500,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
                     var extractedBy = _userManager.GetUserName(this.User);
+                    var companyClaims = await GetCompanyClaimAsync();
 
-                    var cashReceiptBooks = _unitOfWork.FilprideReport.GetCashReceiptBooks(model.DateFrom, model.DateTo);
+                    var cashReceiptBooks = _unitOfWork.FilprideReport.GetCashReceiptBooks(model.DateFrom, model.DateTo, companyClaims);
                     if (cashReceiptBooks.Count == 0)
                     {
                         TempData["error"] = "No Record Found";
@@ -558,7 +584,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate General Ledger Book .Txt File --
 
-        public IActionResult GenerateGeneralLedgerBookTxtFile(ViewModelBook model)
+        public async Task<IActionResult> GenerateGeneralLedgerBookTxtFile(ViewModelBook model)
         {
             if (ModelState.IsValid)
             {
@@ -567,8 +593,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
                     var extractedBy = _userManager.GetUserName(this.User);
+                    var companyClaims = await GetCompanyClaimAsync();
 
-                    var generalBooks = _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo);
+                    var generalBooks = _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
                     if (generalBooks.Count == 0)
                     {
                         TempData["error"] = "No Record Found";
@@ -647,7 +674,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate Inventory Book .Txt File --
 
-        public IActionResult GenerateInventoryBookTxtFile(ViewModelBook model)
+        public async Task<IActionResult> GenerateInventoryBookTxtFileAsync(ViewModelBook model)
         {
             if (ModelState.IsValid)
             {
@@ -656,8 +683,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var dateTo = model.DateTo;
                     var dateFrom = dateTo.AddDays(-dateTo.Day + 1);
                     var extractedBy = _userManager.GetUserName(this.User);
+                    var companyClaims = await GetCompanyClaimAsync();
 
-                    var inventoryBooks = _unitOfWork.FilprideReport.GetInventoryBooks(dateFrom, dateTo);
+                    var inventoryBooks = _unitOfWork.FilprideReport.GetInventoryBooks(dateFrom, dateTo, companyClaims);
                     if (inventoryBooks.Count == 0)
                     {
                         TempData["error"] = "No Record Found";
@@ -738,7 +766,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate Journal Book .Txt File --
 
-        public IActionResult GenerateJournalBookTxtFile(ViewModelBook model)
+        public async Task<IActionResult> GenerateJournalBookTxtFile(ViewModelBook model)
         {
             if (ModelState.IsValid)
             {
@@ -747,8 +775,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
                     var extractedBy = _userManager.GetUserName(this.User);
+                    var companyClaims = await GetCompanyClaimAsync();
 
-                    var journalBooks = _unitOfWork.FilprideReport.GetJournalBooks(model.DateFrom, model.DateTo);
+                    var journalBooks = _unitOfWork.FilprideReport.GetJournalBooks(model.DateFrom, model.DateTo, companyClaims);
                     if (journalBooks.Count == 0)
                     {
                         TempData["error"] = "No Record Found";
@@ -827,7 +856,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate Purchase Book .Txt File --
 
-        public IActionResult GeneratePurchaseBookTxtFile(ViewModelBook model, string? selectedFiltering, string? poListFrom, string? poListTo)
+        public async Task<IActionResult> GeneratePurchaseBookTxtFile(ViewModelBook model, string? selectedFiltering, string? poListFrom, string? poListTo)
         {
             if (ModelState.IsValid)
             {
@@ -836,6 +865,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
                     var extractedBy = _userManager.GetUserName(this.User);
+                    var companyClaims = await GetCompanyClaimAsync();
 
                     if (poListFrom != null && poListTo != null)
                     {
@@ -852,7 +882,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return RedirectToAction("GetRR", new { DateFrom = model.DateFrom, DateTo = model.DateTo, selectedFiltering });
                     }
 
-                    var purchaseOrders = _unitOfWork.FilprideReport.GetPurchaseBooks(model.DateFrom, model.DateTo, selectedFiltering);
+                    var purchaseOrders = _unitOfWork.FilprideReport.GetPurchaseBooks(model.DateFrom, model.DateTo, selectedFiltering, companyClaims);
                     if (purchaseOrders.Count == 0)
                     {
                         TempData["error"] = "No Record Found";
@@ -940,7 +970,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate Sales Book .Txt File --
 
-        public IActionResult GenerateSalesBookTxtFile(ViewModelBook model, string? selectedDocument, string? soaList, string? siList)
+        public async Task<IActionResult> GenerateSalesBookTxtFile(ViewModelBook model, string? selectedDocument, string? soaList, string? siList)
         {
             if (ModelState.IsValid)
             {
@@ -949,13 +979,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
                     var extractedBy = _userManager.GetUserName(this.User);
+                    var companyClaims = await GetCompanyClaimAsync();
 
                     if (soaList != null || siList != null)
                     {
                         return RedirectToAction("TransactionReportsInSOA", new { soaList = soaList, siList = siList });
                     }
 
-                    var salesBook = _unitOfWork.FilprideReport.GetSalesBooks(model.DateFrom, model.DateTo, selectedDocument);
+                    var salesBook = _unitOfWork.FilprideReport.GetSalesBooks(model.DateFrom, model.DateTo, selectedDocument, companyClaims);
                     if (salesBook.Count == 0)
                     {
                         TempData["error"] = "No Record Found";

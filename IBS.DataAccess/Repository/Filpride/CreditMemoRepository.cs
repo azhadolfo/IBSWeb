@@ -15,10 +15,11 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
         {
             FilprideCreditMemo? lastCm = await _db
                 .FilprideCreditMemos
+                .Where(cm => cm.Company == company)
                 .OrderBy(c => c.CreditMemoNo)
                 .LastOrDefaultAsync(cancellationToken);
 

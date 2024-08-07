@@ -81,7 +81,6 @@
                                                     Preview
                                                 </button>
                                             </li>
-                                            @await Html.PartialAsync("_Preview", invoice)
                                             <li><a class="dropdown-item" onclick="confirmPost(@invoice.SalesInvoiceId)">Post</a></li>
                                             <li><a class="dropdown-item" onclick="confirmCancel(@invoice.SalesInvoiceId)">Cancel</a></li>
                                         }
@@ -116,6 +115,7 @@
                                     <span class="badge rounded-pill bg-info">VALID</span>
                                 }
                             }
+                            @await Html.PartialAsync("_Preview", invoice)
                         </td>
 
 

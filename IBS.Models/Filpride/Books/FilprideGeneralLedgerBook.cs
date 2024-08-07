@@ -38,5 +38,7 @@ namespace IBS.Models.Filpride.Books
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         public bool IsPosted { get; set; } = true;
+
+        public string Company { get; set; } = string.Empty;
     }
 }

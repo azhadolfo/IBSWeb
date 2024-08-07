@@ -63,5 +63,7 @@ namespace IBS.Models.Filpride.Books
         [Display(Name = "Due Date")]
         [Column(TypeName = "date")]
         public DateOnly DueDate { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

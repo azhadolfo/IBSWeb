@@ -15,9 +15,10 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<List<SelectListItem>> GetBankAccountListAsync(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetBankAccountListAsync(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideBankAccounts
+                 .Where(a => a.Company == company)
                  .Select(ba => new SelectListItem
                  {
                      Value = ba.BankAccountId.ToString(),

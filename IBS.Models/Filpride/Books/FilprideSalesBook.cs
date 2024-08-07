@@ -71,5 +71,7 @@ namespace IBS.Models.Filpride.Books
         public DateOnly DueDate { get; set; }
 
         public int? DocumentId { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }
