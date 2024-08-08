@@ -60,7 +60,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Description = particular,
                         Debit = Math.Abs(viewModel.Debit[i]),
                         Credit = Math.Abs(viewModel.Credit[i]),
-                        CreatedBy = "Ako",
+                        CreatedBy = viewModel.CurrentUser,
                         CreatedDate = DateTime.Now,
                         IsPosted = false
                     });
@@ -87,7 +87,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 AverageCost = viewModel.Cost,
                 TotalBalance = viewModel.Quantity * viewModel.Cost,
                 IsValidated = true,
-                ValidatedBy = "Ako",
+                ValidatedBy = viewModel.CurrentUser,
                 ValidatedDate = DateTime.Now,
                 Company = company
             };
@@ -240,7 +240,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Cost = previousInventory.AverageCost,
                     POId = salesInvoice.PurchaseOrderId,
                     IsValidated = true,
-                    ValidatedBy = "Ako",
+                    ValidatedBy = salesInvoice.CreatedBy,
                     ValidatedDate = DateTime.Now,
                     Total = total,
                     InventoryBalance = inventoryBalance,
@@ -396,7 +396,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Quantity = 0,
                         Cost = 0,
                         IsValidated = true,
-                        ValidatedBy = "Ako",
+                        ValidatedBy = viewModel.CurrentUser,
                         ValidatedDate = DateTime.Now,
                         Company = existingPO.Company
                     };
@@ -427,8 +427,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Particulars = $"Change price of {existingPO.PurchaseOrderNo} from {existingPO.Price} to {existingPO.FinalPrice}",
                         CRNo = "",
                         JVReason = "Change Price",
-                        CreatedBy = "Ako",
-                        PostedBy = "Ako",
+                        CreatedBy = viewModel.CurrentUser,
+                        PostedBy = viewModel.CurrentUser,
                         PostedDate = DateTime.Now,
                         Company = existingPO.Company
                     };
@@ -555,7 +555,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = previousInventory.Product.ProductCode == "PET001" ? "1010401 Inventory - Biodiesel" : previousInventory.Product.ProductCode == "PET002" ? "1010402 Inventory - Econogas" : "1010403 Inventory - Envirogas",
                             Debit = Math.Abs(productAmount),
                             Credit = 0,
-                            CreatedBy = "ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company,
                         },
@@ -567,7 +567,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "1010602 Vat Input",
                             Debit = Math.Abs(vatInput),
                             Credit = 0,
-                            CreatedBy = "ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company,
                         },
@@ -579,7 +579,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "2010302 Expanded Witholding Tax 1%",
                             Debit = 0,
                             Credit = Math.Abs(wht),
-                            CreatedBy = "ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         },
@@ -591,7 +591,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "2010101 AP-Trade Payable",
                             Debit = 0,
                             Credit = Math.Abs(apTradePayable),
-                            CreatedBy = "ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company,
                         }
@@ -614,7 +614,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = previousInventory.Product.ProductCode == "PET001" ? "1010401 Inventory - Biodiesel" : previousInventory.Product.ProductCode == "PET002" ? "1010402 Inventory - Econogas" : "1010403 Inventory - Envirogas",
                             Debit = 0,
                             Credit = Math.Abs(productAmount),
-                            CreatedBy = "ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         },
@@ -626,7 +626,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "1010602 Vat Input",
                             Debit = 0,
                             Credit = Math.Abs(vatInput),
-                            CreatedBy = "ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         },
@@ -638,7 +638,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "2010302 Expanded Witholding Tax 1%",
                             Debit = Math.Abs(wht),
                             Credit = 0,
-                            CreatedBy = "ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         },
@@ -650,7 +650,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "2010101 AP-Trade Payable",
                             Debit = Math.Abs(apTradePayable),
                             Credit = 0,
-                            CreatedBy = "ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         }
@@ -681,7 +681,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             NetPurchases = inventory.Total,
                             PONo = existingPO.PurchaseOrderNo,
                             DueDate = DateOnly.FromDateTime(DateTime.MinValue),
-                            CreatedBy = "Ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         }
@@ -706,7 +706,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = previousInventory.Product.ProductCode == "PET001" ? "Inventory - Biodiesel" : previousInventory.Product.ProductCode == "PET002" ? "Inventory - Econogas" : "Inventory - Envirogas",
                             Debit = Math.Abs(productAmount),
                             Credit = 0,
-                            CreatedBy = "Ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         },
@@ -719,7 +719,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "Vat Input",
                             Debit = Math.Abs(vatInput),
                             Credit = 0,
-                            CreatedBy = "Ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         },
@@ -732,7 +732,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "Expanded Witholding Tax 1%",
                             Debit = 0,
                             Credit = Math.Abs(wht),
-                            CreatedBy = "Ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         },
@@ -745,7 +745,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "AP-Trade Payable",
                             Debit = 0,
                             Credit = Math.Abs(apTradePayable),
-                            CreatedBy = "Ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         }
@@ -769,7 +769,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = previousInventory.Product.ProductCode == "PET001" ? "Inventory - Biodiesel" : previousInventory.Product.ProductCode == "PET002" ? "Inventory - Econogas" : "Inventory - Envirogas",
                             Debit = 0,
                             Credit = Math.Abs(productAmount),
-                            CreatedBy = "Ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         },
@@ -782,7 +782,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "Vat Input",
                             Debit = 0,
                             Credit = Math.Abs(vatInput),
-                            CreatedBy = "Ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         },
@@ -795,7 +795,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "Expanded Witholding Tax 1%",
                             Debit = Math.Abs(wht),
                             Credit = 0,
-                            CreatedBy = "Ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         },
@@ -808,7 +808,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountTitle = "AP-Trade Payable",
                             Debit = Math.Abs(apTradePayable),
                             Credit = 0,
-                            CreatedBy = "Ako",
+                            CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             Company = inventory.Company
                         }

@@ -80,6 +80,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return View(viewModel);
                     }
 
+                    viewModel.CurrentUser = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideInventory.AddBeginningInventory(viewModel, companyClaims, cancellationToken);
                     TempData["success"] = "Beginning balance created successfully";
                     return RedirectToAction(nameof(BeginningInventory));
@@ -266,6 +267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
+                    viewModel.CurrentUser = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideInventory.AddActualInventory(viewModel, companyClaims, cancellationToken);
                     TempData["success"] = "Actual inventory created successfully";
                     return RedirectToAction(nameof(ActualInventory));

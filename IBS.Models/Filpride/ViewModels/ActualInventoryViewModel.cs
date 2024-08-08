@@ -47,5 +47,7 @@ namespace IBS.Models.Filpride.ViewModels
         public decimal[] Debit { get; set; }
 
         public decimal[] Credit { get; set; }
+
+        public string CurrentUser { get; set; } = string.Empty;
     }
 }

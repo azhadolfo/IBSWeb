@@ -9,5 +9,7 @@ namespace IBS.Models.Filpride.ViewModels
         public List<SelectListItem>? PO { get; set; }
 
         public decimal FinalPrice { get; set; }
+
+        public string CurrentUser { get; set; } = string.Empty;
     }
 }
