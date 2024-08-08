@@ -91,7 +91,8 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public DateTime? LastCreatedDate { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
         public decimal AmountPerMonth { get; set; }
 
         public bool IsComplete { get; set; }

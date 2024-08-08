@@ -47,6 +47,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string Terms { get; set; }
 
         [Required]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Quantity { get; set; }
 
@@ -63,6 +64,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "numeric(18,4)")]
         public decimal? FinalPrice { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal QuantityReceived { get; set; }
 

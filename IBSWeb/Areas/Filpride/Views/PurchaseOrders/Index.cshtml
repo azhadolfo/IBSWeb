@@ -44,6 +44,9 @@
                         Product
                     </th>
                     <th>
+                        @Html.DisplayNameFor(model => model.Quantity)
+                    </th>
+                    <th>
                         @Html.DisplayNameFor(model => model.Amount)
                     </th>
                     <th></th>
@@ -64,6 +67,9 @@
                         </td>
                         <td>
                             @Html.DisplayFor(modelItem => item.Product.ProductName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Quantity)
                         </td>
                         <td>
                             @Html.DisplayFor(modelItem => item.Amount)
@@ -91,14 +97,14 @@
                                         {
                                             <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.PurchaseOrderId">Print</a></li>
                                             <li>
-                                            @if (item.QuantityReceived == 0)
-                                            {
-                                                <a class="dropdown-item" onclick="confirmVoid(@item.PurchaseOrderId)">Void</a>
-                                            }
-                                            else
-                                            {
-                                                <button class="dropdown-item" disabled readonly>Void</button>
-                                            }
+                                                @if (item.QuantityReceived == 0)
+                                                {
+                                                    <a class="dropdown-item" onclick="confirmVoid(@item.PurchaseOrderId)">Void</a>
+                                                }
+                                                else
+                                                {
+                                                    <button class="dropdown-item" disabled readonly>Void</button>
+                                                }
                                             </li>
                                             <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ClosePO-@item.PurchaseOrderId" data-bs-url="@Url.Action($"ClosePO/{item.PurchaseOrderId}")">
                                                 Close

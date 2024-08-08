@@ -20,7 +20,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             PurchaseOrder? lastPo = await _db
                 .PurchaseOrders
-                .Where(c => c.Company == company)
+                .Where(c => c.Company == company && !c.PurchaseOrderNo.StartsWith("POBEG"))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 

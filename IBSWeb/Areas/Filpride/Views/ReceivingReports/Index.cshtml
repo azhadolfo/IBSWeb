@@ -66,16 +66,20 @@
                             @item.QuantityReceived.ToString("N4")
                         </td>
                         <td class="text-center">
-                            @if (item.CreatedBy == UserManager.GetUserName(User) && item.VoidedBy == null && item.CanceledBy == null)
+                            @if (item.CreatedBy == UserManager.GetUserName(User))
                             {
                                 <div class="dropdown">
                                     <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                         Actions
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                        @if (item.PostedBy == null)
+                                        @if (item.VoidedBy == null && item.CanceledBy == null)
                                         {
                                             <li><a asp-action="Edit" asp-route-id="@item.ReceivingReportId" class="dropdown-item">Edit</a></li>
+                                        }
+
+                                        @if (item.PostedBy == null && item.VoidedBy == null && item.CanceledBy == null)
+                                        {
                                             <li>
                                                 <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.ReceivingReportId" data-bs-url="@Url.Action($"Preview/{item.ReceivingReportId}")">
                                                     Preview
@@ -84,18 +88,19 @@
                                             <li><a class="dropdown-item" onclick="confirmPost(@item.ReceivingReportId)">Post</a></li>
                                             <li><a class="dropdown-item" onclick="confirmCancel(@item.ReceivingReportId)">Cancel</a></li>
                                         }
-                                        else
+
+                                        @if (item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null)
                                         {
                                             <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.ReceivingReportId">Print</a></li>
                                             <li>
-                                            @if (item.AmountPaid == 0)
-                                            {
-                                                <a class="dropdown-item" onclick="confirmVoid(@item.ReceivingReportId)">Void</a>
-                                            }
-                                            else
-                                            {
-                                                <button class="dropdown-item" disabled readonly>Void</button>
-                                            }
+                                                @if (item.AmountPaid == 0)
+                                                {
+                                                    <a class="dropdown-item" onclick="confirmVoid(@item.ReceivingReportId)">Void</a>
+                                                }
+                                                else
+                                                {
+                                                    <button class="dropdown-item" disabled readonly>Void</button>
+                                                }
                                             </li>
                                         }
                                     </ul>
@@ -195,4 +200,3 @@
         }
     </script>
 }
-
