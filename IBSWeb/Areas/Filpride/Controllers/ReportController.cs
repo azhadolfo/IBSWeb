@@ -467,7 +467,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"",-10}\t{"",-12}\t{"",-100}\t{"",-200}\t{"",-10}\t{"",-20}\t{"",-10}\t{"TOTAL:",-100}\t{totalDebit,18}\t{totalCredit,18}");
 
                     fileContent.AppendLine();
-                    fileContent.AppendLine($"Software Name: Accounting Administration System (AAS)");
+                    fileContent.AppendLine($"Software Name: Integrated Accounting System (IBS)");
                     fileContent.AppendLine($"Version: v1.1");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
                     fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
@@ -560,7 +560,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"",-10}\t{"",-12}\t{"",-16}\t{"",-100}\t{"",-20}\t{"",-100}\t{"TOTAL:",200}\t{totalDebit,18}\t{totalCredit,18}");
 
                     fileContent.AppendLine();
-                    fileContent.AppendLine($"Software Name: Accounting Administration System (AAS)");
+                    fileContent.AppendLine($"Software Name: Integrated Accounting System (IBS)");
                     fileContent.AppendLine($"Version: v1.1");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
                     fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
@@ -650,7 +650,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"",-10}\t{"",-12}\t{"",-50}\t{"TOTAL:",50}\t{totalDebit,18}\t{totalCredit,18}");
 
                     fileContent.AppendLine();
-                    fileContent.AppendLine($"Software Name: Accounting Administration System (AAS)");
+                    fileContent.AppendLine($"Software Name: Integrated Accounting System (IBS)");
                     fileContent.AppendLine($"Version: v1.1");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
                     fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
@@ -742,7 +742,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"",-10}\t{"",-20}\t{"",-50}\t{"TOTAL:",2}\t{totalQuantity,18}\t{totalPrice,18}\t{totalAmount,18}");
 
                     fileContent.AppendLine();
-                    fileContent.AppendLine($"Software Name: Accounting Administration System (AAS)");
+                    fileContent.AppendLine($"Software Name: Integrated Accounting System (IBS)");
                     fileContent.AppendLine($"Version: v1.1");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
                     fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
@@ -832,7 +832,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"",-10}\t{"",-12}\t{"",-50}\t{"TOTAL:",50}\t{totalDebit,18}\t{totalCredit,18}");
 
                     fileContent.AppendLine();
-                    fileContent.AppendLine($"Software Name: Accounting Administration System (AAS)");
+                    fileContent.AppendLine($"Software Name: Integrated Accounting System (IBS)");
                     fileContent.AppendLine($"Version: v1.1");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
                     fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
@@ -946,7 +946,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"",-10}\t{"",-50}\t{"",-20}\t{"",-200}\t{"",-12}\t{"",-12}\t{"TOTAL:",50}\t{totalAmount,18}\t{totalVatAmount,18}\t{0.00m,18}\t{totalWhtAmount,18}\t{totalNetPurchases,18}");
 
                     fileContent.AppendLine();
-                    fileContent.AppendLine($"Software Name: Accounting Administration System (AAS)");
+                    fileContent.AppendLine($"Software Name: Integrated Accounting System (IBS)");
                     fileContent.AppendLine($"Version: v1.1");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
                     fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
@@ -1054,7 +1054,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"",-10}\t{"",-12}\t{"",-100}\t{"",-20}\t{"",-200}\t{"TOTAL:",50}\t{totalAmount,18}\t{totalVatAmount,18}\t{totalVatableSales,18}\t{totalVatExemptSales,18}\t{totalZeroRatedSales,18}\t{totalDiscount,18}\t{totalNetSales,18}");
 
                     fileContent.AppendLine();
-                    fileContent.AppendLine($"Software Name: Accounting Administration System (AAS)");
+                    fileContent.AppendLine($"Software Name: Integrated Accounting System (IBS)");
                     fileContent.AppendLine($"Version: v1.1");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
                     fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");

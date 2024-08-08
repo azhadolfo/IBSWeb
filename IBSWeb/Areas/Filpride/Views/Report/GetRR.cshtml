@@ -267,7 +267,6 @@ Date Issued: @* @CS.DateIssued *@
                         <td class="text-end">
                             @Html.DisplayFor(model => purchase.NetAmount)
                         </td>
-
                     </tr>
 
                     totalAmount += purchase.Amount;
@@ -300,7 +299,7 @@ Date Issued: @* @CS.DateIssued *@
 
     <p style="line-height: 1; margin-top:25px;" class="text-start">
         <em>
-            <b>Software Name :</b> Accounting Administration System (AAS)
+            <b>Software Name :</b> Integrated Accounting System (IBS)
             <br />
             <b>Version :</b> @* @CS.Version *@
             <br />
@@ -468,8 +467,6 @@ Date Issued: @* @CS.DateIssued *@
         // Replace the placeholder in the HTML with the actual number of records
         resultPre.innerHTML = resultPre.innerHTML.replace('@numberOfRecords', (allTrElements.length - 1));
         resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount");
-
     </script>
-
 
 }

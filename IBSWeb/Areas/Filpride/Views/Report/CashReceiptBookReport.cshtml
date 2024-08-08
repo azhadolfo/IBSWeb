@@ -59,7 +59,6 @@ Amount Field Control Total:         @amountFieldControlTotal
 Period Covered:                     @dateFrom to @dateTo
 Transaction cut-off Date & Time:    @lastRecord
 Extracted By:                       @UserManager.GetUserName(User).ToUpper()
-
 </pre>
 
     <h3><b>CASH RECEIPT BOOK</b></h3>
@@ -148,7 +147,7 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
 
     <p style="line-height: 1; margin-top:25px;" class="text-start">
         <em>
-            <b>Software Name :</b> Accounting Administration System (AAS)
+            <b>Software Name :</b> Integrated Accounting System (IBS)
             <br />
             <b>Version :</b> @* @CS.Version *@
             <br />
@@ -291,8 +290,6 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
         // Replace the placeholder in the HTML with the actual number of records
         resultPre.innerHTML = resultPre.innerHTML.replace('@numberOfRecords', (allTrElements.length - 1));
         resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalDebitAmount.ToString("N4")");
-
     </script>
-
 
 }
