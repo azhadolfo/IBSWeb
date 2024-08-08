@@ -109,13 +109,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
-            Stations = await _unitOfWork.GetMobilityStationListAsyncByCode();
-
-            Companies = await _unitOfWork.GetCompanyListAsyncByName();
-
-            ReturnUrl = returnUrl;
+            await LoadPageData(returnUrl);
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -173,14 +167,24 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                 }
                 else
                 {
-                    Stations = await _unitOfWork.GetMobilityStationListAsyncByCode();
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    await LoadPageData(returnUrl); // Reload data when the form is redisplayed
                     return Page();
                 }
             }
 
             // If we got this far, something failed, redisplay form
+            await LoadPageData(returnUrl); // Reload data when the form is redisplayed
             return Page();
         }
+
+        private async Task LoadPageData(string returnUrl)
+        {
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            Stations = await _unitOfWork.GetMobilityStationListAsyncByCode();
+            Companies = await _unitOfWork.GetCompanyListAsyncByName();
+            ReturnUrl = returnUrl;
+        }
+
     }
 }

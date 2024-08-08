@@ -30,9 +30,9 @@
                             </select>
                             <span asp-validation-for="Input.Company" class="text-danger"></span>
                         </div>
-                        <div class="mb-3" id="station-div">
+                        <div class="mb-3" id="station-div" style="display: none">
                             <label for="station" class="form-label">What Station?</label>
-                            <select asp-for="Input.StationCode" asp-items="@Model.Stations" class="form-select js-select2" style="width:100%" required>
+                            <select asp-for="Input.StationCode" asp-items="@Model.Stations" class="form-select js-select2" style="width:100%;" required>
                                 <option value="" selected disabled>Select station</option>
                                 <option value="ALL">ALL STATION</option>
                             </select>
@@ -55,8 +55,8 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         $(document).ready(function () {
-            $('select[name="Input.Company"]').on('change', function () {
-                var selectedCompany = $(this).val();
+            function toggleStationDiv() {
+                var selectedCompany = $('select[name="Input.Company"]').val();
                 var stationDiv = $('#station-div');
 
                 if (selectedCompany === 'Mobility') {
@@ -64,10 +64,14 @@
                 } else {
                     stationDiv.hide();
                 }
-            });
+            }
+
+            // Attach the change event listener
+            $('select[name="Input.Company"]').on('change', toggleStationDiv);
 
             // Initial check on page load
-            $('select[name="Company"]').trigger('change');
+            toggleStationDiv();
         });
     </script>
+
 }

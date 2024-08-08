@@ -43,11 +43,6 @@
                             </select>
                             <span asp-validation-for="Input.Department" class="text-danger"></span>
                         </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="Enter your email" />
-                            <span asp-validation-for="Input.Email" class="text-danger"></span>
-                        </div>
                         <div class="form-group py-2 col-12">
                             <label class="control-label">Role List<span class="required">*</span></label>
                             <select asp-for="Input.Role" asp-items="@Model.Input.RoleList" class="form-select js-select2 border-0 shadow" style="width:100%">
