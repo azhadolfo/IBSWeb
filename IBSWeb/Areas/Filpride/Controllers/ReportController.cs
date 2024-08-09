@@ -77,7 +77,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return RedirectToAction("TransactionReportsInSOA", new { soaList = soaList, siList = siList });
                     }
 
-                    var salesBook = _unitOfWork.FilprideReport.GetSalesBooks(model.DateFrom, model.DateTo, companyClaims, selectedDocument);
+                    var salesBook = _unitOfWork.FilprideReport.GetSalesBooks(model.DateFrom, model.DateTo, selectedDocument, companyClaims);
                     var lastRecord = salesBook.LastOrDefault();
                     if (lastRecord != null)
                     {
@@ -176,7 +176,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     if (poListFrom != null && poListTo != null)
                     {
-                        return RedirectToAction("POLiquidationPerPO", new { poListFrom = poListFrom, poListTo = poListTo });
+                        return RedirectToAction(nameof(POLiquidationPerPO), new { poListFrom = poListFrom, poListTo = poListTo });
                     }
                     else if (poListFrom == null && poListTo != null || poListFrom != null && poListTo == null)
                     {
