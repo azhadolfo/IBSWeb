@@ -29,14 +29,14 @@
                         <option></option>
                     </select>
                 </div>
-                <div class="form-group py-2 col-12" >
+                <div class="form-group py-2 col-12">
                     <label class="control-label">Level 3<span class="required">*</span></label>
                     <select id="thirdLevel" name="thirdLevel" class="form-select js-select2 border-0 shadow" style="width:100%">
                         <option></option>
                     </select>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="AccountName" class="form-control border-0 shadow" placeholder="" />
+                    <input asp-for="AccountName" class="form-control border-0 shadow uppercase" placeholder="" />
                     <label asp-for="AccountName" class="ms-2">Account Name<span class="required">*</span></label>
                     <span asp-validation-for="AccountName" class="text-danger"></span>
                 </div>
