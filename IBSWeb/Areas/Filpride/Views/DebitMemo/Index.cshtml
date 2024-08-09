@@ -54,7 +54,7 @@
                             @Html.DisplayFor(modelItem => item.DebitMemoNo)
                         </td>
                         <td>
-                            @item.TransactionDate.ToString("MM/dd/yyyy")
+                            @Html.DisplayFor(modelItem => item.TransactionDate)
                         </td>
                         @if (item.Source == "Sales Invoice")
                         {

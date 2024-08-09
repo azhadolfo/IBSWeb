@@ -52,10 +52,10 @@
                 <td class="w-25 text-nowrap">
 
                     <b>Invoice Date:</b>
-                    &nbsp; <span id="soaDate">@Model.CreatedDate.ToString("MM/dd/yyyy")</span>
+                    &nbsp; <span id="soaDate">@Model.CreatedDate.ToString("MMM/dd/yyyy")</span>
                     <br />
                     <b>Terms:</b>&nbsp;<span id="terms"></span>&nbsp;<br />
-                    <b>Due Date:</b>&nbsp; <span id="dueDate">@Model.DueDate.ToString("MM/dd/yyyy")</span><br />
+                    <b>Due Date:</b>&nbsp; <span id="dueDate">@Html.DisplayFor(model => model.DueDate)</span><br />
                 </td>
             </tr>
         </tbody>
@@ -84,9 +84,7 @@
                         @Html.DisplayFor(model => model.Amount)
                     </p>
                 </td>
-
             </tr>
-
         </tbody>
     </table>
 </div>
@@ -167,7 +165,6 @@
                                     {
                                         <p class="mb-0">@Html.DisplayFor(model => model.Discount)</p>
                                     }
-
                                 </td>
                             </tr>
                             <tr>
@@ -195,17 +192,17 @@
 </p>
 
 @* @if (!Model.IsPrinted)
-{
-    <div class="text-end">
-        ORIGINAL COPY
-    </div>
-}
-else
-{
-    <div class="text-end">
-        REPRINT COPY
-    </div>
-} *@
+    {
+        <div class="text-end">
+            ORIGINAL COPY
+        </div>
+    }
+    else
+    {
+        <div class="text-end">
+            REPRINT COPY
+        </div>
+    } *@
 
 <div class="text-start w-100 footer">
     <p style="line-height: 1;">

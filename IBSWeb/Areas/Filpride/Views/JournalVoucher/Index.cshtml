@@ -54,7 +54,7 @@
                             @Html.DisplayFor(modelItem => item.Header.JournalVoucherHeaderNo)
                         </td>
                         <td>
-                            @item.Header.Date.ToString("MM/dd/yyyy")
+                            @Html.DisplayFor(modelItem => item.Header.Date)
                         </td>
                         <td>
                             @Html.DisplayFor(modelItem => item.Header.CheckVoucherHeader.CheckVoucherHeaderNo)
@@ -116,7 +116,6 @@
         </table>
     </div>
 </div>
-
 
 @section Scripts {
     <script>

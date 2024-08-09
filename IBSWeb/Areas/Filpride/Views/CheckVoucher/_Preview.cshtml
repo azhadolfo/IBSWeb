@@ -26,7 +26,6 @@
                     <div class="text-end" style="margin-top:-60px;">
                         <h6><b>No.&nbsp;@Html.DisplayFor(model => model.Header.CheckVoucherHeaderNo)</b></h6>
                     </div>
-
                 </div>
 
                 <div class="table-responsive" style="margin-top:50px;">
@@ -34,7 +33,7 @@
                         <thead>
                             <tr style="border: 1px solid black;">
                                 <th colspan="2" style="padding-left:20px;">I. PAYEE DETAILS</th>
-                                <td colspan="2" class="text-end"><b>Date : </b>@Model.Header.Date.ToString("MM/dd/yyyy")</td>
+                                <td colspan="2" class="text-end"><b>Date : </b>@Html.DisplayFor(model => model.Header.Date)</td>
                             </tr>
                         </thead>
                         <tbody>
@@ -253,17 +252,14 @@
                                 <td style="width:33%;">
                                     <br />
                                     <span class="underline" style="display: inline-block; width:60%;">&nbsp;</span> <br />
-
                                 </td>
                                 <td style="width:33%;">
                                     <br />
                                     <span class="underline" style="display: inline-block; width:60%;">&nbsp;</span> <br />
-
                                 </td>
                                 <td style="width:33%;">
                                     <br />
                                     <span class="underline" style="display: inline-block; width:60%;">&nbsp;</span> <br />
-
                                 </td>
                             </tr>
                         </tbody>

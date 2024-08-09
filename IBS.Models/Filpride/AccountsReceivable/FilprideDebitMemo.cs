@@ -35,6 +35,7 @@ namespace IBS.Models.Filpride
 
         [Column(TypeName = "date")]
         [Display(Name = "Transaction Date")]
+        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly TransactionDate { get; set; }
 
         [Display(Name = "Debit Amount")]

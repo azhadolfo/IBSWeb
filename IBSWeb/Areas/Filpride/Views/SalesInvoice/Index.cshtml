@@ -57,7 +57,7 @@
                             @Html.DisplayFor(model => invoice.Customer.CustomerName)
                         </td>
                         <td>
-                            @invoice.TransactionDate.ToString("MM/dd/yyyy")
+                            @Html.DisplayFor(modelItem => invoice.TransactionDate)
                         </td>
                         <td>
                             @Html.DisplayFor(model => invoice.Customer.CustomerTerms)
@@ -117,8 +117,6 @@
                             }
                             @await Html.PartialAsync("_Preview", invoice)
                         </td>
-
-
                     </tr>
                 }
             </tbody>

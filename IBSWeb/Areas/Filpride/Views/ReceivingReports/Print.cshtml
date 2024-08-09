@@ -25,10 +25,9 @@
     <h6><b>No.&nbsp;@Html.DisplayFor(model => model.ReceivingReportNo)</b></h6>
 </div>
 
-
 <div class="w-100 text-end" style="margin-top:20px; padding-bottom:10px;">
     <span><b>Date:</b></span>
-    <span class="underline" style="display: inline-block; width: 20%; text-align:center;">@Model.Date.ToString("MM/dd/yyyy")</span><br />
+    <span class="underline" style="display: inline-block; width: 20%; text-align:center;">@Html.DisplayFor(model => model.Date)</span><br />
 </div>
 
 <div>
@@ -116,17 +115,17 @@
 </div>
 
 @* @if (!Model.IsPrinted)
-{
-    <div class="text-end">
-        ORIGINAL COPY
-    </div>
-}
-else
-{
-    <div class="text-end">
-        REPRINT COPY
-    </div>
-} *@
+    {
+        <div class="text-end">
+            ORIGINAL COPY
+        </div>
+    }
+    else
+    {
+        <div class="text-end">
+            REPRINT COPY
+        </div>
+    } *@
 
 <a class="btn btn-success" onclick="printPage()" id="printButton">Print</a>
 <a asp-controller="ReceivingReports" asp-action="Index" class="btn" id="otherButton">Back</a>
@@ -181,4 +180,3 @@ else
         }
     </script>
 }
-

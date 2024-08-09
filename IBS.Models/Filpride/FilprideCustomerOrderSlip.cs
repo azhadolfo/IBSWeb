@@ -15,6 +15,7 @@ namespace IBS.Models.Filpride
         public string CustomerOrderSlipNo { get; set; }
 
         [Column(TypeName = "date")]
+        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly Date { get; set; }
 
         #region--Customer properties

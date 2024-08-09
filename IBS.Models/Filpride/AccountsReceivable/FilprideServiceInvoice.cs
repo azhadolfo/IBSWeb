@@ -36,6 +36,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Required]
         [Display(Name = "Due Date")]
         [Column(TypeName = "date")]
+        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly DueDate { get; set; }
 
         [Required]
