@@ -92,16 +92,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetPOs(int supplierId)
         {
-            //var purchaseOrders = await _dbContext.PurchaseOrders
-            //    .Where(po => po.SupplierId == supplierId && po.PostedBy != null)
-            //    .ToListAsync();
-
             var purchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepo
-                .GetAllAsync(po => po.SupplierId == supplierId && po.PostedBy == null);
+                .GetAllAsync(po => po.SupplierId == supplierId && po.PostedBy != null);
 
             if (purchaseOrders != null && purchaseOrders.Any())
             {
-                var poList = purchaseOrders.Select(po => new { Id = po.PurchaseOrderId, PONumber = po.PurchaseOrderNo }).ToList();
+                var poList = purchaseOrders.OrderBy(po => po.PurchaseOrderNo).Select(po => new { Id = po.PurchaseOrderId, PONumber = po.PurchaseOrderNo }).ToList();
                 return Json(poList);
             }
 
@@ -790,7 +786,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Saving the default entries
                     var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, cancellationToken);
-                    var cashInBank = 0m;
+                    var cashInBank = viewModel.Credit[3]; ;
                     var cvh = new FilprideCheckVoucherHeader
                     {
                         CheckVoucherHeaderNo = generateCVNo,
@@ -821,7 +817,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
                         {
-                            cashInBank = viewModel.Credit[3];
                             cvDetails.Add(
                             new FilprideCheckVoucherDetail
                             {
@@ -859,6 +854,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         //if necessary add field to store location path
                         // model.Header.SupportingFilePath = fileSavePath
                     }
+
+                    TempData["success"] = "Check voucher trade created successfully";
+
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     return RedirectToAction("Index");
                     #endregion -- Uploading file --
