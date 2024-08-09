@@ -15,7 +15,7 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Required]
         [Display(Name = "Customer Name")]
-        [Column(TypeName = "varchar(50)")]
+        [Column(TypeName = "varchar(100)")]
         public string CustomerName { get; set; }
 
         [Required]
@@ -30,7 +30,7 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Required]
         [Display(Name = "Business Style")]
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(100)")]
         public string BusinessStyle { get; set; }
 
         [Required]

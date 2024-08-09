@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240808073757_AddTheLengthOfStringInCustomer")]
+    partial class AddTheLengthOfStringInCustomer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2824,7 +2827,8 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SupplierId"));
 
                     b.Property<string>("Branch")
-                        .HasColumnType("varchar(20)")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
                         .HasColumnName("branch");
 
                     b.Property<string>("Category")
@@ -2861,12 +2865,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
-                    b.Property<string>("ProofOfExemptionFilePath")
-                        .HasColumnType("varchar(1024)")
-                        .HasColumnName("proof_of_exemption_file_path");
-
                     b.Property<string>("ProofOfRegistrationFilePath")
-                        .HasColumnType("varchar(1024)")
+                        .HasColumnType("varchar(200)")
                         .HasColumnName("proof_of_registration_file_path");
 
                     b.Property<string>("ReasonOfExemption")

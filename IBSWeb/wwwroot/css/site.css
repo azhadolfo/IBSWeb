@@ -505,3 +505,7 @@ input[readonly] {
 .negative {
     color: red;
 }
+
+.uppercase {
+    text-transform: uppercase;
+}

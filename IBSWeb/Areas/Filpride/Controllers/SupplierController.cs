@@ -73,7 +73,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(FilprideSupplier model, IFormFile? file, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(FilprideSupplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
@@ -85,19 +85,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(model);
                 }
 
-                if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, companyClaims, cancellationToken))
+                if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, model.Branch, companyClaims, cancellationToken))
                 {
                     ModelState.AddModelError("SupplierTin", "Tin number already exist.");
                     return View(model);
                 }
 
+                if (model.WithholdingTaxtitle != null && model.WithholdingTaxPercent != null)
+                {
+                    model.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
+                }
+
                 try
                 {
-                    if (file != null && file.Length > 0)
+                    if (registration != null && registration.Length > 0)
                     {
-                        string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "Proof of Registration", model.SupplierName);
+                        string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "documents", companyClaims, "Proof of Registration", model.SupplierName);
 
-                        model.ProofOfRegistrationFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(file, localPath, cancellationToken);
+                        model.ProofOfRegistrationFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(registration, localPath, cancellationToken);
+                    }
+
+                    if (document != null && document.Length > 0)
+                    {
+                        string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "documents", companyClaims, "Proof of Exemption", model.SupplierName);
+
+                        model.ProofOfExemptionFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(document, localPath, cancellationToken);
                     }
 
                     model.SupplierCode = await _unitOfWork.FilprideSupplier
@@ -142,14 +154,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(FilprideSupplier model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(FilprideSupplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
+                    var companyClaims = await GetCompanyClaimAsync();
+
+                    if (registration != null && registration.Length > 0)
+                    {
+                        string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "documents", companyClaims, "Proof of Registration", model.SupplierName);
+
+                        model.ProofOfRegistrationFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(registration, localPath, cancellationToken);
+                    }
+
+                    if (document != null && document.Length > 0)
+                    {
+                        string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "documents", companyClaims, "Proof of Exemption", model.SupplierName);
+
+                        model.ProofOfExemptionFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(document, localPath, cancellationToken);
+                    }
+
                     model.EditedBy = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
+
                     TempData["success"] = "Supplier updated successfully";
                     return RedirectToAction(nameof(Index));
                 }

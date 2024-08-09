@@ -46,10 +46,10 @@ namespace IBS.DataAccess.Repository.Filpride
                 .AnyAsync(s => s.Company == company && s.SupplierName == supplierName, cancellationToken);
         }
 
-        public async Task<bool> IsTinNoExistAsync(string tin, string company, CancellationToken cancellationToken = default)
+        public async Task<bool> IsTinNoExistAsync(string tin, string branch, string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideSuppliers
-                .AnyAsync(s => s.Company == company && s.SupplierTin == tin, cancellationToken);
+                .AnyAsync(s => s.Company == company && s.SupplierTin == tin && s.Branch == branch, cancellationToken);
         }
 
         public async Task<string> SaveProofOfRegistration(IFormFile file, string localPath, CancellationToken cancellationToken = default)
@@ -75,12 +75,31 @@ namespace IBS.DataAccess.Repository.Filpride
             FilprideSupplier existingSupplier = await _db.FilprideSuppliers
                 .FindAsync(model.SupplierId, cancellationToken) ?? throw new InvalidOperationException($"Supplier with id '{model.SupplierId}' not found.");
 
+            existingSupplier.Category = model.Category;
             existingSupplier.SupplierName = model.SupplierName;
             existingSupplier.SupplierAddress = model.SupplierAddress;
             existingSupplier.SupplierTin = model.SupplierTin;
+            existingSupplier.Branch = model.Branch;
             existingSupplier.SupplierTerms = model.SupplierTerms;
             existingSupplier.VatType = model.VatType;
             existingSupplier.TaxType = model.TaxType;
+            existingSupplier.DefaultExpenseNumber = model.DefaultExpenseNumber;
+            existingSupplier.WithholdingTaxtitle = model.WithholdingTaxtitle;
+
+            if (model.ProofOfRegistrationFilePath != null && existingSupplier.ProofOfRegistrationFilePath != model.ProofOfRegistrationFilePath)
+            {
+                existingSupplier.ProofOfRegistrationFilePath = model.ProofOfRegistrationFilePath;
+            }
+
+            if (model.ProofOfExemptionFilePath != null && existingSupplier.ProofOfExemptionFilePath != model.ProofOfExemptionFilePath)
+            {
+                existingSupplier.ProofOfExemptionFilePath = model.ProofOfExemptionFilePath;
+            }
+
+            if (model.WithholdingTaxtitle != null && model.WithholdingTaxPercent != null)
+            {
+                existingSupplier.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
+            }
 
             if (_db.ChangeTracker.HasChanges())
             {

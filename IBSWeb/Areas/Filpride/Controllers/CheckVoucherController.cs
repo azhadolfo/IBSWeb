@@ -92,11 +92,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetPOs(int supplierId)
         {
-            var purchaseOrders = await _dbContext.PurchaseOrders
-                .Where(po => po.SupplierId == supplierId && po.PostedBy != null)
-                .ToListAsync();
+            //var purchaseOrders = await _dbContext.PurchaseOrders
+            //    .Where(po => po.SupplierId == supplierId && po.PostedBy != null)
+            //    .ToListAsync();
 
-            if (purchaseOrders != null && purchaseOrders.Count > 0)
+            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepo
+                .GetAllAsync(po => po.SupplierId == supplierId && po.PostedBy == null);
+
+            if (purchaseOrders != null && purchaseOrders.Any())
             {
                 var poList = purchaseOrders.Select(po => new { Id = po.PurchaseOrderId, PONumber = po.PurchaseOrderNo }).ToList();
                 return Json(poList);

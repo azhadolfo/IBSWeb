@@ -38,8 +38,11 @@ namespace IBS.Models.Filpride.MasterFile
         [Display(Name = "TAX Type")]
         public string TaxType { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
+        [Column(TypeName = "varchar(1024)")]
         public string? ProofOfRegistrationFilePath { get; set; }
+
+        [Column(TypeName = "varchar(1024)")]
+        public string? ProofOfExemptionFilePath { get; set; }
 
         public bool IsActive { get; set; } = true;
 
@@ -64,8 +67,8 @@ namespace IBS.Models.Filpride.MasterFile
         [Display(Name = "Trade Name")]
         public string? TradeName { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
-        public string Branch { get; set; }
+        [Column(TypeName = "varchar(20)")]
+        public string? Branch { get; set; }
 
         [Column(TypeName = "varchar(100)")]
         [Display(Name = "Default Expense")]

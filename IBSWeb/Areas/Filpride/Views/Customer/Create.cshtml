@@ -52,12 +52,21 @@
                     <label class="control-label">Customer Terms<span class="required">*</span></label>
                     <select asp-for="CustomerTerms" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
                         <option value="" selected disabled>Select payment terms</option>
-                        <option value="@SD.Terms_Cod">@SD.Terms_Cod</option>
-                        <option value="@SD.Terms_7d">@SD.Terms_7d</option>
-                        <option value="@SD.Terms_15d">@SD.Terms_15d</option>
-                        <option value="@SD.Terms_30d">@SD.Terms_30d</option>
-                        <option value="@SD.Terms_M15">@SD.Terms_M15</option>
-                        <option value="@SD.Terms_M30">@SD.Terms_M30</option>
+                        <option value="COD">COD</option>
+                        <option value="PREPAID">PREPAID</option>
+                        <option value="7D">7D</option>
+                        <option value="7D">10D</option>
+                        <option value="15D">15D</option>
+                        <option value="30D">30D</option>
+                        <option value="30D">45D</option>
+                        <option value="30D">60D</option>
+                        <option value="90D">90D</option>
+                        <option value="15PDC">15PDC</option>
+                        <option value="30PDC">30PDC</option>
+                        <option value="45PDC">45PDC</option>
+                        <option value="M15">M15</option>
+                        <option value="M15">M29</option>
+                        <option value="M30">M30</option>
                     </select>
                     <span asp-validation-for="CustomerTerms" class="text-danger"></span>
                 </div>
