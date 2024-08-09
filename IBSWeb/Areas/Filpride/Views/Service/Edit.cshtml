@@ -18,7 +18,7 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group mb-3">
                 <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
+                <input asp-for="Name" class="form-control uppercase" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-group mb-3">
@@ -41,7 +41,6 @@
         </form>
     </div>
 </div>
-
 
 @section Scripts {
     @{
