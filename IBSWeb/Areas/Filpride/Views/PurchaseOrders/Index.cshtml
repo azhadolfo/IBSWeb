@@ -60,7 +60,7 @@
                             @Html.DisplayFor(modelItem => item.PurchaseOrderNo)
                         </td>
                         <td>
-                            @item.Date.ToString("MM/dd/yyyy")
+                            @Html.DisplayFor(modelItem => item.Date)
                         </td>
                         <td>
                             @Html.DisplayFor(modelItem => item.Supplier.SupplierName)

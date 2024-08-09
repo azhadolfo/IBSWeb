@@ -89,14 +89,14 @@
                                         {
                                             <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.ServiceInvoiceId">Print</a></li>
                                             <li>
-                                            @if (item.AmountPaid == 0)
-                                            {
-                                            <a class="dropdown-item" onclick="confirmVoid(@item.ServiceInvoiceId)">Void</a>
-                                            }
-                                            else
-                                            {
-                                            <button class="dropdown-item" disabled readonly>Void</button>
-                                            }
+                                                @if (item.AmountPaid == 0)
+                                                {
+                                                    <a class="dropdown-item" onclick="confirmVoid(@item.ServiceInvoiceId)">Void</a>
+                                                }
+                                                else
+                                                {
+                                                    <button class="dropdown-item" disabled readonly>Void</button>
+                                                }
                                             </li>
                                         }
                                     </ul>

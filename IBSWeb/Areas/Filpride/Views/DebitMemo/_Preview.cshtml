@@ -29,7 +29,6 @@
                     <div class="text-end" style="margin-top:-60px;">
                         <h6><b>No.&nbsp; @Html.DisplayFor(model => model.DebitMemoNo)</b></h6>
                     </div>
-
                 </div>
                 <br />
                 @if (Model.Source == "Sales Invoice")
@@ -54,7 +53,7 @@
 
                                     <td class="w-25 text-nowrap">
 
-                                        <b>Date :</b> @Model.TransactionDate.ToString("MM/dd/yyyy")
+                                        <b>Date :</b> @Html.DisplayFor(model => model.TransactionDate)
                                         &nbsp; <span id="invoiceDate"></span>
                                         <br />
                                         <b>@* Terms: *@</b>&nbsp;<span id="terms"></span>&nbsp;<br />
@@ -86,7 +85,6 @@
                                     <td>@Html.DisplayFor(model => model.Description)</td>
                                     <td>@Html.DisplayFor(model => model.DebitAmount)</td>
                                 </tr>
-
                             </tbody>
                         </table>
                     </div>
@@ -109,7 +107,6 @@
                                                                 <p style="height: 9px;">@Html.DisplayFor(model => model.VatableSales)</p>
                                                             }
                                                         </td>
-
                                                     </tr>
                                                     <tr>
                                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
@@ -234,7 +231,6 @@
                                                         {
                                                             <td class="text-end"></td>
                                                         }
-
                                                     </tr>
                                                     <tr>
                                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
@@ -246,7 +242,6 @@
                                                         {
                                                             <td class="text-end"></td>
                                                         }
-
                                                     </tr>
                                                     <tr>
                                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT-Exempt Sales: </b></p></td>
@@ -290,7 +285,6 @@
                         <i>This is a system generated invoice, no signature required.</i>
                     </p>
                 </div>
-
 
                 <br />
                 <div class="text-center w-100" style="margin-top:20px;">

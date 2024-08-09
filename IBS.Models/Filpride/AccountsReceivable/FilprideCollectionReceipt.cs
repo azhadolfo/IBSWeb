@@ -63,6 +63,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Required]
         [Display(Name = "Transaction Date")]
         [Column(TypeName = "date")]
+        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly TransactionDate { get; set; }
 
         public long SeriesNumber { get; set; }

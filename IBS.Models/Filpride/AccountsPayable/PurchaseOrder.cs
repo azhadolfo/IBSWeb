@@ -17,6 +17,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Required]
         [Column(TypeName = "date")]
         [Display(Name = "Transaction Date")]
+        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly Date { get; set; }
 
         [Required]

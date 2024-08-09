@@ -29,7 +29,7 @@
 
 <div class="w-100 text-end" style="margin-top:-20px; padding-bottom:10px;">
     <span><b>Date:</b></span>
-    <span class="underline" style="display: inline-block; width: 20%; text-align:center;">@Model.TransactionDate.ToString("MM/dd/yyyy")</span><br />
+    <span class="underline" style="display: inline-block; width: 20%; text-align:center;">@Html.DisplayFor(model => model.TransactionDate)</span><br />
 </div>
 
 <div>
@@ -431,17 +431,17 @@
 </div>
 
 @* @if (!Model.IsPrinted)
-{
-    <div class="text-end">
-        ORIGINAL COPY
-    </div>
-}
-else
-{
-    <div class="text-end">
-        REPRINT COPY
-    </div>
-} *@
+    {
+        <div class="text-end">
+            ORIGINAL COPY
+        </div>
+    }
+    else
+    {
+        <div class="text-end">
+            REPRINT COPY
+        </div>
+    } *@
 
 <br />
 @* <a asp-action="OfficialReceipt" class="btn btn-success" asp-route-id="@Model.Id" onclick="printPage()" id="printButton">Print</a> *@

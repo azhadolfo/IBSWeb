@@ -30,7 +30,6 @@
                     <div class="text-end" style="margin-top:-60px;">
                         <h6><b>No.&nbsp;@Html.DisplayFor(model => model.SalesInvoiceNo)</b></h6>
                     </div>
-
                 </div>
 
                 <div class="table-responsive text-start">
@@ -54,10 +53,10 @@
                                 <td class="w-25 text-nowrap">
 
                                     <b>Invoice Date:</b>
-                                    &nbsp; <span>@Model.TransactionDate.ToString("MM/dd/yyyy")</span>
+                                    &nbsp; <span>@Html.DisplayFor(model => model.TransactionDate)</span>
                                     <br />
                                     <b>Terms:</b>&nbsp;<span>@Html.DisplayFor(model => model.Customer.CustomerTerms)</span>&nbsp;<br />
-                                    <b>Due Date:</b>&nbsp; <span>@Model.DueDate.ToString("MM/dd/yyyy")</span><br />
+                                    <b>Due Date:</b>&nbsp; <span>@Html.DisplayFor(model => model.DueDate)</span><br />
 
                                     <b>Other Ref No.:</b>&nbsp; @Html.DisplayFor(model => model.OtherRefNo) &nbsp;
                                 </td>
@@ -84,7 +83,6 @@
                                 <td>@Html.DisplayFor(model => model.UnitPrice)</td>
                                 <td>@Html.DisplayFor(model => model.Amount)</td>
                             </tr>
-
                         </tbody>
                     </table>
                 </div>
@@ -151,7 +149,6 @@
                                         <tr class="h-100">
                                             <td style="position:relative; top:-85px; left:-12%;">INSTRUCTIONS: <br /><pre style="margin: 0; padding: 0">@Html.DisplayFor(model => model.Remarks)</pre></td>
                                         </tr>
-
                                     </tbody>
                                 </table>
                             </td>
@@ -170,7 +167,6 @@
                                                 <br />
                                                 <p style="margin-top:20px;"><span style="display: inline-block; width:110px;" class="underline">Azh Adolfo</span></p>
                                             </td>
-
                                         </tr>
                                         <tr class="align-text-top">
                                             <td colspan="2">
@@ -180,7 +176,6 @@
                                                 </div>
                                             </td>
                                         </tr>
-
                                     </tbody>
                                 </table>
                             </td>
@@ -196,7 +191,6 @@
                                                     @Html.DisplayFor(model => model.VatableSales)
                                                 }
                                             </td>
-
                                         </tr>
                                         <tr style="padding-left: 8%;">
                                             <td><b>Zero-Rated Sales: </b></td>

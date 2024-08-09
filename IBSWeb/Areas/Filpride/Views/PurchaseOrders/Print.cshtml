@@ -23,7 +23,6 @@
     <div class="text-end" style="margin-top:-60px;">
         <h6><b>No.&nbsp;@Html.DisplayFor(model => model.PurchaseOrderNo)</b></h6>
     </div>
-
 </div>
 
 <div class="table-responsive" style="margin-top:50px;">
@@ -31,7 +30,7 @@
         <tbody>
             <tr style="padding-left:10px;">
                 <td class="w-75">Supplier: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
-                <td class="w-25 text-end">Date: &nbsp;@Model.Date.ToString("MM/dd/yyyy")</td>
+                <td class="w-25 text-end">Date: &nbsp;@Html.DisplayFor(model => model.Date)</td>
             </tr>
             <tr style="padding-left:10px;">
                 <td>Address: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
@@ -105,18 +104,17 @@
 </div>
 
 @* @if (!Model.IsPrinted)
-{
-    <div class="text-end footer" style="right:8%; bottom:9%;">
-        ORIGINAL COPY
-    </div>
-}
-else
-{
-    <div class="text-end footer" style="right:8%; bottom:9%;">
-        REPRINT COPY
-    </div>
-} *@
-
+    {
+        <div class="text-end footer" style="right:8%; bottom:9%;">
+            ORIGINAL COPY
+        </div>
+    }
+    else
+    {
+        <div class="text-end footer" style="right:8%; bottom:9%;">
+            REPRINT COPY
+        </div>
+    } *@
 
 <div class="text-start w-100 footer" style="margin-top:50px;">
     <p style="line-height: 1;">
