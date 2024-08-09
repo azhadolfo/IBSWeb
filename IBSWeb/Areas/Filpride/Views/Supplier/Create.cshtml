@@ -32,17 +32,17 @@
                 <span class="text-danger"></span>
             </fieldset>
             <div class="form-floating mb-3" id="tradeList" style="display: none;">
-                <input asp-for="TradeName" class="form-control" placeholder="" />
+                <input asp-for="TradeName" class="form-control uppercase" placeholder="" />
                 <label asp-for="TradeName" class="control-label">Trade Name<span class="required">*</span></label>
                 <span asp-validation-for="TradeName" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="SupplierName" class="form-control" placeholder="" />
+                <input asp-for="SupplierName" class="form-control uppercase" placeholder="" />
                 <label asp-for="SupplierName" class="control-label">Name<span class="required">*</span></label>
                 <span asp-validation-for="SupplierName" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="SupplierAddress" class="form-control" placeholder="" />
+                <input asp-for="SupplierAddress" class="form-control uppercase" placeholder="" />
                 <label asp-for="SupplierAddress" class="control-label">Address<span class="required">*</span></label>
                 <span asp-validation-for="SupplierAddress" class="text-danger"></span>
             </div>
@@ -53,8 +53,8 @@
                     <span asp-validation-for="SupplierTin" class="text-danger"></span>
                 </div>
                 <div class="form-floating col">
-                    <input asp-for="Branch" class="form-control" placeholder="" maxlength="4" />
-                    <label asp-for="Branch" class="control-label ms-2">Branch<span class="required">*</span></label>
+                    <input asp-for="Branch" class="form-control uppercase" placeholder="" />
+                    <label asp-for="Branch" class="control-label ms-2">Branch</label>
                     <span asp-validation-for="Branch" class="text-danger"></span>
                 </div>
             </div>
@@ -70,12 +70,17 @@
                 <select asp-for="SupplierTerms" class="form-select js-select2">
                     <option value="" selected disabled>-- Select the Terms --</option>
                     <option value="COD">COD</option>
+                    <option value="PREPAID">PREPAID</option>
                     <option value="7D">7D</option>
                     <option value="7D">10D</option>
                     <option value="15D">15D</option>
                     <option value="30D">30D</option>
                     <option value="30D">45D</option>
                     <option value="30D">60D</option>
+                    <option value="90D">90D</option>
+                    <option value="15PDC">15PDC</option>
+                    <option value="30PDC">30PDC</option>
+                    <option value="45PDC">45PDC</option>
                     <option value="M15">M15</option>
                     <option value="M15">M29</option>
                     <option value="M30">M30</option>
@@ -110,7 +115,7 @@
             </div>
             <div id="exemptionFields" style="display:none;">
                 <div class="form-floating mb-3">
-                    <textarea asp-for="ReasonOfExemption" class="form-control" placeholder="Reason of exemption" style="height: 100px" required></textarea>
+                    <textarea asp-for="ReasonOfExemption" class="form-control uppercase" placeholder="Reason of exemption" style="height: 100px" required></textarea>
                     <label asp-for="ReasonOfExemption" class="control-label">Reason<span class="required">*</span></label>
                     <span asp-validation-for="ReasonOfExemption" class="text-danger"></span>
                 </div>
@@ -134,11 +139,12 @@
                 <div class="form-group mb-3">
                     <label for="document" class="form-label">Upload the proof of exemption documents.<span class="required">*</span></label>
                     <input class="form-control form-control-sm" name="document" type="file" required>
+                    <span asp-validation-for="ProofOfExemptionFilePath" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group mb-3">
-                <label for="registration" class="form-label">Upload the proof of BIR registration<span class="required">*</span></label>
-                <input class="form-control form-control-sm" name="registration" type='file' required>
+                <label for="registration" class="form-label">Upload the proof of BIR registration</label>
+                <input class="form-control form-control-sm" name="registration" type='file'>
                 <span asp-validation-for="ProofOfRegistrationFilePath" class="text-danger"></span>
             </div>
 
