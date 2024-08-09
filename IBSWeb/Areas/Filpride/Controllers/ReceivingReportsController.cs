@@ -248,6 +248,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.EwtAmount = existingModel.NetAmount * .01m;
                 }
 
+                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedDate = DateTime.Now;
+
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Receiving Report updated successfully";
