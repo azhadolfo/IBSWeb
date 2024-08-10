@@ -392,6 +392,8 @@
                 // Display the total debit value
                 $(".totalDebit").text(totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
                 $(".totalCredit").text(totalCredit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $("#debit").val("0.00");
+                $("#credit").val("0.00");
             }
 
             // Function to remove the corresponding row
