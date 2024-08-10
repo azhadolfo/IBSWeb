@@ -145,9 +145,8 @@
 
                                 <table class="table-bordered w-100 h-100" style="padding: 0; margin: 0;">
                                     <tbody>
-
                                         <tr class="h-100">
-                                            <td style="position:relative; top:-85px; left:-12%;">INSTRUCTIONS: <br /><pre style="margin: 0; padding: 0">@Html.DisplayFor(model => model.Remarks)</pre></td>
+                                            <td style="position:relative; top:-55px; left:-10%;">INSTRUCTIONS: <br /><pre style="margin: 0; padding: 0">@Html.DisplayFor(model => model.Remarks)</pre></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -183,7 +182,7 @@
                                 <table class="table-bordered w-100 h-100" style="padding: 0; margin: 0;">
                                     <tbody class="text-nowrap table-font-bold">
                                         <tr style="padding-left: 8%;">
-                                            <td><b>Vatable Sales: </b></td>
+                                            <td class="text-start"><b>Vatable Sales: </b></td>
 
                                             <td class="text-end">
                                                 @if (Model.Customer.CustomerType == "Vatable")
@@ -193,7 +192,7 @@
                                             </td>
                                         </tr>
                                         <tr style="padding-left: 8%;">
-                                            <td><b>Zero-Rated Sales: </b></td>
+                                            <td class="text-start"><b>Zero-Rated Sales: </b></td>
 
                                             <td class="text-end">
                                                 @if (Model.Customer.CustomerType == "Zero Rated")
@@ -203,7 +202,7 @@
                                             </td>
                                         </tr>
                                         <tr style="padding-left: 8%;">
-                                            <td><b>VAT-Exempt Sales: </b></td>
+                                            <td class="text-start"><b>VAT-Exempt Sales: </b></td>
 
                                             <td class="text-end">
                                                 @if (Model.Customer.CustomerType == "Exempt")
@@ -213,7 +212,7 @@
                                             </td>
                                         </tr>
                                         <tr style="padding-left: 8%;">
-                                            <td><b>VAT Amount: </b></td>
+                                            <td class="text-start"><b>VAT Amount: </b></td>
 
                                             <td class="text-end">
                                                 @if (Model.Customer.CustomerType == "Vatable")
@@ -223,7 +222,7 @@
                                             </td>
                                         </tr>
                                         <tr style="padding-left: 8%;">
-                                            <td><b>Discount: </b></td>
+                                            <td class="text-start"><b>Discount: </b></td>
 
                                             <td class="text-end">
                                                 @if (Model.Discount != 0)
@@ -233,7 +232,7 @@
                                             </td>
                                         </tr>
                                         <tr style="padding-left: 8%;">
-                                            <td><b>TOTAL SALES: </b></td>
+                                            <td class="text-start"><b>TOTAL SALES: </b></td>
 
                                             <td class="text-end">
                                                 @{
