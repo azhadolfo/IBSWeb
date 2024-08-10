@@ -34,15 +34,15 @@
                     <table class="w-100">
                         <tbody>
                             <tr style="padding-left:10px;">
-                                <td class="w-75">Supplier: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
+                                <td class="w-75 text-start">Supplier: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
                                 <td class="w-25 text-end">Date: &nbsp;@Html.DisplayFor(model => model.Date)</td>
                             </tr>
                             <tr style="padding-left:10px;">
-                                <td>Address: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
+                                <td class="text-start">Address: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
                                 <td></td>
                             </tr>
                             <tr style="padding-left:10px;">
-                                <td>TIN No.: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierTin)</td>
+                                <td class="text-start">TIN No.: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierTin)</td>
                                 <td></td>
                             </tr>
                         </tbody>
@@ -82,7 +82,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="w-25" colspan="4"><pre style="margin: 0; padding: 0">@Html.DisplayFor(model => model.Remarks)</pre></td>
+                                <td class="w-25 text-start" colspan="4"><pre style="margin: 0; padding: 0">@Html.DisplayFor(model => model.Remarks)</pre></td>
                             </tr>
                         </tbody>
                     </table>
