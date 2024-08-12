@@ -28,10 +28,9 @@ namespace IBS.Models.Filpride.MasterFile
         [Column(TypeName = "varchar(20)")]
         public string CustomerTin { get; set; }
 
-        [Required]
         [Display(Name = "Business Style")]
         [Column(TypeName = "varchar(100)")]
-        public string BusinessStyle { get; set; }
+        public string? BusinessStyle { get; set; }
 
         [Required]
         [Display(Name = "Payment Terms")]
