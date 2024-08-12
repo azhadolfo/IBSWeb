@@ -26,11 +26,26 @@ namespace IBS.DataAccess.Repository.Filpride
                     case "7D":
                         return transactionDate.AddDays(7);
 
+                    case "10D":
+                        return transactionDate.AddDays(10);
+
                     case "15D":
+                    case "15PDC":
                         return transactionDate.AddDays(15);
 
                     case "30D":
+                    case "30PDC":
                         return transactionDate.AddDays(30);
+
+                    case "45D":
+                    case "45PDC":
+                        return transactionDate.AddDays(45);
+
+                    case "60D":
+                        return transactionDate.AddDays(60);
+
+                    case "90D":
+                        return transactionDate.AddDays(90);
 
                     case "M15":
                         return transactionDate.AddMonths(1).AddDays(15 - transactionDate.Day);
@@ -45,6 +60,26 @@ namespace IBS.DataAccess.Repository.Filpride
                             dueDate = new DateOnly(transactionDate.Year, transactionDate.Month, 1).AddMonths(2).AddDays(-1);
 
                             if (dueDate.Day == 31)
+                            {
+                                dueDate = dueDate.AddDays(-1);
+                            }
+                        }
+                        return dueDate;
+
+                    case "M29":
+                        if (transactionDate.Month == 1)
+                        {
+                            dueDate = new DateOnly(transactionDate.Year, transactionDate.Month, 1).AddMonths(2).AddDays(-1);
+                        }
+                        else
+                        {
+                            dueDate = new DateOnly(transactionDate.Year, transactionDate.Month, 1).AddMonths(2).AddDays(-1);
+
+                            if (dueDate.Day == 31)
+                            {
+                                dueDate = dueDate.AddDays(-2);
+                            }
+                            else if (dueDate.Day == 30)
                             {
                                 dueDate = dueDate.AddDays(-1);
                             }
