@@ -42,6 +42,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         return transactionDate.AddDays(45);
 
                     case "60D":
+                    case "60PDC":
                         return transactionDate.AddDays(60);
 
                     case "90D":
