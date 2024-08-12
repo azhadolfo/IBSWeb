@@ -34,7 +34,7 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Required]
         [Display(Name = "Payment Terms")]
-        [Column(TypeName = "varchar(3)")]
+        [Column(TypeName = "varchar(10)")]
         public string CustomerTerms { get; set; }
 
         [Required]
