@@ -85,7 +85,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (model.Amount >= model.Discount)
                     {
-                        if (existingCustomer.CustomerType == "Vatable")
+                        if (existingCustomer.VatType == "Vatable")
                         {
                             model.NetDiscount = model.Amount - model.Discount;
                             model.VatableSales = model.NetDiscount / 1.12m;
@@ -99,7 +99,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 model.WithHoldingVatAmount = model.VatableSales * 0.05m;
                             }
                         }
-                        else if (existingCustomer.CustomerType == "Zero Rated")
+                        else if (existingCustomer.VatType == "Zero Rated")
                         {
                             model.NetDiscount = model.Amount - model.Discount;
                             model.ZeroRated = model.Amount;
@@ -237,7 +237,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (existingRecord.Amount >= model.Discount)
                     {
-                        if (existingRecord.Customer.CustomerType == "Vatable")
+                        if (existingRecord.Customer.VatType == "Vatable")
                         {
                             existingRecord.NetDiscount = existingRecord.Amount - model.Discount;
                             existingRecord.VatableSales = existingRecord.NetDiscount / 1.12m;
@@ -251,7 +251,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 existingRecord.WithHoldingVatAmount = existingRecord.VatableSales * (decimal)0.05;
                             }
                         }
-                        else if (existingRecord.Customer.CustomerType == "Zero Rated")
+                        else if (existingRecord.Customer.VatType == "Zero Rated")
                         {
                             existingRecord.NetDiscount = existingRecord.Amount - model.Discount;
                             existingRecord.ZeroRated = existingRecord.Amount;
@@ -329,7 +329,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var sales = new FilprideSalesBook();
 
-                        if (model.Customer.CustomerType == "Vatable")
+                        if (model.Customer.VatType == "Vatable")
                         {
                             sales.TransactionDate = model.TransactionDate;
                             sales.SerialNo = model.SalesInvoiceNo;
@@ -348,7 +348,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             sales.DocumentId = model.SalesInvoiceId;
                             sales.Company = model.Company;
                         }
-                        else if (model.Customer.CustomerType == "Exempt")
+                        else if (model.Customer.VatType == "Exempt")
                         {
                             sales.TransactionDate = model.TransactionDate;
                             sales.SerialNo = model.SalesInvoiceNo;

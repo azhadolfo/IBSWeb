@@ -87,7 +87,7 @@
                     </table>
                 </div>
                 @{
-                    if (Model.Customer.CustomerType == "Vatable")
+                    if (Model.Customer.VatType == "Vatable")
                     {
                         if (Model.Customer.WithHoldingTax && !Model.Customer.WithHoldingVat)
                         {
@@ -185,7 +185,7 @@
                                             <td class="text-start"><b>Vatable Sales: </b></td>
 
                                             <td class="text-end">
-                                                @if (Model.Customer.CustomerType == "Vatable")
+                                                @if (Model.Customer.VatType == "Vatable")
                                                 {
                                                     @Html.DisplayFor(model => model.VatableSales)
                                                 }
@@ -195,7 +195,7 @@
                                             <td class="text-start"><b>Zero-Rated Sales: </b></td>
 
                                             <td class="text-end">
-                                                @if (Model.Customer.CustomerType == "Zero Rated")
+                                                @if (Model.Customer.VatType == "Zero Rated")
                                                 {
                                                     @Html.DisplayFor(model => model.Amount)
                                                 }
@@ -205,7 +205,7 @@
                                             <td class="text-start"><b>VAT-Exempt Sales: </b></td>
 
                                             <td class="text-end">
-                                                @if (Model.Customer.CustomerType == "Exempt")
+                                                @if (Model.Customer.VatType == "Exempt")
                                                 {
                                                     @Html.DisplayFor(model => model.Amount)
                                                 }
@@ -215,7 +215,7 @@
                                             <td class="text-start"><b>VAT Amount: </b></td>
 
                                             <td class="text-end">
-                                                @if (Model.Customer.CustomerType == "Vatable")
+                                                @if (Model.Customer.VatType == "Vatable")
                                                 {
                                                     @Html.DisplayFor(model => model.VatAmount)
                                                 }
@@ -243,7 +243,7 @@
                                                 }
                                                 @if (Model.Discount == 0)
                                                 {
-                                                    if (Model.Customer.CustomerType == "Vatable")
+                                                    if (Model.Customer.VatType == "Vatable")
                                                     {
                                                         @Html.DisplayFor(model => formattedTotalSales)
                                                     }
@@ -272,7 +272,7 @@
                         <i>This is a system generated invoice, no signature required.</i>
                     </p>
                 </div>
-                @if (Model.Customer.CustomerType == "Exempt")
+                @if (Model.Customer.VatType == "Exempt")
                 {
                     <div style="margin-top:20px;">
                         <p>
@@ -280,7 +280,7 @@
                         </p>
                     </div>
                 }
-                else if (Model.Customer.CustomerType == "Zero Rated")
+                else if (Model.Customer.VatType == "Zero Rated")
                 {
                     <div style="margin-top:20px;">
                         <p>
