@@ -31,11 +31,25 @@ namespace IBS.DataAccess.Repository.Filpride
                     case "7D":
                         return dueDate = rrDate.AddDays(7);
 
+                    case "10D":
+                        return dueDate = rrDate.AddDays(7);
+
                     case "15D":
                         return dueDate = rrDate.AddDays(15);
 
                     case "30D":
                         return dueDate = rrDate.AddDays(30);
+
+                    case "45D":
+                    case "45PDC":
+                        return dueDate = rrDate.AddDays(45);
+
+                    case "60D":
+                    case "60PDC":
+                        return dueDate = rrDate.AddDays(60);
+
+                    case "90D":
+                        return dueDate = rrDate.AddDays(90);
 
                     case "M15":
                         return dueDate = rrDate.AddMonths(1).AddDays(15 - rrDate.Day);
@@ -50,6 +64,26 @@ namespace IBS.DataAccess.Repository.Filpride
                             dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
 
                             if (dueDate.Day == 31)
+                            {
+                                dueDate = dueDate.AddDays(-1);
+                            }
+                        }
+                        return dueDate;
+
+                    case "M29":
+                        if (rrDate.Month == 1)
+                        {
+                            dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
+                        }
+                        else
+                        {
+                            dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
+
+                            if (dueDate.Day == 31)
+                            {
+                                dueDate = dueDate.AddDays(-2);
+                            }
+                            else if (dueDate.Day == 30)
                             {
                                 dueDate = dueDate.AddDays(-1);
                             }
