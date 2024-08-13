@@ -66,7 +66,7 @@
                             @Html.DisplayFor(model => invoice.Amount)
                         </td>
                         <td class="text-center">
-                            @if (invoice.CreatedBy == UserManager.GetUserName(User) && invoice.VoidedBy == null && invoice.CanceledBy == null)
+                            @if (invoice.CreatedBy == UserManager.GetUserName(User) && invoice.VoidedBy == null && invoice.CanceledBy == null || ViewBag.GetUserDepartment == "RCD")
                             {
                                 <div class="dropdown">
                                     <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -110,7 +110,7 @@
                             }
                             else
                             {
-                                @if (invoice.CreatedBy != UserManager.GetUserName(User))
+                                @if (invoice.CreatedBy != UserManager.GetUserName(User) || ViewBag.GetUserDepartment == "RCD")
                                 {
                                     <span class="badge rounded-pill bg-info">VALID</span>
                                 }

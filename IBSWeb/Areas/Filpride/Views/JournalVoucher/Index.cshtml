@@ -66,7 +66,7 @@
                             @Html.DisplayFor(modelItem => item.Header.JVReason)
                         </td>
                         <td class="text-center">
-                            @if (item.Header.CreatedBy == UserManager.GetUserName(User) && item.Header.VoidedBy == null && item.Header.CanceledBy == null)
+                            @if (item.Header.CreatedBy == UserManager.GetUserName(User) && item.Header.VoidedBy == null && item.Header.CanceledBy == null || ViewBag.GetUserDepartment == "RCD")
                             {
                                 <div class="dropdown">
                                     <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -103,7 +103,7 @@
                             }
                             else
                             {
-                                @if (item.Header.CreatedBy != UserManager.GetUserName(User))
+                                @if (item.Header.CreatedBy != UserManager.GetUserName(User) || ViewBag.GetUserDepartment == "RCD")
                                 {
                                     <span class="badge rounded-pill bg-info">VALID</span>
                                 }

@@ -68,6 +68,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 journalVoucherVMs.Add(journalVoucherVM);
             }
 
+            var findUser = await _dbContext.ApplicationUsers
+                .Where(user => user.Id == _userManager.GetUserId(this.User))
+                .FirstOrDefaultAsync();
+
+            ViewBag.GetUserDepartment = findUser?.Department;
+
             return View(journalVoucherVMs);
         }
 
