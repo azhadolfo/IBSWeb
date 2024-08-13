@@ -105,7 +105,7 @@
                             }
                             else
                             {
-                                @if (item.Header.CreatedBy != UserManager.GetUserName(User) || ViewBag.GetUserDepartment == "RCD")
+                                @if (item.Header.CreatedBy != UserManager.GetUserName(User) && ViewBag.GetUserDepartment != "RCD")
                                 {
                                     <span class="badge rounded-pill bg-info">VALID</span>
                                 }

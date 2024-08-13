@@ -110,7 +110,7 @@
                             }
                             else
                             {
-                                @if (invoice.CreatedBy != UserManager.GetUserName(User) || ViewBag.GetUserDepartment == "RCD")
+                                @if (invoice.CreatedBy != UserManager.GetUserName(User) && ViewBag.GetUserDepartment != "RCD")
                                 {
                                     <span class="badge rounded-pill bg-info">VALID</span>
                                 }
