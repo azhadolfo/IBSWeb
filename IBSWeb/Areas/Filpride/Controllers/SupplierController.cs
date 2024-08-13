@@ -91,7 +91,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(model);
                 }
 
-                if (model.WithholdingTaxtitle != null && model.WithholdingTaxPercent != null)
+                if (model.WithholdingTaxtitle != null)
                 {
                     model.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
                 }
@@ -147,6 +147,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (supplier != null)
             {
+                supplier.DefaultExpenses = await _dbContext.ChartOfAccounts
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber + " " + s.AccountName,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
+
+                supplier.WithholdingTaxList = await _dbContext.ChartOfAccounts
+                    .Where(coa => coa.AccountNumber == "2010302" || coa.AccountNumber == "2010303")
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.AccountNumber + " " + s.AccountName,
+                        Text = s.AccountNumber + " " + s.AccountName
+                    })
+                    .ToListAsync(cancellationToken);
                 return View(supplier);
             }
 
@@ -175,6 +191,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         model.ProofOfExemptionFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(document, localPath, cancellationToken);
                     }
+
+                    if (model.WithholdingTaxtitle != null)
+                    {
+                        model.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
+                    }
+
 
                     model.EditedBy = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
