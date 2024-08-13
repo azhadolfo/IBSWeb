@@ -151,6 +151,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Price = model.Price;
                 existingModel.Amount = model.Quantity * model.Price;
                 existingModel.Remarks = model.Remarks;
+                existingModel.Terms = model.Terms;
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
