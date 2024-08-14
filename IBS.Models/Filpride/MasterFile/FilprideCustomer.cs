@@ -72,5 +72,9 @@ namespace IBS.Models.Filpride.MasterFile
         public DateTime? EditedDate { get; set; }
 
         public string Company { get; set; } = string.Empty;
+
+        //If Retail only
+        [Column(TypeName = "varchar(3)")]
+        public string? StationCode { get; set; }
     }
 }
