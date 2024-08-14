@@ -43,6 +43,9 @@
                     <th>
                         Received
                     </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.CreatedBy)
+                    </th>
                     <th></th>
                 </tr>
             </thead>
@@ -65,47 +68,47 @@
                         <td>
                             @item.QuantityReceived.ToString("N4")
                         </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CreatedBy)
+                        </td>
                         <td class="text-center">
-                            @if (item.CreatedBy == UserManager.GetUserName(User) || ViewBag.GetUserDepartment == "RCD")
-                            {
-                                <div class="dropdown">
-                                    <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Actions
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                        @if (item.VoidedBy == null && item.CanceledBy == null)
-                                        {
-                                            <li><a asp-action="Edit" asp-route-id="@item.ReceivingReportId" class="dropdown-item">Edit</a></li>
-                                        }
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                    @if (item.VoidedBy == null && item.CanceledBy == null)
+                                    {
+                                        <li><a asp-action="Edit" asp-route-id="@item.ReceivingReportId" class="dropdown-item">Edit</a></li>
+                                    }
 
-                                        @if (item.PostedBy == null && item.VoidedBy == null && item.CanceledBy == null)
-                                        {
-                                            <li>
-                                                <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.ReceivingReportId" data-bs-url="@Url.Action($"Preview/{item.ReceivingReportId}")">
-                                                    Preview
-                                                </button>
-                                            </li>
-                                            <li><a class="dropdown-item" onclick="confirmPost(@item.ReceivingReportId)">Post</a></li>
-                                            <li><a class="dropdown-item" onclick="confirmCancel(@item.ReceivingReportId)">Cancel</a></li>
-                                        }
+                                    @if (item.PostedBy == null && item.VoidedBy == null && item.CanceledBy == null)
+                                    {
+                                        <li>
+                                            <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.ReceivingReportId" data-bs-url="@Url.Action($"Preview/{item.ReceivingReportId}")">
+                                                Preview
+                                            </button>
+                                        </li>
+                                        <li><a class="dropdown-item" onclick="confirmPost(@item.ReceivingReportId)">Post</a></li>
+                                        <li><a class="dropdown-item" onclick="confirmCancel(@item.ReceivingReportId)">Cancel</a></li>
+                                    }
 
-                                        @if (item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null)
-                                        {
-                                            <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.ReceivingReportId">Print</a></li>
-                                            <li>
-                                                @if (item.AmountPaid == 0)
-                                                {
-                                                    <a class="dropdown-item" onclick="confirmVoid(@item.ReceivingReportId)">Void</a>
-                                                }
-                                                else
-                                                {
-                                                    <button class="dropdown-item" disabled readonly>Void</button>
-                                                }
-                                            </li>
-                                        }
-                                    </ul>
-                                </div>
-                            }
+                                    @if (item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null)
+                                    {
+                                        <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.ReceivingReportId">Print</a></li>
+                                        <li>
+                                            @if (item.AmountPaid == 0)
+                                            {
+                                                <a class="dropdown-item" onclick="confirmVoid(@item.ReceivingReportId)">Void</a>
+                                            }
+                                            else
+                                            {
+                                                <button class="dropdown-item" disabled readonly>Void</button>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
 
                             @if (item.VoidedBy != null)
                             {
@@ -115,13 +118,7 @@
                             {
                                 <span class="badge rounded-pill bg-warning">CANCELLED</span>
                             }
-                            else
-                            {
-                                @if (item.CreatedBy != UserManager.GetUserName(User) && ViewBag.GetUserDepartment != "RCD")
-                                {
-                                    <span class="badge rounded-pill bg-info">VALID</span>
-                                }
-                            }
+
                             @await Html.PartialAsync("_Preview", item)
                         </td>
                     </tr>
