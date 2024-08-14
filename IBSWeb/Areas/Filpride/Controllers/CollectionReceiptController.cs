@@ -1,4 +1,5 @@
 ﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
@@ -13,6 +14,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
+    [DepartmentAuthorize(SD.Department_CreditAndCollection, SD.Department_RCD)]
+
     public class CollectionReceiptController : Controller
     {
         private readonly ApplicationDbContext _dbContext;

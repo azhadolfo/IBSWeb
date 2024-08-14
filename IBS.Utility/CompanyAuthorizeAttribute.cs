@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace IBS.Utility
 {
-    public class CompanyAuthorizeAttribute : AuthorizeAttribute, IAuthorizationFilter
+    public class CompanyAuthorizeAttribute : AuthorizeAttribute
     {
         private readonly string _company;
 

@@ -1,4 +1,5 @@
 ﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
@@ -12,6 +13,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
+    [DepartmentAuthorize(SD.Department_CreditAndCollection, SD.Department_RCD)]
     public class ServiceInvoiceController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
