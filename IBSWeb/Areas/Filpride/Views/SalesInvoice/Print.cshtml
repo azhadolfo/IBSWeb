@@ -289,20 +289,20 @@
     Date and Time Created:&nbsp;@Model.CreatedDate.ToString("MM/dd/yyyy")
 </p>
 
-@* @if (!Model.IsPrinted)
-    {
-        <div class="text-end">
-            ORIGINAL COPY
-        </div>
-    }
-    else
-    {
-        <div class="text-end">
-            REPRINT COPY
-        </div>
-    } *@
+@if (!Model.IsPrinted)
+{
+    <div class="text-end">
+        ORIGINAL COPY
+    </div>
+}
+else
+{
+    <div class="text-end">
+        REPRINT COPY
+    </div>
+}
 
-<a class="btn btn-success" onclick="printPage()" style="margin-top: 25px;" id="printButton">Print</a>
+<a asp-area="Filpride" asp-controller="SalesInvoice" asp-action="Printed" asp-route-id="@Model.SalesInvoiceId" asp- class="btn btn-success" onclick="printPage()" style="margin-top: 25px;" id="printButton">Print</a>
 <a asp-action="Index" class="btn" style="margin-top: 25px;" id="otherButton">Back</a>
 
 @section Scripts {

@@ -103,18 +103,18 @@
     </p>
 </div>
 
-@* @if (!Model.IsPrinted)
-    {
-        <div class="text-end footer" style="right:8%; bottom:9%;">
-            ORIGINAL COPY
-        </div>
-    }
-    else
-    {
-        <div class="text-end footer" style="right:8%; bottom:9%;">
-            REPRINT COPY
-        </div>
-    } *@
+@if (!Model.IsPrinted)
+{
+    <div class="text-end footer" style="right:8%; bottom:9%;">
+        ORIGINAL COPY
+    </div>
+}
+else
+{
+    <div class="text-end footer" style="right:8%; bottom:9%;">
+        REPRINT COPY
+    </div>
+}
 
 <div class="text-start w-100 footer" style="margin-top:50px;">
     <p style="line-height: 1;">
@@ -130,7 +130,7 @@
     </p>
 </div>
 <div>
-    <a class="btn btn-success" onclick="printPage()" id="printButton">Print</a>
+    <a asp-area="Filpride" asp-controller="PurchaseOrders" asp-action="Printed" asp-route-id="@Model.PurchaseOrderId" class="btn btn-success" onclick="printPage()" id="printButton">Print</a>
     <a class="btn" id="otherButton" asp-action="Index">Back</a>
 </div>
 

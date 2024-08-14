@@ -114,20 +114,20 @@
     </p>
 </div>
 
-@* @if (!Model.IsPrinted)
-    {
-        <div class="text-end">
-            ORIGINAL COPY
-        </div>
-    }
-    else
-    {
-        <div class="text-end">
-            REPRINT COPY
-        </div>
-    } *@
+@if (!Model.IsPrinted)
+{
+    <div class="text-end">
+        ORIGINAL COPY
+    </div>
+}
+else
+{
+    <div class="text-end">
+        REPRINT COPY
+    </div>
+}
 
-<a class="btn btn-success" onclick="printPage()" id="printButton">Print</a>
+<a asp-area="Filpride" asp-controller="ReceivingReports" asp-action="Printed" asp-route-id="@Model.ReceivingReportId" class="btn btn-success" onclick="printPage()" id="printButton">Print</a>
 <a asp-controller="ReceivingReports" asp-action="Index" class="btn" id="otherButton">Back</a>
 
 @section Scripts {

@@ -83,5 +83,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public List<ReceivingReport>? RrList { get; set; }
 
         public string Company { get; set; } = string.Empty;
+
+        public bool IsPrinted { get; set; }
     }
 }

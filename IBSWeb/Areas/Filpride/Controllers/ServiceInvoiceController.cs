@@ -581,5 +581,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return View(existingModel);
         }
+
+        public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
+        {
+            var cv = await _unitOfWork.FilprideServiceInvoice.GetAsync(x => x.ServiceInvoiceId == id, cancellationToken);
+            if (cv?.IsPrinted == false)
+            {
+                #region --Audit Trail Recording
+
+                //var printedBy = _userManager.GetUserName(this.User);
+                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of cv# {cv.CVNo}", "Check Vouchers");
+                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                cv.IsPrinted = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
+            }
+            return RedirectToAction(nameof(Print), new { id });
+        }
     }
 }

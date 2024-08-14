@@ -15,7 +15,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
     [DepartmentAuthorize(SD.Department_CreditAndCollection, SD.Department_RCD)]
-
     public class CollectionReceiptController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
@@ -1337,6 +1336,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return NotFound();
+        }
+
+        public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
+        {
+            var cv = await _unitOfWork.FilprideCollectionReceipt.GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
+            if (cv?.IsPrinted == false)
+            {
+                #region --Audit Trail Recording
+
+                //var printedBy = _userManager.GetUserName(this.User);
+                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of cv# {cv.CVNo}", "Check Vouchers");
+                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                cv.IsPrinted = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
+            }
+            return RedirectToAction(nameof(Print), new { id });
         }
     }
 }

@@ -40,5 +40,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public List<SelectListItem>? COA { get; set; }
 
         public string Company { get; set; } = string.Empty;
+
+        public bool IsPrinted { get; set; }
     }
 }

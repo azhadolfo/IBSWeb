@@ -136,5 +136,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public List<SelectListItem>? Products { get; set; }
 
         public string Company { get; set; } = string.Empty;
+
+        public bool IsPrinted { get; set; }
     }
 }
