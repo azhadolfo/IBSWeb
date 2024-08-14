@@ -49,6 +49,9 @@
                     <th>
                         @Html.DisplayNameFor(model => model.Amount)
                     </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.CreatedBy)
+                    </th>
                     <th></th>
                 </tr>
             </thead>
@@ -74,45 +77,45 @@
                         <td>
                             @Html.DisplayFor(modelItem => item.Amount)
                         </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CreatedBy)
+                        </td>
                         <td class="text-center">
-                            @if (item.CreatedBy == UserManager.GetUserName(User) && item.VoidedBy == null && item.CanceledBy == null || ViewBag.GetUserDepartment == "RCD")
-                            {
-                                <div class="dropdown">
-                                    <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Actions
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                        @if (item.PostedBy == null)
-                                        {
-                                            <li><a asp-action="Edit" asp-route-id="@item.PurchaseOrderId" class="dropdown-item">Edit</a></li>
-                                            <li>
-                                                <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.PurchaseOrderId" data-bs-url="@Url.Action($"Preview/{item.PurchaseOrderId}")">
-                                                    Preview
-                                                </button>
-                                            </li>
-                                            <li><a class="dropdown-item" onclick="confirmPost(@item.PurchaseOrderId)">Post</a></li>
-                                            <li><a class="dropdown-item" onclick="confirmCancel(@item.PurchaseOrderId)">Cancel</a></li>
-                                        }
-                                        else
-                                        {
-                                            <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.PurchaseOrderId">Print</a></li>
-                                            <li>
-                                                @if (item.QuantityReceived == 0)
-                                                {
-                                                    <a class="dropdown-item" onclick="confirmVoid(@item.PurchaseOrderId)">Void</a>
-                                                }
-                                                else
-                                                {
-                                                    <button class="dropdown-item" disabled readonly>Void</button>
-                                                }
-                                            </li>
-                                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ClosePO-@item.PurchaseOrderId" data-bs-url="@Url.Action($"ClosePO/{item.PurchaseOrderId}")">
-                                                Close
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                    @if (item.PostedBy == null)
+                                    {
+                                        <li><a asp-action="Edit" asp-route-id="@item.PurchaseOrderId" class="dropdown-item">Edit</a></li>
+                                        <li>
+                                            <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.PurchaseOrderId" data-bs-url="@Url.Action($"Preview/{item.PurchaseOrderId}")">
+                                                Preview
                                             </button>
-                                        }
-                                    </ul>
-                                </div>
-                            }
+                                        </li>
+                                        <li><a class="dropdown-item" onclick="confirmPost(@item.PurchaseOrderId)">Post</a></li>
+                                        <li><a class="dropdown-item" onclick="confirmCancel(@item.PurchaseOrderId)">Cancel</a></li>
+                                    }
+                                    else
+                                    {
+                                        <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.PurchaseOrderId">Print</a></li>
+                                        <li>
+                                            @if (item.QuantityReceived == 0)
+                                            {
+                                                <a class="dropdown-item" onclick="confirmVoid(@item.PurchaseOrderId)">Void</a>
+                                            }
+                                            else
+                                            {
+                                                <button class="dropdown-item" disabled readonly>Void</button>
+                                            }
+                                        </li>
+                                        <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ClosePO-@item.PurchaseOrderId" data-bs-url="@Url.Action($"ClosePO/{item.PurchaseOrderId}")">
+                                            Close
+                                        </button>
+                                    }
+                                </ul>
+                            </div>
 
                             @if (item.VoidedBy != null)
                             {
@@ -126,13 +129,7 @@
                             {
                                 <span class="badge rounded-pill bg-secondary ">CLOSED</span>
                             }
-                            else
-                            {
-                                @if (item.CreatedBy != UserManager.GetUserName(User) && ViewBag.GetUserDepartment != "RCD")
-                                {
-                                    <span class="badge rounded-pill bg-info ">VALID</span>
-                                }
-                            }
+
                             @await Html.PartialAsync("_Preview", item)
                             @await Html.PartialAsync("_ClosePO", item)
                         </td>

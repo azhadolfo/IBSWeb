@@ -40,12 +40,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             var cm = await _unitOfWork.FilprideCreditMemo.GetAllAsync(x => x.Company == companyClaims, cancellationToken);
 
-            var findUser = await _dbContext.ApplicationUsers
-                .Where(user => user.Id == _userManager.GetUserId(this.User))
-                .FirstOrDefaultAsync();
-
-            ViewBag.GetUserDepartment = findUser?.Department;
-
             return View(cm);
         }
 
