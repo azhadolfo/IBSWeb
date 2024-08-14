@@ -52,7 +52,7 @@
                 <!-- Station Code input (initially hidden) -->
                 <div id="station-div" class="form-floating py-2 col-12" style="display:none;">
                     <input asp-for="StationCode" class="form-control border-0 shadow uppercase" placeholder="" />
-                    <label asp-for="StationCode" class="ms-2">Station Code</label>
+                    <label asp-for="StationCode" class="ms-2">Station Code<span class="required">*</span></label>
                     <span asp-validation-for="StationCode" class="text-danger"></span>
                 </div>
 
