@@ -289,6 +289,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
+
+                    if (model.ReceivedDate == null)
+                    {
+                        TempData["error"] = "Please indicate the received date.";
+                        return RedirectToAction(nameof(Index));
+                    }
+
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
