@@ -509,3 +509,10 @@ input[readonly] {
 .uppercase {
     text-transform: uppercase;
 }
+
+.fixed-width {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 150px; /* Set your desired fixed width */
+}

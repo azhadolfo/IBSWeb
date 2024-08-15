@@ -287,9 +287,9 @@ else if (Model.Source == "Service Invoice")
     <p>
         <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br />
         <span>Acknowledgement Certificate No:</span>
-        <span style="display: inline-block; width:150px;">@* @CS.ACCN *@</span>
+        <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
         <span>&nbsp;&nbsp;Date Issued:</span>
-        <span style="display: inline-block; width:50px;">@* @CS.DateIssued *@</span><br />
+        <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br />
         Series: CM0000000001 - CM9999999999
         Date and Time Created:&nbsp;@Model.CreatedDate.ToString("MM/dd/yyyy")
     </p>
@@ -323,8 +323,8 @@ else
     </div>
 }
 
-<a asp-area="Filpride" asp-controller="CreditMemo" asp-action="Printed" asp-route-id="@Model.CreditMemoId" class="btn btn-success" onclick="printPage()" id="printButton">Print</a>
-<a asp-action="Index" class="btn" id="otherButton">Back</a>
+<a asp-area="Filpride" asp-controller="CreditMemo" asp-action="Printed" asp-route-id="@Model.CreditMemoId" class="btn btn-success buttons" onclick="printPage()">Print</a>
+<a asp-action="Index" class="btn buttons">Back</a>
 
 @section Scripts {
     <script>

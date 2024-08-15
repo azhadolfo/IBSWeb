@@ -73,7 +73,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingCustomer = await _unitOfWork.FilprideCustomer
                         .GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
 
-                    model.SalesInvoiceNo = await _unitOfWork.FilprideSalesInvoice.GenerateCodeAsync(companyClaims, cancellationToken);
+                    model.SalesInvoiceNo = await _unitOfWork.FilprideSalesInvoice.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
                     model.Amount = model.Quantity * model.UnitPrice;
                     model.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingCustomer.CustomerTerms, model.TransactionDate);
@@ -230,6 +230,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.Discount = model.Discount;
                     existingRecord.Amount = model.Quantity * model.UnitPrice;
                     existingRecord.ProductId = model.ProductId;
+                    existingRecord.ReceivingReportId = model.ReceivingReportId;
+                    existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Customer.CustomerTerms, model.TransactionDate);
 
                     if (existingRecord.Amount >= model.Discount)
                     {
@@ -274,6 +276,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 existingRecord.WithHoldingVatAmount = existingRecord.VatExempt * 0.05m;
                             }
                         }
+
+                        existingRecord.EditedBy = _userManager.GetUserName(User);
+                        existingRecord.EditedDate = DateTime.Now;
 
                         await _unitOfWork.SaveAsync(cancellationToken);
                         TempData["success"] = "Sales invoice updated successfully";
@@ -638,6 +643,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        public IActionResult GetRRs(int purchaseOrderId)
+        {
+            var rrs = _dbContext.ReceivingReports
+                              .Where(rr => rr.POId == purchaseOrderId && rr.ReceivedDate != null)
+                              .Select(rr => new
+                              {
+                                  rr.ReceivingReportId,
+                                  rr.ReceivingReportNo,
+                                  rr.ReceivedDate
+                              })
+                              .ToList();
+
+            return Json(rrs);
         }
     }
 }

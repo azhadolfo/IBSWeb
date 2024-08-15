@@ -39,6 +39,11 @@
                 </div>
             }
             <div class="form-floating mb-3">
+                <input asp-for="ReceivedDate" type="date" class="form-control" placeholder="" />
+                <label asp-for="ReceivedDate" class="control-label">Received Date</label>
+                <span asp-validation-for="ReceivedDate" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
                 <input asp-for="SupplierInvoiceNumber" class="form-control" placeholder="" />
                 <label asp-for="SupplierInvoiceNumber" class="control-label"></label>
             </div>

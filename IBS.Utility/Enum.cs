@@ -90,4 +90,10 @@ namespace IBS.Utility
         [Display(Name = "Ex San Pascual")]
         Ex_SanPascual
     }
+
+    public enum SalesInvoiceType
+    {
+        Documented,
+        Undocumented
+    }
 }

@@ -130,6 +130,9 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public List<SelectListItem>? PO { get; set; }
 
         [NotMapped]
+        public List<SelectListItem>? RR { get; set; }
+
+        [NotMapped]
         public List<SelectListItem>? Customers { get; set; }
 
         [NotMapped]
@@ -138,5 +141,9 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
+
+        public string Type { get; set; } = string.Empty;
+
+        public int ReceivingReportId { get; set; }
     }
 }

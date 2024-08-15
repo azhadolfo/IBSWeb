@@ -46,6 +46,9 @@
                     <th>
                         @Html.DisplayNameFor(model => model.Header.CreatedBy)
                     </th>
+                    <th>
+                        Status
+                    </th>
                     <th></th>
                 </tr>
             </thead>
@@ -70,6 +73,18 @@
                         </td>
                         <td>
                             @Html.DisplayFor(modelItem => item.Header.CreatedBy)
+                        </td>
+                        <td>
+                            @{
+                                var status = item.Header.PostedBy != null && item.Header.VoidedBy == null && item.Header.CanceledBy == null
+                                    ? "Posted"
+                                    : item.Header.VoidedBy != null
+                                        ? "Voided"
+                                        : item.Header.CanceledBy != null
+                                            ? "Cancelled"
+                                            : "Pending";
+                            }
+                            <span class="badge rounded-pill @if(status == "Posted") {<text>bg-info</text>} else if(status == "Voided") {<text>bg-danger</text>} else if(status == "Cancelled") {<text>bg-warning</text>}">@status</span>
                         </td>
                         <td class="text-center">
                             <div class="dropdown">

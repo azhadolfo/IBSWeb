@@ -107,5 +107,8 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
+
+        [Column(TypeName = "date")]
+        public DateOnly? ReceivedDate { get; set; }
     }
 }

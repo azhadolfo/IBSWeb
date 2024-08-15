@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsReceivable;
+using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -97,11 +98,23 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
+        {
+            if (type == nameof(SalesInvoiceType.Documented))
+            {
+                return await GenerateCodeForDocumented(company, cancellationToken);
+            }
+            else
+            {
+                return await GenerateCodeForUnDocumented(company, cancellationToken);
+            }
+        }
+
+        private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken)
         {
             FilprideSalesInvoice? lastSi = await _db
                 .FilprideSalesInvoices
-                .Where(c => c.Company == company)
+                .Where(c => c.Company == company && c.Type == nameof(SalesInvoiceType.Documented))
                 .OrderBy(c => c.SalesInvoiceNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -116,6 +129,28 @@ namespace IBS.DataAccess.Repository.Filpride
             else
             {
                 return "SI0000000001";
+            }
+        }
+
+        private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken)
+        {
+            FilprideSalesInvoice? lastSi = await _db
+                .FilprideSalesInvoices
+                .Where(c => c.Company == company && c.Type == nameof(SalesInvoiceType.Undocumented))
+                .OrderBy(c => c.SalesInvoiceNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastSi != null)
+            {
+                string lastSeries = lastSi.SalesInvoiceNo;
+                string numericPart = lastSeries.Substring(3);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
+            }
+            else
+            {
+                return "SIU000000001";
             }
         }
 

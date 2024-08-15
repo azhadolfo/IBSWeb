@@ -163,7 +163,7 @@
                             <td>
                                 Approved by
                                 <br />
-                                <p style="margin-top:20px;"><span style="display: inline-block; width:110px;" class="underline">IVP</span></p>
+                                <p style="margin-top:20px;"><span style="display: inline-block; width:110px;" class="underline">IVP / MSA</span></p>
                             </td>
                         </tr>
                         <tr class="align-text-top">
@@ -282,9 +282,9 @@
 
 <p class="text-center w-100">
     <span>Acknowledgement Certificate No:</span>
-    <span style="display: inline-block; width:150px;">@* @CS.ACCN *@</span>
+    <span style="display: inline-block; width:150px;">@CS.ACCN</span>
     <span>&nbsp;&nbsp;Date Issued:</span>
-    <span style="display: inline-block; width:50px;">@* @CS.DateIssued *@</span><br />
+    <span style="display: inline-block; width:50px;">@CS.DateIssued</span><br />
     Series: SI0000000001 - SI9999999999
     Date and Time Created:&nbsp;@Model.CreatedDate.ToString("MM/dd/yyyy")
 </p>
@@ -302,8 +302,8 @@ else
     </div>
 }
 
-<a asp-area="Filpride" asp-controller="SalesInvoice" asp-action="Printed" asp-route-id="@Model.SalesInvoiceId" asp- class="btn btn-success" onclick="printPage()" style="margin-top: 25px;" id="printButton">Print</a>
-<a asp-action="Index" class="btn" style="margin-top: 25px;" id="otherButton">Back</a>
+<a asp-area="Filpride" asp-controller="SalesInvoice" asp-action="Printed" asp-route-id="@Model.SalesInvoiceId" asp- class="btn btn-success buttons" onclick="printPage()" style="margin-top: 25px;">Print</a>
+<a asp-action="Index" class="btn buttons" style="margin-top: 25px;">Back</a>
 
 @section Scripts {
     <script>

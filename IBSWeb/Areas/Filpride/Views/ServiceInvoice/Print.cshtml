@@ -184,9 +184,9 @@
 
 <p class="text-center w-100">
     <span>Acknowledgement Certificate No:</span>
-    <span style="display: inline-block; width:150px;">@* @CS.ACCN *@</span>
+    <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
     <span>&nbsp;&nbsp;Date Issued:</span>
-    <span style="display: inline-block; width:50px;">@* @CS.DateIssued *@</span><br />
+    <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br />
     Series: SV0000000001 - SV9999999999
     Date and Time Created:&nbsp;@Model.CreatedDate.ToString("MM/dd/yyyy")
 </p>
@@ -219,8 +219,8 @@ else
 </div>
 
 <div>
-    <a asp-area="Filpride" asp-controller="ServiceInvoice" asp-action="Printed" asp-route-id="@Model.ServiceInvoiceId" class="btn btn-success" onclick="printPage()" id="printButton">Print</a>
-    <a asp-action="Index" class="btn" id="otherButton">Back</a>
+    <a asp-area="Filpride" asp-controller="ServiceInvoice" asp-action="Printed" asp-route-id="@Model.ServiceInvoiceId" class="btn btn-success buttons" onclick="printPage()">Print</a>
+    <a asp-action="Index" class="btn buttons">Back</a>
 </div>
 
 @section Scripts {
