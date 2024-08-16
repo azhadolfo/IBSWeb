@@ -101,7 +101,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var sortedInventory = await _db.FilprideInventories
             .Where(i => i.Company == receivingReport.Company && i.ProductId == receivingReport.PurchaseOrder.Product.ProductId && i.POId == receivingReport.POId)
             .OrderBy(i => i.Date)
-            .ThenBy(i => i.ProductId)
+            .ThenBy(i => i.InventoryId)
             .ToListAsync(cancellationToken);
 
             var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= receivingReport.Date);
@@ -203,7 +203,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var sortedInventory = await _db.FilprideInventories
             .Where(i => i.Company == salesInvoice.Company && i.ProductId == salesInvoice.Product.ProductId && i.POId == salesInvoice.PurchaseOrderId)
             .OrderBy(i => i.Date)
-            .ThenBy(i => i.ProductId)
+            .ThenBy(i => i.InventoryId)
             .ToListAsync(cancellationToken);
 
             var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= salesInvoice.TransactionDate);
