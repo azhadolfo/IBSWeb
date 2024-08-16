@@ -167,7 +167,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<int> UpdatePOAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
+        public async Task UpdatePOAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
         {
             var po = await _db.PurchaseOrders
                     .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
@@ -180,13 +180,13 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     po.IsReceived = true;
                     po.ReceivedDate = DateTime.Now;
+
+                    await _db.SaveChangesAsync(cancellationToken);
                 }
                 if (po.QuantityReceived > po.Quantity)
                 {
                     throw new ArgumentException("Input is exceed to remaining quantity received");
                 }
-
-                return await _db.SaveChangesAsync(cancellationToken);
             }
             else
             {

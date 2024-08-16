@@ -8,7 +8,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
     {
         Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default);
 
-        Task<int> UpdatePOAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default);
+        Task UpdatePOAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default);
 
         Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default);
 
