@@ -158,7 +158,6 @@
                         method: "GET",
                         data: { customerId: customerId },
                         success: function (data) {
-                            console.log(data);
                             if (data) {
                                 $("#soldTo").val(data.soldTo);
                                 $("#address").val(data.address);
@@ -202,7 +201,6 @@
                         method: "GET",
                         data: { productId: productId },
                         success: function (data) {
-                            console.log(data);
                             if (data) {
                                 $("#productName").val(data.productName);
                                 $("#productUnit").val(data.productUnit);
@@ -247,7 +245,6 @@
                             // Add new options based on the fetched data
                             $.each(data, function (index, po) {
                                 if (po && po.poNumber) { // Adjust property name to poNumber
-                                    console.log(po)
                                     $('#PurchaseOrderId').append('<option value="' + po.id + '">' + po.poNumber + '</option>'); // Adjust property names
                                 } else {
                                     console.error("Invalid PO object:", po);
@@ -269,6 +266,62 @@
         }
     </script>
     <script>
+        $(document).ready(function () {
+            $(".GetRRList").each(function () {
+                var purchaseOrderId = $(this).val();
+                getRRList(purchaseOrderId)
+            });
+            $(".GetRRList").change(function () {
+                var purchaseOrderId = $(this).val();
+                getRRList(purchaseOrderId)
+            });
+        });
+
+        // GetRRList change event
+        function getRRList(purchaseOrderId) {
+            console.log(purchaseOrderId)
+            if (purchaseOrderId !== "") {
+                // Make an AJAX request to get the RRs based on the selected PurchaseOrderId
+                $.ajax({
+                    url: '@Url.Action("GetRRs", "SalesInvoice")',
+                    method: "GET",
+                    data: { purchaseOrderId: purchaseOrderId },
+                    success: function (data) {
+                        if (data) {
+                            // Clear existing options in the RR dropdown
+                            $("#ReceivingReportId").empty();
+                            // Reset transaction date
+
+                            $.each(data, function (index, rr) {
+                                if (rr && rr.receivingReportNo && rr.receivedDate) {
+                                    $('#ReceivingReportId').append('<option value="' + rr.receivingReportId + '" data-rr-date="' + rr.receivedDate + '">' + rr.receivingReportNo + '</option>');
+                                } else {
+                                    console.error("Invalid RR object:", rr);
+                                }
+                            });
+
+                            // If only one RR is returned, auto-select it and set the TransactionDate
+                            if (data.length === 1) {
+                                $("#ReceivingReportId").val(data[0].receivingReportId);
+                                $("input[name='TransactionDate']").val(data[0].receivedDate);
+                            }
+                        } else {
+                            // Clear the fields if no RRs are found
+                            $("#ReceivingReportId").empty();
+                            $("input[name='TransactionDate']").val("");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching RRs:', error);
+                    }
+                });
+            } else {
+                // Clear the fields if no PO is selected
+                $("#ReceivingReportId").empty();
+                $("input[name='TransactionDate']").val("");
+            }
+        }
+
     $(document).ready(function () {
         // GetPOList change event
         $(".GetPOList").change(function () {
@@ -308,60 +361,11 @@
             }
         });
 
-        // GetRRList change event
-        $(".GetRRList").change(function () {
-            var purchaseOrderId = $(this).val();
-            if (purchaseOrderId !== "") {
-                // Make an AJAX request to get the RRs based on the selected PurchaseOrderId
-                $.ajax({
-                    url: '@Url.Action("GetRRs", "SalesInvoice")',
-                    method: "GET",
-                    data: { purchaseOrderId: purchaseOrderId },
-                    success: function (data) {
-                        if (data) {
-                            // Clear existing options in the RR dropdown
-                            $("#ReceivingReportId").empty();
-
-                            $('#ReceivingReportId').append('<option value="">Select RR</option>');
-                            // Reset transaction date
-                            $("input[name='TransactionDate']").val("");
-
-                            $.each(data, function (index, rr) {
-                                if (rr && rr.receivingReportNo && rr.receivedDate) {
-                                    $('#ReceivingReportId').append('<option value="' + rr.receivingReportId + '" data-rr-date="' + rr.receivedDate + '">' + rr.receivingReportNo + '</option>');
-                                } else {
-                                    console.error("Invalid RR object:", rr);
-                                }
-                            });
-
-                            // If only one RR is returned, auto-select it and set the TransactionDate
-                            if (data.length === 1) {
-                                $("#ReceivingReportId").val(data[0].receivingReportId);
-                                $("input[name='TransactionDate']").val(data[0].receivedDate);
-                            }
-                        } else {
-                            // Clear the fields if no RRs are found
-                            $("#ReceivingReportId").empty();
-                            $("input[name='TransactionDate']").val("");
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching RRs:', error);
-                    }
-                });
-            } else {
-                // Clear the fields if no PO is selected
-                $("#ReceivingReportId").empty();
-                $("input[name='TransactionDate']").val("");
-            }
-        });
-
         // Update TransactionDate when an RR is selected
         $("#ReceivingReportId").change(function () {
             var rrId = $(this).val();
             if (rrId !== "") {
                 var selectedRR = $(this).find("option:selected").data("rr-date");
-                console.log(selectedRR);
                 $("input[name='TransactionDate']").val(selectedRR);
             }
         });

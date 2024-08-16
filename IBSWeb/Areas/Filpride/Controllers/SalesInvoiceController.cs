@@ -6,6 +6,7 @@ using IBS.Models.Filpride.Books;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -197,6 +198,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
                 salesInvoice.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                 salesInvoice.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                salesInvoice.PO = await _dbContext.PurchaseOrders
+                .OrderBy(p => p.PurchaseOrderNo)
+                .Where(po => po.Company == companyClaims && po.ProductId == salesInvoice.ProductId && po.QuantityReceived != 0 && po.PostedBy != null)
+                .Select(p => new SelectListItem
+                {
+                    Value = p.PurchaseOrderId.ToString(),
+                    Text = p.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
+
                 return View(salesInvoice);
             }
             catch (Exception ex)
