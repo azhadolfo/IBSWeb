@@ -104,7 +104,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             ReceivingReport? lastRr = await _db
                 .ReceivingReports
-                .Where(rr => rr.Company == company)
+                .Where(rr => rr.Company == company && !rr.ReceivingReportNo.StartsWith("RRBEG"))
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
