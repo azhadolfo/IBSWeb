@@ -225,7 +225,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     throw new InvalidOperationException($"The quantity exceeds the available inventory of '{salesInvoice.Product.ProductName}'.");
                 }
 
-                decimal total = salesInvoice.Quantity * previousInventory.Cost;
+                decimal total = salesInvoice.Quantity * previousInventory.AverageCost;
                 decimal inventoryBalance = previousInventory.InventoryBalance - salesInvoice.Quantity;
                 decimal totalBalance = previousInventory.TotalBalance - total;
                 decimal averageCost = inventoryBalance == 0 && totalBalance == 0 ? previousInventory.AverageCost : totalBalance / inventoryBalance;
