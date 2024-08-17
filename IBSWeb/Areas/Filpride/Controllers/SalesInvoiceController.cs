@@ -207,6 +207,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = p.PurchaseOrderNo
                 })
                 .ToListAsync(cancellationToken);
+                var receivingReports = await _dbContext.ReceivingReports
+                    .Where(rr => rr.POId == salesInvoice.PurchaseOrderId && rr.ReceivedDate != null)
+                    .Select(rr => new
+                    {
+                        rr.ReceivingReportId,
+                        rr.ReceivingReportNo,
+                        rr.ReceivedDate
+                    })
+                    .ToListAsync();
+
+                salesInvoice.RR = receivingReports.Select(rr => new SelectListItem
+                {
+                    Value = rr.ReceivingReportId.ToString(),
+                    Text = rr.ReceivingReportNo
+                }).ToList();
 
                 return View(salesInvoice);
             }
