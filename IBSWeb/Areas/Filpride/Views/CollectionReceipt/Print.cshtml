@@ -229,7 +229,7 @@
                 <td class="text-center"></td>
                 <td class="text-center"></td>
                 <td class="text-center">
-                    @if (Model.CashAmount != null)
+                    @if (Model.CashAmount != 0)
                     {
                         <p style="height: 9px;">@Html.DisplayFor(model => model.CashAmount)</p>
                     }
@@ -243,7 +243,7 @@
             <tr>
                 <td style="padding-left:20px;">Check</td>
                 <td class="text-center">
-                    @if (Model.CheckDate != null)
+                    @if (Model.CheckDate != null )
                     {
                         <p style="height: 9px;">@Model.CheckDate</p>
                     }

@@ -201,6 +201,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --Offsetting function
 
+                TempData["success"] = "Collection receipt created successfully.";
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 return RedirectToAction(nameof(Index));
             }
@@ -606,7 +607,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     Amount = si.NetDiscount.ToString("N4"),
                     AmountPaid = si.AmountPaid.ToString("N4"),
-                    Balance = si.Balance.ToString(" "),
+                    Balance = si.Balance.ToString("N4"),
                     Ewt = si.WithHoldingTaxAmount.ToString("N4"),
                     Wvat = si.WithHoldingVatAmount.ToString("N4"),
                     Total = (si.NetDiscount - (si.WithHoldingTaxAmount + si.WithHoldingVatAmount)).ToString("N4")
