@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
@@ -228,7 +229,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction("PurchaseBook");
             }
 
-            var receivingReport = _unitOfWork.FilprideReport.GetReceivingReportAsync(dateFrom, dateTo, selectedFiltering, companyClaims);
+            IEnumerable<ReceivingReport> receivingReport = await _unitOfWork.FilprideReport.GetReceivingReportAsync(dateFrom, dateTo, selectedFiltering, companyClaims);
             return View(receivingReport);
         }
 
