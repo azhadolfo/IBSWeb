@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
+using System.Drawing;
 using System.Text;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -396,6 +399,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(JournalBook));
         }
 
+        //Generate as .txt file
         #region -- Generate Disbursement Book .Txt File --
 
         public async Task<IActionResult> GenerateDisbursementBookTxtFile(ViewModelBook model)
@@ -692,9 +696,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TempData["error"] = "No Record Found";
                         return RedirectToAction(nameof(InventoryBook));
                     }
-                    var totalAmount = inventoryBooks.Sum(ib => ib.Total);
                     var totalQuantity = inventoryBooks.Sum(ib => ib.Quantity);
-                    var totalPrice = inventoryBooks.Sum(ib => ib.Cost);
+                    var totalAmount = inventoryBooks.Sum(ib => ib.Total);
                     var lastRecord = inventoryBooks.LastOrDefault();
                     var firstRecord = inventoryBooks.FirstOrDefault();
                     if (lastRecord != null)
@@ -734,13 +737,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine();
                     fileContent.AppendLine($"{"Date",-10}\t{"Product Code",-20}\t{"Product Name",-50}\t{"Unit",-2}\t{"Quantity",18}\t{"Price Per Unit",18}\t{"Amount",18}");
 
+                    var totalPriceUnitAmount = 0m;
                     // Generate the records
                     foreach (var record in inventoryBooks)
                     {
+                        var getLastRecordCost = record.Cost;
+                        if (totalAmount != 0 && totalQuantity != 0)
+                        {
+                            totalPriceUnitAmount = totalAmount / totalQuantity;
+                        }
+                        else
+                        {
+                            totalPriceUnitAmount = getLastRecordCost;
+                        }
                         fileContent.AppendLine($"{record.Date.ToString("MM/dd/yyyy"),-10}\t{record.Product.ProductCode,-20}\t{record.Product.ProductCode,-50}\t{record.Unit,-2}\t{record.Quantity,18}\t{record.Cost,18}\t{record.Total,18}");
                     }
                     fileContent.AppendLine(new string('-', 171));
-                    fileContent.AppendLine($"{"",-10}\t{"",-20}\t{"",-50}\t{"TOTAL:",2}\t{totalQuantity,18}\t{totalPrice,18}\t{totalAmount,18}");
+                    fileContent.AppendLine($"{"",-10}\t{"",-20}\t{"",-50}\t{"TOTAL:",2}\t{totalQuantity,18}\t{totalPriceUnitAmount.ToString("N4"),18}\t{totalAmount,18}");
 
                     fileContent.AppendLine();
                     fileContent.AppendLine($"Software Name: {CS.AAS}");
@@ -1076,5 +1089,873 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- Generate Sales Book .Txt File --
+
+
+        //Generate as .csv file
+        #region -- Generate DisbursmentBook .Csv File -- 
+
+        public async Task<IActionResult> GenerateDisbursementBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var disbursementBooks = _unitOfWork.FilprideReport.GetDisbursementBooks(model.DateFrom, model.DateTo, companyClaims);
+            if (disbursementBooks.Count == 0)
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(DisbursementBook));
+            }
+            var totalDebit = disbursementBooks.Sum(crb => crb.Debit);
+            var totalCredit = disbursementBooks.Sum(crb => crb.Credit);
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("DisbursmentBook");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "DISBURSEMENT BOOK";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Extracted By:";
+            worksheet.Cells["A4"].Value = "Company:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{extractedBy}";
+            worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+            worksheet.Cells["A7"].Value = "Date";
+            worksheet.Cells["B7"].Value = "CV No";
+            worksheet.Cells["C7"].Value = "Payee";
+            worksheet.Cells["D7"].Value = "Particulars";
+            worksheet.Cells["E7"].Value = "Bank";
+            worksheet.Cells["F7"].Value = "Check No";
+            worksheet.Cells["G7"].Value = "Check Date";
+            worksheet.Cells["H7"].Value = "Chart Of Account";
+            worksheet.Cells["I7"].Value = "Debit";
+            worksheet.Cells["J7"].Value = "Credit";
+
+            // Apply styling to the header row
+            using (var range = worksheet.Cells["A7:J7"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Populate the data rows
+            int row = 8;
+            string currencyFormat = "#,##0.0000";
+
+            foreach (var cv in disbursementBooks)
+            {
+                worksheet.Cells[row, 1].Value = cv.Date;
+                worksheet.Cells[row, 2].Value = cv.CVNo;
+                worksheet.Cells[row, 3].Value = cv.Payee;
+                worksheet.Cells[row, 4].Value = cv.Particulars;
+                worksheet.Cells[row, 5].Value = cv.Bank;
+                worksheet.Cells[row, 6].Value = cv.CheckNo;
+                worksheet.Cells[row, 7].Value = cv.CheckDate;
+                worksheet.Cells[row, 8].Value = cv.ChartOfAccount;
+
+                worksheet.Cells[row, 9].Value = cv.Debit;
+                worksheet.Cells[row, 10].Value = cv.Credit;
+
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+
+                row++;
+            }
+
+            worksheet.Cells[row, 8].Value = "Total ";
+            worksheet.Cells[row, 9].Value = totalDebit;
+            worksheet.Cells[row, 10].Value = totalCredit;
+
+            worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+
+            // Apply style to subtotal row
+            using (var range = worksheet.Cells[row, 1, row, 10])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+            }
+
+            using (var range = worksheet.Cells[row, 8, row, 10])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+            }
+
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DisbursementBook.xlsx");
+        }
+
+        #endregion -- Generate DisbursmentBook .Csv File -- 
+
+        #region -- Generate CashReceiptBook .Csv File -- 
+
+        public async Task<IActionResult> GenerateCashReceiptBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var cashReceiptBooks = _unitOfWork.FilprideReport.GetCashReceiptBooks(model.DateFrom, model.DateTo, companyClaims);
+            if (cashReceiptBooks.Count == 0)
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(CashReceiptBook));
+            }
+            var totalDebit = cashReceiptBooks.Sum(crb => crb.Debit);
+            var totalCredit = cashReceiptBooks.Sum(crb => crb.Credit);
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("CashReceiptBook");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "CASH RECEIPT BOOK";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Extracted By:";
+            worksheet.Cells["A4"].Value = "Company:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{extractedBy}";
+            worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+            worksheet.Cells["A7"].Value = "Date";
+            worksheet.Cells["B7"].Value = "Ref No";
+            worksheet.Cells["C7"].Value = "Customer Name";
+            worksheet.Cells["D7"].Value = "Bank";
+            worksheet.Cells["E7"].Value = "Check No";
+            worksheet.Cells["F7"].Value = "Chart Of Account";
+            worksheet.Cells["G7"].Value = "Particulars";
+            worksheet.Cells["H7"].Value = "Debit";
+            worksheet.Cells["I7"].Value = "Credit";
+
+            // Apply styling to the header row
+            using (var range = worksheet.Cells["A7:I7"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Populate the data rows
+            int row = 8;
+            string currencyFormat = "#,##0.0000";
+
+            foreach (var cashReceipt in cashReceiptBooks)
+            {
+                worksheet.Cells[row, 1].Value = cashReceipt.Date;
+                worksheet.Cells[row, 2].Value = cashReceipt.RefNo;
+                worksheet.Cells[row, 3].Value = cashReceipt.CustomerName;
+                worksheet.Cells[row, 4].Value = cashReceipt.Bank;
+                worksheet.Cells[row, 5].Value = cashReceipt.CheckNo;
+                worksheet.Cells[row, 6].Value = cashReceipt.COA;
+                worksheet.Cells[row, 7].Value = cashReceipt.Particulars;
+
+                worksheet.Cells[row, 8].Value = cashReceipt.Debit;
+                worksheet.Cells[row, 9].Value = cashReceipt.Credit;
+
+                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+
+                row++;
+            }
+
+            worksheet.Cells[row, 7].Value = "Total ";
+            worksheet.Cells[row, 8].Value = totalDebit;
+            worksheet.Cells[row, 9].Value = totalCredit;
+
+            worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+
+            // Apply style to subtotal row
+            using (var range = worksheet.Cells[row, 1, row, 9])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+            }
+
+            using (var range = worksheet.Cells[row, 7, row, 9])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+            }
+
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CashReceiptBook.xlsx");
+        }
+
+        #endregion -- Generate CashReceiptBook .Csv File -- 
+
+        #region -- Generate GeneralLedgerBook .Csv File -- 
+
+        public async Task<IActionResult> GenerateGeneralLedgerBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var generalBooks = _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
+            if (generalBooks.Count == 0)
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(GeneralLedgerBook));
+            }
+            var totalDebit = generalBooks.Sum(gb => gb.Debit);
+            var totalCredit = generalBooks.Sum(gb => gb.Credit);
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("GeneralLedgerBook");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "GENERAL LEDGER BOOK";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Extracted By:";
+            worksheet.Cells["A4"].Value = "Company:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{extractedBy}";
+            worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+            worksheet.Cells["A7"].Value = "Date";
+            worksheet.Cells["B7"].Value = "Reference";
+            worksheet.Cells["C7"].Value = "Description";
+            worksheet.Cells["D7"].Value = "Account Title";
+            worksheet.Cells["E7"].Value = "Debit";
+            worksheet.Cells["F7"].Value = "Credit";
+
+            // Apply styling to the header row
+            using (var range = worksheet.Cells["A7:F7"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Populate the data rows
+            int row = 8;
+            string currencyFormat = "#,##0.0000";
+
+            foreach (var gl in generalBooks)
+            {
+                worksheet.Cells[row, 1].Value = gl.Date;
+                worksheet.Cells[row, 2].Value = gl.Reference;
+                worksheet.Cells[row, 3].Value = gl.Description;
+                worksheet.Cells[row, 4].Value = $"{gl.AccountNo} {gl.AccountTitle}";
+
+                worksheet.Cells[row, 5].Value = gl.Debit;
+                worksheet.Cells[row, 6].Value = gl.Credit;
+
+                worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+
+                row++;
+            }
+
+            worksheet.Cells[row, 4].Value = "Total ";
+            worksheet.Cells[row, 5].Value = totalDebit;
+            worksheet.Cells[row, 6].Value = totalCredit;
+
+            worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+
+            // Apply style to subtotal row
+            using (var range = worksheet.Cells[row, 1, row, 6])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+            }
+
+            using (var range = worksheet.Cells[row, 4, row, 6])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+            }
+
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "GeneralLedgerBook.xlsx");
+        }
+
+        #endregion -- Generate GeneralLedgerBook .Csv File -- 
+
+        #region -- Generate InventoryBook .Csv File -- 
+
+        public async Task<IActionResult> GenerateInventoryBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var dateTo = model.DateTo;
+            var dateFrom = dateTo.AddDays(-dateTo.Day + 1);
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var inventoryBooks = _unitOfWork.FilprideReport.GetInventoryBooks(dateFrom, dateTo, companyClaims);
+            if (inventoryBooks.Count == 0)
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(InventoryBook));
+            }
+            var totalQuantity = inventoryBooks.Sum(ib => ib.Quantity);
+            var totalAmount = inventoryBooks.Sum(ib => ib.Total);
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("InventoryBook");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "INVENTORY BOOK";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Extracted By:";
+            worksheet.Cells["A4"].Value = "Company:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{extractedBy}";
+            worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+            worksheet.Cells["A7"].Value = "Date";
+            worksheet.Cells["B7"].Value = "Product Code";
+            worksheet.Cells["C7"].Value = "Product Name";
+            worksheet.Cells["D7"].Value = "Product Unit";
+            worksheet.Cells["E7"].Value = "Quantity";
+            worksheet.Cells["F7"].Value = "Price Per Unit";
+            worksheet.Cells["G7"].Value = "Total";
+
+            // Apply styling to the header row
+            using (var range = worksheet.Cells["A7:G7"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Populate the data rows
+            int row = 8;
+            string currencyFormat = "#,##0.0000";
+            var totalPriceUnitAmount = 0m;
+
+            foreach (var inventory in inventoryBooks)
+            {
+                var getLastRecordCost = inventory.Cost;
+                if (totalAmount != 0 && totalQuantity != 0)
+                {
+                    totalPriceUnitAmount = totalAmount / totalQuantity;
+                }
+                else
+                {
+                    totalPriceUnitAmount = getLastRecordCost;
+                }
+                worksheet.Cells[row, 1].Value = inventory.Date;
+                worksheet.Cells[row, 2].Value = inventory.Product.ProductCode;
+                worksheet.Cells[row, 3].Value = inventory.Product.ProductName;
+                worksheet.Cells[row, 4].Value = inventory.Product.ProductUnit;
+
+                worksheet.Cells[row, 5].Value = inventory.Quantity;
+                worksheet.Cells[row, 6].Value = inventory.Cost;
+                worksheet.Cells[row, 7].Value = inventory.Total;
+
+                worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+
+                row++;
+            }
+
+            worksheet.Cells[row, 4].Value = "Total ";
+            worksheet.Cells[row, 5].Value = totalQuantity;
+            worksheet.Cells[row, 6].Value = totalPriceUnitAmount;
+            worksheet.Cells[row, 7].Value = totalAmount;
+
+            worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+
+            // Apply style to subtotal row
+            using (var range = worksheet.Cells[row, 1, row, 7])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+            }
+
+            using (var range = worksheet.Cells[row, 4, row, 7])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+            }
+
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "InventoryBook.xlsx");
+        }
+
+        #endregion -- Generate InventoryBook .Csv File -- 
+
+        #region -- Generate JournalBook .Csv File -- 
+
+        public async Task<IActionResult> GenerateJournalBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var journalBooks = _unitOfWork.FilprideReport.GetJournalBooks(model.DateFrom, model.DateTo, companyClaims);
+            if (journalBooks.Count == 0)
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(JournalBook));
+            }
+            var totalDebit = journalBooks.Sum(jb => jb.Debit);
+            var totalCredit = journalBooks.Sum(jb => jb.Credit);
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("JournalBook");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "JOURNAL BOOK";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Extracted By:";
+            worksheet.Cells["A4"].Value = "Company:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{extractedBy}";
+            worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+            worksheet.Cells["A7"].Value = "Date";
+            worksheet.Cells["B7"].Value = "Reference";
+            worksheet.Cells["C7"].Value = "Description";
+            worksheet.Cells["D7"].Value = "Account Title";
+            worksheet.Cells["E7"].Value = "Debit";
+            worksheet.Cells["F7"].Value = "Credit";
+
+            // Apply styling to the header row
+            using (var range = worksheet.Cells["A7:F7"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Populate the data rows
+            int row = 8;
+            string currencyFormat = "#,##0.0000";
+
+            foreach (var jv in journalBooks)
+            {
+                worksheet.Cells[row, 1].Value = jv.Date;
+                worksheet.Cells[row, 2].Value = jv.Reference;
+                worksheet.Cells[row, 3].Value = jv.Description;
+                worksheet.Cells[row, 4].Value = jv.AccountTitle;
+
+                worksheet.Cells[row, 5].Value = jv.Debit;
+                worksheet.Cells[row, 6].Value = jv.Credit;
+
+                worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+
+                row++;
+            }
+
+            worksheet.Cells[row, 4].Value = "Total ";
+            worksheet.Cells[row, 5].Value = totalDebit;
+            worksheet.Cells[row, 6].Value = totalCredit;
+
+            worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+
+            // Apply style to subtotal row
+            using (var range = worksheet.Cells[row, 1, row, 6])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+            }
+
+            using (var range = worksheet.Cells[row, 4, row, 6])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+            }
+
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "JournalBook.xlsx");
+        }
+
+        #endregion -- Generate JournalBook .Csv File -- 
+
+        #region -- Generate PurchaseBook .Csv File -- 
+
+        public async Task<IActionResult> GeneratePurchaseBookCsvFile(ViewModelBook model, string? selectedFiltering, string? poListFrom, string? poListTo, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (poListFrom != null || poListTo != null || selectedFiltering == "UnpostedRR" || selectedFiltering == "POLiquidation" || selectedFiltering == "RRDate" || selectedFiltering == "DueDate")
+            {
+                TempData["error"] = "Please input date from and date to only!";
+                return RedirectToAction(nameof(PurchaseBook));
+            }
+
+            var purchaseBooks = _unitOfWork.FilprideReport.GetPurchaseBooks(model.DateFrom, model.DateTo, selectedFiltering, companyClaims);
+            if (purchaseBooks.Count == 0)
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(PurchaseBook));
+            }
+            var totalAmount = purchaseBooks.Sum(sb => sb.Amount);
+            var totalVatAmount = purchaseBooks.Sum(sb => sb.VatAmount);
+            var totalWhtAmount = purchaseBooks.Sum(sb => sb.WhtAmount);
+            var totalNetPurchases = purchaseBooks.Sum(sb => sb.NetPurchases);
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("PurchaseBook");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "PURCHASE BOOK";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Extracted By:";
+            worksheet.Cells["A4"].Value = "Company:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{extractedBy}";
+            worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+            worksheet.Cells["A7"].Value = "Date";
+            worksheet.Cells["B7"].Value = "Supplier Name";
+            worksheet.Cells["C7"].Value = "Supplier Tin";
+            worksheet.Cells["D7"].Value = "Supplier Address";
+            worksheet.Cells["E7"].Value = "PO No";
+            worksheet.Cells["F7"].Value = "Document No";
+            worksheet.Cells["G7"].Value = "Description";
+            worksheet.Cells["H7"].Value = "Amount";
+            worksheet.Cells["I7"].Value = "Vat Amount";
+            worksheet.Cells["J7"].Value = "Def VAT Amount";
+            worksheet.Cells["K7"].Value = "WHT Amount";
+            worksheet.Cells["L7"].Value = "Net Purchases";
+
+            // Apply styling to the header row
+            using (var range = worksheet.Cells["A7:L7"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Populate the data rows
+            int row = 8;
+            string currencyFormat = "#,##0.0000";
+
+            foreach (var pb in purchaseBooks)
+            {
+                worksheet.Cells[row, 1].Value = pb.Date;
+                worksheet.Cells[row, 2].Value = pb.SupplierName;
+                worksheet.Cells[row, 3].Value = pb.SupplierTin;
+                worksheet.Cells[row, 4].Value = pb.SupplierAddress;
+                worksheet.Cells[row, 5].Value = pb.PONo;
+                worksheet.Cells[row, 6].Value = pb.DocumentNo;
+                worksheet.Cells[row, 7].Value = pb.Description;
+                worksheet.Cells[row, 8].Value = pb.Amount;
+                worksheet.Cells[row, 9].Value = pb.VatAmount;
+
+                worksheet.Cells[row, 11].Value = pb.WhtAmount;
+                worksheet.Cells[row, 12].Value = pb.NetPurchases;
+
+                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+
+                row++;
+            }
+
+            worksheet.Cells[row, 7].Value = "Total ";
+            worksheet.Cells[row, 8].Value = totalAmount;
+            worksheet.Cells[row, 9].Value = totalVatAmount;
+
+            worksheet.Cells[row, 11].Value = totalWhtAmount;
+            worksheet.Cells[row, 12].Value = totalNetPurchases;
+
+            worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+
+            // Apply style to subtotal row
+            using (var range = worksheet.Cells[row, 1, row, 12])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+            }
+
+            using (var range = worksheet.Cells[row, 7, row, 12])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+            }
+
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PurchaseBook.xlsx");
+        }
+
+        #endregion -- Generate PurchaseBook .Csv File -- 
+
+        #region -- Generate SalesBook .Csv File -- 
+
+        public async Task<IActionResult> GenerateSalesBookCsvFile(ViewModelBook model, string? selectedDocument, string? soaList, string? siList, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (soaList != null || siList != null || selectedDocument != null)
+            {
+                TempData["error"] = "Please input date from and date to only!";
+                return RedirectToAction(nameof(SalesBook));
+            }
+
+            var salesBook = _unitOfWork.FilprideReport.GetSalesBooks(model.DateFrom, model.DateTo, selectedDocument, companyClaims);
+            if (salesBook.Count == 0)
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(SalesBook));
+            }
+            var totalAmount = salesBook.Sum(sb => sb.Amount);
+            var totalVatAmount = salesBook.Sum(sb => sb.VatAmount);
+            var totalVatableSales = salesBook.Sum(sb => sb.VatableSales);
+            var totalVatExemptSales = salesBook.Sum(sb => sb.VatExemptSales);
+            var totalZeroRatedSales = salesBook.Sum(sb => sb.ZeroRated);
+            var totalDiscount = salesBook.Sum(sb => sb.Discount);
+            var totalNetSales = salesBook.Sum(sb => sb.NetSales);
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("SalesBook");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "SALES BOOK";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Extracted By:";
+            worksheet.Cells["A4"].Value = "Company:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{extractedBy}";
+            worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+            worksheet.Cells["A7"].Value = "Tran. Date";
+            worksheet.Cells["B7"].Value = "Serial Number";
+            worksheet.Cells["C7"].Value = "Customer Name";
+            worksheet.Cells["D7"].Value = "Tin#";
+            worksheet.Cells["E7"].Value = "Address";
+            worksheet.Cells["F7"].Value = "Description";
+            worksheet.Cells["G7"].Value = "Amount";
+            worksheet.Cells["H7"].Value = "Vat Amount";
+            worksheet.Cells["I7"].Value = "Vatable Sales";
+            worksheet.Cells["J7"].Value = "Vat-Exempt Sales";
+            worksheet.Cells["K7"].Value = "Zero-Rated Sales";
+            worksheet.Cells["L7"].Value = "Discount";
+            worksheet.Cells["M7"].Value = "Net Sales";
+
+            // Apply styling to the header row
+            using (var range = worksheet.Cells["A7:M7"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Populate the data rows
+            int row = 8;
+            string currencyFormat = "#,##0.0000";
+
+            foreach (var cv in salesBook)
+            {
+                worksheet.Cells[row, 1].Value = cv.TransactionDate;
+                worksheet.Cells[row, 2].Value = cv.SerialNo;
+                worksheet.Cells[row, 3].Value = cv.SoldTo;
+                worksheet.Cells[row, 4].Value = cv.TinNo;
+                worksheet.Cells[row, 5].Value = cv.Address;
+                worksheet.Cells[row, 6].Value = cv.Description;
+                worksheet.Cells[row, 7].Value = cv.Amount;
+                worksheet.Cells[row, 8].Value = cv.VatAmount;
+                worksheet.Cells[row, 9].Value = cv.VatableSales;
+                worksheet.Cells[row, 10].Value = cv.VatExemptSales;
+                worksheet.Cells[row, 11].Value = cv.ZeroRated;
+                worksheet.Cells[row, 12].Value = cv.Discount;
+                worksheet.Cells[row, 13].Value = cv.NetSales;
+
+                worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+
+                row++;
+            }
+
+            worksheet.Cells[row, 6].Value = "Total ";
+            worksheet.Cells[row, 7].Value = totalAmount;
+            worksheet.Cells[row, 8].Value = totalVatAmount;
+            worksheet.Cells[row, 9].Value = totalVatableSales;
+            worksheet.Cells[row, 10].Value = totalVatExemptSales;
+            worksheet.Cells[row, 11].Value = totalZeroRatedSales;
+            worksheet.Cells[row, 12].Value = totalDiscount;
+            worksheet.Cells[row, 13].Value = totalNetSales;
+
+            worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+
+            // Apply style to subtotal row
+            using (var range = worksheet.Cells[row, 1, row, 13])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+            }
+
+            using (var range = worksheet.Cells[row, 6, row, 13])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+            }
+
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SalesBook.xlsx");
+        }
+
+        #endregion -- Generate SalesBook .Csv File -- 
     }
 }

@@ -189,7 +189,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 TempData["success"] = "Journal voucher created successfully";
 
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
             else
             {
@@ -461,7 +461,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders
                 .Include(jv => jv.CheckVoucherHeader)
-                .FirstOrDefaultAsync(cvh => cvh.CVId == id, cancellationToken);
+                .FirstOrDefaultAsync(cvh => cvh.JournalVoucherHeaderId == id, cancellationToken);
             var existingDetailsModel = await _dbContext.FilprideJournalVoucherDetails
                 .Where(cvd => cvd.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
                 .ToListAsync();
@@ -535,21 +535,66 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(viewModel.JVId, cancellationToken);
                     var existingDetailsModel = await _dbContext.FilprideJournalVoucherDetails.Where(d => d.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId).ToListAsync();
-                    FilprideJournalVoucherDetail detailsModel = new();
 
-                    for (int i = 0; i < existingDetailsModel.Count(); i++)
+                    // Dictionary to keep track of AccountNo and their ids for comparison
+                    var accountTitleDict = new Dictionary<string, List<int>>();
+                    foreach (var details in existingDetailsModel)
                     {
-                        var cvd = existingDetailsModel[i];
-                        cvd.AccountNo = viewModel.AccountNumber[i];
-                        cvd.AccountName = viewModel.AccountTitle[i];
-                        cvd.Debit = viewModel.Debit[i];
-                        cvd.Credit = viewModel.Credit[i];
-                        cvd.TransactionNo = viewModel.JVNo;
-                        cvd.JournalVoucherHeaderId = viewModel.JVId;
+                        if (!accountTitleDict.ContainsKey(details.AccountNo))
+                        {
+                            accountTitleDict[details.AccountNo] = new List<int>();
+                        }
+                        accountTitleDict[details.AccountNo].Add(details.JournalVoucherDetailId);
                     }
 
-                    var newDetailsModel = new List<FilprideJournalVoucherDetail>(); // Replace with the actual new details
-                    existingDetailsModel.AddRange(newDetailsModel);
+                    // Add or update records
+                    for (int i = 0; i < viewModel.AccountTitle.Length; i++)
+                    {
+
+                        if (accountTitleDict.TryGetValue(viewModel.AccountNumber[i], out var ids))
+                        {
+                            // Update the first matching record and remove it from the list
+                            var detailsId = ids.First();
+                            ids.RemoveAt(0);
+                            var details = existingDetailsModel.First(o => o.JournalVoucherDetailId == detailsId);
+
+                            details.AccountNo = viewModel.AccountNumber[i];
+                            details.AccountName = viewModel.AccountTitle[i];
+                            details.Debit = viewModel.Debit[i];
+                            details.Credit = viewModel.Credit[i];
+                            details.TransactionNo = viewModel.JVNo;
+                            details.JournalVoucherHeaderId = viewModel.JVId;
+
+                            if (ids.Count == 0)
+                            {
+                                accountTitleDict.Remove(viewModel.AccountNumber[i]);
+                            }
+                        }
+                        else
+                        {
+                            // Add new record
+                            var newDetails = new FilprideJournalVoucherDetail
+                            {
+                                AccountNo = viewModel.AccountNumber[i],
+                                AccountName = viewModel.AccountTitle[i],
+                                Debit = viewModel.Debit[i],
+                                Credit = viewModel.Credit[i],
+                                TransactionNo = viewModel.JVNo,
+                                JournalVoucherHeaderId = viewModel.JVId
+                            };
+                            _dbContext.Add(newDetails);
+                        }
+                    }
+
+                    // Remove remaining records that were duplicates
+                    foreach (var ids in accountTitleDict.Values)
+                    {
+                        foreach (var id in ids)
+                        {
+                            var details = existingDetailsModel.First(o => o.JournalVoucherDetailId == id);
+                            _dbContext.Remove(details);
+                        }
+                    }
 
                     #endregion --CV Details Entry
 
@@ -568,7 +613,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     TempData["success"] = "Journal Voucher edited successfully";
-                    return RedirectToAction("Index");
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
