@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Create Purchase Order";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var portSelectList = EnumExtensions.ToSelectList<Port>();
 }
 
 <div class="card shadow border-0 mt-4">
@@ -16,24 +17,24 @@
     <div class="card-body p-4">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group mb-3">
-                <label asp-for="Date" class="control-label"></label><span class="required">*</span>
-                <input type="date" asp-for="Date" class="form-control" required />
+            <div class="form-floating py-2 col-12">
+                <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                <label asp-for="Date">Date<span class="required">*</span></label>
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="SupplierId" class="control-label"></label><span class="required">*</span>
-                <select asp-for="SupplierId" class="form-control js-select2" asp-items="@Model.Suppliers" style="width:100%">
-                    <option></option>
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Supplier List<span class="required">*</span></label>
+                <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <option value="" selected>Select supplier</option>
                 </select>
                 <span asp-validation-for="SupplierId" class="text-danger"></span>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="ProductId" class="control-label"></label><span class="required">*</span>
-                <select asp-for="ProductId" class="form-control js-select2" asp-items="@Model.Products" style="width:100%">
-                    <option></option>
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Product List<span class="required">*</span></label>
+                <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <option value="" selected>Select product</option>
                 </select>
                 <span asp-validation-for="ProductId" class="text-danger"></span>
             </div>
@@ -62,16 +63,23 @@
                 <span asp-validation-for="Terms" class="text-danger"></span>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Quantity" class="control-label"></label><span class="required">*</span>
-                <input asp-for="Quantity" class="form-control money quantity" value="" placeholder="0" required />
+            <div class="form-floating py-2 col-12">
+                <input asp-for="Quantity" class="form-control border-0 shadow quantity" placeholder="" />
+                <label asp-for="Quantity">Quantity<span class="required">*</span></label>
                 <span asp-validation-for="Quantity" class="text-danger"></span>
             </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="Price" class="control-label"></label><span class="required">*</span>
-                <input asp-for="Price" class="form-control money price" value="" placeholder="0.00" required />
+            <div class="form-floating py-2 col-12">
+                <input asp-for="Price" class="form-control border-0 shadow price" placeholder="" />
+                <label asp-for="Price">Price<span class="required">*</span></label>
                 <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Port List<span class="required">*</span></label>
+                <select asp-for="Port" asp-items="@portSelectList" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <option value="" selected>Select port</option>
+                </select>
+                <span asp-validation-for="Port" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
@@ -79,8 +87,8 @@
                 <input class="form-control money total" value="" placeholder="0.00" required disabled readonly />
             </div>
 
-            <div class="form-floating mb-3">
-                <textarea asp-for="Remarks" class="form-control" placeholder="Input the remarks here." style="height: 100px"></textarea>
+            <div class="form-floating py-2 col-12">
+                <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
                 <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
                 <span asp-validation-for="Remarks" class="text-danger"></span>
             </div>

@@ -330,6 +330,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (!model.IsClosed)
                 {
                     model.IsClosed = true;
+                    model.PostedBy = null;
+                    model.CanceledBy = null;
+                    model.VoidedBy = null;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Purchase Order has been Closed.";
