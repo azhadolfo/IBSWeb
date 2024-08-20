@@ -387,7 +387,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
             var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
             var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
-            var poIds = _dbContext.PurchaseOrders.Where(model => model.Company == companyClaims && existingHeaderModel.PONo.Contains(model.PurchaseOrderNo)).Select(model => model.PurchaseOrderId).ToArray();
+            var poIds = _dbContext.FilpridePurchaseOrders.Where(model => model.Company == companyClaims && existingHeaderModel.PONo.Contains(model.PurchaseOrderNo)).Select(model => model.PurchaseOrderId).ToArray();
             var rrIds = _dbContext.ReceivingReports.Where(model => model.Company == companyClaims && existingHeaderModel.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
 
             var coa = await _dbContext.ChartOfAccounts
@@ -744,7 +744,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync();
 
-                            viewModel.PONo = await _dbContext.PurchaseOrders
+                            viewModel.PONo = await _dbContext.FilpridePurchaseOrders
                                 .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
                                 .Select(po => new SelectListItem
                                 {
@@ -881,7 +881,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             })
                             .ToListAsync();
 
-                    viewModel.PONo = await _dbContext.PurchaseOrders
+                    viewModel.PONo = await _dbContext.FilpridePurchaseOrders
                                 .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
                                 .Select(po => new SelectListItem
                                 {
@@ -930,7 +930,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync();
 
-            viewModel.PONo = await _dbContext.PurchaseOrders
+            viewModel.PONo = await _dbContext.FilpridePurchaseOrders
                 .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
                 .Select(po => new SelectListItem
                 {

@@ -181,15 +181,15 @@ namespace IBS.DataAccess.Repository.Filpride
             var purchaseOrder = await _db.FilpridePurchaseOrders
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken) ?? throw new InvalidOperationException("No record found.");
 
-            purchaseOrder.QuantityServed += quantityDelivered;
+            purchaseOrder.QuantityReceived += quantityDelivered;
 
-            if (purchaseOrder.QuantityServed == purchaseOrder.Quantity)
+            if (purchaseOrder.QuantityReceived == purchaseOrder.Quantity)
             {
-                purchaseOrder.IsServed = true;
-                purchaseOrder.ServedDate = DateTime.Now;
+                purchaseOrder.IsReceived = true;
+                purchaseOrder.ReceivedDate = DateTime.Now;
                 await _db.SaveChangesAsync(cancellationToken);
             }
-            else if (purchaseOrder.QuantityServed > purchaseOrder.Quantity)
+            else if (purchaseOrder.QuantityReceived > purchaseOrder.Quantity)
             {
                 throw new InvalidOperationException("The entered Quantity Delivered exceeds the Purchase Order Quantity.");
             }

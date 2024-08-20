@@ -52,7 +52,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new ReceivingReport();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.PurchaseOrders = await _dbContext.PurchaseOrders
+            viewModel.PurchaseOrders = await _dbContext.FilpridePurchaseOrders
                 .Where(po => po.Company == companyClaims && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
                 .Select(po => new SelectListItem
                 {
@@ -70,7 +70,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.PurchaseOrders = await _dbContext.PurchaseOrders
+            model.PurchaseOrders = await _dbContext.FilpridePurchaseOrders
                 .Where(po => po.Company == companyClaims && !po.IsReceived && po.PostedBy != null)
                 .Select(po => new SelectListItem
                 {
@@ -83,7 +83,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Retrieve PO
 
                 var po = await _dbContext
-                            .PurchaseOrders
+                            .FilpridePurchaseOrders
                             .Include(po => po.Supplier)
                             .Include(po => po.Product)
                             .FirstOrDefaultAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
@@ -160,7 +160,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            receivingReport.PurchaseOrders = await _dbContext.PurchaseOrders
+            receivingReport.PurchaseOrders = await _dbContext.FilpridePurchaseOrders
                 .Where(rr => rr.Company == companyClaims)
                 .Select(s => new SelectListItem
                 {
@@ -178,7 +178,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var existingModel = await _dbContext.ReceivingReports.FindAsync(model.ReceivingReportId, cancellationToken);
             var companyClaims = await GetCompanyClaimAsync();
 
-            existingModel.PurchaseOrders = await _dbContext.PurchaseOrders
+            existingModel.PurchaseOrders = await _dbContext.FilpridePurchaseOrders
                 .Where(s => s.Company == companyClaims)
                 .Select(s => new SelectListItem
                 {
@@ -197,7 +197,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Retrieve PO
 
                 var po = await _dbContext
-                            .PurchaseOrders
+                            .FilpridePurchaseOrders
                             .Include(po => po.Supplier)
                             .Include(po => po.Product)
                             .FirstOrDefaultAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);

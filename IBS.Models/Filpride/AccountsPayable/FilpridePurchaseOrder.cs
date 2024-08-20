@@ -1,10 +1,11 @@
 ﻿using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using IBS.Utility;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace IBS.Models.Filpride
+namespace IBS.Models.Filpride.AccountsPayable
 {
     public class FilpridePurchaseOrder : BaseEntity
     {
@@ -12,11 +13,11 @@ namespace IBS.Models.Filpride
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int PurchaseOrderId { get; set; }
 
-        [Column(TypeName = "varchar(12)")]
-        [Display(Name = "PO No.")]
-        public string PurchaseOrderNo { get; set; }
+        public string? PurchaseOrderNo { get; set; }
 
+        [Required]
         [Column(TypeName = "date")]
+        [Display(Name = "Transaction Date")]
         [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly Date { get; set; }
 
@@ -44,11 +45,15 @@ namespace IBS.Models.Filpride
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        public decimal UnitCost { get; set; }
+        public decimal Price { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        public decimal TotalAmount { get; set; }
+        public decimal FinalPrice { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        public decimal Amount { get; set; }
 
         [Column(TypeName = "varchar(200)")]
         public string Remarks { get; set; }
@@ -60,13 +65,30 @@ namespace IBS.Models.Filpride
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        public decimal QuantityServed { get; set; }
+        public decimal QuantityReceived { get; set; }
 
-        public bool IsServed { get; set; }
+        public bool IsReceived { get; set; }
 
         [Column(TypeName = "timestamp with time zone")]
-        public DateTime ServedDate { get; set; }
+        public DateTime ReceivedDate { get; set; }
+
+        public bool IsClosed { get; set; }
+
+        public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
+
+        #region--Select List Item
+
+        [NotMapped]
+        public List<ReceivingReport>? RrList { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Suppliers { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Products { get; set; }
+
+        #endregion
     }
 }

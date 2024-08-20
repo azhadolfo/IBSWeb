@@ -39,7 +39,6 @@ namespace IBS.DataAccess.Repository
 
         #region--Filpride
 
-        public Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrder { get; private set; }
         public Filpride.IRepository.IReceivingReportRepository FilprideReceivingReport { get; private set; }
         public ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; private set; }
         public IDeliveryReceiptRepository FilprideDeliveryReceipt { get; private set; }
@@ -116,7 +115,6 @@ namespace IBS.DataAccess.Repository
 
             #region--Filpride
 
-            FilpridePurchaseOrder = new Filpride.PurchaseOrderRepository(_db);
             FilprideReceivingReport = new Filpride.ReceivingReportRepository(_db);
             FilprideCustomerOrderSlip = new CustomerOrderSlipRepository(_db);
             FilprideDeliveryReceipt = new DeliveryReceiptRepository(_db);

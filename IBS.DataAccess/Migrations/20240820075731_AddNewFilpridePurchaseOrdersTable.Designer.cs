@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240820075731_AddNewFilpridePurchaseOrdersTable")]
+    partial class AddNewFilpridePurchaseOrdersTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -464,15 +467,15 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("voided_date");
 
                     b.HasKey("PurchaseOrderId")
-                        .HasName("pk_filpride_purchase_orders");
+                        .HasName("pk_purchase_orders");
 
                     b.HasIndex("ProductId")
-                        .HasDatabaseName("ix_filpride_purchase_orders_product_id");
+                        .HasDatabaseName("ix_purchase_orders_product_id");
 
                     b.HasIndex("SupplierId")
-                        .HasDatabaseName("ix_filpride_purchase_orders_supplier_id");
+                        .HasDatabaseName("ix_purchase_orders_supplier_id");
 
-                    b.ToTable("filpride_purchase_orders", (string)null);
+                    b.ToTable("purchase_orders", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.ReceivingReport", b =>
@@ -5943,14 +5946,14 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_filpride_purchase_orders_products_product_id");
+                        .HasConstraintName("fk_purchase_orders_products_product_id");
 
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
                         .WithMany()
                         .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_filpride_purchase_orders_filpride_suppliers_supplier_id");
+                        .HasConstraintName("fk_purchase_orders_filpride_suppliers_supplier_id");
 
                     b.Navigation("Product");
 
@@ -5964,7 +5967,7 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("POId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_receiving_reports_filpride_purchase_orders_po_id");
+                        .HasConstraintName("fk_receiving_reports_purchase_orders_po_id");
 
                     b.Navigation("PurchaseOrder");
                 });
@@ -6033,7 +6036,7 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("PurchaseOrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_filpride_sales_invoices_filpride_purchase_orders_purchase_o");
+                        .HasConstraintName("fk_filpride_sales_invoices_purchase_orders_purchase_order_id");
 
                     b.Navigation("Customer");
 
@@ -6068,7 +6071,7 @@ namespace IBS.DataAccess.Migrations
                     b.HasOne("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", "PurchaseOrder")
                         .WithMany()
                         .HasForeignKey("POId")
-                        .HasConstraintName("fk_filpride_inventories_filpride_purchase_orders_po_id");
+                        .HasConstraintName("fk_filpride_inventories_purchase_orders_po_id");
 
                     b.HasOne("IBS.Models.MasterFile.Product", "Product")
                         .WithMany()
@@ -6108,7 +6111,7 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("PurchaseOrderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_filpride_customer_order_slips_filpride_purchase_orders_purc");
+                        .HasConstraintName("fk_filpride_customer_order_slips_purchase_orders_purchase_orde");
 
                     b.Navigation("Customer");
 

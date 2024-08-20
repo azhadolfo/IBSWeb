@@ -19,7 +19,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<DateOnly> ComputeDueDateAsync(int poId, DateOnly rrDate, CancellationToken cancellationToken = default)
         {
             var po = await _db
-                .PurchaseOrders
+                .FilpridePurchaseOrders
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == poId, cancellationToken);
 
             if (po != null)
@@ -142,7 +142,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
         {
-            var po = await _db.PurchaseOrders
+            var po = await _db.FilpridePurchaseOrders
                     .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
             if (po != null)
@@ -169,7 +169,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task UpdatePOAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
         {
-            var po = await _db.PurchaseOrders
+            var po = await _db.FilpridePurchaseOrders
                     .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
             if (po != null)

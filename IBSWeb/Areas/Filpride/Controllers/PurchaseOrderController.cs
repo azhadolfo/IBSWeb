@@ -1,24 +1,32 @@
-﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.Filpride;
+﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository;
+using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
+    [DepartmentAuthorize(SD.Department_Logistics, SD.Department_TradeAndSupply, SD.Department_Marketing, SD.Department_RCD)]
     public class PurchaseOrderController : Controller
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly ApplicationDbContext _dbContext;
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        public PurchaseOrderController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
+        private readonly IUnitOfWork _unitOfWork;
+
+        public PurchaseOrderController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
         {
-            _unitOfWork = unitOfWork;
+            _dbContext = dbContext;
             _userManager = userManager;
+            _unitOfWork = unitOfWork;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -30,117 +38,244 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var poList = await _unitOfWork.FilpridePurchaseOrder
-                .GetAllAsync(null, cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
 
-            return View(poList);
+            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepo.GetAllAsync(po => po.Company == companyClaims, cancellationToken);
+
+            foreach (var po in purchaseOrders)
+            {
+                po.RrList = await _dbContext.ReceivingReports
+                    .Where(rr => rr.Company == companyClaims && rr.PONo == po.PurchaseOrderNo)
+                    .ToListAsync(cancellationToken);
+            }
+
+            return View(purchaseOrders);
         }
 
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+            var viewModel = new FilpridePurchaseOrder();
             var companyClaims = await GetCompanyClaimAsync();
 
-            PurchaseOrderViewModel viewModel = new()
-            {
-                Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
-                Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
-            };
+            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             return View(viewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(FilpridePurchaseOrder model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+
+            model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+
+            model.Company = companyClaims;
+
             if (ModelState.IsValid)
             {
-                try
-                {
-                    FilpridePurchaseOrder model = new()
-                    {
-                        PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(cancellationToken),
-                        Date = viewModel.Date,
-                        SupplierId = viewModel.SupplierId,
-                        ProductId = viewModel.ProductId,
-                        Quantity = viewModel.Quantity,
-                        UnitCost = viewModel.UnitCost,
-                        TotalAmount = viewModel.Quantity * viewModel.UnitCost,
-                        Terms = viewModel.Terms,
-                        Port = viewModel.Port,
-                        Remarks = viewModel.Remarks,
-                        CreatedBy = _userManager.GetUserName(User)
-                    };
+                model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrderRepo.GenerateCodeAsync(companyClaims, cancellationToken);
+                model.CreatedBy = _userManager.GetUserName(this.User);
+                model.Amount = model.Quantity * model.Price;
 
-                    await _unitOfWork.FilpridePurchaseOrder.AddAsync(model, cancellationToken);
-                    await _unitOfWork.SaveAsync(cancellationToken);
+                await _dbContext.AddAsync(model, cancellationToken);
 
-                    TempData["success"] = "Purchase order created successfully.";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
-                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                TempData["success"] = "Purchase Order created successfully";
+                return RedirectToAction("Index");
             }
-
-            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
-            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
-            return View(viewModel);
+            else
+            {
+                ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(model);
+            }
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
+            if (id == null || _dbContext.FilpridePurchaseOrders == null)
             {
                 return NotFound();
             }
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            try
+            var purchaseOrder = await _unitOfWork.FilpridePurchaseOrderRepo.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            if (purchaseOrder == null)
             {
-                var existingRecord = await _unitOfWork.FilpridePurchaseOrder
-                    .GetAsync(po => po.PurchaseOrderNo == id, cancellationToken);
-
-                if (existingRecord == null)
-                {
-                    return BadRequest();
-                }
-
-                PurchaseOrderViewModel viewModel = new()
-                {
-                    PurchaseOrderId = existingRecord.PurchaseOrderId,
-                    Date = existingRecord.Date,
-                    ProductId = existingRecord.ProductId,
-                    SupplierId = existingRecord.SupplierId,
-                    Terms = existingRecord.Terms,
-                    Port = existingRecord.Port,
-                    Quantity = existingRecord.Quantity,
-                    UnitCost = existingRecord.UnitCost,
-                    Remarks = existingRecord.Remarks,
-                    Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
-                    Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
-                };
-
-                return View(viewModel);
+                return NotFound();
             }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+
+            purchaseOrder.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+
+            purchaseOrder.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+
+            ViewBag.PurchaseOrders = purchaseOrder.Quantity;
+
+            return View(purchaseOrder);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(FilpridePurchaseOrder model, CancellationToken cancellationToken)
+        {
+            if (ModelState.IsValid)
+            {
+                var existingModel = await _dbContext.FilpridePurchaseOrders.FindAsync(model.PurchaseOrderId, cancellationToken);
+
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (existingModel == null)
+                {
+                    return NotFound();
+                }
+
+                model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+
+                model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+
+                existingModel.Date = model.Date;
+                existingModel.SupplierId = model.SupplierId;
+                existingModel.ProductId = model.ProductId;
+                existingModel.Quantity = model.Quantity;
+                existingModel.Price = model.Price;
+                existingModel.Amount = model.Quantity * model.Price;
+                existingModel.Remarks = model.Remarks;
+                existingModel.Terms = model.Terms;
+                existingModel.Port = model.Port;
+
+                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedDate = DateTime.Now;
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                TempData["success"] = "Purchase Order updated successfully";
+                return RedirectToAction("Index");
+            }
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null || _dbContext.ReceivingReports == null)
+            {
+                return NotFound();
+            }
+
+            var purchaseOrder = await _unitOfWork.FilpridePurchaseOrderRepo
+                .GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            if (purchaseOrder == null)
+            {
+                return NotFound();
+            }
+
+            return View(purchaseOrder);
+        }
+
+        public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
+        {
+            var model = await _dbContext.FilpridePurchaseOrders.FindAsync(id, cancellationToken);
+
+            if (model != null)
+            {
+                if (model.PostedBy == null)
+                {
+                    model.PostedBy = _userManager.GetUserName(this.User);
+                    model.PostedDate = DateTime.Now;
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Purchase Order has been Posted.";
+                }
+                return RedirectToAction("Index");
+            }
+
+            return NotFound();
+        }
+
+        public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
+        {
+            var model = await _dbContext.FilpridePurchaseOrders.FindAsync(id, cancellationToken);
+
+            if (model != null)
+            {
+                if (model.VoidedBy == null)
+                {
+                    if (model.PostedBy != null)
+                    {
+                        model.PostedBy = null;
+                    }
+
+                    model.VoidedBy = _userManager.GetUserName(this.User);
+                    model.VoidedDate = DateTime.Now;
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Purchase Order has been Voided.";
+                }
+                return RedirectToAction("Index");
+            }
+
+            return NotFound();
+        }
+
+        public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
+        {
+            var model = await _dbContext.FilpridePurchaseOrders.FindAsync(id, cancellationToken);
+
+            if (model != null)
+            {
+                if (model.CanceledBy == null)
+                {
+                    model.CanceledBy = _userManager.GetUserName(this.User);
+                    model.CanceledDate = DateTime.Now;
+
+                    ///PENDING - leo
+                    //model.CancellationRemarks = cancellationRemarks;
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Purchase Order has been Cancelled.";
+                }
+                return RedirectToAction("Index");
+            }
+
+            return NotFound();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
+        {
+            var po = await _unitOfWork.FilpridePurchaseOrderRepo.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            return PartialView("_PreviewPartialView", po);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ChangePrice(CancellationToken cancellationToken)
+        {
+            PurchaseChangePriceViewModel po = new();
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            po.PO = await _dbContext.FilpridePurchaseOrders
+                .Where(po => po.FinalPrice == 0 || po.FinalPrice == null && po.Company == companyClaims && po.PostedBy != null)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.PurchaseOrderId.ToString(),
+                    Text = s.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
+
+            return View(po);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePrice(PurchaseChangePriceViewModel model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -148,117 +283,87 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
-                    viewModel.CurrentUser = _userManager.GetUserName(User);
-                    await _unitOfWork.FilpridePurchaseOrder.UpdateAsync(viewModel, cancellationToken);
+                    var existingModel = await _dbContext.FilpridePurchaseOrders.FindAsync(model.POId, cancellationToken);
 
-                    TempData["success"] = "Purchase order updated successfully.";
-                    return RedirectToAction(nameof(Index));
+                    existingModel.FinalPrice = model.FinalPrice;
+
+                    #region--Inventory Recording
+
+                    await _unitOfWork.FilprideInventory.ChangePriceToInventoryAsync(model, cancellationToken);
+
+                    #endregion
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Change Price updated successfully";
+                    return RedirectToAction("Index");
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
-                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                    model.PO = await _dbContext.FilpridePurchaseOrders
+                        .Where(po => po.Company == companyClaims && po.FinalPrice == 0 || po.FinalPrice == null && po.PostedBy != null)
+                        .Select(s => new SelectListItem
+                        {
+                            Value = s.PurchaseOrderId.ToString(),
+                            Text = s.PurchaseOrderNo
+                        })
+                        .ToListAsync(cancellationToken);
+
                     TempData["error"] = ex.Message;
-                    return View(viewModel);
+                    return View(model);
                 }
             }
+            model.PO = await _dbContext.FilpridePurchaseOrders
+                .Where(po => po.Company == companyClaims && po.FinalPrice == 0 || po.FinalPrice == null && po.PostedBy != null)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.PurchaseOrderId.ToString(),
+                    Text = s.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
 
-            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
-            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
-            return View(viewModel);
+            TempData["error"] = "The information provided was invalid.";
+            return View(nameof(ChangePrice));
         }
 
-        public async Task<IActionResult> Preview(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> ClosePO(int id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                return NotFound();
-            }
+            var model = await _dbContext.FilpridePurchaseOrders.FindAsync(id, cancellationToken);
 
-            try
+            if (model != null)
             {
-                var existingRecord = await _unitOfWork.FilpridePurchaseOrder
-                    .GetAsync(po => po.PurchaseOrderNo == id, cancellationToken);
-
-                if (existingRecord == null)
+                if (!model.IsClosed)
                 {
-                    return BadRequest();
-                }
+                    model.IsClosed = true;
+                    model.PostedBy = null;
+                    model.CanceledBy = null;
+                    model.VoidedBy = null;
 
-                return View(existingRecord);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Purchase Order has been Closed.";
+                }
+                return RedirectToAction("Index");
             }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+
+            return NotFound();
         }
 
-        public async Task<IActionResult> Print(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
+            var cv = await _unitOfWork.FilpridePurchaseOrderRepo.GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
+            if (cv?.IsPrinted == false)
             {
-                return NotFound();
+                #region --Audit Trail Recording
+
+                //var printedBy = _userManager.GetUserName(this.User);
+                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of cv# {cv.CVNo}", "Check Vouchers");
+                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                cv.IsPrinted = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
             }
-
-            try
-            {
-                var existingRecord = await _unitOfWork.FilpridePurchaseOrder
-                    .GetAsync(po => po.PurchaseOrderNo == id, cancellationToken);
-
-                if (existingRecord == null)
-                {
-                    return BadRequest();
-                }
-
-                if (!existingRecord.IsPrinted)
-                {
-                    existingRecord.IsPrinted = true;
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                }
-
-                return RedirectToAction(nameof(Preview), new { id });
-            }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Preview), new { id });
-            }
-        }
-
-        public async Task<IActionResult> Post(string? id, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                return NotFound();
-            }
-
-            try
-            {
-                var existingRecord = await _unitOfWork.FilpridePurchaseOrder
-                    .GetAsync(po => po.PurchaseOrderNo == id, cancellationToken);
-
-                if (existingRecord == null)
-                {
-                    return BadRequest();
-                }
-
-                if (existingRecord.PostedBy == null)
-                {
-                    existingRecord.PostedBy = _userManager.GetUserName(User);
-                    existingRecord.PostedDate = DateTime.Now;
-                    await _unitOfWork.FilpridePurchaseOrder.PostAsync(existingRecord, cancellationToken);
-                }
-
-                TempData["success"] = "Purchase order approved successfully.";
-                return RedirectToAction(nameof(Preview), new { id });
-            }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Preview), new { id });
-            }
+            return RedirectToAction(nameof(Print), new { id });
         }
     }
 }

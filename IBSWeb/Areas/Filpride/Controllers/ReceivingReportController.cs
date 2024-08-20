@@ -78,7 +78,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         QuantityDelivered = viewModel.QuantityDelivered,
                         QuantityReceived = viewModel.QuantityReceived,
                         GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered,
-                        TotalAmount = viewModel.QuantityReceived * deliveryReceipt.CustomerOrderSlip.PurchaseOrder.UnitCost,
+                        TotalAmount = viewModel.QuantityReceived * deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price,
                         TotalFreight = viewModel.TotalFreight,
                         Remarks = viewModel.Remarks,
                         CreatedBy = _userManager.GetUserName(User)
@@ -198,7 +198,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            viewModel.DeliveryReceipts = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsync(cancellationToken);
+            viewModel.DeliveryReceipts = await _unitOfWork.FilpridePurchaseOrderRepo.GetPurchaseOrderListAsync(companyClaims, cancellationToken);
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);

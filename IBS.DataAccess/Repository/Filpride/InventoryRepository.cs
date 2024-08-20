@@ -360,7 +360,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             try
             {
-                var existingPO = await _db.PurchaseOrders
+                var existingPO = await _db.FilpridePurchaseOrders
                 .Include(po => po.Supplier)
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == viewModel.POId, cancellationToken);
 

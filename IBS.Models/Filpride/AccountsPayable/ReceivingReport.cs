@@ -27,7 +27,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public int POId { get; set; }
 
         [ForeignKey("POId")]
-        public PurchaseOrder? PurchaseOrder { get; set; }
+        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? PurchaseOrders { get; set; }

@@ -155,7 +155,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var viewModel = new ViewModelBook
             {
-                PO = await _dbContext.PurchaseOrders
+                PO = await _dbContext.FilpridePurchaseOrders
                 .Where(po => po.PostedBy != null && po.Company == companyClaims)
                 .Select(po => new SelectListItem
                 {
