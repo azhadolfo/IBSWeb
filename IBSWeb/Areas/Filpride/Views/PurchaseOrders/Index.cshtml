@@ -89,14 +89,16 @@
                                     ? "Posted"
                                     : item.VoidedBy != null
                                         ? "Voided"
-                                        : item.CanceledBy != null
-                                            ? "Cancelled"
-                                            : "Pending";
+                                        : item.IsClosed
+                                            ? "Closed"
+                                            : item.CanceledBy != null
+                                                ? "Cancelled"
+                                                : "Pending";
                             }
-                            <span class="badge rounded-pill @if(status == "Posted") {<text>bg-info</text>} else if(status == "Voided") {<text>bg-danger</text>} else if(status == "Cancelled") {<text>bg-warning</text>}">@status</span>
+                            <span class="badge rounded-pill @if(status == "Posted") {<text>bg-info</text>} else if(status == "Voided") {<text>bg-danger</text>} else if(status == "Cancelled") {<text>bg-warning</text>} else if(status == "Closed") {<text>bg-secondary</text>}">@status</span>
                         </td>
                         <td class="text-center">
-                            <div class="dropdown">
+                            <div class="dropdown" style="@(item.VoidedBy != null || item.CanceledBy != null || item.IsClosed ? "display:none;" : "")">
                                 <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                     Actions
                                 </button>
@@ -131,19 +133,6 @@
                                     }
                                 </ul>
                             </div>
-
-                            @if (item.VoidedBy != null)
-                            {
-                                <span class="badge rounded-pill bg-danger ">VOIDED</span>
-                            }
-                            else if (item.CanceledBy != null)
-                            {
-                                <span class="badge rounded-pill bg-warning ">CANCELLED</span>
-                            }
-                            else if (item.IsClosed)
-                            {
-                                <span class="badge rounded-pill bg-secondary ">CLOSED</span>
-                            }
 
                             @await Html.PartialAsync("_Preview", item)
                             @await Html.PartialAsync("_ClosePO", item)
