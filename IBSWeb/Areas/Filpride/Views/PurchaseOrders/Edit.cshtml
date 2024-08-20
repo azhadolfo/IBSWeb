@@ -14,7 +14,7 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form asp-action="Edit">
+        <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input asp-for="PurchaseOrderId" type="hidden" class="form-control" />
             <div class="form-floating py-2 col-12">

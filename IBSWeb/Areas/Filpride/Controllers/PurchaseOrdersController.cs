@@ -148,6 +148,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Amount = model.Quantity * model.Price;
                 existingModel.Remarks = model.Remarks;
                 existingModel.Terms = model.Terms;
+                existingModel.Port = model.Port;
+
+                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedDate = DateTime.Now;
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
