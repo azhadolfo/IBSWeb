@@ -116,23 +116,43 @@
                                 <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                     @if (item.PostedBy == null)
                                     {
-                                        <li><a asp-action="Edit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
-                                        <li>
-                                            <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.CollectionReceiptId" data-bs-url="@Url.Action($"Preview/{item.CollectionReceiptId}")">
+                                        
+                                        if (item.MultipleSIId != null)
+                                        {
+                                            <li><a asp-action="MultipleCollectionEdit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
+                                            <li>
+                                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#PreviewMultipleSI-@item.CollectionReceiptId" data-bs-url="@Url.Action($"PreviewMultipleSI/{item.CollectionReceiptId}")">
                                                 Preview
-                                            </button>
-                                        </li>
+                                                </button>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li><a asp-action="Edit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
+                                            <li>
+                                                <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.CollectionReceiptId" data-bs-url="@Url.Action($"Preview/{item.CollectionReceiptId}")">
+                                                    Preview
+                                                </button>
+                                            </li>
+                                        }
                                         <li><a class="dropdown-item" onclick="confirmPost(@item.CollectionReceiptId)">Post</a></li>
                                         <li><a class="dropdown-item" onclick="confirmCancel(@item.CollectionReceiptId)">Cancel</a></li>
                                     }
                                     else
                                     {
-                                        <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.CollectionReceiptId">Print</a></li>
+                                        if (item.MultipleSIId != null)
+                                        {
+                                            <li><a asp-action="MultipleCollectionPrint" asp-route-id="@item.CollectionReceiptId" class="dropdown-item">Print</a></li>
+                                        }
+                                        else
+                                        {
+                                            <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.CollectionReceiptId">Print</a></li>
+                                        }
                                         <li><a class="dropdown-item" onclick="confirmVoid(@item.CollectionReceiptId)">Void</a></li>
                                     }
                                 </ul>
                             </div>
-
+                            @await Html.PartialAsync("_MultipleCollectionPreview", item)
                             @await Html.PartialAsync("_Preview", item)
                         </td>
                     </tr>

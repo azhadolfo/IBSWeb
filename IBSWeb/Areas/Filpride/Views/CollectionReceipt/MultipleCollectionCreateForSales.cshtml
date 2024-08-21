@@ -1,7 +1,7 @@
 ﻿@model FilprideCollectionReceipt
 
 @{
-    ViewData["Title"] = "Create Collection For Sales";
+    ViewData["Title"] = "Create Multiple Collection For Sales";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -58,22 +58,24 @@
                         </tbody>
                     </table>
                 </div>
+
                 <div class="col-8">
                     <div class="row mb-3">
                         <table style="border:dotted 1px;">
                             <thead class="m-2">
                                 <tr>
-                                    <th colspan="6" class="text-center py-4">SI AMOUNT</th>
+                                    <th colspan="6" class="text-center py-4">Invoice Details</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <th style="width:19%; padding-left:20px;">SI No's</th>
-                                    <th class="text-end" style="width:14%;">Gross</th>
-                                    <th class="text-end" style="width:14%;">Net of Vat</th>
-                                    <th class="text-end" style="width:14%;">Vat</th>
+                                    <th style="width:14%; padding-left:20px;">SI No's</th>
+                                    <th class="text-end" style="width:14%;">Invoice Amount</th>
+                                    <th class="text-end" style="width:14%;">WVat</th>
                                     <th class="text-end" style="width:14%;">EWT</th>
-                                    <th class="text-end" style="width:25%; padding-right:20px;">Net of EWT</th>
+                                    <th class="text-end" style="width:14%; padding-right:20px;">Less EWT/WVat</th>
+                                    <th class="text-end" style="width:14%;">Amount Paid</th>
+                                    <th class="text-end" style="width:14%; padding-right:20px;">Balance</th>
                                 </tr>
                             </tbody>
                             <tbody class="siAmount">
@@ -85,83 +87,17 @@
                                 <tr>
                                     <td class="text-end fw-bold p-3">Grand Total:</td>
                                     <td class="text-end" id="grandTotalRRAmount">0.00</td>
-                                    <td class="text-end" id="grandTotalNetAmount">0.00</td>
                                     <td class="text-end" id="grandTotalVatAmount">0.00</td>
                                     <td class="text-end" id="grandTotalEWTAmount">0.00</td>
-                                    <td class="text-end" id="grandTotalNetOfEWT" style="padding-right:20px;">0.00</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="row mb-3">
-                        <table style="border:dotted 1px;">
-                            <thead class="m-2">
-                                <tr>
-                                    <th colspan="6" class="text-center py-4">PAYMENT</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th style="width:19%; padding-left:20px;">SI No's</th>
-                                    <th class="text-end" style="width:14%;">Gross</th>
-                                    <th class="text-end" style="width:14%;">Net of Vat</th>
-                                    <th class="text-end" style="width:14%;">Vat</th>
-                                    <th class="text-end" style="width:14%;">EWT</th>
-                                    <th class="text-end" style="width:25%; padding-right:20px;">Net of EWT</th>
-                                </tr>
-                            </tbody>
-                            <tbody class="payment">
-                            </tbody>
-                            <tbody>
-                                <tr style="border-bottom:double;">
-                                    <td class="pt-1"></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-end fw-bold p-3">Grand Total:</td>
-                                    <td class="text-end" id="grandTotalPayment">0.00</td>
-                                    <td class="text-end" id="grandTotalNetOfVatPayment">0.00</td>
-                                    <td class="text-end" id="grandTotalVatPayment">0.00</td>
-                                    <td class="text-end" id="grandTotalEWTPayment">0.00</td>
-                                    <td class="text-end" id="grandTotalNetOfEWTPayment" style="padding-right:20px;">0.00</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="row mb-3">
-                        <table style="border:dotted 1px;">
-                            <thead class="m-2">
-                                <tr>
-                                    <th colspan="6" class="text-center py-4">REMAINING BALANCE</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th style="width:19%; padding-left:20px;">SI No's</th>
-                                    <th class="text-end" style="width:14%;">Gross</th>
-                                    <th class="text-end" style="width:14%;">Net of Vat</th>
-                                    <th class="text-end" style="width:14%;">Vat</th>
-                                    <th class="text-end" style="width:14%;">EWT</th>
-                                    <th class="text-end" style="width:25%; padding-right:20px;">Net of EWT</th>
-                                </tr>
-                            </tbody>
-                            <tbody class="balance">
-                            </tbody>
-                            <tbody>
-                                <tr style="border-bottom:double;">
-                                    <td class="pt-1"></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-end fw-bold p-3">Grand Total:</td>
-                                    <td class="text-end" id="grandTotal">0.00</td>
-                                    <td class="text-end" id="grandTotalNetOfVat">0.00</td>
-                                    <td class="text-end" id="grandTotalVat">0.00</td>
-                                    <td class="text-end" id="grandTotalEWT">0.00</td>
-                                    <td class="text-end" id="grandTotalRRAmountNetOfEWT" style="padding-right:20px;">0.00</td>
+                                    <td class="text-end" id="grandTotalNetOfEWT">0.00</td>
+                                    <td class="text-end" id="grandTotalAmountPaid">0.00</td>
+                                    <td class="text-end" id="grandTotalBalance" style="padding-right:20px;">0.00</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
+
                 <table class="table-bordered w-100">
                     <tbody>
                         <tr>
@@ -293,209 +229,227 @@
 
 
 
-    @section Scripts {
-        @{
-            await Html.RenderPartialAsync("_ValidationScriptsPartial");
-        }
-        <script>
-            $(document).ready(function () {
-                $("#CustomerId").change(function () {
-                    var customerNo = $(this).val();
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            $("#CustomerId").change(function () {
+                var customerNo = $(this).val();
 
-                    $.ajax({
-                        url: "/Filpride/CollectionReceipt/GetSalesInvoices",
-                        type: "GET",
-                        data: { customerNo: customerNo },
-                        success: function (data) {
+                $.ajax({
+                    url: "/Filpride/CollectionReceipt/GetSalesInvoices",
+                    type: "GET",
+                    data: { customerNo: customerNo },
+                    success: function (data) {
 
-                            $("#invoices").empty();
+                        $("#invoices").empty();
 
-                            // Check if data is an array and not null
-                            if (Array.isArray(data) && data.length > 0) {
+                        // Check if data is an array and not null
+                        if (Array.isArray(data) && data.length > 0) {
 
-                                $("#invoices").append('<option>');
+                            $("#invoices").append('<option>');
 
-                                // Iterate over the array and append options
-                                $.each(data, function (index, item) {
-                                    $("#invoices").append($('<option>', {
-                                        value: item.value,   // Use the correct property for value
-                                        text: item.text      // Use the correct property for text
-                                    }));
-                                });
-                            } else {
-                                // Handle the case where data is null or empty
-                                console.log("No sales invoices found for the selected customer.");
-                            }
+                            // Iterate over the array and append options
+                            $.each(data, function (index, item) {
+                                $("#invoices").append($('<option>', {
+                                    value: item.value,   // Use the correct property for value
+                                    text: item.text      // Use the correct property for text
+                                }));
+                            });
+                        } else {
+                            // Handle the case where data is null or empty
+                            console.log("No sales invoices found for the selected customer.");
                         }
-                    });
+                    }
                 });
             });
-        </script>
+        });
+    </script>
 
-        <script>
-            function saveAccountingEntry() {
-                // Get the values from the modal inputs
-                var accountTitle = $("#AccountTitle").val();
-                var accountTitleText = $("#AccountTitle option:selected").text();
-                var accountAmount = parseFloat($("#AccountAmount").val().replace(/,/g, '')) || 0.00;
+    <script>
+        function saveAccountingEntry() {
+            // Get the values from the modal inputs
+            var accountTitle = $("#AccountTitle").val();
+            var accountTitleText = $("#AccountTitle option:selected").text();
+            var accountAmount = parseFloat($("#AccountAmount").val().replace(/,/g, '')) || 0.00;
 
-                if (accountAmount === 0) {
-                    event.preventDefault();
-                    alert('Please input amount');
-                    return;
-                } else if (accountTitleText === "") {
-                    event.preventDefault();
-                    alert('Please select Account No.!');
-                    return;
-                }
+            if (accountAmount === 0) {
+                event.preventDefault();
+                alert('Please input amount');
+                return;
+            } else if (accountTitleText === "") {
+                event.preventDefault();
+                alert('Please select Account No.!');
+                return;
+            }
 
-                // Format debit and credit values with commas and two decimal places
-                var formattedAmount = accountAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            // Format debit and credit values with commas and two decimal places
+            var formattedAmount = accountAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-                // Create a new row with the text only and a hidden input for the value
-                var newRow = `<tr>
-                                                                    <td>
-                                                                        <input type='hidden' name='accountTitle' value='${accountTitle}' />
-                                                                        <input type='text' name='accountTitleText' value='${accountTitleText}' style='border:none' readonly />
+            // Create a new row with the text only and a hidden input for the value
+            var newRow = `<tr>
+                                                                <td>
+                                                                    <input type='hidden' name='accountTitle' value='${accountTitle}' />
+                                                                    <input type='text' name='accountTitleText' value='${accountTitleText}' style='border:none' readonly />
+                                                                </td>
+                                                                            <td><input type='text' name='accountAmount' value='${formattedAmount}' style='border:none' readonly /></td>
+                                                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                                             </tr>`;
+
+            // Append the new row to the table body
+            $("#accountingEntriesBody").append(newRow);
+
+            // Close the modal
+            $("#AddAccEntry").modal("hide");
+
+            // Clear the modal inputs
+            $("#AccountTitle").val(""); // Reset the select to its default state
+            $("#AccountTitle").trigger("change"); // Trigger change event for the select
+            $("#AccountAmount").val("");
+        }
+
+
+        // Function to remove the corresponding row
+        function removeRow(button) {
+            // Get the reference to the button's parent row and remove it
+            $(button).closest("tr").remove();
+        }
+
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $("#invoices").change(function () {
+                var siSelect = $("#invoices").val();
+
+                $(".siList").empty();
+                $(".siAmount").empty();
+
+                siSelect.forEach(function (siNo) {
+                    var siSelectText = $("#invoices option[value='" + siNo + "']").text();
+                    var newRow = `<tr>
+                                                    <td>
+                                                        <input type='hidden' value='${siNo}' />
+                                                        <input type='text' value='${siSelectText}' style='border:none' readonly />
+                                                    </td>
+                                                        <td><input type='text' name='SIMultipleAmount' class='inputAmount money paymentAmount_${siNo}'/></td>
+                                                </tr>`;
+
+                    var siAmount = `<tr id='row_${siNo}'>
+                                                                    <td style='padding-left:20px;'>
+                                                                        <input type='hidden' value='${siNo}' />
+                                                                        <input type='text' value='${siSelectText}' style='border:none' readonly />
                                                                     </td>
-                                                                                <td><input type='text' name='accountAmount' value='${formattedAmount}' style='border:none' readonly /></td>
-                                                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                                                 </tr>`;
+                                                                    <td class="text-end" id='amount_${siNo}'>0.00</td>
+                                                                    <td class="text-end" id='vatAmount_${siNo}'>0.00</td>
+                                                                    <td class="text-end" id='ewtAmount_${siNo}'>0.00</td>
+                                                                    <td class="text-end" id='siAmountNetOfEWT_${siNo}'>0.00</td>
+                                                                    <td class="text-end" id='amountPaid_${siNo}'>0.00</td>
+                                                                    <td class="text-end" id='balance_${siNo}' style="padding-right:20px;">0.00</td>
+                                                                </tr>`;
 
-                // Append the new row to the table body
-                $("#accountingEntriesBody").append(newRow);
-
-                // Close the modal
-                $("#AddAccEntry").modal("hide");
-
-                // Clear the modal inputs
-                $("#AccountTitle").val(""); // Reset the select to its default state
-                $("#AccountTitle").trigger("change"); // Trigger change event for the select
-                $("#AccountAmount").val("");
-            }
+                    $(".siList").append(newRow);
+                    $(".siAmount").append(siAmount);
 
 
-            // Function to remove the corresponding row
-            function removeRow(button) {
-                // Get the reference to the button's parent row and remove it
-                $(button).closest("tr").remove();
-            }
-
-        </script>
-
-        <script>
-            // Function to handle invoice change event
-            function handleInvoiceChange() {
-                var siNos = $(".siNo").val();
-                console.log(siNos);
-                if (siNos != "") {
-                    siNos.forEach(function (siNo) {
-                        currentSiNo = siNo;
+                    if (siNo !== "") {
+                        // Make an AJAX request to get the balance based on the selected siNo
                         $.ajax({
-                            url: "/Filpride/CollectionReceipt/GetMultipleInvoiceDetails",
-                            type: "GET",
-                            data: {
-                                siNo: currentSiNo,
-                                isSales: true,      // or false based on your condition
-                            },
+                            url: "/Filpride/CollectionReceipt/MultipleInvoiceBalance",
+                            method: "GET",
+                            data: { siNo: siNo },
                             success: function (data) {
-                                console.log(data);
-                                // document.getElementById("amount").innerHTML = data.amount;
-                                // document.getElementById("amountPaid").innerHTML = data.amountPaid;
-                                // document.getElementById("balance").innerHTML = data.balance;
-                                // document.getElementById("ewt").innerHTML = data.ewt;
-                                // document.getElementById("wvat").innerHTML = data.wvat;
-                                // document.getElementById("total").innerHTML = data.total;
-                                var amount = data.amount;
-                                var amountPaid = data.amountPaid;
-                                var totalBalance = amount - amountPaid;
+                                if (data !== null) {
+                                    //compute / show existing SI
+                                    var gross = data.amount;
+                                    $("#amount_" + siNo).text(gross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                    var netAmount = gross / 1.12;
+                                    $("#netAmount_" + siNo).text(netAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                    var vatAmount = data.wvatAmount;
+                                    $("#vatAmount_" + siNo).text(vatAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                    var ewtAmount = data.ewtAmount;
+                                    $("#ewtAmount_" + siNo).text(ewtAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                    var siAmountNetOfEWT = gross - (ewtAmount + vatAmount);
+                                    $("#siAmountNetOfEWT_" + siNo).text(siAmountNetOfEWT.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                    var amountPaid = data.amountPaid
+                                    $("#amountPaid_" + siNo).text(amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                    var balance = data.balance
+                                    $("#balance_" + siNo).text(balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                    $(".paymentAmount_" + siNo).val(balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
-                                $(".paymentAmount_" + siNo).val(totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                    // Recalculate grand total of existing SI
+                                    calculateGrandTotalRRAmount()
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error('Error fetching balance:', error);
                             }
                         });
-                    });
-                }
+                    }
+
+                });
+                calculateGrandTotalRRAmount()
+            });
+
+            function calculateGrandTotalRRAmount() {
+                var grandTotalRRAmount = 0;
+                var grandTotalNetAmount = 0;
+                var grandTotalVatAmount = 0;
+                var grandTotalEWTAmount = 0;
+                var grandTotalNetOfEWT = 0;
+                var grandTotalAmountPaid = 0;
+                var grandTotalBalance = 0;
+
+                $(".siAmount tr").each(function () {
+                    var amount = $(this).find("[id^='amount_']").text();
+                    var totalAmount = parseFloat(amount.replace(/,/g, '')) || 0;
+                    grandTotalRRAmount += totalAmount;
+
+                    var netAmount = $(this).find("[id^='netAmount_']").text();
+                    var totalNetAmount = parseFloat(netAmount.replace(/,/g, '')) || 0;
+                    grandTotalNetAmount += totalNetAmount;
+
+                    var vatAmount = $(this).find("[id^='vatAmount_']").text();
+                    var totalVatAmount = parseFloat(vatAmount.replace(/,/g, '')) || 0;
+                    grandTotalVatAmount += totalVatAmount;
+
+                    var ewtAmount = $(this).find("[id^='ewtAmount_']").text();
+                    var totalEwtAmount = parseFloat(ewtAmount.replace(/,/g, '')) || 0;
+                    grandTotalEWTAmount += totalEwtAmount;
+
+                    var rrAmountNetOfEWT = $(this).find("[id^='siAmountNetOfEWT_']").text();
+                    var totalAmountNetOfEWT = parseFloat(rrAmountNetOfEWT.replace(/,/g, '')) || 0;
+                    grandTotalNetOfEWT += totalAmountNetOfEWT;
+
+                    var amountPaid = $(this).find("[id^='amountPaid_']").text();
+                    var totalAmountPaid = parseFloat(amountPaid.replace(/,/g, '')) || 0;
+                    grandTotalAmountPaid += totalAmountPaid;
+
+                    var balance = $(this).find("[id^='balance_']").text();
+                    var totalBalance = parseFloat(balance.replace(/,/g, '')) || 0;
+                    grandTotalBalance += totalBalance;
+                });
+
+                // Update grand total in the table
+                $("#grandTotalRRAmount").text(grandTotalRRAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $("#grandTotalNetAmount").text(grandTotalNetAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $("#grandTotalVatAmount").text(grandTotalVatAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $("#grandTotalEWTAmount").text(grandTotalEWTAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $("#grandTotalNetOfEWT").text(grandTotalNetOfEWT.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $("#grandTotalAmountPaid").text(grandTotalAmountPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $("#grandTotalBalance").text(grandTotalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
             }
 
-            $(document).ready(function () {
-                // Call the handleInvoiceChange function on page load
-                handleInvoiceChange();
-
-                // Attach event listener to invoice dropdown
-                $(".siNo").change(function () {
-                    // Call the handleInvoiceChange function when the dropdown changes
-                    handleInvoiceChange();
-                });
-            });
-
-            $(document).ready(function () {
-                $("#invoices").change(function () {
-                    var siSelect = $("#invoices").val();
-
-                    $(".siList").empty();
-                    $(".siAmount").empty();
-                    $(".payment").empty();
-                    $(".balance").empty();
-
-                    siSelect.forEach(function (siNo) {
-                        var siSelectText = $("#invoices option[value='" + siNo + "']").text();
-                        var newRow = `<tr>
-                                                        <td>
-                                                            <input type='hidden' value='${siNo}' />
-                                                            <input type='text' value='${siSelectText}' style='border:none' readonly />
-                                                        </td>
-                                                            <td><input type='text' name='SIMultipleAmount' class='inputAmount money paymentAmount_${siNo}'/></td>
-                                                    </tr>`;
-
-                        var siAmount = `<tr id='row_${siNo}'>
-                                                                        <td style='padding-left:20px;'>
-                                                                            <input type='hidden' value='${siNo}' />
-                                                                            <input type='text' value='${siSelectText}' style='border:none' readonly />
-                                                                        </td>
-                                                                        <td class="text-end" id='amount_${siNo}'>0.00</td>
-                                                                        <td class="text-end" id='netAmount_${siNo}'>0.00</td>
-                                                                        <td class="text-end" id='vatAmount_${siNo}'>0.00</td>
-                                                                        <td class="text-end" id='ewtAmount_${siNo}'>0.00</td>
-                                                                        <td class="text-end" id='siAmountNetOfEWT_${siNo}' style="padding-right:20px;">0.00</td>
-                                                                    </tr>`;
-                        var payment = `<tr id='row_${siNo}'>
-                                                                    <td style='padding-left:20px;'>
-                                                                        <input type='hidden' value='${siNo}' />
-                                                                        <input type='text' value='${siSelectText}' style='border:none' readonly />
-                                                                    </td>
-                                                                    <td class="text-end" id='payment_${siNo}'>0.00</td>
-                                                                    <td class="text-end" id='netOfVatPayment_${siNo}'>0.00</td>
-                                                                    <td class="text-end" id='vatPayment_${siNo}'>0.00</td>
-                                                                    <td class="text-end" id='ewtPayment_${siNo}'>0.00</td>
-                                                                    <td class="text-end" id='rrAmountNetOfEWTPayment_${siNo}' style="padding-right:20px;">0.00</td>
-                                                                </tr>`;
-                        var balance = `<tr id='row_${siNo}'>
-                                                                    <td style='padding-left:20px;'>
-                                                                        <input type='hidden' value='${siNo}' />
-                                                                        <input type='text' value='${siSelectText}' style='border:none' readonly />
-                                                                    </td>
-                                                                    <td class="text-end" id='balance_${siNo}'>0.00</td>
-                                                                    <td class="text-end" id='NetOfVat_${siNo}'>0.00</td>
-                                                                    <td class="text-end" id='Vat_${siNo}'>0.00</td>
-                                                                    <td class="text-end" id='EWT_${siNo}'>0.00</td>
-                                                                    <td class="text-end" id='RRAmountNetOfEWT_${siNo}' style="padding-right:20px;">0.00</td>
-                                                                </tr>`;
-
-                        $(".siList").append(newRow);
-                        $(".siAmount").append(siAmount);
-                        $(".payment").append(payment);
-                        $(".balance").append(balance);
-
-                    });
-                });
-            });
-        </script>
-        <script>
-            $('#AccountTitle').select2({
-                dropdownParent: $('#AddAccEntry')
-            });
-        </script>
-        <script>
-            setTransactionDate();
-        </script>
-    }
+        });
+    </script>
+    <script>
+        $('#AccountTitle').select2({
+            dropdownParent: $('#AddAccEntry')
+        });
+    </script>
+    <script>
+        setTransactionDate();
+    </script>
+}
