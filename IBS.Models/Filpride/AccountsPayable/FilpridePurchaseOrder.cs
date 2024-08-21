@@ -81,7 +81,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         #region--Select List Item
 
         [NotMapped]
-        public List<ReceivingReport>? RrList { get; set; }
+        public List<FilprideReceivingReport>? RrList { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? Suppliers { get; set; }

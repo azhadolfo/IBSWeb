@@ -80,8 +80,6 @@ namespace IBS.DataAccess.Data
 
         #region--FILPRIDE
 
-        public DbSet<FilprideReceivingReport> FilprideReceivingReports { get; set; }
-
         public DbSet<FilprideCustomerOrderSlip> FilprideCustomerOrderSlips { get; set; }
 
         public DbSet<FilprideDeliveryReceipt> FilprideDeliveryReceipts { get; set; }
@@ -133,7 +131,7 @@ namespace IBS.DataAccess.Data
         public DbSet<FilprideJournalVoucherHeader> FilprideJournalVoucherHeaders { get; set; }
         public DbSet<FilprideJournalVoucherDetail> FilprideJournalVoucherDetails { get; set; }
         public DbSet<FilpridePurchaseOrder> FilpridePurchaseOrders { get; set; }
-        public DbSet<ReceivingReport> ReceivingReports { get; set; }
+        public DbSet<FilprideReceivingReport> FilprideReceivingReports { get; set; }
 
         #endregion
 
@@ -412,21 +410,21 @@ namespace IBS.DataAccess.Data
             //    .HasConversion<int>();
             //});
 
-            builder.Entity<FilprideReceivingReport>(rr =>
-            {
-                rr.HasIndex(rr => rr.ReceivingReportNo).IsUnique();
-                rr.HasIndex(rr => rr.Date);
+            //builder.Entity<FilprideReceivingReport>(rr =>
+            //{
+            //    rr.HasIndex(rr => rr.ReceivingReportNo).IsUnique();
+            //    rr.HasIndex(rr => rr.Date);
 
-                rr.HasOne(rr => rr.DeliveryReceipt)
-                .WithMany()
-                .HasForeignKey(rr => rr.DeliveryReceiptId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //    rr.HasOne(rr => rr.DeliveryReceipt)
+            //    .WithMany()
+            //    .HasForeignKey(rr => rr.DeliveryReceiptId)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
-                rr.HasOne(rr => rr.Customer)
-                .WithMany()
-                .HasForeignKey(rr => rr.CustomerId)
-                .OnDelete(DeleteBehavior.Restrict);
-            });
+            //    rr.HasOne(rr => rr.Customer)
+            //    .WithMany()
+            //    .HasForeignKey(rr => rr.CustomerId)
+            //    .OnDelete(DeleteBehavior.Restrict);
+            //});
 
             builder.Entity<FilprideCustomerOrderSlip>(cos =>
             {

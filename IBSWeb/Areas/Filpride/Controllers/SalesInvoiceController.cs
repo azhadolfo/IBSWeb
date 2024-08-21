@@ -207,7 +207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = p.PurchaseOrderNo
                 })
                 .ToListAsync(cancellationToken);
-                var receivingReports = await _dbContext.ReceivingReports
+                var receivingReports = await _dbContext.FilprideReceivingReports
                     .Where(rr => rr.POId == salesInvoice.PurchaseOrderId && rr.ReceivedDate != null)
                     .Select(rr => new
                     {
@@ -673,7 +673,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public IActionResult GetRRs(int purchaseOrderId)
         {
-            var rrs = _dbContext.ReceivingReports
+            var rrs = _dbContext.FilprideReceivingReports
                               .Where(rr => rr.POId == purchaseOrderId && rr.ReceivedDate != null)
                               .Select(rr => new
                               {

@@ -1,7 +1,8 @@
-﻿@model ReceivingReportViewModel
+﻿@model FilprideReceivingReport
 
 @{
     ViewData["Title"] = "Edit Receiving Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="card shadow border-0 mt-4">
@@ -13,93 +14,136 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" class="row">
-            <div class="border-2 p-3">
-                <div asp-validation-summary="ModelOnly"></div>
-                <input asp-for="ReceivingReportId" type="hidden" />
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-                    <label asp-for="Date">Date<span class="required">*</span></label>
+        <form asp-action="Edit">
+            <input asp-for="ReceivingReportId" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            @if (Model.PostedBy != null)
+            {
+                <div class="form-group mb-3">
+                    <label asp-for="Date" class="control-label">Date</label>
+                    <input asp-for="Date" type="date" class="form-control" readonly tabindex="-1" />
                     <span asp-validation-for="Date" class="text-danger"></span>
                 </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Customer List<span class="required">*</span></label>
-                    <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select customer</option>
-                    </select>
-                    <span asp-validation-for="CustomerId" class="text-danger"></span>
+            }
+            else
+            {
+                <div class="form-group mb-3">
+                    <label asp-for="Date" class="control-label">Date</label>
+                    <input asp-for="Date" type="date" class="form-control" />
+                    <span asp-validation-for="Date" class="text-danger"></span>
                 </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">DR List<span class="required">*</span></label>
-                    <select asp-for="DeliveryReceiptId" asp-items="@Model.DeliveryReceipts" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select supplier</option>
-                    </select>
-                    <span asp-validation-for="DeliveryReceiptId" class="text-danger"></span>
-                </div>
-                <fieldset class="border p-2 py-2">
-                    <legend class="w-auto px-2">Supplier Details</legend>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="SupplierSiNo" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierSiNo">SI#</label>
-                        <span asp-validation-for="SupplierSiNo" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="SupplierSiDate" type="date" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierSiDate">SI Date</label>
-                        <span asp-validation-for="SupplierSiDate" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="SupplierDrNo" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierDrNo">DR#</label>
-                        <span asp-validation-for="SupplierDrNo" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="SupplierDrDate" type="date" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierDrDate">DR Date</label>
-                        <span asp-validation-for="SupplierDrDate" class="text-danger"></span>
-                    </div>
-                </fieldset>
+            }
 
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="OtherReference" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="OtherReference">Other Reference<span class="required">*</span></label>
-                    <span asp-validation-for="OtherReference" class="text-danger"></span>
+            @if (Model.PostedBy != null)
+            {
+                <div class="form-group mb-3">
+                    <label asp-for="POId" class="control-label">Suppliers PO No.</label>
+                    <select asp-for="POId" class="form-control js-select2" asp-items="@Model.PurchaseOrders" disabled></select>
+                    <input type="hidden" asp-for="POId" />
                 </div>
+            }
+            else
+            {
+                <div class="form-group mb-3">
+                    <label asp-for="POId" class="control-label">Suppliers PO No.</label>
+                    <select asp-for="POId" class="form-control js-select2" asp-items="@Model.PurchaseOrders"></select>
+                    <input type="hidden" asp-for="POId" />
+                </div>
+            }
 
-                <div class="row py-2">
-                    <div class="form-floating col-6">
-                        <input asp-for="QuantityDelivered" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="QuantityDelivered" class="ms-2">Quantity Delivered<span class="required">*</span></label>
-                        <span asp-validation-for="QuantityDelivered" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-6">
-                        <input asp-for="QuantityReceived" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="QuantityReceived" class="ms-2">Quantity Received<span class="required">*</span></label>
-                        <span asp-validation-for="QuantityReceived" class="text-danger"></span>
-                    </div>
+            @if (Model.PostedBy != null)
+            {
+                <div class="form-floating mb-3">
+                    <input asp-for="ReceivedDate" type="date" class="form-control" placeholder="" readonly tabindex="-1" />
+                    <label asp-for="ReceivedDate" class="control-label">Received Date</label>
+                    <span asp-validation-for="ReceivedDate" class="text-danger"></span>
+                </div>
+            }
+            else
+            {
+                <div class="form-floating mb-3">
+                    <input asp-for="ReceivedDate" type="date" class="form-control" placeholder="" />
+                    <label asp-for="ReceivedDate" class="control-label">Received Date</label>
+                    <span asp-validation-for="ReceivedDate" class="text-danger"></span>
+                </div>
+            }
+
+            <fieldset class="border p-2 py-2 mb-3">
+                <legend class="w-auto px-2">Supplier Details</legend>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="SupplierInvoiceNumber" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="SupplierInvoiceNumber">SI#</label>
+                    <span asp-validation-for="SupplierInvoiceNumber" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                    <label asp-for="Freight">Freight<span class="required">*</span></label>
-                    <span asp-validation-for="Freight" class="text-danger"></span>
+                    <input asp-for="SupplierInvoiceDate" type="date" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="SupplierInvoiceDate">SI Date</label>
+                    <span asp-validation-for="SupplierInvoiceDate" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="TotalFreight" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                    <label asp-for="TotalFreight">Total Freight</label>
-                    <span asp-validation-for="TotalFreight" class="text-danger"></span>
+                    <input asp-for="SupplierDrNo" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="SupplierDrNo">DR#</label>
+                    <span asp-validation-for="SupplierDrNo" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
-                    <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
-                    <span asp-validation-for="Remarks" class="text-danger"></span>
+                    <input asp-for="SupplierDrDate" type="date" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="SupplierDrDate">DR Date</label>
+                    <span asp-validation-for="SupplierDrDate" class="text-danger"></span>
                 </div>
-                <div class="row pt-2">
-                    <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control">Save</button>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
-                    </div>
+            </fieldset>
+            <div class="form-floating mb-3">
+                <input asp-for="WithdrawalCertificate" class="form-control" placeholder="" />
+                <label asp-for="WithdrawalCertificate" class="control-label">WC Certificate</label>
+                <span asp-validation-for="WithdrawalCertificate" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="TruckOrVessels" class="form-control" placeholder="" />
+                <label asp-for="TruckOrVessels" class="control-label">Truck/Vessels<span class="required">*</span></label>
+                <span asp-validation-for="TruckOrVessels" class="text-danger"></span>
+            </div>
+            @if (Model.PostedBy != null)
+            {
+                <div class="form-group mb-3">
+                    <label asp-for="QuantityDelivered" class="control-label">Qty Delivered</label>
+                    <input asp-for="QuantityDelivered" class="form-control" readonly tabindex="-1" />
+                    <input type="hidden" asp-for="QuantityDelivered" />
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="QuantityReceived" class="control-label">Qty Received</label>
+                    <input asp-for="QuantityReceived" class="form-control" readonly tabindex="-1" />
+                    <input type="hidden" asp-for="QuantityReceived" />
+                </div>
+            }
+            else
+            {
+                <div class="form-group mb-3">
+                    <label asp-for="QuantityDelivered" class="control-label">Qty Delivered</label>
+                    <input asp-for="QuantityDelivered" class="form-control" />
+                    <input type="hidden" asp-for="QuantityDelivered" />
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="QuantityReceived" class="control-label">Qty Received</label>
+                    <input asp-for="QuantityReceived" class="form-control" />
+                    <input type="hidden" asp-for="QuantityReceived" />
+                </div>
+            }
+            <div class="form-floating mb-3">
+                <input asp-for="OtherRef" class="form-control" placeholder="" />
+                <label asp-for="OtherRef" class="control-label ms-2"></label>
+            </div>
+            <div class="form-floating mb-3">
+                <textarea asp-for="Remarks" class="form-control" placeholder="" style="height: 100px"></textarea>
+                <label asp-for="Remarks" class="control-label ms-2">Remarks<span class="required">*</span></label>
+                <span asp-validation-for="Remarks" class="text-danger"></span>
+            </div>
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control">Save</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                 </div>
             </div>
         </form>
@@ -111,19 +155,6 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const quantityReceivedInput = document.getElementById('QuantityReceived');
-            const freightInput = document.getElementById('Freight');
-            const totalFreightInput = document.getElementById('TotalFreight');
-
-            function updateTotalFreight() {
-                const quantityReceived = parseFloat(quantityReceivedInput.value) || 0;
-                const freight = parseFloat(freightInput.value) || 0;
-                totalFreightInput.value = (quantityReceived * freight).toFixed(2);
-            }
-
-            quantityReceivedInput.addEventListener('input', updateTotalFreight);
-            freightInput.addEventListener('input', updateTotalFreight);
-        });
+        setTransactionDate();
     </script>
 }

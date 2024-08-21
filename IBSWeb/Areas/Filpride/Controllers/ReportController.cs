@@ -232,7 +232,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction("PurchaseBook");
             }
 
-            IEnumerable<ReceivingReport> receivingReport = await _unitOfWork.FilprideReport.GetReceivingReportAsync(dateFrom, dateTo, selectedFiltering, companyClaims);
+            IEnumerable<FilprideReceivingReport> receivingReport = await _unitOfWork.FilprideReport.GetReceivingReportAsync(dateFrom, dateTo, selectedFiltering, companyClaims);
             return View(receivingReport);
         }
 
@@ -248,7 +248,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var po = _dbContext
-                 .ReceivingReports
+                 .FilprideReceivingReports
                  .Include(rr => rr.PurchaseOrder)
                  .ThenInclude(po => po.Supplier)
                  .Include(rr => rr.PurchaseOrder)

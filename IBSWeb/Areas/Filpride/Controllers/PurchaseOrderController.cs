@@ -44,7 +44,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var po in purchaseOrders)
             {
-                po.RrList = await _dbContext.ReceivingReports
+                po.RrList = await _dbContext.FilprideReceivingReports
                     .Where(rr => rr.Company == companyClaims && rr.PONo == po.PurchaseOrderNo)
                     .ToListAsync(cancellationToken);
             }
@@ -165,7 +165,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || _dbContext.ReceivingReports == null)
+            if (id == null || _dbContext.FilprideReceivingReports == null)
             {
                 return NotFound();
             }

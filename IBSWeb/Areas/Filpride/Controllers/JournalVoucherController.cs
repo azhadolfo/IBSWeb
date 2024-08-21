@@ -286,7 +286,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             //    {
             //        var rrValue = header.RRNo[i];
 
-            //        var rr = await _dbContext.ReceivingReports
+            //        var rr = await _dbContext.FilprideReceivingReports
             //                    .FirstOrDefaultAsync(p => p.RRNo == rrValue);
 
             //        siArray[i] = rr.SupplierInvoiceNumber;
@@ -476,7 +476,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
             var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
             var poIds = _dbContext.FilpridePurchaseOrders.Where(model => model.Company == companyClaims && existingHeaderModel.CheckVoucherHeader.PONo.Contains(model.PurchaseOrderNo)).Select(model => model.PurchaseOrderId).ToArray();
-            var rrIds = _dbContext.ReceivingReports.Where(model => model.Company == companyClaims && existingHeaderModel.CheckVoucherHeader.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
+            var rrIds = _dbContext.FilprideReceivingReports.Where(model => model.Company == companyClaims && existingHeaderModel.CheckVoucherHeader.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
 
             var coa = await _dbContext.ChartOfAccounts
                         .Where(coa => !new[] { "2010102", "2010101", "1010101" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && coa.Level == 4 || coa.Level == 5)

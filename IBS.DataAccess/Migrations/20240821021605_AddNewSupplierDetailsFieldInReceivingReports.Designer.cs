@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240821021605_AddNewSupplierDetailsFieldInReceivingReports")]
+    partial class AddNewSupplierDetailsFieldInReceivingReports
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -475,7 +478,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_purchase_orders", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideReceivingReport", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.ReceivingReport", b =>
                 {
                     b.Property<int>("ReceivingReportId")
                         .ValueGeneratedOnAdd()
@@ -640,12 +643,12 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("withdrawal_certificate");
 
                     b.HasKey("ReceivingReportId")
-                        .HasName("pk_filpride_receiving_reports");
+                        .HasName("pk_receiving_reports");
 
                     b.HasIndex("POId")
-                        .HasDatabaseName("ix_filpride_receiving_reports_po_id");
+                        .HasDatabaseName("ix_receiving_reports_po_id");
 
-                    b.ToTable("filpride_receiving_reports", (string)null);
+                    b.ToTable("receiving_reports", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideCollectionReceipt", b =>
@@ -2373,6 +2376,173 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_filpride_offsettings");
 
                     b.ToTable("filpride_offsettings", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideReceivingReport", b =>
+                {
+                    b.Property<int>("ReceivingReportId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("receiving_report_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReceivingReportId"));
+
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount_paid");
+
+                    b.Property<string>("CanceledBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("canceled_by");
+
+                    b.Property<DateTime?>("CanceledDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_date");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<int>("DeliveryReceiptId")
+                        .HasColumnType("integer")
+                        .HasColumnName("delivery_receipt_id");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<decimal>("GainOrLoss")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("gain_or_loss");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_paid");
+
+                    b.Property<bool>("IsPrinted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_printed");
+
+                    b.Property<decimal>("NetOfTaxAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("net_of_tax_amount");
+
+                    b.Property<decimal>("NetOfVatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("net_of_vat_amount");
+
+                    b.Property<string>("OtherReference")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("other_reference");
+
+                    b.Property<DateTime>("PaidDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_date");
+
+                    b.Property<string>("PostedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("posted_by");
+
+                    b.Property<DateTime?>("PostedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("posted_date");
+
+                    b.Property<decimal>("QuantityDelivered")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantity_delivered");
+
+                    b.Property<decimal>("QuantityReceived")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantity_received");
+
+                    b.Property<string>("ReceivingReportNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("receiving_report_no");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("remarks");
+
+                    b.Property<DateOnly?>("SupplierDrDate")
+                        .HasColumnType("date")
+                        .HasColumnName("supplier_dr_date");
+
+                    b.Property<string>("SupplierDrNo")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("supplier_dr_no");
+
+                    b.Property<DateOnly?>("SupplierSiDate")
+                        .HasColumnType("date")
+                        .HasColumnName("supplier_si_date");
+
+                    b.Property<string>("SupplierSiNo")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("supplier_si_no");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("total_amount");
+
+                    b.Property<decimal>("TotalFreight")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("total_freight");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vat_amount");
+
+                    b.Property<string>("VoidedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("voided_by");
+
+                    b.Property<DateTime?>("VoidedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_date");
+
+                    b.Property<string>("WithdrawalCertificate")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("withdrawal_certificate");
+
+                    b.HasKey("ReceivingReportId")
+                        .HasName("pk_filpride_receiving_reports");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_filpride_receiving_reports_customer_id");
+
+                    b.HasIndex("Date")
+                        .HasDatabaseName("ix_filpride_receiving_reports_date");
+
+                    b.HasIndex("DeliveryReceiptId")
+                        .HasDatabaseName("ix_filpride_receiving_reports_delivery_receipt_id");
+
+                    b.HasIndex("ReceivingReportNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_receiving_reports_receiving_report_no");
+
+                    b.ToTable("filpride_receiving_reports", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideBankAccount", b =>
@@ -5802,14 +5972,14 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideReceivingReport", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.ReceivingReport", b =>
                 {
                     b.HasOne("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", "PurchaseOrder")
                         .WithMany()
                         .HasForeignKey("POId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_filpride_receiving_reports_filpride_purchase_orders_po_id");
+                        .HasConstraintName("fk_receiving_reports_filpride_purchase_orders_po_id");
 
                     b.Navigation("PurchaseOrder");
                 });
@@ -6004,6 +6174,27 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("CustomerOrderSlip");
 
                     b.Navigation("Hauler");
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.FilprideReceivingReport", b =>
+                {
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_receiving_reports_filpride_customers_customer_id");
+
+                    b.HasOne("IBS.Models.Filpride.FilprideDeliveryReceipt", "DeliveryReceipt")
+                        .WithMany()
+                        .HasForeignKey("DeliveryReceiptId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_receiving_reports_filpride_delivery_receipts_deliv");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("DeliveryReceipt");
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseDetail", b =>
