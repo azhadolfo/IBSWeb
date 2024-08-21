@@ -112,9 +112,9 @@
                             <tr>
                                 <td colspan="2" class="text-start" style="padding-left:10px;">
                                     IN FULL/PARTIAL payment of:
-                                    @for (int i = 0; i < Model.MultipleSI.Length; i++)
+                                    @for (int i = 0; i < Model.MultipleSI?.Length; i++)
                                     {
-                                        var siNo = $"{Model.MultipleSI[i]}, ";
+                                        var siNo = $"{Model.MultipleSI?[i]}, ";
                                         @siNo
                                     }
                                 </td>
@@ -136,10 +136,10 @@
                                 <td class="text-center" style="width:33%">INVOICE #</td>
                                 <td class="text-center" style="width:33%">AMOUNT</td>
                             </tr>
-                            @for (int i = 0; i < Model.MultipleSI.Length; i++)
+                            @for (int i = 0; i < Model.MultipleSI?.Length; i++)
                             {
-                                var siAmount = $"{Model.SIMultipleAmount[i]}";
-                                var siNo = $"{Model.MultipleSI[i]}";
+                                var siAmount = $"{Model.SIMultipleAmount?[i]}";
+                                var siNo = $"{Model.MultipleSI?[i]}";
                                 var siDate = $"{Model.MultipleTransactionDate?[i]}";
                                 <tr class="text-center">
                                     <td style="width:33%">@siDate</td>
