@@ -140,5 +140,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
+
+        public DateOnly[]? MultipleTransactionDate { get; set; }
     }
 }
