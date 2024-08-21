@@ -204,9 +204,10 @@ Balance:        <span id="balance"></span>
             $(document).ready(function () {
                 $("#CustomerId").change(function () {
                     var customerNo = $(this).val();
+                    var url = '@Url.Action("GetSalesInvoices", "CollectionReceipt", new { area = "Filpride" })';
 
                     $.ajax({
-                        url: "/Filpride/CollectionReceipt/GetSalesInvoices",
+                        url: url,
                         type: "GET",
                         data: { customerNo: customerNo },
                         success: function (data) {

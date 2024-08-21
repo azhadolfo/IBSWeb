@@ -819,9 +819,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSalesInvoices(int customerNo, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var invoices = await _dbContext
                 .FilprideSalesInvoices
-                .Where(si => si.CustomerId == customerNo && !si.IsPaid && si.PostedBy != null)
+                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == customerNo && si.PostedBy != null)
                 .OrderBy(si => si.SalesInvoiceId)
                 .ToListAsync(cancellationToken);
 
