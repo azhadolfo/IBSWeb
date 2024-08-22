@@ -13,6 +13,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int PurchaseOrderId { get; set; }
 
+        [Display(Name = "PO No")]
         public string? PurchaseOrderNo { get; set; }
 
         [Required]
