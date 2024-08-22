@@ -4,6 +4,7 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -30,8 +31,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var drList = await _unitOfWork.FilprideDeliveryReceipt
-                .GetAllAsync(null, cancellationToken);
+                .GetAllAsync(dr => dr.Company == companyClaims, cancellationToken);
 
             return View(drList);
         }
@@ -73,6 +76,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Remarks = viewModel.Remarks,
                         Quantity = viewModel.Volume,
                         TotalAmount = viewModel.TotalAmount,
+                        Company = companyClaims,
                         CreatedBy = _userManager.GetUserName(User)
                     };
 
@@ -104,9 +108,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
+            if (id == null)
             {
                 return NotFound();
             }
@@ -116,7 +120,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
-                    .GetAsync(dr => dr.DeliveryReceiptNo == id, cancellationToken);
+                    .GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
 
                 if (existingRecord == null)
                 {
@@ -189,9 +193,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> Preview(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
+            if (id == null)
             {
                 return NotFound();
             }
@@ -199,7 +203,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
-                    .GetAsync(dr => dr.DeliveryReceiptNo == id, cancellationToken);
+                    .GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
 
                 if (existingRecord == null)
                 {
@@ -215,9 +219,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> Print(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
+            if (id == null)
             {
                 return NotFound();
             }
@@ -225,7 +229,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
-                    .GetAsync(cos => cos.DeliveryReceiptNo == id, cancellationToken);
+                    .GetAsync(cos => cos.DeliveryReceiptId == id, cancellationToken);
 
                 if (existingRecord == null)
                 {
@@ -247,9 +251,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> Post(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(int? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
+            if (id == null)
             {
                 return NotFound();
             }
@@ -257,7 +261,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
-                    .GetAsync(cos => cos.DeliveryReceiptNo == id, cancellationToken);
+                    .GetAsync(cos => cos.DeliveryReceiptId == id, cancellationToken);
 
                 if (existingRecord == null)
                 {
@@ -330,6 +334,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 RemainingVolume = cos.BalanceQuantity,
                 Price = cos.DeliveredPrice
             });
+        }
+
+        public async Task<IActionResult> Delivered(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAsync(cos => cos.DeliveryReceiptId == id, cancellationToken);
+
+            if (existingRecord == null)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                //create the automatic creation of rr
+
+                existingRecord.DeliveredDate = DateOnly.FromDateTime(DateTime.Now);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                TempData["success"] = "Delivery receipt is delivered";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex;
+                return RedirectToAction(nameof(Index));
+            }
         }
     }
 }

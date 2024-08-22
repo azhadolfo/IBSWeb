@@ -250,7 +250,7 @@
             }
 
             function validateVolume() {
-                var remainingVolume = parseFloat($("#RemainingVolume").val());
+                var remainingVolume = parseNumber($("#RemainingVolume").val());
                 var volume = parseFloat($("#Volume").val());
                 if (volume > remainingVolume) {
                     alert("Volume cannot exceed the remaining volume.");

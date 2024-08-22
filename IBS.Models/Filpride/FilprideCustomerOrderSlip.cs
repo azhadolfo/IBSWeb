@@ -98,5 +98,7 @@ namespace IBS.Models.Filpride
         [Column(TypeName = "date")]
         [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly? ExpirationDate { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }
