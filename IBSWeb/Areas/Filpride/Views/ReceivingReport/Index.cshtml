@@ -125,15 +125,6 @@
                                 </ul>
                             </div>
 
-                            @if (item.VoidedBy != null)
-                            {
-                                <span class="badge rounded-pill bg-danger">VOIDED</span>
-                            }
-                            else if (item.CanceledBy != null)
-                            {
-                                <span class="badge rounded-pill bg-warning">CANCELLED</span>
-                            }
-
                             @await Html.PartialAsync("_Preview", item)
                         </td>
                     </tr>

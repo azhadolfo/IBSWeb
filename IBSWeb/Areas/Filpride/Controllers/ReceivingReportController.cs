@@ -486,10 +486,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
 
-                    ///PENDING - leo
-                    //await _generalRepo.RemoveRecords<PurchaseJournalBook>(pb => pb.DocumentNo == model.RRNo, cancellationToken);
-                    //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.RRNo, cancellationToken);
-                    //await _generalRepo.RemoveRecords<Inventory>(i => i.Reference == model.RRNo, cancellationToken);
+                    await _unitOfWork.FilprideReceivingReportRepository.RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
+                    await _unitOfWork.FilprideReceivingReportRepository.RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
                     await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
                     await _unitOfWork.FilprideReceivingReportRepository.RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
                     model.QuantityReceived = 0;
