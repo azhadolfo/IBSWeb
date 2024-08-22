@@ -109,39 +109,50 @@
                             <span class="badge rounded-pill @if(status == "Posted") {<text>bg-info</text>} else if(status == "Voided") {<text>bg-danger</text>} else if(status == "Cancelled") {<text>bg-warning</text>}">@status</span>
                         </td>
                         <td class="text-center">
-                            <div class="dropdown">
+                            <div class="dropdown" style="@(item.VoidedBy != null || item.CanceledBy != null ? "display:none;" : "")">
                                 <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                     Actions
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                     @if (item.PostedBy == null)
                                     {
-                                        <li><a asp-action="Edit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
-                                        <li>
-                                            <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.CollectionReceiptId" data-bs-url="@Url.Action($"Preview/{item.CollectionReceiptId}")">
+                                        
+                                        if (item.MultipleSIId != null)
+                                        {
+                                            <li><a asp-action="MultipleCollectionEdit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
+                                            <li>
+                                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#PreviewMultipleSI-@item.CollectionReceiptId" data-bs-url="@Url.Action($"PreviewMultipleSI/{item.CollectionReceiptId}")">
                                                 Preview
-                                            </button>
-                                        </li>
+                                                </button>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li><a asp-action="Edit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
+                                            <li>
+                                                <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.CollectionReceiptId" data-bs-url="@Url.Action($"Preview/{item.CollectionReceiptId}")">
+                                                    Preview
+                                                </button>
+                                            </li>
+                                        }
                                         <li><a class="dropdown-item" onclick="confirmPost(@item.CollectionReceiptId)">Post</a></li>
                                         <li><a class="dropdown-item" onclick="confirmCancel(@item.CollectionReceiptId)">Cancel</a></li>
                                     }
                                     else
                                     {
-                                        <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.CollectionReceiptId">Print</a></li>
+                                        if (item.MultipleSIId != null)
+                                        {
+                                            <li><a asp-action="MultipleCollectionPrint" asp-route-id="@item.CollectionReceiptId" class="dropdown-item">Print</a></li>
+                                        }
+                                        else
+                                        {
+                                            <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.CollectionReceiptId">Print</a></li>
+                                        }
                                         <li><a class="dropdown-item" onclick="confirmVoid(@item.CollectionReceiptId)">Void</a></li>
                                     }
                                 </ul>
                             </div>
-
-                            @if (item.VoidedBy != null)
-                            {
-                                <span class="badge rounded-pill bg-danger">VOIDED</span>
-                            }
-                            else if (item.CanceledBy != null)
-                            {
-                                <span class="badge rounded-pill bg-warning">CANCELLED</span>
-                            }
-
+                            @await Html.PartialAsync("_MultipleCollectionPreview", item)
                             @await Html.PartialAsync("_Preview", item)
                         </td>
                     </tr>

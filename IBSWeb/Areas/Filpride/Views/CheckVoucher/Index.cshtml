@@ -76,7 +76,7 @@
                             <span class="badge rounded-pill @if(status == "Posted") {<text>bg-info</text>} else if(status == "Voided") {<text>bg-danger</text>} else if(status == "Cancelled") {<text>bg-warning</text>}">@status</span>
                         </td>
                         <td class="text-center">
-                            <div class="dropdown">
+                            <div class="dropdown" style="@(item.Header.VoidedBy != null || item.Header.CanceledBy != null ? "display:none;" : "")">
                                 <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                     Actions
                                 </button>
@@ -112,15 +112,6 @@
                                     }
                                 </ul>
                             </div>
-
-                            @if (item.Header.VoidedBy != null)
-                            {
-                                <span class="badge rounded-pill bg-danger">VOIDED</span>
-                            }
-                            else if (item.Header.CanceledBy != null)
-                            {
-                                <span class="badge rounded-pill bg-warning">CANCELLED</span>
-                            }
 
                             @await Html.PartialAsync("_Preview", item)
                         </td>

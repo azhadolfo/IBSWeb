@@ -157,9 +157,10 @@
 
                 var product = $("#ProductId option:selected").text().replace(/^\S+\s/, '');
                 $(".accountTitle").val("Inventory " + product);
-                if (product = "Biodiesel") {
+                console.log(product)
+                if (product = "BIODIESEL") {
                     $(".accountNumber").val("1010401");
-                } else if (product = "Econogas") {
+                } else if (product = "ECONOGAS") {
                     $(".accountNumber").val("1010402");
                 } else {
                     $(".accountNumber").val("1010403");
