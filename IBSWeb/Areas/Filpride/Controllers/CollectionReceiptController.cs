@@ -1151,9 +1151,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> Post(int itemId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == itemId, cancellationToken);
+            var model = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
             if (model != null)
             {
@@ -1510,9 +1510,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
-        public async Task<IActionResult> Void(int itemId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == itemId, cancellationToken);
+            var model = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
             if (model != null)
             {
@@ -1566,9 +1566,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
-        public async Task<IActionResult> Cancel(int itemId, string cancellationRemarks, CancellationToken cancellationToken)
+        public async Task<IActionResult> Cancel(int id, string cancellationRemarks, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideCollectionReceipts.FindAsync(itemId, cancellationToken);
+            var model = await _dbContext.FilprideCollectionReceipts.FindAsync(id, cancellationToken);
 
             if (model != null)
             {

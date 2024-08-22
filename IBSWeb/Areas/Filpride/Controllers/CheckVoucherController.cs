@@ -248,9 +248,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> Post(int cvId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var modelHeader = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(cvId, cancellationToken);
+            var modelHeader = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync();
 
             if (modelHeader != null)

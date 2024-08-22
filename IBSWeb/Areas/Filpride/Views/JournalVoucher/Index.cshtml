@@ -141,7 +141,7 @@
         }
     </script>
     <script>
-        function confirmVoid(Id) {
+        function confirmVoid(id) {
             console.log(Id);
             Swal.fire({
                 title: 'Are you sure?',
@@ -154,14 +154,14 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Void", "JournalVoucher", new { area = "Filpride" })/${Id}`;
+                    var url = `@Url.Action("Void", "JournalVoucher", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
         }
     </script>
     <script>
-        function confirmCancel(Id) {
+        function confirmCancel(id) {
             console.log(Id);
             Swal.fire({
                 title: "Please Input Remarks",
@@ -181,7 +181,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `@Url.Action("Cancel", "JournalVoucher", new { area = "Filpride" })/${Id}`;
+                    var url = `@Url.Action("Cancel", "JournalVoucher", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })

@@ -124,8 +124,7 @@
 
 @section Scripts {
     <script>
-        function confirmPost(cvId) {
-            console.log(cvId);
+        function confirmPost(id) {
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
@@ -137,15 +136,14 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Post", "CheckVoucher", new { area = "Filpride" })/${cvId}`;
+                    var url = `@Url.Action("Post", "CheckVoucher", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
         }
     </script>
     <script>
-        function confirmVoid(Id) {
-            console.log(Id);
+        function confirmVoid(id) {
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
@@ -157,15 +155,14 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Void", "CheckVoucher", new { area = "Filpride" })/${Id}`;
+                    var url = `@Url.Action("Void", "CheckVoucher", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
         }
     </script>
     <script>
-        function confirmCancel(Id) {
-            console.log(Id);
+        function confirmCancel(id) {
             Swal.fire({
                 title: "Please Input Remarks",
                 html:
@@ -184,7 +181,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `@Url.Action("Cancel", "CheckVoucher", new { area = "Filpride" })/${Id}`;
+                    var url = `@Url.Action("Cancel", "CheckVoucher", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
