@@ -1,5 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@model PurchaseOrder
+@model FilpridePurchaseOrder
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
@@ -130,7 +130,7 @@ else
     </p>
 </div>
 <div>
-    <a asp-area="Filpride" asp-controller="PurchaseOrders" asp-action="Printed" asp-route-id="@Model.PurchaseOrderId" class="btn btn-success buttons" onclick="printPage()">Print</a>
+    <a asp-area="Filpride" asp-controller="PurchaseOrder" asp-action="Printed" asp-route-id="@Model.PurchaseOrderId" class="btn btn-success buttons" onclick="printPage()">Print</a>
     <a class="btn buttons" asp-action="Index">Back</a>
 </div>
 

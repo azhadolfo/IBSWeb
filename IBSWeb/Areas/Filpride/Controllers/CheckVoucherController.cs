@@ -66,7 +66,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var rrValue = header.RRNo[i];
 
-                        var rr = await _dbContext.ReceivingReports
+                        var rr = await _dbContext.FilprideReceivingReports
                                     .FirstOrDefaultAsync(p => p.ReceivingReportNo == rrValue && p.Company == companyClaims);
                         if (rr != null)
                         {
@@ -108,7 +108,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var receivingReports = await _dbContext.ReceivingReports
+            var receivingReports = await _dbContext.FilprideReceivingReports
             .Where(rr => rr.Company == companyClaims && poNumber.Contains(rr.PONo) && !rr.IsPaid && rr.PostedBy != null)
             .OrderBy(rr => criteria == "Transaction Date" ? rr.Date : rr.DueDate)
             .ToListAsync();
@@ -153,7 +153,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var receivingReport = await _dbContext.ReceivingReports
+            var receivingReport = await _dbContext.FilprideReceivingReports
                 .FirstOrDefaultAsync(rr => rr.Company == companyClaims && rr.ReceivingReportNo == rrNo);
             if (receivingReport != null)
             {
@@ -227,7 +227,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var rrValue = header.RRNo[i];
 
-                    var rr = await _dbContext.ReceivingReports
+                    var rr = await _dbContext.FilprideReceivingReports
                                 .FirstOrDefaultAsync(p => p.Company == companyClaims && p.ReceivingReportNo == rrValue);
 
                     if (rr != null)
@@ -248,9 +248,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> Post(int cvId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var modelHeader = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(cvId, cancellationToken);
+            var modelHeader = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync();
 
             if (modelHeader != null)
@@ -265,11 +265,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region -- Partial payment of RR's
                         if (modelHeader.Amount != null)
                         {
-                            var receivingReport = new ReceivingReport();
+                            var receivingReport = new FilprideReceivingReport();
                             for (int i = 0; i < modelHeader.RRNo.Length; i++)
                             {
                                 var rrValue = modelHeader.RRNo[i];
-                                receivingReport = await _dbContext.ReceivingReports
+                                receivingReport = await _dbContext.FilprideReceivingReports
                                             .FirstOrDefaultAsync(p => p.Company == modelHeader.Company && p.ReceivingReportNo == rrValue);
 
                                 receivingReport.AmountPaid += modelHeader.Amount[i];
@@ -387,8 +387,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
             var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
             var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
-            var poIds = _dbContext.PurchaseOrders.Where(model => model.Company == companyClaims && existingHeaderModel.PONo.Contains(model.PurchaseOrderNo)).Select(model => model.PurchaseOrderId).ToArray();
-            var rrIds = _dbContext.ReceivingReports.Where(model => model.Company == companyClaims && existingHeaderModel.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
+            var poIds = _dbContext.FilpridePurchaseOrders.Where(model => model.Company == companyClaims && existingHeaderModel.PONo.Contains(model.PurchaseOrderNo)).Select(model => model.PurchaseOrderId).ToArray();
+            var rrIds = _dbContext.FilprideReceivingReports.Where(model => model.Company == companyClaims && existingHeaderModel.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
 
             var coa = await _dbContext.ChartOfAccounts
                         .Where(coa => !new[] { "2010102", "2010101", "1010101" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && coa.Level == 4 || coa.Level == 5)
@@ -530,11 +530,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (viewModel.Amount != null)
                     {
-                        var receivingReport = new ReceivingReport();
+                        var receivingReport = new FilprideReceivingReport();
                         for (int i = 0; i < viewModel.RRSeries.Length; i++)
                         {
                             var rrValue = viewModel.RRSeries[i];
-                            receivingReport = await _dbContext.ReceivingReports
+                            receivingReport = await _dbContext.FilprideReceivingReports
                                         .FirstOrDefaultAsync(p => p.Company == companyClaims && p.ReceivingReportNo == rrValue);
 
                             if (i < existingHeaderModel.Amount.Length)
@@ -744,7 +744,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync();
 
-                            viewModel.PONo = await _dbContext.PurchaseOrders
+                            viewModel.PONo = await _dbContext.FilpridePurchaseOrders
                                 .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
                                 .Select(po => new SelectListItem
                                 {
@@ -753,7 +753,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync(cancellationToken);
 
-                            viewModel.RR = await _dbContext.ReceivingReports
+                            viewModel.RR = await _dbContext.FilprideReceivingReports
                                 .Where(rr => rr.Company == companyClaims && viewModel.POSeries.Contains(rr.PONo) && !rr.IsPaid && rr.PostedBy != null)
                                 .Select(rr => new SelectListItem
                                 {
@@ -881,7 +881,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             })
                             .ToListAsync();
 
-                    viewModel.PONo = await _dbContext.PurchaseOrders
+                    viewModel.PONo = await _dbContext.FilpridePurchaseOrders
                                 .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
                                 .Select(po => new SelectListItem
                                 {
@@ -890,7 +890,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync(cancellationToken);
 
-                    viewModel.RR = await _dbContext.ReceivingReports
+                    viewModel.RR = await _dbContext.FilprideReceivingReports
                         .Where(rr => rr.Company == companyClaims && viewModel.POSeries.Contains(rr.PONo) && !rr.IsPaid && rr.PostedBy != null)
                         .Select(rr => new SelectListItem
                         {
@@ -930,7 +930,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync();
 
-            viewModel.PONo = await _dbContext.PurchaseOrders
+            viewModel.PONo = await _dbContext.FilpridePurchaseOrders
                 .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
                 .Select(po => new SelectListItem
                 {
@@ -939,7 +939,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            viewModel.RR = await _dbContext.ReceivingReports
+            viewModel.RR = await _dbContext.FilprideReceivingReports
                 .Where(rr => rr.Company == companyClaims && viewModel.POSeries.Contains(rr.PONo) && !rr.IsPaid && rr.PostedBy != null)
                 .Select(rr => new SelectListItem
                 {
@@ -1797,7 +1797,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     //    for (int i = 0; i < viewModel.RRSeries.Length; i++)
                     //    {
                     //        var rrValue = viewModel.RRSeries[i];
-                    //        receivingReport = await _dbContext.ReceivingReports
+                    //        receivingReport = await _dbContext.FilprideReceivingReports
                     //                    .FirstOrDefaultAsync(p => p.RRNo == rrValue);
 
                     //        receivingReport.AmountPaid += viewModel.Amount[i];

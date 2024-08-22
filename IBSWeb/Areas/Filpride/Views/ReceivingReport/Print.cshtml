@@ -1,5 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@model ReceivingReport
+@model FilprideReceivingReport
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
@@ -127,8 +127,8 @@ else
     </div>
 }
 
-<a asp-area="Filpride" asp-controller="ReceivingReports" asp-action="Printed" asp-route-id="@Model.ReceivingReportId" class="btn btn-success buttons" onclick="printPage()">Print</a>
-<a asp-controller="ReceivingReports" asp-action="Index" class="btn buttons">Back</a>
+<a asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Printed" asp-route-id="@Model.ReceivingReportId" class="btn btn-success buttons" onclick="printPage()">Print</a>
+<a asp-controller="ReceivingReport" asp-action="Index" class="btn buttons">Back</a>
 
 @section Scripts {
     <script>

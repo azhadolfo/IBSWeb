@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
-    public interface IReceivingReportRepo : IRepository<ReceivingReport>
+    public interface IReceivingReportRepo : IRepository<FilprideReceivingReport>
     {
         Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default);
 

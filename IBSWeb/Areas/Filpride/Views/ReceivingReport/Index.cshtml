@@ -1,7 +1,10 @@
 ﻿@model IEnumerable<FilprideReceivingReport>
-
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
 @{
     ViewData["Title"] = "Receiving Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="card shadow border-0 mt-4">
@@ -26,58 +29,112 @@
             <thead>
                 <tr>
                     <th class="text-start">
-                        @Html.DisplayNameFor(m => m.ReceivingReportNo)
+                        RR No
                     </th>
                     <th>
-                        @Html.DisplayNameFor(m => m.Date)
+                        @Html.DisplayNameFor(model => model.Date)
                     </th>
                     <th>
-                        PO No.
-                    </th>
-                    <th class="text-end">
-                        Gain/(Loss)
+                        @Html.DisplayNameFor(model => model.PurchaseOrder.PurchaseOrderNo)
                     </th>
                     <th>
-                        Total Amount
+                        Delivered
+                    </th>
+                    <th>
+                        Received
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.CreatedBy)
+                    </th>
+                    <th>
+                        Status
                     </th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var obj in Model.OrderBy(u => u.ReceivingReportNo))
+                @foreach (var item in Model)
                 {
                     <tr>
                         <td class="text-start">
-                            @obj.ReceivingReportNo
+                            @Html.DisplayFor(modelItem => item.ReceivingReportNo)
                         </td>
                         <td>
-                            @Html.DisplayFor(model => obj.Date)
+                            @Html.DisplayFor(modelItem => item.Date)
                         </td>
                         <td>
-                            @obj.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder?.PurchaseOrderNo
+                            @Html.DisplayFor(modelItem => item.PurchaseOrder.PurchaseOrderNo)
                         </td>
-                        <td class="text-end">
+                        <td>
+                            @item.QuantityDelivered.ToString("N4")
+                        </td>
+                        <td>
+                            @item.QuantityReceived.ToString("N4")
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CreatedBy)
+                        </td>
+                        <td>
                             @{
-                                var value = obj.GainOrLoss;
-                                var formattedGainOrLoss = value < 0 ? $"({Math.Abs(value):N4})" : value.ToString("N4");
+                                var status = item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null
+                                    ? "Posted"
+                                    : item.VoidedBy != null
+                                        ? "Voided"
+                                        : item.CanceledBy != null
+                                            ? "Cancelled"
+                                            : "Pending";
                             }
-                            @formattedGainOrLoss
+                            <span class="badge rounded-pill @if(status == "Posted") {<text>bg-info</text>} else if(status == "Voided") {<text>bg-danger</text>} else if(status == "Cancelled") {<text>bg-warning</text>}">@status</span>
                         </td>
-                        <td>
-                            @Html.DisplayFor(model => obj.TotalAmount)
-                        </td>
-                        <td>
-                            <div class="w-100 btn-group" role="group">
-                                @if (obj.PostedBy == null)
-                                {
-                                    <a asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Edit" asp-route-id="@obj.ReceivingReportNo" class="btn btn-primary mx-2">
-                                        <i class="bi bi-pencil-square"></i> Edit
-                                    </a>
-                                }
-                                <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Preview" asp-route-id="@obj.ReceivingReportNo">
-                                    <i class="bi bi-printer-fill"></i> Preview
-                                </a>
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                    @if (item.VoidedBy == null && item.CanceledBy == null)
+                                    {
+                                        <li><a asp-action="Edit" asp-route-id="@item.ReceivingReportId" class="dropdown-item">Edit</a></li>
+                                    }
+
+                                    @if (item.PostedBy == null && item.VoidedBy == null && item.CanceledBy == null)
+                                    {
+                                        <li>
+                                            <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.ReceivingReportId" data-bs-url="@Url.Action($"Preview/{item.ReceivingReportId}")">
+                                                Preview
+                                            </button>
+                                        </li>
+                                        <li><a class="dropdown-item" onclick="confirmPost(@item.ReceivingReportId)">Post</a></li>
+                                        <li><a class="dropdown-item" onclick="confirmCancel(@item.ReceivingReportId)">Cancel</a></li>
+                                    }
+
+                                    @if (item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null)
+                                    {
+                                        <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.ReceivingReportId">Print</a></li>
+                                        <li>
+                                            @if (item.AmountPaid == 0)
+                                            {
+                                                <a class="dropdown-item" onclick="confirmVoid(@item.ReceivingReportId)">Void</a>
+                                            }
+                                            else
+                                            {
+                                                <button class="dropdown-item" disabled readonly>Void</button>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
                             </div>
+
+                            @if (item.VoidedBy != null)
+                            {
+                                <span class="badge rounded-pill bg-danger">VOIDED</span>
+                            }
+                            else if (item.CanceledBy != null)
+                            {
+                                <span class="badge rounded-pill bg-warning">CANCELLED</span>
+                            }
+
+                            @await Html.PartialAsync("_Preview", item)
                         </td>
                     </tr>
                 }
@@ -85,3 +142,73 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function confirmPost(id) {
+            console.log(id);
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Replace with the actual URL that you want to redirect to
+                    var url = `@Url.Action("Post", "ReceivingReport", new { area = "Filpride" })/${id}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+    <script>
+        function confirmVoid(id) {
+            console.log(id);
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Replace with the actual URL that you want to redirect to
+                    var url = `@Url.Action("Void", "ReceivingReport", new { area = "Filpride" })/${id}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+    <script>
+        function confirmCancel(id) {
+            console.log(id);
+            Swal.fire({
+                title: "Please Input Remarks",
+                html:
+                    "<input id='cancellationRemarks' type='text' class='swal2-input' placeholder='Remarks'>",
+                focusConfirm: false,
+                allowEscapeKey: false,
+                allowOutsideClick: false,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var cancellationRemarks = $("#cancellationRemarks").val();
+                    // Encode the cancellationRemarks to make it URL safe
+                    var encodedRemarks = encodeURIComponent(cancellationRemarks);
+                    // Append the encoded remarks as a parameter in the URL
+                    var url = `@Url.Action("Cancel", "ReceivingReport", new { area = "Filpride" })/${id}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+}

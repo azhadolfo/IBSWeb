@@ -132,7 +132,6 @@
 @section Scripts {
     <script>
         function confirmPost(id) {
-            console.log(id);
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
@@ -144,7 +143,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/Filpride/CreditMemo/Post?id=${id}`;
+                    var url = `@Url.Action("Post", "CreditMemo", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
@@ -152,7 +151,6 @@
     </script>
     <script>
         function confirmVoid(id) {
-            console.log(id);
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
@@ -164,7 +162,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/Filpride/CreditMemo/Void?id=${id}`;
+                    var url = `@Url.Action("Void", "CreditMemo", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
@@ -172,7 +170,6 @@
     </script>
     <script>
         function confirmCancel(id) {
-            console.log(id);
             Swal.fire({
                 title: "Please Input Remarks",
                 html:
@@ -191,7 +188,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `/Filpride/CreditMemo/Cancel?id=${id}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `@Url.Action("Cancel", "CreditMemo", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })

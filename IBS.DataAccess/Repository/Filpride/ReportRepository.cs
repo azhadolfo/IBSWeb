@@ -155,7 +155,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return disbursementBooks;
         }
 
-        public async Task<List<ReceivingReport>> GetReceivingReportAsync(DateOnly? dateFrom, DateOnly? dateTo, string? selectedFiltering, string company)
+        public async Task<List<FilprideReceivingReport>> GetReceivingReportAsync(DateOnly? dateFrom, DateOnly? dateTo, string? selectedFiltering, string company)
         {
             if (dateFrom > dateTo)
             {
@@ -163,16 +163,16 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var receivingReportRepo = new ReceivingReportRepo(_db);
-            List<ReceivingReport> receivingReport = new List<ReceivingReport>();
+            List<FilprideReceivingReport> receivingReport = new List<FilprideReceivingReport>();
 
             if (selectedFiltering == "UnpostedRR")
             {
-                receivingReport = (List<ReceivingReport>)await receivingReportRepo
+                receivingReport = (List<FilprideReceivingReport>)await receivingReportRepo
                     .GetAllAsync(rr => rr.Company == company && rr.Date >= dateFrom && rr.Date <= dateTo && rr.PostedBy == null);
             }
             else if (selectedFiltering == "POLiquidation")
             {
-                receivingReport = (List<ReceivingReport>)await receivingReportRepo
+                receivingReport = (List<FilprideReceivingReport>)await receivingReportRepo
                     .GetAllAsync(rr => rr.Company == company && rr.DueDate >= dateFrom && rr.DueDate <= dateTo && rr.PostedBy != null);
             }
 

@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
-    public class ReceivingReportRepo : Repository<ReceivingReport>, IReceivingReportRepo
+    public class ReceivingReportRepo : Repository<FilprideReceivingReport>, IReceivingReportRepo
     {
         private ApplicationDbContext _db;
 
@@ -19,7 +19,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<DateOnly> ComputeDueDateAsync(int poId, DateOnly rrDate, CancellationToken cancellationToken = default)
         {
             var po = await _db
-                .PurchaseOrders
+                .FilpridePurchaseOrders
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == poId, cancellationToken);
 
             if (po != null)
@@ -102,8 +102,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
         {
-            ReceivingReport? lastRr = await _db
-                .ReceivingReports
+            FilprideReceivingReport? lastRr = await _db
+                .FilprideReceivingReports
                 .Where(rr => rr.Company == company && !rr.ReceivingReportNo.StartsWith("RRBEG"))
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
@@ -126,7 +126,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var rrNoHashSet = new HashSet<string>(rrNos);
 
-            var rrList = await _db.ReceivingReports
+            var rrList = await _db.FilprideReceivingReports
                 .OrderBy(rr => rrNoHashSet.Contains(rr.ReceivingReportNo) ? Array.IndexOf(rrNos, rr.ReceivingReportNo) : int.MaxValue) // Order by index in rrNos array if present in HashSet
                 .ThenBy(rr => rr.ReceivingReportId) // Secondary ordering by Id
                 .Where(rr => rr.Company == company)
@@ -142,7 +142,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
         {
-            var po = await _db.PurchaseOrders
+            var po = await _db.FilpridePurchaseOrders
                     .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
             if (po != null)
@@ -169,7 +169,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task UpdatePOAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
         {
-            var po = await _db.PurchaseOrders
+            var po = await _db.FilpridePurchaseOrders
                     .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
             if (po != null)
@@ -194,7 +194,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public override async Task<ReceivingReport> GetAsync(Expression<Func<ReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilprideReceivingReport> GetAsync(Expression<Func<FilprideReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(rr => rr.PurchaseOrder)
@@ -204,9 +204,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public override async Task<IEnumerable<ReceivingReport>> GetAllAsync(Expression<Func<ReceivingReport, bool>>? filter, CancellationToken cancellationToken = default)
+        public override async Task<IEnumerable<FilprideReceivingReport>> GetAllAsync(Expression<Func<FilprideReceivingReport, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<ReceivingReport> query = dbSet
+            IQueryable<FilprideReceivingReport> query = dbSet
                 .Include(rr => rr.PurchaseOrder)
                 .ThenInclude(po => po.Product)
                 .Include(rr => rr.PurchaseOrder)

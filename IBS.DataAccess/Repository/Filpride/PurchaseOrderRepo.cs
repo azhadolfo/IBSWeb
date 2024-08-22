@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
-    public class PurchaseOrderRepo : Repository<PurchaseOrder>, IPurchaseOrderRepo
+    public class PurchaseOrderRepo : Repository<FilpridePurchaseOrder>, IPurchaseOrderRepo
     {
         private ApplicationDbContext _db;
 
@@ -18,8 +18,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
         {
-            PurchaseOrder? lastPo = await _db
-                .PurchaseOrders
+            FilpridePurchaseOrder? lastPo = await _db
+                .FilpridePurchaseOrders
                 .Where(c => c.Company == company && !c.PurchaseOrderNo.StartsWith("POBEG"))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
@@ -38,7 +38,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public override async Task<PurchaseOrder> GetAsync(Expression<Func<PurchaseOrder, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilpridePurchaseOrder> GetAsync(Expression<Func<FilpridePurchaseOrder, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(p => p.Supplier)
@@ -46,9 +46,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public override async Task<IEnumerable<PurchaseOrder>> GetAllAsync(Expression<Func<PurchaseOrder, bool>>? filter, CancellationToken cancellationToken = default)
+        public override async Task<IEnumerable<FilpridePurchaseOrder>> GetAllAsync(Expression<Func<FilpridePurchaseOrder, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<PurchaseOrder> query = dbSet
+            IQueryable<FilpridePurchaseOrder> query = dbSet
                 .Include(p => p.Supplier)
                 .Include(p => p.Product);
 
@@ -62,7 +62,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<List<SelectListItem>> GetPurchaseOrderListAsync(string company, CancellationToken cancellationToken = default)
         {
-            return await _db.PurchaseOrders
+            return await _db.FilpridePurchaseOrders
                 .Where(p => p.Company == company)
                 .Select(po => new SelectListItem
                 {

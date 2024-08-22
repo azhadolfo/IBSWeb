@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240821023352_RemoveTheOldFilprideReceivingReports")]
+    partial class RemoveTheOldFilprideReceivingReports
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -475,7 +478,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_purchase_orders", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideReceivingReport", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.ReceivingReport", b =>
                 {
                     b.Property<int>("ReceivingReportId")
                         .ValueGeneratedOnAdd()
@@ -640,12 +643,12 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("withdrawal_certificate");
 
                     b.HasKey("ReceivingReportId")
-                        .HasName("pk_filpride_receiving_reports");
+                        .HasName("pk_receiving_reports");
 
                     b.HasIndex("POId")
-                        .HasDatabaseName("ix_filpride_receiving_reports_po_id");
+                        .HasDatabaseName("ix_receiving_reports_po_id");
 
-                    b.ToTable("filpride_receiving_reports", (string)null);
+                    b.ToTable("receiving_reports", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideCollectionReceipt", b =>
@@ -765,10 +768,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int[]>("MultipleSIId")
                         .HasColumnType("integer[]")
                         .HasColumnName("multiple_si_id");
-
-                    b.Property<DateOnly[]>("MultipleTransactionDate")
-                        .HasColumnType("date[]")
-                        .HasColumnName("multiple_transaction_date");
 
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)")
@@ -5806,14 +5805,14 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideReceivingReport", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.ReceivingReport", b =>
                 {
                     b.HasOne("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", "PurchaseOrder")
                         .WithMany()
                         .HasForeignKey("POId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_filpride_receiving_reports_filpride_purchase_orders_po_id");
+                        .HasConstraintName("fk_receiving_reports_filpride_purchase_orders_po_id");
 
                     b.Navigation("PurchaseOrder");
                 });

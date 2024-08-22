@@ -49,7 +49,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.PO = await _dbContext.PurchaseOrders
+            viewModel.PO = await _dbContext.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
                 .Where(p => p.Company == companyClaims)
                 .Select(p => new SelectListItem
@@ -94,7 +94,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
-            viewModel.PO = await _dbContext.PurchaseOrders
+            viewModel.PO = await _dbContext.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
                 .Where(p => p.Company == companyClaims)
                 .Select(p => new SelectListItem
@@ -116,7 +116,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
-            viewModel.PO = await _dbContext.PurchaseOrders
+            viewModel.PO = await _dbContext.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
                 .Where(p => p.Company == companyClaims)
                 .Select(p => new SelectListItem
@@ -227,7 +227,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
-            viewModel.PO = await _dbContext.PurchaseOrders
+            viewModel.PO = await _dbContext.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
                 .Where(p => p.Company == companyClaims)
                 .Select(p => new SelectListItem
@@ -276,7 +276,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
-                    viewModel.PO = await _dbContext.PurchaseOrders
+                    viewModel.PO = await _dbContext.FilpridePurchaseOrders
                         .OrderBy(p => p.PurchaseOrderNo)
                         .Where(p => p.Company == companyClaims)
                         .Select(p => new SelectListItem

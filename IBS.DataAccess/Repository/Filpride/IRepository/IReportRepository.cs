@@ -12,7 +12,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         List<FilpridePurchaseBook> GetPurchaseBooks(DateOnly dateFrom, DateOnly dateTo, string? selectedFiltering, string company);
 
-        Task<List<ReceivingReport>> GetReceivingReportAsync(DateOnly? dateFrom, DateOnly? dateTo, string? selectedFiltering, string company);
+        Task<List<FilprideReceivingReport>> GetReceivingReportAsync(DateOnly? dateFrom, DateOnly? dateTo, string? selectedFiltering, string company);
 
         List<FilprideInventory> GetInventoryBooks(DateOnly dateFrom, DateOnly dateTo, string company);
 
