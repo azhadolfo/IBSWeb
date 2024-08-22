@@ -137,7 +137,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/Filpride/CheckVoucher/Post?cvId=${cvId}`;
+                    var url = `@Url.Action("Post", "CheckVoucher", new { area = "Filpride" })/${cvId}`;
                     window.location.href = url;
                 }
             })
@@ -157,7 +157,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/Filpride/CheckVoucher/Void?Id=${Id}`;
+                    var url = `@Url.Action("Void", "CheckVoucher", new { area = "Filpride" })/${Id}`;
                     window.location.href = url;
                 }
             })
@@ -184,7 +184,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `/Filpride/CheckVoucher/Cancel?Id=${Id}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `@Url.Action("Cancel", "CheckVoucher", new { area = "Filpride" })/${Id}`;
                     window.location.href = url;
                 }
             })

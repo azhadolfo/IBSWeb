@@ -119,7 +119,7 @@
                                         
                                         if (item.MultipleSIId != null)
                                         {
-                                            <li><a asp-action="MultipleCollectionEdit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
+                                            <li><a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionEdit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
                                             <li>
                                                 <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#PreviewMultipleSI-@item.CollectionReceiptId" data-bs-url="@Url.Action($"PreviewMultipleSI/{item.CollectionReceiptId}")">
                                                 Preview
@@ -128,7 +128,7 @@
                                         }
                                         else
                                         {
-                                            <li><a asp-action="Edit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
+                                            <li><a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Edit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
                                             <li>
                                                 <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.CollectionReceiptId" data-bs-url="@Url.Action($"Preview/{item.CollectionReceiptId}")">
                                                     Preview
@@ -142,11 +142,11 @@
                                     {
                                         if (item.MultipleSIId != null)
                                         {
-                                            <li><a asp-action="MultipleCollectionPrint" asp-route-id="@item.CollectionReceiptId" class="dropdown-item">Print</a></li>
+                                            <li><a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionPrint" asp-route-id="@item.CollectionReceiptId" class="dropdown-item">Print</a></li>
                                         }
                                         else
                                         {
-                                            <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.CollectionReceiptId">Print</a></li>
+                                            <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Print" asp-route-id="@item.CollectionReceiptId">Print</a></li>
                                         }
                                         <li><a class="dropdown-item" onclick="confirmVoid(@item.CollectionReceiptId)">Void</a></li>
                                     }
@@ -177,7 +177,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/Filpride/CollectionReceipt/Post?itemId=${itemId}`;
+                    var url = `@Url.Action("Post", "CollectionReceipt", new { area = "Filpride" })/${itemId}`;
                     window.location.href = url;
                 }
             })
@@ -197,7 +197,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `/Filpride/CollectionReceipt/Void?itemId=${itemId}`;
+                    var url = `@Url.Action("Void", "CollectionReceipt", new { area = "Filpride" })/${itemId}`;
                     window.location.href = url;
                 }
             })
@@ -224,7 +224,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `/Filpride/CollectionReceipt/Cancel?itemId=${itemId}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `@Url.Action("Cancel", "CollectionReceipt", new { area = "Filpride" })/${itemId}`;
                     window.location.href = url;
                 }
             })
