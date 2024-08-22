@@ -19,6 +19,10 @@ namespace IBS.Models.Filpride
         [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly Date { get; set; }
 
+        [Column(TypeName = "date")]
+        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        public DateOnly? DeliveredDate { get; set; }
+
         [Column(TypeName = "varchar(50)")]
         public string InvoiceNo { get; set; }
 
@@ -79,5 +83,7 @@ namespace IBS.Models.Filpride
 
         [Column(TypeName = "varchar(15)")]
         public string DeliveryType { get; set; }
+
+        public string Company { get; set; } = string.Empty;
     }
 }

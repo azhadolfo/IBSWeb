@@ -54,6 +54,7 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     model.HaulerCode = await _unitOfWork.FilprideHauler.GenerateCodeAsync(companyClaims, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
+                    model.Company = companyClaims;
                     await _unitOfWork.FilprideHauler.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Hauler created successfully";

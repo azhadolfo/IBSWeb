@@ -30,8 +30,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var cosList = await _unitOfWork.FilprideCustomerOrderSlip
-                .GetAllAsync(null, cancellationToken);
+                .GetAllAsync(cos => cos.Company == companyClaims, cancellationToken);
 
             return View(cosList);
         }
@@ -73,6 +75,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Vat = viewModel.Vat,
                         TotalAmount = viewModel.TotalAmount,
                         Remarks = viewModel.Remarks,
+                        Company = companyClaims,
                         CreatedBy = _userManager.GetUserName(User)
                     };
 
@@ -98,9 +101,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
+            if (id == null)
             {
                 return NotFound();
             }
@@ -110,7 +113,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var exisitingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                    .GetAsync(cos => cos.CustomerOrderSlipNo == id, cancellationToken);
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
                 if (exisitingRecord == null)
                 {
@@ -174,9 +177,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> Preview(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
+            if (id == null)
             {
                 return NotFound();
             }
@@ -184,7 +187,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                    .GetAsync(cos => cos.CustomerOrderSlipNo == id, cancellationToken);
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
                 if (existingRecord == null)
                 {
@@ -200,9 +203,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> Print(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
+            if (id == null)
             {
                 return NotFound();
             }
@@ -210,7 +213,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                    .GetAsync(cos => cos.CustomerOrderSlipNo == id, cancellationToken);
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
                 if (existingRecord == null)
                 {
@@ -232,9 +235,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> Approve(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Approve(int? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
+            if (id == null)
             {
                 return NotFound();
             }
@@ -242,7 +245,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                    .GetAsync(cos => cos.CustomerOrderSlipNo == id, cancellationToken);
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
                 if (existingRecord == null)
                 {
@@ -266,9 +269,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> Disapprove(string? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Disapprove(int? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id))
+            if (id == null)
             {
                 return NotFound();
             }
@@ -278,7 +281,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 //PENDING DisapproveAsync repo
 
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                    .GetAsync(cos => cos.CustomerOrderSlipNo == id, cancellationToken);
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
                 if (existingRecord == null)
                 {
