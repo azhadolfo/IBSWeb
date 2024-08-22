@@ -470,7 +470,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var model = await _dbContext.FilprideReceivingReports
                 .FindAsync(id, cancellationToken);
 
-            if (model != null)
+            var existingInventory = await _dbContext.FilprideInventories
+                .Include(i => i.Product)
+                .FirstOrDefaultAsync(i => i.Reference == model.ReceivingReportNo && i.Company == model.Company);
+
+            if (model != null && existingInventory != null)
             {
                 if (model.VoidedBy == null)
                 {
@@ -486,6 +490,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     //await _generalRepo.RemoveRecords<PurchaseJournalBook>(pb => pb.DocumentNo == model.RRNo, cancellationToken);
                     //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.RRNo, cancellationToken);
                     //await _generalRepo.RemoveRecords<Inventory>(i => i.Reference == model.RRNo, cancellationToken);
+                    await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
                     await _unitOfWork.FilprideReceivingReportRepository.RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
                     model.QuantityReceived = 0;
 

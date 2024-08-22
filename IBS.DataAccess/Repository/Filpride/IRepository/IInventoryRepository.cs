@@ -19,5 +19,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task AddActualInventory(ActualInventoryViewModel viewModel, string company, CancellationToken cancellationToken = default);
 
         Task ChangePriceToInventoryAsync(PurchaseChangePriceViewModel viewModel, CancellationToken cancellationToken = default);
+
+        Task VoidInventory(FilprideInventory model, CancellationToken cancellationToken = default);
     }
 }
