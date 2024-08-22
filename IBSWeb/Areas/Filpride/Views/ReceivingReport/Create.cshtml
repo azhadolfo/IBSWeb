@@ -1,7 +1,8 @@
-﻿@model ReceivingReportViewModel
+﻿@model FilprideReceivingReport
 
 @{
     ViewData["Title"] = "Create Receiving Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="card shadow border-0 mt-4">
@@ -13,89 +14,101 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" class="row">
-            <div class="border-2 p-3">
-                <div asp-validation-summary="ModelOnly"></div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-                    <label asp-for="Date">Date<span class="required">*</span></label>
-                    <span asp-validation-for="Date" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Customer List<span class="required">*</span></label>
-                    <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select customer</option>
-                    </select>
-                    <span asp-validation-for="CustomerId" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">DR List<span class="required">*</span></label>
-                    <select asp-for="DeliveryReceiptId" asp-items="@Model.DeliveryReceipts" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select supplier</option>
-                    </select>
-                    <span asp-validation-for="DeliveryReceiptId" class="text-danger"></span>
-                </div>
-                <fieldset class="border p-2 py-2">
-                    <legend class="w-auto px-2">Supplier Details</legend>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="SupplierSiNo" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierSiNo">SI#</label>
-                        <span asp-validation-for="SupplierSiNo" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="SupplierSiDate" type="date" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierSiDate">SI Date</label>
-                        <span asp-validation-for="SupplierSiDate" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="SupplierDrNo" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierDrNo">DR#</label>
-                        <span asp-validation-for="SupplierDrNo" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="SupplierDrDate" type="date" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierDrDate">DR Date</label>
-                        <span asp-validation-for="SupplierDrDate" class="text-danger"></span>
-                    </div>
-                </fieldset>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="WithdrawalCertificate" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="WithdrawalCertificate">WC Certificate</label>
-                    <span asp-validation-for="WithdrawalCertificate" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="OtherReference" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="OtherReference">Other Reference<span class="required">*</span></label>
-                    <span asp-validation-for="OtherReference" class="text-danger"></span>
-                </div>
+        <div class="position-absolute p-2" style="left:40%; width:45%; border:dotted 1px; max-height: 500px; overflow-y: auto;">
+            <pre style="white-space: pre-wrap;">
+            <b>PO Liquidations</b>
 
-                <div class="row py-2">
-                    <div class="form-floating col-6">
-                        <input asp-for="QuantityDelivered" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                        <label asp-for="QuantityDelivered" class="ms-2">Quantity Delivered</label>
+   PO No: <span id="poNo" class="fw-bold"></span> - Quantity: <span id="poQuantity" class="fw-bold"></span>
+
+   Posted RR:
+            <ul id="rrListPostedOnly" style="margin: 0;"></ul>
+=====================================================================
+   Remaining Quantity (Only posted RR):  <span id="remainingQuantityPostedOnly"></span>
+=====================================================================
+
+   Unposted RR:
+            <ul id="rrListCanceled" style="margin: 0;"></ul>
+            <ul id="rrListNotPosted" style="margin: 0;"></ul>
+=====================================================================
+   Remaining Quantity (Including posted and unposted RR):  <span id="remainingQuantity"></span>
+=====================================================================
+           </pre>
+        </div>
+        <form asp-action="Create">
+            <div class="row">
+                <div class="col-md-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Date" class="control-label"></label><span class="required">*</span>
+                        <input asp-for="Date" type="date" class="form-control" />
+                        <span asp-validation-for="Date" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="POId" class="control-label">Suppliers PO No.</label><span class="required">*</span>
+                        <select asp-for="POId" class="form-control js-select2" asp-items="@Model.PurchaseOrders" style="width:100%">
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="POId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="ReceivedDate" type="date" class="form-control" placeholder="" />
+                        <label asp-for="ReceivedDate" class="control-label">Received Date</label>
+                        <span asp-validation-for="ReceivedDate" class="text-danger"></span>
+                    </div>
+                    <fieldset class="border p-2 py-2 mb-3">
+                        <legend class="w-auto px-2">Supplier Details</legend>
+                        <div class="form-floating py-2 col-12">
+                            <input asp-for="SupplierInvoiceNumber" class="form-control border-0 shadow" placeholder="" />
+                            <label asp-for="SupplierInvoiceNumber">SI#</label>
+                            <span asp-validation-for="SupplierInvoiceNumber" class="text-danger"></span>
+                        </div>
+                        <div class="form-floating py-2 col-12">
+                            <input asp-for="SupplierInvoiceDate" type="date" class="form-control border-0 shadow" placeholder="" />
+                            <label asp-for="SupplierInvoiceDate">SI Date</label>
+                            <span asp-validation-for="SupplierInvoiceDate" class="text-danger"></span>
+                        </div>
+                        <div class="form-floating py-2 col-12">
+                            <input asp-for="SupplierDrNo" class="form-control border-0 shadow" placeholder="" />
+                            <label asp-for="SupplierDrNo">DR#</label>
+                            <span asp-validation-for="SupplierDrNo" class="text-danger"></span>
+                        </div>
+                        <div class="form-floating py-2 col-12">
+                            <input asp-for="SupplierDrDate" type="date" class="form-control border-0 shadow" placeholder="" />
+                            <label asp-for="SupplierDrDate">DR Date</label>
+                            <span asp-validation-for="SupplierDrDate" class="text-danger"></span>
+                        </div>
+                    </fieldset>
+                    <div class="form-floating mb-3">
+                        <input asp-for="WithdrawalCertificate" class="form-control" placeholder="" />
+                        <label asp-for="WithdrawalCertificate" class="control-label">WC Certificate</label>
+                        <span asp-validation-for="WithdrawalCertificate" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="TruckOrVessels" class="form-control" placeholder="" />
+                        <label asp-for="TruckOrVessels" class="control-label">Truck/Vessels<span class="required">*</span></label>
+                        <span asp-validation-for="TruckOrVessels" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="QuantityDelivered" class="form-control" placeholder="" />
+                        <label asp-for="QuantityDelivered" class="control-label">Qty Delivered<span class="required">*</span></label>
                         <span asp-validation-for="QuantityDelivered" class="text-danger"></span>
                     </div>
-                    <div class="form-floating col-6">
-                        <input asp-for="QuantityReceived" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="QuantityReceived" class="ms-2">Quantity Received<span class="required">*</span></label>
+                    <div class="form-floating mb-3">
+                        <input asp-for="QuantityReceived" class="form-control" placeholder="" />
+                        <label asp-for="QuantityReceived" class="control-label">Qty Received<span class="required">*</span></label>
                         <span asp-validation-for="QuantityReceived" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                    <label asp-for="Freight">Freight</label>
-                    <span asp-validation-for="Freight" class="text-danger"></span>
+                <div class="form-floating mb-3">
+                    <input asp-for="OtherRef" class="form-control" placeholder="" />
+                    <label asp-for="OtherRef" class="control-label ms-2"></label>
                 </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="TotalFreight" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                    <label asp-for="TotalFreight">Total Freight</label>
-                    <span asp-validation-for="TotalFreight" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
-                    <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
+                <div class="form-floating mb-3">
+                    <textarea asp-for="Remarks" class="form-control" placeholder="" style="height: 100px"></textarea>
+                    <label asp-for="Remarks" class="control-label ms-2">Remarks<span class="required">*</span></label>
                     <span asp-validation-for="Remarks" class="text-danger"></span>
                 </div>
+
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
                         <button type="submit" class="btn btn-primary form-control">Create</button>
@@ -113,81 +126,101 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
     <script>
-        $(document).ready(function () {
-            // Get Delivery Receipts by Customer
-            $('select[name="CustomerId"]').on('change', function () {
-                var customerId = $(this).val();
-                if (customerId) {
-                    $.ajax({
-                        url: '@Url.Action("GetDeliveryReceiptsByCustomer", "ReceivingReport")',
-                        type: "GET",
-                        data: { customerId: customerId },
-                        success: function (data) {
-                            var $drSelect = $('select[name="DeliveryReceiptId"]');
-                            $drSelect.empty();
-                            if (data && data.length > 0) {
-                                $drSelect.append('<option value="">Select DR</option>');
-                                $.each(data, function (index, item) {
-                                    $drSelect.append('<option value="' + item.value + '">' + item.text + '</option>');
-                                });
-                            } else {
-                                $drSelect.append('<option value="">No DR available</option>');
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.log("Error: " + error);
+        document.getElementById('Date').value = new Date().toISOString().substring(0, 10);
+    </script>
+
+    <script>
+        // Function to handle invoice change event
+        function handlePoChange() {
+            var id = $("#POId").val();
+            console.log(id);
+            if (id != "") {
+                $.ajax({
+                    url: "@Url.Action("GetLiquidations", "ReceivingReport")",
+                    type: "GET",
+                    data: { id: id },
+                    success: function (data) {
+                        console.log(data);
+                        // Update PO No and Quantity
+                        document.getElementById("poNo").innerHTML = data.poNo;
+                        document.getElementById("poQuantity").innerHTML = data.poQuantity;
+
+                        // Calculate and update Remaining Quantity
+                        var totalReceived = 0;
+                        for (var i = 0; i < data.rrList.length; i++) {
+                            totalReceived += data.rrList[i].quantityReceived;
                         }
-                    });
-                } else {
-                    var $drSelect = $('select[name="DeliveryReceiptId"]');
-                    $drSelect.empty();
-                    $drSelect.append('<option value="">Select DR</option>');
-                }
-            });
-
-            // Get Freight and update total freight
-            $('select[name="DeliveryReceiptId"]').on('change', function () {
-                var drId = $(this).val();
-                if (drId) {
-                    $.ajax({
-                        url: '@Url.Action("GetDeliveryReceiptDetails", "ReceivingReport")',
-                        type: "GET",
-                        data: { drId: drId },
-                        success: function (data) {
-                            console.log(data)
-                            if (data) {
-                                $('input[name="QuantityDelivered"]').val(formatNumber(data.quantity));
-                                $('input[name="Freight"]').val(formatNumber(data.freight));
-                                updateTotalFreight();
-                            } else {
-                                $('input[name="QuantityDelivered"]').val('0.00');
-                                $('input[name="Freight"]').val('0.00');
-                                $('input[name="TotalFreight"]').val('0.00');
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.log("Error: " + error);
+                        var totalReceivedPostedOnly = 0;
+                        for (var i = 0; i < data.rrListPostedOnly.length; i++) {
+                            totalReceivedPostedOnly += data.rrListPostedOnly[i].quantityReceived;
                         }
-                    });
-                } else {
-                    $('input[name="QuantityDelivered"]').val('');
-                    $('input[name="Freight"]').val('');
-                    $('input[name="TotalFreight"]').val('');
-                }
-            });
 
-            // Calculate Total Freight
-            $('input[name="QuantityReceived"]').on('input', function () {
-                updateTotalFreight();
-            });
+                        var remainingQuantityPostedOnly = parseFloat(data.poQuantity.replace(/,/g, '')) - totalReceivedPostedOnly;
+                        var remainingQuantity = parseFloat(data.poQuantity.replace(/,/g, '')) - totalReceived;
 
-            function updateTotalFreight() {
-                var quantityReceived = parseFloat($('input[name="QuantityReceived"]').val()) || 0;
-                var freight = parseFloat($('input[name="Freight"]').val()) || 0;
-                var totalFreight = quantityReceived * freight;
-                $('input[name="TotalFreight"]').val(formatNumber(totalFreight));
+                        // Format the remaining quantity with thousand's comma
+                        var formattedRemainingQuantityPostedOnly = formatNumberWithCommas(remainingQuantityPostedOnly);
+                        var formattedRemainingQuantity = formatNumberWithCommas(remainingQuantity);
+
+                        // Display the formatted remaining quantity
+                        document.getElementById("remainingQuantityPostedOnly").innerHTML = formattedRemainingQuantityPostedOnly + "L";
+                        document.getElementById("remainingQuantity").innerHTML = formattedRemainingQuantity + "L";
+
+                        var rrListPostedOnly = data.rrListPostedOnly;
+                        var rrListPostedOnlyUl = document.getElementById("rrListPostedOnly");
+                        rrListPostedOnlyUl.innerHTML = ""; // Clear previous list items
+
+                        var rrListNotPosted = data.rrListNotPosted;
+                        var rrListNotPostedUl = document.getElementById("rrListNotPosted");
+                        rrListNotPostedUl.innerHTML = ""; // Clear previous list items
+
+                        var rrListCanceled = data.rrListCanceled;
+                        var rrListCanceledUl = document.getElementById("rrListCanceled");
+                        rrListCanceledUl.innerHTML = ""; // Clear previous list items
+
+                        for (var i = 0; i < rrListPostedOnly.length; i++) {
+                            var rrPostedOnly = rrListPostedOnly[i];
+                            var list = document.createElement("li");
+                            list.textContent = rrPostedOnly.quantityReceived < rrPostedOnly.quantityDelivered ? "RR No: " + rrPostedOnly.receivingReportNo + " - Quantity: -" + rrPostedOnly.quantityReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "RR No: " + rrPostedOnly.receivingReportNo + " - Quantity: -" + rrPostedOnly.quantityDelivered.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            rrListPostedOnlyUl.appendChild(list);
+                        }
+
+                        for (var i = 0; i < rrListNotPosted.length; i++) {
+                            var rrNotPosted = rrListNotPosted[i];
+                            var li = document.createElement("li");
+                            li.textContent = rrNotPosted.quantityReceived < rrNotPosted.quantityDelivered ? "RR No: " + rrNotPosted.receivingReportNo + " - Quantity: -" + rrNotPosted.quantityReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "RR No: " + rrNotPosted.receivingReportNo + " - Quantity: -" + rrNotPosted.quantityDelivered.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            rrListNotPostedUl.appendChild(li);
+                        }
+
+                        for (var i = 0; i < rrListCanceled.length; i++) {
+                            var rrCanceled = rrListCanceled[i];
+                            var listed = document.createElement("li");
+                            listed.textContent = rrCanceled.quantityReceived < rrCanceled.quantityDelivered ? "RR No: " + rrCanceled.receivingReportNo + " - Quantity: -" + rrCanceled.canceledQuantity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " (Cancelled)" : "RR No: " + rrCanceled.receivingReportNo + " - Quantity: -" + rrCanceled.canceledQuantity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " (Cancelled)";
+                            rrListCanceledUl.appendChild(listed);
+                        }
+                    }
+                });
             }
+        }
+
+        function formatNumberWithCommas(number) {
+            return number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        $(document).ready(function () {
+            // Call the handleInvoiceChange function on page load
+            handlePoChange();
+
+            // Attach event listener to invoice dropdown
+            $("#POId").change(function () {
+                // Call the handleInvoiceChange function when the dropdown changes
+                handlePoChange();
+            });
         });
+    </script>
+    <script>
+        setTransactionDate();
     </script>
 }

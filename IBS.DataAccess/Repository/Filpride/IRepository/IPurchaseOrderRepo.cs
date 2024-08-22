@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
-    public interface IPurchaseOrderRepo : IRepository<PurchaseOrder>
+    public interface IPurchaseOrderRepo : IRepository<FilpridePurchaseOrder>
     {
         Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default);
 

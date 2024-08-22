@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using IBS.Models.Filpride.MasterFile;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride.AccountsPayable
 {
-    public class ReceivingReport : BaseEntity
+    public class FilprideReceivingReport : BaseEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -27,11 +28,9 @@ namespace IBS.Models.Filpride.AccountsPayable
         public int POId { get; set; }
 
         [ForeignKey("POId")]
-        public PurchaseOrder? PurchaseOrder { get; set; }
-
+        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
         [NotMapped]
         public List<SelectListItem>? PurchaseOrders { get; set; }
-
         [Display(Name = "PO No")]
         [Column(TypeName = "varchar(12)")]
         public string? PONo { get; set; }
@@ -42,6 +41,14 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [Display(Name = "Supplier Invoice Date")]
         public string? SupplierInvoiceDate { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string? SupplierDrNo { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string? WithdrawalCertificate { get; set; }
+
+        public DateOnly? SupplierDrDate { get; set; }
 
         [Required]
         [Display(Name = "Truck/Vessels")]

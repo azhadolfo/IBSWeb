@@ -198,7 +198,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
                 salesInvoice.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                 salesInvoice.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                salesInvoice.PO = await _dbContext.PurchaseOrders
+                salesInvoice.PO = await _dbContext.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
                 .Where(po => po.Company == companyClaims && po.ProductId == salesInvoice.ProductId && po.QuantityReceived != 0 && po.PostedBy != null)
                 .Select(p => new SelectListItem
@@ -207,7 +207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = p.PurchaseOrderNo
                 })
                 .ToListAsync(cancellationToken);
-                var receivingReports = await _dbContext.ReceivingReports
+                var receivingReports = await _dbContext.FilprideReceivingReports
                     .Where(rr => rr.POId == salesInvoice.PurchaseOrderId && rr.ReceivedDate != null)
                     .Select(rr => new
                     {
@@ -639,7 +639,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var purchaseOrders = await _dbContext.PurchaseOrders
+            var purchaseOrders = await _dbContext.FilpridePurchaseOrders
                 .Where(po => po.Company == companyClaims && po.ProductId == productId && po.QuantityReceived != 0 && po.PostedBy != null)
                 .ToListAsync();
 
@@ -673,7 +673,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public IActionResult GetRRs(int purchaseOrderId)
         {
-            var rrs = _dbContext.ReceivingReports
+            var rrs = _dbContext.FilprideReceivingReports
                               .Where(rr => rr.POId == purchaseOrderId && rr.ReceivedDate != null)
                               .Select(rr => new
                               {

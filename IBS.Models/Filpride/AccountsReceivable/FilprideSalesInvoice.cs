@@ -121,7 +121,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public DateOnly DueDate { get; set; }
 
         [ForeignKey(nameof(PurchaseOrderId))]
-        public PurchaseOrder? PurchaseOrder { get; set; }
+        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
 
         [Display(Name = "PO No.")]
         public int PurchaseOrderId { get; set; }

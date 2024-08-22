@@ -1,12 +1,13 @@
 ﻿using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
+using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride.AccountsPayable
 {
-    public class PurchaseOrder : BaseEntity
+    public class FilpridePurchaseOrder : BaseEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -20,70 +21,74 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly Date { get; set; }
 
-        [Required]
-        [Display(Name = "Supplier Name")]
+        #region-- Supplier properties
+
         public int SupplierId { get; set; }
 
-        [ForeignKey("SupplierId")]
+        [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
-        [NotMapped]
-        public List<SelectListItem>? Suppliers { get; set; }
+        #endregion
 
-        public int SupplierNo { get; set; }
+        #region--Product properties
 
-        [Required]
-        [Display(Name = "Product Name")]
         public int ProductId { get; set; }
 
-        [ForeignKey("ProductId")]
+        [ForeignKey(nameof(ProductId))]
         public Product? Product { get; set; }
 
-        [NotMapped]
-        public List<SelectListItem>? Products { get; set; }
+        #endregion
 
-        public string? ProductNo { get; set; }
-
-        [Column(TypeName = "varchar(10)")]
-        public string Terms { get; set; }
-
-        [Required]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Quantity { get; set; }
 
-        [Required]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Price { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
+        public decimal FinalPrice { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal? FinalPrice { get; set; }
+        [Column(TypeName = "varchar(200)")]
+        public string Remarks { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "varchar(5)")]
+        public string Terms { get; set; }
+
+        public Port Port { get; set; }
+
         [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal QuantityReceived { get; set; }
 
         public bool IsReceived { get; set; }
 
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime ReceivedDate { get; set; }
 
-        [Required]
-        [Column(TypeName = "varchar(200)")]
-        public string Remarks { get; set; }
-
         public bool IsClosed { get; set; }
-
-        [NotMapped]
-        public List<ReceivingReport>? RrList { get; set; }
 
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
+
+        #region--Select List Item
+
+        [NotMapped]
+        public List<FilprideReceivingReport>? RrList { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Suppliers { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Products { get; set; }
+
+        #endregion
     }
 }

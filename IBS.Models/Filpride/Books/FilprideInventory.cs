@@ -97,7 +97,7 @@ namespace IBS.Models.Filpride.Books
         public int? POId { get; set; }
 
         [ForeignKey("POId")]
-        public PurchaseOrder? PurchaseOrder { get; set; }
+        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
 
         public string Company { get; set; } = string.Empty;
     }

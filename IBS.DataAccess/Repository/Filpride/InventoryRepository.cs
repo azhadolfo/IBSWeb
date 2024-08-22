@@ -96,7 +96,7 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task AddPurchaseToInventoryAsync(ReceivingReport receivingReport, CancellationToken cancellationToken = default)
+        public async Task AddPurchaseToInventoryAsync(FilprideReceivingReport receivingReport, CancellationToken cancellationToken = default)
         {
             var sortedInventory = await _db.FilprideInventories
             .Where(i => i.Company == receivingReport.Company && i.ProductId == receivingReport.PurchaseOrder.Product.ProductId && i.POId == receivingReport.POId)
@@ -360,7 +360,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             try
             {
-                var existingPO = await _db.PurchaseOrders
+                var existingPO = await _db.FilpridePurchaseOrders
                 .Include(po => po.Supplier)
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == viewModel.POId, cancellationToken);
 
@@ -378,7 +378,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     .ToListAsync();
                 if (previousInventory != null && previousInventoryList.Any())
                 {
-                    var findRR = await _db.ReceivingReports
+                    var findRR = await _db.FilprideReceivingReports
                     .Where(rr => rr.POId == previousInventory.POId)
                     .ToListAsync(cancellationToken);
 
