@@ -7,11 +7,11 @@ using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
-    public class ReceivingReportRepo : Repository<FilprideReceivingReport>, IReceivingReportRepo
+    public class ReceivingReportRepository : Repository<FilprideReceivingReport>, IReceivingReportRepository
     {
         private ApplicationDbContext _db;
 
-        public ReceivingReportRepo(ApplicationDbContext db) : base(db)
+        public ReceivingReportRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
         }

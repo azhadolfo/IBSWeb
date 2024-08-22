@@ -7,11 +7,11 @@ using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
-    public class PurchaseOrderRepo : Repository<FilpridePurchaseOrder>, IPurchaseOrderRepo
+    public class PurchaseOrderRepository : Repository<FilpridePurchaseOrder>, IPurchaseOrderRepository
     {
         private ApplicationDbContext _db;
 
-        public PurchaseOrderRepo(ApplicationDbContext db) : base(db)
+        public PurchaseOrderRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
         }
@@ -67,6 +67,18 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderNo,
+                    Text = po.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetPurchaseOrderListAsyncById(string company, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilpridePurchaseOrders
+                .Where(p => p.Company == company)
+                .Select(po => new SelectListItem
+                {
+                    Value = po.PurchaseOrderId.ToString(),
                     Text = po.PurchaseOrderNo
                 })
                 .ToListAsync(cancellationToken);

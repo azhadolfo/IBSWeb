@@ -95,9 +95,9 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IJournalVoucherRepository FilprideJournalVoucher { get; }
 
-        IPurchaseOrderRepo FilpridePurchaseOrderRepo { get; }
+        Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrderRepository { get; }
 
-        IReceivingReportRepo FilprideReceivingReportRepo { get; }
+        Filpride.IRepository.IReceivingReportRepository FilprideReceivingReportRepository { get; }
 
         #endregion
 

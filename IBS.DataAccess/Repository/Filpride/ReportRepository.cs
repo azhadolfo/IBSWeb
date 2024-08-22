@@ -162,7 +162,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new ArgumentException("Date From must be greater than Date To !");
             }
 
-            var receivingReportRepo = new ReceivingReportRepo(_db);
+            var receivingReportRepo = new ReceivingReportRepository(_db);
             List<FilprideReceivingReport> receivingReport = new List<FilprideReceivingReport>();
 
             if (selectedFiltering == "UnpostedRR")

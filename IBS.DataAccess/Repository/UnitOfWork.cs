@@ -66,9 +66,9 @@ namespace IBS.DataAccess.Repository
 
         public IJournalVoucherRepository FilprideJournalVoucher { get; private set; }
 
-        public IPurchaseOrderRepo FilpridePurchaseOrderRepo { get; private set; }
+        public Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrderRepository { get; private set; }
 
-        public IReceivingReportRepo FilprideReceivingReportRepo { get; private set; }
+        public Filpride.IRepository.IReceivingReportRepository FilprideReceivingReportRepository { get; private set; }
         #endregion
 
         #region Books and Report
@@ -135,8 +135,8 @@ namespace IBS.DataAccess.Repository
             #region Accounts Payable
             FilprideCheckVoucher = new CheckVoucherRepository(_db);
             FilprideJournalVoucher = new JournalVoucherRepository(_db);
-            FilpridePurchaseOrderRepo = new PurchaseOrderRepo(_db);
-            FilprideReceivingReportRepo = new ReceivingReportRepo(_db);
+            FilpridePurchaseOrderRepository = new Filpride.PurchaseOrderRepository(_db);
+            FilprideReceivingReportRepository = new Filpride.ReceivingReportRepository(_db);
             #endregion
 
             #region Books and Report
