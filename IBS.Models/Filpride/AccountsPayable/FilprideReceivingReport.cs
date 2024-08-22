@@ -48,8 +48,6 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "varchar(50)")]
         public string? WithdrawalCertificate { get; set; }
 
-        public DateOnly? SupplierDrDate { get; set; }
-
         [Required]
         [Display(Name = "Truck/Vessels")]
         [Column(TypeName = "varchar(100)")]

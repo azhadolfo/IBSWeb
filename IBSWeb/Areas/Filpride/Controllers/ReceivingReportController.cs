@@ -227,7 +227,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.SupplierInvoiceNumber = model.SupplierInvoiceNumber;
                 existingModel.SupplierInvoiceDate = model.SupplierInvoiceDate;
                 existingModel.SupplierDrNo = model.SupplierDrNo;
-                existingModel.SupplierDrDate = model.SupplierDrDate;
                 existingModel.WithdrawalCertificate = model.WithdrawalCertificate;
                 existingModel.TruckOrVessels = model.TruckOrVessels;
                 existingModel.QuantityDelivered = model.QuantityDelivered;
