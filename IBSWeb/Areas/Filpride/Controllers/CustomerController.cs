@@ -192,7 +192,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 customer.IsActive = false;
                 await _unitOfWork.SaveAsync();
-                TempData["success"] = "Customer has been activated";
+                TempData["success"] = "Customer has been deactivated";
                 return RedirectToAction(nameof(Index));
             }
 

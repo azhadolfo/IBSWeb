@@ -307,7 +307,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var ledgers = new List<FilprideGeneralLedgerBook>();
 
-                        if (model.PurchaseOrder.Product.ProductName == "Biodiesel")
+                        if (model.PurchaseOrder.Product.ProductName == "BIODIESEL")
                         {
                             ledgers.Add(new FilprideGeneralLedgerBook
                             {
@@ -323,7 +323,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = model.Company
                             });
                         }
-                        else if (model.PurchaseOrder.Product.ProductName == "Econogas")
+                        else if (model.PurchaseOrder.Product.ProductName == "ECONOGAS")
                         {
                             ledgers.Add(new FilprideGeneralLedgerBook
                             {
