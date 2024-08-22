@@ -40,7 +40,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var rr = await _unitOfWork.FilprideReceivingReportRepo
+            var rr = await _unitOfWork.FilprideReceivingReportRepository
                 .GetAllAsync(rr => rr.Company == companyClaims, cancellationToken);
 
             return View(rr);
@@ -102,15 +102,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(model);
                 }
 
-                model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReportRepo.GenerateCodeAsync(companyClaims, cancellationToken);
+                model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReportRepository.GenerateCodeAsync(companyClaims, cancellationToken);
                 model.CreatedBy = _userManager.GetUserName(this.User);
                 model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
 
-                var existingPo = await _unitOfWork.FilpridePurchaseOrderRepo.GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
+                var existingPo = await _unitOfWork.FilpridePurchaseOrderRepository.GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
 
                 model.PONo = existingPo.PurchaseOrderNo;
 
-                model.DueDate = await _unitOfWork.FilprideReceivingReportRepo.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
+                model.DueDate = await _unitOfWork.FilprideReceivingReportRepository.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
 
                 if (po.Supplier.VatType == "Vatable")
                 {
@@ -219,11 +219,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Date = model.Date;
                 existingModel.POId = model.POId;
 
-                var existingPo = await _unitOfWork.FilpridePurchaseOrderRepo.GetAsync(po => po.PurchaseOrderId == model.POId);
+                var existingPo = await _unitOfWork.FilpridePurchaseOrderRepository.GetAsync(po => po.PurchaseOrderId == model.POId);
 
                 existingModel.PONo = existingPo.PurchaseOrderNo;
 
-                existingModel.DueDate = await _unitOfWork.FilprideReceivingReportRepo.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
+                existingModel.DueDate = await _unitOfWork.FilprideReceivingReportRepository.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
                 existingModel.SupplierInvoiceNumber = model.SupplierInvoiceNumber;
                 existingModel.SupplierInvoiceDate = model.SupplierInvoiceDate;
                 existingModel.SupplierDrNo = model.SupplierDrNo;
@@ -273,7 +273,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var receivingReport = await _unitOfWork.FilprideReceivingReportRepo.GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
+            var receivingReport = await _unitOfWork.FilprideReceivingReportRepository.GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
 
             if (receivingReport == null)
             {
@@ -285,7 +285,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.FilprideReceivingReportRepo.GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
+            var model = await _unitOfWork.FilprideReceivingReportRepository.GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
 
             if (model != null)
             {
@@ -404,7 +404,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Company = model.Company
                         });
 
-                        if (!_unitOfWork.FilprideReceivingReportRepo.IsJournalEntriesBalanced(ledgers))
+                        if (!_unitOfWork.FilprideReceivingReportRepository.IsJournalEntriesBalanced(ledgers))
                         {
                             throw new ArgumentException("Debit and Credit is not equal, check your entries.");
                         }
@@ -419,7 +419,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #endregion
 
-                        await _unitOfWork.FilprideReceivingReportRepo.UpdatePOAsync(model.PurchaseOrder.PurchaseOrderId, model.QuantityReceived, cancellationToken);
+                        await _unitOfWork.FilprideReceivingReportRepository.UpdatePOAsync(model.PurchaseOrder.PurchaseOrderId, model.QuantityReceived, cancellationToken);
 
                         #region --Purchase Book Recording
 
@@ -486,7 +486,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     //await _generalRepo.RemoveRecords<PurchaseJournalBook>(pb => pb.DocumentNo == model.RRNo, cancellationToken);
                     //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.RRNo, cancellationToken);
                     //await _generalRepo.RemoveRecords<Inventory>(i => i.Reference == model.RRNo, cancellationToken);
-                    await _unitOfWork.FilprideReceivingReportRepo.RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
+                    await _unitOfWork.FilprideReceivingReportRepository.RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
                     model.QuantityReceived = 0;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -527,7 +527,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetLiquidations(int id, CancellationToken cancellationToken)
         {
-            var po = await _unitOfWork.FilpridePurchaseOrderRepo.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            var po = await _unitOfWork.FilpridePurchaseOrderRepository.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
             var rrPostedOnly = await _dbContext
                 .FilprideReceivingReports
@@ -569,7 +569,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.FilprideReceivingReportRepo.GetAsync(x => x.ReceivingReportId == id, cancellationToken);
+            var cv = await _unitOfWork.FilprideReceivingReportRepository.GetAsync(x => x.ReceivingReportId == id, cancellationToken);
             if (cv?.IsPrinted == false)
             {
                 #region --Audit Trail Recording
