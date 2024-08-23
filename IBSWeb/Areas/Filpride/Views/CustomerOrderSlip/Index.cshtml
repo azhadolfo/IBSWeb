@@ -40,6 +40,9 @@
                     <th>
                         Total Amount
                     </th>
+                    <th>
+                        Status
+                    </th>
                     <th></th>
                 </tr>
             </thead>
@@ -63,6 +66,16 @@
                             @Html.DisplayFor(model => obj.TotalAmount)
                         </td>
                         <td>
+                            @{
+                                var status = obj.ApprovedBy != null && obj.DisapprovedBy == null
+                                    ? "Approved"
+                                        : obj.DisapprovedBy != null
+                                            ? "Disapproved"
+                                            : "Pending";
+                            }
+                            <span class="badge rounded-pill @if(status == "Approved") {<text>bg-info</text>} else if(status == "Disapproved") {<text>bg-danger</text>}">@status</span>
+                        </td>
+                        @*<td>
                             <div class="w-100 btn-group" role="group">
                                 @if (obj.DisapprovedBy != null)
                                 {
@@ -85,6 +98,28 @@
                                     </a>
                                 }
                             </div>
+                        </td>*@
+                        <td class="text-center">
+                            <div class="dropdown" style="@(obj.DisapprovedBy != null ? "display:none;" : "")">
+                                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                    @if (obj.ApprovedBy == null)
+                                    {
+                                        <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                        <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Preview</a></li>
+                                        }
+                                        else
+                                        {
+                                        <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Print</a></li>
+
+                                        }
+
+                                    </ul>
+                            </div>
+
+                            @*@await Html.PartialAsync("_Preview", obj)*@
                         </td>
                     </tr>
                 }
