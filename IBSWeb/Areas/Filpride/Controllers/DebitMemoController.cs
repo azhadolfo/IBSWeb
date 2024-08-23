@@ -734,9 +734,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
 
-                    ///PENDING - further discussion
-                    //await _generalRepo.RemoveRecords<SalesBook>(crb => crb.SerialNo == model.DebitMemoNo);
-                    //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo);
+                    await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.DebitMemoNo);
+                    await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo);
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Debit Memo has been Voided.";

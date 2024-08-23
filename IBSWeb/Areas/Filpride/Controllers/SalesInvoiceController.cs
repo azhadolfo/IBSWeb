@@ -598,9 +598,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
 
-                    //await _generalRepo.RemoveRecords<SalesBook>(sb => sb.SerialNo == model.SINo, cancellationToken);
-                    //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.SINo, cancellationToken);
-                    //await _generalRepo.RemoveRecords<Inventory>(i => i.Reference == model.SINo, cancellationToken);
+                    await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideSalesBook>(sb => sb.SerialNo == model.SalesInvoiceNo, cancellationToken);
+                    await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.SalesInvoiceNo, cancellationToken);
+                    await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideInventory>(i => i.Reference == model.SalesInvoiceNo, cancellationToken);
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Sales Invoice has been Voided.";

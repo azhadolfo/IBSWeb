@@ -392,8 +392,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var model = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(id, cancellationToken);
-            var findJVInJB = await _dbContext.FilprideJournalBooks.Where(jb => jb.Reference == model.JournalVoucherHeaderNo).ToListAsync();
-            var findJVInGL = await _dbContext.FilprideGeneralLedgerBooks.Where(jb => jb.Reference == model.JournalVoucherHeaderNo).ToListAsync();
 
             if (model != null)
             {
@@ -407,15 +405,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
 
-                    ///PENDING - futher discussion
-                    //if (findJVInJB.Any())
-                    //{
-                    //    await _generalRepo.RemoveRecords<JournalBook>(crb => crb.Reference == model.JVNo);
-                    //}
-                    //if (findJVInGL.Any())
-                    //{
-                    //    await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.JVNo);
-                    //}
+                    await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideJournalBook>(crb => crb.Reference == model.JournalVoucherHeaderNo);
+                    await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.JournalVoucherHeaderNo);
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Journal Voucher has been Voided.";

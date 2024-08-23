@@ -909,9 +909,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
 
-                    ///PENDING - further discussion
-                    //await _generalRepo.RemoveRecords<SalesBook>(crb => crb.SerialNo == model.CMNo);
-                    //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.CMNo);
+                    await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.CreditMemoNo);
+                    await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CreditMemoNo);
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Credit Memo has been Voided.";

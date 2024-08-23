@@ -1534,22 +1534,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var findOffsetting = await _dbContext.FilprideOffsettings.Where(offset => offset.Company == model.Company && offset.Source == model.CollectionReceiptNo && offset.Reference == series).ToListAsync(cancellationToken);
 
-                        ///PENDING - further discussion
-                        //await _generalRepo.RemoveRecords<CashReceiptBook>(crb => crb.RefNo == model.CRNo, cancellationToken);
-                        //await _generalRepo.RemoveRecords<GeneralLedgerBook>(gl => gl.Reference == model.CRNo, cancellationToken);
+                        await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideCashReceiptBook>(crb => crb.RefNo == model.CollectionReceiptNo, cancellationToken);
+                        await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CollectionReceiptNo, cancellationToken);
 
-                        ///PENDING - further discussion
-                        //if (findOffsetting.Any())
-                        //{
-                        //    await _generalRepo.RemoveRecords<Offsetting>(offset => offset.Source == model.CRNo && offset.Reference == series, cancellationToken);
-                        //}
-                        if (series.Contains("SI"))
+                        if (findOffsetting.Any())
+                        {
+                            await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideOffsettings>(offset => offset.Source == model.CollectionReceiptNo && offset.Reference == series, cancellationToken);
+                        }
+                        if (model.SINo != null)
                         {
                             await _unitOfWork.FilprideCollectionReceipt.RemoveSIPayment(model.SalesInvoice.SalesInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
                         }
-                        else
+                        else if (model.SVNo != null)
                         {
                             await _unitOfWork.FilprideCollectionReceipt.RemoveSVPayment(model.ServiceInvoice.ServiceInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                        }
+                        else if (model.MultipleSI != null)
+                        {
+                            await _unitOfWork.FilprideCollectionReceipt.RemoveMultipleSIPayment(model.MultipleSIId, model.SIMultipleAmount, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                        }
+                        else
+                        {
+                            TempData["error"] = "No series number found";
+                            return RedirectToAction(nameof(Index));
                         }
 
                         await _dbContext.SaveChangesAsync(cancellationToken);

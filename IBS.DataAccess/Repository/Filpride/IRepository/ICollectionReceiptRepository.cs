@@ -16,6 +16,8 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task<int> RemoveSVPayment(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default);
 
+        Task<int> RemoveMultipleSIPayment(int[] id, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default);
+
         Task<int> UpdateSV(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default);
 
         Task<List<FilprideOffsettings>> GetOffsettings(string source, string reference, string company, CancellationToken cancellationToken = default);
