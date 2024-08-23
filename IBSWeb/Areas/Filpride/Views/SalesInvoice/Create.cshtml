@@ -170,7 +170,7 @@
                 if (customerId !== "") {
                     // Make an AJAX request to get the customer details based on the selected CustomerId
                     $.ajax({
-                        url: '@Url.Action("GetCustomerDetails", "SalesInvoice")', // Replace with the actual controller and action names
+                        url: '@Url.Action("GetCustomerDetails", "SalesInvoice", new { area = "Filpride" })', // Replace with the actual controller and action names
                         method: "GET",
                         data: { customerId: customerId },
                         success: function (data) {
@@ -214,7 +214,7 @@
                 if (productId !== "") {
                     // Make an AJAX request to get the customer details based on the selected CustomerId
                     $.ajax({
-                        url: '@Url.Action("GetProductDetails", "SalesInvoice")', // Replace with the actual controller and action names
+                        url: '@Url.Action("GetProductDetails", "SalesInvoice", new { area = "Filpride" })', // Replace with the actual controller and action names
                         method: "GET",
                         data: { productId: productId },
                         success: function (data) {

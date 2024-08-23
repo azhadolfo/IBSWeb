@@ -196,7 +196,7 @@
             var cvId = $(this).val();
             if (cvId !== "") {
                 $.ajax({
-                    url: "/Filpride/CheckVoucher/GetCheckVoucherDetails", // Replace with the actual controller and action names
+                    url: '@Url.Action("GetSupplierDetails", "CheckVoucher", new { area = "Filpride" })', // Replace with the actual controller and action names
                     method: "GET",
                     data: { cvId: cvId },
                     success: function (data) {
@@ -226,7 +226,7 @@
                 // Check if a valid bank is selected
                 if (bankId !== "") {
                     $.ajax({
-                        url: '/Filpride/CheckVoucher/GetBankAccount', // Replace with your controller and action method
+                        url: '@Url.Action("GetBankAccount", "CheckVoucher", new { area = "Filpride" })', // Replace with your controller and action method
                         type: 'GET',
                         data: { bankId: bankId },
                         success: function (data) {

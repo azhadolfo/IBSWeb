@@ -403,7 +403,7 @@
                 if (suppId !== "") {
                     // Make an AJAX request to get the TaxType based on the selected SupplierId
                     $.ajax({
-                        url: "/Filpride/CheckVoucher/GetSupplierDetails",
+                        url: '@Url.Action("GetSupplierDetails", "CheckVoucher", new { area = "Filpride" })',
                         method: "GET",
                         data: { supplierId: suppId },
                         success: function (data) {
@@ -477,7 +477,7 @@
                 if (suppId !== "") {
                     // Make an AJAX request to get the POs based on the selected SupplierId
                     $.ajax({
-                        url: "/Filpride/CheckVoucher/GetPOs",
+                        url: '@Url.Action("GetPOs", "CheckVoucher", new { area = "Filpride" })',
                         method: "GET",
                         data: { supplierId: suppId }, // Corrected parameter name
                         success: function (data) {
@@ -560,7 +560,7 @@
         function displayRecords(poNumber, criteria) {
             // Make an AJAX request to get the RRs based on the selected POIds and display criteria
             $.ajax({
-                url: "/Filpride/CheckVoucher/GetRRs",
+                url: '@Url.Action("GetRRs", "CheckVoucher", new { area = "Filpride" })',
                 method: "GET",
                 data: { poNumber: poNumber, criteria: criteria }, // Pass PO numbers to controller
                 traditional: true, // Ensure jQuery sends the array properly
@@ -678,7 +678,7 @@
                     if (rrNo !== "") {
                         // Make an AJAX request to get the balance based on the selected RRNo
                         $.ajax({
-                            url: "/Filpride/CheckVoucher/RRBalance",
+                            url: '@Url.Action("RRBalance", "CheckVoucher", new { area = "Filpride" })',
                             method: "GET",
                             data: { rrNo: rrNo },
                             success: function (data) {
@@ -855,7 +855,7 @@
             $('#bankAccounts').change(function () {
                 var bankId = $(this).val();
                 $.ajax({
-                    url: "/Filpride/CheckVoucher/GetBankAccount",
+                    url: '@Url.Action("GetBankAccount", "CheckVoucher", new { area = "Filpride" })',
                     method: "GET",
                     data: { bankId: bankId },
                     success: function (data) {

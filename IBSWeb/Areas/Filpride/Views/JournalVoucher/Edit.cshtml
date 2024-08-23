@@ -359,7 +359,7 @@
             function cvDetails(cvId) {
                 if (cvId !== "") {
                     $.ajax({
-                        url: "/Filpride/JournalVoucher/GetCV",
+                        url: '@Url.Action("GetCV", "JournalVoucher", new { area = "Filpride" })',
                         method: "GET",
                         data: { id: cvId },
                         success: function (data) {

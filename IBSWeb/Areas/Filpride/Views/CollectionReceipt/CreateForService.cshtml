@@ -206,7 +206,7 @@
                     var customerNo = $(this).val();
 
                     $.ajax({
-                        url: '/Filpride/CollectionReceipt/GetServiceInvoices',
+                    url: '@Url.Action("GetServiceInvoices", "CollectionReceipt", new { area = "Filpride" })',
                         type: "GET",
                         data: { customerNo: customerNo },
                         success: function (data) {
@@ -297,7 +297,7 @@
 
                 if (invoiceNo != "") {
                     $.ajax({
-                        url: '/Filpride/CollectionReceipt/GetInvoiceDetails',
+                    url: '@Url.Action("GetInvoiceDetails", "CollectionReceipt", new { area = "Filpride" })',
                         type: "GET",
                         data: {
                             invoiceNo: invoiceNo,

@@ -237,10 +237,9 @@
         $(document).ready(function () {
             $("#CustomerId").change(function () {
                 var customerNo = $(this).val();
-                var url = '@Url.Action("GetSalesInvoices", "CollectionReceipt", new { area = "Filpride" })';
 
                 $.ajax({
-                    url: url,
+                    url: '@Url.Action("GetSalesInvoices", "CollectionReceipt", new { area = "Filpride" })',
                     type: "GET",
                     data: { customerNo: customerNo },
                     success: function (data) {
@@ -358,7 +357,7 @@
                     if (siNo !== "") {
                         // Make an AJAX request to get the balance based on the selected siNo
                         $.ajax({
-                            url: "/Filpride/CollectionReceipt/MultipleInvoiceBalance",
+                            url: '@Url.Action("MultipleInvoiceBalance", "CollectionReceipt", new { area = "Filpride" })',
                             method: "GET",
                             data: { siNo: siNo },
                             success: function (data) {

@@ -133,7 +133,7 @@
             console.log(id);
             if (id != "") {
                 $.ajax({
-                    url: "@Url.Action("GetLiquidations", "ReceivingReport")",
+                    url: '@Url.Action("GetLiquidations", "ReceivingReport", new { area = "Filpride" })',
                     type: "GET",
                     data: { id: id },
                     success: function (data) {

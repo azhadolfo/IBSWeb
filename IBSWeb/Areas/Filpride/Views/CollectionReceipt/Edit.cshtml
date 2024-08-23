@@ -229,7 +229,7 @@ Balance:        <span id="balance"></span>
                 var customerNo = $(this).val();
 
                 $.ajax({
-                    url: "/Receipt/GetSalesInvoices",
+                    url: '@Url.Action("GetSalesInvoices", "CollectionReceipt", new { area = "Filpride" })',
                     type: "GET",
                     data: { customerNo: customerNo },
                     success: function (data) {
@@ -321,7 +321,7 @@ Balance:        <span id="balance"></span>
 
             if (salesInvoice != undefined) {
                 $.ajax({
-                    url: "/Filpride/CollectionReceipt/GetInvoiceDetails",
+                    url: '@Url.Action("GetInvoiceDetails", "CollectionReceipt", new { area = "Filpride" })',
                     type: "GET",
                     data: {
                         invoiceNo: salesInvoice,
@@ -340,7 +340,7 @@ Balance:        <span id="balance"></span>
                 });
             } else {
                 $.ajax({
-                    url: "/Filpride/CollectionReceipt/GetInvoiceDetails",
+                    url: '@Url.Action("GetInvoiceDetails", "CollectionReceipt", new { area = "Filpride" })',
                     type: "GET",
                     data: {
                         invoiceNo: serviceInvoice,
