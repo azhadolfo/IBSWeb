@@ -65,7 +65,7 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 var total = paidAmount + offsetAmount;
                 si.AmountPaid -= total;
-                si.Balance -= si.NetDiscount - total;
+                si.Balance += total;
 
                 if (si.IsPaid == true && si.Status == "Paid" || si.IsPaid == true && si.Status == "OverPaid")
                 {
@@ -91,12 +91,42 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 var total = paidAmount + offsetAmount;
                 sv.AmountPaid -= total;
-                sv.Balance -= (sv.Total - sv.Discount) - total;
+                sv.Balance += total;
 
                 if (sv.IsPaid == true && sv.Status == "Paid" || sv.IsPaid == true && sv.Status == "OverPaid")
                 {
                     sv.IsPaid = false;
                     sv.Status = "Pending";
+                }
+
+                return await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new ArgumentException("", "No record found");
+            }
+        }
+
+        public async Task<int> RemoveMultipleSIPayment(int[] id, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
+        {
+            var salesInvoices = await _db
+                .FilprideSalesInvoices
+                .Where(si => id.Contains(si.SalesInvoiceId))
+                .ToListAsync(cancellationToken);
+
+            if (salesInvoices != null)
+            {
+                for (int i = 0; i < paidAmount.Length; i++)
+                {
+                    var total = paidAmount[i] + offsetAmount;
+                    salesInvoices[i].AmountPaid -= total;
+                    salesInvoices[i].Balance += total;
+
+                    if (salesInvoices[i].IsPaid == true && salesInvoices[i].Status == "Paid" || salesInvoices[i].IsPaid == true && salesInvoices[i].Status == "OverPaid")
+                    {
+                        salesInvoices[i].IsPaid = false;
+                        salesInvoices[i].Status = "Pending";
+                    }
                 }
 
                 return await _db.SaveChangesAsync(cancellationToken);
