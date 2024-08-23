@@ -976,6 +976,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
+            viewModel.DefaultExpenses = await _dbContext.ChartOfAccounts
+                .Where(coa => coa.Level == 4 || coa.Level == 5)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
+
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
                 .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
                 .Select(sup => new SelectListItem
@@ -1388,6 +1397,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = sup.SupplierName
                 })
                 .ToListAsync();
+
+            //existingDetailsModel.DefaultExpenses = await _dbContext.ChartOfAccounts
+            //    .Select(s => new SelectListItem
+            //    {
+            //        Value = s.AccountNumber,
+            //        Text = s.AccountNumber + " " + s.AccountName
+            //    })
+            //    .ToListAsync(cancellationToken);
 
             existingModel.COA = await _dbContext.ChartOfAccounts
                         .Where(coa => coa.Level == 4 || coa.Level == 5)

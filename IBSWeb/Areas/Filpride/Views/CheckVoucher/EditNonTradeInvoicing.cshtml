@@ -367,18 +367,26 @@
                 var credits = @Html.Raw(Json.Serialize(Model.Credit));
 
                 for (var i = 0; i < accountNumbers.length; i++) {
-                    var creditClass = 'ap-trade-credit'; // Initialize the debit class
+                    var creditClass = 'ap-trade-credit w-100'; // Initialize the debit class
+                    var widthClass = 'w-100'; // Initialize the debit class
+                    var defaultExpenseClass = 'form-select js-select2 defaultExpenseText w-100';
 
                     // Construct the row HTML with the determined row class
                     var row = '<tr>' +
                         '<input type="hidden" name="AccountNumber" value="' + accountNumbers[i] + '" />' +
-                        '<td><input type="text" name="AccountTitle" value="' + accountTitles[i] + '" style="border:none" readonly /></td>' +
-                        '<td><input type="text" name="Debit" value="' + debits[i].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '" style="border:none" readonly /></td>' +
+                        (i !== 0 ? '<td><input type="text" name="AccountTitle" value="' + accountNumbers[i] + ' ' + accountTitles[i] + '" class="' + widthClass + '" style="border:none" readonly /></td>'
+                            : '<td><select asp-for="@Model.AccountNumber" asp-items="@Model.DefaultExpenses" class="' + defaultExpenseClass + '">' +
+                            '<option></option>' +
+                            '</select></td>') +
+                        '<td><input type="text" name="Debit" value="' + debits[i].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '" class="' + widthClass + '" style="border:none" readonly /></td>' +
                         '<td><input type="text" name="Credit" value="' + credits[i].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '" class="' + creditClass + '" style="border:none" readonly /></td>' +
-                        (i === 0 ? '<td></td>' : '<td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>') +
+                        (i < 4 ? '<td></td>' : '<td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>') +
                         '</tr>';
 
                     $('.defaultEntry').append(row);
+
+                    // Reinitialize Select2 on the newly added elements
+                    $('.js-select2').select2();
                 }
 
                 updateTotalDebitAndCredit();

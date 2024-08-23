@@ -86,8 +86,10 @@
                             <tbody id="accountingEntriesBody">
                                 <tr>
                                     <td>
-                                        <input type="hidden" name="AccountNumber" class="defaultExpenseNumber" />
-                                        <input name='AccountTitle' class="w-100 defaultExpenseTitle" style='border:none' readonly />
+                                        <input type="hidden" name="AccountTitle" class="defaultExpenseTitle" />
+                                        <select asp-for="AccountNumber" asp-items="@Model.DefaultExpenses" class="form-select js-select2 defaultExpenseText" style="width: 100%">
+                                            <option></option>
+                                        </select>
                                     </td>
                                     <td><input name="Debit" value='0.00' class="w-100 netOfVat" style='border:none' readonly /></td>
                                     <td><input name="Credit" value='0.00' class="w-100" style='border:none' readonly /></td>
@@ -199,7 +201,7 @@
 
                 if (supplierId !== "") {
                     $.ajax({
-                        url: '@Url.Action("GetSupplierDetails", "CheckVoucher", new { area = "Filpride" })', // Replace with the actual controller and action names
+                        url: '@Url.Action("GetSupplierDetails", "CheckVoucher", new { area = "Filpride" })',
                         method: "GET",
                         data: { supplierId: supplierId },
                         success: function (data) {
@@ -217,16 +219,12 @@
                                 $("#SupplierName").val(data.name);
                                 $("#SupplierAddress").val(data.address);
                                 $("#SupplierTinNo").val(data.tinNo);
-                                $(".defaultExpenseNumber").val(data.defaultExpense !== null ? data.defaultExpense.split(' ')[0] : null);
-                                $(".defaultExpenseTitle").val(data.defaultExpense !== null ? data.defaultExpense.replace(/^\s*\S+\s*/, '').trim() : null);
                                 $(".withholdingTaxNumber").val(data.withholdingTax !== null ? data.withholdingTax.split(' ')[0] : null);
                                 $(".withholdingTaxTitle").val(data.withholdingTax !== null ? data.withholdingTax.replace(/^\s*\S+\s*/, '').trim() : null);
                             } else {
                                 $("#SupplierName").val("");
                                 $("#SupplierAddress").val("");
                                 $("#SupplierTinNo").val("");
-                                $(".defaultExpenseNumber").val("");
-                                $(".defaultExpenseTitle").val("");
                                 $(".withholdingTaxNumber").val("");
                                 $(".withholdingTaxtitle").val("");
                             }
@@ -304,12 +302,17 @@
                     $("#SupplierName").val("");
                     $("#SupplierAddress").val("");
                     $("#SupplierTinNo").val("");
-                    $(".defaultExpenseNumber").val("");
-                    $(".defaultExpenseTitle").val("");
                     $(".withholdingTaxNumber").val("");
                     $(".withholdingTaxtitle").val("");
                 }
             };
+        </script>
+        <script>
+            $(".defaultExpenseText").change(function () {
+                var defaultExpenseTitle = $(".defaultExpenseText option:selected").text().replace(/^\S+\s/, '');
+                console.log(defaultExpenseTitle)
+                $(".defaultExpenseTitle").val(defaultExpenseTitle);
+            });
         </script>
         <script>
             function saveAccountingEntry() {

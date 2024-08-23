@@ -43,6 +43,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public decimal[] Credit { get; set; }
 
+        public List<SelectListItem>? DefaultExpenses { get; set; }
+
         #region--For automation of journal voucher entry
 
         public DateOnly? StartDate { get; set; }
