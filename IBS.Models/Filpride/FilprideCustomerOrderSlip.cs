@@ -29,7 +29,7 @@ namespace IBS.Models.Filpride
         #endregion
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         [Display(Name = "Total Amount")]
         public decimal TotalAmount { get; set; }
 

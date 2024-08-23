@@ -154,10 +154,10 @@ else
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Approve action
-                    window.location.href = '@Url.Action("Approve", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlipNo })';
+                    window.location.href = '@Url.Action("Approve", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlipId })';
                 } else if (result.isDenied) {
                     // Disapprove action
-                    window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlipNo })';
+                    window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlipId })';
                 }
             });
         });

@@ -356,6 +356,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 //create the automatic creation of rr
 
                 existingRecord.DeliveredDate = DateOnly.FromDateTime(DateTime.Now);
+
+                await _unitOfWork.FilprideReceivingReportRepository.AutoGenerateReceivingReport(existingRecord, cancellationToken);
+
                 await _unitOfWork.SaveAsync(cancellationToken);
 
                 TempData["success"] = "Delivery receipt is delivered";
@@ -363,7 +366,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                TempData["error"] = ex;
+                TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }

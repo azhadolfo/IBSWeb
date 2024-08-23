@@ -70,17 +70,17 @@
                                 }
                                 else if (obj.ApprovedBy == null && obj.DisapprovedBy == null)
                                 {
-                                    <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipNo" class="btn btn-primary mx-2">
+                                    <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId" class="btn btn-primary mx-2">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </a>
 
-                                    <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipNo">
+                                    <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">
                                         <i class="bi bi-printer-fill"></i> Preview
                                     </a>
                                 }
                                 else if (obj.ApprovedBy != null && obj.DisapprovedBy == null)
                                 {
-                                    <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipNo">
+                                    <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">
                                         <i class="bi bi-printer-fill"></i> Preview
                                     </a>
                                 }

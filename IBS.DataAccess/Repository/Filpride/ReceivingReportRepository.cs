@@ -1,6 +1,10 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.Books;
+using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -218,6 +222,196 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             return await query.ToListAsync(cancellationToken);
+        }
+
+        public async Task AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, CancellationToken cancellationToken = default)
+        {
+            FilprideReceivingReport model = new()
+            {
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                POId = deliveryReceipt.CustomerOrderSlip.PurchaseOrderId,
+                PONo = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo,
+                QuantityDelivered = deliveryReceipt.Quantity,
+                QuantityReceived = deliveryReceipt.Quantity,
+                TruckOrVessels = deliveryReceipt.Hauler.HaulerName,
+                OtherRef = deliveryReceipt.AuthorityToLoadNo,
+                Remarks = "PENDING",
+                Company = deliveryReceipt.Company,
+                CreatedBy = "SYSTEM GENERATED",
+                CreatedDate = DateTime.Now,
+                PostedBy = "SYSTEM GENERATED",
+                PostedDate = DateTime.Now
+            };
+
+            if (model.QuantityDelivered > (deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Quantity - deliveryReceipt.CustomerOrderSlip.PurchaseOrder.QuantityReceived))
+            {
+                throw new ArgumentException("Inputted quantity is exceed to remaining quantity delivered");
+            }
+
+            model.ReceivingReportNo = await GenerateCodeAsync(model.Company, cancellationToken);
+            model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
+            model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
+            model.Amount = model.QuantityReceived * deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price;
+            model.NetAmount = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable ? ComputeNetOfVat(model.Amount) : model.Amount;
+            model.VatAmount = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable ? ComputeVatAmount(model.Amount) : model.Amount;
+            model.EwtAmount = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.TaxType_WithTax ? model.NetAmount * 0.01m : model.NetAmount;
+            model.NetAmountOfEWT = model.Amount - model.EwtAmount;
+
+            await _db.AddAsync(model, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+
+            await PostAsync(model, cancellationToken);
+
+        }
+
+        public async Task PostAsync(FilprideReceivingReport model, CancellationToken cancellationToken = default)
+        {
+            #region --General Ledger Recording
+
+            var ledgers = new List<FilprideGeneralLedgerBook>();
+
+            if (model.PurchaseOrder.Product.ProductName == "BIODIESEL")
+            {
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = model.Date,
+                    Reference = model.ReceivingReportNo,
+                    Description = "Receipt of Goods",
+                    AccountNo = "1010401",
+                    AccountTitle = "Inventory - Biodiesel",
+                    Debit = model.NetAmount,
+                    Credit = 0,
+                    CreatedBy = model.CreatedBy,
+                    CreatedDate = model.CreatedDate,
+                    Company = model.Company
+                });
+            }
+            else if (model.PurchaseOrder.Product.ProductName == "ECONOGAS")
+            {
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = model.Date,
+                    Reference = model.ReceivingReportNo,
+                    Description = "Receipt of Goods",
+                    AccountNo = "1010402",
+                    AccountTitle = "Inventory - Econogas",
+                    Debit = model.NetAmount,
+                    Credit = 0,
+                    CreatedBy = model.CreatedBy,
+                    CreatedDate = model.CreatedDate,
+                    Company = model.Company
+                });
+            }
+            else
+            {
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = model.Date,
+                    Reference = model.ReceivingReportNo,
+                    Description = "Receipt of Goods",
+                    AccountNo = "1010403",
+                    AccountTitle = "Inventory - Envirogas",
+                    Debit = model.NetAmount,
+                    Credit = 0,
+                    CreatedBy = model.CreatedBy,
+                    CreatedDate = model.CreatedDate,
+                    Company = model.Company
+                });
+            }
+
+            if (model.VatAmount > 0)
+            {
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = model.Date,
+                    Reference = model.ReceivingReportNo,
+                    Description = "Receipt of Goods",
+                    AccountNo = "1010602",
+                    AccountTitle = "Vat Input",
+                    Debit = model.VatAmount,
+                    Credit = 0,
+                    CreatedBy = model.CreatedBy,
+                    CreatedDate = model.CreatedDate,
+                    Company = model.Company
+                });
+            }
+
+            if (model.EwtAmount > 0)
+            {
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = model.Date,
+                    Reference = model.ReceivingReportNo,
+                    Description = "Receipt of Goods",
+                    AccountNo = "2010302",
+                    AccountTitle = "Expanded Withholding Tax 1%",
+                    Debit = 0,
+                    Credit = model.EwtAmount,
+                    CreatedBy = model.CreatedBy,
+                    CreatedDate = model.CreatedDate,
+                    Company = model.Company
+                });
+            }
+
+            ledgers.Add(new FilprideGeneralLedgerBook
+            {
+                Date = model.Date,
+                Reference = model.ReceivingReportNo,
+                Description = "Receipt of Goods",
+                AccountNo = "2010101",
+                AccountTitle = "AP-Trade Payable",
+                Debit = 0,
+                Credit = model.Amount - model.EwtAmount,
+                CreatedBy = model.CreatedBy,
+                CreatedDate = model.CreatedDate,
+                Company = model.Company
+            });
+
+            if (!IsJournalEntriesBalanced(ledgers))
+            {
+                throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+            }
+
+            await _db.AddRangeAsync(ledgers, cancellationToken);
+
+            #endregion --General Ledger Recording
+
+            #region--Inventory Recording
+
+            var unitOfWork = new UnitOfWork(_db);
+
+            await unitOfWork.FilprideInventory.AddPurchaseToInventoryAsync(model, cancellationToken);
+
+            #endregion
+
+            await UpdatePOAsync(model.PurchaseOrder.PurchaseOrderId, model.QuantityReceived, cancellationToken);
+
+            #region --Purchase Book Recording
+
+            var purchaseBook = new List<FilpridePurchaseBook>();
+
+            purchaseBook.Add(new FilpridePurchaseBook
+            {
+                Date = model.Date,
+                SupplierName = model.PurchaseOrder.Supplier.SupplierName,
+                SupplierTin = model.PurchaseOrder.Supplier.SupplierTin,
+                SupplierAddress = model.PurchaseOrder.Supplier.SupplierAddress,
+                DocumentNo = model.ReceivingReportNo,
+                Description = model.PurchaseOrder.Product.ProductName,
+                Amount = model.Amount,
+                VatAmount = model.VatAmount,
+                WhtAmount = model.EwtAmount,
+                NetPurchases = model.NetAmount,
+                CreatedBy = model.CreatedBy,
+                PONo = model.PurchaseOrder.PurchaseOrderNo,
+                DueDate = model.DueDate,
+                Company = model.Company
+            });
+
+            await _db.AddRangeAsync(purchaseBook, cancellationToken);
+            #endregion --Purchase Book Recording
+
+            await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -75,7 +75,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<List<SelectListItem>> GetPurchaseOrderListAsyncById(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePurchaseOrders
-                .Where(p => p.Company == company)
+                .Where(p => p.Company == company && !p.IsReceived)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
