@@ -216,9 +216,25 @@ else
     </div>
 }
 
-<div>
-    <a asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Printed" asp-route-id="@Model.Header.JournalVoucherHeaderId" class="btn btn-success buttons" onclick="printPage()">Print</a>
-    <a asp-action="Index" class="btn buttons">Back</a>
+<div class="row pt-2">
+    @{
+        if (Model.Header.PostedBy == null)
+        {
+            <div class="col-6 col-md-3">
+                <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.Header.JournalVoucherHeaderId)">Post</a>
+            </div>
+        }
+        else
+        {
+            <div class="col-6 col-md-3">
+                <a asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Printed" asp-route-id="@Model.Header.JournalVoucherHeaderId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+            </div>
+        }
+    }
+
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+    </div>
 </div>
 
 @section Scripts {
@@ -282,6 +298,25 @@ else
 
             // Restore the header and footer's visibility after printing (optional)
             document.querySelector("header").style.display = "";
+        }
+    </script>
+    <script>
+        function confirmPost(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Post'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Replace with the actual URL that you want to redirect to
+                    var url = `@Url.Action("Post", "JournalVoucher", new { area = "Filpride" })/${id}`;
+                    window.location.href = url;
+                }
+            })
         }
     </script>
 }

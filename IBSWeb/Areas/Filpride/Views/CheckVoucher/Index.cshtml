@@ -20,9 +20,9 @@
             <div class="col-6">
             </div>
         </div>
-        <table class="table table-bordered table-striped" id="dataTable">
+        <table class="table table-bordered table-hover" id="dataTable">
             <thead>
-                <tr class="text-nowrap">
+                <tr class="text-nowrap table-secondary">
                     <th>
                         CV No
                     </th>
@@ -98,11 +98,8 @@
                                             }
                                         </li>
                                         <li>
-                                            <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.Header.CheckVoucherHeaderId" data-bs-url="@Url.Action($"Preview/{item.Header.CheckVoucherHeaderId}")">
-                                                Preview
-                                            </button>
+                                            <a class="dropdown-item" asp-action="Print" asp-route-id="@item.Header.CheckVoucherHeaderId">Preview</a>
                                         </li>
-                                        <li><a class="dropdown-item" onclick="confirmPost(@item.Header.CheckVoucherHeaderId)">Post</a></li>
                                         <li><a class="dropdown-item" onclick="confirmCancel(@item.Header.CheckVoucherHeaderId)">Cancel</a></li>
                                     }
                                     else
@@ -112,8 +109,6 @@
                                     }
                                 </ul>
                             </div>
-
-                            @await Html.PartialAsync("_Preview", item)
                         </td>
                     </tr>
                 }
@@ -123,25 +118,6 @@
 </div>
 
 @section Scripts {
-    <script>
-        function confirmPost(id) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Post'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Post", "CheckVoucher", new { area = "Filpride" })/${id}`;
-                    window.location.href = url;
-                }
-            })
-        }
-    </script>
     <script>
         function confirmVoid(id) {
             Swal.fire({

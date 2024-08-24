@@ -26,9 +26,9 @@
                 </a>
             </div>
         </div>
-        <table class="table table-bordered table-striped" id="dataTable">
+        <table class="table table-bordered table-hover" id="dataTable">
             <thead>
-                <tr class="text-nowrap">
+                <tr class="text-nowrap table-secondary">
                     <th>
                         @Html.DisplayNameFor(model => model.ServiceInvoiceNo)
                     </th>
@@ -97,11 +97,8 @@
                                     {
                                         <li><a asp-action="Edit" asp-route-id="@item.ServiceInvoiceId" class="dropdown-item">Edit</a></li>
                                         <li>
-                                            <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.ServiceInvoiceId" data-bs-url="@Url.Action($"Preview/{item.ServiceInvoiceId}")">
-                                                Preview
-                                            </button>
+                                            <a class="dropdown-item" asp-action="Print" asp-route-id="@item.ServiceInvoiceId">Preview</a>
                                         </li>
-                                        <li><a class="dropdown-item" onclick="confirmPost(@item.ServiceInvoiceId)">Post</a></li>
                                         <li><a class="dropdown-item" onclick="confirmCancel(@item.ServiceInvoiceId)">Cancel</a></li>
                                     }
                                     else
@@ -120,8 +117,6 @@
                                     }
                                 </ul>
                             </div>
-
-                            @await Html.PartialAsync("_Preview", item)
                         </td>
                     </tr>
                 }
@@ -131,26 +126,6 @@
 </div>
 
 @section Scripts {
-    <script>
-        function confirmPost(id) {
-            console.log(id);
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Post", "ServiceInvoice", new { area = "Filpride" })/${id}`;
-                    window.location.href = url;
-                }
-            })
-        }
-    </script>
     <script>
         function confirmVoid(id) {
             console.log(id);

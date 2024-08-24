@@ -448,7 +448,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Receiving Report has been Posted.";
-                        return RedirectToAction(nameof(Index));
+                        return RedirectToAction(nameof(Print), new { id });
                     }
                     else
                     {

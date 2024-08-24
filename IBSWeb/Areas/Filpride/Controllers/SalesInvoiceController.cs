@@ -569,7 +569,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Sales Invoice has been Posted.";
-                        return RedirectToAction("Index");
+                        return RedirectToAction(nameof(Print), new { id });
                     }
                 }
                 catch (Exception ex)
