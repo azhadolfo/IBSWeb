@@ -201,20 +201,18 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<FilprideReceivingReport> GetAsync(Expression<Func<FilprideReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
-                .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(po => po.Product)
-                .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(po => po.Supplier)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Customer)
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
         public override async Task<IEnumerable<FilprideReceivingReport>> GetAllAsync(Expression<Func<FilprideReceivingReport, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<FilprideReceivingReport> query = dbSet
-                .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(po => po.Product)
-                .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(po => po.Supplier);
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Customer)
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier);
 
             if (filter != null)
             {
