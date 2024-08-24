@@ -110,7 +110,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var receivingReports = await _dbContext.FilprideReceivingReports
             .Where(rr => rr.Company == companyClaims && poNumber.Contains(rr.PONo) && !rr.IsPaid && rr.PostedBy != null)
-            .OrderBy(rr => criteria == "Transaction Date" ? rr.Date : rr.DueDate)
+            .OrderBy(rr => rr.ReceivingReportNo)
+            .ThenBy(rr => criteria == "Transaction Date" ? rr.Date : rr.DueDate)
             .ToListAsync();
 
             if (receivingReports != null && receivingReports.Count > 0)
