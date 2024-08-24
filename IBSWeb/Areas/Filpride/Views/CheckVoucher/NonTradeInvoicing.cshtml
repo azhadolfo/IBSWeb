@@ -87,7 +87,7 @@
                                 <tr>
                                     <td>
                                         <input type="hidden" name="AccountTitle" class="defaultExpenseTitle" />
-                                        <select asp-for="AccountNumber" asp-items="@Model.DefaultExpenses" class="form-select js-select2 defaultExpenseText" style="width: 100%">
+                                        <select asp-for="AccountNumber" asp-items="@Model.DefaultExpenses" class="form-select js-select-defaultExpense defaultExpenseText" style="width: 100%">
                                             <option></option>
                                         </select>
                                     </td>
@@ -473,5 +473,17 @@
         </script>
         <script>
             setTransactionDate();
+        </script>
+        <script>
+            $(document).ready(function () {
+
+                $('.js-select-defaultExpense').select2({
+                    placeholder: "Select an option...",
+                    allowClear: true,
+                    width: 'resolve',
+                    theme: 'classic',
+                    multiple: false // Set multiple to false if the model data is an array, true otherwise
+                });
+            });
         </script>
     }
