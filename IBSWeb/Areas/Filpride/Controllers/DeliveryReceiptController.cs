@@ -67,6 +67,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(cancellationToken),
                         Date = viewModel.Date,
+                        EstimatedTimeOfArrival = viewModel.ETA,
                         CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
                         DeliveryType = viewModel.DeliveryType,
                         HaulerId = viewModel.HaulerId,
@@ -131,6 +132,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     DeliverReceiptId = existingRecord.DeliveryReceiptId,
                     Date = existingRecord.Date,
+                    ETA = existingRecord.EstimatedTimeOfArrival,
                     InvoiceNo = existingRecord.InvoiceNo,
                     CustomerId = existingRecord.Customer.CustomerId,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
@@ -336,7 +338,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             });
         }
 
-        public async Task<IActionResult> Delivered(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delivered(int? id, string deliveredDate, CancellationToken cancellationToken)
         {
             if (id == null)
             {
@@ -353,9 +355,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                //create the automatic creation of rr
-
-                existingRecord.DeliveredDate = DateOnly.FromDateTime(DateTime.Now);
+                existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
 
                 await _unitOfWork.FilprideReceivingReportRepository.AutoGenerateReceivingReport(existingRecord, cancellationToken);
 
@@ -370,5 +370,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
+
     }
 }

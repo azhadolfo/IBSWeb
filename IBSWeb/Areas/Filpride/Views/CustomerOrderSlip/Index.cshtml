@@ -75,30 +75,6 @@
                             }
                             <span class="badge rounded-pill @if(status == "Approved") {<text>bg-info</text>} else if(status == "Disapproved") {<text>bg-danger</text>}">@status</span>
                         </td>
-                        @*<td>
-                            <div class="w-100 btn-group" role="group">
-                                @if (obj.DisapprovedBy != null)
-                                {
-                                    <span class="badge rounded-bill bg-danger w-100">Disapproved</span>
-                                }
-                                else if (obj.ApprovedBy == null && obj.DisapprovedBy == null)
-                                {
-                                    <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId" class="btn btn-primary mx-2">
-                                        <i class="bi bi-pencil-square"></i> Edit
-                                    </a>
-
-                                    <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">
-                                        <i class="bi bi-printer-fill"></i> Preview
-                                    </a>
-                                }
-                                else if (obj.ApprovedBy != null && obj.DisapprovedBy == null)
-                                {
-                                    <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">
-                                        <i class="bi bi-printer-fill"></i> Preview
-                                    </a>
-                                }
-                            </div>
-                        </td>*@
                         <td class="text-center">
                             <div class="dropdown" style="@(obj.DisapprovedBy != null ? "display:none;" : "")">
                                 <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -118,8 +94,6 @@
 
                                     </ul>
                             </div>
-
-                            @*@await Html.PartialAsync("_Preview", obj)*@
                         </td>
                     </tr>
                 }
