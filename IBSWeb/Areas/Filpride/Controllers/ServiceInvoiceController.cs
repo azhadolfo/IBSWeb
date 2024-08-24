@@ -412,7 +412,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Service invoice has been posted.";
-                        return RedirectToAction("Index");
+                        return RedirectToAction(nameof(Print), new { id });
                     }
                     else
                     {

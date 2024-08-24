@@ -706,7 +706,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Debit Memo has been Posted.";
                     }
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Print), new { id });
                 }
                 catch (Exception ex)
                 {

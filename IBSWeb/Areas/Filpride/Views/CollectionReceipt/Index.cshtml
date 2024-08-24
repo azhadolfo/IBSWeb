@@ -21,9 +21,9 @@
             <div class="col-6">
             </div>
         </div>
-        <table class="table table-bordered table-striped" id="dataTable">
+        <table class="table table-bordered table-hover" id="dataTable">
             <thead>
-                <tr class="text-nowrap">
+                <tr class="text-nowrap table-secondary">
                     <th>
                         CR No.
                     </th>
@@ -121,21 +121,16 @@
                                         {
                                             <li><a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionEdit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
                                             <li>
-                                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#PreviewMultipleSI-@item.CollectionReceiptId" data-bs-url="@Url.Action($"PreviewMultipleSI/{item.CollectionReceiptId}")">
-                                                Preview
-                                                </button>
+                                                <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionPrint" asp-route-id="@item.CollectionReceiptId" class="dropdown-item">Preview</a>
                                             </li>
                                         }
                                         else
                                         {
                                             <li><a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Edit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
                                             <li>
-                                                <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#Preview-@item.CollectionReceiptId" data-bs-url="@Url.Action($"Preview/{item.CollectionReceiptId}")">
-                                                    Preview
-                                                </button>
+                                                <a class="dropdown-item" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Print" asp-route-id="@item.CollectionReceiptId">Preview</a>
                                             </li>
                                         }
-                                        <li><a class="dropdown-item" onclick="confirmPost(@item.CollectionReceiptId)">Post</a></li>
                                         <li><a class="dropdown-item" onclick="confirmCancel(@item.CollectionReceiptId)">Cancel</a></li>
                                     }
                                     else
@@ -152,8 +147,6 @@
                                     }
                                 </ul>
                             </div>
-                            @await Html.PartialAsync("_MultipleCollectionPreview", item)
-                            @await Html.PartialAsync("_Preview", item)
                         </td>
                     </tr>
                 }
@@ -163,25 +156,6 @@
 </div>
 
 @section Scripts {
-    <script>
-        function confirmPost(id) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Post", "CollectionReceipt", new { area = "Filpride" })/${id}`;
-                    window.location.href = url;
-                }
-            })
-        }
-    </script>
     <script>
         function confirmVoid(id) {
             Swal.fire({

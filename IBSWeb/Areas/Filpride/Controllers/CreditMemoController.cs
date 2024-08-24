@@ -887,7 +887,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TempData["error"] = ex.Message;
                     return RedirectToAction("Index");
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Print), new { id });
             }
 
             return NotFound();

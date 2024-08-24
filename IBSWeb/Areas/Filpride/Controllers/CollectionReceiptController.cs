@@ -1500,7 +1500,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TempData["success"] = "Collection Receipt has been Posted.";
                     }
 
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Print), new { id });
                 }
                 catch (Exception ex)
                 {
