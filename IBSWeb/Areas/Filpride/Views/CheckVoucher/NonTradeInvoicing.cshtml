@@ -221,6 +221,7 @@
                                 $("#SupplierTinNo").val(data.tinNo);
                                 $(".withholdingTaxNumber").val(data.withholdingTax !== null ? data.withholdingTax.split(' ')[0] : null);
                                 $(".withholdingTaxTitle").val(data.withholdingTax !== null ? data.withholdingTax.replace(/^\s*\S+\s*/, '').trim() : null);
+                                $(".defaultExpenseText").val(data.defaultExpense !== null ? data.defaultExpense.split(' ')[0] : null).trigger('change');
                             } else {
                                 $("#SupplierName").val("");
                                 $("#SupplierAddress").val("");
@@ -309,10 +310,17 @@
         </script>
         <script>
             $(".defaultExpenseText").change(function () {
-                var defaultExpenseTitle = $(".defaultExpenseText option:selected").text().replace(/^\S+\s/, '');
-                console.log(defaultExpenseTitle)
-                $(".defaultExpenseTitle").val(defaultExpenseTitle);
+                var value = $(".defaultExpenseText option:selected").text();
+                getDefaultExpense(value)
             });
+            $(".defaultExpenseText").each(function () {
+                var value = $(".defaultExpenseText option:selected").text();
+                getDefaultExpense(value)
+            });
+            function getDefaultExpense(value) {
+                var defaultExpenseTitle = $(".defaultExpenseText option:selected").text().replace(/^\S+\s/, '');
+                $(".defaultExpenseTitle").val(defaultExpenseTitle);
+            }
         </script>
         <script>
             function saveAccountingEntry() {
