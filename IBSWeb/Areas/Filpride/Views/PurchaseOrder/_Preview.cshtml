@@ -1,0 +1,171 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model FilpridePurchaseOrder
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<div class="modal fade" id="Preview-@Model.PurchaseOrderId" data-bs-backdrop="static" aria-labelledby="PreviewPOLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="PreviewPOLabel">Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close">
+                </button>
+            </div>
+            <div class="modal-body">
+                <br />
+                <div class="text-end">
+                    <img src="~/img/Filpride.jpg" height="" width="130px" />
+                </div>
+                <div class="text-center">
+                    <h2><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
+                    <p style="line-height: 1; margin-top:-7px;">
+                        57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
+                        Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
+                        VAT Reg. TIN: 000-216-589-00000
+                    </p>
+
+                    <h3><span style="display: inline-block;"><b>Purchase Order</b></span></h3>
+                    <div class="text-end" style="margin-top:-60px;">
+                        <h6><b>No.&nbsp;@Html.DisplayFor(model => model.PurchaseOrderNo)</b></h6>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="margin-top:50px;">
+                    <table class="w-100">
+                        <tbody>
+                            <tr style="padding-left:10px;">
+                                <td class="w-75 text-start">Supplier: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
+                                <td class="w-25 text-end">Date: &nbsp;@Html.DisplayFor(model => model.Date)</td>
+                            </tr>
+                            <tr style="padding-left:10px;">
+                                <td class="text-start">Address: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
+                                <td></td>
+                            </tr>
+                            <tr style="padding-left:10px;">
+                                <td class="text-start">TIN No.: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierTin)</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-responsive" style="margin-top:50px;">
+                    <table class="w-100">
+                        <thead>
+                            <tr>
+                                <th class="w-25 text-center">Product Name</th>
+                                <th class="w-25 text-center">Quantity</th>
+                                <th class="w-25 text-center">Price</th>
+                                <th class="w-25 text-center">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-center">@Html.DisplayFor(model => model.Product.ProductName)</td>
+                                <td class="text-center">@Model.Quantity.ToString("N4")</td>
+                                <td class="text-center">@Html.DisplayFor(model => model.Price)</td>
+                                <td class="text-center">@Html.DisplayFor(model => model.Amount)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-responsive" style="margin-top:50px;">
+                    <table class="w-100">
+                        <thead>
+                            <tr>
+                                <th class="w-25">@Html.DisplayNameFor(model => model.Remarks)</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="w-25 text-start" colspan="4"><pre style="margin: 0; padding: 0">@Html.DisplayFor(model => model.Remarks)</pre></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <br /><br /><br /><br /><br /><br /><br /><br />
+                <div class="text-center w-100" style="margin-top:20px;">
+                    <p>
+                        <em><b>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</b></em><br /><br />
+                        <span>Acknowledgement Certificate No:</span>
+                        <span style="display: inline-block; width:150px;">@* @CS.ACCN *@</span>
+                        <span>&nbsp;&nbsp;Date Issued:</span>
+                        <span style="display: inline-block; width:50px;">@* @CS.DateIssued *@</span><br />
+                        Series: PO0000000001 - PO9999999999
+                        Date and Time Created:&nbsp;@Model.CreatedDate
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var originalFontSizes = [];
+    function printPage() {
+        var printButton = document.getElementById("printButton");
+        var otherButton = document.getElementById("otherButton");
+
+        // Hide the header and footer
+        document.querySelector("header").style.display = "none";
+        document.querySelector("footer").style.display = "none";
+
+        // Hide the buttons before printing
+        if (printButton) {
+            printButton.style.visibility = "hidden";
+        }
+        if (otherButton) {
+            otherButton.style.visibility = "hidden";
+        }
+
+        // Get all paragraph elements
+        var paragraphs = document.querySelectorAll("p");
+
+        // Store the original font sizes
+        for (var i = 0; i < paragraphs.length; i++) {
+            originalFontSizes[i] = paragraphs[i].style.fontSize;
+            // Set the font size of all paragraph elements to 12px for printing
+            paragraphs[i].style.fontSize = "12px";
+        }
+
+        // Get all table text elements
+        var mytable = document.querySelectorAll("table");
+
+        // Store the original font sizes
+        for (var i = 0; i < mytable.length; i++) {
+            originalFontSizes[i] = mytable[i].style.fontSize;
+            // Set the font size of all paragraph elements to 12px for printing
+            mytable[i].style.fontSize = "12px";
+        }
+
+        // Call the print function
+        window.print();
+
+        // Restore the font sizes
+        for (var i = 0; i < paragraphs.length; i++) {
+            paragraphs[i].style.fontSize = originalFontSizes[i];
+        }
+
+        // Restore the font sizes
+        for (var i = 0; i < mytable.length; i++) {
+            mytable[i].style.fontSize = originalFontSizes[i];
+        }
+
+        // Restore the buttons' visibility after printing (optional)
+        if (printButton) {
+            printButton.style.visibility = "visible";
+        }
+        if (otherButton) {
+            otherButton.style.visibility = "visible";
+        }
+
+        // Restore the header and footer's visibility after printing (optional)
+        document.querySelector("header").style.display = "";
+        document.querySelector("footer").style.display = "";
+    }
+</script>

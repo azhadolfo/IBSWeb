@@ -25,9 +25,9 @@
                 </a>
             </div>
         </div>
-        <table class="table table-bordered table-hover" id="dataTable">
+        <table class="table table-bordered table-striped" id="dataTable">
             <thead>
-                <tr class="text-nowrap table-secondary">
+                <tr class="text-nowrap">
                     <th>
                         @Html.DisplayNameFor(model => model.SalesInvoiceNo)
                     </th>
@@ -114,6 +114,7 @@
                                     }
                                 </ul>
                             </div>
+                            @await Html.PartialAsync("_Preview", invoice)
                         </td>
                     </tr>
                 }
