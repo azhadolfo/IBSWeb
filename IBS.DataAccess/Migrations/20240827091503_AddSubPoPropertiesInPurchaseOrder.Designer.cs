@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240827091503_AddSubPoPropertiesInPurchaseOrder")]
+    partial class AddSubPoPropertiesInPurchaseOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -377,10 +380,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<int?>("CustomerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_id");
-
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
                         .HasColumnName("date");
@@ -473,9 +472,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("PurchaseOrderId")
                         .HasName("pk_filpride_purchase_orders");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_filpride_purchase_orders_customer_id");
 
                     b.HasIndex("ProductId")
                         .HasDatabaseName("ix_filpride_purchase_orders_product_id");
@@ -5884,11 +5880,6 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .HasConstraintName("fk_filpride_purchase_orders_filpride_customers_customer_id");
-
                     b.HasOne("IBS.Models.MasterFile.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
@@ -5902,8 +5893,6 @@ namespace IBS.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_filpride_purchase_orders_filpride_suppliers_supplier_id");
-
-                    b.Navigation("Customer");
 
                     b.Navigation("Product");
 

@@ -1,5 +1,7 @@
 ﻿using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.MasterFile;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -79,7 +81,14 @@ namespace IBS.Models.Filpride
 
         public int? PurchaseOrderId { get; set; }
 
+        [ForeignKey(nameof(PurchaseOrderId))]
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
+
+        public string? DeliveryType { get; set; }
+
+        public decimal? Freight { get; set; }
+
+        public string? PickUpPoint { get; set; }
 
         #endregion
         #endregion

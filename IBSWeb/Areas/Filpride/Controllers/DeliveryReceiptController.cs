@@ -357,7 +357,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
 
-                await _unitOfWork.FilprideReceivingReportRepository.AutoGenerateReceivingReport(existingRecord, cancellationToken);
+                await _unitOfWork.FilprideReceivingReport.AutoGenerateReceivingReport(existingRecord, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
 

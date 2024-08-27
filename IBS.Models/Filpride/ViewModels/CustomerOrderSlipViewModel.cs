@@ -40,23 +40,11 @@ namespace IBS.Models.Filpride.ViewModels
 
         public bool HasCommission { get; set; }
 
-        public string? CommissionerName { get; set; }
+        public string CommissionerName { get; set; }
 
-        public decimal? CommissionerRate { get; set; }
+        public decimal CommissionerRate { get; set; }
 
         public string Remarks { get; set; }
-
-        #endregion
-
-        #region For TNS - Step 2
-
-        #region--PO properties
-
-        public int PurchaseOrderId { get; set; } = 0;
-
-        public List<SelectListItem>? PurchaseOrders { get; set; }
-
-        #endregion
 
         #endregion
 

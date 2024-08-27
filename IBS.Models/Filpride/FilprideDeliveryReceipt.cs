@@ -53,7 +53,7 @@ namespace IBS.Models.Filpride
         public int? HaulerId { get; set; }
 
         [ForeignKey(nameof(HaulerId))]
-        public Hauler? Hauler { get; set; }
+        public FilprideHauler? Hauler { get; set; }
 
         #endregion
 

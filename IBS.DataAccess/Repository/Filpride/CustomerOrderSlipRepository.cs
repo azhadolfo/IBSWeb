@@ -68,7 +68,6 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.DeliveryDateAndTime = viewModel.DeliveryDateAndTime;
             existingRecord.CustomerId = viewModel.CustomerId;
             existingRecord.CustomerPoNo = viewModel.CustomerPoNo;
-            existingRecord.PurchaseOrderId = viewModel.PurchaseOrderId;
             existingRecord.Quantity = viewModel.Quantity;
             existingRecord.DeliveredPrice = viewModel.DeliveredPrice;
             existingRecord.Vat = viewModel.Vat;

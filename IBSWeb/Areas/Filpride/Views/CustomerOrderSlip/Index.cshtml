@@ -65,15 +65,8 @@
                         <td>
                             @Html.DisplayFor(model => obj.TotalAmount)
                         </td>
-                        <td>
-                            @{
-                                var status = obj.ApprovedBy != null && obj.DisapprovedBy == null
-                                    ? "Approved"
-                                        : obj.DisapprovedBy != null
-                                            ? "Disapproved"
-                                            : "Pending";
-                            }
-                            <span class="badge rounded-pill @if(status == "Approved") {<text>bg-info</text>} else if(status == "Disapproved") {<text>bg-danger</text>}">@status</span>
+                        <td class="text-center">
+                            <span class="badge rounded-pill @if(obj.Status == nameof(CosStatus.Completed)) {<text>bg-success</text>} else {<text>bg-info</text>}">@obj.Status</span>
                         </td>
                         <td class="text-center">
                             <div class="dropdown" style="@(obj.DisapprovedBy != null ? "display:none;" : "")">
@@ -83,16 +76,41 @@
                                 <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                     @if (obj.ApprovedBy == null)
                                     {
-                                        <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
-                                        <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Preview</a></li>
-                                        }
-                                        else
+                                        @switch (obj.Status)
                                         {
-                                        <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Print</a></li>
+                                            case nameof(CosStatus.Created):
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="AppointSupplier" asp-route-id="@obj.CustomerOrderSlipId">Appoint Supplier</a></li>
+                                                break;
 
+                                            case nameof(CosStatus.SupplierAppointed):
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                break;
+
+                                            case nameof(CosStatus.ApprovedByOpsManager):
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                break;
+
+                                            case nameof(CosStatus.ApprovedByFinance):
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                break;
+
+                                            case nameof(CosStatus.HaulerAppointed):
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                break;
+
+                                            default:
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Details" asp-route-id="@obj.CustomerOrderSlipId">View Details</a></li>
+                                                break;
                                         }
 
-                                    </ul>
+                                    }
+                                    else
+                                    {
+                                        <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Print</a></li>
+                                    }
+
+                                </ul>
                             </div>
                         </td>
                     </tr>

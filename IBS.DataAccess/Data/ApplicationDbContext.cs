@@ -90,7 +90,9 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideSupplier> FilprideSuppliers { get; set; }
 
-        public DbSet<Hauler> Haulers { get; set; }
+        public DbSet<FilprideHauler> FilprideHaulers { get; set; }
+
+        public DbSet<FilpridePickUpPoint> FilpridePickUpPoints { get; set; }
 
         #endregion
 
@@ -480,7 +482,7 @@ namespace IBS.DataAccess.Data
                 s.HasIndex(s => s.SupplierName);
             });
 
-            builder.Entity<Hauler>(h =>
+            builder.Entity<FilprideHauler>(h =>
             {
                 h.HasIndex(h => h.HaulerCode);
                 h.HasIndex(h => h.HaulerName);

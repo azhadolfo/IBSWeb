@@ -1,6 +1,5 @@
 ﻿using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
-using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -62,8 +61,6 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "varchar(5)")]
         public string Terms { get; set; }
 
-        public Port Port { get; set; }
-
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal QuantityReceived { get; set; }
@@ -89,6 +86,20 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [NotMapped]
         public List<SelectListItem>? Products { get; set; }
+
+        #endregion
+
+        #region--SUB PO
+
+        public bool IsSubPo { get; set; }
+
+        [Column(TypeName = "varchar(20)")]
+        public string? SubPoSeries { get; set; }
+
+        public int? CustomerId { get; set; }
+
+        [ForeignKey(nameof(CustomerId))]
+        public FilprideCustomer? Customer { get; set; }
 
         #endregion
     }

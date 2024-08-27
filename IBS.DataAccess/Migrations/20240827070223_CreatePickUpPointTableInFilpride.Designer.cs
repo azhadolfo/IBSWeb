@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240827070223_CreatePickUpPointTableInFilpride")]
+    partial class CreatePickUpPointTableInFilpride
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -377,10 +380,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<int?>("CustomerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_id");
-
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
                         .HasColumnName("date");
@@ -409,9 +408,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_received");
 
-                    b.Property<bool>("IsSubPo")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_sub_po");
+                    b.Property<int>("Port")
+                        .HasColumnType("integer")
+                        .HasColumnName("port");
 
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)")
@@ -450,10 +449,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(200)")
                         .HasColumnName("remarks");
 
-                    b.Property<string>("SubPoSeries")
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("sub_po_series");
-
                     b.Property<int>("SupplierId")
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
@@ -473,9 +468,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("PurchaseOrderId")
                         .HasName("pk_filpride_purchase_orders");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_filpride_purchase_orders_customer_id");
 
                     b.HasIndex("ProductId")
                         .HasDatabaseName("ix_filpride_purchase_orders_product_id");
@@ -2030,10 +2022,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
 
-                    b.Property<string>("PickUpPoint")
-                        .HasColumnType("text")
-                        .HasColumnName("pick_up_point");
-
                     b.Property<int?>("PurchaseOrderId")
                         .HasColumnType("integer")
                         .HasColumnName("purchase_order_id");
@@ -2651,12 +2639,10 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilpridePickUpPoint", b =>
                 {
-                    b.Property<int>("PickUpPointId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("pick_up_point_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PickUpPointId"));
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
@@ -2676,7 +2662,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
 
-                    b.HasKey("PickUpPointId")
+                    b.HasKey("Id")
                         .HasName("pk_filpride_pick_up_points");
 
                     b.HasIndex("SupplierId")
@@ -5884,11 +5870,6 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .HasConstraintName("fk_filpride_purchase_orders_filpride_customers_customer_id");
-
                     b.HasOne("IBS.Models.MasterFile.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
@@ -5902,8 +5883,6 @@ namespace IBS.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_filpride_purchase_orders_filpride_suppliers_supplier_id");
-
-                    b.Navigation("Customer");
 
                     b.Navigation("Product");
 
