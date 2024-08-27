@@ -53,13 +53,6 @@
                         <span asp-validation-for="CustomerPoNo" class="text-danger"></span>
                     </div>
                 </fieldset>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">PO List<span class="required">*</span></label>
-                    <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%" id="company-select">
-                        <option value="" selected>Select po</option>
-                    </select>
-                    <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
-                </div>
                 <div class="row py-2">
                     <div class="form-floating col-4">
                         <input asp-for="Quantity" class="form-control border-0 shadow" placeholder="" />
@@ -82,6 +75,32 @@
                     <label asp-for="TotalAmount">Total Amount</label>
                     <span asp-validation-for="TotalAmount" class="text-danger"></span>
                 </div>
+                <!-- Add radio button for HasCommission -->
+                <div class="form-group py-2">
+                    <label>Has Commission<span class="required">*</span></label><br />
+                    <input type="radio" asp-for="HasCommission" value="true" id="HasCommissionYes" />
+                    <label for="HasCommissionYes">Yes</label>
+
+                    <input type="radio" asp-for="HasCommission" value="false" id="HasCommissionNo" checked />
+                    <label for="HasCommissionNo">No</label>
+
+                    <span asp-validation-for="HasCommission" class="text-danger"></span>
+                </div>
+
+                <!-- Commission info fields -->
+                <div id="commissionInfo" style="display: none;">
+                    <div class="form-floating col-12 py-2">
+                        <input asp-for="CommissionerName" class="form-control border-0 shadow" placeholder="Enter Commissioner's Name" />
+                        <label asp-for="CommissionerName" class="ms-2">Commissioner Name<span class="required">*</span></label>
+                        <span asp-validation-for="CommissionerName" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-12 py-2">
+                        <input asp-for="CommissionerRate" class="form-control border-0 shadow" placeholder="Enter Commission Rate" />
+                        <label asp-for="CommissionerRate" class="ms-2">Commission Rate<span class="required">*</span></label>
+                        <span asp-validation-for="CommissionerRate" class="text-danger"></span>
+                    </div>
+                </div>
+
                 <div class="form-floating py-2 col-12">
                     <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
                     <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
@@ -146,16 +165,27 @@
         });
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var companySelect = document.getElementById('company-select'); // Ensure correct ID for company select
-            var stationDiv = document.getElementById('station-div');
-
-            function toggleStationDiv() {
-                console.log('working')
+        $(document).ready(function () {
+            function toggleCommissionFields() {
+                var hasCommission = $('input[name="HasCommission"]:checked').val() === 'true';
+                if (hasCommission) {
+                    $('#commissionInfo').show();
+                    $('input[name="CommissionerName"]').prop('required', true);
+                    $('input[name="CommissionerRate"]').prop('required', true);
+                } else {
+                    $('#commissionInfo').hide();
+                    $('input[name="CommissionerName"]').prop('required', false);
+                    $('input[name="CommissionerRate"]').prop('required', false);
+                }
             }
 
-            companySelect.addEventListener('change', toggleStationDiv);
+            // Initial check
+            toggleCommissionFields();
 
+            // On radio button change
+            $('input[name="HasCommission"]').on('change', function () {
+                toggleCommissionFields();
+            });
         });
     </script>
 }

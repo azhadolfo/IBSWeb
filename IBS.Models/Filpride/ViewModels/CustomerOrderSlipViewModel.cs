@@ -5,6 +5,7 @@ namespace IBS.Models.Filpride.ViewModels
 {
     public class CustomerOrderSlipViewModel
     {
+        #region For Marketing - Step 1
         public int CustomerOrderSlipId { get; set; }
 
         public DateOnly Date { get; set; }
@@ -29,14 +30,6 @@ namespace IBS.Models.Filpride.ViewModels
         [Required(ErrorMessage = "Customer PO No field is required.")]
         public string CustomerPoNo { get; set; }
 
-        #region--PO properties
-
-        public int PurchaseOrderId { get; set; }
-
-        public List<SelectListItem>? PurchaseOrders { get; set; }
-
-        #endregion
-
         public decimal Quantity { get; set; }
 
         public decimal DeliveredPrice { get; set; }
@@ -45,7 +38,27 @@ namespace IBS.Models.Filpride.ViewModels
 
         public decimal TotalAmount { get; set; }
 
+        public bool HasCommission { get; set; }
+
+        public string? CommissionerName { get; set; }
+
+        public decimal? CommissionerRate { get; set; }
+
         public string Remarks { get; set; }
+
+        #endregion
+
+        #region For TNS - Step 2
+
+        #region--PO properties
+
+        public int PurchaseOrderId { get; set; } = 0;
+
+        public List<SelectListItem>? PurchaseOrders { get; set; }
+
+        #endregion
+
+        #endregion
 
         public string? CurrentUser { get; set; }
     }

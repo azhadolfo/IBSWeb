@@ -7,6 +7,7 @@ namespace IBS.Models.Filpride
 {
     public class FilprideCustomerOrderSlip
     {
+        #region First Stage
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CustomerOrderSlipId { get; set; }
@@ -40,14 +41,6 @@ namespace IBS.Models.Filpride
         [Display(Name = "Customer PO No.")]
         public string CustomerPoNo { get; set; }
 
-        #region--PO properties
-
-        public int PurchaseOrderId { get; set; }
-
-        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
-
-        #endregion
-
         [Column(TypeName = "timestamp without time zone")]
         public DateTime DeliveryDateAndTime { get; set; }
 
@@ -70,6 +63,26 @@ namespace IBS.Models.Filpride
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal BalanceQuantity { get; set; }
+
+        #region Commissioner's Properties
+        public bool HasCommission { get; set; }
+
+        public string? CommissionerName { get; set; }
+
+        public decimal? CommissionRate { get; set; }
+        #endregion
+
+        #endregion
+
+        #region Second Stage
+        #region--PO properties
+
+        public int? PurchaseOrderId { get; set; }
+
+        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
+
+        #endregion
+        #endregion
 
         public bool IsDelivered { get; set; }
 
@@ -100,5 +113,7 @@ namespace IBS.Models.Filpride
         public DateOnly? ExpirationDate { get; set; }
 
         public string Company { get; set; } = string.Empty;
+
+        public string Status { get; set; } //Created, Supplier Appointed, Approved by Ops Manager, Approved by Finance, Hauler Appointed, Completed
     }
 }

@@ -68,7 +68,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         DeliveryDateAndTime = viewModel.DeliveryDateAndTime,
                         CustomerId = viewModel.CustomerId,
                         CustomerPoNo = viewModel.CustomerPoNo,
-                        PurchaseOrderId = viewModel.PurchaseOrderId,
                         Quantity = viewModel.Quantity,
                         BalanceQuantity = viewModel.Quantity,
                         DeliveredPrice = viewModel.DeliveredPrice,
@@ -76,8 +75,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TotalAmount = viewModel.TotalAmount,
                         Remarks = viewModel.Remarks,
                         Company = companyClaims,
-                        CreatedBy = _userManager.GetUserName(User)
+                        CreatedBy = _userManager.GetUserName(User),
+                        Status = nameof(CosStatus.Created)
                     };
+
+                    if (viewModel.HasCommission)
+                    {
+                        model.CommissionerName = viewModel.CommissionerName;
+                        model.CommissionRate = viewModel.CommissionerRate;
+                    }
 
                     await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -130,7 +136,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TinNo = exisitingRecord.Customer.CustomerTin,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                     PurchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepository.GetPurchaseOrderListAsync(companyClaims, cancellationToken),
-                    PurchaseOrderId = exisitingRecord.PurchaseOrderId,
+                    PurchaseOrderId = exisitingRecord.PurchaseOrderId ?? throw new ArgumentNullException("Purchase Order id is null."),
                     CustomerPoNo = exisitingRecord.CustomerPoNo,
                     Quantity = exisitingRecord.Quantity,
                     DeliveredPrice = exisitingRecord.DeliveredPrice,

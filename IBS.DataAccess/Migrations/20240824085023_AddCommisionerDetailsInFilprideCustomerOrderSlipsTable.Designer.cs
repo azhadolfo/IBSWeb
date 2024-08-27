@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240824085023_AddCommisionerDetailsInFilprideCustomerOrderSlipsTable")]
+    partial class AddCommisionerDetailsInFilprideCustomerOrderSlipsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1930,11 +1933,11 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<decimal?>("CommissionRate")
                         .HasColumnType("numeric")
-                        .HasColumnName("commission_rate");
+                        .HasColumnName("commision_rate");
 
                     b.Property<string>("CommissionerName")
                         .HasColumnType("text")
-                        .HasColumnName("commissioner_name");
+                        .HasColumnName("commisioner_name");
 
                     b.Property<string>("Company")
                         .IsRequired()
@@ -2001,7 +2004,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<bool>("HasCommission")
                         .HasColumnType("boolean")
-                        .HasColumnName("has_commission");
+                        .HasColumnName("has_commision");
 
                     b.Property<bool>("IsDelivered")
                         .HasColumnType("boolean")
@@ -2011,7 +2014,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
 
-                    b.Property<int?>("PurchaseOrderId")
+                    b.Property<int>("PurchaseOrderId")
                         .HasColumnType("integer")
                         .HasColumnName("purchase_order_id");
 
@@ -2023,11 +2026,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(200)")
                         .HasColumnName("remarks");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("status");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("numeric(18,4)")
@@ -6001,6 +5999,7 @@ namespace IBS.DataAccess.Migrations
                         .WithMany()
                         .HasForeignKey("PurchaseOrderId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
                         .HasConstraintName("fk_filpride_customer_order_slips_filpride_purchase_orders_purc");
 
                     b.Navigation("Customer");

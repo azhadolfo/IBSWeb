@@ -227,7 +227,8 @@ namespace IBS.DataAccess.Repository.Filpride
             FilprideReceivingReport model = new()
             {
                 Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                POId = deliveryReceipt.CustomerOrderSlip.PurchaseOrderId,
+                POId = deliveryReceipt.CustomerOrderSlip.PurchaseOrderId
+                ?? throw new ArgumentNullException("Purchase Order id is null."),
                 PONo = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo,
                 QuantityDelivered = deliveryReceipt.Quantity,
                 QuantityReceived = deliveryReceipt.Quantity,
@@ -246,6 +247,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new ArgumentException("Inputted quantity is exceed to remaining quantity delivered");
             }
 
+            model.ReceivedDate = model.Date;
             model.ReceivingReportNo = await GenerateCodeAsync(model.Company, cancellationToken);
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;

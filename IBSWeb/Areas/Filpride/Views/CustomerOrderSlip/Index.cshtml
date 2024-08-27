@@ -35,7 +35,7 @@
                         Customer
                     </th>
                     <th>
-                        Product
+                        Quantity
                     </th>
                     <th>
                         Total Amount
@@ -60,7 +60,7 @@
                             @obj.Customer?.CustomerName
                         </td>
                         <td>
-                            @obj.PurchaseOrder.Product?.ProductName
+                            @Html.DisplayFor(model => obj.Quantity)
                         </td>
                         <td>
                             @Html.DisplayFor(model => obj.TotalAmount)
