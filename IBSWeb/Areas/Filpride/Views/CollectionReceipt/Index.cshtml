@@ -116,7 +116,7 @@
                                 <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                     @if (item.PostedBy == null)
                                     {
-                                        
+
                                         if (item.MultipleSIId != null)
                                         {
                                             <li><a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionEdit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
@@ -147,6 +147,8 @@
                                     }
                                 </ul>
                             </div>
+                            @await Html.PartialAsync("_MultipleCollectionPreview", item)
+                            @await Html.PartialAsync("_Preview", item)
                         </td>
                     </tr>
                 }
