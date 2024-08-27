@@ -210,7 +210,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var totalAmountRR = po.Quantity - po.QuantityReceived;
 
-                if (model.QuantityDelivered > totalAmountRR)
+                if (model.QuantityDelivered > totalAmountRR && model.PostedBy == null)
                 {
                     TempData["error"] = "Input is exceed to remaining quantity delivered";
                     return View(model);
