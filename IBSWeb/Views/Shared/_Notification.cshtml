@@ -1,16 +1,54 @@
-﻿﻿@if (TempData["success"] != null)
+﻿@if (TempData["success"] != null)
 {
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
-    <script type="text/javascript">
-        toastr.success('@TempData["success"]');
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/lib/query/dist/jquery.min.js"></script>
+    <script>
+        Swal.fire(
+            'Success',
+            '@TempData["success"]',
+            'success'
+        )
     </script>
 }
+
 @if (TempData["error"] != null)
 {
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
-    <script type="text/javascript">
-        toastr.error('@TempData["error"]');
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/lib/query/dist/jquery.min.js"></script>
+    <script>
+        Swal.fire(
+            'Error',
+            '@TempData["error"]',
+            'error'
+        )
     </script>
+
+}
+
+@if (TempData["Denied"] != null)
+{
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/lib/query/dist/jquery.min.js"></script>
+    <script>
+        Swal.fire(
+            'Oops...',
+            '@TempData["Denied"]',
+            'error'
+        )
+    </script>
+
+}
+
+@if (TempData["warning"] != null)
+{
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/lib/query/dist/jquery.min.js"></script>
+    <script>
+        Swal.fire(
+            'Warning',
+            '@TempData["warning"]',
+            'warning'
+        )
+    </script>
+
 }
