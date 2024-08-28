@@ -105,7 +105,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditCos(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
             {
@@ -151,7 +151,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(CustomerOrderSlipViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditCos(CustomerOrderSlipViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)

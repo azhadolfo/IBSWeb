@@ -79,12 +79,12 @@
                                         @switch (obj.Status)
                                         {
                                             case nameof(CosStatus.Created):
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="EditCos" asp-route-id="@obj.CustomerOrderSlipId">Edit COS</a></li>
                                                 <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="AppointSupplier" asp-route-id="@obj.CustomerOrderSlipId">Appoint Supplier</a></li>
                                                 break;
 
                                             case nameof(CosStatus.SupplierAppointed):
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="ApproveByOpsManager" asp-route-id="@obj.CustomerOrderSlipId">Approve</a></li>
                                                 break;
 
                                             case nameof(CosStatus.ApprovedByOpsManager):
