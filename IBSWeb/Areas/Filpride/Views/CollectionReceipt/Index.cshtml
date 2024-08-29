@@ -21,7 +21,7 @@
             <div class="col-6">
             </div>
         </div>
-        <table class="table table-bordered table-hover" id="dataTable">
+        <table class="table table-bordered table-hover" id="paginatedTable">
             <thead>
                 <tr class="text-nowrap table-secondary">
                     <th>
@@ -48,111 +48,6 @@
                     <th></th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.CollectionReceiptNo)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.TransactionDate)
-                        </td>
-                        <td>
-                            @if (item.SalesInvoiceId != null)
-                            {
-                                @Html.DisplayFor(modelItem => item.SINo)
-                            }
-                            else if (item.MultipleSIId != null)
-                            {
-                                for (int i = 0; i < item.MultipleSI.Length; i++)
-                                {
-                                    var siNo = $"{item.MultipleSI[i]}, ";
-                                    @siNo
-                                }
-                            }
-                            else
-                            {
-                                @Html.DisplayFor(modelItem => item.SVNo)
-                            }
-                        </td>
-                        <td>
-                            @if (item.SalesInvoiceId != null)
-                            {
-                                @Html.DisplayFor(modelItem => item.SalesInvoice.Customer.CustomerName)
-                            }
-                            else if (item.MultipleSIId != null)
-                            {
-                                @Html.DisplayFor(modelItem => item.Customer.CustomerName)
-                            }
-                            else
-                            {
-                                @Html.DisplayFor(modelItem => item.ServiceInvoice.Customer.CustomerName)
-                            }
-                        </td>
-                        <td class="text-end px-4">
-                            @Html.DisplayFor(modelItem => item.Total)
-                        </td>
-                        <td class="text-end px-4">
-                            @Html.DisplayFor(modelItem => item.CreatedBy)
-                        </td>
-                        <td>
-                            @{
-                                var status = item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null
-                                    ? "Posted"
-                                    : item.VoidedBy != null
-                                        ? "Voided"
-                                        : item.CanceledBy != null
-                                            ? "Cancelled"
-                                            : "Pending";
-                            }
-                            <span class="badge rounded-pill @if(status == "Posted") {<text>bg-info</text>} else if(status == "Voided") {<text>bg-danger</text>} else if(status == "Cancelled") {<text>bg-warning</text>}">@status</span>
-                        </td>
-                        <td class="text-center">
-                            <div class="dropdown" style="@(item.VoidedBy != null || item.CanceledBy != null ? "display:none;" : "")">
-                                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Actions
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                    @if (item.PostedBy == null)
-                                    {
-
-                                        if (item.MultipleSIId != null)
-                                        {
-                                            <li><a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionEdit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
-                                            <li>
-                                                <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionPrint" asp-route-id="@item.CollectionReceiptId" class="dropdown-item">Preview</a>
-                                            </li>
-                                        }
-                                        else
-                                        {
-                                            <li><a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Edit" asp-route-id="@item.CollectionReceiptId" class="dropdown-item" title="Feature coming soon">Edit</a></li>
-                                            <li>
-                                                <a class="dropdown-item" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Print" asp-route-id="@item.CollectionReceiptId">Preview</a>
-                                            </li>
-                                        }
-                                        <li><a class="dropdown-item" onclick="confirmCancel(@item.CollectionReceiptId)">Cancel</a></li>
-                                    }
-                                    else
-                                    {
-                                        if (item.MultipleSIId != null)
-                                        {
-                                            <li><a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionPrint" asp-route-id="@item.CollectionReceiptId" class="dropdown-item">Print</a></li>
-                                        }
-                                        else
-                                        {
-                                            <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Print" asp-route-id="@item.CollectionReceiptId">Print</a></li>
-                                        }
-                                        <li><a class="dropdown-item" onclick="confirmVoid(@item.CollectionReceiptId)">Void</a></li>
-                                    }
-                                </ul>
-                            </div>
-                            @await Html.PartialAsync("_MultipleCollectionPreview", item)
-                            @await Html.PartialAsync("_Preview", item)
-                        </td>
-                    </tr>
-                }
-            </tbody>
         </table>
     </div>
 </div>
@@ -202,5 +97,110 @@
                 }
             })
         }
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('#paginatedTable').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ajax": {
+                    "url": "@Url.Action("GetCollectionReceipts", "CollectionReceipt", new { area = "Filpride" })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    "dataSrc": function (json) {
+                        console.log(json); // Log the returned data to the console
+                        return json.data; // Return the data to populate the DataTable
+                    }
+                },
+                "columns": [
+                    { "data": "collectionReceiptNo" },
+                    {
+                        "data": "transactionDate",
+                        "name": "transactionDate",
+                        "render": function (data, type, row) {
+                            var date = new Date(data);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                        }
+                    },
+                    {
+                        "data": null,
+                        "render": function (data, type, row) {
+                            if (row.salesInvoiceId != null) {
+                                return row.siNo;
+                            } else if (row.multipleSIId != null && Array.isArray(row.multipleSIId)) {
+                                return row.multipleSI.map(function (si) {
+                                    return si;
+                                }).join(", "); // Concatenate multiple siNo values with a comma
+                            } else {
+                                return row.svNo;
+                            }
+                        }
+                    },
+                    { "data": "customer.customerName" },
+                    { "data": "total", "render": $.fn.dataTable.render.number(',', '.', 4) },
+                    { "data": "createdBy" },
+                    {
+                        "data": null,
+                        "render": function (data, type, row) {
+                            var status = row.postedBy != null && row.voidedBy == null && row.canceledBy == null ? "Posted" :
+                                row.voidedBy != null ? "Voided" :
+                                    row.canceledBy != null ? "Cancelled" : "Pending";
+
+                            var statusClass = status == "Posted" ? "bg-info" :
+                                status == "Voided" ? "bg-danger" :
+                                    status == "Cancelled" ? "bg-warning" : "";
+
+                            return `<span class="badge rounded-pill ${statusClass}">${status}</span>`;
+                        }
+                    },
+                    {
+                        "data": null,
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                                let dropdownHtml = `
+            <div class="dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
+                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Actions
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">`;
+
+                                if (row.postedBy == null) {
+                                    if (row.multipleSIId != null) {
+                                        dropdownHtml += `
+                    <li><a href="/Filpride/CollectionReceipt/MultipleCollectionEdit/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
+                    <li><a href="/Filpride/CollectionReceipt/MultipleCollectionPrint/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
+                                    } else {
+                                        dropdownHtml += `
+                    <li><a href="/Filpride/CollectionReceipt/Edit/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
+                    <li><a href="/Filpride/CollectionReceipt/Print/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
+                                    }
+                                    dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.CollectionReceiptId})">Cancel</a></li>`;
+                                } else {
+                                    if (row.MultipleSIId != null) {
+                                        dropdownHtml += `
+                    <li><a href="/Filpride/CollectionReceipt/MultipleCollectionPrint/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
+                                    } else {
+                                        dropdownHtml += `
+                    <li><a href="/Filpride/CollectionReceipt/Print/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
+                                    }
+                                    dropdownHtml += `<li><a class="dropdown-item" onclick="confirmVoid(${row.collectionReceiptId})">Void</a></li>`;
+                                }
+
+                                dropdownHtml += `</ul></div>`;
+                                return dropdownHtml;
+                        }
+                    }
+
+                        ],
+
+                            "order": [[1, "asc"]],
+                            "pageLength": 10 // Default number of rows per page
+                        });
+                    });
+
     </script>
 }

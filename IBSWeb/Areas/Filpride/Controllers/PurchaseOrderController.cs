@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -36,20 +38,74 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
-            var companyClaims = await GetCompanyClaimAsync();
+            return View();
+        }
 
-            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepository.GetAllAsync(po => po.Company == companyClaims, cancellationToken);
-
-            foreach (var po in purchaseOrders)
+        [HttpPost]
+        public async Task<IActionResult> GetPurchaseOrders([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
             {
-                po.RrList = await _dbContext.FilprideReceivingReports
-                    .Where(rr => rr.Company == companyClaims && rr.PONo == po.PurchaseOrderNo)
-                    .ToListAsync(cancellationToken);
-            }
+                var companyClaims = await GetCompanyClaimAsync();
 
-            return View(purchaseOrders);
+                var purchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepository
+                    .GetAllAsync(po => po.Company == companyClaims, cancellationToken);
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    purchaseOrders = purchaseOrders
+                    .Where(s =>
+                        s.PurchaseOrderNo.ToLower().Contains(searchValue) ||
+                        s.Supplier.SupplierName.ToLower().Contains(searchValue) ||
+                        s.Product.ProductName.ToLower().Contains(searchValue) ||
+                        s.Date.ToString().Contains(searchValue) ||
+                        s.Terms.ToLower().Contains(searchValue) ||
+                        s.Quantity.ToString().Contains(searchValue) ||
+                        s.Remarks.ToLower().Contains(searchValue) ||
+                        s.CreatedBy.ToLower().Contains(searchValue)
+                        )
+                    .ToList();
+
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    purchaseOrders = purchaseOrders
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = purchaseOrders.Count();
+
+                var pagedData = purchaseOrders
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]

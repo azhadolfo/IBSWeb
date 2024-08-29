@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Utility;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -36,14 +38,80 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
-            var companyClaims = await GetCompanyClaimAsync();
+            return View();
+        }
 
-            var rr = await _unitOfWork.FilprideReceivingReportRepository
-                .GetAllAsync(rr => rr.Company == companyClaims, cancellationToken);
+        [HttpPost]
+        public async Task<IActionResult> GetReceivingReports([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
 
-            return View(rr);
+                var receivingReports = await _unitOfWork.FilprideReceivingReportRepository
+                    .GetAllAsync(rr => rr.Company == companyClaims, cancellationToken);
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    receivingReports = receivingReports
+                    .Where(s =>
+                        s.ReceivingReportNo.ToLower().Contains(searchValue) ||
+                        s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue) ||
+                        s.SupplierInvoiceNumber?.ToLower().Contains(searchValue) == true ||
+                        s.SupplierInvoiceDate?.ToString().Contains(searchValue) == true ||
+                        s.SupplierDrNo?.ToLower().Contains(searchValue) == true ||
+                        s.WithdrawalCertificate?.ToLower().Contains(searchValue) == true ||
+                        s.TruckOrVessels.ToLower().Contains(searchValue) ||
+                        s.Date.ToString().Contains(searchValue) ||
+                        s.QuantityReceived.ToString().Contains(searchValue) ||
+                        s.QuantityDelivered.ToString().Contains(searchValue) ||
+                        s.Amount.ToString().Contains(searchValue) ||
+                        s.OtherRef?.ToLower().Contains(searchValue) == null ||
+                        s.Remarks.ToLower().Contains(searchValue) ||
+                        s.CreatedBy.ToLower().Contains(searchValue)
+                        )
+                    .ToList();
+
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    receivingReports = receivingReports
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = receivingReports.Count();
+
+                var pagedData = receivingReports
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]

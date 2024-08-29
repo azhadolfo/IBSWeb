@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -40,12 +42,75 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
-            var companyClaims = await GetCompanyClaimAsync();
-            var viewData = await _unitOfWork.FilprideCollectionReceipt.GetAllAsync(x => x.Company == companyClaims, cancellationToken);
+            return View();
+        }
 
-            return View(viewData);
+        [HttpPost]
+        public async Task<IActionResult> GetCollectionReceipts([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
+                    .GetAllAsync(sv => sv.Company == companyClaims, cancellationToken);
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    collectionReceipts = collectionReceipts
+                        .Where(s =>
+                            s.CollectionReceiptNo.ToLower().Contains(searchValue) ||
+                            s.Customer.CustomerName.ToLower().Contains(searchValue) ||
+                            s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
+                            s.SINo?.ToLower().Contains(searchValue) == true ||
+                            s.SVNo?.ToLower().Contains(searchValue) == true ||
+                            s.MultipleSI?.Contains(searchValue) == true ||
+                            s.Customer.CustomerName.ToLower().Contains(searchValue) ||
+                            s.TransactionDate.ToString().Contains(searchValue) ||
+                            s.Remarks?.ToLower().Contains(searchValue) == true ||
+                            s.CreatedBy.ToLower().Contains(searchValue)
+                            )
+                        .ToList();
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    collectionReceipts = collectionReceipts
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = collectionReceipts.Count();
+
+                var pagedData = collectionReceipts
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]

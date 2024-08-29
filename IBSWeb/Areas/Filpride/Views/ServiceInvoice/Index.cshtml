@@ -26,7 +26,7 @@
                 </a>
             </div>
         </div>
-        <table class="table table-bordered table-hover" id="dataTable">
+        <table class="table table-bordered table-hover" id="paginatedTable">
             <thead>
                 <tr class="text-nowrap table-secondary">
                     <th>
@@ -53,75 +53,6 @@
                     <th></th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.ServiceInvoiceNo)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Customer.CustomerName)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Service.Name)
-                        </td>
-                        <td>
-                            @item.Period.ToString("MMM yyyy")
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Amount)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.CreatedBy)
-                        </td>
-                        <td>
-                            @{
-                                var status = item.PostedBy != null && item.VoidedBy == null && item.CanceledBy == null
-                                    ? "Posted"
-                                    : item.VoidedBy != null
-                                        ? "Voided"
-                                        : item.CanceledBy != null
-                                            ? "Cancelled"
-                                            : "Pending";
-                            }
-                            <span class="badge rounded-pill @if(status == "Posted") {<text>bg-info</text>} else if(status == "Voided") {<text>bg-danger</text>} else if(status == "Cancelled") {<text>bg-warning</text>}">@status</span>
-                        </td>
-                        <td class="text-center">
-                            <div class="dropdown" style="@(item.VoidedBy != null || item.CanceledBy != null ? "display:none;" : "")">
-                                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Actions
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                    @if (item.PostedBy == null)
-                                    {
-                                        <li><a asp-action="Edit" asp-route-id="@item.ServiceInvoiceId" class="dropdown-item">Edit</a></li>
-                                        <li>
-                                            <a class="dropdown-item" asp-action="Print" asp-route-id="@item.ServiceInvoiceId">Preview</a>
-                                        </li>
-                                        <li><a class="dropdown-item" onclick="confirmCancel(@item.ServiceInvoiceId)">Cancel</a></li>
-                                    }
-                                    else
-                                    {
-                                        <li><a class="dropdown-item" asp-action="Print" asp-route-id="@item.ServiceInvoiceId">Print</a></li>
-                                        <li>
-                                            @if (item.AmountPaid == 0)
-                                            {
-                                                <a class="dropdown-item" onclick="confirmVoid(@item.ServiceInvoiceId)">Void</a>
-                                            }
-                                            else
-                                            {
-                                                <button class="dropdown-item" disabled readonly>Void</button>
-                                            }
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
-                            @await Html.PartialAsync("_Preview", item)
-                        </td>
-                    </tr>
-                }
-            </tbody>
         </table>
     </div>
 </div>
@@ -173,5 +104,79 @@
                 }
             })
         }
+    </script>
+    <script>
+    $(document).ready(function() {
+        $('#paginatedTable').DataTable({
+            "processing": true, // Enable processing indicator
+            "serverSide": true, // Enable server-side processing
+            "ajax": {
+                "url": "@Url.Action("GetServiceInvoices", "ServiceInvoice", new { area = "Filpride" })",
+                "type": "POST",
+                "data": function (d) {
+                    return $.extend({}, d, {
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    });
+                },
+            },
+            "columns": [
+                { "data": "serviceInvoiceNo" },
+                { "data": "customer.customerName" },
+                { "data": "service.name" },
+                {
+                    "data": "period",
+                    "name": "period",
+                    "render": function (data, type, row) {
+                        // Assuming 'Date' is in ISO format like "2024-07-12T00:00:00"
+                        var date = new Date(data);
+                        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    }
+                },
+                { "data": "amount", "render": $.fn.dataTable.render.number(',', '.', 4) },
+                { "data": "createdBy" },
+                {
+                    "data": null,
+                    "render": function(data, type, row) {
+                        var status = row.postedBy != null && row.voidedBy == null && row.canceledBy == null ? "Posted" :
+                            row.voidedBy != null ? "Voided" :
+                            row.canceledBy != null ? "Cancelled" : "Pending";
+
+                        var statusClass = status == "Posted" ? "bg-info" :
+                                          status == "Voided" ? "bg-danger" :
+                                          status == "Cancelled" ? "bg-warning" : "";
+
+                        return `<span class="badge rounded-pill ${statusClass}">${status}</span>`;
+                    }
+                },
+                {
+                    "data": "serviceInvoiceId",
+                    "render": function (data, type, row) {
+                        var dropdown = `<div class="dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
+                                            <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Actions
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                                ${row.postedBy == null ? `
+                                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "ServiceInvoice", new { area = "Filpride" })/${data}">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "ServiceInvoice", new { area = "Filpride" })/${data}">Preview</a></li>
+                                                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${data})">Cancel</a></li>
+                                                ` : `
+                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "ServiceInvoice", new { area = "Filpride" })/${data}">Print</a></li>
+                                                    ${row.amountPaid == 0 ? `
+                                                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${data})">Void</a></li>
+                                                    ` : `
+                                                        <li><button class="dropdown-item" disabled readonly>Void</button></li>
+                                                    `}
+                                                `}
+                                            </ul>
+                                        </div>`;
+                        return dropdown;
+                    }
+                }
+            ],
+            "order": [[0, "asc"]], // Default sort by TransactionDate
+            "pageLength": 10 // Default number of rows per page
+        });
+    });
     </script>
 }

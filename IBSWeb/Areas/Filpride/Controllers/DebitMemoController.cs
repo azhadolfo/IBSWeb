@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -37,12 +39,73 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
-            var companyClaims = await GetCompanyClaimAsync();
-            var dm = await _unitOfWork.FilprideDebitMemo.GetAllAsync(dm => dm.Company == companyClaims, cancellationToken);
+            return View();
+        }
 
-            return View(dm);
+        [HttpPost]
+        public async Task<IActionResult> GetDebitMemos([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var debitMemos = await _unitOfWork.FilprideDebitMemo
+                    .GetAllAsync(dm => dm.Company == companyClaims, cancellationToken);
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    debitMemos = debitMemos
+                        .Where(s =>
+                            s.DebitMemoNo.ToLower().Contains(searchValue) ||
+                            (s.SalesInvoice?.SalesInvoiceNo.ToLower().Contains(searchValue) == true) ||
+                            (s.ServiceInvoice?.ServiceInvoiceNo.ToLower().Contains(searchValue) == true) ||
+                            s.TransactionDate.ToString().Contains(searchValue) ||
+                            s.DebitAmount.ToString().Contains(searchValue) ||
+                            s.Remarks?.ToLower().Contains(searchValue) == true ||
+                            s.Description.ToLower().Contains(searchValue) ||
+                            s.CreatedBy.ToLower().Contains(searchValue)
+                            )
+                        .ToList();
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    debitMemos = debitMemos
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = debitMemos.Count();
+
+                var pagedData = debitMemos
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]

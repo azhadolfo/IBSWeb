@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -37,40 +39,74 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
-            var companyClaims = await GetCompanyClaimAsync();
+            return View();
+        }
 
-            var headers = await _dbContext.FilprideJournalVoucherHeaders
-                .Where(j => j.Company == companyClaims)
-                .Include(j => j.CheckVoucherHeader)
-                .ThenInclude(cv => cv.Supplier)
-                .ToListAsync(cancellationToken);
-
-            var details = await _dbContext.FilprideJournalVoucherDetails
-                .ToListAsync(cancellationToken);
-
-            // Create a list to store CheckVoucherVM objectssw
-            var journalVoucherVMs = new List<JournalVoucherVM>();
-
-            // Retrieve details for each header
-            foreach (var header in headers)
+        [HttpPost]
+        public async Task<IActionResult> GetJournalVouchers([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
             {
-                var headerJVNo = header.JournalVoucherHeaderNo;
-                var headerDetails = details.Where(d => d.JournalVoucherHeaderId == header.JournalVoucherHeaderId).ToList();
+                var companyClaims = await GetCompanyClaimAsync();
 
-                // Create a new CheckVoucherVM object for each header and its associated details
-                var journalVoucherVM = new JournalVoucherVM
+                var journalVoucherHeader = await _unitOfWork.FilprideJournalVoucher
+                    .GetAllAsync(jv => jv.Company == companyClaims, cancellationToken);
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
                 {
-                    Header = header,
-                    Details = headerDetails
-                };
+                    var searchValue = parameters.Search.Value.ToLower();
 
-                // Add the CheckVoucherVM object to the list
-                journalVoucherVMs.Add(journalVoucherVM);
+                    journalVoucherHeader = journalVoucherHeader
+                    .Where(s =>
+                        s.JournalVoucherHeaderNo.ToLower().Contains(searchValue) ||
+                        s.Date.ToString().Contains(searchValue) ||
+                        s.References?.Contains(searchValue) == true ||
+                        s.CheckVoucherHeader?.CheckVoucherHeaderNo.Contains(searchValue) == true ||
+                        s.Particulars.ToLower().Contains(searchValue) == true ||
+                        s.CRNo?.ToLower().Contains(searchValue) == true ||
+                        s.JVReason.ToLower().ToString().Contains(searchValue) ||
+                        s.CreatedBy.ToLower().Contains(searchValue)
+                        )
+                    .ToList();
+
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    journalVoucherHeader = journalVoucherHeader
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = journalVoucherHeader.Count();
+
+                var pagedData = journalVoucherHeader
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
             }
-
-            return View(journalVoucherVMs);
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]
@@ -625,7 +661,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 //var printedBy = _userManager.GetUserName(this.User);
-                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of cv# {cv.CVNo}", "Check Vouchers");
+                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of jv# {jv.CVNo}", "Check Vouchers");
                 //await _dbContext.AddAsync(auditTrail, cancellationToken);
 
                 #endregion --Audit Trail Recording

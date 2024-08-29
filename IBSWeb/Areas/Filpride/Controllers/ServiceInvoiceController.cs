@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Utility;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -36,14 +38,74 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
-            var companyClaims = await GetCompanyClaimAsync();
+            return View();
+        }
 
-            var results = await _unitOfWork.FilprideServiceInvoice
-                .GetAllAsync(s => s.Company == companyClaims, cancellationToken);
+        [HttpPost]
+        public async Task<IActionResult> GetServiceInvoices([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
 
-            return View(results);
+                var serviceInvoices = await _unitOfWork.FilprideServiceInvoice
+                    .GetAllAsync(sv => sv.Company == companyClaims, cancellationToken);
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    serviceInvoices = serviceInvoices
+                        .Where(s =>
+                            s.ServiceInvoiceNo.ToLower().Contains(searchValue) ||
+                            s.Customer.CustomerName.ToLower().Contains(searchValue) ||
+                            s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
+                            s.Service.ServiceNo.ToLower().Contains(searchValue) ||
+                            s.Service.Name.ToLower().Contains(searchValue) ||
+                            s.Period.ToString().Contains(searchValue) ||
+                            s.Amount.ToString().Contains(searchValue) ||
+                            s.Instructions?.ToLower().Contains(searchValue) == true ||
+                            s.CreatedBy.ToLower().Contains(searchValue)
+                            )
+                        .ToList();
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    serviceInvoices = serviceInvoices
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = serviceInvoices.Count();
+
+                var pagedData = serviceInvoices
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]

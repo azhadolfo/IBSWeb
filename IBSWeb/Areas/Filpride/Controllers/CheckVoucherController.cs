@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -39,55 +41,79 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
-            var companyClaims = await GetCompanyClaimAsync();
+            return View();
+        }
 
-            var headers = await _dbContext.FilprideCheckVoucherHeaders
-                .Include(s => s.Supplier)
-                .Where(c => c.Company == companyClaims)
-                .ToListAsync(cancellationToken);
-
-            var details = await _dbContext.FilprideCheckVoucherDetails
-                .ToListAsync(cancellationToken);
-
-            // Create a list to store CheckVoucherVM objects
-            var checkVoucherVMs = new List<CheckVoucherVM>();
-
-            // Retrieve details for each header
-            foreach (var header in headers)
+        [HttpPost]
+        public async Task<IActionResult> GetCheckVouchers([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
             {
-                var headerDetails = details.Where(d => d.CheckVoucherHeaderId == header.CheckVoucherHeaderId).ToList();
+                var companyClaims = await GetCompanyClaimAsync();
 
-                if (header.Category == "Trade" && header.RRNo != null)
+                var checkVoucherHeader = await _unitOfWork.FilprideCheckVoucher
+                    .GetAllAsync(cv => cv.Company == companyClaims, cancellationToken);
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
                 {
-                    var siArray = new string[header.RRNo.Length];
-                    for (int i = 0; i < header.RRNo.Length; i++)
-                    {
-                        var rrValue = header.RRNo[i];
+                    var searchValue = parameters.Search.Value.ToLower();
 
-                        var rr = await _dbContext.FilprideReceivingReports
-                                    .FirstOrDefaultAsync(p => p.ReceivingReportNo == rrValue && p.Company == companyClaims);
-                        if (rr != null)
-                        {
-                            siArray[i] = rr.SupplierInvoiceNumber;
-                        }
-                    }
+                    checkVoucherHeader = checkVoucherHeader
+                    .Where(s =>
+                        s.CheckVoucherHeaderNo.ToLower().Contains(searchValue) ||
+                        s.Date.ToString().Contains(searchValue) ||
+                        s.RRNo?.Contains(searchValue) == true ||
+                        s.SINo?.Contains(searchValue) == true ||
+                        s.PONo?.Contains(searchValue) == true ||
+                        s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
+                        s.Total.ToString().Contains(searchValue) ||
+                        s.Amount?.ToString().Contains(searchValue) == true ||
+                        s.Particulars.ToLower().Contains(searchValue) ||
+                        s.Category.ToLower().Contains(searchValue) ||
+                        s.Payee.ToLower().Contains(searchValue) ||
+                        s.CvType.ToLower().Contains(searchValue) ||
+                        s.CreatedBy.ToLower().Contains(searchValue)
+                        )
+                    .ToList();
 
-                    ViewBag.SINoArray = siArray;
                 }
-                // Create a new CheckVoucherVM object for each header and its associated details
-                var checkVoucherVM = new CheckVoucherVM
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
                 {
-                    Header = header,
-                    Details = headerDetails
-                };
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
-                // Add the CheckVoucherVM object to the list
-                checkVoucherVMs.Add(checkVoucherVM);
+                    checkVoucherHeader = checkVoucherHeader
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = checkVoucherHeader.Count();
+
+                var pagedData = checkVoucherHeader
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
             }
-
-            return View(checkVoucherVMs);
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         public async Task<IActionResult> GetPOs(int supplierId)

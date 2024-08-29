@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -46,6 +47,26 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 invoiceVoucher.IsPaid = true;
             }
+        }
+
+        public override async Task<FilprideCheckVoucherHeader> GetAsync(Expression<Func<FilprideCheckVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                .Include(x => x.Supplier)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public override async Task<IEnumerable<FilprideCheckVoucherHeader>> GetAllAsync(Expression<Func<FilprideCheckVoucherHeader, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<FilprideCheckVoucherHeader> query = dbSet
+               .Include(c => c.Supplier);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
     }
 }

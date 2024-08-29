@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Utility;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -36,14 +38,77 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
-            var companyClaims = await GetCompanyClaimAsync();
+            return View();
+        }
 
-            var salesInvoices = await _unitOfWork.FilprideSalesInvoice
-                .GetAllAsync(si => si.Company == companyClaims, cancellationToken);
+        [HttpPost]
+        public async Task<IActionResult> GetSalesInvoices([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
 
-            return View(salesInvoices);
+                var salesInvoices = await _unitOfWork.FilprideSalesInvoice
+                    .GetAllAsync(si => si.Company == companyClaims, cancellationToken);
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    salesInvoices = salesInvoices
+                        .Where(s =>
+                            s.SalesInvoiceNo.ToLower().Contains(searchValue) ||
+                            s.Customer.CustomerName.ToLower().Contains(searchValue) ||
+                            s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
+                            s.Product.ProductCode.ToLower().Contains(searchValue) ||
+                            s.Product.ProductName.ToLower().Contains(searchValue) ||
+                            s.OtherRefNo.ToLower().Contains(searchValue) ||
+                            s.TransactionDate.ToString().Contains(searchValue) ||
+                            s.Quantity.ToString().Contains(searchValue) ||
+                            s.UnitPrice.ToString().Contains(searchValue) ||
+                            s.Amount.ToString().Contains(searchValue) ||
+                            s.Remarks.ToLower().Contains(searchValue) ||
+                            s.CreatedBy.ToLower().Contains(searchValue)
+                            )
+                        .ToList();
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    salesInvoices = salesInvoices
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = salesInvoices.Count();
+
+                var pagedData = salesInvoices
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]
