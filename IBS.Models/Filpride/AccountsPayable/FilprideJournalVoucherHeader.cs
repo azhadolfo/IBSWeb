@@ -43,5 +43,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
+
+        public string Status { get; set; } = nameof(Utility.Status.Pending);
     }
 }

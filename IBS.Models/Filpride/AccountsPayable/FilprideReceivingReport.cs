@@ -1,5 +1,4 @@
-﻿using IBS.Models.Filpride.MasterFile;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -115,5 +114,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [Column(TypeName = "date")]
         public DateOnly? ReceivedDate { get; set; }
+
+        public string Status { get; set; } = nameof(Utility.Status.Pending);
     }
 }

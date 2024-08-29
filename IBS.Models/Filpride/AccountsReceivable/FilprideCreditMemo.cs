@@ -101,5 +101,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
+
+        public string Status { get; set; } = nameof(Utility.Status.Pending);
     }
 }

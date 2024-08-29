@@ -96,4 +96,12 @@ namespace IBS.Utility
         Documented,
         Undocumented
     }
+
+    public enum Status
+    {
+        Pending,
+        Posted,
+        Voided,
+        Canceled
+    }
 }

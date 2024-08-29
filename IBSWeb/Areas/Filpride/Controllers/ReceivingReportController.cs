@@ -370,6 +370,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
                         model.PostedDate = DateTime.Now;
+                        model.Status = nameof(Status.Posted);
 
                         #region --General Ledger Recording
 
@@ -553,6 +554,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
+                    model.Status = nameof(Status.Voided);
 
                     await _unitOfWork.FilprideReceivingReportRepository.RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
                     await _unitOfWork.FilprideReceivingReportRepository.RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
@@ -582,6 +584,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledQuantity = model.QuantityDelivered < model.QuantityReceived ? model.QuantityDelivered : model.QuantityReceived;
                     model.QuantityDelivered = 0;
                     model.QuantityReceived = 0;
+                    model.Status = nameof(Status.Canceled);
 
                     ///PENDING - leo
                     //model.CancellationRemarks = cancellationRemarks;

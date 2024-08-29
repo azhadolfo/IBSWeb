@@ -1230,6 +1230,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
                         model.PostedDate = DateTime.Now;
+                        model.Status = nameof(Status.Posted);
 
                         List<FilprideOffsettings>? offset = new List<FilprideOffsettings>();
 
@@ -1595,6 +1596,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
                         model.VoidedDate = DateTime.Now;
+                        model.Status = nameof(Status.Voided);
                         var series = model.SINo != null ? model.SINo : model.SVNo;
 
                         var findOffsetting = await _dbContext.FilprideOffsettings.Where(offset => offset.Company == model.Company && offset.Source == model.CollectionReceiptNo && offset.Reference == series).ToListAsync(cancellationToken);
@@ -1650,6 +1652,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
+                    model.Status = nameof(Status.Canceled);
 
                     ///PENDING
                     //model.CancellationRemarks = cancellationRemarks;

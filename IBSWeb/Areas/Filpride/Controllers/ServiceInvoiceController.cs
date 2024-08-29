@@ -268,6 +268,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
                         model.PostedDate = DateTime.Now;
+                        model.Status = nameof(Status.Posted);
 
                         #region --Retrieval of Services
 
@@ -501,6 +502,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
+                    model.Status = nameof(Status.Canceled);
 
                     ///PENDING
                     //model.CancellationRemarks = cancellationRemarks;
@@ -529,6 +531,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
+                    model.Status = nameof(Status.Voided);
 
                     await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
                     await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.ServiceInvoiceNo, cancellationToken);

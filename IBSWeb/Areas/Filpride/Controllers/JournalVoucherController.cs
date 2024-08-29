@@ -353,6 +353,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         modelHeader.PostedBy = _userManager.GetUserName(this.User);
                         modelHeader.PostedDate = DateTime.Now;
+                        modelHeader.Status = nameof(Status.Posted);
 
                         #region --General Ledger Book Recording(GL)--
 
@@ -440,6 +441,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
+                    model.Status = nameof(Status.Voided);
 
                     await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideJournalBook>(crb => crb.Reference == model.JournalVoucherHeaderNo);
                     await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.JournalVoucherHeaderNo);
@@ -463,6 +465,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
+                    model.Status = nameof(Status.Canceled);
 
                     ///PENDING - leo
                     //model.CancellationRemarks = cancellationRemarks;

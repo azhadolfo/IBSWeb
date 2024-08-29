@@ -67,10 +67,10 @@ namespace IBS.DataAccess.Repository.Filpride
                 si.AmountPaid -= total;
                 si.Balance += total;
 
-                if (si.IsPaid == true && si.Status == "Paid" || si.IsPaid == true && si.Status == "OverPaid")
+                if (si.IsPaid == true && si.PaymentStatus == "Paid" || si.IsPaid == true && si.PaymentStatus == "OverPaid")
                 {
                     si.IsPaid = false;
-                    si.Status = "Pending";
+                    si.PaymentStatus = "Pending";
                 }
 
                 return await _db.SaveChangesAsync(cancellationToken);
@@ -93,10 +93,10 @@ namespace IBS.DataAccess.Repository.Filpride
                 sv.AmountPaid -= total;
                 sv.Balance += total;
 
-                if (sv.IsPaid == true && sv.Status == "Paid" || sv.IsPaid == true && sv.Status == "OverPaid")
+                if (sv.IsPaid == true && sv.PaymentStatus == "Paid" || sv.IsPaid == true && sv.PaymentStatus == "OverPaid")
                 {
                     sv.IsPaid = false;
-                    sv.Status = "Pending";
+                    sv.PaymentStatus = "Pending";
                 }
 
                 return await _db.SaveChangesAsync(cancellationToken);
@@ -122,10 +122,10 @@ namespace IBS.DataAccess.Repository.Filpride
                     salesInvoices[i].AmountPaid -= total;
                     salesInvoices[i].Balance += total;
 
-                    if (salesInvoices[i].IsPaid == true && salesInvoices[i].Status == "Paid" || salesInvoices[i].IsPaid == true && salesInvoices[i].Status == "OverPaid")
+                    if (salesInvoices[i].IsPaid == true && salesInvoices[i].PaymentStatus == "Paid" || salesInvoices[i].IsPaid == true && salesInvoices[i].PaymentStatus == "OverPaid")
                     {
                         salesInvoices[i].IsPaid = false;
-                        salesInvoices[i].Status = "Pending";
+                        salesInvoices[i].PaymentStatus = "Pending";
                     }
                 }
 
@@ -152,12 +152,12 @@ namespace IBS.DataAccess.Repository.Filpride
                 if (si.Balance == 0 && si.AmountPaid == si.NetDiscount)
                 {
                     si.IsPaid = true;
-                    si.Status = "Paid";
+                    si.PaymentStatus = "Paid";
                 }
                 else if (si.AmountPaid > si.NetDiscount)
                 {
                     si.IsPaid = true;
-                    si.Status = "OverPaid";
+                    si.PaymentStatus = "OverPaid";
                 }
 
                 return await _db.SaveChangesAsync(cancellationToken);
@@ -190,12 +190,12 @@ namespace IBS.DataAccess.Repository.Filpride
                         if (salesInvoice.Balance == 0 && salesInvoice.AmountPaid == salesInvoice.NetDiscount)
                         {
                             salesInvoice.IsPaid = true;
-                            salesInvoice.Status = "Paid";
+                            salesInvoice.PaymentStatus = "Paid";
                         }
                         else if (salesInvoice.AmountPaid > salesInvoice.NetDiscount)
                         {
                             salesInvoice.IsPaid = true;
-                            salesInvoice.Status = "OverPaid";
+                            salesInvoice.PaymentStatus = "OverPaid";
                         }
                     }
                     else
@@ -231,12 +231,12 @@ namespace IBS.DataAccess.Repository.Filpride
                 if (sv.Balance == 0 && sv.AmountPaid == (sv.Total - sv.Discount))
                 {
                     sv.IsPaid = true;
-                    sv.Status = "Paid";
+                    sv.PaymentStatus = "Paid";
                 }
                 else if (sv.AmountPaid > (sv.Total - sv.Discount))
                 {
                     sv.IsPaid = true;
-                    sv.Status = "OverPaid";
+                    sv.PaymentStatus = "OverPaid";
                 }
 
                 return await _db.SaveChangesAsync(cancellationToken);

@@ -142,5 +142,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public bool IsPrinted { get; set; }
 
         public DateOnly[]? MultipleTransactionDate { get; set; }
+
+        public string Status { get; set; } = nameof(Utility.Status.Pending);
     }
 }

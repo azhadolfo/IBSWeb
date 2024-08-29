@@ -81,7 +81,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public decimal UnearnedAmount { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string Status { get; set; } = "Pending";
+        public string PaymentStatus { get; set; } = "Pending";
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal AmountPaid { get; set; }
@@ -103,5 +103,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
+
+        public string Status { get; set; } = nameof(Utility.Status.Pending);
     }
 }

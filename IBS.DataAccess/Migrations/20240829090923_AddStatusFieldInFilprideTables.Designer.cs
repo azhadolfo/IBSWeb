@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240829090923_AddStatusFieldInFilprideTables")]
+    partial class AddStatusFieldInFilprideTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1146,11 +1149,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(12)")
                         .HasColumnName("sales_invoice_no");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("status");
-
                     b.Property<DateOnly>("TransactionDate")
                         .HasColumnType("date")
                         .HasColumnName("transaction_date");
@@ -1317,11 +1315,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("ServiceInvoiceNo")
                         .HasColumnType("varchar(12)")
                         .HasColumnName("service_invoice_no");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("status");
 
                     b.Property<decimal>("Total")
                         .HasColumnType("numeric(18,4)")

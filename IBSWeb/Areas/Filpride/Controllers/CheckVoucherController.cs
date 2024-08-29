@@ -288,6 +288,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         modelHeader.PostedBy = _userManager.GetUserName(this.User);
                         modelHeader.PostedDate = DateTime.Now;
+                        modelHeader.Status = nameof(Status.Posted);
 
                         #region -- Partial payment of RR's
                         if (modelHeader.Amount != null)
@@ -662,6 +663,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     model.VoidedBy = _userManager.GetUserName(this.User);
                     model.VoidedDate = DateTime.Now;
+                    model.Status = nameof(Status.Voided);
 
                     await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo);
                     await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo);
@@ -685,6 +687,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
+                    model.Status = nameof(Status.Canceled);
 
                     ///PENDING - further discussion
                     //model.CancellationRemarks = cancellationRemarks;

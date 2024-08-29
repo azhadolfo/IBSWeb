@@ -73,7 +73,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public decimal VatAmount { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string Status { get; set; } = "Pending";
+        public string PaymentStatus { get; set; } = "Pending";
 
         [Required]
         [Display(Name = "Transaction Date")]
@@ -145,5 +145,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public string Type { get; set; } = string.Empty;
 
         public int ReceivingReportId { get; set; }
+
+        public string Status { get; set; } = nameof(Utility.Status.Pending);
     }
 }

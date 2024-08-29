@@ -135,17 +135,13 @@
                     { "data": "quantityReceived", "render": $.fn.dataTable.render.number(',', '.', 4) },
                     { "data": "createdBy" },
                     {
-                        "data": null,
+                        "data": "status",
                         "render": function(data, type, row) {
-                            var status = row.postedBy != null && row.voidedBy == null && row.canceledBy == null ? "Posted" :
-                                row.voidedBy != null ? "Voided" :
-                                row.canceledBy != null ? "Cancelled" : "Pending";
+                            var statusClass = row.status == "@nameof(Status.Posted)" ? "bg-info" :
+                                              row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
+                                              row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
 
-                            var statusClass = status == "Posted" ? "bg-info" :
-                                              status == "Voided" ? "bg-danger" :
-                                              status == "Cancelled" ? "bg-warning" : "";
-
-                            return `<span class="badge rounded-pill ${statusClass}">${status}</span>`;
+                            return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                         }
                     },
                     {
