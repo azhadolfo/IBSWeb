@@ -263,7 +263,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             po.PO = await _dbContext.FilpridePurchaseOrders
-                .Where(po => po.FinalPrice == 0 || po.FinalPrice == null && po.Company == companyClaims && po.PostedBy != null)
+                .Where(po => po.FinalPrice == 0 && po.Company == companyClaims && po.PostedBy != null && po.QuantityReceived != 0)
                 .Select(s => new SelectListItem
                 {
                     Value = s.PurchaseOrderId.ToString(),
@@ -300,7 +300,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     model.PO = await _dbContext.FilpridePurchaseOrders
-                        .Where(po => po.Company == companyClaims && po.FinalPrice == 0 || po.FinalPrice == null && po.PostedBy != null)
+                        .Where(po => po.Company == companyClaims && po.FinalPrice == 0 || po.FinalPrice == null && po.PostedBy != null && po.QuantityReceived != 0)
                         .Select(s => new SelectListItem
                         {
                             Value = s.PurchaseOrderId.ToString(),

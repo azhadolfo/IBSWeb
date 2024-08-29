@@ -319,7 +319,9 @@
             });
             function getDefaultExpense(value) {
                 var defaultExpenseTitle = $(".defaultExpenseText option:selected").text().replace(/^\S+\s/, '');
+                var defaultExpenseNumber = $(".defaultExpenseText option:selected").text().split(' ')[0];
                 $(".defaultExpenseTitle").val(defaultExpenseTitle);
+                $(".defaultExpenseTitle").val(defaultExpenseNumber);
             }
         </script>
         <script>
@@ -338,11 +340,6 @@
                     event.preventDefault();
                     alert('Please select Account No.!');
                     return;
-                }
-                if (accountNumber.startsWith("10201") || accountNumber.startsWith("10105")) {
-                } else {
-                    $("#StartDate").val("");
-                    $("#NumberOfYears").val(0);
                 }
 
                 // Format debit and credit values with commas and two decimal places

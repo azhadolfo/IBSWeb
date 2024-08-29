@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
+using IBS.DataAccess.Repository.Filpride;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Mobility;
 using Microsoft.AspNetCore.Identity;
@@ -32,6 +33,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IHostedService, ImportService>();
+builder.Services.AddHostedService<AutomatedEntries>();
 
 var app = builder.Build();
 

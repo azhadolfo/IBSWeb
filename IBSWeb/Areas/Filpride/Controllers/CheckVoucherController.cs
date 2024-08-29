@@ -1026,6 +1026,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion -- Saving the default entries --
 
+                    #region -- Get Supplier --
+
+                    var supplier = await _dbContext.FilprideSuppliers
+                        .Where(s => s.SupplierId == viewModel.SupplierId)
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    #endregion -- Get Supplier --
+
                     #region -- Automatic entry --
 
                     if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
@@ -1038,10 +1046,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         decimal? amount = null;
                         for (int i = 0; i < viewModel.AccountNumber.Length; i++)
                         {
+                            if (supplier.TaxType == "Exempt" && (i == 2 || i == 3))
+                            {
+                                continue;
+                            }
+
                             if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
                             {
                                 amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
-                                break;
                             }
                         }
 
