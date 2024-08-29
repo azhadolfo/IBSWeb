@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -34,6 +35,28 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 return "JV0000000001";
             }
+        }
+
+        public override async Task<FilprideJournalVoucherHeader> GetAsync(Expression<Func<FilprideJournalVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                .Include(cv => cv.CheckVoucherHeader)
+                .ThenInclude(supplier => supplier.Supplier)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public override async Task<IEnumerable<FilprideJournalVoucherHeader>> GetAllAsync(Expression<Func<FilprideJournalVoucherHeader, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<FilprideJournalVoucherHeader> query = dbSet
+                .Include(cv => cv.CheckVoucherHeader)
+                .ThenInclude(supplier => supplier.Supplier);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
     }
 }

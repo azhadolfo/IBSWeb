@@ -53,7 +53,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var checkVoucherHeader = await _unitOfWork.FilprideCheckVoucher
+                var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher
                     .GetAllAsync(cv => cv.Company == companyClaims, cancellationToken);
 
                 // Search filter
@@ -61,7 +61,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
-                    checkVoucherHeader = checkVoucherHeader
+                    checkVoucherHeaders = checkVoucherHeaders
                     .Where(s =>
                         s.CheckVoucherHeaderNo.ToLower().Contains(searchValue) ||
                         s.Date.ToString().Contains(searchValue) ||
@@ -88,15 +88,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var columnName = parameters.Columns[orderColumn.Column].Data;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
-                    checkVoucherHeader = checkVoucherHeader
+                    checkVoucherHeaders = checkVoucherHeaders
                         .AsQueryable()
                         .OrderBy($"{columnName} {sortDirection}")
                         .ToList();
                 }
 
-                var totalRecords = checkVoucherHeader.Count();
+                var totalRecords = checkVoucherHeaders.Count();
 
-                var pagedData = checkVoucherHeader
+                var pagedData = checkVoucherHeaders
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
                     .ToList();
@@ -180,8 +180,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var receivingReport = await _dbContext.FilprideReceivingReports
-                .FirstOrDefaultAsync(rr => rr.Company == companyClaims && rr.ReceivingReportNo == rrNo);
+            var receivingReport = await _unitOfWork.FilprideReceivingReportRepository
+                .GetAsync(rr => rr.Company == companyClaims && rr.ReceivingReportNo == rrNo);
+
             if (receivingReport != null)
             {
                 var amount = receivingReport.Amount;
@@ -208,7 +209,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (bankId != 0)
             {
-                var existingBankAccount = await _dbContext.FilprideBankAccounts.FindAsync(bankId);
+                var existingBankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == bankId);
                 return Json(new { AccountNoCOA = existingBankAccount.AccountNoCOA, AccountNo = existingBankAccount.AccountNo, AccountName = existingBankAccount.AccountName });
             }
             return Json(null);
@@ -232,9 +233,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var header = await _dbContext.FilprideCheckVoucherHeaders
-                .Include(s => s.Supplier)
-                .FirstOrDefaultAsync(cvh => cvh.CheckVoucherHeaderId == id.Value, cancellationToken);
+            var header = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(cvh => cvh.CheckVoucherHeaderId == id.Value, cancellationToken);
 
             if (header == null)
             {
@@ -277,7 +277,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var modelHeader = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
+            var modelHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync();
 
             if (modelHeader != null)
@@ -398,9 +398,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders
-                .Include(supp => supp.Supplier)
-                .FirstOrDefaultAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
+            var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
+
             var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
                 .ToListAsync();
@@ -469,14 +469,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var companyClaims = await GetCompanyClaimAsync();
 
                     #region --Check if duplicate CheckNo
-                    var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(viewModel.CVId, cancellationToken);
+                    var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
 
                     if (viewModel.CheckNo != null && !viewModel.CheckNo.Contains("DM"))
                     {
-                        var cv = await _dbContext
-                        .FilprideCheckVoucherHeaders
-                        .Where(cv => cv.Company == companyClaims && cv.BankId == viewModel.BankId && cv.CheckNo == viewModel.CheckNo && !cv.CheckNo.Equals(existingHeaderModel.CheckNo))
-                        .ToListAsync(cancellationToken);
+                        var cv = await _unitOfWork
+                        .FilprideCheckVoucher
+                        .GetAllAsync(cv => cv.Company == companyClaims && cv.BankId == viewModel.BankId && cv.CheckNo == viewModel.CheckNo && !cv.CheckNo.Equals(existingHeaderModel.CheckNo), cancellationToken);
+
                         if (cv.Any())
                         {
                             TempData["error"] = "Check No. Is already exist";
