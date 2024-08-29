@@ -40,16 +40,16 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<bool> IsSupplierExistAsync(string supplierName, string company, CancellationToken cancellationToken = default)
+        public async Task<bool> IsSupplierExistAsync(string supplierName, string category, string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideSuppliers
-                .AnyAsync(s => s.Company == company && s.SupplierName == supplierName, cancellationToken);
+                .AnyAsync(s => s.Company == company && s.SupplierName == supplierName && s.Category == category, cancellationToken);
         }
 
-        public async Task<bool> IsTinNoExistAsync(string tin, string branch, string company, CancellationToken cancellationToken = default)
+        public async Task<bool> IsTinNoExistAsync(string tin, string branch, string category, string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideSuppliers
-                .AnyAsync(s => s.Company == company && s.SupplierTin == tin && s.Branch == branch, cancellationToken);
+                .AnyAsync(s => s.Company == company && s.SupplierTin == tin && s.Branch == branch && s.Category == category, cancellationToken);
         }
 
         public async Task<string> SaveProofOfRegistration(IFormFile file, string localPath, CancellationToken cancellationToken = default)

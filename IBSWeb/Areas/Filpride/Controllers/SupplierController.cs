@@ -79,13 +79,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, companyClaims, cancellationToken))
+                if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, model.Category, companyClaims, cancellationToken))
                 {
                     ModelState.AddModelError("SupplierName", "Supplier already exist.");
                     return View(model);
                 }
 
-                if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, model.Branch, companyClaims, cancellationToken))
+                if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, model.Branch, model.Category, companyClaims, cancellationToken))
                 {
                     ModelState.AddModelError("SupplierTin", "Tin number already exist.");
                     return View(model);

@@ -102,6 +102,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ModelState.AddModelError("Name", "Services already exist!");
                     return View(services);
                 }
+                if (services.Percent == 0)
+                {
+                    ModelState.AddModelError("Percent", "Please input percent!");
+                    return View(services);
+                }
 
                 var currentAndPrevious = await _dbContext.ChartOfAccounts
                     .FindAsync(services.CurrentAndPreviousId, cancellationToken);
@@ -147,7 +152,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Name,Percent,Id,CreatedBy,CreatedDate")] FilprideService services, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(int id, FilprideService services, CancellationToken cancellationToken)
         {
             if (id != services.ServiceId)
             {
@@ -156,6 +161,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
+                if (services.Percent == 0)
+                {
+                    ModelState.AddModelError("Percent", "Please input percent!");
+                    return View(services);
+                }
                 try
                 {
                     _dbContext.Update(services);

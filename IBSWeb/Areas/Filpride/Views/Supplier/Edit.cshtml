@@ -168,22 +168,40 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        function toggleExemptionFields(selectElement) {
-            const exemptionFields = document.getElementById("exemptionFields");
-            const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
-            var inlineRadio2 = document.getElementById('inlineRadio2');
+        $(document).ready(function () {
+            function toggleExemptionFields(selectElement) {
+                const exemptionFields = document.getElementById("exemptionFields");
+                const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
+                var inlineRadio2 = document.getElementById('inlineRadio2');
 
-            if (selectElement.value === "Exempt") {
-                exemptionFields.style.display = "block";
-                withHoldingTaxPercent.style.display = "none";
-                $(".withHoldingTaxPercent").val(null).trigger('change');
-            } else if (selectElement.value === "Withholding Tax" && inlineRadio2.checked === true) {
-                withHoldingTaxPercent.style.display = "block";
-                exemptionFields.style.display = "none";
-            } else {
-                exemptionFields.style.display = "none";
+                // Set the value of the select element
+                selectElement.value = "@Model.TaxType";
+
+                // Toggle fields based on the selected value
+                if (selectElement.value === "Exempt") {
+                    exemptionFields.style.display = "block";
+                    withHoldingTaxPercent.style.display = "none";
+                    $(".withHoldingTaxPercent").val(null).trigger('change');
+                } else if (selectElement.value === "Withholding Tax" && inlineRadio2.checked) {
+                    withHoldingTaxPercent.style.display = "block";
+                    exemptionFields.style.display = "none";
+                } else {
+                    exemptionFields.style.display = "none";
+                }
             }
-        }
+
+            // Get the select element by ID or class
+            var selectElement = document.getElementById("TaxType"); // Replace with your actual ID or class
+            if (selectElement) {
+                toggleExemptionFields(selectElement);
+
+                // Handle change event
+                selectElement.addEventListener('change', function () {
+                    toggleExemptionFields(selectElement);
+                });
+            }
+        });
+
 
         function toggleValidityDate(radioButton) {
             const validityDateField = document.getElementById("validityDateField");

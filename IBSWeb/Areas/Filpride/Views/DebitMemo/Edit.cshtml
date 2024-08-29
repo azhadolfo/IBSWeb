@@ -33,43 +33,43 @@
                 <span asp-validation-for="Source" class="text-danger"></span>
             </fieldset>
             <div class="form-group mb-3">
-                <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
+                <label asp-for="TransactionDate" class="control-label"></label>
                 <input asp-for="TransactionDate" type="Date" class="form-control" />
                 <span asp-validation-for="TransactionDate" class="text-danger"></span>
             </div>
             <div class="form-group" id="siList">
                 <div class="form-group mb-3">
-                    <label asp-for="SalesInvoiceId" class="control-label"></label><span class="required">*</span>
+                    <label asp-for="SalesInvoiceId" class="control-label"></label>
                     <select asp-for="SalesInvoiceId" asp-items="@Model.SalesInvoices" class="form-control js-select2" style="width:100%" required>
                         <option></option>
                     </select>
                     <span asp-validation-for="SalesInvoiceId" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
-                    <label class="control-label">Quantity</label><span class="required">*</span>
+                    <label class="control-label">Quantity</label>
                     <input asp-for="Quantity" class="form-control money" placeholder="0.00" required />
                     <span asp-validation-for="Quantity" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
-                    <label asp-for="AdjustedPrice" class="control-label"></label><span class="required">*</span>
+                    <label asp-for="AdjustedPrice" class="control-label"></label>
                     <input asp-for="AdjustedPrice" class="form-control money" placeholder="0.00" required />
                     <span asp-validation-for="AdjustedPrice" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group" id="svList" style="display: none;">
-                <label asp-for="ServiceInvoiceId" class="control-label"></label><span class="required">*</span>
+                <label asp-for="ServiceInvoiceId" class="control-label"></label>
                 <select asp-for="ServiceInvoiceId" asp-items="@Model.ServiceInvoices" class="form-control js-select2" style="width:100%" required>
                     <option></option>
                     <span asp-validation-for="ServiceInvoiceId" class="text-danger"></span>
                 </select>
                 <div class="row g-2 mt-3">
                     <div class="col-sm mb-3">
-                        <label asp-for="Period" class="control-label"></label><span class="required">*</span>
+                        <label asp-for="Period" class="control-label"></label>
                         <input asp-for="Period" type="month" class="form-control" readonly />
                         <span asp-validation-for="Period" class="text-danger"></span>
                     </div>
                     <div class="col-sm">
-                        <label asp-for="Amount" class="control-label"></label><span class="required">*</span>
+                        <label asp-for="Amount" class="control-label"></label>
                         <input asp-for="Amount" class="form-control moneyInput" placeholder="0.00" />
                         <span asp-validation-for="Amount" class="text-danger"></span>
                     </div>
@@ -78,12 +78,12 @@
 
             <div class="form-floating mb-3">
                 <input asp-for="Description" id="floatingInput" type="text" class="form-control" placeholder="Optional" />
-                <label for="floatingInput" class="control-label">Description<span class="required">*</span></label>
+                <label for="floatingInput" class="control-label">Description</label>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
                 <textarea asp-for="Remarks" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
-                <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
+                <label asp-for="Remarks" class="control-label">Remarks</label>
                 <span asp-validation-for="Remarks" class="text-danger"></span>
             </div>
 

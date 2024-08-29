@@ -26,7 +26,7 @@
                             <span asp-validation-for="SalesInvoiceNo" class="text-danger"></span>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="control-label">Customer Name<span class="required">*</span></label>
+                            <label class="control-label">Customer Name
                             <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-control js-select2" style="width:100%">
                                 <option></option>
                             </select>
@@ -62,7 +62,7 @@
                     </div>
                     <div class="col">
                         <div class="form-group mb-3">
-                            <label class="control-label">Product Name<span class="required">*</span></label>
+                            <label class="control-label">Product Name
                             <select asp-for="ProductId" asp-items="@Model.Products" class="form-control GetPOList js-select2" style="width:100%">
                                 <option></option>
                             </select>
@@ -100,7 +100,7 @@
                             <span asp-validation-for="TransactionDate" class="text-danger"></span>
                         </div>
                         <div class="form-group mb-3">
-                            <label asp-for="PurchaseOrderId" class="control-label">Suppliers PO No.<span class="required">*</span></label>
+                            <label asp-for="PurchaseOrderId" class="control-label">Suppliers PO No.</label>
                             <select asp-for="PurchaseOrderId" class="form-control js-select2 GetRRList" asp-items="@Model.PO">
                                 <option></option>
                             </select>
@@ -108,7 +108,7 @@
                         </div>
 
                         <div class="form-group mb-3">
-                            <label asp-for="ReceivingReportId" class="control-label">RR No<span class="required">*</span></label>
+                            <label asp-for="ReceivingReportId" class="control-label">RR No</label>
                             <select asp-for="ReceivingReportId" class="form-control js-select2" asp-items="@Model.RR">
                                 <option></option>
                             </select>
