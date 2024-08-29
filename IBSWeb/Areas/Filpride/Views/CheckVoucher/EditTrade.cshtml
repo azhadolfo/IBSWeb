@@ -19,7 +19,7 @@
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group mb-3">
-                        <label asp-for="SupplierId" class="control-label"></label><span class="required">*</span>
+                        <label asp-for="SupplierId" class="control-label"></label>
                         <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 GetPOList supplier" style="width:100%">
                             <option></option>
                         </select>
@@ -38,7 +38,7 @@
                         <label asp-for="SupplierTinNo" class="control-label"></label>
                     </div>
                     <div class="form-group mb-3">
-                        <label asp-for="POSeries" class="control-label">Suppliers PO No.</label><span class="required">*</span>
+                        <label asp-for="POSeries" class="control-label">Suppliers PO No.</label>
                         <select asp-for="POSeries" asp-items="@Model.PONo" class="form-select js-multiple GetRRList" multiple="multiple" style="width:100%" required>
                             <option></option>
                         </select>
@@ -46,7 +46,7 @@
                     </div>
                     <div class="form-group mb-3">
                         <input type="hidden" id="criteriaInput" name="criteria" />
-                        <label asp-for="RRSeries" class="control-label"></label><span class="required">*</span>
+                        <label asp-for="RRSeries" class="control-label"></label>
                         <select asp-for="RRSeries" asp-items="@Model.RR" class="form-select js-multiple" multiple="multiple" style="width:100%">
                             <option></option>
                         </select>
@@ -65,13 +65,13 @@
                         </tbody>
                     </table>
                     <div class="form-group mb-3">
-                        <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
+                        <label asp-for="TransactionDate" class="control-label"></label>
                         <input asp-for="TransactionDate" type="Date" class="form-control" />
                         <span asp-validation-for="TransactionDate" class="text-danger"></span>
                     </div>
 
                     <div class="form-group mb-3">
-                        <label asp-for="BankId" class="control-label"></label><span class="required">*</span>
+                        <label asp-for="BankId" class="control-label"></label>
                         <select asp-for="BankId" asp-items="@Model.BankAccounts" class="form-select js-select2" id="bankAccounts" style="width:100%">
                             <option></option>
                         </select>
@@ -80,17 +80,17 @@
                     <div class="form-floating mb-3">
                         <input asp-for="CheckNo" type="text" class="form-control" placeholder="" />
                         <span asp-validation-for="CheckNo" class="text-danger"></span>
-                        <label asp-for="CheckNo" class="control-label">Check No<span class="required">*</span></label>
+                        <label asp-for="CheckNo" class="control-label">Check No</label>
                     </div>
                     <div class="form-group mb-3">
-                        <label asp-for="CheckDate" class="control-label"></label><span class="required">*</span>
+                        <label asp-for="CheckDate" class="control-label"></label>
                         <input asp-for="CheckDate" type="date" class="form-control" />
                         <span asp-validation-for="CheckDate" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
                         <input asp-for="Particulars" type="text" class="form-control" placeholder="" />
                         <span asp-validation-for="Particulars" class="text-danger"></span>
-                        <label asp-for="Particulars" class="control-label">Particulars<span class="required">*</span></label>
+                        <label asp-for="Particulars" class="control-label">Particulars</label>
                     </div>
                     <div class="form-group mb-3">
                         <label class="control-label">Upload File (Optional)</label>

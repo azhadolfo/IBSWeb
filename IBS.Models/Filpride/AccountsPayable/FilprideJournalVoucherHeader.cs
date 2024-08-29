@@ -19,6 +19,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public string? References { get; set; }
 
+        [Required]
         [Display(Name = "Check Voucher Id")]
         public int? CVId { get; set; }
 

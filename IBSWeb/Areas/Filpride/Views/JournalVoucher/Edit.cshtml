@@ -22,7 +22,7 @@
                     <input asp-for="JVId" type="hidden" />
                     <input asp-for="JVNo" type="hidden" />
                     <div class="form-group mb-3">
-                        <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
+                        <label asp-for="TransactionDate" class="control-label"></label>
                         <input asp-for="TransactionDate" type="Date" class="form-control" />
                         <span asp-validation-for="TransactionDate" class="text-danger"></span>
                     </div>
@@ -32,7 +32,7 @@
                         <label asp-for="References" class="control-label"></label>
                     </div>
                     <div class="form-group mb-3">
-                        <label class="control-label">CV No.</label><span class="required">*</span>
+                        <label class="control-label">CV No.</label>
                         <select asp-for="CVId" asp-items="@Model.CheckVoucherHeaders" class="form-select js-select2 checkVoucher" style="width:100%">
                             <option></option>
                         </select>
@@ -40,7 +40,7 @@
                     </div>
                     <div class="form-floating mb-3">
                         <input asp-for="Particulars" type="text" class="form-control" placeholder="" />
-                        <label asp-for="Particulars" class="control-label">Particulars<span class="required">*</span></label>
+                        <label asp-for="Particulars" class="control-label">Particulars</label>
                         <span asp-validation-for="Particulars" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
@@ -50,7 +50,7 @@
                     </div>
                     <div class="form-floating mb-3">
                         <textarea asp-for="JVReason" type="text" class="form-control" placeholder="Enter JV Reason" style="height: 100px"></textarea>
-                        <label asp-for="JVReason" class="control-label">Reason<span class="required">*</span></label>
+                        <label asp-for="JVReason" class="control-label">Reason</label>
                         <span asp-validation-for="JVReason" class="text-danger"></span>
                     </div>
                 </div>

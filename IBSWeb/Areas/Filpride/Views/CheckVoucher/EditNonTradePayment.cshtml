@@ -18,14 +18,14 @@
             <div class="row">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-group mb-3">
-                    <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
+                    <label asp-for="TransactionDate" class="control-label"></label>
                     <input asp-for="TransactionDate" type="Date" class="form-control" />
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
                 <input type="hidden" asp-for="CVId" />
                 <div class="form-group mb-3">
-                    <label class="control-label">CV #<span class="required">*</span></label>
-                    <select asp-for="CvId" asp-items="@Model.CheckVouchers" class="form-select js-select2" required>
+                    <label class="control-label">CV #</label>
+                    <select asp-for="CvId" asp-items="@Model.CheckVouchers" class="form-select js-select2 w-100" required>
                         <option></option>
                     </select>
                     <span asp-validation-for="CvId" class="text-danger"></span>
@@ -46,24 +46,24 @@
                     <span asp-validation-for="PayeeTin" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
-                    <label asp-for="Total" class="control-label"></label><span class="required">*</span>
+                    <label asp-for="Total" class="control-label"></label>
                     <input asp-for="Total" class="form-control money" placeholder="0.00" />
                     <span asp-validation-for="Total" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
-                    <label class="control-label">Bank Account<span class="required">*</span></label>
-                    <select asp-for="BankId" asp-items="@Model.Banks" class="form-select js-select2" required>
+                    <label class="control-label">Bank Account</label>
+                    <select asp-for="BankId" asp-items="@Model.Banks" class="form-select js-select2 w-100" required>
                         <option></option>
                     </select>
                     <span asp-validation-for="BankId" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
                     <input asp-for="CheckNo" type="text" class="form-control" placeholder="Input check #" />
-                    <label asp-for="CheckNo" class="control-label ms-2">Check No.<span class="required">*</span></label>
+                    <label asp-for="CheckNo" class="control-label ms-2">Check No.</label>
                     <span asp-validation-for="CheckNo" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
-                    <label asp-for="CheckDate" class="control-label"></label><span class="required">*</span>
+                    <label asp-for="CheckDate" class="control-label"></label>
                     <input asp-for="CheckDate" type="Date" class="form-control" />
                     <span asp-validation-for="CheckDate" class="text-danger"></span>
                 </div>
@@ -73,7 +73,7 @@
                 </div>
                 <div class="form-floating mb-3">
                     <textarea asp-for="Particulars" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
-                    <label asp-for="Particulars" class="control-label ms-2">Particulars<span class="required">*</span></label>
+                    <label asp-for="Particulars" class="control-label ms-2">Particulars</label>
                     <span asp-validation-for="Particulars" class="text-danger"></span>
                 </div>
                 <div class="form-group">

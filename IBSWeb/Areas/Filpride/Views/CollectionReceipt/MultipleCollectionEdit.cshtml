@@ -19,20 +19,20 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <input type="hidden" asp-for="CollectionReceiptId" />
                     <div class="form-group mb-3">
-                        <label class="control-label">Customers<span class="required">*</span></label>
+                        <label class="control-label">Customers</label>
                         <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2" style="width:100%" required>
                             <option></option>
                         </select>
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-3">
-                        <label asp-for="TransactionDate" class="control-label">Transaction Date<span class="required">*</span></label>
+                        <label asp-for="TransactionDate" class="control-label">Transaction Date</label>
                         <input asp-for="TransactionDate" type="Date" class="form-control" />
                         <span asp-validation-for="TransactionDate" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
                         <input asp-for="ReferenceNo" id="floatingInput" type="text" class="form-control" placeholder="Reference #" />
-                        <label for="floatingInput" class="control-label">Reference #<span class="required">*</span></label>
+                        <label for="floatingInput" class="control-label">Reference #</label>
                         <span asp-validation-for="ReferenceNo" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
@@ -41,7 +41,7 @@
                         <span asp-validation-for="Remarks" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-3">
-                        <label class="control-label">SI NO.<span class="required">*</span></label>
+                        <label class="control-label">SI NO.</label>
                         <select asp-for="MultipleSIId" id="invoices" asp-items="@Model.SalesInvoices" class="form-select js-multiple siNo" multiple="multiple" style="width:100%">
                             <option></option>
                         </select>
@@ -99,7 +99,7 @@
                 <table class="table-bordered w-100">
                     <tbody>
                         <tr>
-                            <td colspan="6" style="padding-left:20px;">FORM OF PAYMENT<span class="required">*</span></td>
+                            <td colspan="6" style="padding-left:20px;">FORM OF PAYMENT</td>
                         </tr>
                         <tr>
                             <td class="text-center" style="width:25%"></td>
