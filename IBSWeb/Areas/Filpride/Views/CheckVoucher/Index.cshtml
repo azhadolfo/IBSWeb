@@ -124,7 +124,12 @@
                     }
                 },
                 { "data": "supplier.supplierName" },
-                { "data": "category" },
+                {
+                    "data": null,
+                    "render": function (data, type, row) {
+                        return row.category + row.cvType
+                    }
+                },
                 { "data": "total", "render": $.fn.dataTable.render.number(',', '.', 4) },
                 { "data": "createdBy" },
                 {
