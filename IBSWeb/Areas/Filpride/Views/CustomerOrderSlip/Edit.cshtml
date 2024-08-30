@@ -19,12 +19,12 @@
                 <input asp-for="CustomerOrderSlipId" type="hidden" />
                 <div class="row py-2">
                     <div class="form-floating col-6">
-                        <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" />
                         <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6">
-                        <input asp-for="DeliveryDateAndTime" type="datetime-local" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-ddThh:mm")" />
+                        <input asp-for="DeliveryDateAndTime" type="datetime-local" class="form-control border-0 shadow" placeholder="" />
                         <label asp-for="DeliveryDateAndTime" class="ms-2">Delivery Date & Time<span class="required">*</span></label>
                         <span asp-validation-for="DeliveryDateAndTime" class="text-danger"></span>
                     </div>
