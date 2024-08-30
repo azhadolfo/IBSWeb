@@ -50,7 +50,7 @@
 
                 <div class="col-sm mb-3">
                     <label asp-for="Amount" class="control-label">Amount</label>
-                    <input asp-for="Amount" class="form-control money" placeholder="0.00" />
+                    <input asp-for="Amount" class="form-control money" placeholder="0.000" />
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
             </div>
@@ -71,7 +71,4 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    <script>
-        setTransactionDate();
-    </script>
 }

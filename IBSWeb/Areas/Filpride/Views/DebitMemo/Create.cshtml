@@ -45,12 +45,12 @@
                 </div>
                 <div class="form-group mb-3">
                     <label class="control-label">Quantity</label><span class="required">*</span>
-                    <input asp-for="Quantity" class="form-control money" value="" placeholder="0.00" required />
+                    <input asp-for="Quantity" class="form-control money" value="" placeholder="0.000" required />
                     <span asp-validation-for="Quantity" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="AdjustedPrice" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="AdjustedPrice" class="form-control money" value="" placeholder="0.00" required />
+                    <input asp-for="AdjustedPrice" class="form-control money" value="" placeholder="0.000" required />
                     <span asp-validation-for="AdjustedPrice" class="text-danger"></span>
                 </div>
             </div>
@@ -68,7 +68,7 @@
                     </div>
                     <div class="col-sm">
                         <label asp-for="Amount" class="control-label"></label><span class="required">*</span>
-                        <input asp-for="Amount" class="form-control moneyInput amount" value="" placeholder="0.00" />
+                        <input asp-for="Amount" class="form-control moneyInput amount" value="" placeholder="0.000" />
                         <span asp-validation-for="Amount" class="text-danger"></span>
                     </div>
                 </div>

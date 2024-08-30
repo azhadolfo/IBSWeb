@@ -256,7 +256,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return Json(new { InventoryBalance = getPerBook.InventoryBalance, AverageCost = getPerBook.AverageCost, TotalBalance = getPerBook.TotalBalance });
                 }
             }
-            return Json(new { InventoryBalance = 0.00, AverageCost = 0.00, TotalBalance = 0.00 });
+            return Json(new { InventoryBalance = 0.000, AverageCost = 0.000, TotalBalance = 0.000 });
         }
 
         [HttpPost]

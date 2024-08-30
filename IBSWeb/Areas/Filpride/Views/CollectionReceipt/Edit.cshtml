@@ -206,7 +206,7 @@ Balance:        <span id="balance"></span>
                     </div>
                     <div class="form-group pt-4">
                         <label class="control-label">Amount</label>
-                        <input id="AccountAmount" class="form-control moneyInput" value="" placeholder="0.00" />
+                        <input id="AccountAmount" class="form-control moneyInput" value="" placeholder="0.000" />
                         <span class="text-danger"></span>
                     </div>
                 </form>
@@ -267,7 +267,7 @@ Balance:        <span id="balance"></span>
             // Get the values from the modal inputs
             var accountTitle = $("#AccountTitle").val();
             var accountTitleText = $("#AccountTitle option:selected").text();
-            var accountAmount = parseFloat($("#AccountAmount").val().replace(/,/g, '')) || 0.00;
+            var accountAmount = parseNumber($("#AccountAmount").val());
 
             if (accountAmount === 0) {
                 event.preventDefault();
@@ -280,7 +280,7 @@ Balance:        <span id="balance"></span>
             }
 
             // Format debit and credit values with commas and two decimal places
-            var formattedAmount = accountAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var formattedAmount = formatNumber(accountAmount);
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
@@ -381,8 +381,5 @@ Balance:        <span id="balance"></span>
         $('#AccountTitle').select2({
             dropdownParent: $('#AddAccEntry')
         });
-    </script>
-    <script>
-        setTransactionDate();
     </script>
 }

@@ -48,17 +48,6 @@ function parseNumber(formattedNum) {
     return parseFloat(formattedNum.replace(/,/g, '')) || 0;
 }
 
-function setTransactionDate() {
-    // Get the current date in the format "YYYY-MM-DD" (required for the date input)
-    var currentDate = new Date().toISOString().slice(0, 10);
-
-    var transactionDateField = document.getElementById("TransactionDate");
-
-    if (transactionDateField.value == '0001-01-01') {
-        transactionDateField.value = currentDate;
-    }
-}
-
 // Dynamic date to in books
 document.addEventListener('DOMContentLoaded', function () {
     var dateFromInput = document.getElementById('DateFrom');

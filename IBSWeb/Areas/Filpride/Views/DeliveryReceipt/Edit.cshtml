@@ -207,8 +207,8 @@
 
             // Calculate Total Amount
             $('input[name="Volume"]').on('input', function () {
-                var volume = parseFloat($(this).val()) || 0;
-                var price = parseFloat($('input[name="Price"]').val().replace(/,/g, '')) || 0;
+                var volume = parseNumber($(this).val());
+                var price = parseNumber($('input[name="Price"]').val());
                 var totalAmount = volume * price;
                 $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
             });

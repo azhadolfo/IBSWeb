@@ -39,16 +39,16 @@
                 <input asp-for="TotalBalance" type="hidden" />
                 <div class="form-group mb-3">
                     <label asp-for="PerBook" class="control-label"></label>
-                    <input asp-for="PerBook" class="form-control money" value="" placeholder="0.00" readonly />
+                    <input asp-for="PerBook" class="form-control money" value="" placeholder="0.000" readonly />
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="ActualVolume" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="ActualVolume" class="form-control money" value="" placeholder="0.00" />
+                    <input asp-for="ActualVolume" class="form-control money" value="" placeholder="0.000" />
                     <span asp-validation-for="ActualVolume" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="Variance" class="control-label"></label>
-                    <input asp-for="Variance" class="form-control money" value="" placeholder="0.00" readonly />
+                    <input asp-for="Variance" class="form-control money" value="" placeholder="0.000" readonly />
                 </div>
 
                 <div class="form-group">
@@ -72,16 +72,16 @@
                             <tr>
                                 <input type="hidden" name="AccountNumber" class="accountNumber" value="" />
                                 <td><input type="text" name="AccountTitle" value="" class="w-100 accountTitle" style="border:none" readonly /></td>
-                                <td><input type="text" name="Debit" value="0.00" class="w-100 debit" style="border:none" readonly /></td>
-                                <td><input type="text" name="Credit" value="0.00" class="w-100 credit" style="border:none" readonly /></td>
+                                <td><input type="text" name="Debit" value="0.000" class="w-100 debit" style="border:none" readonly /></td>
+                                <td><input type="text" name="Credit" value="0.000" class="w-100 credit" style="border:none" readonly /></td>
                                 <td></td>
                             </tr>
                         </tbody>
                         <tbody>
                             <tr>
                                 <td class="text-end">TOTAL:</td>
-                                <td class="totalDebit">0.00</td>
-                                <td class="totalCredit">0.00</td>
+                                <td class="totalDebit">0.000</td>
+                                <td class="totalCredit">0.000</td>
                                 <td></td>
                             </tr>
                         </tbody>
@@ -118,12 +118,12 @@
                     </div>
                     <div class="form-group pt-4">
                         <label class="control-label">Debit</label>
-                        <input id="Debit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                        <input id="Debit" value="0.000" class="form-control moneyInput" placeholder="0.000" />
                         <span class="text-danger"></span>
                     </div>
                     <div class="form-group pt-4">
                         <label class="control-label">Credit</label>
-                        <input id="Credit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                        <input id="Credit" value="0.000" class="form-control moneyInput" placeholder="0.000" />
                         <span class="text-danger"></span>
                     </div>
                 </form>
@@ -171,14 +171,14 @@
                     method: "GET",
                     data: { id: productId, poId: poId, dateTo: date },
                     success: function (data) {
-                        if (data.inventoryBalance !== 0.00) {
-                            $("#PerBook").val(data.inventoryBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                            $("#AverageCost").val(data.averageCost);
-                            $("#TotalBalance").val(data.totalBalance);
+                        if (data.inventoryBalance !== 0.000) {
+                            $("#PerBook").val(formatNumber(data.inventoryBalance));
+                            $("#AverageCost").val(formatNumber(data.averageCost));
+                            $("#TotalBalance").val(formatNumber(data.totalBalance));
                         } else {
-                            $("#PerBook").val(data.inventoryBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                            $("#AverageCost").val(data.averageCost);
-                            $("#TotalBalance").val(data.totalBalance);
+                            $("#PerBook").val(formatNumber(data.inventoryBalance));
+                            $("#AverageCost").val(formatNumber(data.averageCost));
+                            $("#TotalBalance").val(formatNumber(data.totalBalance));
                         }
                     },
                     error: function () {
@@ -194,25 +194,25 @@
             $("#ActualVolume").on('input', function () {
                 var inputValue = $(this).val();
                 var perBookAmount = $("#PerBook").val();
-                var perBook = parseFloat(perBookAmount.replace(/,/g, '')) || 0;
+                var perBook = parseNumber(perBookAmount);
                 var variance = (inputValue - perBook);
                 var averageCost = $(".averageCost").val();
                 var total = Math.abs(variance * averageCost);
 
                 if (!inputValue) {
-                    $(".credit").val("0.00");
-                    $(".debit").val("0.00");
+                    $(".credit").val("0.0000");
+                    $(".debit").val("0.0000");
                 } else if (variance < 0) {
-                    $(".credit").val(total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                    $(".debit").val("0.00");
+                    $(".credit").val(formatNumber(total));
+                    $(".debit").val("0.0000");
                 } else {
-                    $(".debit").val(total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                    $(".credit").val("0.00");
+                    $(".debit").val(formatNumber(total));
+                    $(".credit").val("0.0000");
                 }
                 if (inputValue) {
-                    $("#Variance").val(variance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                    $("#Variance").val(formatNumber(variance));
                 } else {
-                    $("#Variance").val("0.00");
+                    $("#Variance").val("0.0000");
                 }
 
                 updateTotalDebitAndCredit();
@@ -229,8 +229,8 @@
             // Get the values from the modal inputs
             var accountNumber = $("#AccountNo").val();
             var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
-            var debit = parseFloat($("#Debit").val().replace(/,/g, '')) || 0.00;
-            var credit = parseFloat($("#Credit").val().replace(/,/g, '')) || 0.00;
+            var debit = parseNumber($("#Debit").val());
+            var credit = parseNumber($("#Credit").val());
 
             if (debit === 0 && credit === 0) {
                 event.preventDefault();
@@ -243,8 +243,8 @@
             }
 
             // Format debit and credit values with commas and two decimal places
-            var formattedDebit = debit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            var formattedCredit = credit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var formattedDebit = formatNumber(debit);
+            var formattedCredit = formatNumber(credit);
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
@@ -267,8 +267,8 @@
             // Clear the modal inputs
             $("#AccountNo").val(""); // Reset the select to its default state
             $("#AccountNo").trigger("change"); // Trigger change event for the select
-            $("#Debit").val("0.00");
-            $("#Credit").val("0.00");
+            $("#Debit").val("0.000");
+            $("#Credit").val("0.000");
 
             updateTotalDebitAndCredit();
         }
@@ -285,15 +285,15 @@
                 debitInput = debitInput ? String(debitInput) : ""; // convert to string if not null/undefined
                 creditInput = creditInput ? String(creditInput) : "";
 
-                var debit = parseFloat(debitInput.replace(/,/g, '')) || 0;
-                var credit = parseFloat(creditInput.replace(/,/g, '')) || 0;
+                var debit = parseNumber(debitInput);
+                var credit = parseNumber(creditInput);
 
                 totalDebit += debit;
                 totalCredit += credit;
             });
             // Display the total debit value
-            $(".totalDebit").text(totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            $(".totalCredit").text(totalCredit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            $(".totalDebit").text(formatNumber(totalDebit));
+            $(".totalCredit").text(formatNumber(totalCredit));
         }
 
         // Function to remove the corresponding row
@@ -305,8 +305,8 @@
     </script>
     <script>
         function validateDebitAndCredit(event) {
-            var debit = parseFloat($(".totalDebit").text().replace(/,/g, '')) || 0.00;
-            var credit = parseFloat($(".totalCredit").text().replace(/,/g, '')) || 0.00;
+            var debit = parseNumber($(".totalDebit").text());
+            var credit = parseNumber($(".totalCredit").text());
             if (debit !== credit) {
                 event.preventDefault();
                 alert('Total Debit and Credit do not match.');

@@ -85,12 +85,12 @@
                                 </tr>
                                 <tr>
                                     <td class="text-end fw-bold p-3">Grand Total:</td>
-                                    <td class="text-end" id="grandTotalRRAmount">0.00</td>
-                                    <td class="text-end" id="grandTotalVatAmount">0.00</td>
-                                    <td class="text-end" id="grandTotalEWTAmount">0.00</td>
-                                    <td class="text-end" id="grandTotalNetOfEWT">0.00</td>
-                                    <td class="text-end" id="grandTotalAmountPaid">0.00</td>
-                                    <td class="text-end" id="grandTotalBalance" style="padding-right:20px;">0.00</td>
+                                    <td class="text-end" id="grandTotalRRAmount">0.000</td>
+                                    <td class="text-end" id="grandTotalVatAmount">0.000</td>
+                                    <td class="text-end" id="grandTotalEWTAmount">0.000</td>
+                                    <td class="text-end" id="grandTotalNetOfEWT">0.000</td>
+                                    <td class="text-end" id="grandTotalAmountPaid">0.000</td>
+                                    <td class="text-end" id="grandTotalBalance" style="padding-right:20px;">0.000</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -227,7 +227,7 @@
                         </div>
                         <div class="form-group pt-4">
                             <label class="control-label">Amount</label>
-                            <input id="AccountAmount" class="form-control moneyInput" value="" placeholder="0.00" />
+                            <input id="AccountAmount" class="form-control moneyInput" value="" placeholder="0.000" />
                             <span class="text-danger"></span>
                         </div>
                     </form>
@@ -286,7 +286,7 @@
                 // Get the values from the modal inputs
                 var accountTitle = $("#AccountTitle").val();
                 var accountTitleText = $("#AccountTitle option:selected").text();
-                var accountAmount = parseFloat($("#AccountAmount").val().replace(/,/g, '')) || 0.00;
+                var accountAmount = parseNumber($("#AccountAmount").val());
 
                 if (accountAmount === 0) {
                     event.preventDefault();
@@ -299,7 +299,7 @@
                 }
 
                 // Format debit and credit values with commas and two decimal places
-                var formattedAmount = accountAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                var formattedAmount = formatNumber(accountAmount);
 
                 // Create a new row with the text only and a hidden input for the value
                 var newRow = `<tr>
@@ -366,12 +366,12 @@
                                                                                         <input type='hidden' value='${siNo}' />
                                                                                         <input type='text' value='${siSelectText}' style='border:none' readonly />
                                                                                     </td>
-                                                                                    <td class="text-end" id='amount_${siNo}'>0.00</td>
-                                                                                    <td class="text-end" id='vatAmount_${siNo}'>0.00</td>
-                                                                                    <td class="text-end" id='ewtAmount_${siNo}'>0.00</td>
-                                                                                    <td class="text-end" id='siAmountNetOfEWT_${siNo}'>0.00</td>
-                                                                                    <td class="text-end" id='amountPaid_${siNo}'>0.00</td>
-                                                                                    <td class="text-end" id='balance_${siNo}' style="padding-right:20px;">0.00</td>
+                                                                                    <td class="text-end" id='amount_${siNo}'>0.000</td>
+                                                                                    <td class="text-end" id='vatAmount_${siNo}'>0.000</td>
+                                                                                    <td class="text-end" id='ewtAmount_${siNo}'>0.000</td>
+                                                                                    <td class="text-end" id='siAmountNetOfEWT_${siNo}'>0.000</td>
+                                                                                    <td class="text-end" id='amountPaid_${siNo}'>0.000</td>
+                                                                                    <td class="text-end" id='balance_${siNo}' style="padding-right:20px;">0.000</td>
                                                                                 </tr>`;
 
                         $(".siList").append(newRow);
@@ -388,20 +388,20 @@
                                     if (data !== null) {
                                         //compute / show existing SI
                                         var gross = data.amount;
-                                        $("#amount_" + siNo).text(gross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                        $("#amount_" + siNo).text(formatNumber(gross));
                                         var netAmount = gross / 1.12;
-                                        $("#netAmount_" + siNo).text(netAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                        $("#netAmount_" + siNo).text(formatNumber(netAmount));
                                         var vatAmount = data.wvatAmount;
-                                        $("#vatAmount_" + siNo).text(vatAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                        $("#vatAmount_" + siNo).text(formatNumber(vatAmount));
                                         var ewtAmount = data.ewtAmount;
-                                        $("#ewtAmount_" + siNo).text(ewtAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                        $("#ewtAmount_" + siNo).text(formatNumber(ewtAmount));
                                         var siAmountNetOfEWT = gross - (ewtAmount + vatAmount);
-                                        $("#siAmountNetOfEWT_" + siNo).text(siAmountNetOfEWT.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                        $("#siAmountNetOfEWT_" + siNo).text(formatNumber(siAmountNetOfEWT));
                                         var amountPaid = data.amountPaid
-                                        $("#amountPaid_" + siNo).text(amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                        $("#amountPaid_" + siNo).text(formatNumber(amountPaid));
                                         var balance = data.balance
-                                        $("#balance_" + siNo).text(balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                                        // $(".paymentAmount_" + siNo).val(balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                                        $("#balance_" + siNo).text(formatNumber(balance));
+                                        // $(".paymentAmount_" + siNo).val(balance));
 
                                         // Recalculate grand total of existing SI
                                         calculateGrandTotalRRAmount()
@@ -428,42 +428,42 @@
 
                     $(".siAmount tr").each(function () {
                         var amount = $(this).find("[id^='amount_']").text();
-                        var totalAmount = parseFloat(amount.replace(/,/g, '')) || 0;
+                        var totalAmount = parseNumber(amount);
                         grandTotalRRAmount += totalAmount;
 
                         var netAmount = $(this).find("[id^='netAmount_']").text();
-                        var totalNetAmount = parseFloat(netAmount.replace(/,/g, '')) || 0;
+                        var totalNetAmount = parseNumber(netAmount);
                         grandTotalNetAmount += totalNetAmount;
 
                         var vatAmount = $(this).find("[id^='vatAmount_']").text();
-                        var totalVatAmount = parseFloat(vatAmount.replace(/,/g, '')) || 0;
+                        var totalVatAmount = parseNumber(vatAmount);
                         grandTotalVatAmount += totalVatAmount;
 
                         var ewtAmount = $(this).find("[id^='ewtAmount_']").text();
-                        var totalEwtAmount = parseFloat(ewtAmount.replace(/,/g, '')) || 0;
+                        var totalEwtAmount = parseNumber(ewtAmount);
                         grandTotalEWTAmount += totalEwtAmount;
 
                         var rrAmountNetOfEWT = $(this).find("[id^='siAmountNetOfEWT_']").text();
-                        var totalAmountNetOfEWT = parseFloat(rrAmountNetOfEWT.replace(/,/g, '')) || 0;
+                        var totalAmountNetOfEWT = parseNumber(rrAmountNetOfEWT);
                         grandTotalNetOfEWT += totalAmountNetOfEWT;
 
                         var amountPaid = $(this).find("[id^='amountPaid_']").text();
-                        var totalAmountPaid = parseFloat(amountPaid.replace(/,/g, '')) || 0;
+                        var totalAmountPaid = parseNumber(amountPaid);
                         grandTotalAmountPaid += totalAmountPaid;
 
                         var balance = $(this).find("[id^='balance_']").text();
-                        var totalBalance = parseFloat(balance.replace(/,/g, '')) || 0;
+                        var totalBalance = parseNumber(balance);
                         grandTotalBalance += totalBalance;
                     });
 
                     // Update grand total in the table
-                    $("#grandTotalRRAmount").text(grandTotalRRAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                    $("#grandTotalNetAmount").text(grandTotalNetAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                    $("#grandTotalVatAmount").text(grandTotalVatAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                    $("#grandTotalEWTAmount").text(grandTotalEWTAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                    $("#grandTotalNetOfEWT").text(grandTotalNetOfEWT.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                    $("#grandTotalAmountPaid").text(grandTotalAmountPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-                    $("#grandTotalBalance").text(grandTotalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                    $("#grandTotalRRAmount").text(formatNumber(grandTotalRRAmount));
+                    $("#grandTotalNetAmount").text(formatNumber(grandTotalNetAmount));
+                    $("#grandTotalVatAmount").text(formatNumber(grandTotalVatAmount));
+                    $("#grandTotalEWTAmount").text(formatNumber(grandTotalEWTAmount));
+                    $("#grandTotalNetOfEWT").text(formatNumber(grandTotalNetOfEWT));
+                    $("#grandTotalAmountPaid").text(formatNumber(grandTotalAmountPaid));
+                    $("#grandTotalBalance").text(formatNumber(grandTotalBalance));
                 }
 
             });

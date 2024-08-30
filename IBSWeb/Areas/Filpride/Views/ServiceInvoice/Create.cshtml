@@ -36,7 +36,7 @@
                 <span asp-validation-for="DueDate" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Discount" class="form-control moneyInput" placeholder="0.00" />
+                <input asp-for="Discount" class="form-control moneyInput" placeholder="0.000" />
                 <label for="discount" class="control-label">Discount</label>
                 <span asp-validation-for="Discount" class="text-danger"></span>
             </div>
@@ -53,7 +53,7 @@
                 </div>
                 <div class="col-sm mb-3">
                     <label asp-for="Amount" class="control-label">Amount<span class="required">*</span></label>
-                    <input asp-for="Amount" class="form-control money" placeholder="0.00" value="" />
+                    <input asp-for="Amount" class="form-control money" placeholder="0.000" value="" />
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
             </div>
@@ -81,8 +81,5 @@
 
         // Set the default value of the input field
         document.getElementById("DueDate").value = currentDate;
-    </script>
-    <script>
-        setTransactionDate();
     </script>
 }

@@ -134,8 +134,8 @@
             });
 
             $('input[name="Quantity"], input[name="DeliveredPrice"]').on('input', function () {
-                var quantity = parseFloat($('input[name="Quantity"]').val()) || 0;
-                var deliveredPrice = parseFloat($('input[name="DeliveredPrice"]').val()) || 0;
+                var quantity = parseNumber($('input[name="Quantity"]').val());
+                var deliveredPrice = parseNumber($('input[name="DeliveredPrice"]').val());
 
                 var totalAmount = (quantity * deliveredPrice);
                 var vat = (totalAmount / 1.12) * 0.12;

@@ -84,7 +84,7 @@
 
             <div class="form-group mb-3">
                 <label class="control-label">Total</label>
-                <input class="form-control money total" value="" placeholder="0.00" required disabled readonly />
+                <input class="form-control money total" value="" placeholder="0.000" required disabled readonly />
             </div>
 
             <div class="form-floating py-2 col-12">
@@ -118,15 +118,12 @@
         document.getElementById("Date").value = currentDate;
     </script>
     <script>
-        setTransactionDate();
-    </script>
-    <script>
         $(document).ready(function () {
             function updateTotalDebitAndCredit() {
-                var quantity = parseFloat($(".quantity").val().replace(/,/g, '')) || 0;
-                var price = parseFloat($(".price").val().replace(/,/g, '')) || 0;
+                var quantity = parseNumber($(".quantity").val());
+                var price = parseNumber($(".price").val());
                 var total = quantity * price;
-                $(".total").val(total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $(".total").val(formatNumber(total));
             }
 
             $(".quantity").on("input", function () {

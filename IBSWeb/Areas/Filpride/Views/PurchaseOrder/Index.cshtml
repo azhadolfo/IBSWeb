@@ -146,8 +146,8 @@
                     "data": "quantityReceived",
                     "render": function (data, type, row) {
                         // Assuming 'quantityReceived' is the field for the quantity received
-                        var quantityReceived = data || 0;
-                        var quantity = row.quantity || 0;
+                        var quantityReceived = data;
+                        var quantity = row.quantity;
                         var balance = quantity - quantityReceived;
                         return formatNumber(balance);
                     }

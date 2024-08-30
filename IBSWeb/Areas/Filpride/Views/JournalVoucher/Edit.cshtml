@@ -191,8 +191,8 @@
                         <tbody>
                             <tr>
                                 <td class="text-end">TOTAL:</td>
-                                <td class="totalDebit">0.00</td>
-                                <td class="totalCredit">0.00</td>
+                                <td class="totalDebit">0.0000</td>
+                                <td class="totalCredit">0.0000</td>
                                 <td></td>
                             </tr>
                         </tbody>
@@ -233,12 +233,12 @@
                     </div>
                     <div class="form-group pt-4">
                         <label class="control-label">Debit</label>
-                        <input id="debit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                        <input id="debit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
                         <span class="text-danger"></span>
                     </div>
                     <div class="form-group pt-4">
                         <label class="control-label">Credit</label>
-                        <input id="credit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                        <input id="credit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
                         <span class="text-danger"></span>
                     </div>
                 </form>
@@ -270,8 +270,8 @@
             // Get the values from the modal inputs
             var accountNumber = $("#AccountNo").val();
             var accountNumberText = $("#AccountNo option:selected").text();
-            var debit = parseFloat($("#debit").val().replace(/,/g, '')) || 0.00;
-            var credit = parseFloat($("#credit").val().replace(/,/g, '')) || 0.00;
+            var debit = parseNumber($("#debit").val());
+            var credit = parseNumber($("#credit").val());
 
             if (debit === 0 && credit === 0) {
                 event.preventDefault();
@@ -284,8 +284,8 @@
             }
 
             // Format debit and credit values with commas and two decimal places
-            var formattedDebit = debit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            var formattedCredit = credit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var formattedDebit = formatNumber(debit);
+            var formattedCredit = formatNumber(credit);
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
@@ -308,8 +308,8 @@
             // Clear the modal inputs
             $("#AccountNo").val(""); // Reset the select to its default state
             $("#AccountNo").trigger("change"); // Trigger change event for the select
-            $("#Debit").val("0.00");
-            $("#Credit").val("0.00");
+            $("#Debit").val("0.000");
+            $("#Credit").val("0.000");
 
             updateTotalDebitAndCredit();
         }
@@ -327,18 +327,18 @@
                 debitInput = debitInput ? String(debitInput) : ""; // convert to string if not null/undefined
                 creditInput = creditInput ? String(creditInput) : "";
 
-                var debit = parseFloat(debitInput.replace(/,/g, '')) || 0;
-                var credit = parseFloat(creditInput.replace(/,/g, '')) || 0;
+                var debit = parseNumber(debitInput);
+                var credit = parseNumber(creditInput);
 
                 totalDebit += debit;
                 totalCredit += credit;
             });
 
             // Display the total debit value
-            $(".totalDebit").text(totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            $(".totalCredit").text(totalCredit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            $("#debit").val("0.00");
-            $("#credit").val("0.00");
+            $(".totalDebit").text(formatNumber(totalDebit));
+            $(".totalCredit").text(formatNumber(totalCredit));
+            $("#debit").val("0.0000");
+            $("#credit").val("0.0000");
         }
 
         // Function to remove the corresponding row
@@ -373,18 +373,18 @@
                                 $("#poNo").text(data.poNo);
                                 $("#siNo").text(data.siNo);
                                 $("#payee").text(data.payee);
-                                $("#amount").text(data.amount);
+                                $("#amount").text(formatNumber(data.amount));
                                 $("#particulars").text(data.particulars);
                                 $("#checkNo").text(data.checkNo);
-                                $("#totalDebit").text(data.totalDebit);
-                                $("#totalCredit").text(data.totalCredit);
+                                $("#totalDebit").text(formatNumber(data.totalDebit));
+                                $("#totalCredit").text(formatNumber(data.totalCredit));
 
                                 if (data.viewModel !== null && data.viewModel.details !== undefined) {
                                     for (let i = 0; i < data.viewModel.details.length; i++) {
                                         var row = $("<tr></tr>");
                                         row.append("<td style='width:60%; padding-left:20px;'>" + data.viewModel.details[i].accountNo + " " + data.viewModel.details[i].accountName + "</td>");
-                                        row.append("<td class='text-end' style='width:7%;'>" + data.viewModel.details[i].debit + "</td>");
-                                        row.append("<td class='text-end' style='width:7%;'>" + data.viewModel.details[i].credit + "</td>");
+                                        row.append("<td class='text-end' style='width:7%;'>" + formatNumber(data.viewModel.details[i].debit) + "</td>");
+                                        row.append("<td class='text-end' style='width:7%;'>" + formatNumber(data.viewModel.details[i].credit) + "</td>");
                                         $("#tableBody").append(row);
                                     }
                                 } else {
@@ -433,16 +433,22 @@
     </script>
     <script>
         function validateDebitAndCredit(event) {
-            var debit = parseFloat($(".totalDebit").text().replace(/,/g, '')) || 0.00;
-            var credit = parseFloat($(".totalCredit").text().replace(/,/g, '')) || 0.00;
-            if (debit !== credit) {
-                event.preventDefault();
-                alert('Total Debit and Credit do not match.');
-                return;
+            var totalDebit = parseNumber($(".totalDebit").text());
+            var totalCredit = parseNumber($(".totalCredit").text());
+
+            if (totalDebit !== totalCredit) {
+                alert("Debit and Credit totals must be equal.");
+                event.preventDefault(); // Prevent form submission
+                return false;
             }
+
+            if (totalDebit === 0 && totalCredit === 0) {
+                alert("Debit and Credit cannot both be zero.");
+                event.preventDefault(); // Prevent form submission
+                return false;
+            }
+
+            return true; // Allow form submission
         }
-    </script>
-    <script>
-        setTransactionDate();
     </script>
 }

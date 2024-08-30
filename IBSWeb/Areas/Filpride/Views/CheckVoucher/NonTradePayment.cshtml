@@ -19,7 +19,7 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="TransactionDate" type="Date" class="form-control" />
+                    <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")"/>
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -46,7 +46,7 @@
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="Total" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="Total" class="form-control money" value="" placeholder="0.00" />
+                    <input asp-for="Total" class="form-control money" value="" placeholder="0.000" />
                     <span asp-validation-for="Total" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -98,8 +98,8 @@
                                     <input type="hidden" name="AccountNumber" value="2010102" />
                                     <input name='AccountTitle' value='AP-Non Trade Payable' class="w-100" style='border:none' readonly />
                                 </td>
-                                <td><input asp-for="Debit" value='' placeholder="0.00" class="w-100 money" style='border:none' required /></td>
-                                <td><input name="Credit" value='0.00' class="w-100" style='border:none' readonly /></td>
+                                <td><input asp-for="Debit" value='' placeholder="0.0000" class="w-100 money" style='border:none' required /></td>
+                                <td><input name="Credit" value='0.0000' class="w-100" style='border:none' readonly /></td>
                                 <td></td>
                             </tr>
                             <tr>
@@ -107,16 +107,16 @@
                                     <input type="hidden" name="AccountNumber" class="cib-acct-no" value="" />
                                     <input name='AccountTitle' value='Cash in Bank' class="w-100" style='border:none' readonly />
                                 </td>
-                                <td><input name="Debit" value='0.00' class="w-100" style='border:none' readonly /></td>
-                                <td><input name="Credit" value='0.00' class="w-100 cib-credit" style='border:none' readonly /></td>
+                                <td><input name="Debit" value='0.0000' class="w-100" style='border:none' readonly /></td>
+                                <td><input name="Credit" value='0.0000' class="w-100 cib-credit" style='border:none' readonly /></td>
                                 <td></td>
                             </tr>
                         </tbody>
                         <tbody>
                             <tr>
                                 <td class="text-end">TOTAL:</td>
-                                <td class="totalDebit">0.00</td>
-                                <td class="totalCredit">0.00</td>
+                                <td class="totalDebit">0.0000</td>
+                                <td class="totalCredit">0.0000</td>
                                 <td></td>
                             </tr>
                         </tbody>
@@ -156,12 +156,12 @@
                     </div>
                     <div class="form-group pt-4">
                         <label class="control-label">Debit</label>
-                        <input id="debit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                        <input id="debit" value="0.000" class="form-control moneyInput" placeholder="0.000" />
                         <span class="text-danger"></span>
                     </div>
                     <div class="form-group pt-4">
                         <label class="control-label">Credit</label>
-                        <input id="credit" value="0.00" class="form-control moneyInput" placeholder="0.00" />
+                        <input id="credit" value="0.000" class="form-control moneyInput" placeholder="0.000" />
                         <span class="text-danger"></span>
                     </div>
                 </form>
@@ -244,8 +244,8 @@
             // Get the values from the modal inputs
             var accountNumber = $("#AccountNo").val();
             var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
-            var debit = parseFloat($("#debit").val().replace(/,/g, '')) || 0.00;
-            var credit = parseFloat($("#credit").val().replace(/,/g, '')) || 0.00;
+            var debit = parseNumber($("#debit").val());
+            var credit = parseNumber($("#credit").val());
 
             if (debit === 0 && credit === 0) {
                 event.preventDefault();
@@ -258,8 +258,8 @@
             }
 
             // Format debit and credit values with commas and two decimal places
-            var formattedDebit = debit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            var formattedCredit = credit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var formattedDebit = formatNumber(debit);
+            var formattedCredit = formatNumber(credit);
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
@@ -281,8 +281,8 @@
             // Clear the modal inputs
             $("#AccountNo").val(""); // Reset the select to its default state
             $("#AccountNo").trigger("change"); // Trigger change event for the select
-            $("#Debit").val("0.00");
-            $("#Credit").val("0.00");
+            $("#Debit").val("0.000");
+            $("#Credit").val("0.000");
 
             updateTotalDebitAndCredit();
         }
@@ -306,17 +306,17 @@
                 debitInput = debitInput ? String(debitInput) : ""; // convert to string if not null/undefined
                 creditInput = creditInput ? String(creditInput) : "";
 
-                var debit = parseFloat(debitInput.replace(/,/g, '')) || 0;
-                var credit = parseFloat(creditInput.replace(/,/g, '')) || 0;
+                var debit = parseNumber(debitInput);
+                var credit = parseNumber(creditInput);
 
                 totalDebit += debit;
                 totalCredit += credit;
             });
             // Display the total debit value
-            $(".totalDebit").text(totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            $(".totalCredit").text(totalCredit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            $("#debit").val("0.00");
-            $("#credit").val("0.00");
+            $(".totalDebit").text(totalDebit);
+            $(".totalCredit").text(totalCredit);
+            $("#debit").val("0.000");
+            $("#credit").val("0.000");
         }
 
         // Function to remove the corresponding row
@@ -329,7 +329,7 @@
         $(document).ready(function () {
             // Event listener for when the Total input changes
             $("#Total").on("input", function () {
-                var totalValue = parseFloat($(this).val().replace(/,/g, '')) || 0;
+                var totalValue = parseNumber($(this).val());
                 updateDefaultEntries(totalValue);
             });
         });
@@ -337,14 +337,14 @@
         function updateDefaultEntries(totalValue) {
             var creditField = $(".cib-credit");
 
-            creditField.val(totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            creditField.val(formatNumber(totalValue));
             updateTotalDebitAndCredit();
         }
     </script>
     <script>
         function validateDebitAndCredit(event) {
-            var debit = parseFloat($(".totalDebit").text().replace(/,/g, '')) || 0.00;
-            var credit = parseFloat($(".totalCredit").text().replace(/,/g, '')) || 0.00;
+            var debit = parseNumber($(".totalDebit").text());
+            var credit = parseNumber($(".totalCredit").text());
             if (debit !== credit) {
                 event.preventDefault();
                 alert('Total Debit and Credit do not match.');
@@ -356,13 +356,10 @@
         $(document).ready(function () {
             // Event listener for when the Total input changes
             $("#Debit").on("input", function () {
-                var totalValue = parseFloat($(this).val().replace(/,/g, '')) || 0;
+                var totalValue = parseNumber($(this).val());
                 updateTotalDebitAndCredit();
             });
         });
-    </script>
-    <script>
-        setTransactionDate();
     </script>
 }
 

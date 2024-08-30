@@ -175,7 +175,7 @@
             //Get cos
             $('select[name="CustomerOrderSlipId"]').on('change', function () {
                 var cosId = $(this).val();
-                $('input[name="Volume"]').val('0.00');
+                $('input[name="Volume"]').val('0.000');
                 if (cosId) {
                     $.ajax({
                         url: '@Url.Action("GetCosDetails", "DeliveryReceipt", new { area = "Filpride" })',
@@ -243,15 +243,15 @@
             }
 
             function calculateTotalAmount() {
-                var volume = parseFloat($('input[name="Volume"]').val()) || 0;
-                var price = parseFloat($('input[name="Price"]').val().replace(/,/g, '')) || 0;
+                var volume = parseNumber($('input[name="Volume"]').val());
+                var price = parseNumber($('input[name="Price"]').val());
                 var totalAmount = volume * price;
                 $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
             }
 
             function validateVolume() {
                 var remainingVolume = parseNumber($("#RemainingVolume").val());
-                var volume = parseFloat($("#Volume").val());
+                var volume = parseNumber($("#Volume").val());
                 if (volume > remainingVolume) {
                     alert("Volume cannot exceed the remaining volume.");
                     $("#Volume").val(remainingVolume);
@@ -276,7 +276,7 @@
             directDeliveryRadio.change(function () {
                 if ($(this).is(":checked")) {
                     haulerSelect.val(""); // Clear selected hauler
-                    freightInput.val("0.00"); // Clear freight input
+                    freightInput.val("0.000"); // Clear freight input
                     haulerAndFreightSection.hide();
                     freightField.hide();
                 }

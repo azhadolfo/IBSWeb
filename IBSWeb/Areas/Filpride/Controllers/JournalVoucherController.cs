@@ -633,7 +633,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.JournalVoucherHeaderNo = viewModel.JVNo;
                     existingHeaderModel.Date = viewModel.TransactionDate;
                     existingHeaderModel.References = viewModel.References;
-                    existingHeaderModel.CVId = viewModel.CVId;
+                    //existingHeaderModel.CVId = viewModel.CVId;
                     existingHeaderModel.Particulars = viewModel.Particulars;
                     existingHeaderModel.CRNo = viewModel.CRNo;
                     existingHeaderModel.JVReason = viewModel.JVReason;

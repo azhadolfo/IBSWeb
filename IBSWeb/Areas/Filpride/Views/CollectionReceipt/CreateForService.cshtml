@@ -49,7 +49,7 @@
 
                     <div class="form-group mb-3">
                         <label asp-for="TransactionDate" class="control-label">Transaction Date<span class="required">*</span></label>
-                        <input asp-for="TransactionDate" type="Date" class="form-control" />
+                        <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
                         <span asp-validation-for="TransactionDate" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
@@ -181,7 +181,7 @@
                         </div>
                         <div class="form-group pt-4">
                             <label class="control-label">Amount</label>
-                            <input id="AccountAmount" class="form-control moneyInput" value="" placeholder="0.00" />
+                            <input id="AccountAmount" class="form-control moneyInput" value="" placeholder="0.000" />
                             <span class="text-danger"></span>
                         </div>
                     </form>
@@ -244,7 +244,7 @@
                 // Get the values from the modal inputs
                 var accountTitle = $("#AccountTitle").val();
                 var accountTitleText = $("#AccountTitle option:selected").text();
-                var accountAmount = parseFloat($("#AccountAmount").val().replace(/,/g, '')) || 0.00;
+                var accountAmount = parseNumber($("#AccountAmount").val());
 
                 if (accountAmount === 0) {
                     event.preventDefault();
@@ -257,7 +257,7 @@
                 }
 
                 // Format debit and credit values with commas and two decimal places
-                var formattedAmount = accountAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                var formattedAmount = formatNumber(accountAmount);
 
                 // Create a new row with the text only and a hidden input for the value
                 var newRow = `<tr>
@@ -333,8 +333,5 @@
             $('#AccountTitle').select2({
                 dropdownParent: $('#AddAccEntry')
             });
-        </script>
-        <script>
-            setTransactionDate();
         </script>
     }

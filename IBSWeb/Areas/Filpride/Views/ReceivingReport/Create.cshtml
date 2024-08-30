@@ -40,7 +40,7 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group mb-3">
                         <label asp-for="Date" class="control-label"></label><span class="required">*</span>
-                        <input asp-for="Date" type="date" class="form-control" />
+                        <input asp-for="Date" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-3">
@@ -152,12 +152,12 @@
                             totalReceivedPostedOnly += data.rrListPostedOnly[i].quantityReceived;
                         }
 
-                        var remainingQuantityPostedOnly = parseFloat(data.poQuantity.replace(/,/g, '')) - totalReceivedPostedOnly;
-                        var remainingQuantity = parseFloat(data.poQuantity.replace(/,/g, '')) - totalReceived;
+                        var remainingQuantityPostedOnly = parseNumber(data.poQuantity) - totalReceivedPostedOnly;
+                        var remainingQuantity = parseNumber(data.poQuantity) - totalReceived;
 
                         // Format the remaining quantity with thousand's comma
-                        var formattedRemainingQuantityPostedOnly = formatNumberWithCommas(remainingQuantityPostedOnly);
-                        var formattedRemainingQuantity = formatNumberWithCommas(remainingQuantity);
+                        var formattedRemainingQuantityPostedOnly = formatNumber(remainingQuantityPostedOnly);
+                        var formattedRemainingQuantity = formatNumber(remainingQuantity);
 
                         // Display the formatted remaining quantity
                         document.getElementById("remainingQuantityPostedOnly").innerHTML = formattedRemainingQuantityPostedOnly + "L";
@@ -178,30 +178,26 @@
                         for (var i = 0; i < rrListPostedOnly.length; i++) {
                             var rrPostedOnly = rrListPostedOnly[i];
                             var list = document.createElement("li");
-                            list.textContent = rrPostedOnly.quantityReceived < rrPostedOnly.quantityDelivered ? "RR No: " + rrPostedOnly.receivingReportNo + " - Quantity: -" + rrPostedOnly.quantityReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "RR No: " + rrPostedOnly.receivingReportNo + " - Quantity: -" + rrPostedOnly.quantityDelivered.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            list.textContent = rrPostedOnly.quantityReceived < rrPostedOnly.quantityDelivered ? "RR No: " + rrPostedOnly.receivingReportNo + " - Quantity: -" + formatNumber(rrPostedOnly.quantityReceived) : "RR No: " + rrPostedOnly.receivingReportNo + " - Quantity: -" + formatNumber(rrPostedOnly.quantityDelivered);
                             rrListPostedOnlyUl.appendChild(list);
                         }
 
                         for (var i = 0; i < rrListNotPosted.length; i++) {
                             var rrNotPosted = rrListNotPosted[i];
                             var li = document.createElement("li");
-                            li.textContent = rrNotPosted.quantityReceived < rrNotPosted.quantityDelivered ? "RR No: " + rrNotPosted.receivingReportNo + " - Quantity: -" + rrNotPosted.quantityReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "RR No: " + rrNotPosted.receivingReportNo + " - Quantity: -" + rrNotPosted.quantityDelivered.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            li.textContent = rrNotPosted.quantityReceived < rrNotPosted.quantityDelivered ? "RR No: " + rrNotPosted.receivingReportNo + " - Quantity: -" + formatNumber(rrNotPosted.quantityReceived) : "RR No: " + rrNotPosted.receivingReportNo + " - Quantity: -" + formatNumber(rrNotPosted.quantityDelivered);
                             rrListNotPostedUl.appendChild(li);
                         }
 
                         for (var i = 0; i < rrListCanceled.length; i++) {
                             var rrCanceled = rrListCanceled[i];
                             var listed = document.createElement("li");
-                            listed.textContent = rrCanceled.quantityReceived < rrCanceled.quantityDelivered ? "RR No: " + rrCanceled.receivingReportNo + " - Quantity: -" + rrCanceled.canceledQuantity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " (Cancelled)" : "RR No: " + rrCanceled.receivingReportNo + " - Quantity: -" + rrCanceled.canceledQuantity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " (Cancelled)";
+                            listed.textContent = rrCanceled.quantityReceived < rrCanceled.quantityDelivered ? "RR No: " + rrCanceled.receivingReportNo + " - Quantity: -" + formatNumber(rrCanceled.canceledQuantity) + " (Cancelled)" : "RR No: " + rrCanceled.receivingReportNo + " - Quantity: -" + formatNumber(rrCanceled.canceledQuantity) + " (Cancelled)";
                             rrListCanceledUl.appendChild(listed);
                         }
                     }
                 });
             }
-        }
-
-        function formatNumberWithCommas(number) {
-            return number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         $(document).ready(function () {
@@ -214,8 +210,5 @@
                 handlePoChange();
             });
         });
-    </script>
-    <script>
-        setTransactionDate();
     </script>
 }
