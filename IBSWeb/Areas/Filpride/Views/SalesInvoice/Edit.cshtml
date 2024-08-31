@@ -26,11 +26,12 @@
                             <span asp-validation-for="SalesInvoiceNo" class="text-danger"></span>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="control-label">Customer Name
-                            <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-control js-select2" style="width:100%">
-                                <option></option>
-                            </select>
-                            <span asp-validation-for="CustomerId" class="text-danger"></span>
+                            <label class="control-label">
+                                Customer Name
+                                <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-control js-select2" style="width:100%">
+                                    <option></option>
+                                </select>
+                                <span asp-validation-for="CustomerId" class="text-danger"></span>
                         </div>
 
                         <input type="hidden" id="soldTo" class="form-control" readonly disabled />
@@ -62,11 +63,12 @@
                     </div>
                     <div class="col">
                         <div class="form-group mb-3">
-                            <label class="control-label">Product Name
-                            <select asp-for="ProductId" asp-items="@Model.Products" class="form-control GetPOList js-select2" style="width:100%">
-                                <option></option>
-                            </select>
-                            <span asp-validation-for="ProductId" class="text-danger"></span>
+                            <label class="control-label">
+                                Product Name
+                                <select asp-for="ProductId" asp-items="@Model.Products" class="form-control GetPOList js-select2" style="width:100%">
+                                    <option></option>
+                                </select>
+                                <span asp-validation-for="ProductId" class="text-danger"></span>
                         </div>
 
                         <input type="hidden" id="productName" class="form-control" readonly disabled />
@@ -220,102 +222,102 @@
         });
     </script>
     <script>
-    $(document).ready(function () {
-        // GetPOList change event
-        $(".GetPOList").change(function () {
-            var productId = $(this).val();
-            if (productId !== "") {
-                // Make an AJAX request to get the POs based on the selected SupplierId
-                $.ajax({
-                    url: '@Url.Action("GetPOs", "SalesInvoice", new { area = "Filpride" })',
-                    method: "GET",
-                    data: { productId: productId },
-                    success: function (data) {
-                        if (data) {
-                            // Clear existing options
-                            $("#PurchaseOrderId").empty();
-                            // Add "No Value" option
-                            $('#PurchaseOrderId').append('<option value="">Select PO</option>');
-                            // Add new options based on the fetched data
-                            $.each(data, function (index, po) {
-                                if (po && po.poNumber) {
-                                    $('#PurchaseOrderId').append('<option value="' + po.id + '">' + po.poNumber + '</option>');
-                                }
-                            });
-                        } else {
-                            // Clear the fields if no POs are found
-                            $("#PurchaseOrderId").empty();
-                            $('#PurchaseOrderId').append('<option value="">No Value</option>');
+        $(document).ready(function () {
+            // GetPOList change event
+            $(".GetPOList").change(function () {
+                var productId = $(this).val();
+                if (productId !== "") {
+                    // Make an AJAX request to get the POs based on the selected SupplierId
+                    $.ajax({
+                        url: '@Url.Action("GetPOs", "SalesInvoice", new { area = "Filpride" })',
+                        method: "GET",
+                        data: { productId: productId },
+                        success: function (data) {
+                            if (data) {
+                                // Clear existing options
+                                $("#PurchaseOrderId").empty();
+                                // Add "No Value" option
+                                $('#PurchaseOrderId').append('<option value="">Select PO</option>');
+                                // Add new options based on the fetched data
+                                $.each(data, function (index, po) {
+                                    if (po && po.poNumber) {
+                                        $('#PurchaseOrderId').append('<option value="' + po.id + '">' + po.poNumber + '</option>');
+                                    }
+                                });
+                            } else {
+                                // Clear the fields if no POs are found
+                                $("#PurchaseOrderId").empty();
+                                $('#PurchaseOrderId').append('<option value="">No Value</option>');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error fetching POs:', error);
                         }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching POs:', error);
-                    }
-                });
-            } else {
-                // Clear the fields if no supplier is selected
-                $("#PurchaseOrderId").empty();
-                $('#PurchaseOrderId').append('<option value="">No Value</option>');
-            }
+                    });
+                } else {
+                    // Clear the fields if no supplier is selected
+                    $("#PurchaseOrderId").empty();
+                    $('#PurchaseOrderId').append('<option value="">No Value</option>');
+                }
+            });
+
+            $(".GetRRList").change(function () {
+                var purchaseOrderId = $(this).val();
+                if (purchaseOrderId !== "") {
+                    // Make an AJAX request to get the RRs based on the selected PurchaseOrderId
+                    $.ajax({
+                        url: '@Url.Action("GetRRs", "SalesInvoice", new { area = "Filpride" })',
+                        method: "GET",
+                        data: { purchaseOrderId: purchaseOrderId },
+                        success: function (data) {
+                            if (data) {
+                                // Clear existing options in the RR dropdown
+                                $("#ReceivingReportId").empty();
+
+                                $('#ReceivingReportId').append('<option value="">Select RR</option>');
+                                // Reset transaction date
+                                $("input[name='TransactionDate']").val("");
+
+                                $.each(data, function (index, rr) {
+                                    if (rr && rr.receivingReportNo && rr.receivedDate) {
+                                        $('#ReceivingReportId').append('<option value="' + rr.receivingReportId + '" data-rr-date="' + rr.receivedDate + '">' + rr.receivingReportNo + '</option>');
+                                    } else {
+                                        console.error("Invalid RR object:", rr);
+                                    }
+                                });
+
+                                // If only one RR is returned, auto-select it and set the TransactionDate
+                                if (data.length === 1) {
+                                    $("#ReceivingReportId").val(data[0].receivingReportId);
+                                    $("input[name='TransactionDate']").val(data[0].receivedDate);
+                                }
+                            } else {
+                                // Clear the fields if no RRs are found
+                                $("#ReceivingReportId").empty();
+                                $("input[name='TransactionDate']").val("");
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error fetching RRs:', error);
+                        }
+                    });
+                } else {
+                    // Clear the fields if no PO is selected
+                    $("#ReceivingReportId").empty();
+                    $("input[name='TransactionDate']").val("");
+                }
+            });
+
+            // Update TransactionDate when an RR is selected
+            $("#ReceivingReportId").change(function () {
+                var rrId = $(this).val();
+                if (rrId !== "") {
+                    var selectedRR = $(this).find("option:selected").data("rr-date");
+                    console.log(selectedRR);
+                    $("input[name='TransactionDate']").val(selectedRR);
+                }
+            });
         });
-
-         $(".GetRRList").change(function () {
-     var purchaseOrderId = $(this).val();
-     if (purchaseOrderId !== "") {
-         // Make an AJAX request to get the RRs based on the selected PurchaseOrderId
-         $.ajax({
-             url: '@Url.Action("GetRRs", "SalesInvoice", new { area = "Filpride" })',
-             method: "GET",
-             data: { purchaseOrderId: purchaseOrderId },
-             success: function (data) {
-                 if (data) {
-                     // Clear existing options in the RR dropdown
-                     $("#ReceivingReportId").empty();
-
-                     $('#ReceivingReportId').append('<option value="">Select RR</option>');
-                     // Reset transaction date
-                     $("input[name='TransactionDate']").val("");
-
-                     $.each(data, function (index, rr) {
-                         if (rr && rr.receivingReportNo && rr.receivedDate) {
-                             $('#ReceivingReportId').append('<option value="' + rr.receivingReportId + '" data-rr-date="' + rr.receivedDate + '">' + rr.receivingReportNo + '</option>');
-                         } else {
-                             console.error("Invalid RR object:", rr);
-                         }
-                     });
-
-                     // If only one RR is returned, auto-select it and set the TransactionDate
-                     if (data.length === 1) {
-                         $("#ReceivingReportId").val(data[0].receivingReportId);
-                         $("input[name='TransactionDate']").val(data[0].receivedDate);
-                     }
-                 } else {
-                     // Clear the fields if no RRs are found
-                     $("#ReceivingReportId").empty();
-                     $("input[name='TransactionDate']").val("");
-                 }
-             },
-             error: function (xhr, status, error) {
-                 console.error('Error fetching RRs:', error);
-             }
-         });
-     } else {
-         // Clear the fields if no PO is selected
-         $("#ReceivingReportId").empty();
-         $("input[name='TransactionDate']").val("");
-     }
- });
-
- // Update TransactionDate when an RR is selected
- $("#ReceivingReportId").change(function () {
-     var rrId = $(this).val();
-     if (rrId !== "") {
-         var selectedRR = $(this).find("option:selected").data("rr-date");
-         console.log(selectedRR);
-         $("input[name='TransactionDate']").val(selectedRR);
-     }
- });
-    });
     </script>
 
 }
