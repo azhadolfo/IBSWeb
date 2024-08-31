@@ -399,7 +399,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CustomerId = existingCos.CustomerId,
                             SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now
+                            CreatedDate = DateTime.Now,
+                            PostedBy = viewModel.CurrentUser,
+                            PostedDate = DateTime.Now
                         };
 
                         subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
