@@ -404,9 +404,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
                         await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel);
-                        await _unitOfWork.SaveAsync(cancellationToken);
                     }
 
+                    TempData["success"] = "Appointed supplier successfully.";
+                    await _unitOfWork.SaveAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
 
                 }
@@ -423,7 +424,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
-
 
         public async Task<IActionResult> GetPurchaseOrders(int? supplierId, CancellationToken cancellationToken)
         {
