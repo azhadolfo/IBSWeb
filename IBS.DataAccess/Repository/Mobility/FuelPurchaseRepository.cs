@@ -183,7 +183,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     }
 
                     var journalEntries = await _db.MobilityGeneralLedgers
-                            .Where(j => j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
+                            .Where(j => j.Particular == nameof(JournalType.Sales) && j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
                                         (j.AccountNumber.StartsWith("50101") || j.AccountNumber.StartsWith("10104")))
                             .ToListAsync(cancellationToken);
 

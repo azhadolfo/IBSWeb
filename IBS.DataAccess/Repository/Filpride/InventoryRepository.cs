@@ -149,6 +149,36 @@ namespace IBS.DataAccess.Repository.Filpride
                     averageCost = transaction.AverageCost;
                     totalBalance = transaction.TotalBalance;
                     inventoryBalance = transaction.InventoryBalance;
+
+                    var journalEntries = await _db.FilprideGeneralLedgerBooks
+                        .Where(j => j.Reference == transaction.Reference &&
+                                    (j.AccountNo.StartsWith("50101") || j.AccountNo.StartsWith("10104")))
+                        .ToListAsync(cancellationToken);
+
+                    if (journalEntries.Count != 0)
+                    {
+                        foreach (var journal in journalEntries)
+                        {
+                            if (journal.Debit != 0)
+                            {
+                                if (journal.Debit != costOfGoodsSold)
+                                {
+                                    journal.Debit = costOfGoodsSold;
+                                    journal.Credit = 0;
+                                }
+                            }
+                            else
+                            {
+                                if (journal.Credit != costOfGoodsSold)
+                                {
+                                    journal.Credit = costOfGoodsSold;
+                                    journal.Debit = 0;
+                                }
+                            }
+                        }
+                    }
+
+                    _db.FilprideGeneralLedgerBooks.UpdateRange(journalEntries);
                 }
                 else if (transaction.Particular == "Purchases")
                 {
@@ -160,36 +190,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     totalBalance = transaction.TotalBalance;
                     inventoryBalance = transaction.InventoryBalance;
                 }
-
-                var journalEntries = await _db.FilprideGeneralLedgerBooks
-                        .Where(j => j.Reference == transaction.Reference &&
-                                    (j.AccountNo.StartsWith("50101") || j.AccountNo.StartsWith("10104")))
-                        .ToListAsync(cancellationToken);
-
-                if (journalEntries.Count != 0)
-                {
-                    foreach (var journal in journalEntries)
-                    {
-                        if (journal.Debit != 0)
-                        {
-                            if (journal.Debit != costOfGoodsSold)
-                            {
-                                journal.Debit = costOfGoodsSold;
-                                journal.Credit = 0;
-                            }
-                        }
-                        else
-                        {
-                            if (journal.Credit != costOfGoodsSold)
-                            {
-                                journal.Credit = costOfGoodsSold;
-                                journal.Debit = 0;
-                            }
-                        }
-                    }
-                }
-
-                _db.FilprideGeneralLedgerBooks.UpdateRange(journalEntries);
             }
 
             _db.FilprideInventories.UpdateRange(sortedInventory);
@@ -264,6 +264,36 @@ namespace IBS.DataAccess.Repository.Filpride
                         averageCost = transaction.AverageCost;
                         totalBalance = transaction.TotalBalance;
                         inventoryBalance = transaction.InventoryBalance;
+
+                        var journalEntries = await _db.FilprideGeneralLedgerBooks
+                            .Where(j => j.Reference == transaction.Reference &&
+                                        (j.AccountNo.StartsWith("50101") || j.AccountNo.StartsWith("10104")))
+                            .ToListAsync(cancellationToken);
+
+                        if (journalEntries.Count != 0)
+                        {
+                            foreach (var journal in journalEntries)
+                            {
+                                if (journal.Debit != 0)
+                                {
+                                    if (journal.Debit != costOfGoodsSold)
+                                    {
+                                        journal.Debit = costOfGoodsSold;
+                                        journal.Credit = 0;
+                                    }
+                                }
+                                else
+                                {
+                                    if (journal.Credit != costOfGoodsSold)
+                                    {
+                                        journal.Credit = costOfGoodsSold;
+                                        journal.Debit = 0;
+                                    }
+                                }
+                            }
+                        }
+
+                        _db.FilprideGeneralLedgerBooks.UpdateRange(journalEntries);
                     }
                     else if (transaction.Particular == "Purchases")
                     {
@@ -275,36 +305,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         totalBalance = transaction.TotalBalance;
                         inventoryBalance = transaction.InventoryBalance;
                     }
-
-                    var journalEntries = await _db.FilprideGeneralLedgerBooks
-                            .Where(j => j.Reference == transaction.Reference &&
-                                        (j.AccountNo.StartsWith("50101") || j.AccountNo.StartsWith("10104")))
-                            .ToListAsync(cancellationToken);
-
-                    if (journalEntries.Count != 0)
-                    {
-                        foreach (var journal in journalEntries)
-                        {
-                            if (journal.Debit != 0)
-                            {
-                                if (journal.Debit != costOfGoodsSold)
-                                {
-                                    journal.Debit = costOfGoodsSold;
-                                    journal.Credit = 0;
-                                }
-                            }
-                            else
-                            {
-                                if (journal.Credit != costOfGoodsSold)
-                                {
-                                    journal.Credit = costOfGoodsSold;
-                                    journal.Debit = 0;
-                                }
-                            }
-                        }
-                    }
-
-                    _db.FilprideGeneralLedgerBooks.UpdateRange(journalEntries);
                 }
 
                 var ledgers = new List<FilprideGeneralLedgerBook>
