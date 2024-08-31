@@ -13,7 +13,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem>? PurchaseOrders { get; set; }
 
-        public string DeliveryType { get; set; }
+        public string DeliveryOption { get; set; }
 
         public decimal Freight { get; set; } = 0;
 

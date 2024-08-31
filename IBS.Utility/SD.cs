@@ -17,8 +17,8 @@
         public const string TaxType_WithVax = "Withholding Vat";
         public const string TaxType_Exempt = "Exempt";
 
-        public const string DeliveryType_ForPickUp = "For Pick Up";
-        public const string DeliveryType_DirectDelivery = "Direct Delivery";
+        public const string DeliveryOption_ForPickUp = "For Pick Up";
+        public const string DeliveryOption_DirectDelivery = "Direct Delivery";
 
         public const string Department_Accounting = "Accounting";
         public const string Department_CreditAndCollection = "Credit and Collection";

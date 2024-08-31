@@ -47,7 +47,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public decimal TotalAmount { get; set; }
 
-        public string DeliveryType { get; set; }
+        public string DeliveryOption { get; set; }
 
         #region--Hauler
 

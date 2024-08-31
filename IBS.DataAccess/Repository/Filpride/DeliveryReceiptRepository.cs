@@ -118,7 +118,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.DeliveryReceiptId.ToString(),
-                        Text = $"{dr.DeliveryReceiptNo} - {dr.DeliveryType.ToUpper()}"
+                        Text = $"{dr.DeliveryReceiptNo} - {dr.DeliveryOption.ToUpper()}"
                     })
                     .ToListAsync(cancellationToken);
         }

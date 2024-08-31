@@ -86,7 +86,7 @@ namespace IBS.Models.Filpride
         public bool IsPrinted { get; set; }
 
         [Column(TypeName = "varchar(15)")]
-        public string DeliveryType { get; set; }
+        public string DeliveryOption { get; set; }
 
         public string Company { get; set; } = string.Empty;
     }

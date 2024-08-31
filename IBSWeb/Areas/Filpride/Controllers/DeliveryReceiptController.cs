@@ -4,7 +4,6 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -69,7 +68,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Date = viewModel.Date,
                         EstimatedTimeOfArrival = viewModel.ETA,
                         CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
-                        DeliveryType = viewModel.DeliveryType,
+                        DeliveryOption = viewModel.DeliveryOption,
                         HaulerId = viewModel.HaulerId,
                         CustomerId = viewModel.CustomerId,
                         Freight = viewModel.Freight,
@@ -146,7 +145,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Price = existingRecord.CustomerOrderSlip.DeliveredPrice,
                     Volume = existingRecord.Quantity,
                     TotalAmount = existingRecord.TotalAmount,
-                    DeliveryType = existingRecord.DeliveryType,
+                    DeliveryOption = existingRecord.DeliveryOption,
                     HaulerId = existingRecord.HaulerId,
                     Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(companyClaims, cancellationToken),
                     Freight = existingRecord.Freight,

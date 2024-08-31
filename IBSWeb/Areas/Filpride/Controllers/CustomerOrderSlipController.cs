@@ -368,11 +368,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     existingCos.PurchaseOrderId = viewModel.PurchaseOrderId;
-                    existingCos.DeliveryType = viewModel.DeliveryType;
+                    existingCos.DeliveryOption = viewModel.DeliveryOption;
                     existingCos.PickUpPoint = viewModel.PickUpPoint;
                     existingCos.Status = nameof(CosStatus.SupplierAppointed);
 
-                    if (existingCos.DeliveryType == SD.DeliveryType_DirectDelivery)
+                    if (existingCos.DeliveryOption == SD.DeliveryOption_DirectDelivery)
                     {
                         existingCos.Freight = viewModel.Freight;
 
