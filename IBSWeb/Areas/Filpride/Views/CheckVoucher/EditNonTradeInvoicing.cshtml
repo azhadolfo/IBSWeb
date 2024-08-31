@@ -374,32 +374,47 @@
                 var accountTitles = @Html.Raw(Json.Serialize(Model.AccountTitle));
                 var debits = @Html.Raw(Json.Serialize(Model.Debit));
                 var credits = @Html.Raw(Json.Serialize(Model.Credit));
+                var defaultExpenses = @Html.Raw(Json.Serialize(Model.DefaultExpenses));
 
                 for (var i = 0; i < accountNumbers.length; i++) {
-                    var creditClass = 'ap-trade-credit w-100'; // Initialize the debit class
-                    var widthClass = 'w-100'; // Initialize the debit class
+                    var creditClass = 'ap-trade-credit w-100';
+                    var widthClass = 'w-100';
                     var defaultExpenseClass = 'form-select js-select2 defaultExpenseText w-100';
 
-                    // Construct the row HTML with the determined row class
-                    var row = '<tr>' +
-                        '<input type="hidden" name="AccountNumber" value="' + accountNumbers[i] + '" />' +
-                        (i !== 0 ? '<td><input type="text" name="AccountTitle" value="' + accountNumbers[i] + ' ' + accountTitles[i] + '" class="' + widthClass + '" style="border:none" readonly /></td>'
-                            : '<td><select asp-for="@Model.AccountNumber" asp-items="@Model.DefaultExpenses" class="' + defaultExpenseClass + '">' +
-                            '<option></option>' +
-                            '</select></td>') +
-                        '<td><input type="text" name="Debit" value="' + formatNumber(debits[i]) + '" class="' + widthClass + '" style="border:none" readonly /></td>' +
-                        '<td><input type="text" name="Credit" value="' + formatNumber(credits[i]) + '" class="' + creditClass + '" style="border:none" readonly /></td>' +
-                        (i < 4 ? '<td></td>' : '<td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>') +
-                        '</tr>';
+                    var options = '<option></option>';
+                    defaultExpenses.forEach(function (expense) {
+                        // Check if the current expense value matches the account number
+                        var selected = expense.value === accountNumbers[i] ? ' selected' : '';
+                        options += '<option value="' + expense.text + '"' + selected + '>' + expense.text + '</option>';
+                    });
+
+                    var row = `
+                                <tr>
+                                    <input type="hidden" name="AccountNumber" value="${accountNumbers[i]}" />
+                                    ${i !== 0
+                                            ? `<td><input type="text" name="AccountTitle" value="${accountTitles[i]}" class="${widthClass}" style="border:none" readonly /></td>`
+                                            : `<td><select name="AccountTitle" class="${defaultExpenseClass}">${options}</select></td>`
+                                        }
+                                    <td><input type="text" name="Debit" value="${debits[i].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" class="${widthClass}" style="border:none" readonly /></td>
+                                    <td><input type="text" name="Credit" value="${credits[i].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" class="${creditClass}" style="border:none" readonly /></td>
+                                    ${i < 4
+                                            ? '<td></td>'
+                                            : '<td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>'
+                                        }
+                                </tr>`;
 
                     $('.defaultEntry').append(row);
 
                     // Reinitialize Select2 on the newly added elements
-                    $('.js-select2').select2();
+                    $('.js-select2').select2({
+                            placeholder: "Select an option...",
+                            allowClear: true,
+                            width: 'resolve',
+                            theme: 'classic'
+                        });
                 }
 
                 updateTotalDebitAndCredit();
-
             });
         </script>
     }

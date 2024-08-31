@@ -222,12 +222,14 @@
                                 $(".withholdingTaxNumber").val(data.withholdingTax !== null ? data.withholdingTax.split(' ')[0] : null);
                                 $(".withholdingTaxTitle").val(data.withholdingTax !== null ? data.withholdingTax.replace(/^\s*\S+\s*/, '').trim() : null);
                                 $(".defaultExpenseText").val(data.defaultExpense !== null ? data.defaultExpense.split(' ')[0] : null).trigger('change');
+                                getDefaultExpense(data.defaultExpense)
                             } else {
                                 $("#SupplierName").val("");
                                 $("#SupplierAddress").val("");
                                 $("#SupplierTinNo").val("");
                                 $(".withholdingTaxNumber").val("");
                                 $(".withholdingTaxtitle").val("");
+                                $(".defaultExpenseText").val(null).trigger('change');
                             }
                             $(document).ready(function () {
                                 $(".supplier").change(function () {
@@ -305,23 +307,16 @@
                     $("#SupplierTinNo").val("");
                     $(".withholdingTaxNumber").val("");
                     $(".withholdingTaxtitle").val("");
+                    $(".defaultExpenseText").val(null).trigger('change');
                 }
             };
         </script>
         <script>
-            $(".defaultExpenseText").change(function () {
-                var value = $(".defaultExpenseText option:selected").text();
-                getDefaultExpense(value)
-            });
-            $(".defaultExpenseText").each(function () {
-                var value = $(".defaultExpenseText option:selected").text();
-                getDefaultExpense(value)
-            });
-            function getDefaultExpense(value) {
-                var defaultExpenseTitle = $(".defaultExpenseText option:selected").text().replace(/^\S+\s/, '');
-                var defaultExpenseNumber = $(".defaultExpenseText option:selected").text().split(' ')[0];
+            function getDefaultExpense(defaultExpense) {
+                var defaultExpenseTitle = defaultExpense.replace(/^\S+\s/, '');
+                var defaultExpenseNumber = defaultExpense.split(' ')[0];
                 $(".defaultExpenseTitle").val(defaultExpenseTitle);
-                $(".defaultExpenseTitle").val(defaultExpenseNumber);
+                $(".defaultExpenseText").val(defaultExpenseNumber);
             }
         </script>
         <script>

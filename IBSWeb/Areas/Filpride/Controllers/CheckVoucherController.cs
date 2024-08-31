@@ -1010,7 +1010,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
+                    Text = s.AccountName
                 })
                 .ToListAsync(cancellationToken);
 
@@ -1439,14 +1439,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync();
 
-            //existingDetailsModel.DefaultExpenses = await _dbContext.ChartOfAccounts
-            //    .Select(s => new SelectListItem
-            //    {
-            //        Value = s.AccountNumber,
-            //        Text = s.AccountNumber + " " + s.AccountName
-            //    })
-            //    .ToListAsync(cancellationToken);
-
             existingModel.COA = await _dbContext.ChartOfAccounts
                         .Where(coa => coa.Level == 4 || coa.Level == 5)
                         .Select(s => new SelectListItem
@@ -1456,10 +1448,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
 
-            var accountNumbers = existingDetailsModel.Select(model => model.AccountNo).ToArray();
-            var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
-            var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
-            var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
+            var accountNumbers = existingDetailsModel.OrderBy(x => x.CheckVoucherDetailId).Select(model => model.AccountNo).ToArray();
+            var accountTitles = existingDetailsModel.OrderBy(x => x.CheckVoucherDetailId).Select(model => model.AccountName).ToArray();
+            var debit = existingDetailsModel.OrderBy(x => x.CheckVoucherDetailId).Select(model => model.Debit).ToArray();
+            var credit = existingDetailsModel.OrderBy(x => x.CheckVoucherDetailId).Select(model => model.Credit).ToArray();
 
             CheckVoucherNonTradeInvoicingViewModel viewModel = new()
             {
@@ -1477,6 +1469,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Particulars = existingModel.Particulars,
                 AccountNumber = accountNumbers,
                 AccountTitle = accountTitles,
+                DefaultExpenses = await _dbContext.ChartOfAccounts
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber,
+                    Text = s.AccountName
+                })
+                .ToListAsync(cancellationToken),
                 Debit = debit,
                 Credit = credit
             };
@@ -1567,7 +1566,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             ids.RemoveAt(0);
                             var details = existingDetailsModel.First(o => o.CheckVoucherDetailId == detailsId);
 
-                            details.AccountNo = viewModel.AccountNumber[i];
+                            var acctNo = await _dbContext.ChartOfAccounts
+                                .FirstOrDefaultAsync(x => x.AccountName == viewModel.AccountTitle[i]);
+
+                            details.AccountNo = acctNo.AccountNumber ?? throw new ArgumentNullException("Account title not found!");
                             details.AccountName = viewModel.AccountTitle[i];
                             details.Debit = viewModel.Debit[i];
                             details.Credit = viewModel.Credit[i];

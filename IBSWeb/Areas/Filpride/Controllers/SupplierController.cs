@@ -54,6 +54,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             FilprideSupplier model = new();
             model.DefaultExpenses = await _dbContext.ChartOfAccounts
+                .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber + " " + s.AccountName,
@@ -148,6 +149,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (supplier != null)
             {
                 supplier.DefaultExpenses = await _dbContext.ChartOfAccounts
+                .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber + " " + s.AccountName,
