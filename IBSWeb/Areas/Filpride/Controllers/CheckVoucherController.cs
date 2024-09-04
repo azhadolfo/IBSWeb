@@ -64,7 +64,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     checkVoucherHeaders = checkVoucherHeaders
                     .Where(s =>
                         s.CheckVoucherHeaderNo.ToLower().Contains(searchValue) ||
-                        s.Date.ToString().Contains(searchValue) ||
+                        s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.RRNo?.Contains(searchValue) == true ||
                         s.SINo?.Contains(searchValue) == true ||
                         s.PONo?.Contains(searchValue) == true ||

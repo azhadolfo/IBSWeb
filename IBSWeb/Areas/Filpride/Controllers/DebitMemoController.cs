@@ -64,7 +64,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.DebitMemoNo.ToLower().Contains(searchValue) ||
                             (s.SalesInvoice?.SalesInvoiceNo.ToLower().Contains(searchValue) == true) ||
                             (s.ServiceInvoice?.ServiceInvoiceNo.ToLower().Contains(searchValue) == true) ||
-                            s.TransactionDate.ToString().Contains(searchValue) ||
+                            s.TransactionDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                             s.DebitAmount.ToString().Contains(searchValue) ||
                             s.Remarks?.ToLower().Contains(searchValue) == true ||
                             s.Description.ToLower().Contains(searchValue) ||

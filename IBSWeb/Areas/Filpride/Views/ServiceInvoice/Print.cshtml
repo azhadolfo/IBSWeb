@@ -106,7 +106,7 @@
                             <tr>
                                 <td><p style="margin-left:8%;" class="mb-0"><b>Vatable Sales: </b></p></td>
                                 <td class="text-end">
-                                    @if (Model.Customer.CustomerType == "Vatable")
+                                    @if (Model.Customer.VatType == "Vatable" && Model.NetAmount != 0)
                                     {
                                         <p class="mb-0">@Html.DisplayFor(model => model.NetAmount)</p>
                                     }
@@ -116,7 +116,7 @@
                                 <td><p style="margin-left:8%;" class="mb-0"><b>Zero-Rated Sales: </b></p></td>
 
                                 <td class="text-end">
-                                    @if (Model.Customer.CustomerType == "Zero Rated")
+                                    @if (Model.Customer.VatType == "Zero Rated" && (Model.NetAmount != 0 || Model.Total != 0))
                                     {
                                         if (Model.Discount > 0)
                                         {
@@ -134,7 +134,7 @@
                                 <td><p style="margin-left:8%;" class="mb-0"><b>VAT-Exempt Sales: </b></p></td>
 
                                 <td class="text-end">
-                                    @if (Model.Customer.CustomerType == "Exempt")
+                                    @if (Model.Customer.VatType == "Exempt" && (Model.NetAmount != 0 || Model.Total != 0))
                                     {
                                         if (Model.Discount > 0)
                                         {
@@ -151,7 +151,7 @@
                                 <td><p style="margin-left:8%;" class="mb-0"><b>VAT Amount: </b></p></td>
 
                                 <td class="text-end">
-                                    @if (Model.Customer.CustomerType == "Vatable")
+                                    @if (Model.Customer.VatType == "Vatable" && Model.VatAmount != 0)
                                     {
                                         <p class="mb-0">@Html.DisplayFor(model => model.VatAmount)</p>
                                     }

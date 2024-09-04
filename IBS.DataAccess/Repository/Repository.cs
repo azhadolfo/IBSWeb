@@ -195,7 +195,7 @@ namespace IBS.DataAccess.Repository
                 })
                 .FirstOrDefaultAsync(cancellationToken);
         }
-        public async Task<int> RemoveRecords<TEntity>(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
+        public async Task RemoveRecords<TEntity>(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
        where TEntity : class
         {
             var entitySet = _db.Set<TEntity>();
@@ -211,16 +211,11 @@ namespace IBS.DataAccess.Repository
                 try
                 {
                     await _db.SaveChangesAsync(cancellationToken);
-                    return entitiesToRemove.Count;
                 }
                 catch (Exception ex)
                 {
                     throw;
                 }
-            }
-            else
-            {
-                throw new ArgumentException($"No entities found with identifier value: '{predicate.Body.ToString}'");
             }
         }
     }

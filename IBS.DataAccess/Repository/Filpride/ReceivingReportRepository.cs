@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
@@ -153,7 +154,7 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 po.QuantityReceived -= quantityReceived;
 
-                if (po.IsReceived == true)
+                if (po.IsReceived)
                 {
                     po.IsReceived = false;
                     po.ReceivedDate = DateTime.MaxValue;
