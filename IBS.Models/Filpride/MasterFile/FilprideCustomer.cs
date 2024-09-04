@@ -79,5 +79,9 @@ namespace IBS.Models.Filpride.MasterFile
         //If Retail only
         [Column(TypeName = "varchar(3)")]
         public string? StationCode { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        public decimal CreditLimit { get; set; }
     }
 }
