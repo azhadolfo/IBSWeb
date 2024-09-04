@@ -110,6 +110,7 @@
         $('#paginatedTable').DataTable({
             "processing": true, // Enable processing indicator
             "serverSide": true, // Enable server-side processing
+            "stateSave": true,
             "ajax": {
                 "url": "@Url.Action("GetServiceInvoices", "ServiceInvoice", new { area = "Filpride" })",
                 "type": "POST",

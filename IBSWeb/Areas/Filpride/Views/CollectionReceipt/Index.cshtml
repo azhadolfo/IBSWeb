@@ -103,6 +103,7 @@
             $('#paginatedTable').DataTable({
                 "processing": true,
                 "serverSide": true,
+                "stateSave": true,
                 "ajax": {
                     "url": "@Url.Action("GetCollectionReceipts", "CollectionReceipt", new { area = "Filpride" })",
                     "type": "POST",
