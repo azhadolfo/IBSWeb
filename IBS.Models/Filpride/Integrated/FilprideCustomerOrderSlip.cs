@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace IBS.Models.Filpride
+namespace IBS.Models.Filpride.Integrated
 {
     public class FilprideCustomerOrderSlip
     {
@@ -68,8 +68,11 @@ namespace IBS.Models.Filpride
         #region Commissioner's Properties
         public bool HasCommission { get; set; }
 
+        [Column(TypeName = "varchar(100)")]
         public string? CommissionerName { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal? CommissionRate { get; set; }
         #endregion
 
@@ -83,10 +86,14 @@ namespace IBS.Models.Filpride
         [ForeignKey(nameof(PurchaseOrderId))]
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
 
+        [Column(TypeName = "varchar(20)")]
         public string? DeliveryOption { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal? Freight { get; set; }
 
+        [Column(TypeName = "varchar(20)")]
         public string? PickUpPoint { get; set; }
 
         #endregion

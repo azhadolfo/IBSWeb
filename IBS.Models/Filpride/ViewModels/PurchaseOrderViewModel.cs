@@ -1,5 +1,4 @@
-﻿using IBS.Utility;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace IBS.Models.Filpride.ViewModels
@@ -31,9 +30,6 @@ namespace IBS.Models.Filpride.ViewModels
         [Required]
         [Range(1, double.MaxValue, ErrorMessage = "The unit cost should be greater than zero.")]
         public decimal UnitCost { get; set; }
-
-        [Required]
-        public Port Port { get; set; }
 
         public string Remarks { get; set; }
 

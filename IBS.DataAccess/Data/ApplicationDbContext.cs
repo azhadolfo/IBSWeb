@@ -3,6 +3,7 @@ using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
@@ -83,6 +84,8 @@ namespace IBS.DataAccess.Data
         public DbSet<FilprideCustomerOrderSlip> FilprideCustomerOrderSlips { get; set; }
 
         public DbSet<FilprideDeliveryReceipt> FilprideDeliveryReceipts { get; set; }
+
+        public DbSet<FilprideFreight> FilprideFreights { get; set; }
 
         #region--Master File
 

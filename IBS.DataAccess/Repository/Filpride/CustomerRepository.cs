@@ -68,6 +68,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.CustomerType = model.CustomerType;
             existingCustomer.WithHoldingVat = model.WithHoldingVat;
             existingCustomer.WithHoldingTax = model.WithHoldingTax;
+            existingCustomer.ClusterCode = model.ClusterCode;
 
             if (_db.ChangeTracker.HasChanges())
             {
