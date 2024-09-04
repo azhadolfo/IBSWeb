@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using IBS.Utility;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride.MasterFile
@@ -72,6 +73,8 @@ namespace IBS.Models.Filpride.MasterFile
         public DateTime? EditedDate { get; set; }
 
         public string Company { get; set; } = string.Empty;
+
+        public ClusterArea? ClusterCode { get; set; }
 
         //If Retail only
         [Column(TypeName = "varchar(3)")]
