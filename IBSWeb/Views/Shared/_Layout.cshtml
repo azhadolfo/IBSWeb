@@ -149,7 +149,9 @@
                             }
                             else
                             {
-                                <li class="nav-item dropdown-layout">
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <li class="nav-item dropdown-layout">
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
                                             Integrated
                                         </a>
@@ -170,6 +172,7 @@
                                             </li>
                                         </ul>
                                     </li>
+                                }
                                 <li class="nav-item dropdown-layout">
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
                                         Accounts Receivable
