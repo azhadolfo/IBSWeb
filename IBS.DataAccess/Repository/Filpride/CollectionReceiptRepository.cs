@@ -55,7 +55,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<int> RemoveSIPayment(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
+        public async Task RemoveSIPayment(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
         {
             var si = await _db
                 .FilprideSalesInvoices
@@ -73,15 +73,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     si.PaymentStatus = "Pending";
                 }
 
-                return await _db.SaveChangesAsync(cancellationToken);
-            }
-            else
-            {
-                throw new ArgumentException("", "No record found");
+                await _db.SaveChangesAsync(cancellationToken);
             }
         }
 
-        public async Task<int> RemoveSVPayment(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
+        public async Task RemoveSVPayment(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
         {
             var sv = await _db
                 .FilprideServiceInvoices
@@ -99,15 +95,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     sv.PaymentStatus = "Pending";
                 }
 
-                return await _db.SaveChangesAsync(cancellationToken);
-            }
-            else
-            {
-                throw new ArgumentException("", "No record found");
+                await _db.SaveChangesAsync(cancellationToken);
             }
         }
 
-        public async Task<int> RemoveMultipleSIPayment(int[] id, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
+        public async Task RemoveMultipleSIPayment(int[] id, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
         {
             var salesInvoices = await _db
                 .FilprideSalesInvoices
@@ -129,15 +121,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     }
                 }
 
-                return await _db.SaveChangesAsync(cancellationToken);
-            }
-            else
-            {
-                throw new ArgumentException("", "No record found");
+                await _db.SaveChangesAsync(cancellationToken);
             }
         }
 
-        public async Task<int> UpdateInvoice(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
+        public async Task UpdateInvoice(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
         {
             var si = await _db
                 .FilprideSalesInvoices
@@ -160,15 +148,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     si.PaymentStatus = "OverPaid";
                 }
 
-                return await _db.SaveChangesAsync(cancellationToken);
-            }
-            else
-            {
-                throw new ArgumentException("", "No record found");
+                await _db.SaveChangesAsync(cancellationToken);
             }
         }
 
-        public async Task<int> UpdateMutipleInvoice(string[] siNo, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
+        public async Task UpdateMutipleInvoice(string[] siNo, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
         {
             if (siNo != null)
             {
@@ -208,15 +192,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     }
                 }
 
-                return await _db.SaveChangesAsync(cancellationToken);
-            }
-            else
-            {
-                throw new ArgumentException("", "No record found");
+                await _db.SaveChangesAsync(cancellationToken);
             }
         }
 
-        public async Task<int> UpdateSV(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
+        public async Task UpdateSV(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
         {
             var sv = await _db
                 .FilprideServiceInvoices
@@ -239,11 +219,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     sv.PaymentStatus = "OverPaid";
                 }
 
-                return await _db.SaveChangesAsync(cancellationToken);
-            }
-            else
-            {
-                throw new ArgumentException("", "No record found");
+                await _db.SaveChangesAsync(cancellationToken);
             }
         }
 
