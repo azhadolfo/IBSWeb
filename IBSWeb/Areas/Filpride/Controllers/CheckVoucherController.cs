@@ -180,7 +180,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var receivingReport = await _unitOfWork.FilprideReceivingReportRepository
+            var receivingReport = await _unitOfWork.FilprideReceivingReport
                 .GetAsync(rr => rr.Company == companyClaims && rr.ReceivingReportNo == rrNo);
 
             if (receivingReport != null)

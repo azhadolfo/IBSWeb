@@ -50,7 +50,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var purchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepository
+                var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
                     .GetAllAsync(po => po.Company == companyClaims, cancellationToken);
 
                 // Search filter
