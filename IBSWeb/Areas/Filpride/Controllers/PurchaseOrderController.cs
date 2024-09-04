@@ -63,7 +63,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.PurchaseOrderNo.ToLower().Contains(searchValue) ||
                         s.Supplier.SupplierName.ToLower().Contains(searchValue) ||
                         s.Product.ProductName.ToLower().Contains(searchValue) ||
-                        s.Date.ToString().Contains(searchValue) ||
+                        s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.Terms.ToLower().Contains(searchValue) ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.Remarks.ToLower().Contains(searchValue) ||

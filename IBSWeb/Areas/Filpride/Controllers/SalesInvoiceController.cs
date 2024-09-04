@@ -66,7 +66,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.Product.ProductCode.ToLower().Contains(searchValue) ||
                             s.Product.ProductName.ToLower().Contains(searchValue) ||
                             s.OtherRefNo.ToLower().Contains(searchValue) ||
-                            s.TransactionDate.ToString().Contains(searchValue) ||
+                            s.TransactionDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                             s.Quantity.ToString().Contains(searchValue) ||
                             s.UnitPrice.ToString().Contains(searchValue) ||
                             s.Amount.ToString().Contains(searchValue) ||
