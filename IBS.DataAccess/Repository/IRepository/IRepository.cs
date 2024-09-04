@@ -17,7 +17,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task RemoveRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
 
-        Task<int> RemoveRecords<TEntity>(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default) where TEntity : class;
+        Task RemoveRecords<TEntity>(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default) where TEntity : class;
 
         bool IsJournalEntriesBalanced(IEnumerable<MobilityGeneralLedger> journals);
 
