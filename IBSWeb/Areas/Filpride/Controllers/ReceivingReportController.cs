@@ -170,15 +170,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(model);
                 }
 
-                model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReportRepository.GenerateCodeAsync(companyClaims, cancellationToken);
+                model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, cancellationToken);
                 model.CreatedBy = _userManager.GetUserName(this.User);
                 model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
 
-                var existingPo = await _unitOfWork.FilpridePurchaseOrderRepository.GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
+                var existingPo = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
 
                 model.PONo = existingPo.PurchaseOrderNo;
 
-                model.DueDate = await _unitOfWork.FilprideReceivingReportRepository.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
+                model.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
 
                 if (po.Supplier.VatType == "Vatable")
                 {
@@ -287,11 +287,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Date = model.Date;
                 existingModel.POId = model.POId;
 
-                var existingPo = await _unitOfWork.FilpridePurchaseOrderRepository.GetAsync(po => po.PurchaseOrderId == model.POId);
+                var existingPo = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == model.POId);
 
                 existingModel.PONo = existingPo.PurchaseOrderNo;
 
-                existingModel.DueDate = await _unitOfWork.FilprideReceivingReportRepository.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
+                existingModel.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
                 existingModel.SupplierInvoiceNumber = model.SupplierInvoiceNumber;
                 existingModel.SupplierInvoiceDate = model.SupplierInvoiceDate;
                 existingModel.SupplierDrNo = model.SupplierDrNo;
@@ -341,7 +341,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var receivingReport = await _unitOfWork.FilprideReceivingReportRepository.GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
+            var receivingReport = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
 
             if (receivingReport == null)
             {
@@ -353,7 +353,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.FilprideReceivingReportRepository.GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
+            var model = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
 
             if (model != null)
             {
@@ -372,150 +372,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.PostedDate = DateTime.Now;
                         model.Status = nameof(Status.Posted);
 
-                        #region --General Ledger Recording
+                        await _unitOfWork.FilprideReceivingReport.PostAsync(model, cancellationToken);
 
-                        var ledgers = new List<FilprideGeneralLedgerBook>();
-
-                        if (model.PurchaseOrder.Product.ProductName == "BIODIESEL")
-                        {
-                            ledgers.Add(new FilprideGeneralLedgerBook
-                            {
-                                Date = model.Date,
-                                Reference = model.ReceivingReportNo,
-                                Description = "Receipt of Goods",
-                                AccountNo = "1010401",
-                                AccountTitle = "Inventory - Biodiesel",
-                                Debit = model.NetAmount,
-                                Credit = 0,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
-                                Company = model.Company
-                            });
-                        }
-                        else if (model.PurchaseOrder.Product.ProductName == "ECONOGAS")
-                        {
-                            ledgers.Add(new FilprideGeneralLedgerBook
-                            {
-                                Date = model.Date,
-                                Reference = model.ReceivingReportNo,
-                                Description = "Receipt of Goods",
-                                AccountNo = "1010402",
-                                AccountTitle = "Inventory - Econogas",
-                                Debit = model.NetAmount,
-                                Credit = 0,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
-                                Company = model.Company
-                            });
-                        }
-                        else
-                        {
-                            ledgers.Add(new FilprideGeneralLedgerBook
-                            {
-                                Date = model.Date,
-                                Reference = model.ReceivingReportNo,
-                                Description = "Receipt of Goods",
-                                AccountNo = "1010403",
-                                AccountTitle = "Inventory - Envirogas",
-                                Debit = model.NetAmount,
-                                Credit = 0,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
-                                Company = model.Company
-                            });
-                        }
-
-                        if (model.VatAmount > 0)
-                        {
-                            ledgers.Add(new FilprideGeneralLedgerBook
-                            {
-                                Date = model.Date,
-                                Reference = model.ReceivingReportNo,
-                                Description = "Receipt of Goods",
-                                AccountNo = "1010602",
-                                AccountTitle = "Vat Input",
-                                Debit = model.VatAmount,
-                                Credit = 0,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
-                                Company = model.Company
-                            });
-                        }
-
-                        if (model.EwtAmount > 0)
-                        {
-                            ledgers.Add(new FilprideGeneralLedgerBook
-                            {
-                                Date = model.Date,
-                                Reference = model.ReceivingReportNo,
-                                Description = "Receipt of Goods",
-                                AccountNo = "2010302",
-                                AccountTitle = "Expanded Withholding Tax 1%",
-                                Debit = 0,
-                                Credit = model.EwtAmount,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
-                                Company = model.Company
-                            });
-                        }
-
-                        ledgers.Add(new FilprideGeneralLedgerBook
-                        {
-                            Date = model.Date,
-                            Reference = model.ReceivingReportNo,
-                            Description = "Receipt of Goods",
-                            AccountNo = "2010101",
-                            AccountTitle = "AP-Trade Payable",
-                            Debit = 0,
-                            Credit = model.Amount - model.EwtAmount,
-                            CreatedBy = model.CreatedBy,
-                            CreatedDate = model.CreatedDate,
-                            Company = model.Company
-                        });
-
-                        if (!_unitOfWork.FilprideReceivingReportRepository.IsJournalEntriesBalanced(ledgers))
-                        {
-                            throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                        }
-
-                        await _dbContext.AddRangeAsync(ledgers, cancellationToken);
-
-                        #endregion --General Ledger Recording
-
-                        #region--Inventory Recording
-
-                        await _unitOfWork.FilprideInventory.AddPurchaseToInventoryAsync(model, cancellationToken);
-
-                        #endregion
-
-                        await _unitOfWork.FilprideReceivingReportRepository.UpdatePOAsync(model.PurchaseOrder.PurchaseOrderId, model.QuantityReceived, cancellationToken);
-
-                        #region --Purchase Book Recording
-
-                        var purchaseBook = new List<FilpridePurchaseBook>();
-
-                        purchaseBook.Add(new FilpridePurchaseBook
-                        {
-                            Date = model.Date,
-                            SupplierName = model.PurchaseOrder.Supplier.SupplierName,
-                            SupplierTin = model.PurchaseOrder.Supplier.SupplierTin,
-                            SupplierAddress = model.PurchaseOrder.Supplier.SupplierAddress,
-                            DocumentNo = model.ReceivingReportNo,
-                            Description = model.PurchaseOrder.Product.ProductName,
-                            Amount = model.Amount,
-                            VatAmount = model.VatAmount,
-                            WhtAmount = model.EwtAmount,
-                            NetPurchases = model.NetAmount,
-                            CreatedBy = model.CreatedBy,
-                            PONo = model.PurchaseOrder.PurchaseOrderNo,
-                            DueDate = model.DueDate,
-                            Company = model.Company
-                        });
-
-                        await _dbContext.AddRangeAsync(purchaseBook, cancellationToken);
-                        #endregion --Purchase Book Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Receiving Report has been Posted.";
                         return RedirectToAction(nameof(Print), new { id });
                     }
@@ -556,10 +414,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.VoidedDate = DateTime.Now;
                     model.Status = nameof(Status.Voided);
 
-                    await _unitOfWork.FilprideReceivingReportRepository.RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
-                    await _unitOfWork.FilprideReceivingReportRepository.RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
+                    await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
+                    await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
                     await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
-                    await _unitOfWork.FilprideReceivingReportRepository.RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
+                    await _unitOfWork.FilprideReceivingReport.RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
                     model.QuantityReceived = 0;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -601,7 +459,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetLiquidations(int id, CancellationToken cancellationToken)
         {
-            var po = await _unitOfWork.FilpridePurchaseOrderRepository.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            var po = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
             var rrPostedOnly = await _dbContext
                 .FilprideReceivingReports
@@ -643,7 +501,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.FilprideReceivingReportRepository.GetAsync(x => x.ReceivingReportId == id, cancellationToken);
+            var cv = await _unitOfWork.FilprideReceivingReport.GetAsync(x => x.ReceivingReportId == id, cancellationToken);
             if (cv?.IsPrinted == false)
             {
                 #region --Audit Trail Recording

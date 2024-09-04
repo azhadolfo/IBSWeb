@@ -9,6 +9,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public DateOnly Date { get; set; }
 
+        public DateOnly ETA { get; set; }
+
         public string? InvoiceNo { get; set; }
 
         #region--Customer
@@ -45,7 +47,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public decimal TotalAmount { get; set; }
 
-        public string DeliveryType { get; set; }
+        public string DeliveryOption { get; set; }
 
         #region--Hauler
 

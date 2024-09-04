@@ -387,6 +387,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
                         .HasColumnName("date");
@@ -415,9 +419,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_received");
 
-                    b.Property<int>("Port")
-                        .HasColumnType("integer")
-                        .HasColumnName("port");
+                    b.Property<bool>("IsSubPo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_sub_po");
 
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)")
@@ -456,6 +460,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(200)")
                         .HasColumnName("remarks");
 
+                    b.Property<string>("SubPoSeries")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("sub_po_series");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text")
@@ -480,6 +488,9 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("PurchaseOrderId")
                         .HasName("pk_filpride_purchase_orders");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_filpride_purchase_orders_customer_id");
 
                     b.HasIndex("ProductId")
                         .HasDatabaseName("ix_filpride_purchase_orders_product_id");
@@ -535,6 +546,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
                         .HasColumnName("date");
+
+                    b.Property<int?>("DeliveryReceiptId")
+                        .HasColumnType("integer")
+                        .HasColumnName("delivery_receipt_id");
 
                     b.Property<DateOnly>("DueDate")
                         .HasColumnType("date")
@@ -657,6 +672,9 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("ReceivingReportId")
                         .HasName("pk_filpride_receiving_reports");
+
+                    b.HasIndex("DeliveryReceiptId")
+                        .HasDatabaseName("ix_filpride_receiving_reports_delivery_receipt_id");
 
                     b.HasIndex("POId")
                         .HasDatabaseName("ix_filpride_receiving_reports_po_id");
@@ -1961,6 +1979,14 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("balance_quantity");
 
+                    b.Property<decimal?>("CommissionRate")
+                        .HasColumnType("numeric")
+                        .HasColumnName("commission_rate");
+
+                    b.Property<string>("CommissionerName")
+                        .HasColumnType("text")
+                        .HasColumnName("commissioner_name");
+
                     b.Property<string>("Company")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2004,6 +2030,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("delivery_date_and_time");
 
+                    b.Property<string>("DeliveryOption")
+                        .HasColumnType("text")
+                        .HasColumnName("delivery_option");
+
                     b.Property<string>("DisapprovedBy")
                         .HasColumnType("varchar(100)")
                         .HasColumnName("disapproved_by");
@@ -2024,6 +2054,14 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("expiration_date");
 
+                    b.Property<decimal?>("Freight")
+                        .HasColumnType("numeric")
+                        .HasColumnName("freight");
+
+                    b.Property<bool>("HasCommission")
+                        .HasColumnType("boolean")
+                        .HasColumnName("has_commission");
+
                     b.Property<bool>("IsDelivered")
                         .HasColumnType("boolean")
                         .HasColumnName("is_delivered");
@@ -2032,7 +2070,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
 
-                    b.Property<int>("PurchaseOrderId")
+                    b.Property<string>("PickUpPoint")
+                        .HasColumnType("text")
+                        .HasColumnName("pick_up_point");
+
+                    b.Property<int?>("PurchaseOrderId")
                         .HasColumnType("integer")
                         .HasColumnName("purchase_order_id");
 
@@ -2044,6 +2086,11 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(200)")
                         .HasColumnName("remarks");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("numeric(18,4)")
@@ -2281,15 +2328,15 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("delivered_date");
 
+                    b.Property<string>("DeliveryOption")
+                        .IsRequired()
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("delivery_option");
+
                     b.Property<string>("DeliveryReceiptNo")
                         .IsRequired()
                         .HasColumnType("varchar(12)")
                         .HasColumnName("delivery_receipt_no");
-
-                    b.Property<string>("DeliveryType")
-                        .IsRequired()
-                        .HasColumnType("varchar(15)")
-                        .HasColumnName("delivery_type");
 
                     b.Property<string>("EditedBy")
                         .HasColumnType("varchar(50)")
@@ -2298,6 +2345,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
+
+                    b.Property<DateOnly>("EstimatedTimeOfArrival")
+                        .HasColumnType("date")
+                        .HasColumnName("estimated_time_of_arrival");
 
                     b.Property<decimal>("Freight")
                         .HasColumnType("numeric(18,4)")
@@ -2582,6 +2633,103 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_customers", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideHauler", b =>
+                {
+                    b.Property<int>("HaulerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("hauler_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("HaulerId"));
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
+
+                    b.Property<string>("ContactNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("contact_no");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<string>("HaulerAddress")
+                        .IsRequired()
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("hauler_address");
+
+                    b.Property<string>("HaulerCode")
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("hauler_code");
+
+                    b.Property<string>("HaulerName")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("hauler_name");
+
+                    b.HasKey("HaulerId")
+                        .HasName("pk_filpride_haulers");
+
+                    b.HasIndex("HaulerCode")
+                        .HasDatabaseName("ix_filpride_haulers_hauler_code");
+
+                    b.HasIndex("HaulerName")
+                        .HasDatabaseName("ix_filpride_haulers_hauler_name");
+
+                    b.ToTable("filpride_haulers", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilpridePickUpPoint", b =>
+                {
+                    b.Property<int>("PickUpPointId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("pick_up_point_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PickUpPointId"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Depot")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("depot");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("integer")
+                        .HasColumnName("supplier_id");
+
+                    b.HasKey("PickUpPointId")
+                        .HasName("pk_filpride_pick_up_points");
+
+                    b.HasIndex("SupplierId")
+                        .HasDatabaseName("ix_filpride_pick_up_points_supplier_id");
+
+                    b.ToTable("filpride_pick_up_points", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideService", b =>
                 {
                     b.Property<int>("ServiceId")
@@ -2762,67 +2910,6 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_suppliers_supplier_name");
 
                     b.ToTable("filpride_suppliers", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.Hauler", b =>
-                {
-                    b.Property<int>("HaulerId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("hauler_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("HaulerId"));
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("company");
-
-                    b.Property<string>("ContactNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(15)")
-                        .HasColumnName("contact_no");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime?>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
-                    b.Property<string>("HaulerAddress")
-                        .IsRequired()
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("hauler_address");
-
-                    b.Property<string>("HaulerCode")
-                        .HasColumnType("varchar(3)")
-                        .HasColumnName("hauler_code");
-
-                    b.Property<string>("HaulerName")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("hauler_name");
-
-                    b.HasKey("HaulerId")
-                        .HasName("pk_haulers");
-
-                    b.HasIndex("HaulerCode")
-                        .HasDatabaseName("ix_haulers_hauler_code");
-
-                    b.HasIndex("HaulerName")
-                        .HasDatabaseName("ix_haulers_hauler_name");
-
-                    b.ToTable("haulers", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.LogMessage", b =>
@@ -5842,6 +5929,11 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", b =>
                 {
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .HasConstraintName("fk_filpride_purchase_orders_filpride_customers_customer_id");
+
                     b.HasOne("IBS.Models.MasterFile.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
@@ -5856,6 +5948,8 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_purchase_orders_filpride_suppliers_supplier_id");
 
+                    b.Navigation("Customer");
+
                     b.Navigation("Product");
 
                     b.Navigation("Supplier");
@@ -5863,12 +5957,19 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideReceivingReport", b =>
                 {
+                    b.HasOne("IBS.Models.Filpride.FilprideDeliveryReceipt", "DeliveryReceipt")
+                        .WithMany()
+                        .HasForeignKey("DeliveryReceiptId")
+                        .HasConstraintName("fk_filpride_receiving_reports_filpride_delivery_receipts_deliv");
+
                     b.HasOne("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", "PurchaseOrder")
                         .WithMany()
                         .HasForeignKey("POId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_filpride_receiving_reports_filpride_purchase_orders_po_id");
+
+                    b.Navigation("DeliveryReceipt");
 
                     b.Navigation("PurchaseOrder");
                 });
@@ -6011,7 +6112,6 @@ namespace IBS.DataAccess.Migrations
                         .WithMany()
                         .HasForeignKey("PurchaseOrderId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("fk_filpride_customer_order_slips_filpride_purchase_orders_purc");
 
                     b.Navigation("Customer");
@@ -6052,17 +6152,29 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_delivery_receipts_filpride_customer_order_slips_cu");
 
-                    b.HasOne("IBS.Models.Filpride.MasterFile.Hauler", "Hauler")
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideHauler", "Hauler")
                         .WithMany()
                         .HasForeignKey("HaulerId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_delivery_receipts_haulers_hauler_id");
+                        .HasConstraintName("fk_filpride_delivery_receipts_filpride_haulers_hauler_id");
 
                     b.Navigation("Customer");
 
                     b.Navigation("CustomerOrderSlip");
 
                     b.Navigation("Hauler");
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilpridePickUpPoint", b =>
+                {
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_pick_up_points_filpride_suppliers_supplier_id");
+
+                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseDetail", b =>

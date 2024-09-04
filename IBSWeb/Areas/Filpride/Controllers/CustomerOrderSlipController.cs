@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
@@ -45,8 +46,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             CustomerOrderSlipViewModel viewModel = new()
             {
-                Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
-                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepository.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken)
+                Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken)
             };
 
             return View(viewModel);
@@ -68,7 +68,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         DeliveryDateAndTime = viewModel.DeliveryDateAndTime,
                         CustomerId = viewModel.CustomerId,
                         CustomerPoNo = viewModel.CustomerPoNo,
-                        PurchaseOrderId = viewModel.PurchaseOrderId,
                         Quantity = viewModel.Quantity,
                         BalanceQuantity = viewModel.Quantity,
                         DeliveredPrice = viewModel.DeliveredPrice,
@@ -76,8 +75,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TotalAmount = viewModel.TotalAmount,
                         Remarks = viewModel.Remarks,
                         Company = companyClaims,
-                        CreatedBy = _userManager.GetUserName(User)
+                        CreatedBy = _userManager.GetUserName(User),
+                        Status = nameof(CosStatus.Created)
                     };
+
+                    if (viewModel.HasCommission)
+                    {
+                        model.CommissionerName = viewModel.CommissionerName;
+                        model.CommissionRate = viewModel.CommissionerRate;
+                    }
 
                     await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -88,20 +94,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-                    viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepository.GetPurchaseOrderListAsync(companyClaims, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-            viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepository.GetPurchaseOrderListAsync(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditCos(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
             {
@@ -129,8 +133,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerAddress = exisitingRecord.Customer.CustomerAddress,
                     TinNo = exisitingRecord.Customer.CustomerTin,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
-                    PurchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepository.GetPurchaseOrderListAsync(companyClaims, cancellationToken),
-                    PurchaseOrderId = exisitingRecord.PurchaseOrderId,
                     CustomerPoNo = exisitingRecord.CustomerPoNo,
                     Quantity = exisitingRecord.Quantity,
                     DeliveredPrice = exisitingRecord.DeliveredPrice,
@@ -149,7 +151,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(CustomerOrderSlipViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditCos(CustomerOrderSlipViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
@@ -165,14 +167,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-                    viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepository.GetPurchaseOrderListAsync(companyClaims, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-            viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepository.GetPurchaseOrderListAsync(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -324,6 +324,133 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Address = customerDto.CustomerAddress,
                 TinNo = customerDto.CustomerTin
             });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AppointSupplier(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+            var viewModel = new CustomerOrderSlipStep2ViewModel
+            {
+                CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
+                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken)
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AppointSupplier(CustomerOrderSlipStep2ViewModel viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+            viewModel.CurrentUser = _userManager.GetUserName(User);
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                    if (existingCos == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    existingCos.PurchaseOrderId = viewModel.PurchaseOrderId;
+                    existingCos.DeliveryOption = viewModel.DeliveryOption;
+                    existingCos.PickUpPoint = viewModel.PickUpPoint;
+                    existingCos.Status = nameof(CosStatus.SupplierAppointed);
+
+                    if (existingCos.DeliveryOption == SD.DeliveryOption_DirectDelivery)
+                    {
+                        existingCos.Freight = viewModel.Freight;
+
+                        var existingPo = await _unitOfWork.FilpridePurchaseOrder
+                            .GetAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
+
+                        if (existingPo == null)
+                        {
+                            return BadRequest();
+                        }
+
+                        var subPoModel = new FilpridePurchaseOrder
+                        {
+                            PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, cancellationToken),
+                            Date = DateOnly.FromDateTime(DateTime.Now),
+                            SupplierId = viewModel.SupplierId,
+                            ProductId = existingPo.ProductId,
+                            Terms = existingPo.Terms,
+                            Quantity = existingCos.Quantity,
+                            Price = viewModel.Freight,
+                            Remarks = viewModel.SubPoRemarks,
+                            Company = existingPo.Company,
+                            IsSubPo = true,
+                            CustomerId = existingCos.CustomerId,
+                            SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
+                            CreatedBy = viewModel.CurrentUser,
+                            CreatedDate = DateTime.Now,
+                            PostedBy = viewModel.CurrentUser,
+                            PostedDate = DateTime.Now
+                        };
+
+                        subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
+                        await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel);
+                    }
+
+                    TempData["success"] = "Appointed supplier successfully.";
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
+
+                }
+                catch (Exception ex)
+                {
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return View(viewModel);
+                }
+            }
+            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
+            TempData["error"] = "The submitted information is invalid.";
+            return View(viewModel);
+        }
+
+        public async Task<IActionResult> GetPurchaseOrders(int? supplierId, CancellationToken cancellationToken)
+        {
+            if (supplierId == null)
+            {
+                return NotFound();
+            }
+
+            var purchaseOrderList = await _unitOfWork.FilpridePurchaseOrder
+                .GetPurchaseOrderListAsyncBySupplier((int)supplierId, cancellationToken);
+
+            return Json(purchaseOrderList);
+        }
+
+        public async Task<IActionResult> GetPickUpPoints(int? supplierId, CancellationToken cancellationToken)
+        {
+            if (supplierId == null)
+            {
+                return NotFound();
+            }
+
+            var pickUpPoints = await _unitOfWork.FilpridePickUpPoint
+                .GetPickUpPointListBasedOnSupplier((int)supplierId, cancellationToken);
+
+            return Json(pickUpPoints);
         }
     }
 }

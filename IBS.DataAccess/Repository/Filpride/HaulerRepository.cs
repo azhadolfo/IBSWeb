@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
-    public class HaulerRepository : Repository<Hauler>, IHaulerRepository
+    public class HaulerRepository : Repository<FilprideHauler>, IHaulerRepository
     {
         private ApplicationDbContext _db;
 
@@ -17,8 +17,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
         {
-            Hauler? lastHauler = await _db
-                .Haulers
+            FilprideHauler? lastHauler = await _db
+                .FilprideHaulers
                 .OrderBy(c => c.HaulerId)
                 .Where(c => c.Company == company)
                 .LastOrDefaultAsync(cancellationToken);
@@ -40,11 +40,11 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<bool> IsHaulerNameExistAsync(string haulerName, string company, CancellationToken cancellationToken)
         {
-            return await _db.Haulers
+            return await _db.FilprideHaulers
                 .AnyAsync(c => c.Company == company && c.HaulerName == haulerName, cancellationToken);
         }
 
-        public async Task UpdateAsync(Hauler model, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(FilprideHauler model, CancellationToken cancellationToken = default)
         {
             var existingRecord = await GetAsync(h => h.HaulerId == model.HaulerId, cancellationToken);
 
@@ -66,7 +66,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<List<SelectListItem>> GetHaulerListAsync(string company, CancellationToken cancellationToken = default)
         {
-            return await _db.Haulers
+            return await _db.FilprideHaulers
                 .OrderBy(h => h.HaulerId)
                 .Where(h => h.Company == company)
                 .Select(h => new SelectListItem

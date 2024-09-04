@@ -17,10 +17,17 @@
         <form method="post" class="row">
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-                    <label asp-for="Date">Date<span class="required">*</span></label>
-                    <span asp-validation-for="Date" class="text-danger"></span>
+                <div class="row py-2">
+                    <div class="form-floating col-6">
+                        <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
+                        <span asp-validation-for="Date" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6">
+                        <input asp-for="ETA" type="date" class="form-control border-0 shadow" placeholder="" value="" />
+                        <label asp-for="ETA" class="ms-2">Estimated Time Of Arrival<span class="required">*</span></label>
+                        <span asp-validation-for="ETA" class="text-danger"></span>
+                    </div>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="InvoiceNo" class="form-control border-0 shadow" placeholder="Leave it blank if the delivery receipt (DR) is the same as the invoice number." />
@@ -89,16 +96,16 @@
                     <span asp-validation-for="TotalAmount" class="text-danger"></span>
                 </div>
                 <div class="form-group py-2 col-12">
-                    <label class="control-label">Delivery Type<span class="required">*</span></label><br />
+                    <label class="control-label">Delivery Option<span class="required">*</span></label><br />
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" asp-for="DeliveryType" value="@SD.DeliveryType_ForPickUp" id="DeliveryType_ForPickUp" />
-                        <label class="form-check-label" for="DeliveryType_ForPickUp">@SD.DeliveryType_ForPickUp</label>
+                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUp" id="DeliveryOption_ForPickUp" />
+                        <label class="form-check-label" for="DeliveryOption_ForPickUp">@SD.DeliveryOption_ForPickUp</label>
                     </div>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" asp-for="DeliveryType" value="@SD.DeliveryType_DirectDelivery" id="DeliveryType_DirectDelivery" />
-                        <label class="form-check-label" for="DeliveryType_DirectDelivery">@SD.DeliveryType_DirectDelivery</label>
+                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_DirectDelivery" id="DeliveryOption_DirectDelivery" />
+                        <label class="form-check-label" for="DeliveryOption_DirectDelivery">@SD.DeliveryOption_DirectDelivery</label>
                     </div>
-                    <span asp-validation-for="DeliveryType" class="text-danger"></span>
+                    <span asp-validation-for="DeliveryOption" class="text-danger"></span>
                 </div>
                 <div class="form-group py-2 col-12" id="haulerAndFreight">
                     <label class="control-label">Hauler List<span class="required">*</span></label>
@@ -261,8 +268,8 @@
     </script>
     <script>
         $(function () {
-            var directDeliveryRadio = $("#DeliveryType_DirectDelivery");
-            var forPickUpRadio = $("#DeliveryType_ForPickUp");
+            var directDeliveryRadio = $("#DeliveryOption_DirectDelivery");
+            var forPickUpRadio = $("#DeliveryOption_ForPickUp");
             var haulerAndFreightSection = $("#haulerAndFreight");
             var freightField = $("#freightField");
             var haulerSelect = $("#HaulerId");

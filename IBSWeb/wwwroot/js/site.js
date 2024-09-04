@@ -26,9 +26,11 @@ $(document).on('select2:open', () => {
 
 $(document).ready(function () {
     $('#dataTable').DataTable({
-        stateSave: true
+        stateSave: true,
+        processing: true, // Enable the processing indicator
     });
 });
+
 
 function validateDate() {
     let dateFrom = document.getElementById("dateFrom").value;

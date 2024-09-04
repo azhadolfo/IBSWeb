@@ -60,10 +60,11 @@ namespace IBS.DataAccess.Repository.Filpride
             return await query.ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetPurchaseOrderListAsync(string company, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetPurchaseOrderListAsyncByCode(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePurchaseOrders
-                .Where(p => p.Company == company)
+                .OrderBy(p => p.PurchaseOrderNo)
+                .Where(p => p.Company == company && !p.IsReceived)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderNo,
@@ -75,13 +76,44 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<List<SelectListItem>> GetPurchaseOrderListAsyncById(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePurchaseOrders
-                .Where(p => p.Company == company)
+                .Where(p => p.Company == company && !p.IsReceived)
+                .OrderBy(p => p.PurchaseOrderNo)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
                     Text = po.PurchaseOrderNo
                 })
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetPurchaseOrderListAsyncBySupplier(int supplierId, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilpridePurchaseOrders
+                .OrderBy(p => p.PurchaseOrderNo)
+                .Where(p => p.SupplierId == supplierId && !p.IsReceived)
+                .Select(po => new SelectListItem
+                {
+                    Value = po.PurchaseOrderId.ToString(),
+                    Text = po.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<string> GenerateCodeForSubPoAsync(string purchaseOrderNo, string company, CancellationToken cancellationToken = default)
+        {
+            var latestSubPoCode = await _db.FilpridePurchaseOrders
+                .Where(po => po.IsSubPo && po.Company == company && po.SubPoSeries.Contains(purchaseOrderNo))
+                .OrderByDescending(po => po.SubPoSeries)
+                .Select(po => po.SubPoSeries)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            char nextLetter = 'A';
+            if (!string.IsNullOrEmpty(latestSubPoCode))
+            {
+                nextLetter = (char)(latestSubPoCode[^1] + 1);
+            }
+
+            return $"{purchaseOrderNo}{nextLetter}";
         }
     }
 }

@@ -21,6 +21,10 @@ namespace IBS.Models.Filpride
 
         [Column(TypeName = "date")]
         [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        public DateOnly EstimatedTimeOfArrival { get; set; }
+
+        [Column(TypeName = "date")]
+        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
         public DateOnly? DeliveredDate { get; set; }
 
         [Column(TypeName = "varchar(50)")]
@@ -49,7 +53,7 @@ namespace IBS.Models.Filpride
         public int? HaulerId { get; set; }
 
         [ForeignKey(nameof(HaulerId))]
-        public Hauler? Hauler { get; set; }
+        public FilprideHauler? Hauler { get; set; }
 
         #endregion
 
@@ -82,7 +86,7 @@ namespace IBS.Models.Filpride
         public bool IsPrinted { get; set; }
 
         [Column(TypeName = "varchar(15)")]
-        public string DeliveryType { get; set; }
+        public string DeliveryOption { get; set; }
 
         public string Company { get; set; } = string.Empty;
     }

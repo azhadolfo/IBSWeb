@@ -4,7 +4,6 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -67,8 +66,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(cancellationToken),
                         Date = viewModel.Date,
+                        EstimatedTimeOfArrival = viewModel.ETA,
                         CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
-                        DeliveryType = viewModel.DeliveryType,
+                        DeliveryOption = viewModel.DeliveryOption,
                         HaulerId = viewModel.HaulerId,
                         CustomerId = viewModel.CustomerId,
                         Freight = viewModel.Freight,
@@ -131,6 +131,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     DeliverReceiptId = existingRecord.DeliveryReceiptId,
                     Date = existingRecord.Date,
+                    ETA = existingRecord.EstimatedTimeOfArrival,
                     InvoiceNo = existingRecord.InvoiceNo,
                     CustomerId = existingRecord.Customer.CustomerId,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
@@ -144,7 +145,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Price = existingRecord.CustomerOrderSlip.DeliveredPrice,
                     Volume = existingRecord.Quantity,
                     TotalAmount = existingRecord.TotalAmount,
-                    DeliveryType = existingRecord.DeliveryType,
+                    DeliveryOption = existingRecord.DeliveryOption,
                     HaulerId = existingRecord.HaulerId,
                     Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(companyClaims, cancellationToken),
                     Freight = existingRecord.Freight,
@@ -336,7 +337,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             });
         }
 
-        public async Task<IActionResult> Delivered(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delivered(int? id, string deliveredDate, CancellationToken cancellationToken)
         {
             if (id == null)
             {
@@ -353,9 +354,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                //create the automatic creation of rr
+                existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
 
-                existingRecord.DeliveredDate = DateOnly.FromDateTime(DateTime.Now);
+                await _unitOfWork.FilprideReceivingReport.AutoGenerateReceivingReport(existingRecord, cancellationToken);
+
                 await _unitOfWork.SaveAsync(cancellationToken);
 
                 TempData["success"] = "Delivery receipt is delivered";
@@ -363,9 +365,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                TempData["error"] = ex;
+                TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }
+
     }
 }

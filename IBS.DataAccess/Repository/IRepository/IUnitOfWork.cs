@@ -95,9 +95,9 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IJournalVoucherRepository FilprideJournalVoucher { get; }
 
-        Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrderRepository { get; }
+        Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrder { get; }
 
-        Filpride.IRepository.IReceivingReportRepository FilprideReceivingReportRepository { get; }
+        Filpride.IRepository.IReceivingReportRepository FilprideReceivingReport { get; }
 
         #endregion
 
@@ -112,6 +112,8 @@ namespace IBS.DataAccess.Repository.IRepository
         IBankAccountRepository FilprideBankAccount { get; }
 
         IServiceRepository FilprideService { get; }
+
+        IPickUpPointRepository FilpridePickUpPoint { get; }
 
         #endregion
 

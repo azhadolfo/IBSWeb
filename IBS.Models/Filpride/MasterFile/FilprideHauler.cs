@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride.MasterFile
 {
-    public class Hauler
+    public class FilprideHauler
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

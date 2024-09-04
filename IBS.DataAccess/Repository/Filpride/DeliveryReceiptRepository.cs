@@ -69,6 +69,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var existingRecord = await GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
 
             existingRecord.Date = viewModel.Date;
+            existingRecord.EstimatedTimeOfArrival = viewModel.ETA;
             existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
             existingRecord.HaulerId = viewModel.HaulerId;
             existingRecord.CustomerId = viewModel.CustomerId;
@@ -117,7 +118,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.DeliveryReceiptId.ToString(),
-                        Text = $"{dr.DeliveryReceiptNo} - {dr.DeliveryType.ToUpper()}"
+                        Text = $"{dr.DeliveryReceiptNo} - {dr.DeliveryOption.ToUpper()}"
                     })
                     .ToListAsync(cancellationToken);
         }

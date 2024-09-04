@@ -135,7 +135,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrderRepository.GenerateCodeAsync(companyClaims, cancellationToken);
+                model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, cancellationToken);
                 model.CreatedBy = _userManager.GetUserName(this.User);
                 model.Amount = model.Quantity * model.Price;
 
@@ -163,7 +163,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            var purchaseOrder = await _unitOfWork.FilpridePurchaseOrderRepository.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
             if (purchaseOrder == null)
             {
                 return NotFound();
@@ -204,7 +204,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Amount = model.Quantity * model.Price;
                 existingModel.Remarks = model.Remarks;
                 existingModel.Terms = model.Terms;
-                existingModel.Port = model.Port;
 
                 existingModel.EditedBy = _userManager.GetUserName(User);
                 existingModel.EditedDate = DateTime.Now;
@@ -226,7 +225,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var purchaseOrder = await _unitOfWork.FilpridePurchaseOrderRepository
+            var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder
                 .GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
             if (purchaseOrder == null)
             {
@@ -310,7 +309,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
         {
-            var po = await _unitOfWork.FilpridePurchaseOrderRepository.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            var po = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
             return PartialView("_PreviewPartialView", po);
         }
 
@@ -408,7 +407,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.FilpridePurchaseOrderRepository.GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
+            var cv = await _unitOfWork.FilpridePurchaseOrder.GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
             if (cv?.IsPrinted == false)
             {
                 #region --Audit Trail Recording

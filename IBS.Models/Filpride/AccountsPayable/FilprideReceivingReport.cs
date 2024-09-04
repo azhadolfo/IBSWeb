@@ -115,6 +115,11 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "date")]
         public DateOnly? ReceivedDate { get; set; }
 
+        public int? DeliveryReceiptId { get; set; }
+
+        [ForeignKey(nameof(DeliveryReceiptId))]
+        public FilprideDeliveryReceipt? DeliveryReceipt { get; set; }
+
         public string Status { get; set; } = nameof(Utility.Status.Pending);
     }
 }

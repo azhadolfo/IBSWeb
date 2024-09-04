@@ -35,10 +35,13 @@
                         Customer
                     </th>
                     <th>
-                        Product
+                        Quantity
                     </th>
                     <th>
                         Total Amount
+                    </th>
+                    <th>
+                        Status
                     </th>
                     <th></th>
                 </tr>
@@ -57,33 +60,57 @@
                             @obj.Customer?.CustomerName
                         </td>
                         <td>
-                            @obj.PurchaseOrder.Product?.ProductName
+                            @Html.DisplayFor(model => obj.Quantity)
                         </td>
                         <td>
                             @Html.DisplayFor(model => obj.TotalAmount)
                         </td>
-                        <td>
-                            <div class="w-100 btn-group" role="group">
-                                @if (obj.DisapprovedBy != null)
-                                {
-                                    <span class="badge rounded-bill bg-danger w-100">Disapproved</span>
-                                }
-                                else if (obj.ApprovedBy == null && obj.DisapprovedBy == null)
-                                {
-                                    <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipNo" class="btn btn-primary mx-2">
-                                        <i class="bi bi-pencil-square"></i> Edit
-                                    </a>
+                        <td class="text-center">
+                            <span class="badge rounded-pill @if(obj.Status == nameof(CosStatus.Completed)) {<text>bg-success</text>} else {<text>bg-info</text>}">@obj.Status</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="dropdown" style="@(obj.DisapprovedBy != null ? "display:none;" : "")">
+                                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                    @if (obj.ApprovedBy == null)
+                                    {
+                                        @switch (obj.Status)
+                                        {
+                                            case nameof(CosStatus.Created):
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="EditCos" asp-route-id="@obj.CustomerOrderSlipId">Edit COS</a></li>
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="AppointSupplier" asp-route-id="@obj.CustomerOrderSlipId">Appoint Supplier</a></li>
+                                                break;
 
-                                    <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipNo">
-                                        <i class="bi bi-printer-fill"></i> Preview
-                                    </a>
-                                }
-                                else if (obj.ApprovedBy != null && obj.DisapprovedBy == null)
-                                {
-                                    <a class="btn btn-primary mx-2 preview-btn" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipNo">
-                                        <i class="bi bi-printer-fill"></i> Preview
-                                    </a>
-                                }
+                                            case nameof(CosStatus.SupplierAppointed):
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="ApproveByOpsManager" asp-route-id="@obj.CustomerOrderSlipId">Approve</a></li>
+                                                break;
+
+                                            case nameof(CosStatus.ApprovedByOpsManager):
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                break;
+
+                                            case nameof(CosStatus.ApprovedByFinance):
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                break;
+
+                                            case nameof(CosStatus.HaulerAppointed):
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                break;
+
+                                            default:
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Details" asp-route-id="@obj.CustomerOrderSlipId">View Details</a></li>
+                                                break;
+                                        }
+
+                                    }
+                                    else
+                                    {
+                                        <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Print</a></li>
+                                    }
+
+                                </ul>
                             </div>
                         </td>
                     </tr>

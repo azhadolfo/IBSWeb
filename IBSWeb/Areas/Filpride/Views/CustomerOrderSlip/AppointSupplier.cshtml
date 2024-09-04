@@ -1,0 +1,147 @@
+﻿@model CustomerOrderSlipStep2ViewModel
+
+@{
+    ViewData["Title"] = "COS - Appoint Supplier";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">COS - Appoint Supplier</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <div class="border-2 p-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <input asp-for="CustomerOrderSlipId" type="hidden" />
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Supplier List<span class="required">*</span></label>
+                    <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select supplier</option>
+                    </select>
+                    <span asp-validation-for="SupplierId" class="text-danger"></span>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">PO List<span class="required">*</span></label>
+                    <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select po</option>
+                    </select>
+                    <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Delivery Option<span class="required">*</span></label><br />
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUp" id="DeliveryType_ForPickUp" />
+                        <label class="form-check-label" for="DeliveryType_ForPickUp">@SD.DeliveryOption_ForPickUp</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_DirectDelivery" id="DeliveryType_DirectDelivery" />
+                        <label class="form-check-label" for="DeliveryType_DirectDelivery">@SD.DeliveryOption_DirectDelivery</label>
+                    </div>
+                    <span asp-validation-for="DeliveryOption" class="text-danger"></span>
+                </div>
+                <!-- Freight and SubPoRemarks fields -->
+                <div id="freightRemarksSection" style="display:none;">
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" required min="0.01"/>
+                        <label asp-for="Freight" class="ms-2">Freight<span class="required">*</span></label>
+                        <span asp-validation-for="Freight" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <textarea asp-for="SubPoRemarks" class="form-control border-0 shadow" placeholder="Add description." style="height: 100px" required></textarea>
+                        <label asp-for="SubPoRemarks" class="control-label">Sub PO Remarks<span class="required">*</span></label>
+                        <span asp-validation-for="SubPoRemarks" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Port List<span class="required">*</span></label>
+                    <select asp-for="PickUpPoint" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select supplier</option>
+                    </select>
+                    <span asp-validation-for="SupplierId" class="text-danger"></span>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control">Appoint</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+<script>
+        $(document).ready(function () {
+
+            $('input[name="DeliveryOption"]').change(function() {
+                if ($(this).val() === '@SD.DeliveryOption_DirectDelivery') {
+                    $('#freightRemarksSection').show();
+                } else {
+                    $('#freightRemarksSection').hide();
+                }
+            });
+
+            $('#SupplierId').change(function() {
+                var supplierId = $(this).val();
+                var $poSelect = $('#PurchaseOrderId');
+                var $pickUpSelect = $('#PurchaseOrderId');
+
+                // Clear existing options
+                $poSelect.empty();
+                $poSelect.append('<option value="" selected>Select PO</option>');
+
+                if (supplierId) {
+                    $.ajax({
+                        url: '@Url.Action("GetPurchaseOrders", "CustomerOrderSlip")',
+                        type: 'GET',
+                        data: { supplierId: supplierId },
+                        success: function(data) {
+                            $.each(data, function(index, po) {
+                                $poSelect.append($('<option></option>').val(po.value).text(po.text));
+                            });
+                        },
+                        error: function() {
+                            alert('Failed to retrieve POs');
+                        }
+                    });
+                }
+            });
+
+            $('#PurchaseOrderId').change(function() {
+                var poId = $(this).val();
+                var supplierId = $('#SupplierId').val(); // Get the selected supplier ID
+                var $pickUpSelect = $('#PickUpPoint');
+
+                // Clear existing options
+                $pickUpSelect.empty();
+                $pickUpSelect.append('<option value="" selected>Select Pick Up Point</option>');
+
+                if (poId && supplierId) {
+                    $.ajax({
+                        url: '@Url.Action("GetPickUpPoints", "CustomerOrderSlip")',
+                        type: 'GET',
+                        data: { purchaseOrderId: poId, supplierId: supplierId },
+                        success: function(data) {
+                            $.each(data, function(index, pickUpPoint) {
+                                $pickUpSelect.append($('<option></option>').val(pickUpPoint.value).text(pickUpPoint.text));
+                            });
+                        },
+                        error: function() {
+                            alert('Failed to retrieve Pick Up Points');
+                        }
+                    });
+                }
+            });
+
+        });
+</script>
+}

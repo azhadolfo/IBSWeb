@@ -118,7 +118,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetPOs(int supplierId)
         {
-            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrderRepository
+            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
                 .GetAllAsync(po => po.SupplierId == supplierId && po.PostedBy != null);
 
             if (purchaseOrders != null && purchaseOrders.Any())
@@ -435,9 +435,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 SupplierTinNo = existingHeaderModel.Supplier.SupplierTin,
                 Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
                 RRSeries = existingHeaderModel.RRNo,
-                RR = await _unitOfWork.FilprideReceivingReportRepository.GetReceivingReportListAsync(existingHeaderModel.RRNo, companyClaims, cancellationToken),
+                RR = await _unitOfWork.FilprideReceivingReport.GetReceivingReportListAsync(existingHeaderModel.RRNo, companyClaims, cancellationToken),
                 POSeries = existingHeaderModel.PONo,
-                PONo = await _unitOfWork.FilpridePurchaseOrderRepository.GetPurchaseOrderListAsync(companyClaims, cancellationToken),
+                PONo = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncByCode(companyClaims, cancellationToken),
                 TransactionDate = existingHeaderModel.Date,
                 BankAccounts = await _unitOfWork.FilprideBankAccount.GetBankAccountListAsync(companyClaims, cancellationToken),
                 BankId = existingHeaderModel.BankId,

@@ -8,8 +8,12 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
     {
         Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetPurchaseOrderListAsync(string company, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetPurchaseOrderListAsyncByCode(string company, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetPurchaseOrderListAsyncById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetPurchaseOrderListAsyncBySupplier(int supplierId, CancellationToken cancellationToken = default);
+
+        Task<string> GenerateCodeForSubPoAsync(string purchaseOrderNo, string company, CancellationToken cancellationToken = default);
     }
 }

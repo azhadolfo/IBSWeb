@@ -44,6 +44,7 @@ namespace IBS.DataAccess.Repository
         public ICustomerRepository FilprideCustomer { get; private set; }
         public ISupplierRepository FilprideSupplier { get; private set; }
         public IHaulerRepository FilprideHauler { get; private set; }
+        public IPickUpPointRepository FilpridePickUpPoint { get; private set; }
 
         #endregion
 
@@ -66,9 +67,9 @@ namespace IBS.DataAccess.Repository
 
         public IJournalVoucherRepository FilprideJournalVoucher { get; private set; }
 
-        public Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrderRepository { get; private set; }
+        public Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrder { get; private set; }
 
-        public Filpride.IRepository.IReceivingReportRepository FilprideReceivingReportRepository { get; private set; }
+        public Filpride.IRepository.IReceivingReportRepository FilprideReceivingReport { get; private set; }
         #endregion
 
         #region Books and Report
@@ -119,6 +120,7 @@ namespace IBS.DataAccess.Repository
             FilprideCustomer = new CustomerRepository(_db);
             FilprideSupplier = new SupplierRepository(_db);
             FilprideHauler = new HaulerRepository(_db);
+            FilpridePickUpPoint = new PickUpPointRepository(_db);
 
             #endregion
 
@@ -135,8 +137,8 @@ namespace IBS.DataAccess.Repository
             #region Accounts Payable
             FilprideCheckVoucher = new CheckVoucherRepository(_db);
             FilprideJournalVoucher = new JournalVoucherRepository(_db);
-            FilpridePurchaseOrderRepository = new Filpride.PurchaseOrderRepository(_db);
-            FilprideReceivingReportRepository = new Filpride.ReceivingReportRepository(_db);
+            FilpridePurchaseOrder = new Filpride.PurchaseOrderRepository(_db);
+            FilprideReceivingReport = new Filpride.ReceivingReportRepository(_db);
             #endregion
 
             #region Books and Report

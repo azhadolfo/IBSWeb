@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Hauler model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(FilprideHauler model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
@@ -87,7 +87,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(Hauler model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(FilprideHauler model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {

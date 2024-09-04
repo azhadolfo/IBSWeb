@@ -97,6 +97,16 @@ namespace IBS.Utility
         Undocumented
     }
 
+    public enum CosStatus
+    {
+        Created,
+        SupplierAppointed,
+        ApprovedByOpsManager,
+        ApprovedByFinance,
+        HaulerAppointed,
+        Completed
+    }
+
     public enum Status
     {
         Pending,
