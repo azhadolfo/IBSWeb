@@ -1,6 +1,6 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
