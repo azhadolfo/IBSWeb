@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240904024938_AddFilprideFreightsTable")]
+    partial class AddFilprideFreightsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2138,15 +2141,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(50)")
                         .HasColumnName("hauler_name");
 
-                    b.Property<int>("PickUpPointId")
-                        .HasColumnType("integer")
-                        .HasColumnName("pick_up_point_id");
+                    b.Property<string>("PickUpPoint")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("pick_up_point");
 
                     b.HasKey("FreightId")
                         .HasName("pk_filpride_freights");
-
-                    b.HasIndex("PickUpPointId")
-                        .HasDatabaseName("ix_filpride_freights_pick_up_point_id");
 
                     b.ToTable("filpride_freights", (string)null);
                 });
@@ -6153,18 +6154,6 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("SalesInvoice");
 
                     b.Navigation("ServiceInvoice");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideFreight", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilpridePickUpPoint", "PickUpPoint")
-                        .WithMany()
-                        .HasForeignKey("PickUpPointId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_freights_filpride_pick_up_points_pick_up_point_id");
-
-                    b.Navigation("PickUpPoint");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", b =>

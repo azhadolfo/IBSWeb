@@ -85,6 +85,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideDeliveryReceipt> FilprideDeliveryReceipts { get; set; }
 
+        public DbSet<FilprideFreight> FilprideFreights { get; set; }
+
         #region--Master File
 
         public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
