@@ -40,20 +40,20 @@
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                        <label asp-for="CustomerAddress" class="ms-2"></label>
+                        <label asp-for="CustomerAddress"></label>
                         <span asp-validation-for="CustomerAddress" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="TinNo" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                        <label asp-for="TinNo" class="ms-2"></label>
+                        <label asp-for="TinNo"></label>
                         <span asp-validation-for="TinNo" class="text-danger"></span>
                     </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="CustomerPoNo" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="CustomerPoNo">Customer PO No.<span class="required">*</span></label>
+                        <span asp-validation-for="CustomerPoNo" class="text-danger"></span>
+                    </div>
                 </fieldset>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerPoNo" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="CustomerPoNo" class="ms-2">PO No.<span class="required">*</span></label>
-                    <span asp-validation-for="CustomerPoNo" class="text-danger"></span>
-                </div>
                 <div class="row py-2">
                     <div class="form-floating col-4">
                         <input asp-for="Quantity" class="form-control border-0 shadow" placeholder="" />
@@ -76,17 +76,45 @@
                     <label asp-for="TotalAmount">Total Amount</label>
                     <span asp-validation-for="TotalAmount" class="text-danger"></span>
                 </div>
+                <!-- Add radio button for HasCommission -->
+                <div class="form-group py-2">
+                    <label>Has Commission<span class="required">*</span></label><br />
+                    <input type="radio" asp-for="HasCommission" value="true" id="HasCommissionYes" />
+                    <label for="HasCommissionYes">Yes</label>
+
+                    <input type="radio" asp-for="HasCommission" value="false" id="HasCommissionNo" />
+                    <label for="HasCommissionNo">No</label>
+
+                    <span asp-validation-for="HasCommission" class="text-danger"></span>
+                </div>
+
+                <!-- Commission info fields -->
+                <div id="commissionInfo" style="display: none;">
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Commissioner List<span class="required">*</span></label>
+                        <select asp-for="CommissionerId" asp-items="@Model.Commissioners" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected>Select commissioner</option>
+                        </select>
+                        <span asp-validation-for="CommissionerId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-12 py-2">
+                        <input asp-for="CommissionerRate" class="form-control border-0 shadow" placeholder="Enter Commission Rate" />
+                        <label asp-for="CommissionerRate" class="ms-2">Commission Rate<span class="required">*</span></label>
+                        <span asp-validation-for="CommissionerRate" class="text-danger"></span>
+                    </div>
+                </div>
+
                 <div class="form-floating py-2 col-12">
-                    <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
+                    <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason for this change." style="height: 100px"></textarea>
                     <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
                     <span asp-validation-for="Remarks" class="text-danger"></span>
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control">Save</button>
+                        <button type="submit" class="btn btn-primary form-control">Update</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border form-control">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -98,9 +126,9 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
     <script>
         $(document).ready(function () {
+            // Handle customer change event
             $('select[name="CustomerId"]').on('change', function () {
                 var customerId = $(this).val();
                 if (customerId) {
@@ -127,16 +155,31 @@
                 }
             });
 
+            // Calculate VAT and total amount on quantity or price change
             $('input[name="Quantity"], input[name="DeliveredPrice"]').on('input', function () {
-                var quantity = parseNumber($('input[name="Quantity"]').val());
-                var deliveredPrice = parseNumber($('input[name="DeliveredPrice"]').val());
-
-                var totalAmount = (quantity * deliveredPrice);
-                var vat = (totalAmount / 1.12) * 0.12;
-
-                $('input[name="Vat"]').val(formatNumber(vat));
-                $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
+                var quantity = parseFloat($('input[name="Quantity"]').val()) || 0;
+                var price = parseFloat($('input[name="DeliveredPrice"]').val()) || 0;
+                var vat = price * 0.12;
+                $('input[name="Vat"]').val(vat.toFixed(2));
+                $('input[name="TotalAmount"]').val((quantity * (price + vat)).toFixed(2));
             });
+
+            // Show/hide commission info based on HasCommission value
+            $('input[name="HasCommission"]').on('change', function () {
+                if ($(this).val() == 'true') {
+                    $('#commissionInfo').show();
+                } else {
+                    $('#commissionInfo').hide();
+                }
+            });
+
+            // Trigger the HasCommission check on page load
+            if ($('input[name="HasCommission"]:checked').val() == 'true') {
+                $('#commissionInfo').show();
+            } else {
+                $('#commissionInfo').hide();
+            }
         });
     </script>
 }
+

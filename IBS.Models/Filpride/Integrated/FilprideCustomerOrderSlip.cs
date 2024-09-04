@@ -68,8 +68,10 @@ namespace IBS.Models.Filpride.Integrated
         #region Commissioner's Properties
         public bool HasCommission { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
-        public string? CommissionerName { get; set; }
+        public int? CommissionerId { get; set; }
+
+        [ForeignKey(nameof(CommissionerId))]
+        public FilprideSupplier? Commissioner { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]

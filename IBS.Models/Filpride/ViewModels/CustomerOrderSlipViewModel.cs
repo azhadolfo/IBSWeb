@@ -40,7 +40,9 @@ namespace IBS.Models.Filpride.ViewModels
 
         public bool HasCommission { get; set; }
 
-        public string? CommissionerName { get; set; }
+        public int? CommissionerId { get; set; }
+
+        public List<SelectListItem>? Commissioners { get; set; }
 
         public decimal? CommissionerRate { get; set; }
 

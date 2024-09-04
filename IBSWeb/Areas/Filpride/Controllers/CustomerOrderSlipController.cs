@@ -46,7 +46,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             CustomerOrderSlipViewModel viewModel = new()
             {
-                Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken)
+                Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
+                Commissioners = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
             };
 
             return View(viewModel);
@@ -81,7 +82,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (viewModel.HasCommission)
                     {
-                        model.CommissionerName = viewModel.CommissionerName;
+                        model.HasCommission = viewModel.HasCommission;
+                        model.CommissionerId = viewModel.CommissionerId;
                         model.CommissionRate = viewModel.CommissionerRate;
                     }
 
@@ -94,12 +96,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+                    viewModel.Commissioners = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            viewModel.Commissioners = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -133,6 +137,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerAddress = exisitingRecord.Customer.CustomerAddress,
                     TinNo = exisitingRecord.Customer.CustomerTin,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
+                    HasCommission = exisitingRecord.HasCommission,
+                    CommissionerId = exisitingRecord.CommissionerId,
+                    Commissioners = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
+                    CommissionerRate = exisitingRecord.CommissionRate,
                     CustomerPoNo = exisitingRecord.CustomerPoNo,
                     Quantity = exisitingRecord.Quantity,
                     DeliveredPrice = exisitingRecord.DeliveredPrice,
