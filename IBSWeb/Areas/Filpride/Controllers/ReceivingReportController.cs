@@ -67,7 +67,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.SupplierDrNo?.ToLower().Contains(searchValue) == true ||
                         s.WithdrawalCertificate?.ToLower().Contains(searchValue) == true ||
                         s.TruckOrVessels.ToLower().Contains(searchValue) ||
-                        s.Date.ToString().Contains(searchValue) ||
+                        s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.QuantityReceived.ToString().Contains(searchValue) ||
                         s.QuantityDelivered.ToString().Contains(searchValue) ||
                         s.Amount.ToString().Contains(searchValue) ||

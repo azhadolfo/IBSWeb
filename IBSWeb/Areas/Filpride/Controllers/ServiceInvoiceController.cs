@@ -65,7 +65,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
                             s.Service.ServiceNo.ToLower().Contains(searchValue) ||
                             s.Service.Name.ToLower().Contains(searchValue) ||
-                            s.Period.ToString().Contains(searchValue) ||
+                            s.Period.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                             s.Amount.ToString().Contains(searchValue) ||
                             s.Instructions?.ToLower().Contains(searchValue) == true ||
                             s.CreatedBy.ToLower().Contains(searchValue)
@@ -595,13 +595,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Retrieval of Services
 
-                var services = await _dbContext.FilprideServices.FindAsync(model.ServiceId, cancellationToken);
+                var services = await _dbContext.FilprideServices.FindAsync(existingModel.ServiceId, cancellationToken);
 
                 #endregion --Retrieval of Services
 
                 #region --Retrieval of Customer
 
-                var customer = await _dbContext.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
+                var customer = await _dbContext.FilprideCustomers.FindAsync(existingModel.CustomerId, cancellationToken);
 
                 #endregion --Retrieval of Customer
 
