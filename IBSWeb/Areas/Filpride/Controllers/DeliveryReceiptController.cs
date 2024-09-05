@@ -82,7 +82,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     model.InvoiceNo = viewModel.InvoiceNo ?? model.DeliveryReceiptNo;
                     model.NetOfVatAmount = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(model.TotalAmount);
-                    model.VatAmount = _unitOfWork.FilprideDeliveryReceipt.ComputeVatAmount(model.TotalAmount);
+                    model.VatAmount = _unitOfWork.FilprideDeliveryReceipt.ComputeVatAmount(model.NetOfVatAmount);
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);

@@ -290,7 +290,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             model.Total = model.Amount - model.Discount;
                             model.NetAmount = _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(model.Total);
-                            model.VatAmount = _unitOfWork.FilprideServiceInvoice.ComputeVatAmount(model.Total);
+                            model.VatAmount = _unitOfWork.FilprideServiceInvoice.ComputeVatAmount(model.NetAmount);
                             model.WithholdingTaxAmount = Math.Round(model.NetAmount * (customer.WithHoldingTax ? services.Percent / 100m : 0), 4);
                             if (customer.WithHoldingVat)
                             {

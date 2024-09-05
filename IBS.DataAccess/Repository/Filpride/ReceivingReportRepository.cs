@@ -1,7 +1,5 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
@@ -254,7 +252,7 @@ namespace IBS.DataAccess.Repository.Filpride
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
             model.Amount = model.QuantityReceived * deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price;
             model.NetAmount = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable ? ComputeNetOfVat(model.Amount) : model.Amount;
-            model.VatAmount = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable ? ComputeVatAmount(model.Amount) : model.Amount;
+            model.VatAmount = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable ? ComputeVatAmount(model.NetAmount) : model.Amount;
             model.EwtAmount = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.TaxType_WithTax ? model.NetAmount * 0.01m : model.NetAmount;
             model.NetAmountOfEWT = model.Amount - model.EwtAmount;
 

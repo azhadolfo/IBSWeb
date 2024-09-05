@@ -86,7 +86,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 var grossAmount = fuelPurchase.Quantity * fuelPurchase.PurchasePrice;
                 var netOfVatPrice = ComputeNetOfVat(fuelPurchase.PurchasePrice);
                 var netOfVatAmount = ComputeNetOfVat(grossAmount);
-                var vatAmount = ComputeVatAmount(grossAmount);
+                var vatAmount = ComputeVatAmount(netOfVatAmount);
 
                 List<MobilityGeneralLedger> journals = new();
 

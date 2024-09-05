@@ -171,14 +171,14 @@ namespace IBS.DataAccess.Repository
             return grossAmount / (1 + VatRate);
         }
 
-        public decimal ComputeVatAmount(decimal grossAmount)
+        public decimal ComputeVatAmount(decimal netOfVatAmount)
         {
-            if (grossAmount < 0)
+            if (netOfVatAmount < 0)
             {
-                throw new ArgumentException("Gross amount cannot be negative.");
+                throw new ArgumentException("Net of vat amount cannot be negative.");
             }
 
-            return grossAmount - ComputeNetOfVat(grossAmount);
+            return netOfVatAmount * VatRate;
         }
 
         public async Task<CustomerDto> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default)

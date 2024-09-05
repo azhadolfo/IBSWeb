@@ -31,7 +31,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         decimal ComputeNetOfVat(decimal grossAmount);
 
-        decimal ComputeVatAmount(decimal grossAmount);
+        decimal ComputeVatAmount(decimal netOfVatAmount);
 
         // Retrieving DTOs (Data Transfer Objects)
 

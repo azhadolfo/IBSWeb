@@ -82,7 +82,7 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 existingRecord.TotalAmount = viewModel.TotalAmount;
                 existingRecord.NetOfVatAmount = ComputeNetOfVat(existingRecord.TotalAmount);
-                existingRecord.VatAmount = ComputeVatAmount(existingRecord.TotalAmount);
+                existingRecord.VatAmount = ComputeVatAmount(existingRecord.NetOfVatAmount);
             }
 
             if (_db.ChangeTracker.HasChanges())
