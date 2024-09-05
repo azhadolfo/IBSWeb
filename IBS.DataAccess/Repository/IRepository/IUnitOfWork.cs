@@ -115,6 +115,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IPickUpPointRepository FilpridePickUpPoint { get; }
 
+        IFreightRepository FilprideFreight { get; }
+
         #endregion
 
         #endregion

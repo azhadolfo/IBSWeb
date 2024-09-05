@@ -95,8 +95,10 @@ namespace IBS.Models.Filpride.Integrated
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal? Freight { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
-        public string? PickUpPoint { get; set; }
+        public int? PickUpPointId { get; set; }
+
+        [ForeignKey(nameof(PickUpPointId))]
+        public FilpridePickUpPoint? PickUpPoint { get; set; }
 
         #endregion
         #endregion

@@ -377,7 +377,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingCos.PurchaseOrderId = viewModel.PurchaseOrderId;
                     existingCos.DeliveryOption = viewModel.DeliveryOption;
-                    existingCos.PickUpPoint = viewModel.PickUpPoint;
+                    existingCos.PickUpPointId = viewModel.PickUpPointId;
                     existingCos.Status = nameof(CosStatus.SupplierAppointed);
 
                     if (existingCos.DeliveryOption == SD.DeliveryOption_DirectDelivery)
@@ -413,7 +413,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         };
 
                         subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
-                        await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel);
+                        await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
+                    }
+                    else
+                    {
+                        var highestFreight = await _unitOfWork.FilprideFreight
+                            .GetAsync(f => f.ClusterCode == existingCos.Customer.ClusterCode && f.PickUpPointId == existingCos.PickUpPointId) ?? throw new ArgumentNullException("No freight reference found!");
+
+                        existingCos.Freight = highestFreight.Freight;
                     }
 
                     TempData["success"] = "Appointed supplier successfully.";

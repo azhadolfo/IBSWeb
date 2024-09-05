@@ -58,10 +58,10 @@
                 </div>
                 <div class="form-group py-2 col-12">
                     <label class="control-label">Port List<span class="required">*</span></label>
-                    <select asp-for="PickUpPoint" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select supplier</option>
+                    <select asp-for="PickUpPointId" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select pick up point</option>
                     </select>
-                    <span asp-validation-for="SupplierId" class="text-danger"></span>
+                    <span asp-validation-for="PickUpPointId" class="text-danger"></span>
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
@@ -119,7 +119,7 @@
             $('#PurchaseOrderId').change(function() {
                 var poId = $(this).val();
                 var supplierId = $('#SupplierId').val(); // Get the selected supplier ID
-                var $pickUpSelect = $('#PickUpPoint');
+                var $pickUpSelect = $('#PickUpPointId');
 
                 // Clear existing options
                 $pickUpSelect.empty();
