@@ -19,9 +19,6 @@ namespace IBS.Models.Filpride
 
         public ClusterArea ClusterCode { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
-        public string HaulerName { get; set; }
-
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal Freight { get; set; }
