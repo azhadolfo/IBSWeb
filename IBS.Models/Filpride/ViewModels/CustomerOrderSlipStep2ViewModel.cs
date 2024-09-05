@@ -19,7 +19,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string? SubPoRemarks { get; set; }
 
-        public string PickUpPoint { get; set; }
+        public int PickUpPointId { get; set; }
 
         public List<SelectListItem>? PickUpPoints { get; set; }
 

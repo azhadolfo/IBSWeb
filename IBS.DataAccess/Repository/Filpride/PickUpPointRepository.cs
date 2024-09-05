@@ -22,7 +22,7 @@ namespace IBS.DataAccess.Repository.Filpride
                .Where(p => p.SupplierId == supplierId)
                .Select(po => new SelectListItem
                {
-                   Value = po.Depot,
+                   Value = po.PickUpPointId.ToString(),
                    Text = po.Depot
                })
                .ToListAsync(cancellationToken);

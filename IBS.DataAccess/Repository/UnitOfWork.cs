@@ -45,6 +45,7 @@ namespace IBS.DataAccess.Repository
         public ISupplierRepository FilprideSupplier { get; private set; }
         public IHaulerRepository FilprideHauler { get; private set; }
         public IPickUpPointRepository FilpridePickUpPoint { get; private set; }
+        public IFreightRepository FilprideFreight { get; private set; }
 
         #endregion
 
@@ -121,6 +122,7 @@ namespace IBS.DataAccess.Repository
             FilprideSupplier = new SupplierRepository(_db);
             FilprideHauler = new HaulerRepository(_db);
             FilpridePickUpPoint = new PickUpPointRepository(_db);
+            FilprideFreight = new FreightRepository(_db);
 
             #endregion
 
