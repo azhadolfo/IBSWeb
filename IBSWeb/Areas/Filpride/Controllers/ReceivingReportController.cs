@@ -410,18 +410,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.PostedBy = null;
                     }
 
-                    model.VoidedBy = _userManager.GetUserName(this.User);
-                    model.VoidedDate = DateTime.Now;
-                    model.Status = nameof(Status.Voided);
+                    try
+                    {
+                        model.VoidedBy = _userManager.GetUserName(this.User);
+                        model.VoidedDate = DateTime.Now;
+                        model.Status = nameof(Status.Voided);
 
-                    await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
-                    await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
-                    await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
-                    await _unitOfWork.FilprideReceivingReport.RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
-                    model.QuantityReceived = 0;
+                        await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
+                        await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
+                        await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
+                        await _unitOfWork.FilprideReceivingReport.RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
+                        model.QuantityReceived = 0;
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Receiving Report has been Voided.";
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        TempData["success"] = "Receiving Report has been Voided.";
+                    }
+                    catch (Exception ex)
+                    {
+                        TempData["error"] = ex.Message;
+                        return RedirectToAction("Index");
+                    }
                 }
                 return RedirectToAction("Index");
             }
