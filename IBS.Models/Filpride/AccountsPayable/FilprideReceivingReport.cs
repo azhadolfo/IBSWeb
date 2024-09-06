@@ -74,18 +74,6 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "numeric(18,4)")]
         public decimal Amount { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal NetAmount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal VatAmount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal EwtAmount { get; set; }
-
         [Display(Name = "Other Reference")]
         [Column(TypeName = "varchar(100)")]
         public string? OtherRef { get; set; }
@@ -104,10 +92,6 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal CanceledQuantity { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal NetAmountOfEWT { get; set; }
 
         public string Company { get; set; } = string.Empty;
 

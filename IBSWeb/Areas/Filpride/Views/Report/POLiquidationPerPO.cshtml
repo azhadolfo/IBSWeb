@@ -118,16 +118,16 @@ Date Issued: @* @CS.DateIssued *@
                         amount = purchasesWithSamePONo.Sum(po => po.Amount);
                         quantity = po.QuantityDelivered > po.QuantityReceived ? po.QuantityReceived : po.QuantityDelivered;
                         subTotalQTY = purchasesWithSamePONo.Sum(purchase => purchase.QuantityDelivered > purchase.QuantityReceived ? purchase.QuantityReceived : purchase.QuantityDelivered);
-                        vatableAmount = purchasesWithSamePONo.Sum(po => po.VatAmount);
-                        wthAmount = purchasesWithSamePONo.Sum(po => po.EwtAmount);
-                        netPurchases = purchasesWithSamePONo.Sum(po => po.NetAmount);
+                        vatableAmount = purchasesWithSamePONo.Sum(po => (po.Amount / 1.12m) * 0.12m);
+                        wthAmount = purchasesWithSamePONo.Sum(po => (po.Amount / 1.12m) * 0.01m);
+                        netPurchases = purchasesWithSamePONo.Sum(po => po.Amount / 1.12m);
 
                         totalAmount += po.Amount;
                         totalQuantity += subTotalQTY;
-                        totalVatableAmount += po.VatAmount;
+                        totalVatableAmount += (po.Amount / 1.12m) * 0.12m;
                         totalDefAmount += 0;
-                        totalWthAmount += po.EwtAmount;
-                        totalNetPurchases += po.NetAmount;
+                        totalWthAmount += po.Amount * 0.01m;
+                        totalNetPurchases += po.Amount / 1.12m;
 
                         <tr class="align-text-bottom">
                             @if (po == purchasesWithSamePONo.First())
@@ -159,16 +159,16 @@ Date Issued: @* @CS.DateIssued *@
                                 @Html.DisplayFor(model => po.Amount)
                             </td>
                             <td class="text-end">
-                                @Html.DisplayFor(model => po.VatAmount)
+                                @(Math.Round((po.Amount / 1.12m) * 0.12m, 4))
                             </td>
                             <td class="text-end">
                                 0.000
                             </td>
                             <td class="text-end">
-                                @Html.DisplayFor(model => po.EwtAmount)
+                                @(Math.Round((po.Amount / 1.12m) * 0.01m, 4))
                             </td>
                             <td class="text-end">
-                                @Html.DisplayFor(model => po.NetAmount)
+                                @(Math.Round(po.Amount / 1.12m, 4))
                             </td>
                         </tr>
                     }
