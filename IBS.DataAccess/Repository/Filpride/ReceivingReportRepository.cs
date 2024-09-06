@@ -269,6 +269,28 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var ledgers = new List<FilprideGeneralLedgerBook>();
 
+            decimal netOfVatAmount = 0;
+            decimal vatAmount = 0;
+            decimal ewtAmount = 0;
+            decimal netOfEwtAmount = 0;
+
+            if (model.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable)
+            {
+                netOfVatAmount = ComputeNetOfVat(model.Amount);
+                vatAmount = ComputeVatAmount(netOfVatAmount);
+            }
+            else
+            {
+                netOfVatAmount = model.Amount;
+            }
+
+            if (model.PurchaseOrder.Supplier.TaxType == SD.TaxType_WithTax)
+            {
+                ewtAmount = ComputeEwtAmount(netOfVatAmount, 0.01m);
+                netOfEwtAmount = ComputeNetOfEwt(model.Amount, ewtAmount);
+            }
+
+
             if (model.PurchaseOrder.Product.ProductName == "BIODIESEL")
             {
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -278,7 +300,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Description = "Receipt of Goods",
                     AccountNo = "1010401",
                     AccountTitle = "Inventory - Biodiesel",
-                    Debit = model.NetAmount,
+                    Debit = netOfVatAmount,
                     Credit = 0,
                     CreatedBy = model.CreatedBy,
                     CreatedDate = model.CreatedDate,
@@ -294,7 +316,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Description = "Receipt of Goods",
                     AccountNo = "1010402",
                     AccountTitle = "Inventory - Econogas",
-                    Debit = model.NetAmount,
+                    Debit = netOfVatAmount,
                     Credit = 0,
                     CreatedBy = model.CreatedBy,
                     CreatedDate = model.CreatedDate,
@@ -310,7 +332,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Description = "Receipt of Goods",
                     AccountNo = "1010403",
                     AccountTitle = "Inventory - Envirogas",
-                    Debit = model.NetAmount,
+                    Debit = netOfVatAmount,
                     Credit = 0,
                     CreatedBy = model.CreatedBy,
                     CreatedDate = model.CreatedDate,
@@ -318,7 +340,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 });
             }
 
-            if (model.VatAmount > 0)
+            if (vatAmount > 0)
             {
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
@@ -327,7 +349,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Description = "Receipt of Goods",
                     AccountNo = "1010602",
                     AccountTitle = "Vat Input",
-                    Debit = model.VatAmount,
+                    Debit = vatAmount,
                     Credit = 0,
                     CreatedBy = model.CreatedBy,
                     CreatedDate = model.CreatedDate,
@@ -335,7 +357,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 });
             }
 
-            if (model.EwtAmount > 0)
+            if (ewtAmount > 0)
             {
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
@@ -345,7 +367,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountNo = "2010302",
                     AccountTitle = "Expanded Withholding Tax 1%",
                     Debit = 0,
-                    Credit = model.EwtAmount,
+                    Credit = ewtAmount,
                     CreatedBy = model.CreatedBy,
                     CreatedDate = model.CreatedDate,
                     Company = model.Company
@@ -360,7 +382,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 AccountNo = "2010101",
                 AccountTitle = "AP-Trade Payable",
                 Debit = 0,
-                Credit = model.Amount - model.EwtAmount,
+                Credit = netOfEwtAmount,
                 CreatedBy = model.CreatedBy,
                 CreatedDate = model.CreatedDate,
                 Company = model.Company
@@ -398,9 +420,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 DocumentNo = model.ReceivingReportNo,
                 Description = model.PurchaseOrder.Product.ProductName,
                 Amount = model.Amount,
-                VatAmount = model.VatAmount,
-                WhtAmount = model.EwtAmount,
-                NetPurchases = model.NetAmount,
+                VatAmount = vatAmount,
+                WhtAmount = ewtAmount,
+                NetPurchases = netOfVatAmount,
                 CreatedBy = model.CreatedBy,
                 PONo = model.PurchaseOrder.PurchaseOrderNo,
                 DueDate = model.DueDate,
