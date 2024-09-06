@@ -33,6 +33,10 @@ namespace IBS.DataAccess.Repository.IRepository
 
         decimal ComputeVatAmount(decimal netOfVatAmount);
 
+        decimal ComputeEwtAmount(decimal netOfVatAmount, decimal percent);
+
+        decimal ComputeNetOfEwt(decimal grossAmount, decimal ewtAmount);
+
         // Retrieving DTOs (Data Transfer Objects)
 
         Task<ProductDto> MapProductToDTO(string productCode, CancellationToken cancellationToken = default);
