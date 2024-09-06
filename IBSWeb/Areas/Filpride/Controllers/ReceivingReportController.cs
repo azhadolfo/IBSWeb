@@ -150,19 +150,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Retrieve PO
 
-                var po = await _dbContext
-                            .FilpridePurchaseOrders
-                            .Include(po => po.Supplier)
-                            .Include(po => po.Product)
-                            .FirstOrDefaultAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
+                var existingPo = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
 
                 #endregion --Retrieve PO
 
-                var rr = _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims && rr.PONo == po.PurchaseOrderNo)
-                .ToList();
-
-                var totalAmountRR = po.Quantity - po.QuantityReceived;
+                var totalAmountRR = existingPo.Quantity - existingPo.QuantityReceived;
 
                 if (model.QuantityDelivered > totalAmountRR)
                 {
@@ -173,31 +165,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, cancellationToken);
                 model.CreatedBy = _userManager.GetUserName(this.User);
                 model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
-
-                var existingPo = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
-
                 model.PONo = existingPo.PurchaseOrderNo;
-
                 model.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
-
-                if (po.Supplier.VatType == "Vatable")
-                {
-                    model.Amount = model.QuantityDelivered < model.QuantityReceived ? model.QuantityDelivered * po.Price : model.QuantityReceived * po.Price;
-                    model.NetAmount = model.Amount / 1.12m;
-                    model.VatAmount = model.NetAmount * .12m;
-                }
-                else
-                {
-                    model.Amount = model.QuantityDelivered < model.QuantityReceived ? model.QuantityDelivered * po.Price : model.QuantityReceived * po.Price;
-                    model.NetAmount = model.Amount;
-                }
-
-                if (po.Supplier.TaxType == "Withholding Tax")
-                {
-                    model.EwtAmount = model.NetAmount * .01m;
-                    model.NetAmountOfEWT = model.Amount - model.EwtAmount;
-                }
-
+                model.Amount = model.QuantityReceived * existingPo.Price;
                 model.Company = companyClaims;
 
                 await _dbContext.AddAsync(model, cancellationToken);
@@ -303,23 +273,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.OtherRef = model.OtherRef;
                 existingModel.Remarks = model.Remarks;
                 existingModel.ReceivedDate = model.ReceivedDate;
-
-                if (po.Supplier.VatType == "Vatable")
-                {
-                    existingModel.Amount = model.QuantityReceived * po.Price;
-                    existingModel.NetAmount = existingModel.Amount / 1.12m;
-                    existingModel.VatAmount = existingModel.NetAmount * .12m;
-                }
-                else
-                {
-                    existingModel.Amount = model.QuantityReceived * po.Price;
-                    existingModel.NetAmount = existingModel.Amount;
-                }
-
-                if (po.Supplier.TaxType == "Withholding Tax")
-                {
-                    existingModel.EwtAmount = existingModel.NetAmount * .01m;
-                }
+                existingModel.Amount = model.QuantityReceived * po.Price;
 
                 existingModel.EditedBy = _userManager.GetUserName(User);
                 existingModel.EditedDate = DateTime.Now;

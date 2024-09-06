@@ -122,64 +122,64 @@ Date Issued: @* @CS.DateIssued *@
                     {
                         var purchasesWithSamePONo = Model.Where(purchase => purchase.PONo == poNumber).ToList();
 
-                        foreach (var po in purchasesWithSamePONo)
+                        foreach (var rr in purchasesWithSamePONo)
                         {
-                            amount = purchasesWithSamePONo.Sum(po => po.Amount);
-                            quantity = po.QuantityDelivered > po.QuantityReceived ? po.QuantityReceived : po.QuantityDelivered;
+                            amount = purchasesWithSamePONo.Sum(rr => rr.Amount);
+                            quantity = rr.QuantityDelivered > rr.QuantityReceived ? rr.QuantityReceived : rr.QuantityDelivered;
                             subTotalQTY = purchasesWithSamePONo.Sum(purchase => purchase.QuantityDelivered > purchase.QuantityReceived ? purchase.QuantityReceived : purchase.QuantityDelivered);
-                            vatableAmount = purchasesWithSamePONo.Sum(po => po.VatAmount);
-                            wthAmount = purchasesWithSamePONo.Sum(po => po.EwtAmount);
-                            netPurchases = purchasesWithSamePONo.Sum(po => po.NetAmount);
+                            vatableAmount = purchasesWithSamePONo.Sum(rr => (rr.Amount / 1.12m) * 0.12m);
+                            wthAmount = purchasesWithSamePONo.Sum(rr => rr.Amount * 0.01m);
+                            netPurchases = purchasesWithSamePONo.Sum(rr => rr.Amount / 1.12m);
 
-                            totalAmount += po.Amount;
+                            totalAmount += rr.Amount;
                             totalQuantity += subTotalQTY;
-                            totalVatableAmount += po.VatAmount;
+                            totalVatableAmount += (rr.Amount / 1.12m) * 0.12m;
                             totalDefAmount += 0;
-                            totalWthAmount += po.EwtAmount;
-                            totalNetPurchases += po.NetAmount;
+                            totalWthAmount += rr.Amount * 0.01m;
+                            totalNetPurchases += rr.Amount / 1.12m;
 
-                            <tr class="align-text-bottom">
-                                @if (po == purchasesWithSamePONo.First())
-                                {
-                                    <td rowspan="@purchasesWithSamePONo.Count"> @Html.DisplayFor(model => po.PONo) </td>
-                                }
-                                <td>
-                                    @Html.DisplayFor(model => po.ReceivingReportNo)
-                                </td>
-                                <td>
-                                    @po.Date.ToString("MM/dd/yyyy")
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(model => po.PurchaseOrder.Supplier.SupplierName)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(model => po.PurchaseOrder.Supplier.SupplierTin)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(model => po.PurchaseOrder.Supplier.SupplierAddress)
-                                </td>
-                                <td>
-                                    @Html.DisplayFor(model => po.PurchaseOrder.Product.ProductName)
-                                </td>
-                                <td class="text-end">
-                                    @quantity
-                                </td>
-                                <td class="text-end">
-                                    @Html.DisplayFor(model => po.Amount)
-                                </td>
-                                <td class="text-end">
-                                    @Html.DisplayFor(model => po.VatAmount)
-                                </td>
-                                <td class="text-end">
-                                    0.000
-                                </td>
-                                <td class="text-end">
-                                    @Html.DisplayFor(model => po.EwtAmount)
-                                </td>
-                                <td class="text-end">
-                                    @Html.DisplayFor(model => po.NetAmount)
-                                </td>
-                            </tr>
+                                <tr class="align-text-bottom">
+                                    @if (rr == purchasesWithSamePONo.First())
+                                    {
+                                        <td rowspan="@purchasesWithSamePONo.Count"> @Html.DisplayFor(model => rr.PONo) </td>
+                                    }
+                                    <td>
+                                        @Html.DisplayFor(model => rr.ReceivingReportNo)
+                                    </td>
+                                    <td>
+                                        @rr.Date.ToString("MM/dd/yyyy")
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(model => rr.PurchaseOrder.Supplier.SupplierName)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(model => rr.PurchaseOrder.Supplier.SupplierTin)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(model => rr.PurchaseOrder.Supplier.SupplierAddress)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(model => rr.PurchaseOrder.Product.ProductName)
+                                    </td>
+                                    <td class="text-end">
+                                        @quantity
+                                    </td>
+                                    <td class="text-end">
+                                        @Html.DisplayFor(model => rr.Amount)
+                                    </td>
+                                    <td class="text-end">
+                                        Vat Amount
+                                    </td>
+                                    <td class="text-end">
+                                        0.000
+                                    </td>
+                                    <td class="text-end">
+                                        WHT Amount
+                                    </td>
+                                    <td class="text-end">
+                                        Net Purchases
+                                    </td>
+                                </tr>
                         }
                         @if (purchasesWithSamePONo.Any())
                         {
@@ -256,25 +256,25 @@ Date Issued: @* @CS.DateIssued *@
                             @Html.DisplayFor(model => purchase.Amount)
                         </td>
                         <td class="text-end">
-                            @Html.DisplayFor(model => purchase.VatAmount)
+                            @(Math.Round((purchase.Amount / 1.12m) * 0.12m, 4))
                         </td>
                         <td class="text-end">
                             0.000
                         </td>
                         <td class="text-end">
-                            @Html.DisplayFor(model => purchase.EwtAmount)
+                            @(Math.Round((purchase.Amount / 1.12m) * 0.01m, 4))
                         </td>
                         <td class="text-end">
-                            @Html.DisplayFor(model => purchase.NetAmount)
+                            @(Math.Round(purchase.Amount / 1.12m, 4))
                         </td>
                     </tr>
 
                     totalAmount += purchase.Amount;
                     totalQuantity += quantity;
-                    totalVatableAmount += purchase.VatAmount;
+                    totalVatableAmount += (purchase.Amount / 1.12m) * 0.12m;
                     totalDefAmount += 0;
-                    totalWthAmount += purchase.EwtAmount;
-                    totalNetPurchases += purchase.NetAmount;
+                    totalWthAmount += purchase.Amount * 0.01m;
+                    totalNetPurchases += purchase.Amount / 1.12m;
                 }
                 <tr class="align-text-bottom" style="border-top: 2px solid black;">
                     @{

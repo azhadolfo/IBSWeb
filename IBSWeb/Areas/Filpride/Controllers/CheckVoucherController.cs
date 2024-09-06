@@ -187,9 +187,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var amount = receivingReport.Amount;
                 var amountPaid = receivingReport.AmountPaid;
-                var netAmount = receivingReport.NetAmount;
-                var vatAmount = receivingReport.VatAmount;
-                var ewtAmount = receivingReport.EwtAmount;
+                var netAmount = _unitOfWork.FilprideCheckVoucher.ComputeNetOfVat(amount);
+                var vatAmount = _unitOfWork.FilprideCheckVoucher.ComputeVatAmount(netAmount);
+                var ewtAmount = _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(netAmount, 0.01m);
                 var balance = amount - amountPaid;
 
                 return Json(new

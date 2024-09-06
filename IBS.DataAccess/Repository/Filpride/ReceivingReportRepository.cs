@@ -251,10 +251,6 @@ namespace IBS.DataAccess.Repository.Filpride
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
             model.Amount = model.QuantityReceived * deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price;
-            model.NetAmount = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable ? ComputeNetOfVat(model.Amount) : model.Amount;
-            model.VatAmount = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable ? ComputeVatAmount(model.NetAmount) : model.Amount;
-            model.EwtAmount = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.VatType == SD.TaxType_WithTax ? model.NetAmount * 0.01m : model.NetAmount;
-            model.NetAmountOfEWT = model.Amount - model.EwtAmount;
 
             await _db.AddAsync(model, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
