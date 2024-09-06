@@ -652,6 +652,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
 
+            var existingInventory = await _dbContext.FilprideInventories
+                .Include(i => i.Product)
+                .FirstOrDefaultAsync(i => i.Reference == model.SalesInvoiceNo && i.Company == model.Company);
+
             if (model != null)
             {
                 if (model.VoidedBy == null)
@@ -668,7 +672,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideSalesBook>(sb => sb.SerialNo == model.SalesInvoiceNo, cancellationToken);
                     await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.SalesInvoiceNo, cancellationToken);
                     await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideInventory>(i => i.Reference == model.SalesInvoiceNo, cancellationToken);
-
+                    await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Sales Invoice has been Voided.";
                 }
