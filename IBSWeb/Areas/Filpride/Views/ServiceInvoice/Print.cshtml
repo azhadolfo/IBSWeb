@@ -106,9 +106,9 @@
                             <tr>
                                 <td><p style="margin-left:8%;" class="mb-0"><b>Vatable Sales: </b></p></td>
                                 <td class="text-end">
-                                    @if (Model.Customer.VatType == "Vatable" && Model.NetAmount != 0)
+                                    @if (Model.Customer.VatType == "Vatable")
                                     {
-                                        <p class="mb-0">@Html.DisplayFor(model => model.NetAmount)</p>
+                                        <p class="mb-0">@((Model.Total / 1.12m).ToString("N4"))</p>
                                     }
                                 </td>
                             </tr>
@@ -116,11 +116,11 @@
                                 <td><p style="margin-left:8%;" class="mb-0"><b>Zero-Rated Sales: </b></p></td>
 
                                 <td class="text-end">
-                                    @if (Model.Customer.VatType == "Zero Rated" && (Model.NetAmount != 0 || Model.Total != 0))
+                                    @if (Model.Customer.VatType == "Zero Rated")
                                     {
                                         if (Model.Discount > 0)
                                         {
-                                            <p class="mb-0">@Html.DisplayFor(model => model.NetAmount)</p>
+                                            <p class="mb-0">@((Model.Total - Model.Discount).ToString("N4"))</p>
                                         }
                                         else
                                         {
@@ -134,11 +134,11 @@
                                 <td><p style="margin-left:8%;" class="mb-0"><b>VAT-Exempt Sales: </b></p></td>
 
                                 <td class="text-end">
-                                    @if (Model.Customer.VatType == "Exempt" && (Model.NetAmount != 0 || Model.Total != 0))
+                                    @if (Model.Customer.VatType == "Exempt")
                                     {
                                         if (Model.Discount > 0)
                                         {
-                                            <p class="mb-0">@Html.DisplayFor(model => model.NetAmount)</p>
+                                            <p class="mb-0">@((Model.Total - Model.Discount).ToString("N4"))</p>
                                         }
                                         else
                                         {
@@ -151,9 +151,9 @@
                                 <td><p style="margin-left:8%;" class="mb-0"><b>VAT Amount: </b></p></td>
 
                                 <td class="text-end">
-                                    @if (Model.Customer.VatType == "Vatable" && Model.VatAmount != 0)
+                                    @if (Model.Customer.VatType == "Vatable")
                                     {
-                                        <p class="mb-0">@Html.DisplayFor(model => model.VatAmount)</p>
+                                        <p class="mb-0">@(((Model.Total / 1.12m) * 0.12m).ToString("N4"))</p>
                                     }
                                 </td>
                             </tr>

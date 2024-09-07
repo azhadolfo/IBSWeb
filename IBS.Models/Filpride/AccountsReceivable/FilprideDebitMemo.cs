@@ -45,19 +45,6 @@ namespace IBS.Models.Filpride
 
         public string Description { get; set; }
 
-        [Display(Name = "Vatable Sales")]
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
-        public decimal VatableSales { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
-        public decimal VatAmount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
-        public decimal TotalSales { get; set; }
-
         [Display(Name = "Price Adjustment")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,2)")]
@@ -65,14 +52,6 @@ namespace IBS.Models.Filpride
 
         [Column(TypeName = "numeric(18,2)")]
         public decimal? Quantity { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
-        public decimal WithHoldingVatAmount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
-        public decimal WithHoldingTaxAmount { get; set; }
 
         public string Source { get; set; }
 

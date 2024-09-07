@@ -242,26 +242,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.ServiceInvoiceId = null;
 
                     model.CreditAmount = (decimal)(model.Quantity * -model.AdjustedPrice);
-
-                    if (existingSalesInvoice.Customer.VatType == "Vatable")
-                    {
-                        model.VatableSales = model.CreditAmount / 1.12m;
-                        model.VatAmount = model.CreditAmount - model.VatableSales;
-
-                        if (existingSalesInvoice.WithHoldingTaxAmount != 0)
-                        {
-                            model.WithHoldingTaxAmount = model.VatableSales * 0.01m;
-                        }
-                        if (existingSalesInvoice.WithHoldingVatAmount != 0)
-                        {
-                            model.WithHoldingVatAmount = model.VatableSales * 0.05m;
-                        }
-                        model.TotalSales = model.VatableSales + model.VatAmount;
-                    }
-                    else
-                    {
-                        model.TotalSales = model.CreditAmount;
-                    }
                 }
                 else if (model.Source == "Service Invoice")
                 {
@@ -278,23 +258,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion --Retrieval of Services
 
                     model.CreditAmount = -model.Amount ?? 0;
-
-                    if (existingSv.Customer.VatType == "Vatable")
-                    {
-                        model.VatableSales = model.CreditAmount / 1.12m;
-                        model.VatAmount = model.CreditAmount - model.VatableSales;
-                        model.TotalSales = model.VatableSales + model.VatAmount;
-                        model.WithHoldingTaxAmount = model.VatableSales * (services.Percent / 100m);
-
-                        if (existingSv.WithholdingVatAmount != 0)
-                        {
-                            model.WithHoldingVatAmount = model.VatableSales * 0.05m;
-                        }
-                    }
-                    else
-                    {
-                        model.TotalSales = model.CreditAmount;
-                    }
                 }
 
                 await _dbContext.AddAsync(model, cancellationToken);
@@ -400,25 +363,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingCM.CreditAmount = (decimal)(model.Quantity * -model.AdjustedPrice);
 
-                    if (existingSalesInvoice.Customer.VatType == "Vatable")
-                    {
-                        existingCM.VatableSales = existingCM.CreditAmount / 1.12m;
-                        existingCM.VatAmount = existingCM.CreditAmount - existingCM.VatableSales;
-
-                        if (existingSalesInvoice.WithHoldingTaxAmount != 0)
-                        {
-                            existingCM.WithHoldingTaxAmount = existingCM.VatableSales * 0.01m;
-                        }
-                        if (existingSalesInvoice.WithHoldingVatAmount != 0)
-                        {
-                            existingCM.WithHoldingVatAmount = existingCM.VatableSales * 0.05m;
-                        }
-                        existingCM.TotalSales = existingCM.VatableSales + existingCM.VatAmount;
-                    }
-                    else
-                    {
-                        existingCM.TotalSales = existingCM.CreditAmount;
-                    }
                 }
                 else if (model.Source == "Service Invoice")
                 {
@@ -446,23 +390,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion -- Saving Default Enries --
 
                     existingCM.CreditAmount = -model.Amount ?? 0;
-
-                    if (existingSv.Customer.VatType == "Vatable")
-                    {
-                        existingCM.VatableSales = existingCM.CreditAmount / 1.12m;
-                        existingCM.VatAmount = existingCM.CreditAmount - existingCM.VatableSales;
-                        existingCM.TotalSales = existingCM.VatableSales + existingCM.VatAmount;
-                        existingCM.WithHoldingTaxAmount = existingCM.VatableSales * (services.Percent / 100m);
-
-                        if (existingSv.WithholdingVatAmount != 0)
-                        {
-                            existingCM.WithHoldingVatAmount = existingCM.VatableSales * 0.05m;
-                        }
-                    }
-                    else
-                    {
-                        existingCM.TotalSales = existingCM.CreditAmount;
-                    }
                 }
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -530,10 +457,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.Address = model.SalesInvoice.Customer.CustomerAddress;
                                 sales.Description = model.SalesInvoice.Product.ProductName;
                                 sales.Amount = model.CreditAmount;
-                                sales.VatAmount = model.VatAmount;
-                                sales.VatableSales = model.VatableSales;
+                                sales.VatableSales = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(sales.Amount);
+                                sales.VatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(sales.VatableSales);
                                 //sales.Discount = model.Discount;
-                                sales.NetSales = model.VatableSales;
+                                sales.NetSales = sales.VatableSales;
                                 sales.CreatedBy = model.CreatedBy;
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSI.DueDate;
@@ -551,7 +478,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.Amount = model.CreditAmount;
                                 sales.VatExemptSales = model.CreditAmount;
                                 //sales.Discount = model.Discount;
-                                sales.NetSales = model.VatableSales;
+                                sales.NetSales = sales.Amount;
                                 sales.CreatedBy = model.CreatedBy;
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSI.DueDate;
@@ -569,7 +496,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.Amount = model.CreditAmount;
                                 sales.ZeroRated = model.CreditAmount;
                                 //sales.Discount = model.Discount;
-                                sales.NetSales = model.VatableSales;
+                                sales.NetSales = sales.Amount;
                                 sales.CreatedBy = model.CreatedBy;
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSI.DueDate;
@@ -582,6 +509,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region --General Ledger Book Recording(SI)--
 
+                            decimal withHoldingTaxAmount = 0;
+                            decimal withHoldingVatAmount = 0;
+                            decimal netOfVatAmount = 0;
+                            decimal vatAmount = 0;
+
+                            if (model.SalesInvoice.Customer.VatType == SD.VatType_Vatable)
+                            {
+                                netOfVatAmount = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(model.CreditAmount);
+                                vatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(netOfVatAmount);
+                            }
+                            else
+                            {
+                                netOfVatAmount = model.CreditAmount;
+                            }
+
+                            if (model.SalesInvoice.Customer.WithHoldingTax)
+                            {
+                                withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.01m);
+                            }
+
+                            if (model.SalesInvoice.Customer.WithHoldingVat)
+                            {
+                                withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m);
+                            }
+
                             var ledgers = new List<FilprideGeneralLedgerBook>();
 
                             ledgers.Add(
@@ -593,14 +545,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     AccountNo = "1010201",
                                     AccountTitle = "AR-Trade Receivable",
                                     Debit = 0,
-                                    Credit = Math.Abs(model.CreditAmount - (model.WithHoldingTaxAmount + model.WithHoldingVatAmount)),
+                                    Credit = Math.Abs(model.CreditAmount - (withHoldingTaxAmount + withHoldingVatAmount)),
                                     Company = model.Company,
                                     CreatedBy = model.CreatedBy,
                                     CreatedDate = model.CreatedDate
                                 }
                             );
 
-                            if (model.WithHoldingTaxAmount < 0)
+                            if (withHoldingTaxAmount < 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
@@ -611,14 +563,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountNo = "1010202",
                                         AccountTitle = "Deferred Creditable Withholding Tax",
                                         Debit = 0,
-                                        Credit = Math.Abs(model.WithHoldingTaxAmount),
+                                        Credit = Math.Abs(withHoldingTaxAmount),
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }
                                 );
                             }
-                            if (model.WithHoldingVatAmount < 0)
+                            if (withHoldingVatAmount < 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
@@ -629,7 +581,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountNo = "1010203",
                                         AccountTitle = "Deferred Creditable Withholding Vat",
                                         Debit = 0,
-                                        Credit = Math.Abs(model.WithHoldingVatAmount),
+                                        Credit = Math.Abs(withHoldingVatAmount),
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
@@ -646,9 +598,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "4010101",
                                         AccountTitle = "Sales - Biodiesel",
-                                        Debit = model.VatableSales < 0
-                                                    ? Math.Abs(model.VatableSales)
-                                                    : Math.Abs(model.CreditAmount),
+                                        Debit = netOfVatAmount,
                                         CreatedBy = model.CreatedBy,
                                         Credit = 0,
                                         Company = model.Company,
@@ -666,9 +616,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "4010102",
                                         AccountTitle = "Sales - Econogas",
-                                        Debit = model.VatableSales < 0
-                                                    ? Math.Abs(model.VatableSales)
-                                                    : Math.Abs(model.CreditAmount),
+                                        Debit = netOfVatAmount,
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
@@ -686,9 +634,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "4010103",
                                         AccountTitle = "Sales - Envirogas",
-                                        Debit = model.VatableSales < 0
-                                                    ? Math.Abs(model.VatableSales)
-                                                    : Math.Abs(model.CreditAmount),
+                                        Debit = netOfVatAmount,
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
@@ -697,7 +643,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 );
                             }
 
-                            if (model.VatAmount < 0)
+                            if (vatAmount < 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
@@ -707,7 +653,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "2010301",
                                         AccountTitle = "Vat Output",
-                                        Debit = Math.Abs(model.VatAmount),
+                                        Debit = Math.Abs(vatAmount),
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
@@ -844,6 +790,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region --General Ledger Book Recording(SV)--
 
+                            decimal withHoldingTaxAmount = 0;
+                            decimal withHoldingVatAmount = 0;
+                            decimal netOfVatAmount = 0;
+                            decimal vatAmount = 0;
+
+                            if (model.ServiceInvoice.Customer.VatType == SD.VatType_Vatable)
+                            {
+                                netOfVatAmount = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(model.CreditAmount);
+                                vatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(netOfVatAmount);
+                            }
+                            else
+                            {
+                                netOfVatAmount = model.CreditAmount;
+                            }
+
+                            if (model.ServiceInvoice.Customer.WithHoldingTax)
+                            {
+                                withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.01m);
+                            }
+
+                            if (model.ServiceInvoice.Customer.WithHoldingVat)
+                            {
+                                withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m);
+                            }
+
                             var ledgers = new List<FilprideGeneralLedgerBook>();
 
                             ledgers.Add(
@@ -855,13 +826,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountNo = "1010204",
                                         AccountTitle = "AR-Non Trade Receivable",
                                         Debit = 0,
-                                        Credit = Math.Abs(model.CreditAmount - (model.WithHoldingTaxAmount + model.WithHoldingVatAmount)),
+                                        Credit = Math.Abs(model.CreditAmount - (withHoldingTaxAmount + withHoldingVatAmount)),
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }
                                 );
-                            if (model.WithHoldingTaxAmount < 0)
+                            if (withHoldingTaxAmount < 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
@@ -872,14 +843,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountNo = "1010202",
                                         AccountTitle = "Deferred Creditable Withholding Tax",
                                         Debit = 0,
-                                        Credit = Math.Abs(model.WithHoldingTaxAmount),
+                                        Credit = Math.Abs(withHoldingTaxAmount),
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
                                     }
                                 );
                             }
-                            if (model.WithHoldingVatAmount < 0)
+                            if (withHoldingVatAmount < 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
@@ -890,7 +861,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountNo = "1010203",
                                         AccountTitle = "Deferred Creditable Withholding Vat",
                                         Debit = 0,
-                                        Credit = Math.Abs(model.WithHoldingVatAmount),
+                                        Credit = Math.Abs(withHoldingVatAmount),
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
@@ -912,7 +883,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 CreatedDate = model.CreatedDate
                             });
 
-                            if (model.VatAmount < 0)
+                            if (vatAmount < 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
@@ -922,7 +893,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Description = model.ServiceInvoice.Service.Name,
                                         AccountNo = "2010304",
                                         AccountTitle = "Deferred Vat Output",
-                                        Debit = Math.Abs(model.VatAmount),
+                                        Debit = Math.Abs(vatAmount),
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,

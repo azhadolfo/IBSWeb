@@ -50,27 +50,11 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
-        public decimal VatAmount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal NetAmount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
         public decimal Total { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Discount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal WithholdingTaxAmount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal WithholdingVatAmount { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]

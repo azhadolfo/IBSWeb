@@ -53,29 +53,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "numeric(18,4)")]
         public decimal CreditAmount { get; set; }
 
-        [Display(Name = "Vatable Sales")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal VatableSales { get; set; }
-
-        [Display(Name = "Vat Amount")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal VatAmount { get; set; }
-
-        [Display(Name = "Total Sales")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal TotalSales { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal WithHoldingVatAmount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal WithHoldingTaxAmount { get; set; }
-
         [Required]
         public string Source { get; set; }
 

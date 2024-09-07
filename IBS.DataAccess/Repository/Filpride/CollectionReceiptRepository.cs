@@ -133,16 +133,18 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (si != null)
             {
+                decimal netDiscount = si.Amount - si.Discount;
+
                 var total = paidAmount + offsetAmount;
                 si.AmountPaid += total;
-                si.Balance = si.NetDiscount - si.AmountPaid;
+                si.Balance = netDiscount - si.AmountPaid;
 
-                if (si.Balance == 0 && si.AmountPaid == si.NetDiscount)
+                if (si.Balance == 0 && si.AmountPaid == netDiscount)
                 {
                     si.IsPaid = true;
                     si.PaymentStatus = "Paid";
                 }
-                else if (si.AmountPaid > si.NetDiscount)
+                else if (si.AmountPaid > netDiscount)
                 {
                     si.IsPaid = true;
                     si.PaymentStatus = "OverPaid";
@@ -167,16 +169,18 @@ namespace IBS.DataAccess.Repository.Filpride
 
                     if (!salesInvoice.IsPaid)
                     {
+                        decimal netDiscount = salesInvoice.Amount - salesInvoice.Discount;
+
                         salesInvoice.AmountPaid += salesInvoice.Amount >= amountPaid ? paidAmount[i] + offsetAmount : paidAmount[i];
 
-                        salesInvoice.Balance = salesInvoice.NetDiscount - salesInvoice.AmountPaid;
+                        salesInvoice.Balance = netDiscount - salesInvoice.AmountPaid;
 
-                        if (salesInvoice.Balance == 0 && salesInvoice.AmountPaid == salesInvoice.NetDiscount)
+                        if (salesInvoice.Balance == 0 && salesInvoice.AmountPaid == netDiscount)
                         {
                             salesInvoice.IsPaid = true;
                             salesInvoice.PaymentStatus = "Paid";
                         }
-                        else if (salesInvoice.AmountPaid > salesInvoice.NetDiscount)
+                        else if (salesInvoice.AmountPaid > netDiscount)
                         {
                             salesInvoice.IsPaid = true;
                             salesInvoice.PaymentStatus = "OverPaid";
