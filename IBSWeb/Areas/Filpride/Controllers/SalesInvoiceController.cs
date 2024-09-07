@@ -574,25 +574,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
-                if (model.VoidedBy == null)
+                try
                 {
-                    if (model.PostedBy != null)
+                    if (model.VoidedBy == null)
                     {
-                        model.PostedBy = null;
+                        if (model.PostedBy != null)
+                        {
+                            model.PostedBy = null;
+                        }
+
+                        model.VoidedBy = _userManager.GetUserName(this.User);
+                        model.VoidedDate = DateTime.Now;
+                        model.Status = nameof(Status.Voided);
+
+                        await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideSalesBook>(sb => sb.SerialNo == model.SalesInvoiceNo, cancellationToken);
+                        await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.SalesInvoiceNo, cancellationToken);
+                        await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideInventory>(i => i.Reference == model.SalesInvoiceNo, cancellationToken);
+                        await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        TempData["success"] = "Sales Invoice has been Voided.";
                     }
-
-                    model.VoidedBy = _userManager.GetUserName(this.User);
-                    model.VoidedDate = DateTime.Now;
-                    model.Status = nameof(Status.Voided);
-
-                    await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideSalesBook>(sb => sb.SerialNo == model.SalesInvoiceNo, cancellationToken);
-                    await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.SalesInvoiceNo, cancellationToken);
-                    await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideInventory>(i => i.Reference == model.SalesInvoiceNo, cancellationToken);
-                    await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Sales Invoice has been Voided.";
+                    return RedirectToAction(nameof(Index));
                 }
-                return RedirectToAction("Index");
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
             }
 
             return NotFound();
