@@ -493,6 +493,177 @@ namespace IBS.DataAccess.Data
 
             #endregion
 
+            #region -- Accounts Receivable --
+
+            #region -- Sales Invoice --
+
+            builder.Entity<FilprideSalesInvoice>(si =>
+            {
+                si.HasOne(si => si.Product)
+                .WithMany()
+                .HasForeignKey(si => si.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                si.HasOne(si => si.Customer)
+                .WithMany()
+                .HasForeignKey(si => si.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                si.HasOne(si => si.PurchaseOrder)
+                .WithMany()
+                .HasForeignKey(si => si.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Sales Invoice --
+
+            #region -- Service Invoice --
+
+            builder.Entity<FilprideServiceInvoice>(sv =>
+            {
+                sv.HasOne(sv => sv.Customer)
+                .WithMany()
+                .HasForeignKey(sv => sv.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                sv.HasOne(sv => sv.Service)
+                .WithMany()
+                .HasForeignKey(sv => sv.ServiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Service Invoice --
+
+            #region -- Collection Receipt --
+
+            builder.Entity<FilprideCollectionReceipt>(cr =>
+            {
+                cr.HasOne(cr => cr.SalesInvoice)
+                .WithMany()
+                .HasForeignKey(cr => cr.SalesInvoiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                cr.HasOne(cr => cr.ServiceInvoice)
+                .WithMany()
+                .HasForeignKey(cr => cr.ServiceInvoiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                cr.HasOne(cr => cr.Customer)
+                .WithMany()
+                .HasForeignKey(cr => cr.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Collection Receipt --
+
+            #region -- Debit Memo --
+
+            builder.Entity<FilprideDebitMemo>(cr =>
+            {
+                cr.HasOne(cr => cr.SalesInvoice)
+                .WithMany()
+                .HasForeignKey(cr => cr.SalesInvoiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                cr.HasOne(cr => cr.ServiceInvoice)
+                .WithMany()
+                .HasForeignKey(cr => cr.ServiceInvoiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Debit Memo --
+
+            #region -- Credit Memo --
+
+            builder.Entity<FilprideCreditMemo>(cr =>
+            {
+                cr.HasOne(cr => cr.SalesInvoice)
+                .WithMany()
+                .HasForeignKey(cr => cr.SalesInvoiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                cr.HasOne(cr => cr.ServiceInvoice)
+                .WithMany()
+                .HasForeignKey(cr => cr.ServiceInvoiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Credit Memo --
+
+            #endregion -- Accounts Receivable --
+
+            #region -- Accounts Payable --
+
+            #region -- Purchase Order --
+
+            builder.Entity<FilpridePurchaseOrder>(po =>
+            {
+                po.HasOne(po => po.Supplier)
+                .WithMany()
+                .HasForeignKey(po => po.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                po.HasOne(po => po.Product)
+                .WithMany()
+                .HasForeignKey(po => po.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                po.HasOne(po => po.Customer)
+                .WithMany()
+                .HasForeignKey(po => po.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Purchase Order --
+
+            #region -- Receving Report --
+
+            builder.Entity<FilprideReceivingReport>(rr =>
+            {
+                rr.HasOne(rr => rr.PurchaseOrder)
+                .WithMany()
+                .HasForeignKey(rr => rr.POId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                rr.HasOne(rr => rr.DeliveryReceipt)
+                .WithMany()
+                .HasForeignKey(rr => rr.DeliveryReceiptId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Receving Report --
+
+            #region -- Check Voucher --
+
+            builder.Entity<FilprideCheckVoucherHeader>(cv =>
+            {
+                cv.HasOne(cv => cv.Supplier)
+                .WithMany()
+                .HasForeignKey(cv => cv.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                cv.HasOne(cv => cv.BankAccount)
+                .WithMany()
+                .HasForeignKey(cv => cv.BankId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher --
+
+            #region -- Check Voucher --
+
+            builder.Entity<FilprideJournalVoucherHeader>(jv =>
+            {
+                jv.HasOne(jv => jv.CheckVoucherHeader)
+                .WithMany()
+                .HasForeignKey(jv => jv.CVId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher --
+
+            #endregion -- Accounts Payable --
+
             #endregion
         }
 
