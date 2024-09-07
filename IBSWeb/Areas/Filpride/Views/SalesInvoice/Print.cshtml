@@ -191,7 +191,7 @@
                             <td class="text-end">
                                 @if (Model.Customer.VatType == "Vatable")
                                 {
-                                    @Html.DisplayFor(model => netOfVatAmount)
+                                    @netOfVatAmount.ToString("N4");
                                 }
                             </td>
                         </tr>
@@ -201,7 +201,7 @@
                             <td class="text-end">
                                 @if (Model.Customer.VatType == "Zero Rated")
                                 {
-                                    @Html.DisplayFor(model => netOfVatAmount)
+                                    @netOfVatAmount.ToString("N4");
                                 }
                             </td>
                         </tr>
@@ -211,7 +211,7 @@
                             <td class="text-end">
                                 @if (Model.Customer.VatType == "Exempt")
                                 {
-                                    @Html.DisplayFor(model => netOfVatAmount)
+                                    @netOfVatAmount.ToString("N4");
                                 }
                             </td>
                         </tr>
@@ -221,7 +221,7 @@
                             <td class="text-end">
                                 @if (Model.Customer.VatType == "Vatable")
                                 {
-                                    @Html.DisplayFor(model => vatAmount)
+                                    @vatAmount.ToString("N4");
                                 }
                             </td>
                         </tr>
