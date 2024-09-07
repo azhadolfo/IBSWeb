@@ -5,6 +5,8 @@
 
 @{
     ViewData["Title"] = "Print Debit Memo";
+    decimal netOfVatAmount = Model.DebitAmount / 1.12m;
+    decimal vatAmount = netOfVatAmount * 0.12m;
 }
 
 <br />
@@ -98,7 +100,7 @@
                                         <td class="text-end">
                                             @if (Model.SalesInvoice.Customer.CustomerType == "Vatable")
                                             {
-                                                <p style="height: 9px;">@Html.DisplayFor(model => model.VatableSales)</p>
+                                                <p style="height: 9px;">@Html.DisplayFor(model => netOfVatAmount)</p>
                                             }
                                         </td>
                                     </tr>
@@ -128,13 +130,13 @@
                                         <td class="text-end">
                                             @if (Model.SalesInvoice.Customer.CustomerType == "Vatable")
                                             {
-                                                <p style="height: 9px;">@Html.DisplayFor(model => model.VatAmount)</p>
+                                                <p style="height: 9px;">@Html.DisplayFor(model => vatAmount)</p>
                                             }
                                         </td>
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>TOTAL SALES: </b></p></td>
-                                        <td class="text-end"><p style="height: 9px;">@Html.DisplayFor(model => model.TotalSales)</p></td>
+                                        <td class="text-end"><p style="height: 9px;">@Html.DisplayFor(model => model.DebitAmount)</p></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -217,9 +219,9 @@ else if (Model.Source == "Service Invoice")
                                 <tbody class="text-nowrap">
                                     <tr>
                                         <td class="w-50"><p style="height: 9px; margin-left:8%;"><b>Vatable Sales: </b></p></td>
-                                        @if (Model.VatableSales != 0)
+                                        @if (netOfVatAmount != 0)
                                         {
-                                            <td class="text-end">@Html.DisplayFor(model => model.VatableSales)</td>
+                                            <td class="text-end">@Html.DisplayFor(model => netOfVatAmount)</td>
                                         }
                                         else
                                         {
@@ -252,9 +254,9 @@ else if (Model.Source == "Service Invoice")
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT Amount: </b></p></td>
 
-                                        @if (Model.VatAmount != 0)
+                                        @if (vatAmount != 0)
                                         {
-                                            <td class="text-end">@Html.DisplayFor(model => model.VatAmount)</td>
+                                            <td class="text-end">@Html.DisplayFor(model => vatAmount)</td>
                                         }
                                         else
                                         {
@@ -263,7 +265,7 @@ else if (Model.Source == "Service Invoice")
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>TOTAL SALES: </b></p></td>
-                                        <td class="text-end">@Html.DisplayFor(model => model.TotalSales)</td>
+                                        <td class="text-end">@Html.DisplayFor(model => model.DebitAmount)</td>
                                     </tr>
                                 </tbody>
                             </table>

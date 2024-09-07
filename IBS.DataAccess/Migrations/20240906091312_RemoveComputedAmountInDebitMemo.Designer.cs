@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240906091312_RemoveComputedAmountInDebitMemo")]
+    partial class RemoveComputedAmountInDebitMemo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1080,6 +1083,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_tax_and_vat_paid");
 
+                    b.Property<decimal>("NetDiscount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("net_discount");
+
                     b.Property<string>("OtherRefNo")
                         .IsRequired()
                         .HasColumnType("varchar(20)")
@@ -1141,6 +1148,18 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("unit_price");
 
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vat_amount");
+
+                    b.Property<decimal>("VatExempt")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vat_exempt");
+
+                    b.Property<decimal>("VatableSales")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vatable_sales");
+
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)")
                         .HasColumnName("voided_by");
@@ -1148,6 +1167,18 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("VoidedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("voided_date");
+
+                    b.Property<decimal>("WithHoldingTaxAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("with_holding_tax_amount");
+
+                    b.Property<decimal>("WithHoldingVatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("with_holding_vat_amount");
+
+                    b.Property<decimal>("ZeroRated")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("zero_rated");
 
                     b.HasKey("SalesInvoiceId")
                         .HasName("pk_filpride_sales_invoices");
@@ -1242,6 +1273,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
 
+                    b.Property<decimal>("NetAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("net_amount");
+
                     b.Property<string>("PaymentStatus")
                         .IsRequired()
                         .HasColumnType("varchar(20)")
@@ -1280,6 +1315,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("unearned_amount");
 
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("vat_amount");
+
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)")
                         .HasColumnName("voided_by");
@@ -1287,6 +1326,14 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("VoidedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("voided_date");
+
+                    b.Property<decimal>("WithholdingTaxAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("withholding_tax_amount");
+
+                    b.Property<decimal>("WithholdingVatAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("withholding_vat_amount");
 
                     b.HasKey("ServiceInvoiceId")
                         .HasName("pk_filpride_service_invoices");

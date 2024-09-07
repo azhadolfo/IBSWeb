@@ -242,27 +242,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.ServiceInvoiceId = null;
 
                     model.DebitAmount = (decimal)(model.Quantity * model.AdjustedPrice);
-
-                    if (existingSalesInvoice.Customer.VatType == "Vatable")
-                    {
-                        model.VatableSales = model.DebitAmount / 1.12m;
-                        model.VatAmount = model.DebitAmount - model.VatableSales;
-
-                        if (existingSalesInvoice.WithHoldingTaxAmount != 0)
-                        {
-                            model.WithHoldingTaxAmount = model.VatableSales * 0.01m;
-                        }
-                        if (existingSalesInvoice.WithHoldingVatAmount != 0)
-                        {
-                            model.WithHoldingVatAmount = model.VatableSales * 0.05m;
-                        }
-
-                        model.TotalSales = model.VatableSales + model.VatAmount;
-                    }
-                    else
-                    {
-                        model.TotalSales = model.DebitAmount;
-                    }
                 }
                 else if (model.Source == "Service Invoice")
                 {
@@ -279,23 +258,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion --Retrieval of Services
 
                     model.DebitAmount = model.Amount ?? 0;
-
-                    if (existingSv.Customer.VatType == "Vatable")
-                    {
-                        model.VatableSales = model.DebitAmount / 1.12m;
-                        model.VatAmount = model.DebitAmount - model.VatableSales;
-                        model.TotalSales = model.VatableSales + model.VatAmount;
-                        model.WithHoldingTaxAmount = model.VatableSales * (services.Percent / 100m);
-
-                        if (existingSv.WithholdingVatAmount != 0)
-                        {
-                            model.WithHoldingVatAmount = model.VatableSales * 0.05m;
-                        }
-                    }
-                    else
-                    {
-                        model.TotalSales = model.DebitAmount;
-                    }
                 }
 
                 await _dbContext.AddAsync(model, cancellationToken);
@@ -366,10 +328,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.Address = model.SalesInvoice.Customer.CustomerAddress;
                                 sales.Description = model.SalesInvoice.Product.ProductName;
                                 sales.Amount = model.DebitAmount;
-                                sales.VatAmount = model.VatAmount;
-                                sales.VatableSales = model.VatableSales;
+                                sales.VatableSales = _unitOfWork.FilprideDebitMemo.ComputeNetOfVat(sales.Amount);
+                                sales.VatAmount = _unitOfWork.FilprideDebitMemo.ComputeVatAmount(sales.VatableSales);
                                 //sales.Discount = model.Discount;
-                                sales.NetSales = model.VatableSales;
+                                sales.NetSales = sales.VatableSales;
                                 sales.CreatedBy = model.CreatedBy;
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSI.DueDate;
@@ -387,7 +349,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.Amount = model.DebitAmount;
                                 sales.VatExemptSales = model.DebitAmount;
                                 //sales.Discount = model.Discount;
-                                sales.NetSales = model.VatableSales;
+                                sales.NetSales = sales.Amount;
                                 sales.CreatedBy = model.CreatedBy;
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSI.DueDate;
@@ -405,7 +367,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.Amount = model.DebitAmount;
                                 sales.ZeroRated = model.DebitAmount;
                                 //sales.Discount = model.Discount;
-                                sales.NetSales = model.VatableSales;
+                                sales.NetSales = sales.Amount;
                                 sales.CreatedBy = model.CreatedBy;
                                 sales.CreatedDate = model.CreatedDate;
                                 sales.DueDate = existingSI.DueDate;
@@ -418,6 +380,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region --General Ledger Book Recording(SI)--
 
+                            decimal withHoldingTaxAmount = 0;
+                            decimal withHoldingVatAmount = 0;
+                            decimal netOfVatAmount = 0;
+                            decimal vatAmount = 0;
+
+                            if (model.SalesInvoice.Customer.VatType == SD.VatType_Vatable)
+                            {
+                                netOfVatAmount = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(model.DebitAmount);
+                                vatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(netOfVatAmount);
+                            }
+                            else
+                            {
+                                netOfVatAmount = model.DebitAmount;
+                            }
+
+                            if (model.SalesInvoice.Customer.WithHoldingTax)
+                            {
+                                withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.01m);
+                            }
+
+                            if (model.SalesInvoice.Customer.WithHoldingVat)
+                            {
+                                withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m);
+                            }
+
                             var ledgers = new List<FilprideGeneralLedgerBook>();
 
                             ledgers.Add(
@@ -428,7 +415,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Description = model.SalesInvoice.Product.ProductName,
                                     AccountNo = "1010201",
                                     AccountTitle = "AR-Trade Receivable",
-                                    Debit = model.DebitAmount - (model.WithHoldingTaxAmount + model.WithHoldingVatAmount),
+                                    Debit = model.DebitAmount - (withHoldingTaxAmount + withHoldingVatAmount),
                                     Credit = 0,
                                     Company = model.Company,
                                     CreatedBy = model.CreatedBy,
@@ -436,7 +423,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 }
                             );
 
-                            if (model.WithHoldingTaxAmount > 0)
+                            if (withHoldingTaxAmount > 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
@@ -446,7 +433,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "1010202",
                                         AccountTitle = "Deferred Creditable Withholding Tax",
-                                        Debit = model.WithHoldingTaxAmount,
+                                        Debit = withHoldingTaxAmount,
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
@@ -454,7 +441,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     }
                                 );
                             }
-                            if (model.WithHoldingVatAmount > 0)
+                            if (withHoldingVatAmount > 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
@@ -464,7 +451,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "1010203",
                                         AccountTitle = "Deferred Creditable Withholding Vat",
-                                        Debit = model.WithHoldingVatAmount,
+                                        Debit = withHoldingVatAmount,
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
@@ -485,9 +472,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Debit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
-                                        Credit = model.VatableSales > 0
-                                                    ? model.VatableSales
-                                                    : model.DebitAmount,
+                                        Credit = netOfVatAmount,
                                         CreatedDate = model.CreatedDate
                                     }
                                 );
@@ -505,9 +490,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Debit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
-                                        Credit = model.VatableSales > 0
-                                                    ? model.VatableSales
-                                                    : model.DebitAmount,
+                                        Credit = netOfVatAmount,
                                         CreatedDate = model.CreatedDate
                                     }
                                 );
@@ -525,15 +508,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Debit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
-                                        Credit = model.VatableSales > 0
-                                                    ? model.VatableSales
-                                                    : model.DebitAmount,
+                                        Credit = netOfVatAmount,
                                         CreatedDate = model.CreatedDate
                                     }
                                 );
                             }
 
-                            if (model.VatAmount > 0)
+                            if (vatAmount > 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
@@ -544,7 +525,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         AccountNo = "2010301",
                                         AccountTitle = "Vat Output",
                                         Debit = 0,
-                                        Credit = model.VatAmount,
+                                        Credit = vatAmount,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
@@ -946,26 +927,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion -- Saving Default Enries --
 
                     existingDM.DebitAmount = (decimal)(model.Quantity * model.AdjustedPrice);
-
-                    if (existingSalesInvoice.Customer.VatType == "Vatable")
-                    {
-                        existingDM.VatableSales = existingDM.DebitAmount / 1.12m;
-                        existingDM.VatAmount = existingDM.DebitAmount - existingDM.VatableSales;
-
-                        if (existingSalesInvoice.WithHoldingTaxAmount != 0)
-                        {
-                            existingDM.WithHoldingTaxAmount = existingDM.VatableSales * 0.01m;
-                        }
-                        if (existingSalesInvoice.WithHoldingVatAmount != 0)
-                        {
-                            existingDM.WithHoldingVatAmount = existingDM.VatableSales * 0.05m;
-                        }
-                        existingDM.TotalSales = existingDM.VatableSales + existingDM.VatAmount;
-                    }
-                    else
-                    {
-                        existingDM.TotalSales = existingDM.DebitAmount;
-                    }
                 }
                 else if (model.Source == "Service Invoice")
                 {
@@ -993,23 +954,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion -- Saving Default Enries --
 
                     existingDM.DebitAmount = model.Amount ?? 0;
-
-                    if (existingSv.Customer.VatType == "Vatable")
-                    {
-                        existingDM.VatableSales = existingDM.DebitAmount / 1.12m;
-                        existingDM.VatAmount = existingDM.DebitAmount - existingDM.VatableSales;
-                        existingDM.TotalSales = existingDM.VatableSales + existingDM.VatAmount;
-                        existingDM.WithHoldingTaxAmount = existingDM.VatableSales * (services.Percent / 100m);
-
-                        if (existingSv.WithholdingVatAmount != 0)
-                        {
-                            existingDM.WithHoldingVatAmount = existingDM.VatableSales * 0.05m;
-                        }
-                    }
-                    else
-                    {
-                        existingDM.TotalSales = existingDM.DebitAmount;
-                    }
                 }
 
                 await _dbContext.SaveChangesAsync(cancellationToken);

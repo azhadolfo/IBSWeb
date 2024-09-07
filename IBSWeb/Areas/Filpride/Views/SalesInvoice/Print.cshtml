@@ -2,6 +2,11 @@
 
 @{
     ViewData["Title"] = "Print Sales Invoice";
+    decimal netDiscount = Model.Amount - Model.Discount;
+    decimal netOfVatAmount = Model.Customer.VatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
+    decimal vatAmount = Model.Customer.VatType == SD.VatType_Vatable ? netOfVatAmount * 0.12m : 0;
+    decimal withHoldingTaxAmount = Model.Customer.WithHoldingTax ? (netDiscount / 1.12m) * 0.01m : 0;
+    decimal withHoldingVatAmount = Model.Customer.WithHoldingVat ? (netDiscount / 1.12m) * 0.05m : 0;
 }
 
 <br class="br-top" />
@@ -89,22 +94,22 @@
         if (Model.Customer.WithHoldingTax && !Model.Customer.WithHoldingVat)
         {
             <p style="line-height: 1; margin-top:20px;">
-                Creditable Withholding Tax with the amount of <b>@Html.DisplayFor(model => model.WithHoldingTaxAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Tax with the amount of <b>@Html.DisplayFor(model => withHoldingTaxAmount)</b> is computed for this invoice.<br />
                 Please attach BIR Form 2307 to your payment if you deducted Expanded Withholding Tax.
             </p>
         }
         else if (Model.Customer.WithHoldingVat && !Model.Customer.WithHoldingTax)
         {
             <p style="line-height: 1; margin-top:20px;">
-                Creditable Withholding Vat with the amount of <b>@Html.DisplayFor(model => model.WithHoldingVatAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Vat with the amount of <b>@Html.DisplayFor(model => withHoldingVatAmount)</b> is computed for this invoice.<br />
                 Please attach BIR Form 2306 to your payment if you deducted Expanded Withholding Vat.
             </p>
         }
         else if (Model.Customer.WithHoldingTax && Model.Customer.WithHoldingVat)
         {
             <p style="line-height: 1; margin-top:20px;">
-                Creditable Withholding Tax with the amount of <b>@Html.DisplayFor(model => model.WithHoldingTaxAmount)</b> is computed for this invoice.<br />
-                Creditable Withholding Vat with the amount of <b>@Html.DisplayFor(model => model.WithHoldingVatAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Tax with the amount of <b>@Html.DisplayFor(model => withHoldingTaxAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Vat with the amount of <b>@Html.DisplayFor(model => withHoldingVatAmount)</b> is computed for this invoice.<br />
                 Please attach BIR Form 2306 and 2307 to your payment if you deducted Expanded Withholding Tax and Vat.
             </p>
         }
@@ -114,22 +119,22 @@
         if (Model.Customer.WithHoldingTax && !Model.Customer.WithHoldingVat)
         {
             <p style="line-height: 1; margin-top:20px;">
-                Creditable Withholding Tax with the amount of <b>@Html.DisplayFor(model => model.WithHoldingTaxAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Tax with the amount of <b>@Html.DisplayFor(model => withHoldingTaxAmount)</b> is computed for this invoice.<br />
                 Please attach BIR Form 2307 to your payment if you deducted Expanded Withholding Tax.
             </p>
         }
         else if (Model.Customer.WithHoldingVat && !Model.Customer.WithHoldingTax)
         {
             <p style="line-height: 1; margin-top:20px;">
-                Creditable Withholding Vat with the amount of <b>@Html.DisplayFor(model => model.WithHoldingVatAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Vat with the amount of <b>@Html.DisplayFor(model => withHoldingVatAmount)</b> is computed for this invoice.<br />
                 Please attach BIR Form 2306 to your payment if you deducted Expanded Withholding Vat.
             </p>
         }
         else if (Model.Customer.WithHoldingTax && Model.Customer.WithHoldingVat)
         {
             <p style="line-height: 1; margin-top:20px;">
-                Creditable Withholding Tax with the amount of <b>@Html.DisplayFor(model => model.WithHoldingTaxAmount)</b> is computed for this invoice.<br />
-                Creditable Withholding Vat with the amount of <b>@Html.DisplayFor(model => model.WithHoldingVatAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Tax with the amount of <b>@Html.DisplayFor(model => withHoldingTaxAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Vat with the amount of <b>@Html.DisplayFor(model => withHoldingVatAmount)</b> is computed for this invoice.<br />
                 Please attach BIR Form 2306 and 2307 to your payment if you deducted Expanded Withholding Tax and Vat.
             </p>
         }
@@ -186,7 +191,7 @@
                             <td class="text-end">
                                 @if (Model.Customer.VatType == "Vatable")
                                 {
-                                    @Html.DisplayFor(model => model.VatableSales)
+                                    @Html.DisplayFor(model => netOfVatAmount)
                                 }
                             </td>
                         </tr>
@@ -196,7 +201,7 @@
                             <td class="text-end">
                                 @if (Model.Customer.VatType == "Zero Rated")
                                 {
-                                    @Html.DisplayFor(model => model.Amount)
+                                    @Html.DisplayFor(model => netOfVatAmount)
                                 }
                             </td>
                         </tr>
@@ -206,7 +211,7 @@
                             <td class="text-end">
                                 @if (Model.Customer.VatType == "Exempt")
                                 {
-                                    @Html.DisplayFor(model => model.Amount)
+                                    @Html.DisplayFor(model => netOfVatAmount)
                                 }
                             </td>
                         </tr>
@@ -216,7 +221,7 @@
                             <td class="text-end">
                                 @if (Model.Customer.VatType == "Vatable")
                                 {
-                                    @Html.DisplayFor(model => model.VatAmount)
+                                    @Html.DisplayFor(model => vatAmount)
                                 }
                             </td>
                         </tr>
@@ -235,7 +240,7 @@
 
                             <td class="text-end">
                                 @{
-                                    var totalSales = Model.VatableSales + Model.VatAmount;
+                                    var totalSales = Model.Amount;
                                     var formattedTotalSales = String.Format("{0:N4}", totalSales);
                                     var otherDiscount = Model.Amount - Model.Discount;
                                     var formattedOtherDiscount = String.Format("{0:N4}", otherDiscount);
