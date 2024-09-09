@@ -72,7 +72,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Quantity = viewModel.Quantity,
                         BalanceQuantity = viewModel.Quantity,
                         DeliveredPrice = viewModel.DeliveredPrice,
-                        Vat = viewModel.Vat,
                         TotalAmount = viewModel.TotalAmount,
                         Remarks = viewModel.Remarks,
                         Company = companyClaims,
@@ -144,7 +143,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerPoNo = exisitingRecord.CustomerPoNo,
                     Quantity = exisitingRecord.Quantity,
                     DeliveredPrice = exisitingRecord.DeliveredPrice,
-                    Vat = exisitingRecord.Vat,
+                    Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount((exisitingRecord.TotalAmount / 1.12m)),
                     TotalAmount = exisitingRecord.TotalAmount,
                     Remarks = exisitingRecord.Remarks,
                 };
@@ -185,7 +184,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> PreviewByOperationManager(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
             {
@@ -234,20 +233,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.SaveAsync(cancellationToken);
                 }
 
-                return RedirectToAction(nameof(Preview), new { id });
+                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Preview), new { id });
+                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
             }
         }
 
-        public async Task<IActionResult> Approve(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> ApproveByOperationManager(int? id, decimal grossMargin, CancellationToken cancellationToken)
         {
             if (id == null)
             {
                 return NotFound();
+            }
+
+            if (grossMargin <= 0)
+            {
+                TempData["error"] = "Gross margin cannot be negative and zero";
+                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
             }
 
             try
@@ -260,20 +265,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                if (existingRecord.ApprovedBy == null)
+                if (existingRecord.FirstApprovedBy == null)
                 {
-                    existingRecord.ApprovedBy = _userManager.GetUserName(User);
-                    existingRecord.ApprovedDate = DateTime.Now;
-                    await _unitOfWork.FilprideCustomerOrderSlip.PostAsync(existingRecord, cancellationToken);
+                    existingRecord.FirstApprovedBy = _userManager.GetUserName(User);
+                    existingRecord.FirstApprovedDate = DateTime.Now;
+                    await _unitOfWork.FilprideCustomerOrderSlip.PostAsync(existingRecord, grossMargin, cancellationToken);
                 }
 
                 TempData["success"] = "Customer order slip approved successfully.";
-                return RedirectToAction(nameof(Preview), new { id });
+                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Preview), new { id });
+                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
             }
         }
 
@@ -309,7 +314,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Preview), new { id });
+                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
             }
         }
 
@@ -432,6 +437,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
+                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }

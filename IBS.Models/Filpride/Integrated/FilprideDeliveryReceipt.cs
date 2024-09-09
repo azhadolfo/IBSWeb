@@ -75,14 +75,6 @@ namespace IBS.Models.Filpride.Integrated
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal TotalAmount { get; set; }
 
-        [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        public decimal NetOfVatAmount { get; set; }
-
-        [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        public decimal VatAmount { get; set; }
-
         public bool IsPrinted { get; set; }
 
         [Column(TypeName = "varchar(15)")]
