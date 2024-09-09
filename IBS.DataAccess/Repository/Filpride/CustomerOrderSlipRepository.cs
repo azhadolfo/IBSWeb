@@ -70,7 +70,6 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CustomerPoNo = viewModel.CustomerPoNo;
             existingRecord.Quantity = viewModel.Quantity;
             existingRecord.DeliveredPrice = viewModel.DeliveredPrice;
-            existingRecord.Vat = viewModel.Vat;
             existingRecord.TotalAmount = viewModel.TotalAmount;
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.HasCommission = viewModel.HasCommission;
@@ -93,7 +92,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.ApprovedBy != null)
+                .Where(cos => cos.FirstApprovedBy != null)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -106,7 +105,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.ApprovedBy != null && cos.CustomerId == customerId && !cos.IsDelivered)
+                .Where(cos => cos.FirstApprovedBy != null && cos.CustomerId == customerId && !cos.IsDelivered)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -115,11 +114,32 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task PostAsync(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default)
+        public async Task PostAsync(FilprideCustomerOrderSlip customerOrderSlip, decimal grossMargin, CancellationToken cancellationToken = default)
         {
             //PENDING process the method here
             customerOrderSlip.ExpirationDate = DateOnly.FromDateTime(DateTime.Now.AddDays(7));
+
+            customerOrderSlip.DeliveredPrice = UpdateCosPrice(grossMargin, customerOrderSlip);
+
+            customerOrderSlip.TotalAmount = customerOrderSlip.Quantity * customerOrderSlip.DeliveredPrice;
+
             await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        private decimal UpdateCosPrice(decimal grossMargin, FilprideCustomerOrderSlip existingRecord)
+        {
+            var netOfVatProductCost = existingRecord.PurchaseOrder.Price / 1.12m;
+            var netOfVatCosPrice = existingRecord.DeliveredPrice / 1.12m;
+            var netOfVatFreightCharge = existingRecord.Freight / 1.12m;
+            var existingGrossMargin = netOfVatCosPrice - netOfVatProductCost - netOfVatFreightCharge - existingRecord.CommissionRate;
+
+            if (existingGrossMargin != grossMargin)
+            {
+                decimal newNetOfVatCosPrice = grossMargin + (decimal)(existingRecord.CommissionRate + netOfVatFreightCharge + netOfVatProductCost);
+                return (ComputeVatAmount(newNetOfVatCosPrice) + newNetOfVatCosPrice);
+            }
+
+            return existingRecord.DeliveredPrice;
         }
     }
 }

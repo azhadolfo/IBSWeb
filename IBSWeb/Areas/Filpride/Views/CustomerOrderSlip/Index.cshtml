@@ -74,7 +74,7 @@
                                     Actions
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                    @if (obj.ApprovedBy == null)
+                                    @if (obj.FirstApprovedBy == null)
                                     {
                                         @switch (obj.Status)
                                         {
@@ -84,7 +84,7 @@
                                                 break;
 
                                             case nameof(CosStatus.SupplierAppointed):
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="ApproveByOpsManager" asp-route-id="@obj.CustomerOrderSlipId">Approve</a></li>
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="PreviewByOperationManager" asp-route-id="@obj.CustomerOrderSlipId">Preview</a></li>
                                                 break;
 
                                             case nameof(CosStatus.ApprovedByOpsManager):

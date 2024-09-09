@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240907090511_RemoveComputedAmountInCosAndDrTables")]
+    partial class RemoveComputedAmountInCosAndDrTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2110,6 +2113,14 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerOrderSlipId"));
 
+                    b.Property<string>("ApprovedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("approved_by");
+
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_date");
+
                     b.Property<decimal>("BalanceQuantity")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("balance_quantity");
@@ -2189,14 +2200,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("expiration_date");
 
-                    b.Property<string>("FirstApprovedBy")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("first_approved_by");
-
-                    b.Property<DateTime?>("FirstApprovedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("first_approved_date");
-
                     b.Property<decimal?>("Freight")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("freight");
@@ -2229,14 +2232,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(200)")
                         .HasColumnName("remarks");
-
-                    b.Property<string>("SecondApprovedBy")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("second_approved_by");
-
-                    b.Property<DateTime?>("SecondApprovedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("second_approved_date");
 
                     b.Property<string>("Status")
                         .IsRequired()

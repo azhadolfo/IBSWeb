@@ -51,10 +51,6 @@ namespace IBS.Models.Filpride.Integrated
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        public decimal Vat { get; set; }
-
-        [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
         public decimal DeliveredPrice { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
@@ -103,6 +99,30 @@ namespace IBS.Models.Filpride.Integrated
         #endregion
         #endregion
 
+        #region Third Stage
+
+        [Column(TypeName = "varchar(100)")]
+        public string? FirstApprovedBy { get; set; }
+
+        public DateTime? FirstApprovedDate { get; set; }
+
+        [Column(TypeName = "date")]
+        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        public DateOnly? ExpirationDate { get; set; }
+
+        #endregion
+
+        #region Fourth Stage
+
+        [Column(TypeName = "varchar(100)")]
+        public string? SecondApprovedBy { get; set; }
+
+        public DateTime? SecondApprovedDate { get; set; }
+
+        #endregion
+
+
+
         public bool IsDelivered { get; set; }
 
         [Column(TypeName = "varchar(100)")]
@@ -116,20 +136,11 @@ namespace IBS.Models.Filpride.Integrated
         public DateTime? EditedDate { get; set; }
 
         [Column(TypeName = "varchar(100)")]
-        public string? ApprovedBy { get; set; }
-
-        public DateTime? ApprovedDate { get; set; }
-
-        [Column(TypeName = "varchar(100)")]
         public string? DisapprovedBy { get; set; }
 
         public DateTime? DisapprovedDate { get; set; }
 
         public bool IsPrinted { get; set; }
-
-        [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
-        public DateOnly? ExpirationDate { get; set; }
 
         public string Company { get; set; } = string.Empty;
 
