@@ -61,7 +61,6 @@
                         "data": "Date",
                         "name": "Date",
                         "render": function (data, type, row) {
-                            // Assuming 'Date' is in ISO format like "2024-07-12T00:00:00"
                             var date = new Date(data);
                             return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
                         }
@@ -74,9 +73,12 @@
                         "data": null,
                         "orderable": false,
                         "render": function (data, type, row) {
+                            var editUrl = '@Url.Action("Edit", "CashierReport", new { area = "Mobility" })' + '?id=' + row.SalesNo + '&stationCode=' + row.StationCode;
+                            var previewUrl = '@Url.Action("Preview", "CashierReport", new { area = "Mobility" })' + '?id=' + row.SalesNo + '&stationCode=' + row.StationCode;
+
                             return '<div class="w-100 btn-group" role="group">' +
-                                (row.PostedBy == null ? '<a href="/Mobility/CashierReport/Edit?id=' + row.SalesNo + '&stationCode=' + row.StationCode + '" class="btn btn-primary mx-2"><i class="bi bi-pencil-square"></i> Edit</a>' : '') +
-                                '<a href="/Mobility/CashierReport/Preview?id=' + row.SalesNo + '&stationCode=' + row.StationCode + '" class="btn btn-primary mx-2"><i class="bi bi-printer-fill"></i> Preview</a>' +
+                                (row.PostedBy == null ? '<a href="' + editUrl + '" class="btn btn-primary mx-2"><i class="bi bi-pencil-square"></i> Edit</a>' : '') +
+                                '<a href="' + previewUrl + '" class="btn btn-primary mx-2"><i class="bi bi-printer-fill"></i> Preview</a>' +
                                 '</div>';
                         }
                     }

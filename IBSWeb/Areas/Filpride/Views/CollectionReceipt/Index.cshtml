@@ -159,30 +159,31 @@
                         "orderable": false,
                         "render": function (data, type, row) {
                                 let dropdownHtml = `
-            <div class="dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
-                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    Actions
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">`;
+                                    <div class="dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
+                                        <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Actions
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="actionsDropdown">`;
 
                                 if (row.postedBy == null) {
                                     if (row.multipleSIId != null) {
                                         dropdownHtml += `
-                    <li><a href="/Filpride/CollectionReceipt/MultipleCollectionEdit/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
-                    <li><a href="/Filpride/CollectionReceipt/MultipleCollectionPrint/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
+                                        <li><a href="@Url.Action("MultipleCollectionEdit", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
+                                        <li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
                                     } else {
                                         dropdownHtml += `
-                    <li><a href="/Filpride/CollectionReceipt/Edit/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
-                    <li><a href="/Filpride/CollectionReceipt/Print/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
+                                        <li><a href="@Url.Action("Edit", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
+                                        <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
                                     }
                                     dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.CollectionReceiptId})">Cancel</a></li>`;
                                 } else {
                                     if (row.MultipleSIId != null) {
                                         dropdownHtml += `
-                    <li><a href="/Filpride/CollectionReceipt/MultipleCollectionPrint/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
+                                        <li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
+
                                     } else {
                                         dropdownHtml += `
-                    <li><a href="/Filpride/CollectionReceipt/Print/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
+                                        <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
                                     }
                                     dropdownHtml += `<li><a class="dropdown-item" onclick="confirmVoid(${row.collectionReceiptId})">Void</a></li>`;
                                 }

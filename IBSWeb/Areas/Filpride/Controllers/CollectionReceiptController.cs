@@ -1697,8 +1697,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> MultipleInvoiceBalance(int siNo)
         {
-            var salesInvoice = await _dbContext.FilprideSalesInvoices
-                .FirstOrDefaultAsync(si => si.SalesInvoiceId == siNo);
+            var salesInvoice = await _unitOfWork.FilprideSalesInvoice
+                .GetAsync(si => si.SalesInvoiceId == siNo);
+
             if (salesInvoice != null)
             {
                 var amount = salesInvoice.Amount;
