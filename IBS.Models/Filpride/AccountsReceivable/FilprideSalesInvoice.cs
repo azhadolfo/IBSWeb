@@ -44,17 +44,17 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public string OtherRefNo { get; set; }
 
         [Required]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Quantity { get; set; }
 
         [Required]
         [Display(Name = "Unit Price")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal UnitPrice { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Amount { get; set; }
 
@@ -68,10 +68,10 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Required]
         [Display(Name = "Transaction Date")]
         [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly TransactionDate { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Discount { get; set; }
 
@@ -87,7 +87,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [Display(Name = "Due Date")]
         [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly DueDate { get; set; }
 
         [ForeignKey(nameof(PurchaseOrderId))]

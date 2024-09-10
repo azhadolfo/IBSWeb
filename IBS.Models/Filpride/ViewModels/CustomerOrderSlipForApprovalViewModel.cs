@@ -1,30 +1,39 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using IBS.Models.Filpride.Integrated;
+using System.ComponentModel.DataAnnotations;
 
 namespace IBS.Models.Filpride.ViewModels
 {
-    public class ViewModelDMCM
+    public class CustomerOrderSlipForApprovalViewModel
     {
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        public decimal NetAmount { get; set; }
+        #region Ops Manager Approval
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        public decimal Amount { get; set; }
-
-        public DateOnly Period { get; set; }
+        public decimal NetOfVatProductCost { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        public decimal Discount { get; set; }
+        public decimal NetOfVatCosPrice { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        public decimal NetOfVatFreightCharge { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        public decimal GrossMargin { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal VatAmount { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        public decimal WithholdingTaxAmount { get; set; }
+        #endregion
+
+        public FilprideCustomerOrderSlip? CustomerOrderSlip { get; set; }
+
+        #region Finance Approval
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        public decimal WithholdingVatAmount { get; set; }
+        public decimal CreditBalance { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Total { get; set; }
+
+        #endregion
     }
 }

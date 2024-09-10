@@ -66,7 +66,7 @@
                             @Html.DisplayFor(model => obj.TotalAmount)
                         </td>
                         <td class="text-center">
-                            <span class="badge rounded-pill @if(obj.Status == nameof(CosStatus.Completed)) {<text>bg-success</text>} else {<text>bg-info</text>}">@obj.Status</span>
+                            <span class="badge rounded-pill @if(obj.Status == nameof(CosStatus.Completed)) {<text>bg-success</text>} else if(obj.Status == nameof(CosStatus.Disapproved)) {<text>bg-danger</text>} else {<text>bg-info</text>}">@obj.Status</span>
                         </td>
                         <td class="text-center">
                             <div class="dropdown" style="@(obj.DisapprovedBy != null ? "display:none;" : "")">
@@ -74,7 +74,7 @@
                                     Actions
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                    @if (obj.FirstApprovedBy == null)
+                                    @if (obj.Status != nameof(CosStatus.Completed))
                                     {
                                         @switch (obj.Status)
                                         {
@@ -84,15 +84,16 @@
                                                 break;
 
                                             case nameof(CosStatus.SupplierAppointed):
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="PreviewByOperationManager" asp-route-id="@obj.CustomerOrderSlipId">Preview</a></li>
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Preview</a></li>
                                                 break;
 
                                             case nameof(CosStatus.ApprovedByOpsManager):
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Preview</a></li>
                                                 break;
 
                                             case nameof(CosStatus.ApprovedByFinance):
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Preview</a></li>
+                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="AppointHauler" asp-route-id="@obj.CustomerOrderSlipId">Appoint Hauler</a></li>
                                                 break;
 
                                             case nameof(CosStatus.HaulerAppointed):

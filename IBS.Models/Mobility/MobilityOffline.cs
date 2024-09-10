@@ -14,11 +14,11 @@ namespace IBS.Models.Mobility
         public string StationCode { get; set; } //fuel.StationCode
 
         [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly StartDate { get; set; } //fuel.BusinessDate - previous
 
         [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly EndDate { get; set; } //fuel.BusinessDate
 
         [Column(TypeName = "varchar(20)")]
@@ -27,27 +27,27 @@ namespace IBS.Models.Mobility
         public int Pump { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal FirstDsrOpening { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal FirstDsrClosing { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal SecondDsrOpening { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal SecondDsrClosing { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Liters { get; set; } //FirstDsrClosing - SecondDsrOpeningBeforer
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Balance { get; set; } //Remaining Balance
 
         public string FirstDsrNo { get; set; }
@@ -57,7 +57,7 @@ namespace IBS.Models.Mobility
         public bool IsResolve { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal? NewClosing { get; set; }
 
         public string? LastUpdatedBy { get; set; }

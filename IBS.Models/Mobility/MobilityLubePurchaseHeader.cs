@@ -26,7 +26,7 @@ namespace IBS.Models.Mobility
 
         [Column(TypeName = "date")]
         [Display(Name = "Shift Date")]
-        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly ShiftDate { get; set; }
 
         [Column(TypeName = "varchar(50)")]
@@ -46,15 +46,15 @@ namespace IBS.Models.Mobility
         public string PoNo { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal VatableSales { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal VatAmount { get; set; }
 
         [Column(TypeName = "varchar(50)")]

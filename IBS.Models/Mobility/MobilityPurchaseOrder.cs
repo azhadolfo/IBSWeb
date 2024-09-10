@@ -25,11 +25,11 @@ namespace IBS.Models.Mobility
         #endregion Supplier
 
         [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly Date { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Quantity { get; set; }
 
         #region Product
@@ -42,19 +42,19 @@ namespace IBS.Models.Mobility
         #endregion Product
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal UnitPrice { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; } //Quantity * UnitPrice
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Discount { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal TotalAmount { get; set; }
 
         [Display(Name = "Note/Remarks")]

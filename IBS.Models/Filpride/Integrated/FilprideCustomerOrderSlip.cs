@@ -8,7 +8,7 @@ namespace IBS.Models.Filpride.Integrated
 {
     public class FilprideCustomerOrderSlip
     {
-        #region First Stage
+        #region Preparation of COS
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CustomerOrderSlipId { get; set; }
@@ -18,7 +18,7 @@ namespace IBS.Models.Filpride.Integrated
         public string CustomerOrderSlipNo { get; set; }
 
         [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly Date { get; set; }
 
         #region--Customer properties
@@ -31,7 +31,7 @@ namespace IBS.Models.Filpride.Integrated
         #endregion
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Display(Name = "Total Amount")]
         public decimal TotalAmount { get; set; }
 
@@ -46,19 +46,19 @@ namespace IBS.Models.Filpride.Integrated
         public DateTime DeliveryDateAndTime { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Quantity { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal DeliveredPrice { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal DeliveredQuantity { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal BalanceQuantity { get; set; }
 
         #region Commissioner's Properties
@@ -70,13 +70,13 @@ namespace IBS.Models.Filpride.Integrated
         public FilprideSupplier? Commissioner { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
-        public decimal? CommissionRate { get; set; }
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        public decimal CommissionRate { get; set; }
         #endregion
 
         #endregion
 
-        #region Second Stage
+        #region Appointing Supplier
         #region--PO properties
 
         public int? PurchaseOrderId { get; set; }
@@ -88,7 +88,7 @@ namespace IBS.Models.Filpride.Integrated
         public string? DeliveryOption { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal? Freight { get; set; }
 
         public int? PickUpPointId { get; set; }
@@ -99,7 +99,7 @@ namespace IBS.Models.Filpride.Integrated
         #endregion
         #endregion
 
-        #region Third Stage
+        #region Approval of Operation Manager
 
         [Column(TypeName = "varchar(100)")]
         public string? FirstApprovedBy { get; set; }
@@ -107,21 +107,21 @@ namespace IBS.Models.Filpride.Integrated
         public DateTime? FirstApprovedDate { get; set; }
 
         [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly? ExpirationDate { get; set; }
 
         #endregion
 
-        #region Fourth Stage
+        #region Approval of Finance
 
         [Column(TypeName = "varchar(100)")]
         public string? SecondApprovedBy { get; set; }
 
         public DateTime? SecondApprovedDate { get; set; }
 
+        public string? Terms { get; set; }
+
         #endregion
-
-
 
         public bool IsDelivered { get; set; }
 
