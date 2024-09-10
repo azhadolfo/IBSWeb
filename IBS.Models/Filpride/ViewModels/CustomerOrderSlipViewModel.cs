@@ -30,12 +30,16 @@ namespace IBS.Models.Filpride.ViewModels
         [Required(ErrorMessage = "Customer PO No field is required.")]
         public string CustomerPoNo { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Quantity { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal DeliveredPrice { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Vat { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal TotalAmount { get; set; }
 
         public bool HasCommission { get; set; }
@@ -44,6 +48,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem>? Commissioners { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal CommissionerRate { get; set; }
 
         public string Remarks { get; set; }

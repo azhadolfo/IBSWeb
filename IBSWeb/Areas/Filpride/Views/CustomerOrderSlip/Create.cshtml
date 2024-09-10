@@ -125,7 +125,7 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    <script>
+<script>
         $(document).ready(function () {
             $('select[name="CustomerId"]').on('change', function () {
                 var customerId = $(this).val();
@@ -162,9 +162,36 @@
 
                 $('input[name="Vat"]').val(formatNumber(vat));
                 $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
+
+                if (totalAmount > 0) {
+                    // Call the function to check customer balance
+                    checkCustomerBalance(totalAmount);
+                }
             });
+
+            function checkCustomerBalance(totalAmount) {
+                var customerId = $('select[name="CustomerId"]').val();
+                if (customerId) {
+                    $.ajax({
+                        url: '@Url.Action("CheckCustomerBalance", "CustomerOrderSlip", new { area = "Filpride" })',
+                        type: "GET",
+                        data: { customerId: customerId },
+                        success: function (data) {
+                            if (totalAmount > data) {
+                                alert("Customer balance exceeded! Current balance: " + formatNumber(data));
+
+                                // Set DeliveredPrice to zero if the balance is exceeded
+                                $('input[name="DeliveredPrice"]').val('0.0000');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error: " + error);
+                        }
+                    });
+                }
+            }
         });
-    </script>
+</script>
     <script>
         $(document).ready(function () {
             function toggleCommissionFields() {
