@@ -496,5 +496,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return Json(pickUpPoints);
         }
+
+        public async Task<IActionResult> CheckCustomerBalance(int? customerId, CancellationToken cancellationToken)
+        {
+            if (customerId == null)
+            {
+                return NotFound();
+            }
+
+            var balance = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetCustomerCreditBalance((int)customerId, cancellationToken);
+
+            return Json(balance);
+        }
     }
 }
