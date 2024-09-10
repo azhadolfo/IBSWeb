@@ -63,7 +63,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Required]
         [Display(Name = "Transaction Date")]
         [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly TransactionDate { get; set; }
 
         public long SeriesNumber { get; set; }
@@ -77,7 +77,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public string? Remarks { get; set; }
 
         //Cash
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal CashAmount { get; set; }
 
@@ -93,7 +93,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "varchar(20)")]
         public string? CheckBranch { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal CheckAmount { get; set; }
 
@@ -110,19 +110,19 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "varchar(20)")]
         public string? ManagerCheckBranch { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal ManagerCheckAmount { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal EWT { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal WVAT { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Total { get; set; }
 

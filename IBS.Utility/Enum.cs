@@ -33,7 +33,8 @@
         ApprovedByOpsManager,
         ApprovedByFinance,
         HaulerAppointed,
-        Completed
+        Completed,
+        Disapproved
     }
 
     public enum Status

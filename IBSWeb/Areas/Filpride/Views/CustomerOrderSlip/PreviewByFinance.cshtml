@@ -3,7 +3,7 @@
 @inject UserManager<IdentityUser> UserManager
 
 @{
-    ViewData["Title"] = "Ops Manager Approval - COS";
+    ViewData["Title"] = "Finance Approval - COS";
 }
 
 <div class="container mt-4">
@@ -33,7 +33,7 @@
                     <td class="text-end"><b>Exp Date:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.ExpirationDate)</td>
                 </tr>
                 <tr>
-                    <td><b>Terms:</b> @Model.CustomerOrderSlip.Customer?.CustomerTerms</td>
+                    <td><b>Terms:</b> @(Model.CustomerOrderSlip.Terms ?? Model.CustomerOrderSlip.Customer?.CustomerTerms)</td>
                     <td class="text-end"><b>PO No:</b> @Model.CustomerOrderSlip.CustomerPoNo</td>
                 </tr>
             </tbody>
@@ -77,7 +77,7 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th class="text-center table-primary" colspan="2">Net Delivered Price</th>
+                    <th class="text-center table-secondary" colspan="2">Net Delivered Price</th>
                 </tr>
             </thead>
             <tbody>
@@ -85,14 +85,30 @@
                 <tr><td class="text-center">Product Cost</td><td>@Html.DisplayFor(model => model.NetOfVatProductCost)</td></tr>
                 <tr><td class="text-center">Freight Charge</td><td>@Html.DisplayFor(model => model.NetOfVatFreightCharge)</td></tr>
                 <tr><td class="text-center">Commission</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip.CommissionRate)</td></tr>
-                <tr><td class="text-center">Gross Margin</td><td><input type="text" id="grossMarginInput" value="@Html.DisplayFor(model => model.GrossMargin)" class="form-control" /></td></tr>
+                <tr><td class="text-center">Gross Margin</td><td>@Html.DisplayFor(model => model.GrossMargin)</td></tr>
+
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive mb-3">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th class="text-center table-secondary" colspan="2">Customer Credit Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td class="text-center col-6">Balance</td><td class="col-6">@Html.DisplayFor(model => model.CreditBalance)</td></tr>
+                <tr><td class="text-center">COS Amount</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip.TotalAmount)</td></tr>
+                <tr><td class="text-center">Total</td><td>@Html.DisplayFor(model => model.Total)</td></tr>
             </tbody>
         </table>
     </div>
 
     <div class="row pt-2">
-        @*@{
-            if (Model.FirstApprovedBy == null)
+        @{
+            if (Model.CustomerOrderSlip.SecondApprovedBy == null)
             {
                 <div class="col-6 col-md-3">
                     <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
@@ -101,14 +117,10 @@
             else
             {
                 <div class="col-6 col-md-3">
-                    <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Print" asp-route-id="@Model.CustomerOrderSlipNo" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                    <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
                 </div>
             }
-        }*@
-
-        <div class="col-6 col-md-3">
-            <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
-        </div>
+        }
 
         <div class="col-6 col-md-3">
             <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
@@ -116,10 +128,34 @@
     </div>
 </div>
 
+@*@section Scripts {
+        <script>
+            document.getElementById('approveButton').addEventListener('click', function () {
+                const grossMarginValue = document.getElementById('grossMarginInput').value;
+                Swal.fire({
+                    title: 'Choose an action',
+                    text: "Approve or Disapprove the action.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: 'Approve',
+                    denyButtonText: 'Disapprove',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        var url = '@Url.Action("ApproveByFinance", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';//pass the terms
+                        window.location.href = url;
+                    } else if (result.isDenied) {
+                        window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';
+                    }
+                });
+            });
+        </script>
+    }*@
+
 @section Scripts {
     <script>
         document.getElementById('approveButton').addEventListener('click', function () {
-            const grossMarginValue = document.getElementById('grossMarginInput').value;
             Swal.fire({
                 title: 'Choose an action',
                 text: "Approve or Disapprove the action.",
@@ -130,9 +166,39 @@
                 denyButtonText: 'Disapprove',
                 cancelButtonText: 'Cancel'
             }).then((result) => {
-                if (result.isConfirmed) {
-                    var url = `@Url.Action("ApproveByOperationManager", "CustomerOrderSlip", new { area = "Filpride" })?id=${@Model.CustomerOrderSlip.CustomerOrderSlipId}&grossMargin=${grossMarginValue}`;
-                    window.location.href = url;
+                 if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Do you want to change the terms?',
+                        text: "If yes, please select new terms. If not, submit to approve without changes.",
+                        icon: 'question',
+                        input: 'select',
+                        inputOptions: {
+                            '@SD.Terms_Cod': '@SD.Terms_Cod',
+                            '@SD.Terms_Prepaid': '@SD.Terms_Prepaid',
+                            '@SD.Terms_7d': '@SD.Terms_7d',
+                            '@SD.Terms_10d': '@SD.Terms_10d',
+                            '@SD.Terms_15d': '@SD.Terms_15d',
+                            '@SD.Terms_30d': '@SD.Terms_30d',
+                            '@SD.Terms_45d': '@SD.Terms_45d',
+                            '@SD.Terms_60d': '@SD.Terms_60d',
+                            '@SD.Terms_90d': '@SD.Terms_90d',
+                            '@SD.Terms_15pdc': '@SD.Terms_15pdc',
+                            '@SD.Terms_30pdc': '@SD.Terms_30pdc',
+                            '@SD.Terms_45pdc': '@SD.Terms_45pdc',
+                            '@SD.Terms_60pdc': '@SD.Terms_60pdc',
+                            '@SD.Terms_M15': '@SD.Terms_M15',
+                            '@SD.Terms_M29': '@SD.Terms_M29',
+                            '@SD.Terms_M30': '@SD.Terms_M30'
+                        },
+                        inputPlaceholder: 'Select terms (optional)',
+                        showCancelButton: false,
+                        confirmButtonText: 'Submit'
+                    }).then((termResult) => {
+                        const selectedTerm = termResult.value || null;
+                        var url = '@Url.Action("ApproveByFinance", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId, terms = "__term__" })';
+                        url = url.replace('__term__', selectedTerm || '');
+                        window.location.href = url;
+                    });
                 } else if (result.isDenied) {
                     window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';
                 }
@@ -140,3 +206,4 @@
         });
     </script>
 }
+

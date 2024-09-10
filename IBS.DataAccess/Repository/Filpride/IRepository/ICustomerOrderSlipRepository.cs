@@ -15,6 +15,10 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task<List<SelectListItem>> GetCosListPerCustomerAsync(int customerId, CancellationToken cancellationToken = default);
 
-        Task PostAsync(FilprideCustomerOrderSlip customerOrderSlip, decimal grossMargin, CancellationToken cancellationToken = default);
+        Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, decimal grossMargin, CancellationToken cancellationToken = default);
+
+        Task<decimal> GetCustomerCreditBalance(int customerId, CancellationToken cancellationToken = default);
+
+        Task FinanceApproved(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default);
     }
 }

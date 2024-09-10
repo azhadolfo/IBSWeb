@@ -15,7 +15,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [Display(Name = "Transaction Date")]
         [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM/dd/yyyy}")]
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly Date { get; set; }
 
         [Display(Name = "RR No")]
@@ -92,7 +92,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public DateTime? LastCreatedDate { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal AmountPerMonth { get; set; }
 
@@ -108,11 +108,11 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "varchar(10)")]
         public string? CvType { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal CheckAmount { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:N4}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal AmountPaid { get; set; }
 

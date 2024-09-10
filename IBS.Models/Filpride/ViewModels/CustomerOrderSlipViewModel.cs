@@ -44,7 +44,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem>? Commissioners { get; set; }
 
-        public decimal? CommissionerRate { get; set; }
+        public decimal CommissionerRate { get; set; }
 
         public string Remarks { get; set; }
 

@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
+using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -114,14 +115,15 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task PostAsync(FilprideCustomerOrderSlip customerOrderSlip, decimal grossMargin, CancellationToken cancellationToken = default)
+        public async Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, decimal grossMargin, CancellationToken cancellationToken = default)
         {
-            //PENDING process the method here
             customerOrderSlip.ExpirationDate = DateOnly.FromDateTime(DateTime.Now.AddDays(7));
 
             customerOrderSlip.DeliveredPrice = UpdateCosPrice(grossMargin, customerOrderSlip);
 
             customerOrderSlip.TotalAmount = customerOrderSlip.Quantity * customerOrderSlip.DeliveredPrice;
+
+            customerOrderSlip.Status = nameof(CosStatus.ApprovedByOpsManager);
 
             await _db.SaveChangesAsync(cancellationToken);
         }
@@ -140,6 +142,33 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             return existingRecord.DeliveredPrice;
+        }
+
+        public async Task<decimal> GetCustomerCreditBalance(int customerId, CancellationToken cancellationToken = default)
+        {
+            //Beginning Balance to be discussed
+
+            var drForTheMonth = await _db.FilprideDeliveryReceipts
+                .Where(dr => dr.CustomerId == customerId && dr.Date.Month == DateTime.Now.Month && dr.Date.Year == DateTime.Now.Year)
+                .SumAsync(dr => dr.TotalAmount, cancellationToken);
+
+            var outstandingCos = await _db.FilprideCustomerOrderSlips
+                .Where(cos => cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.Now) && cos.Status == nameof(CosStatus.Completed))
+                .SumAsync(cos => cos.TotalAmount, cancellationToken);
+
+            var creditLimit = await _db.FilprideCustomers
+                .Where(c => c.CustomerId == customerId)
+                .Select(c => c.CreditLimit)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return creditLimit - (drForTheMonth + outstandingCos);
+        }
+
+        public async Task FinanceApproved(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default)
+        {
+            customerOrderSlip.Status = nameof(CosStatus.ApprovedByFinance);
+
+            await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }

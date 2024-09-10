@@ -184,7 +184,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> PreviewByOperationManager(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
             {
@@ -201,44 +201,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                return View(existingRecord);
+                CustomerOrderSlipForApprovalViewModel model = new()
+                {
+                    CustomerOrderSlip = existingRecord,
+                    NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.PurchaseOrder.Price),
+                    NetOfVatCosPrice = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.DeliveredPrice),
+                    NetOfVatFreightCharge = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat((decimal)existingRecord.Freight),
+                    VatAmount = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount(_unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.TotalAmount))
+                };
+
+                model.GrossMargin = model.NetOfVatCosPrice - model.NetOfVatProductCost - model.NetOfVatFreightCharge - (decimal)existingRecord.CommissionRate;
+
+                if (existingRecord.FirstApprovedBy == null)
+                {
+                    return View("PreviewByOperationManager", model);
+                }
+
+                model.CreditBalance = await _unitOfWork.FilprideCustomerOrderSlip.GetCustomerCreditBalance(existingRecord.CustomerId, cancellationToken);
+                model.Total = model.CreditBalance - existingRecord.TotalAmount;
+
+                return View("PreviewByFinance", model);
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
-            }
-        }
-
-        public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            try
-            {
-                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
-
-                if (existingRecord == null)
-                {
-                    return BadRequest();
-                }
-
-                if (!existingRecord.IsPrinted)
-                {
-                    existingRecord.IsPrinted = true;
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                }
-
-                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
-            }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
             }
         }
 
@@ -252,7 +239,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (grossMargin <= 0)
             {
                 TempData["error"] = "Gross margin cannot be negative and zero";
-                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
+                return RedirectToAction(nameof(Preview), new { id });
             }
 
             try
@@ -269,16 +256,51 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     existingRecord.FirstApprovedBy = _userManager.GetUserName(User);
                     existingRecord.FirstApprovedDate = DateTime.Now;
-                    await _unitOfWork.FilprideCustomerOrderSlip.PostAsync(existingRecord, grossMargin, cancellationToken);
+                    await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, grossMargin, cancellationToken);
                 }
 
-                TempData["success"] = "Customer order slip approved successfully.";
-                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
+                TempData["success"] = "Customer order slip approved by operation manager successfully.";
+                return RedirectToAction(nameof(Preview), new { id });
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
+
+        public async Task<IActionResult> ApproveByFinance(int? id, string? terms, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                if (existingRecord.SecondApprovedBy == null)
+                {
+                    existingRecord.SecondApprovedBy = _userManager.GetUserName(User);
+                    existingRecord.SecondApprovedDate = DateTime.Now;
+                    existingRecord.Terms = terms;
+                    await _unitOfWork.FilprideCustomerOrderSlip.FinanceApproved(existingRecord, cancellationToken);
+                }
+
+                TempData["success"] = "Customer order slip approved by finance successfully.";
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Preview), new { id });
             }
         }
 
@@ -305,6 +327,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     existingRecord.DisapprovedBy = _userManager.GetUserName(User);
                     existingRecord.DisapprovedDate = DateTime.Now;
+                    existingRecord.Status = nameof(CosStatus.Disapproved);
                     await _unitOfWork.SaveAsync(cancellationToken);
                 }
 
@@ -314,7 +337,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(PreviewByOperationManager), new { id });
+                return RedirectToAction(nameof(Preview), new { id });
             }
         }
 
@@ -352,7 +375,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                 .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
-            var viewModel = new CustomerOrderSlipStep2ViewModel
+            var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                 Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
@@ -363,7 +386,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AppointSupplier(CustomerOrderSlipStep2ViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> AppointSupplier(CustomerOrderSlipAppointingSupplierViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
             viewModel.CurrentUser = _userManager.GetUserName(User);
