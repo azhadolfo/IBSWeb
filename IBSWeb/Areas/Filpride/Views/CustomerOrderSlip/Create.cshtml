@@ -170,26 +170,30 @@
             });
 
             function checkCustomerBalance(totalAmount) {
-                var customerId = $('select[name="CustomerId"]').val();
-                if (customerId) {
-                    $.ajax({
-                        url: '@Url.Action("CheckCustomerBalance", "CustomerOrderSlip", new { area = "Filpride" })',
-                        type: "GET",
-                        data: { customerId: customerId },
-                        success: function (data) {
-                            if (totalAmount > data) {
-                                alert("Customer balance exceeded! Current balance: " + formatNumber(data));
-
-                                // Set DeliveredPrice to zero if the balance is exceeded
+            var customerId = $('select[name="CustomerId"]').val();
+            if (customerId) {
+                $.ajax({
+                    url: '@Url.Action("CheckCustomerBalance", "CustomerOrderSlip", new { area = "Filpride" })',
+                    type: "GET",
+                    data: { customerId: customerId },
+                    success: function (data) {
+                        if (totalAmount > data) {
+                            if (confirm("Customer balance exceeded! Current balance: " + formatNumber(data) + ". Do you want to proceed with the creation?")) {
+                                // User chose to proceed
+                            } else {
+                                // User chose not to proceed
                                 $('input[name="DeliveredPrice"]').val('0.0000');
+                                $('input[name="TotalAmount"]').val('0.0000');
+                                $('input[name="Vat"]').val('0.0000');
                             }
-                        },
-                        error: function (xhr, status, error) {
-                            console.log("Error: " + error);
                         }
-                    });
-                }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error: " + error);
+                    }
+                });
             }
+        }
         });
 </script>
     <script>
