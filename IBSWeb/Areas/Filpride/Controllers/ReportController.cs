@@ -185,7 +185,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     else if (poListFrom == null && poListTo != null || poListFrom != null && poListTo == null)
                     {
                         TempData["error"] = "Please fill the two select list in PO Liquidation Per PO, lowest to highest";
-                        return RedirectToAction("PurchaseBook");
+                        return RedirectToAction(nameof(PurchaseBook));
                     }
 
                     if (selectedFiltering == "UnpostedRR" || selectedFiltering == "POLiquidation")
@@ -224,12 +224,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (dateFrom == default && dateTo == default)
             {
                 TempData["error"] = "Please input Date From and Date To";
-                return RedirectToAction("PurchaseBook");
+                return RedirectToAction(nameof(PurchaseBook));
             }
             else if (dateFrom == default)
             {
                 TempData["error"] = "Please input Date To";
-                return RedirectToAction("PurchaseBook");
+                return RedirectToAction(nameof(PurchaseBook));
             }
 
             IEnumerable<FilprideReceivingReport> receivingReport = await _unitOfWork.FilprideReport.GetReceivingReportAsync(dateFrom, dateTo, selectedFiltering, companyClaims);
@@ -244,20 +244,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (poListFrom > poListTo)
             {
                 TempData["error"] = "Please input lowest to highest PO#!";
-                return RedirectToAction("PurchaseBook");
+                return RedirectToAction(nameof(PurchaseBook));
             }
 
-            var po = _dbContext
-                 .FilprideReceivingReports
-                 .Include(rr => rr.PurchaseOrder)
-                 .ThenInclude(po => po.Supplier)
-                 .Include(rr => rr.PurchaseOrder)
-                 .ThenInclude(po => po.Product)
-                 .AsEnumerable()
-                 .Where(rr => rr.POId >= from && rr.POId <= to && rr.PostedBy != null)
-                 .OrderBy(rr => rr.POId)
-                 .ToList();
-            return View(po);
+            try
+            {
+                var po = _dbContext
+                         .FilprideReceivingReports
+                         .Include(rr => rr.PurchaseOrder)
+                         .ThenInclude(po => po.Supplier)
+                         .Include(rr => rr.PurchaseOrder)
+                         .ThenInclude(po => po.Product)
+                         .AsEnumerable()
+                         .Where(rr => rr.POId >= from && rr.POId <= to && rr.PostedBy != null)
+                         .OrderBy(rr => rr.POId)
+                         .ToList();
+                return View(po);
+            }
+            catch (Exception ex)
+            {
+
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(PurchaseBook));
+            }
         }
 
         public IActionResult InventoryBook()
@@ -888,7 +897,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     else if (poListFrom == null && poListTo != null || poListFrom != null && poListTo == null)
                     {
                         TempData["error"] = "Please fill the two select list in PO Liquidation Per PO, lowest to highest";
-                        return RedirectToAction("PurchaseBook");
+                        return RedirectToAction(nameof(PurchaseBook));
                     }
 
                     if (selectedFiltering == "UnpostedRR" || selectedFiltering == "POLiquidation")
@@ -1092,7 +1101,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
         //Generate as .csv file
-        #region -- Generate DisbursmentBook .Csv File -- 
+        #region -- Generate DisbursmentBook .Csv File --
 
         public async Task<IActionResult> GenerateDisbursementBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
         {
@@ -1208,9 +1217,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DisbursementBook.xlsx");
         }
 
-        #endregion -- Generate DisbursmentBook .Csv File -- 
+        #endregion -- Generate DisbursmentBook .Csv File --
 
-        #region -- Generate CashReceiptBook .Csv File -- 
+        #region -- Generate CashReceiptBook .Csv File --
 
         public async Task<IActionResult> GenerateCashReceiptBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
         {
@@ -1324,9 +1333,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CashReceiptBook.xlsx");
         }
 
-        #endregion -- Generate CashReceiptBook .Csv File -- 
+        #endregion -- Generate CashReceiptBook .Csv File --
 
-        #region -- Generate GeneralLedgerBook .Csv File -- 
+        #region -- Generate GeneralLedgerBook .Csv File --
 
         public async Task<IActionResult> GenerateGeneralLedgerBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
         {
@@ -1434,9 +1443,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "GeneralLedgerBook.xlsx");
         }
 
-        #endregion -- Generate GeneralLedgerBook .Csv File -- 
+        #endregion -- Generate GeneralLedgerBook .Csv File --
 
-        #region -- Generate InventoryBook .Csv File -- 
+        #region -- Generate InventoryBook .Csv File --
 
         public async Task<IActionResult> GenerateInventoryBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
         {
@@ -1559,9 +1568,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "InventoryBook.xlsx");
         }
 
-        #endregion -- Generate InventoryBook .Csv File -- 
+        #endregion -- Generate InventoryBook .Csv File --
 
-        #region -- Generate JournalBook .Csv File -- 
+        #region -- Generate JournalBook .Csv File --
 
         public async Task<IActionResult> GenerateJournalBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
         {
@@ -1669,9 +1678,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "JournalBook.xlsx");
         }
 
-        #endregion -- Generate JournalBook .Csv File -- 
+        #endregion -- Generate JournalBook .Csv File --
 
-        #region -- Generate PurchaseBook .Csv File -- 
+        #region -- Generate PurchaseBook .Csv File --
 
         public async Task<IActionResult> GeneratePurchaseBookCsvFile(ViewModelBook model, string? selectedFiltering, string? poListFrom, string? poListTo, CancellationToken cancellationToken)
         {
@@ -1807,9 +1816,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PurchaseBook.xlsx");
         }
 
-        #endregion -- Generate PurchaseBook .Csv File -- 
+        #endregion -- Generate PurchaseBook .Csv File --
 
-        #region -- Generate SalesBook .Csv File -- 
+        #region -- Generate SalesBook .Csv File --
 
         public async Task<IActionResult> GenerateSalesBookCsvFile(ViewModelBook model, string? selectedDocument, string? soaList, string? siList, CancellationToken cancellationToken)
         {
@@ -1956,6 +1965,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SalesBook.xlsx");
         }
 
-        #endregion -- Generate SalesBook .Csv File -- 
+        #endregion -- Generate SalesBook .Csv File --
     }
 }

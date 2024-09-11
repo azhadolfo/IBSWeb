@@ -170,62 +170,70 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                #region --CV Details Entry
-
-                var generateJVNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, cancellationToken);
-                var cvDetails = new List<FilprideJournalVoucherDetail>();
-
-                var totalDebit = 0m;
-                var totalCredit = 0m;
-                if (totalDebit != totalCredit)
+                try
                 {
-                    TempData["error"] = "The debit and credit should be equal!";
+                    #region --CV Details Entry
+
+                    var generateJVNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, cancellationToken);
+                    var cvDetails = new List<FilprideJournalVoucherDetail>();
+
+                    var totalDebit = 0m;
+                    var totalCredit = 0m;
+                    if (totalDebit != totalCredit)
+                    {
+                        TempData["error"] = "The debit and credit should be equal!";
+                        return View(model);
+                    }
+
+                    #endregion --CV Details Entry
+
+                    #region --Saving the default entries
+
+                    //JV Header Entry
+                    model.Header.JournalVoucherHeaderNo = generateJVNo;
+                    model.Header.CreatedBy = _userManager.GetUserName(this.User);
+                    model.Header.Company = companyClaims;
+
+                    #endregion --Saving the default entries
+
+                    await _dbContext.AddAsync(model.Header, cancellationToken);  // Add CheckVoucherHeader to the context
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    for (int i = 0; i < accountNumber.Length; i++)
+                    {
+                        var currentAccountNumber = accountNumber[i];
+                        var accountTitle = await _dbContext.ChartOfAccounts
+                            .FirstOrDefaultAsync(coa => coa.AccountNumber == currentAccountNumber);
+                        var currentDebit = debit[i];
+                        var currentCredit = credit[i];
+                        totalDebit += debit[i];
+                        totalCredit += credit[i];
+
+                        cvDetails.Add(
+                            new FilprideJournalVoucherDetail
+                            {
+                                AccountNo = currentAccountNumber,
+                                AccountName = accountTitle.AccountName,
+                                TransactionNo = generateJVNo,
+                                JournalVoucherHeaderId = model.Header.JournalVoucherHeaderId,
+                                Debit = currentDebit,
+                                Credit = currentCredit
+                            }
+                        );
+                    }
+
+                    await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    TempData["success"] = "Journal voucher created successfully";
+
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
                     return View(model);
                 }
-
-                #endregion --CV Details Entry
-
-                #region --Saving the default entries
-
-                //JV Header Entry
-                model.Header.JournalVoucherHeaderNo = generateJVNo;
-                model.Header.CreatedBy = _userManager.GetUserName(this.User);
-                model.Header.Company = companyClaims;
-
-                #endregion --Saving the default entries
-
-                await _dbContext.AddAsync(model.Header, cancellationToken);  // Add CheckVoucherHeader to the context
-                await _dbContext.SaveChangesAsync(cancellationToken);
-
-                for (int i = 0; i < accountNumber.Length; i++)
-                {
-                    var currentAccountNumber = accountNumber[i];
-                    var accountTitle = await _dbContext.ChartOfAccounts
-                        .FirstOrDefaultAsync(coa => coa.AccountNumber == currentAccountNumber);
-                    var currentDebit = debit[i];
-                    var currentCredit = credit[i];
-                    totalDebit += debit[i];
-                    totalCredit += credit[i];
-
-                    cvDetails.Add(
-                        new FilprideJournalVoucherDetail
-                        {
-                            AccountNo = currentAccountNumber,
-                            AccountName = accountTitle.AccountName,
-                            TransactionNo = generateJVNo,
-                            JournalVoucherHeaderId = model.Header.JournalVoucherHeaderId,
-                            Debit = currentDebit,
-                            Credit = currentCredit
-                        }
-                    );
-                }
-
-                await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-
-                TempData["success"] = "Journal voucher created successfully";
-
-                return RedirectToAction(nameof(Index));
             }
             else
             {
@@ -419,7 +427,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     TempData["error"] = ex.Message;
-                    return RedirectToAction("Index");
+                    return RedirectToAction(nameof(Index));
                 }
             }
 
@@ -432,24 +440,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
-                if (model.VoidedBy == null)
+                try
                 {
-                    if (model.PostedBy != null)
+                    if (model.VoidedBy == null)
                     {
-                        model.PostedBy = null;
+                        if (model.PostedBy != null)
+                        {
+                            model.PostedBy = null;
+                        }
+
+                        model.VoidedBy = _userManager.GetUserName(this.User);
+                        model.VoidedDate = DateTime.Now;
+                        model.Status = nameof(Status.Voided);
+
+                        await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideJournalBook>(crb => crb.Reference == model.JournalVoucherHeaderNo);
+                        await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.JournalVoucherHeaderNo);
+
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        TempData["success"] = "Journal Voucher has been Voided.";
+                        return RedirectToAction(nameof(Index));
                     }
-
-                    model.VoidedBy = _userManager.GetUserName(this.User);
-                    model.VoidedDate = DateTime.Now;
-                    model.Status = nameof(Status.Voided);
-
-                    await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideJournalBook>(crb => crb.Reference == model.JournalVoucherHeaderNo);
-                    await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.JournalVoucherHeaderNo);
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Journal Voucher has been Voided.";
                 }
-                return RedirectToAction("Index");
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
+
             }
 
             return NotFound();
@@ -473,7 +490,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Journal Voucher has been Cancelled.";
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return NotFound();

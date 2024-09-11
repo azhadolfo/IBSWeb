@@ -215,7 +215,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion --Saving the default properties
 
                 await _dbContext.SaveChangesAsync();
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return View(model);
@@ -465,14 +465,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     else
                     {
-                        return RedirectToAction("Index");
+                        return RedirectToAction(nameof(Index));
                     }
                 }
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return null;
@@ -496,7 +496,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Service invoice has been Cancelled.";
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return NotFound();
@@ -510,22 +510,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 if (model.VoidedBy == null)
                 {
-                    if (model.PostedBy != null)
+                    try
                     {
-                        model.PostedBy = null;
+                        if (model.PostedBy != null)
+                        {
+                            model.PostedBy = null;
+                        }
+
+                        model.VoidedBy = _userManager.GetUserName(this.User);
+                        model.VoidedDate = DateTime.Now;
+                        model.Status = nameof(Status.Voided);
+
+                        await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
+                        await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.ServiceInvoiceNo, cancellationToken);
+
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        TempData["success"] = "Service invoice has been voided.";
+                        return RedirectToAction(nameof(Index));
                     }
+                    catch (Exception ex)
+                    {
 
-                    model.VoidedBy = _userManager.GetUserName(this.User);
-                    model.VoidedDate = DateTime.Now;
-                    model.Status = nameof(Status.Voided);
-
-                    await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
-                    await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.ServiceInvoiceNo, cancellationToken);
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Service invoice has been voided.";
+                        TempData["error"] = ex.Message;
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
-                return RedirectToAction("Index");
             }
 
             return NotFound();
@@ -579,34 +588,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                #region --Retrieval of Services
+                try
+                {
+                    #region --Retrieval of Services
 
-                var services = await _dbContext.FilprideServices.FindAsync(existingModel.ServiceId, cancellationToken);
+                    var services = await _dbContext.FilprideServices.FindAsync(existingModel.ServiceId, cancellationToken);
 
-                #endregion --Retrieval of Services
+                    #endregion --Retrieval of Services
 
-                #region --Retrieval of Customer
+                    #region --Retrieval of Customer
 
-                var customer = await _dbContext.FilprideCustomers.FindAsync(existingModel.CustomerId, cancellationToken);
+                    var customer = await _dbContext.FilprideCustomers.FindAsync(existingModel.CustomerId, cancellationToken);
 
-                #endregion --Retrieval of Customer
+                    #endregion --Retrieval of Customer
 
-                #region --Saving the default properties
+                    #region --Saving the default properties
 
-                existingModel.Discount = model.Discount;
-                existingModel.Amount = model.Amount;
-                existingModel.Period = model.Period;
-                existingModel.DueDate = model.DueDate;
-                existingModel.Instructions = model.Instructions;
+                    existingModel.Discount = model.Discount;
+                    existingModel.Amount = model.Amount;
+                    existingModel.Period = model.Period;
+                    existingModel.DueDate = model.DueDate;
+                    existingModel.Instructions = model.Instructions;
 
-                decimal total = 0;
-                total += model.Amount;
-                existingModel.Total = total;
+                    decimal total = 0;
+                    total += model.Amount;
+                    existingModel.Total = total;
 
-                #endregion --Saving the default properties
+                    #endregion --Saving the default properties
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                return RedirectToAction("Index");
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+
+                    TempData["error"] = ex.Message;
+                    return View(existingModel);
+                }
             }
 
             return View(existingModel);

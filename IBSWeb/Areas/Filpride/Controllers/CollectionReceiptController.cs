@@ -163,112 +163,120 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                #region --Saving default value
-
-                var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
-                if (computeTotalInModelIfZero == 0)
-                {
-                    TempData["error"] = "Please input atleast one type form of payment";
-                    return View(model);
-                }
-                var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
-                                               .FirstOrDefaultAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
-                var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
-
-                model.SINo = existingSalesInvoice.SalesInvoiceNo;
-                model.CollectionReceiptNo = generateCRNo;
-                model.CreatedBy = _userManager.GetUserName(this.User);
-                model.Total = computeTotalInModelIfZero;
-                model.Company = companyClaims;
-
                 try
                 {
-                    if (bir2306 != null && bir2306.Length > 0)
+                    #region --Saving default value
+
+                    var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
+                    if (computeTotalInModelIfZero == 0)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+                        TempData["error"] = "Please input atleast one type form of payment";
+                        return View(model);
+                    }
+                    var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
+                                                   .FirstOrDefaultAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
+                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
 
-                        if (!Directory.Exists(uploadsFolder))
+                    model.SINo = existingSalesInvoice.SalesInvoiceNo;
+                    model.CollectionReceiptNo = generateCRNo;
+                    model.CreatedBy = _userManager.GetUserName(this.User);
+                    model.Total = computeTotalInModelIfZero;
+                    model.Company = companyClaims;
+
+                    try
+                    {
+                        if (bir2306 != null && bir2306.Length > 0)
                         {
-                            Directory.CreateDirectory(uploadsFolder);
+                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            string fileName = Path.GetFileName(bir2306.FileName);
+                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
+
+                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                            {
+                                await bir2306.CopyToAsync(stream);
+                            }
+
+                            model.F2306FilePath = fileSavePath;
+                            model.IsCertificateUpload = true;
                         }
 
-                        string fileName = Path.GetFileName(bir2306.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        if (bir2307 != null && bir2307.Length > 0)
                         {
-                            await bir2306.CopyToAsync(stream);
-                        }
+                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
 
-                        model.F2306FilePath = fileSavePath;
-                        model.IsCertificateUpload = true;
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            string fileName = Path.GetFileName(bir2307.FileName);
+                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
+
+                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                            {
+                                await bir2307.CopyToAsync(stream);
+                            }
+
+                            model.F2307FilePath = fileSavePath;
+                            model.IsCertificateUpload = true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
                     }
 
-                    if (bir2307 != null && bir2307.Length > 0)
+                    await _dbContext.AddAsync(model, cancellationToken);
+
+                    decimal offsetAmount = 0;
+
+                    #endregion --Saving default value
+
+                    #region --Offsetting function
+
+                    var offsettings = new List<FilprideOffsettings>();
+
+                    for (int i = 0; i < accountTitle.Length; i++)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
+                        var currentAccountTitle = accountTitleText[i];
+                        var currentAccountAmount = accountAmount[i];
+                        offsetAmount += accountAmount[i];
 
-                        if (!Directory.Exists(uploadsFolder))
-                        {
-                            Directory.CreateDirectory(uploadsFolder);
-                        }
+                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
 
-                        string fileName = Path.GetFileName(bir2307.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        {
-                            await bir2307.CopyToAsync(stream);
-                        }
-
-                        model.F2307FilePath = fileSavePath;
-                        model.IsCertificateUpload = true;
+                        offsettings.Add(
+                            new FilprideOffsettings
+                            {
+                                AccountNo = accountTitle[i],
+                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                                Source = model.CollectionReceiptNo,
+                                Reference = model.SINo,
+                                Amount = currentAccountAmount,
+                                Company = model.Company,
+                                CreatedBy = model.CreatedBy,
+                                CreatedDate = model.CreatedDate
+                            }
+                        );
                     }
+
+                    await _dbContext.AddRangeAsync(offsettings, cancellationToken);
+
+                    #endregion --Offsetting function
+
+                    TempData["success"] = "Collection receipt created successfully.";
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+                    TempData["error"] = ex.Message;
+                    return View(model);
                 }
-
-                await _dbContext.AddAsync(model, cancellationToken);
-
-                decimal offsetAmount = 0;
-
-                #endregion --Saving default value
-
-                #region --Offsetting function
-
-                var offsettings = new List<FilprideOffsettings>();
-
-                for (int i = 0; i < accountTitle.Length; i++)
-                {
-                    var currentAccountTitle = accountTitleText[i];
-                    var currentAccountAmount = accountAmount[i];
-                    offsetAmount += accountAmount[i];
-
-                    var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                    offsettings.Add(
-                        new FilprideOffsettings
-                        {
-                            AccountNo = accountTitle[i],
-                            AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                            Source = model.CollectionReceiptNo,
-                            Reference = model.SINo,
-                            Amount = currentAccountAmount,
-                            Company = model.Company,
-                            CreatedBy = model.CreatedBy,
-                            CreatedDate = model.CreatedDate
-                        }
-                    );
-                }
-
-                await _dbContext.AddRangeAsync(offsettings, cancellationToken);
-
-                #endregion --Offsetting function
-
-                TempData["success"] = "Collection receipt created successfully.";
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                return RedirectToAction(nameof(Index));
             }
             else
             {
@@ -328,127 +336,136 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                #region --Saving default value
-
-                var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
-                if (computeTotalInModelIfZero == 0)
-                {
-                    TempData["error"] = "Please input atleast one type form of payment";
-                    return View(model);
-                }
-                var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
-                                               .Where(si => model.MultipleSIId.Contains(si.SalesInvoiceId))
-                                               .ToListAsync(cancellationToken);
-
-                model.MultipleSI = new string[model.MultipleSIId.Length];
-                model.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
-                var salesInvoice = new FilprideSalesInvoice();
-                for (int i = 0; i < model.MultipleSIId.Length; i++)
-                {
-                    var siId = model.MultipleSIId[i];
-                    salesInvoice = await _dbContext.FilprideSalesInvoices
-                                .FirstOrDefaultAsync(si => si.SalesInvoiceId == siId);
-
-                    if (salesInvoice != null)
-                    {
-                        model.MultipleSI[i] = salesInvoice.SalesInvoiceNo;
-                        model.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
-                    }
-                }
-
-                var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
-
-                model.CollectionReceiptNo = generateCRNo;
-                model.CreatedBy = _userManager.GetUserName(this.User);
-                model.Total = computeTotalInModelIfZero;
-
                 try
                 {
-                    if (bir2306 != null && bir2306.Length > 0)
+                    #region --Saving default value
+
+                    var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
+                    if (computeTotalInModelIfZero == 0)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+                        TempData["error"] = "Please input atleast one type form of payment";
+                        return View(model);
+                    }
+                    var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
+                                                   .Where(si => model.MultipleSIId.Contains(si.SalesInvoiceId))
+                                                   .ToListAsync(cancellationToken);
 
-                        if (!Directory.Exists(uploadsFolder))
+                    model.MultipleSI = new string[model.MultipleSIId.Length];
+                    model.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
+                    var salesInvoice = new FilprideSalesInvoice();
+                    for (int i = 0; i < model.MultipleSIId.Length; i++)
+                    {
+                        var siId = model.MultipleSIId[i];
+                        salesInvoice = await _dbContext.FilprideSalesInvoices
+                                    .FirstOrDefaultAsync(si => si.SalesInvoiceId == siId);
+
+                        if (salesInvoice != null)
                         {
-                            Directory.CreateDirectory(uploadsFolder);
+                            model.MultipleSI[i] = salesInvoice.SalesInvoiceNo;
+                            model.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
                         }
-
-                        string fileName = Path.GetFileName(bir2306.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        {
-                            await bir2306.CopyToAsync(stream);
-                        }
-
-                        model.F2306FilePath = fileSavePath;
-                        model.IsCertificateUpload = true;
                     }
 
-                    if (bir2307 != null && bir2307.Length > 0)
+                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
+
+                    model.CollectionReceiptNo = generateCRNo;
+                    model.CreatedBy = _userManager.GetUserName(this.User);
+                    model.Total = computeTotalInModelIfZero;
+
+                    try
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
-
-                        if (!Directory.Exists(uploadsFolder))
+                        if (bir2306 != null && bir2306.Length > 0)
                         {
-                            Directory.CreateDirectory(uploadsFolder);
+                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            string fileName = Path.GetFileName(bir2306.FileName);
+                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
+
+                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                            {
+                                await bir2306.CopyToAsync(stream);
+                            }
+
+                            model.F2306FilePath = fileSavePath;
+                            model.IsCertificateUpload = true;
                         }
 
-                        string fileName = Path.GetFileName(bir2307.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        if (bir2307 != null && bir2307.Length > 0)
                         {
-                            await bir2307.CopyToAsync(stream);
-                        }
+                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
 
-                        model.F2307FilePath = fileSavePath;
-                        model.IsCertificateUpload = true;
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            string fileName = Path.GetFileName(bir2307.FileName);
+                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
+
+                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                            {
+                                await bir2307.CopyToAsync(stream);
+                            }
+
+                            model.F2307FilePath = fileSavePath;
+                            model.IsCertificateUpload = true;
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                    }
+
+                    await _dbContext.AddAsync(model, cancellationToken);
+
+                    decimal offsetAmount = 0;
+
+                    #endregion --Saving default value
+
+                    #region --Offsetting function
+
+                    var offsettings = new List<FilprideOffsettings>();
+
+                    for (int i = 0; i < accountTitle.Length; i++)
+                    {
+                        var currentAccountTitle = accountTitleText[i];
+                        var currentAccountAmount = accountAmount[i];
+                        offsetAmount += accountAmount[i];
+
+                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
+
+                        offsettings.Add(
+                            new FilprideOffsettings
+                            {
+                                AccountNo = accountTitle[i],
+                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                                Source = model.CollectionReceiptNo,
+                                Reference = model.SINo,
+                                Amount = currentAccountAmount,
+                                Company = model.Company,
+                                CreatedBy = model.CreatedBy,
+                                CreatedDate = model.CreatedDate
+                            }
+                        );
+                    }
+
+                    await _dbContext.AddRangeAsync(offsettings, cancellationToken);
+
+                    #endregion --Offsetting function
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+
+                    TempData["error"] = ex.Message;
+                    return View(model);
                 }
-
-                await _dbContext.AddAsync(model, cancellationToken);
-
-                decimal offsetAmount = 0;
-
-                #endregion --Saving default value
-
-                #region --Offsetting function
-
-                var offsettings = new List<FilprideOffsettings>();
-
-                for (int i = 0; i < accountTitle.Length; i++)
-                {
-                    var currentAccountTitle = accountTitleText[i];
-                    var currentAccountAmount = accountAmount[i];
-                    offsetAmount += accountAmount[i];
-
-                    var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                    offsettings.Add(
-                        new FilprideOffsettings
-                        {
-                            AccountNo = accountTitle[i],
-                            AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                            Source = model.CollectionReceiptNo,
-                            Reference = model.SINo,
-                            Amount = currentAccountAmount,
-                            Company = model.Company,
-                            CreatedBy = model.CreatedBy,
-                            CreatedDate = model.CreatedDate
-                        }
-                    );
-                }
-
-                await _dbContext.AddRangeAsync(offsettings, cancellationToken);
-
-                #endregion --Offsetting function
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                return RedirectToAction(nameof(Index));
             }
             else
             {
@@ -520,191 +537,200 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                #region --Saving default value
-
-                var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
-                if (computeTotalInModelIfZero == 0)
-                {
-                    TempData["error"] = "Please input atleast one type form of payment";
-                    return View(model);
-                }
-                var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
-                                               .Where(si => model.MultipleSIId.Contains(si.SalesInvoiceId))
-                                               .ToListAsync(cancellationToken);
-
-                existingModel.MultipleSIId = new int[model.MultipleSIId.Length];
-                existingModel.MultipleSI = new string[model.MultipleSIId.Length];
-                existingModel.SIMultipleAmount = new decimal[model.MultipleSIId.Length];
-                existingModel.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
-                var salesInvoice = new FilprideSalesInvoice();
-                for (int i = 0; i < model.MultipleSIId.Length; i++)
-                {
-                    var siId = model.MultipleSIId[i];
-                    salesInvoice = await _dbContext.FilprideSalesInvoices
-                                .FirstOrDefaultAsync(si => si.SalesInvoiceId == siId);
-
-                    if (salesInvoice != null)
-                    {
-                        existingModel.MultipleSIId[i] = model.MultipleSIId[i];
-                        existingModel.MultipleSI[i] = salesInvoice.SalesInvoiceNo;
-                        existingModel.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
-                        existingModel.SIMultipleAmount[i] = model.SIMultipleAmount[i];
-                    }
-                }
-
-                existingModel.TransactionDate = model.TransactionDate;
-                existingModel.ReferenceNo = model.ReferenceNo;
-                existingModel.Remarks = model.Remarks;
-                existingModel.CheckDate = model.CheckDate;
-                existingModel.CheckNo = model.CheckNo;
-                existingModel.CheckBank = model.CheckBank;
-                existingModel.CheckBranch = model.CheckBranch;
-                existingModel.CashAmount = model.CashAmount;
-                existingModel.CheckAmount = model.CheckAmount;
-                existingModel.ManagerCheckAmount = model.ManagerCheckAmount;
-                existingModel.EWT = model.EWT;
-                existingModel.WVAT = model.WVAT;
-                existingModel.Total = computeTotalInModelIfZero;
-
                 try
                 {
-                    if (bir2306 != null && bir2306.Length > 0)
+                    #region --Saving default value
+
+                    var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
+                    if (computeTotalInModelIfZero == 0)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+                        TempData["error"] = "Please input atleast one type form of payment";
+                        return View(model);
+                    }
+                    var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
+                                                   .Where(si => model.MultipleSIId.Contains(si.SalesInvoiceId))
+                                                   .ToListAsync(cancellationToken);
 
-                        if (!Directory.Exists(uploadsFolder))
+                    existingModel.MultipleSIId = new int[model.MultipleSIId.Length];
+                    existingModel.MultipleSI = new string[model.MultipleSIId.Length];
+                    existingModel.SIMultipleAmount = new decimal[model.MultipleSIId.Length];
+                    existingModel.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
+                    var salesInvoice = new FilprideSalesInvoice();
+                    for (int i = 0; i < model.MultipleSIId.Length; i++)
+                    {
+                        var siId = model.MultipleSIId[i];
+                        salesInvoice = await _dbContext.FilprideSalesInvoices
+                                    .FirstOrDefaultAsync(si => si.SalesInvoiceId == siId);
+
+                        if (salesInvoice != null)
                         {
-                            Directory.CreateDirectory(uploadsFolder);
+                            existingModel.MultipleSIId[i] = model.MultipleSIId[i];
+                            existingModel.MultipleSI[i] = salesInvoice.SalesInvoiceNo;
+                            existingModel.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
+                            existingModel.SIMultipleAmount[i] = model.SIMultipleAmount[i];
                         }
-
-                        string fileName = Path.GetFileName(bir2306.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        {
-                            await bir2306.CopyToAsync(stream);
-                        }
-
-                        existingModel.F2306FilePath = fileSavePath;
-                        existingModel.IsCertificateUpload = true;
                     }
 
-                    if (bir2307 != null && bir2307.Length > 0)
+                    existingModel.TransactionDate = model.TransactionDate;
+                    existingModel.ReferenceNo = model.ReferenceNo;
+                    existingModel.Remarks = model.Remarks;
+                    existingModel.CheckDate = model.CheckDate;
+                    existingModel.CheckNo = model.CheckNo;
+                    existingModel.CheckBank = model.CheckBank;
+                    existingModel.CheckBranch = model.CheckBranch;
+                    existingModel.CashAmount = model.CashAmount;
+                    existingModel.CheckAmount = model.CheckAmount;
+                    existingModel.ManagerCheckAmount = model.ManagerCheckAmount;
+                    existingModel.EWT = model.EWT;
+                    existingModel.WVAT = model.WVAT;
+                    existingModel.Total = computeTotalInModelIfZero;
+
+                    try
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
-
-                        if (!Directory.Exists(uploadsFolder))
+                        if (bir2306 != null && bir2306.Length > 0)
                         {
-                            Directory.CreateDirectory(uploadsFolder);
+                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            string fileName = Path.GetFileName(bir2306.FileName);
+                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
+
+                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                            {
+                                await bir2306.CopyToAsync(stream);
+                            }
+
+                            existingModel.F2306FilePath = fileSavePath;
+                            existingModel.IsCertificateUpload = true;
                         }
 
-                        string fileName = Path.GetFileName(bir2307.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        if (bir2307 != null && bir2307.Length > 0)
                         {
-                            await bir2307.CopyToAsync(stream);
-                        }
+                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
 
-                        existingModel.F2307FilePath = fileSavePath;
-                        existingModel.IsCertificateUpload = true;
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            string fileName = Path.GetFileName(bir2307.FileName);
+                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
+
+                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                            {
+                                await bir2307.CopyToAsync(stream);
+                            }
+
+                            existingModel.F2307FilePath = fileSavePath;
+                            existingModel.IsCertificateUpload = true;
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                    }
+
+                    decimal offsetAmount = 0;
+
+                    #endregion --Saving default value
+
+                    #region --Offsetting function
+
+                    var findOffsettings = await _dbContext.FilprideOffsettings
+                    .Where(offset => offset.Source == existingModel.CollectionReceiptNo)
+                    .ToListAsync(cancellationToken);
+
+                    var accountTitleSet = new HashSet<string>(accountTitle);
+
+                    // Remove records not in accountTitle
+                    foreach (var offsetting in findOffsettings)
+                    {
+                        if (!accountTitleSet.Contains(offsetting.AccountNo))
+                        {
+                            _dbContext.FilprideOffsettings.Remove(offsetting);
+                        }
+                    }
+
+                    // Dictionary to keep track of AccountNo and their ids for comparison
+                    var accountTitleDict = new Dictionary<string, List<int>>();
+                    foreach (var offsetting in findOffsettings)
+                    {
+                        if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
+                        {
+                            accountTitleDict[offsetting.AccountNo] = new List<int>();
+                        }
+                        accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
+                    }
+
+                    // Add or update records
+                    for (int i = 0; i < accountTitle.Length; i++)
+                    {
+                        var accountNo = accountTitle[i];
+                        var currentAccountTitle = accountTitleText[i];
+                        var currentAccountAmount = accountAmount[i];
+                        offsetAmount += accountAmount[i];
+
+                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
+
+                        if (accountTitleDict.TryGetValue(accountNo, out var ids))
+                        {
+                            // Update the first matching record and remove it from the list
+                            var offsettingId = ids.First();
+                            ids.RemoveAt(0);
+                            var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
+
+                            offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
+                            offsetting.Amount = currentAccountAmount;
+                            offsetting.CreatedBy = _userManager.GetUserName(this.User);
+                            offsetting.CreatedDate = DateTime.Now;
+
+                            if (ids.Count == 0)
+                            {
+                                accountTitleDict.Remove(accountNo);
+                            }
+                        }
+                        else
+                        {
+                            // Add new record
+                            var newOffsetting = new FilprideOffsettings
+                            {
+                                AccountNo = accountNo,
+                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                                Source = existingModel.CollectionReceiptNo,
+                                Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
+                                Amount = currentAccountAmount,
+                                CreatedBy = _userManager.GetUserName(this.User),
+                                CreatedDate = DateTime.Now
+                            };
+                            _dbContext.FilprideOffsettings.Add(newOffsetting);
+                        }
+                    }
+
+                    // Remove remaining records that were duplicates
+                    foreach (var ids in accountTitleDict.Values)
+                    {
+                        foreach (var id in ids)
+                        {
+                            var offsetting = findOffsettings.First(o => o.OffSettingId == id);
+                            _dbContext.FilprideOffsettings.Remove(offsetting);
+                        }
+                    }
+
+                    #endregion --Offsetting function
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Collection Receipt edited successfully";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+
+                    TempData["error"] = ex.Message;
+                    return View(model);
                 }
-
-                decimal offsetAmount = 0;
-
-                #endregion --Saving default value
-
-                #region --Offsetting function
-
-                var findOffsettings = await _dbContext.FilprideOffsettings
-                .Where(offset => offset.Source == existingModel.CollectionReceiptNo)
-                .ToListAsync(cancellationToken);
-
-                var accountTitleSet = new HashSet<string>(accountTitle);
-
-                // Remove records not in accountTitle
-                foreach (var offsetting in findOffsettings)
-                {
-                    if (!accountTitleSet.Contains(offsetting.AccountNo))
-                    {
-                        _dbContext.FilprideOffsettings.Remove(offsetting);
-                    }
-                }
-
-                // Dictionary to keep track of AccountNo and their ids for comparison
-                var accountTitleDict = new Dictionary<string, List<int>>();
-                foreach (var offsetting in findOffsettings)
-                {
-                    if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
-                    {
-                        accountTitleDict[offsetting.AccountNo] = new List<int>();
-                    }
-                    accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
-                }
-
-                // Add or update records
-                for (int i = 0; i < accountTitle.Length; i++)
-                {
-                    var accountNo = accountTitle[i];
-                    var currentAccountTitle = accountTitleText[i];
-                    var currentAccountAmount = accountAmount[i];
-                    offsetAmount += accountAmount[i];
-
-                    var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                    if (accountTitleDict.TryGetValue(accountNo, out var ids))
-                    {
-                        // Update the first matching record and remove it from the list
-                        var offsettingId = ids.First();
-                        ids.RemoveAt(0);
-                        var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
-
-                        offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
-                        offsetting.Amount = currentAccountAmount;
-                        offsetting.CreatedBy = _userManager.GetUserName(this.User);
-                        offsetting.CreatedDate = DateTime.Now;
-
-                        if (ids.Count == 0)
-                        {
-                            accountTitleDict.Remove(accountNo);
-                        }
-                    }
-                    else
-                    {
-                        // Add new record
-                        var newOffsetting = new FilprideOffsettings
-                        {
-                            AccountNo = accountNo,
-                            AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                            Source = existingModel.CollectionReceiptNo,
-                            Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
-                            Amount = currentAccountAmount,
-                            CreatedBy = _userManager.GetUserName(this.User),
-                            CreatedDate = DateTime.Now
-                        };
-                        _dbContext.FilprideOffsettings.Add(newOffsetting);
-                    }
-                }
-
-                // Remove remaining records that were duplicates
-                foreach (var ids in accountTitleDict.Values)
-                {
-                    foreach (var id in ids)
-                    {
-                        var offsetting = findOffsettings.First(o => o.OffSettingId == id);
-                        _dbContext.FilprideOffsettings.Remove(offsetting);
-                    }
-                }
-
-                #endregion --Offsetting function
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                TempData["success"] = "Collection Receipt edited successfully";
-                return RedirectToAction(nameof(Index));
             }
             else
             {
@@ -755,112 +781,121 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                #region --Saving default value
-
-                var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
-                if (computeTotalInModelIfZero == 0)
-                {
-                    TempData["error"] = "Please input atleast one type form of payment";
-                    return View(model);
-                }
-                var existingServiceInvoice = await _dbContext.FilprideServiceInvoices
-                                               .FirstOrDefaultAsync(si => si.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-                var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
-
-                model.SVNo = existingServiceInvoice.ServiceInvoiceNo;
-                model.CollectionReceiptNo = generateCRNo;
-                model.CreatedBy = _userManager.GetUserName(this.User);
-                model.Total = computeTotalInModelIfZero;
-                model.Company = companyClaims;
-
                 try
                 {
-                    if (bir2306 != null && bir2306.Length > 0)
+                    #region --Saving default value
+
+                    var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
+                    if (computeTotalInModelIfZero == 0)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+                        TempData["error"] = "Please input atleast one type form of payment";
+                        return View(model);
+                    }
+                    var existingServiceInvoice = await _dbContext.FilprideServiceInvoices
+                                                   .FirstOrDefaultAsync(si => si.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
 
-                        if (!Directory.Exists(uploadsFolder))
+                    model.SVNo = existingServiceInvoice.ServiceInvoiceNo;
+                    model.CollectionReceiptNo = generateCRNo;
+                    model.CreatedBy = _userManager.GetUserName(this.User);
+                    model.Total = computeTotalInModelIfZero;
+                    model.Company = companyClaims;
+
+                    try
+                    {
+                        if (bir2306 != null && bir2306.Length > 0)
                         {
-                            Directory.CreateDirectory(uploadsFolder);
+                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            string fileName = Path.GetFileName(bir2306.FileName);
+                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
+
+                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                            {
+                                await bir2306.CopyToAsync(stream);
+                            }
+
+                            model.F2306FilePath = fileSavePath;
+                            model.IsCertificateUpload = true;
                         }
 
-                        string fileName = Path.GetFileName(bir2306.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        if (bir2307 != null && bir2307.Length > 0)
                         {
-                            await bir2306.CopyToAsync(stream);
-                        }
+                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
 
-                        model.F2306FilePath = fileSavePath;
-                        model.IsCertificateUpload = true;
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            string fileName = Path.GetFileName(bir2307.FileName);
+                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
+
+                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                            {
+                                await bir2307.CopyToAsync(stream);
+                            }
+
+                            model.F2307FilePath = fileSavePath;
+                            model.IsCertificateUpload = true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
                     }
 
-                    if (bir2307 != null && bir2307.Length > 0)
+                    await _dbContext.AddAsync(model, cancellationToken);
+
+                    decimal offsetAmount = 0;
+
+                    #endregion --Saving default value
+
+                    #region --Offsetting function
+
+                    var offsettings = new List<FilprideOffsettings>();
+
+                    for (int i = 0; i < accountTitle.Length; i++)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
+                        var currentAccountTitle = accountTitleText[i];
+                        var currentAccountAmount = accountAmount[i];
+                        offsetAmount += accountAmount[i];
 
-                        if (!Directory.Exists(uploadsFolder))
-                        {
-                            Directory.CreateDirectory(uploadsFolder);
-                        }
+                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
 
-                        string fileName = Path.GetFileName(bir2307.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        {
-                            await bir2307.CopyToAsync(stream);
-                        }
-
-                        model.F2307FilePath = fileSavePath;
-                        model.IsCertificateUpload = true;
+                        offsettings.Add(
+                            new FilprideOffsettings
+                            {
+                                AccountNo = accountTitle[i],
+                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                                Source = model.CollectionReceiptNo,
+                                Reference = model.SVNo,
+                                Amount = currentAccountAmount,
+                                Company = model.Company,
+                                CreatedBy = model.CreatedBy,
+                                CreatedDate = model.CreatedDate
+                            }
+                        );
                     }
+
+                    await _dbContext.AddRangeAsync(offsettings, cancellationToken);
+
+                    #endregion --Offsetting function
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Collection receipt created successfully.";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+
+                    TempData["error"] = ex.Message;
+                    return View(model);
                 }
-
-                await _dbContext.AddAsync(model, cancellationToken);
-
-                decimal offsetAmount = 0;
-
-                #endregion --Saving default value
-
-                #region --Offsetting function
-
-                var offsettings = new List<FilprideOffsettings>();
-
-                for (int i = 0; i < accountTitle.Length; i++)
-                {
-                    var currentAccountTitle = accountTitleText[i];
-                    var currentAccountAmount = accountAmount[i];
-                    offsetAmount += accountAmount[i];
-
-                    var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                    offsettings.Add(
-                        new FilprideOffsettings
-                        {
-                            AccountNo = accountTitle[i],
-                            AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                            Source = model.CollectionReceiptNo,
-                            Reference = model.SVNo,
-                            Amount = currentAccountAmount,
-                            Company = model.Company,
-                            CreatedBy = model.CreatedBy,
-                            CreatedDate = model.CreatedDate
-                        }
-                    );
-                }
-
-                await _dbContext.AddRangeAsync(offsettings, cancellationToken);
-
-                #endregion --Offsetting function
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                TempData["success"] = "Collection receipt created successfully.";
-                return RedirectToAction(nameof(Index));
             }
             else
             {
@@ -1057,169 +1092,178 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                #region --Saving default value
-
-                var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
-                if (computeTotalInModelIfZero == 0)
-                {
-                    TempData["error"] = "Please input atleast one type form of payment";
-                    return View(model);
-                }
-
-                existingModel.TransactionDate = model.TransactionDate;
-                existingModel.ReferenceNo = model.ReferenceNo;
-                existingModel.Remarks = model.Remarks;
-                existingModel.CheckDate = model.CheckDate;
-                existingModel.CheckNo = model.CheckNo;
-                existingModel.CheckBank = model.CheckBank;
-                existingModel.CheckBranch = model.CheckBranch;
-                existingModel.CashAmount = model.CashAmount;
-                existingModel.CheckAmount = model.CheckAmount;
-                existingModel.ManagerCheckAmount = model.ManagerCheckAmount;
-                existingModel.EWT = model.EWT;
-                existingModel.WVAT = model.WVAT;
-                existingModel.Total = computeTotalInModelIfZero;
-
                 try
                 {
-                    if (bir2306 != null && bir2306.Length > 0)
+                    var companyClaims = await GetCompanyClaimAsync();
+
+                    #region --Saving default value
+
+                    var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
+                    if (computeTotalInModelIfZero == 0)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
-
-                        if (!Directory.Exists(uploadsFolder))
-                        {
-                            Directory.CreateDirectory(uploadsFolder);
-                        }
-
-                        string fileName = Path.GetFileName(bir2306.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        {
-                            await bir2306.CopyToAsync(stream);
-                        }
-
-                        existingModel.F2306FilePath = fileSavePath;
-                        existingModel.IsCertificateUpload = true;
+                        TempData["error"] = "Please input atleast one type form of payment";
+                        return View(model);
                     }
 
-                    if (bir2307 != null && bir2307.Length > 0)
+                    existingModel.TransactionDate = model.TransactionDate;
+                    existingModel.ReferenceNo = model.ReferenceNo;
+                    existingModel.Remarks = model.Remarks;
+                    existingModel.CheckDate = model.CheckDate;
+                    existingModel.CheckNo = model.CheckNo;
+                    existingModel.CheckBank = model.CheckBank;
+                    existingModel.CheckBranch = model.CheckBranch;
+                    existingModel.CashAmount = model.CashAmount;
+                    existingModel.CheckAmount = model.CheckAmount;
+                    existingModel.ManagerCheckAmount = model.ManagerCheckAmount;
+                    existingModel.EWT = model.EWT;
+                    existingModel.WVAT = model.WVAT;
+                    existingModel.Total = computeTotalInModelIfZero;
+
+                    try
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
-
-                        if (!Directory.Exists(uploadsFolder))
+                        if (bir2306 != null && bir2306.Length > 0)
                         {
-                            Directory.CreateDirectory(uploadsFolder);
+                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
+
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            string fileName = Path.GetFileName(bir2306.FileName);
+                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
+
+                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                            {
+                                await bir2306.CopyToAsync(stream);
+                            }
+
+                            existingModel.F2306FilePath = fileSavePath;
+                            existingModel.IsCertificateUpload = true;
                         }
 
-                        string fileName = Path.GetFileName(bir2307.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                        if (bir2307 != null && bir2307.Length > 0)
                         {
-                            await bir2307.CopyToAsync(stream);
-                        }
+                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
 
-                        existingModel.F2307FilePath = fileSavePath;
-                        existingModel.IsCertificateUpload = true;
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            string fileName = Path.GetFileName(bir2307.FileName);
+                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
+
+                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
+                            {
+                                await bir2307.CopyToAsync(stream);
+                            }
+
+                            existingModel.F2307FilePath = fileSavePath;
+                            existingModel.IsCertificateUpload = true;
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                    }
+
+                    decimal offsetAmount = 0;
+
+                    #endregion --Saving default value
+
+                    #region --Offsetting function
+
+                    var findOffsettings = await _dbContext.FilprideOffsettings
+                    .Where(offset => offset.Company == companyClaims && offset.Source == existingModel.CollectionReceiptNo)
+                    .ToListAsync(cancellationToken);
+
+                    var accountTitleSet = new HashSet<string>(accountTitle);
+
+                    // Remove records not in accountTitle
+                    foreach (var offsetting in findOffsettings)
+                    {
+                        if (!accountTitleSet.Contains(offsetting.AccountNo))
+                        {
+                            _dbContext.FilprideOffsettings.Remove(offsetting);
+                        }
+                    }
+
+                    // Dictionary to keep track of AccountNo and their ids for comparison
+                    var accountTitleDict = new Dictionary<string, List<int>>();
+                    foreach (var offsetting in findOffsettings)
+                    {
+                        if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
+                        {
+                            accountTitleDict[offsetting.AccountNo] = new List<int>();
+                        }
+                        accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
+                    }
+
+                    // Add or update records
+                    for (int i = 0; i < accountTitle.Length; i++)
+                    {
+                        var accountNo = accountTitle[i];
+                        var currentAccountTitle = accountTitleText[i];
+                        var currentAccountAmount = accountAmount[i];
+                        offsetAmount += accountAmount[i];
+
+                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
+
+                        if (accountTitleDict.TryGetValue(accountNo, out var ids))
+                        {
+                            // Update the first matching record and remove it from the list
+                            var offsettingId = ids.First();
+                            ids.RemoveAt(0);
+                            var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
+
+                            offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
+                            offsetting.Amount = currentAccountAmount;
+                            offsetting.CreatedBy = _userManager.GetUserName(this.User);
+                            offsetting.CreatedDate = DateTime.Now;
+
+                            if (ids.Count == 0)
+                            {
+                                accountTitleDict.Remove(accountNo);
+                            }
+                        }
+                        else
+                        {
+                            // Add new record
+                            var newOffsetting = new FilprideOffsettings
+                            {
+                                AccountNo = accountNo,
+                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                                Source = existingModel.CollectionReceiptNo,
+                                Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
+                                Amount = currentAccountAmount,
+                                CreatedBy = _userManager.GetUserName(this.User),
+                                CreatedDate = DateTime.Now
+                            };
+                            _dbContext.FilprideOffsettings.Add(newOffsetting);
+                        }
+                    }
+
+                    // Remove remaining records that were duplicates
+                    foreach (var ids in accountTitleDict.Values)
+                    {
+                        foreach (var id in ids)
+                        {
+                            var offsetting = findOffsettings.First(o => o.OffSettingId == id);
+                            _dbContext.FilprideOffsettings.Remove(offsetting);
+                        }
+                    }
+
+                    #endregion --Offsetting function
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+
+                    TempData["error"] = ex.Message;
+                    return View(model);
                 }
-
-                decimal offsetAmount = 0;
-
-                #endregion --Saving default value
-
-                #region --Offsetting function
-
-                var findOffsettings = await _dbContext.FilprideOffsettings
-                .Where(offset => offset.Company == companyClaims && offset.Source == existingModel.CollectionReceiptNo)
-                .ToListAsync(cancellationToken);
-
-                var accountTitleSet = new HashSet<string>(accountTitle);
-
-                // Remove records not in accountTitle
-                foreach (var offsetting in findOffsettings)
-                {
-                    if (!accountTitleSet.Contains(offsetting.AccountNo))
-                    {
-                        _dbContext.FilprideOffsettings.Remove(offsetting);
-                    }
-                }
-
-                // Dictionary to keep track of AccountNo and their ids for comparison
-                var accountTitleDict = new Dictionary<string, List<int>>();
-                foreach (var offsetting in findOffsettings)
-                {
-                    if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
-                    {
-                        accountTitleDict[offsetting.AccountNo] = new List<int>();
-                    }
-                    accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
-                }
-
-                // Add or update records
-                for (int i = 0; i < accountTitle.Length; i++)
-                {
-                    var accountNo = accountTitle[i];
-                    var currentAccountTitle = accountTitleText[i];
-                    var currentAccountAmount = accountAmount[i];
-                    offsetAmount += accountAmount[i];
-
-                    var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                    if (accountTitleDict.TryGetValue(accountNo, out var ids))
-                    {
-                        // Update the first matching record and remove it from the list
-                        var offsettingId = ids.First();
-                        ids.RemoveAt(0);
-                        var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
-
-                        offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
-                        offsetting.Amount = currentAccountAmount;
-                        offsetting.CreatedBy = _userManager.GetUserName(this.User);
-                        offsetting.CreatedDate = DateTime.Now;
-
-                        if (ids.Count == 0)
-                        {
-                            accountTitleDict.Remove(accountNo);
-                        }
-                    }
-                    else
-                    {
-                        // Add new record
-                        var newOffsetting = new FilprideOffsettings
-                        {
-                            AccountNo = accountNo,
-                            AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                            Source = existingModel.CollectionReceiptNo,
-                            Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
-                            Amount = currentAccountAmount,
-                            CreatedBy = _userManager.GetUserName(this.User),
-                            CreatedDate = DateTime.Now
-                        };
-                        _dbContext.FilprideOffsettings.Add(newOffsetting);
-                    }
-                }
-
-                // Remove remaining records that were duplicates
-                foreach (var ids in accountTitleDict.Values)
-                {
-                    foreach (var id in ids)
-                    {
-                        var offsetting = findOffsettings.First(o => o.OffSettingId == id);
-                        _dbContext.FilprideOffsettings.Remove(offsetting);
-                    }
-                }
-
-                #endregion --Offsetting function
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                return RedirectToAction(nameof(Index));
             }
             else
             {
@@ -1642,7 +1686,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     catch (Exception ex)
                     {
-                        await transaction.RollbackAsync();
+                        await transaction.RollbackAsync(cancellationToken);
                         TempData["error"] = ex.Message;
                     }
                 }

@@ -46,23 +46,31 @@ namespace IBSWeb.Areas.User.Controllers
         {
             if (ModelState.IsValid)
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var isHaulerExist = await _unitOfWork.FilprideHauler.IsHaulerNameExistAsync(model.HaulerName, companyClaims, cancellationToken);
-
-                if (!isHaulerExist)
+                try
                 {
-                    model.HaulerCode = await _unitOfWork.FilprideHauler.GenerateCodeAsync(companyClaims, cancellationToken);
-                    model.CreatedBy = _userManager.GetUserName(User);
-                    model.Company = companyClaims;
-                    await _unitOfWork.FilprideHauler.AddAsync(model, cancellationToken);
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    TempData["success"] = "Hauler created successfully";
-                    return RedirectToAction(nameof(Index));
-                }
+                    var companyClaims = await GetCompanyClaimAsync();
 
-                ModelState.AddModelError("HaulerName", "Hauler already exist.");
-                return View(model);
+                    var isHaulerExist = await _unitOfWork.FilprideHauler.IsHaulerNameExistAsync(model.HaulerName, companyClaims, cancellationToken);
+
+                    if (!isHaulerExist)
+                    {
+                        model.HaulerCode = await _unitOfWork.FilprideHauler.GenerateCodeAsync(companyClaims, cancellationToken);
+                        model.CreatedBy = _userManager.GetUserName(User);
+                        model.Company = companyClaims;
+                        await _unitOfWork.FilprideHauler.AddAsync(model, cancellationToken);
+                        await _unitOfWork.SaveAsync(cancellationToken);
+                        TempData["success"] = "Hauler created successfully";
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    ModelState.AddModelError("HaulerName", "Hauler already exist.");
+                    return View(model);
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return View(model);
+                }
             }
             TempData["error"] = "The submitted information is invalid.";
             return View(model);

@@ -148,34 +148,42 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
             if (ModelState.IsValid)
             {
-                #region --Retrieve PO
-
-                var existingPo = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
-
-                #endregion --Retrieve PO
-
-                var totalAmountRR = existingPo.Quantity - existingPo.QuantityReceived;
-
-                if (model.QuantityDelivered > totalAmountRR)
+                try
                 {
-                    TempData["error"] = "Input is exceed to remaining quantity delivered";
+                    #region --Retrieve PO
+
+                    var existingPo = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
+
+                    #endregion --Retrieve PO
+
+                    var totalAmountRR = existingPo.Quantity - existingPo.QuantityReceived;
+
+                    if (model.QuantityDelivered > totalAmountRR)
+                    {
+                        TempData["error"] = "Input is exceed to remaining quantity delivered";
+                        return View(model);
+                    }
+
+                    model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, cancellationToken);
+                    model.CreatedBy = _userManager.GetUserName(this.User);
+                    model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
+                    model.PONo = existingPo.PurchaseOrderNo;
+                    model.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
+                    model.Amount = model.QuantityReceived * existingPo.Price;
+                    model.Company = companyClaims;
+
+                    await _dbContext.AddAsync(model, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    TempData["success"] = "Receiving Report created successfully";
+
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
                     return View(model);
                 }
-
-                model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, cancellationToken);
-                model.CreatedBy = _userManager.GetUserName(this.User);
-                model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
-                model.PONo = existingPo.PurchaseOrderNo;
-                model.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
-                model.Amount = model.QuantityReceived * existingPo.Price;
-                model.Company = companyClaims;
-
-                await _dbContext.AddAsync(model, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-
-                TempData["success"] = "Receiving Report created successfully";
-
-                return RedirectToAction("Index");
             }
 
             ModelState.AddModelError("", "The information you submitted is not valid!");
@@ -227,61 +235,69 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                if (existingModel == null)
+                try
                 {
-                    return NotFound();
+                    if (existingModel == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #region --Retrieve PO
+
+                    var po = await _dbContext
+                                .FilpridePurchaseOrders
+                                .Include(po => po.Supplier)
+                                .Include(po => po.Product)
+                                .FirstOrDefaultAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
+
+                    #endregion --Retrieve PO
+
+                    var rr = _dbContext.FilprideReceivingReports
+                    .Where(rr => rr.Company == companyClaims && rr.PONo == po.PurchaseOrderNo)
+                    .ToList();
+
+                    var totalAmountRR = po.Quantity - po.QuantityReceived;
+
+                    if (model.QuantityDelivered > totalAmountRR && existingModel.PostedBy == null)
+                    {
+                        TempData["error"] = "Input is exceed to remaining quantity delivered";
+                        return View(model);
+                    }
+
+                    existingModel.Date = model.Date;
+                    existingModel.POId = model.POId;
+
+                    var existingPo = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == model.POId);
+
+                    existingModel.PONo = existingPo.PurchaseOrderNo;
+
+                    existingModel.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
+                    existingModel.SupplierInvoiceNumber = model.SupplierInvoiceNumber;
+                    existingModel.SupplierInvoiceDate = model.SupplierInvoiceDate;
+                    existingModel.SupplierDrNo = model.SupplierDrNo;
+                    existingModel.WithdrawalCertificate = model.WithdrawalCertificate;
+                    existingModel.TruckOrVessels = model.TruckOrVessels;
+                    existingModel.QuantityDelivered = model.QuantityDelivered;
+                    existingModel.QuantityReceived = model.QuantityReceived;
+                    existingModel.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
+                    existingModel.OtherRef = model.OtherRef;
+                    existingModel.Remarks = model.Remarks;
+                    existingModel.ReceivedDate = model.ReceivedDate;
+                    existingModel.Amount = model.QuantityReceived * po.Price;
+
+                    existingModel.EditedBy = _userManager.GetUserName(User);
+                    existingModel.EditedDate = DateTime.Now;
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    TempData["success"] = "Receiving Report updated successfully";
+                    return RedirectToAction(nameof(Index));
                 }
-
-                #region --Retrieve PO
-
-                var po = await _dbContext
-                            .FilpridePurchaseOrders
-                            .Include(po => po.Supplier)
-                            .Include(po => po.Product)
-                            .FirstOrDefaultAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
-
-                #endregion --Retrieve PO
-
-                var rr = _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims && rr.PONo == po.PurchaseOrderNo)
-                .ToList();
-
-                var totalAmountRR = po.Quantity - po.QuantityReceived;
-
-                if (model.QuantityDelivered > totalAmountRR && existingModel.PostedBy == null)
+                catch (Exception ex)
                 {
-                    TempData["error"] = "Input is exceed to remaining quantity delivered";
+                    TempData["error"] = ex.Message;
                     return View(model);
                 }
-
-                existingModel.Date = model.Date;
-                existingModel.POId = model.POId;
-
-                var existingPo = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == model.POId);
-
-                existingModel.PONo = existingPo.PurchaseOrderNo;
-
-                existingModel.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
-                existingModel.SupplierInvoiceNumber = model.SupplierInvoiceNumber;
-                existingModel.SupplierInvoiceDate = model.SupplierInvoiceDate;
-                existingModel.SupplierDrNo = model.SupplierDrNo;
-                existingModel.WithdrawalCertificate = model.WithdrawalCertificate;
-                existingModel.TruckOrVessels = model.TruckOrVessels;
-                existingModel.QuantityDelivered = model.QuantityDelivered;
-                existingModel.QuantityReceived = model.QuantityReceived;
-                existingModel.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
-                existingModel.OtherRef = model.OtherRef;
-                existingModel.Remarks = model.Remarks;
-                existingModel.ReceivedDate = model.ReceivedDate;
-                existingModel.Amount = model.QuantityReceived * po.Price;
-
-                existingModel.EditedBy = _userManager.GetUserName(User);
-                existingModel.EditedDate = DateTime.Now;
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
-
-                TempData["success"] = "Receiving Report updated successfully";
-                return RedirectToAction("Index");
             }
 
             return View(existingModel);
@@ -382,10 +398,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     catch (Exception ex)
                     {
                         TempData["error"] = ex.Message;
-                        return RedirectToAction("Index");
+                        return RedirectToAction(nameof(Index));
                     }
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return NotFound();
@@ -412,7 +428,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Receiving Report has been Cancelled.";
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return NotFound();

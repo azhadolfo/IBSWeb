@@ -188,82 +188,90 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                if (model.SalesInvoiceId != null)
+                try
                 {
-                    var existingSIDMs = _dbContext.FilprideDebitMemos
-                                  .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                  .OrderBy(s => s.SalesInvoiceId)
-                                  .ToList();
-                    if (existingSIDMs.Count > 0)
+                    if (model.SalesInvoiceId != null)
                     {
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
-                        return View(model);
-                    }
-
-                    var existingSICMs = _dbContext.FilprideCreditMemos
+                        var existingSIDMs = _dbContext.FilprideDebitMemos
                                       .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
                                       .OrderBy(s => s.SalesInvoiceId)
                                       .ToList();
-                    if (existingSICMs.Count > 0)
-                    {
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
-                        return View(model);
-                    }
-                }
-                else
-                {
-                    var existingSOADMs = _dbContext.FilprideDebitMemos
-                                  .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                  .OrderBy(s => s.ServiceInvoiceId)
-                                  .ToList();
-                    if (existingSOADMs.Count > 0)
-                    {
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOADMs.First().DebitMemoNo}");
-                        return View(model);
-                    }
+                        if (existingSIDMs.Count > 0)
+                        {
+                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
+                            return View(model);
+                        }
 
-                    var existingSOACMs = _dbContext.FilprideCreditMemos
+                        var existingSICMs = _dbContext.FilprideCreditMemos
+                                          .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                          .OrderBy(s => s.SalesInvoiceId)
+                                          .ToList();
+                        if (existingSICMs.Count > 0)
+                        {
+                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
+                            return View(model);
+                        }
+                    }
+                    else
+                    {
+                        var existingSOADMs = _dbContext.FilprideDebitMemos
                                       .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                      .OrderBy(s => s.SalesInvoiceId)
+                                      .OrderBy(s => s.ServiceInvoiceId)
                                       .ToList();
-                    if (existingSOACMs.Count > 0)
-                    {
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOACMs.First().CreditMemoNo}");
-                        return View(model);
+                        if (existingSOADMs.Count > 0)
+                        {
+                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOADMs.First().DebitMemoNo}");
+                            return View(model);
+                        }
+
+                        var existingSOACMs = _dbContext.FilprideCreditMemos
+                                          .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                          .OrderBy(s => s.SalesInvoiceId)
+                                          .ToList();
+                        if (existingSOACMs.Count > 0)
+                        {
+                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOACMs.First().CreditMemoNo}");
+                            return View(model);
+                        }
                     }
+
+                    model.CreditMemoNo = await _unitOfWork.FilprideCreditMemo.GenerateCodeAsync(companyClaims, cancellationToken);
+                    model.CreatedBy = _userManager.GetUserName(this.User);
+                    model.Company = companyClaims;
+
+                    if (model.Source == "Sales Invoice")
+                    {
+                        model.ServiceInvoiceId = null;
+
+                        model.CreditAmount = (decimal)(model.Quantity * -model.AdjustedPrice);
+                    }
+                    else if (model.Source == "Service Invoice")
+                    {
+                        model.SalesInvoiceId = null;
+
+                        #region --Retrieval of Services
+
+                        model.ServicesId = existingSv.ServiceId;
+
+                        var services = await _dbContext
+                        .FilprideServices
+                        .FirstOrDefaultAsync(s => s.ServiceId == model.ServicesId, cancellationToken);
+
+                        #endregion --Retrieval of Services
+
+                        model.CreditAmount = -model.Amount ?? 0;
+                    }
+
+                    await _dbContext.AddAsync(model, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Credit memo created successfully.";
+                    return RedirectToAction(nameof(Index));
                 }
-
-                model.CreditMemoNo = await _unitOfWork.FilprideCreditMemo.GenerateCodeAsync(companyClaims, cancellationToken);
-                model.CreatedBy = _userManager.GetUserName(this.User);
-                model.Company = companyClaims;
-
-                if (model.Source == "Sales Invoice")
+                catch (Exception ex)
                 {
-                    model.ServiceInvoiceId = null;
-
-                    model.CreditAmount = (decimal)(model.Quantity * -model.AdjustedPrice);
+                    TempData["error"] = ex.Message;
+                    return View(model);
                 }
-                else if (model.Source == "Service Invoice")
-                {
-                    model.SalesInvoiceId = null;
-
-                    #region --Retrieval of Services
-
-                    model.ServicesId = existingSv.ServiceId;
-
-                    var services = await _dbContext
-                    .FilprideServices
-                    .FirstOrDefaultAsync(s => s.ServiceId == model.ServicesId, cancellationToken);
-
-                    #endregion --Retrieval of Services
-
-                    model.CreditAmount = -model.Amount ?? 0;
-                }
-
-                await _dbContext.AddAsync(model, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                TempData["success"] = "Credit memo created successfully.";
-                return RedirectToAction("Index");
             }
 
             ModelState.AddModelError("", "The information you submitted is not valid!");
@@ -340,61 +348,69 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                var existingCM = await _dbContext
-                        .FilprideCreditMemos
-                        .FirstOrDefaultAsync(cm => cm.CreditMemoId == model.CreditMemoId);
-
-                model.CreatedBy = _userManager.GetUserName(this.User);
-
-                if (model.Source == "Sales Invoice")
+                try
                 {
-                    model.ServiceInvoiceId = null;
+                    var existingCM = await _dbContext
+                                    .FilprideCreditMemos
+                                    .FirstOrDefaultAsync(cm => cm.CreditMemoId == model.CreditMemoId);
 
-                    #region -- Saving Default Enries --
+                    model.CreatedBy = _userManager.GetUserName(this.User);
 
-                    existingCM.TransactionDate = model.TransactionDate;
-                    existingCM.SalesInvoiceId = model.SalesInvoiceId;
-                    existingCM.Quantity = model.Quantity;
-                    existingCM.AdjustedPrice = model.AdjustedPrice;
-                    existingCM.Description = model.Description;
-                    existingCM.Remarks = model.Remarks;
+                    if (model.Source == "Sales Invoice")
+                    {
+                        model.ServiceInvoiceId = null;
 
-                    #endregion -- Saving Default Enries --
+                        #region -- Saving Default Enries --
 
-                    existingCM.CreditAmount = (decimal)(model.Quantity * -model.AdjustedPrice);
+                        existingCM.TransactionDate = model.TransactionDate;
+                        existingCM.SalesInvoiceId = model.SalesInvoiceId;
+                        existingCM.Quantity = model.Quantity;
+                        existingCM.AdjustedPrice = model.AdjustedPrice;
+                        existingCM.Description = model.Description;
+                        existingCM.Remarks = model.Remarks;
 
+                        #endregion -- Saving Default Enries --
+
+                        existingCM.CreditAmount = (decimal)(model.Quantity * -model.AdjustedPrice);
+
+                    }
+                    else if (model.Source == "Service Invoice")
+                    {
+                        model.SalesInvoiceId = null;
+
+                        #region --Retrieval of Services
+
+                        existingCM.ServicesId = existingSv.ServiceId;
+
+                        var services = await _dbContext
+                        .FilprideServices
+                        .FirstOrDefaultAsync(s => s.ServiceId == existingCM.ServicesId, cancellationToken);
+
+                        #endregion --Retrieval of Services
+
+                        #region -- Saving Default Enries --
+
+                        existingCM.TransactionDate = model.TransactionDate;
+                        existingCM.ServiceInvoiceId = model.ServiceInvoiceId;
+                        existingCM.Period = model.Period;
+                        existingCM.Amount = model.Amount;
+                        existingCM.Description = model.Description;
+                        existingCM.Remarks = model.Remarks;
+
+                        #endregion -- Saving Default Enries --
+
+                        existingCM.CreditAmount = -model.Amount ?? 0;
+                    }
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Credit Memo edited successfully";
+                    return RedirectToAction(nameof(Index));
                 }
-                else if (model.Source == "Service Invoice")
+                catch (Exception ex)
                 {
-                    model.SalesInvoiceId = null;
-
-                    #region --Retrieval of Services
-
-                    existingCM.ServicesId = existingSv.ServiceId;
-
-                    var services = await _dbContext
-                    .FilprideServices
-                    .FirstOrDefaultAsync(s => s.ServiceId == existingCM.ServicesId, cancellationToken);
-
-                    #endregion --Retrieval of Services
-
-                    #region -- Saving Default Enries --
-
-                    existingCM.TransactionDate = model.TransactionDate;
-                    existingCM.ServiceInvoiceId = model.ServiceInvoiceId;
-                    existingCM.Period = model.Period;
-                    existingCM.Amount = model.Amount;
-                    existingCM.Description = model.Description;
-                    existingCM.Remarks = model.Remarks;
-
-                    #endregion -- Saving Default Enries --
-
-                    existingCM.CreditAmount = -model.Amount ?? 0;
+                    TempData["error"] = ex.Message;
+                    return View(model);
                 }
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                TempData["success"] = "Credit Memo edited successfully";
-                return RedirectToAction("Index");
             }
 
             ModelState.AddModelError("", "The information you submitted is not valid!");
@@ -921,7 +937,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     TempData["error"] = ex.Message;
-                    return RedirectToAction("Index");
+                    return RedirectToAction(nameof(Index));
                 }
                 return RedirectToAction(nameof(Print), new { id });
             }
@@ -935,24 +951,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
-                if (model.VoidedBy == null)
+                try
                 {
-                    if (model.PostedBy != null)
+                    if (model.VoidedBy == null)
                     {
-                        model.PostedBy = null;
+                        if (model.PostedBy != null)
+                        {
+                            model.PostedBy = null;
+                        }
+
+                        model.VoidedBy = _userManager.GetUserName(this.User);
+                        model.VoidedDate = DateTime.Now;
+                        model.Status = nameof(Status.Voided);
+
+                        await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.CreditMemoNo);
+                        await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CreditMemoNo);
+
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        TempData["success"] = "Credit Memo has been Voided.";
+                        return RedirectToAction(nameof(Index));
                     }
-
-                    model.VoidedBy = _userManager.GetUserName(this.User);
-                    model.VoidedDate = DateTime.Now;
-                    model.Status = nameof(Status.Voided);
-
-                    await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.CreditMemoNo);
-                    await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CreditMemoNo);
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Credit Memo has been Voided.";
                 }
-                return RedirectToAction("Index");
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
             }
 
             return NotFound();
@@ -976,7 +1000,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Credit Memo has been Cancelled.";
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return NotFound();

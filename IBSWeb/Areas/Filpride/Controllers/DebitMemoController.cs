@@ -188,84 +188,92 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                if (model.SalesInvoiceId != null)
+                try
                 {
-                    var existingSIDMs = _dbContext.FilprideDebitMemos
-                                  .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                  .OrderBy(s => s.DebitMemoId)
-                                  .ToList();
-                    if (existingSIDMs.Count > 0)
+                    if (model.SalesInvoiceId != null)
                     {
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
-                        return View(model);
-                    }
-
-                    var existingSICMs = _dbContext.FilprideCreditMemos
+                        var existingSIDMs = _dbContext.FilprideDebitMemos
                                       .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                      .OrderBy(s => s.CreditMemoId)
+                                      .OrderBy(s => s.DebitMemoId)
                                       .ToList();
-                    if (existingSICMs.Count > 0)
-                    {
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
-                        return View(model);
-                    }
-                }
-                else
-                {
-                    var existingSVDMs = _dbContext.FilprideDebitMemos
-                                  .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                  .OrderBy(s => s.DebitMemoId)
-                                  .ToList();
-                    if (existingSVDMs.Count > 0)
-                    {
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
-                        return View(model);
-                    }
+                        if (existingSIDMs.Count > 0)
+                        {
+                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
+                            return View(model);
+                        }
 
-                    var existingSVCMs = _dbContext.FilprideCreditMemos
+                        var existingSICMs = _dbContext.FilprideCreditMemos
+                                          .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                          .OrderBy(s => s.CreditMemoId)
+                                          .ToList();
+                        if (existingSICMs.Count > 0)
+                        {
+                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
+                            return View(model);
+                        }
+                    }
+                    else
+                    {
+                        var existingSVDMs = _dbContext.FilprideDebitMemos
                                       .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                      .OrderBy(s => s.CreditMemoId)
+                                      .OrderBy(s => s.DebitMemoId)
                                       .ToList();
-                    if (existingSVCMs.Count > 0)
-                    {
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVCMs.First().CreditMemoNo}");
-                        return View(model);
+                        if (existingSVDMs.Count > 0)
+                        {
+                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
+                            return View(model);
+                        }
+
+                        var existingSVCMs = _dbContext.FilprideCreditMemos
+                                          .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                          .OrderBy(s => s.CreditMemoId)
+                                          .ToList();
+                        if (existingSVCMs.Count > 0)
+                        {
+                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVCMs.First().CreditMemoNo}");
+                            return View(model);
+                        }
                     }
+
+                    model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, cancellationToken);
+                    model.CreatedBy = _userManager.GetUserName(this.User);
+                    model.Company = companyClaims;
+
+                    if (model.Source == "Sales Invoice")
+                    {
+                        model.ServiceInvoiceId = null;
+
+                        model.DebitAmount = (decimal)(model.Quantity * model.AdjustedPrice);
+                    }
+                    else if (model.Source == "Service Invoice")
+                    {
+                        model.SalesInvoiceId = null;
+
+                        #region --Retrieval of Services
+
+                        model.ServicesId = existingSv.ServiceId;
+
+                        var services = await _dbContext
+                        .FilprideServices
+                        .FirstOrDefaultAsync(s => s.ServiceId == model.ServicesId, cancellationToken);
+
+                        #endregion --Retrieval of Services
+
+                        model.DebitAmount = model.Amount ?? 0;
+                    }
+
+                    await _dbContext.AddAsync(model, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    TempData["success"] = "Debit memo created successfully.";
+
+                    return RedirectToAction(nameof(Index));
                 }
-
-                model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, cancellationToken);
-                model.CreatedBy = _userManager.GetUserName(this.User);
-                model.Company = companyClaims;
-
-                if (model.Source == "Sales Invoice")
+                catch (Exception ex)
                 {
-                    model.ServiceInvoiceId = null;
-
-                    model.DebitAmount = (decimal)(model.Quantity * model.AdjustedPrice);
+                    TempData["error"] = ex.Message;
+                    return View(model);
                 }
-                else if (model.Source == "Service Invoice")
-                {
-                    model.SalesInvoiceId = null;
-
-                    #region --Retrieval of Services
-
-                    model.ServicesId = existingSv.ServiceId;
-
-                    var services = await _dbContext
-                    .FilprideServices
-                    .FirstOrDefaultAsync(s => s.ServiceId == model.ServicesId, cancellationToken);
-
-                    #endregion --Retrieval of Services
-
-                    model.DebitAmount = model.Amount ?? 0;
-                }
-
-                await _dbContext.AddAsync(model, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-
-                TempData["success"] = "Debit memo created successfully.";
-
-                return RedirectToAction("Index");
             }
             else
             {
@@ -768,23 +776,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
-                if (model.VoidedBy == null)
+                try
                 {
-                    if (model.PostedBy != null)
+                    if (model.VoidedBy == null)
                     {
-                        model.PostedBy = null;
+                        if (model.PostedBy != null)
+                        {
+                            model.PostedBy = null;
+                        }
+
+                        model.VoidedBy = _userManager.GetUserName(this.User);
+                        model.VoidedDate = DateTime.Now;
+
+                        await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.DebitMemoNo);
+                        await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo);
+
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        TempData["success"] = "Debit Memo has been Voided.";
+                        return RedirectToAction(nameof(Index));
                     }
-
-                    model.VoidedBy = _userManager.GetUserName(this.User);
-                    model.VoidedDate = DateTime.Now;
-
-                    await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.DebitMemoNo);
-                    await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo);
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Debit Memo has been Voided.";
                 }
-                return RedirectToAction("Index");
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
+
             }
 
             return NotFound();
@@ -807,7 +824,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Debit Memo has been Cancelled.";
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return NotFound();
@@ -905,60 +922,68 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             if (ModelState.IsValid)
             {
-                var existingDM = await _dbContext
-                        .FilprideDebitMemos
-                        .FirstOrDefaultAsync(dm => dm.DebitMemoId == model.DebitMemoId);
-
-                model.CreatedBy = _userManager.GetUserName(this.User);
-
-                if (model.Source == "Sales Invoice")
+                try
                 {
-                    model.ServiceInvoiceId = null;
+                    var existingDM = await _dbContext
+                                    .FilprideDebitMemos
+                                    .FirstOrDefaultAsync(dm => dm.DebitMemoId == model.DebitMemoId);
 
-                    #region -- Saving Default Enries --
+                    model.CreatedBy = _userManager.GetUserName(this.User);
 
-                    existingDM.TransactionDate = model.TransactionDate;
-                    existingDM.SalesInvoiceId = model.SalesInvoiceId;
-                    existingDM.Quantity = model.Quantity;
-                    existingDM.AdjustedPrice = model.AdjustedPrice;
-                    existingDM.Description = model.Description;
-                    existingDM.Remarks = model.Remarks;
+                    if (model.Source == "Sales Invoice")
+                    {
+                        model.ServiceInvoiceId = null;
 
-                    #endregion -- Saving Default Enries --
+                        #region -- Saving Default Enries --
 
-                    existingDM.DebitAmount = (decimal)(model.Quantity * model.AdjustedPrice);
+                        existingDM.TransactionDate = model.TransactionDate;
+                        existingDM.SalesInvoiceId = model.SalesInvoiceId;
+                        existingDM.Quantity = model.Quantity;
+                        existingDM.AdjustedPrice = model.AdjustedPrice;
+                        existingDM.Description = model.Description;
+                        existingDM.Remarks = model.Remarks;
+
+                        #endregion -- Saving Default Enries --
+
+                        existingDM.DebitAmount = (decimal)(model.Quantity * model.AdjustedPrice);
+                    }
+                    else if (model.Source == "Service Invoice")
+                    {
+                        model.SalesInvoiceId = null;
+
+                        #region --Retrieval of Services
+
+                        existingDM.ServicesId = existingSv.ServiceId;
+
+                        var services = await _dbContext
+                        .FilprideServices
+                        .FirstOrDefaultAsync(s => s.ServiceId == existingDM.ServicesId, cancellationToken);
+
+                        #endregion --Retrieval of Services
+
+                        #region -- Saving Default Enries --
+
+                        existingDM.TransactionDate = model.TransactionDate;
+                        existingDM.ServiceInvoiceId = model.ServiceInvoiceId;
+                        existingDM.Period = model.Period;
+                        existingDM.Amount = model.Amount;
+                        existingDM.Description = model.Description;
+                        existingDM.Remarks = model.Remarks;
+
+                        #endregion -- Saving Default Enries --
+
+                        existingDM.DebitAmount = model.Amount ?? 0;
+                    }
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Debit Memo edited successfully";
+                    return RedirectToAction(nameof(Index));
                 }
-                else if (model.Source == "Service Invoice")
+                catch (Exception ex)
                 {
-                    model.SalesInvoiceId = null;
-
-                    #region --Retrieval of Services
-
-                    existingDM.ServicesId = existingSv.ServiceId;
-
-                    var services = await _dbContext
-                    .FilprideServices
-                    .FirstOrDefaultAsync(s => s.ServiceId == existingDM.ServicesId, cancellationToken);
-
-                    #endregion --Retrieval of Services
-
-                    #region -- Saving Default Enries --
-
-                    existingDM.TransactionDate = model.TransactionDate;
-                    existingDM.ServiceInvoiceId = model.ServiceInvoiceId;
-                    existingDM.Period = model.Period;
-                    existingDM.Amount = model.Amount;
-                    existingDM.Description = model.Description;
-                    existingDM.Remarks = model.Remarks;
-
-                    #endregion -- Saving Default Enries --
-
-                    existingDM.DebitAmount = model.Amount ?? 0;
+                    TempData["error"] = ex.Message;
+                    return View(model);
                 }
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                TempData["success"] = "Debit Memo edited successfully";
-                return RedirectToAction("Index");
             }
 
             ModelState.AddModelError("", "The information you submitted is not valid!");

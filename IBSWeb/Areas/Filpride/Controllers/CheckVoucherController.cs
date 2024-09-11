@@ -634,7 +634,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     TempData["success"] = "Trade edited successfully";
-                    return RedirectToAction("Index");
+                    return RedirectToAction(nameof(Index));
                     #endregion -- Uploading file --
                 }
                 catch (Exception ex)
@@ -654,24 +654,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
-                if (model.VoidedBy == null)
+                try
                 {
-                    if (model.PostedBy != null)
+                    if (model.VoidedBy == null)
                     {
-                        model.PostedBy = null;
+                        if (model.PostedBy != null)
+                        {
+                            model.PostedBy = null;
+                        }
+
+                        model.VoidedBy = _userManager.GetUserName(this.User);
+                        model.VoidedDate = DateTime.Now;
+                        model.Status = nameof(Status.Voided);
+
+                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo);
+                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo);
+
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        TempData["success"] = "Check Voucher has been Voided.";
+                        return RedirectToAction(nameof(Index));
                     }
-
-                    model.VoidedBy = _userManager.GetUserName(this.User);
-                    model.VoidedDate = DateTime.Now;
-                    model.Status = nameof(Status.Voided);
-
-                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo);
-                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo);
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Check Voucher has been Voided.";
                 }
-                return RedirectToAction("Index");
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
             }
 
             return NotFound();
@@ -695,7 +703,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Check Voucher has been Cancelled.";
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return NotFound();
@@ -887,7 +895,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TempData["success"] = "Check voucher trade created successfully";
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
-                    return RedirectToAction("Index");
+                    return RedirectToAction(nameof(Index));
                     #endregion -- Uploading file --
                 }
                 catch (Exception ex)
@@ -1147,7 +1155,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                     TempData["success"] = "Check voucher invoicing created successfully.";
-                    return RedirectToAction("Index");
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
@@ -1328,7 +1336,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                     TempData["success"] = "Check voucher payment created successfully";
-                    return RedirectToAction("Index");
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
@@ -1634,7 +1642,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     TempData["success"] = "Non-trade invoicing edited successfully";
-                    return RedirectToAction("Index");
+                    return RedirectToAction(nameof(Index));
                     #endregion -- Uploading file --
                 }
                 catch (Exception ex)
@@ -1897,7 +1905,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     TempData["success"] = "Non-trade payment edited successfully";
-                    return RedirectToAction("Index");
+                    return RedirectToAction(nameof(Index));
                     #endregion -- Uploading file --
                 }
                 catch (Exception ex)

@@ -61,64 +61,72 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (await _unitOfWork.FilprideBankAccount.IsBankAccountNoExist(model.AccountNo, cancellationToken))
+                try
                 {
-                    ModelState.AddModelError("AccountNo", "Bank account no already exist!");
+                    if (await _unitOfWork.FilprideBankAccount.IsBankAccountNoExist(model.AccountNo, cancellationToken))
+                    {
+                        ModelState.AddModelError("AccountNo", "Bank account no already exist!");
+                        return View(model);
+                    }
+
+                    if (await _unitOfWork.FilprideBankAccount.IsBankAccountNameExist(model.AccountName, cancellationToken))
+                    {
+                        ModelState.AddModelError("AccountName", "Bank account name already exist!");
+                        return View(model);
+                    }
+
+                    model.Company = await GetCompanyClaimAsync();
+
+                    #region Generate Account No
+
+                    var lastCibAccount = await _dbContext.ChartOfAccounts
+                        .Where(coa => coa.Level == 5 && coa.AccountNumber.StartsWith("1010101"))
+                        .OrderByDescending(coa => coa.AccountNumber)
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    if (lastCibAccount != null)
+                    {
+                        var lastAccountNumber = lastCibAccount.AccountNumber;
+                        model.AccountNoCOA = (long.Parse(lastAccountNumber) + 1).ToString();
+                    }
+                    else
+                    {
+                        model.AccountNoCOA = "101010101";
+                    }
+
+                    #endregion Generate Account No
+
+                    model.CreatedBy = _userManager.GetUserName(this.User);
+
+                    #region -- COA Entry --
+
+                    var coa = new ChartOfAccount
+                    {
+                        IsMain = false,
+                        AccountNumber = model.AccountNoCOA,
+                        AccountName = "Cash in Bank" + " - " + model.AccountNo + " " + model.AccountName,
+                        AccountType = "Asset",
+                        NormalBalance = "Debit",
+                        Parent = "1010101",
+                        CreatedBy = _userManager.GetUserName(this.User),
+                        CreatedDate = DateTime.Now,
+                        Level = 5
+                    };
+
+                    await _dbContext.ChartOfAccounts.AddAsync(coa, cancellationToken);
+
+                    #endregion -- COA Entry --
+
+                    await _dbContext.AddAsync(model, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Bank created successfully.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
                     return View(model);
                 }
-
-                if (await _unitOfWork.FilprideBankAccount.IsBankAccountNameExist(model.AccountName, cancellationToken))
-                {
-                    ModelState.AddModelError("AccountName", "Bank account name already exist!");
-                    return View(model);
-                }
-
-                model.Company = await GetCompanyClaimAsync();
-
-                #region Generate Account No
-
-                var lastCibAccount = await _dbContext.ChartOfAccounts
-                    .Where(coa => coa.Level == 5 && coa.AccountNumber.StartsWith("1010101"))
-                    .OrderByDescending(coa => coa.AccountNumber)
-                    .FirstOrDefaultAsync(cancellationToken);
-
-                if (lastCibAccount != null)
-                {
-                    var lastAccountNumber = lastCibAccount.AccountNumber;
-                    model.AccountNoCOA = (long.Parse(lastAccountNumber) + 1).ToString();
-                }
-                else
-                {
-                    model.AccountNoCOA = "101010101";
-                }
-
-                #endregion Generate Account No
-
-                model.CreatedBy = _userManager.GetUserName(this.User);
-
-                #region -- COA Entry --
-
-                var coa = new ChartOfAccount
-                {
-                    IsMain = false,
-                    AccountNumber = model.AccountNoCOA,
-                    AccountName = "Cash in Bank" + " - " + model.AccountNo + " " + model.AccountName,
-                    AccountType = "Asset",
-                    NormalBalance = "Debit",
-                    Parent = "1010101",
-                    CreatedBy = _userManager.GetUserName(this.User),
-                    CreatedDate = DateTime.Now,
-                    Level = 5
-                };
-
-                await _dbContext.ChartOfAccounts.AddAsync(coa, cancellationToken);
-
-                #endregion -- COA Entry --
-
-                await _dbContext.AddAsync(model, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                TempData["success"] = "Bank created successfully.";
-                return RedirectToAction("Index");
             }
             else
             {
@@ -145,21 +153,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             if (ModelState.IsValid)
             {
-                existingModel.AccountNo = model.AccountNo;
-                existingModel.AccountName = model.AccountName;
-                existingModel.Bank = model.Bank;
-                existingModel.Branch = model.Branch;
+                try
+                {
+                    existingModel.AccountNo = model.AccountNo;
+                    existingModel.AccountName = model.AccountName;
+                    existingModel.Bank = model.Bank;
+                    existingModel.Branch = model.Branch;
 
-                TempData["success"] = "Bank edited successfully.";
+                    TempData["success"] = "Bank edited successfully.";
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return View(existingModel);
+                }
             }
             else
             {
                 ModelState.AddModelError("", "The information you submitted is not valid!");
                 return View(existingModel);
             }
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return RedirectToAction("Index");
         }
     }
 }

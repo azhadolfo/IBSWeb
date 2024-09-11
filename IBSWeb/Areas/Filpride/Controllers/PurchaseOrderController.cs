@@ -135,16 +135,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, cancellationToken);
-                model.CreatedBy = _userManager.GetUserName(this.User);
-                model.Amount = model.Quantity * model.Price;
+                try
+                {
+                    model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, cancellationToken);
+                    model.CreatedBy = _userManager.GetUserName(this.User);
+                    model.Amount = model.Quantity * model.Price;
 
-                await _dbContext.AddAsync(model, cancellationToken);
+                    await _dbContext.AddAsync(model, cancellationToken);
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
 
-                TempData["success"] = "Purchase Order created successfully";
-                return RedirectToAction("Index");
+                    TempData["success"] = "Purchase Order created successfully";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+
+                    TempData["error"] = ex.Message;
+                    return View(model);
+                }
             }
             else
             {
@@ -183,35 +192,44 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
-                var existingModel = await _dbContext.FilpridePurchaseOrders.FindAsync(model.PurchaseOrderId, cancellationToken);
-
-                var companyClaims = await GetCompanyClaimAsync();
-
-                if (existingModel == null)
+                try
                 {
-                    return NotFound();
+                    var existingModel = await _dbContext.FilpridePurchaseOrders.FindAsync(model.PurchaseOrderId, cancellationToken);
+
+                    var companyClaims = await GetCompanyClaimAsync();
+
+                    if (existingModel == null)
+                    {
+                        return NotFound();
+                    }
+
+                    model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+
+                    model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+
+                    existingModel.Date = model.Date;
+                    existingModel.SupplierId = model.SupplierId;
+                    existingModel.ProductId = model.ProductId;
+                    existingModel.Quantity = model.Quantity;
+                    existingModel.Price = model.Price;
+                    existingModel.Amount = model.Quantity * model.Price;
+                    existingModel.Remarks = model.Remarks;
+                    existingModel.Terms = model.Terms;
+
+                    existingModel.EditedBy = _userManager.GetUserName(User);
+                    existingModel.EditedDate = DateTime.Now;
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    TempData["success"] = "Purchase Order updated successfully";
+                    return RedirectToAction(nameof(Index));
                 }
+                catch (Exception ex)
+                {
 
-                model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
-
-                model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-
-                existingModel.Date = model.Date;
-                existingModel.SupplierId = model.SupplierId;
-                existingModel.ProductId = model.ProductId;
-                existingModel.Quantity = model.Quantity;
-                existingModel.Price = model.Price;
-                existingModel.Amount = model.Quantity * model.Price;
-                existingModel.Remarks = model.Remarks;
-                existingModel.Terms = model.Terms;
-
-                existingModel.EditedBy = _userManager.GetUserName(User);
-                existingModel.EditedDate = DateTime.Now;
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
-
-                TempData["success"] = "Purchase Order updated successfully";
-                return RedirectToAction("Index");
+                    TempData["error"] = ex.Message;
+                    return View(model);
+                }
             }
 
             return View(model);
@@ -275,8 +293,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Purchase Order has been Voided.";
+                    return RedirectToAction(nameof(Index));
                 }
-                return RedirectToAction("Index");
             }
 
             return NotFound();
@@ -300,7 +318,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Purchase Order has been Cancelled.";
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return NotFound();
@@ -353,7 +371,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Change Price updated successfully";
-                    return RedirectToAction("Index");
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
@@ -399,7 +417,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Purchase Order has been Closed.";
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
 
             return NotFound();

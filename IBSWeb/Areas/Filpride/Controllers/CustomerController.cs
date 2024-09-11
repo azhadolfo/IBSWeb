@@ -50,23 +50,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                //bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
-                bool IsTinExist = false;
-                if (!IsTinExist)
+                try
                 {
-                    model.Company = companyClaims;
-                    model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, companyClaims, cancellationToken);
-                    model.CreatedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.FilprideCustomer.AddAsync(model, cancellationToken);
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    TempData["success"] = "Customer created successfully";
-                    return RedirectToAction(nameof(Index));
-                }
+                    var companyClaims = await GetCompanyClaimAsync();
 
-                ModelState.AddModelError("CustomerTin", "Tin No already exist.");
-                return View(model);
+                    //bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
+                    bool IsTinExist = false;
+                    if (!IsTinExist)
+                    {
+                        model.Company = companyClaims;
+                        model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, companyClaims, cancellationToken);
+                        model.CreatedBy = _userManager.GetUserName(User);
+                        await _unitOfWork.FilprideCustomer.AddAsync(model, cancellationToken);
+                        await _unitOfWork.SaveAsync(cancellationToken);
+                        TempData["success"] = "Customer created successfully";
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    ModelState.AddModelError("CustomerTin", "Tin No already exist.");
+                    return View(model);
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return View(model);
+                }
             }
             ModelState.AddModelError("", "Make sure to fill all the required details.");
             return View(model);
