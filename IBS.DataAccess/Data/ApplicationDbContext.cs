@@ -396,41 +396,6 @@ namespace IBS.DataAccess.Data
 
             #region--Filpride
 
-            //builder.Entity<FilpridePurchaseOrder>(po =>
-            //{
-            //    po.HasIndex(po => po.PurchaseOrderNo).IsUnique();
-            //    po.HasIndex(po => po.Date);
-
-            //    po.HasOne(po => po.Supplier)
-            //    .WithMany()
-            //    .HasForeignKey(po => po.SupplierId)
-            //    .OnDelete(DeleteBehavior.Restrict);
-
-            //    po.HasOne(po => po.Product)
-            //    .WithMany()
-            //    .HasForeignKey(po => po.ProductId)
-            //    .OnDelete(DeleteBehavior.Restrict);
-
-            //    po.Property(po => po.Port)
-            //    .HasConversion<int>();
-            //});
-
-            //builder.Entity<FilprideReceivingReport>(rr =>
-            //{
-            //    rr.HasIndex(rr => rr.ReceivingReportNo).IsUnique();
-            //    rr.HasIndex(rr => rr.Date);
-
-            //    rr.HasOne(rr => rr.DeliveryReceipt)
-            //    .WithMany()
-            //    .HasForeignKey(rr => rr.DeliveryReceiptId)
-            //    .OnDelete(DeleteBehavior.Restrict);
-
-            //    rr.HasOne(rr => rr.Customer)
-            //    .WithMany()
-            //    .HasForeignKey(rr => rr.CustomerId)
-            //    .OnDelete(DeleteBehavior.Restrict);
-            //});
-
             builder.Entity<FilprideCustomerOrderSlip>(cos =>
             {
                 cos.HasIndex(cos => cos.CustomerOrderSlipNo).IsUnique();
@@ -444,6 +409,16 @@ namespace IBS.DataAccess.Data
                 cos.HasOne(cos => cos.Customer)
                 .WithMany()
                 .HasForeignKey(cos => cos.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                cos.HasOne(cos => cos.Hauler)
+                .WithMany()
+                .HasForeignKey(cos => cos.HaulerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                cos.HasOne(cos => cos.Commissioner)
+                .WithMany()
+                .HasForeignKey(cos => cos.CommissionerId)
                 .OnDelete(DeleteBehavior.Restrict);
             });
 

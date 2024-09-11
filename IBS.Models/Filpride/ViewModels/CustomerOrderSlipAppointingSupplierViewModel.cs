@@ -5,6 +5,7 @@ namespace IBS.Models.Filpride.ViewModels
     public class CustomerOrderSlipAppointingSupplierViewModel
     {
         public int CustomerOrderSlipId { get; set; }
+
         public List<SelectListItem>? Suppliers { get; set; }
 
         public int SupplierId { get; set; } = 0;
