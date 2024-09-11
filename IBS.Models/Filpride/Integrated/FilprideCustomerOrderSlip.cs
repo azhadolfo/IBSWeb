@@ -123,6 +123,14 @@ namespace IBS.Models.Filpride.Integrated
 
         #endregion
 
+        #region Appointing Hauler
+
+        public int? HaulerId { get; set; }
+
+        public FilprideHauler? Hauler { get; set; }
+
+        #endregion
+
         public bool IsDelivered { get; set; }
 
         [Column(TypeName = "varchar(100)")]

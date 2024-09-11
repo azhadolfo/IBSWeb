@@ -509,5 +509,67 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return Json(balance);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> AppointHauler(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+            var viewModel = new CustomerOrderSlipAppointingHauler
+            {
+                CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(companyClaims, cancellationToken)
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AppointHauler(CustomerOrderSlipAppointingHauler viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    viewModel.CurrentUser = _userManager.GetUserName(User);
+
+                    var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                    if (existingCos == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    existingCos.HaulerId = viewModel.HaulerId;
+                    existingCos.Freight = viewModel.Freight;
+                    existingCos.Status = nameof(CosStatus.HaulerAppointed);
+
+                    TempData["success"] = "Appointed hauler successfully.";
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
+
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return View(viewModel);
+                }
+            }
+
+            viewModel.Haulers = await _unitOfWork.FilprideHauler.GetHaulerListAsync(companyClaims, cancellationToken);
+            TempData["error"] = "The submitted information is invalid.";
+            return View(viewModel);
+        }
     }
 }
