@@ -22,7 +22,7 @@
                 </a>
             </div>
         </div>
-        <table class="table table-bordered table-striped" id="dataTable">
+        <table class="table table-bordered table-striped" id="paginatedTable">
             <thead>
                 <tr class="text-nowrap">
                     <th>
@@ -43,81 +43,106 @@
                     <th>
                         Status
                     </th>
-                    <th></th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach (var obj in Model.OrderBy(u => u.CustomerOrderSlipNo))
-                {
-                    <tr>
-                        <td>
-                            @obj.CustomerOrderSlipNo
-                        </td>
-                        <td>
-                            @obj.Date.ToString("MMM dd, yyyy")
-                        </td>
-                        <td>
-                            @obj.Customer?.CustomerName
-                        </td>
-                        <td>
-                            @Html.DisplayFor(model => obj.Quantity)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(model => obj.TotalAmount)
-                        </td>
-                        <td class="text-center">
-                            <span class="badge rounded-pill @if(obj.Status == nameof(CosStatus.Completed)) {<text>bg-success</text>} else if(obj.Status == nameof(CosStatus.Disapproved)) {<text>bg-danger</text>} else {<text>bg-info</text>}">@obj.Status</span>
-                        </td>
-                        <td class="text-center">
-                            <div class="dropdown" style="@(obj.DisapprovedBy != null ? "display:none;" : "")">
-                                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Actions
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                    @if (obj.Status != nameof(CosStatus.Completed))
-                                    {
-                                        @switch (obj.Status)
-                                        {
-                                            case nameof(CosStatus.Created):
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="EditCos" asp-route-id="@obj.CustomerOrderSlipId">Edit COS</a></li>
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="AppointSupplier" asp-route-id="@obj.CustomerOrderSlipId">Appoint Supplier</a></li>
-                                                break;
-
-                                            case nameof(CosStatus.SupplierAppointed):
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Preview</a></li>
-                                                break;
-
-                                            case nameof(CosStatus.ApprovedByOpsManager):
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Preview</a></li>
-                                                break;
-
-                                            case nameof(CosStatus.ApprovedByFinance):
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Preview</a></li>
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="AppointHauler" asp-route-id="@obj.CustomerOrderSlipId">Appoint Hauler</a></li>
-                                                break;
-
-                                            case nameof(CosStatus.HaulerAppointed):
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Edit" asp-route-id="@obj.CustomerOrderSlipId">Edit</a></li>
-                                                break;
-
-                                            default:
-                                                <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Details" asp-route-id="@obj.CustomerOrderSlipId">View Details</a></li>
-                                                break;
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        <li><a class="dropdown-item" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Preview" asp-route-id="@obj.CustomerOrderSlipId">Print</a></li>
-                                    }
-
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#paginatedTable').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ajax": {
+                    "url": "@Url.Action("GetCustomerOrderSlips", "CustomerOrderSlip", new { area = "Filpride" })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                },
+                "columns": [
+                    { "data": "customerOrderSlipNo" },
+                    { "data": "date", "render": function (data) {
+                        var date = new Date(data);
+                        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                    }},
+                    { "data": "customer.customerName" },
+                    { "data": "quantity" },
+                    { "data": "totalAmount", "render": $.fn.dataTable.render.number(',', '.', 4) },
+                    {
+                        "data": "status",
+                        "render": function (data) {
+                            var badgeClass = "";
+                            switch (data) {
+                                case 'Created':
+                                    badgeClass = "badge bg-primary";
+                                    break;
+                                case 'SupplierAppointed':
+                                    badgeClass = "badge bg-info";
+                                    break;
+                                case 'ApprovedByOpsManager':
+                                    badgeClass = "badge bg-warning";
+                                    break;
+                                case 'ApprovedByFinance':
+                                    badgeClass = "badge bg-success";
+                                    break;
+                                case 'HaulerAppointed':
+                                    badgeClass = "badge bg-dark";
+                                    break;
+                                case 'Completed':
+                                    badgeClass = "badge bg-success";
+                                    break;
+                                default:
+                                    badgeClass = "badge bg-secondary";
+                                    break;
+                            }
+                            return `<span class="${badgeClass}">${data}</span>`;
+                        }
+                    },
+                    {
+                        "data": null,
+                        "render": function (data, type, row) {
+                            var status = row.status;
+                            var customerOrderSlipId = row.customerOrderSlipId;
+                            var actions = `<div class="dropdown">
+                                             <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">`;
+
+                            switch (status) {
+                                case 'Created':
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>
+                                                <li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>`;
+                                    break;
+                                case 'SupplierAppointed':
+                                case 'ApprovedByOpsManager':
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
+                                    break;
+                                case 'ApprovedByFinance':
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>
+                                                <li><a class="dropdown-item" href="@Url.Action("AppointHauler", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Hauler</a></li>`;
+                                    break;
+                                case 'HaulerAppointed':
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("Edit", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit</a></li>`;
+                                    break;
+                                case 'Completed':
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Print</a></li>`;
+                                    break;
+                                default:
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("Details", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">View Details</a></li>`;
+                                    break;
+                            }
+
+                            actions += `</ul></div>`;
+                            return actions;
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+}

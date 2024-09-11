@@ -1,10 +1,12 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -38,6 +40,72 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return View(cosList);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> GetCustomerOrderSlips([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var cosList = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAllAsync(cos => cos.Company == companyClaims, cancellationToken);
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    cosList = cosList
+                    .Where(s =>
+                        s.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
+                        s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
+                        s.Customer.CustomerName?.ToLower().Contains(searchValue) == true ||
+                        s.Quantity.ToString().Contains(searchValue) == true ||
+                        s.TotalAmount.ToString().Contains(searchValue) == true ||
+                        s.Remarks?.ToLower().Contains(searchValue) == true ||
+                        s.Status.ToLower().Contains(searchValue)
+                        )
+                    .ToList();
+
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    cosList = cosList
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = cosList.Count();
+
+                var pagedData = cosList
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+
 
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
