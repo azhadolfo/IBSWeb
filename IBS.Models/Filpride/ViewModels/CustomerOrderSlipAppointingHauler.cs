@@ -14,6 +14,10 @@ namespace IBS.Models.Filpride.ViewModels
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Freight { get; set; }
 
+        public string Driver { get; set; }
+
+        public string PlateNo { get; set; }
+
         public string CurrentUser { get; set; } = string.Empty;
     }
 }

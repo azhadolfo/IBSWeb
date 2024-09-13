@@ -624,6 +624,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingCos.HaulerId = viewModel.HaulerId;
                     existingCos.Freight = viewModel.Freight;
+                    existingCos.Driver = viewModel.Driver;
+                    existingCos.PlateNo = viewModel.PlateNo;
                     existingCos.Status = nameof(CosStatus.HaulerAppointed);
 
                     TempData["success"] = "Appointed hauler successfully.";

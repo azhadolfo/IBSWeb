@@ -131,6 +131,10 @@ namespace IBS.Models.Filpride.Integrated
 
         public FilprideSupplier? Hauler { get; set; }
 
+        public string? Driver { get; set; }
+
+        public string? PlateNo { get; set; }
+
         #endregion
 
         public bool IsDelivered { get; set; }
