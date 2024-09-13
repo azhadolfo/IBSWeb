@@ -213,6 +213,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.Quantity = model.Quantity;
                     existingModel.Price = model.Price;
                     existingModel.Amount = model.Quantity * model.Price;
+                    existingModel.SalesOrderNo = model.SalesOrderNo;
                     existingModel.Remarks = model.Remarks;
                     existingModel.Terms = model.Terms;
 
