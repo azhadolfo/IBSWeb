@@ -74,7 +74,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.TotalAmount = viewModel.TotalAmount;
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.HasCommission = viewModel.HasCommission;
-            existingRecord.CommissionerId = viewModel.CommissionerId;
+            existingRecord.CommissioneeId = viewModel.CommissioneeId;
             existingRecord.CommissionRate = viewModel.CommissionerRate;
 
             if (_db.ChangeTracker.HasChanges())

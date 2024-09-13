@@ -414,9 +414,9 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(cos => cos.HaulerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-                cos.HasOne(cos => cos.Commissioner)
+                cos.HasOne(cos => cos.Commissionee)
                 .WithMany()
-                .HasForeignKey(cos => cos.CommissionerId)
+                .HasForeignKey(cos => cos.CommissioneeId)
                 .OnDelete(DeleteBehavior.Restrict);
             });
 
