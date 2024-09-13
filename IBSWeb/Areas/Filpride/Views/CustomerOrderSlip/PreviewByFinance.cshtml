@@ -166,7 +166,7 @@
                 denyButtonText: 'Disapprove',
                 cancelButtonText: 'Cancel'
             }).then((result) => {
-                 if (result.isConfirmed) {
+                if (result.isConfirmed) {
                     Swal.fire({
                         title: 'Do you want to change the terms?',
                         text: "If yes, please select new terms. If not, submit to approve without changes.",
@@ -192,12 +192,24 @@
                         },
                         inputPlaceholder: 'Select terms (optional)',
                         showCancelButton: false,
-                        confirmButtonText: 'Submit'
+                        confirmButtonText: 'Next'
                     }).then((termResult) => {
                         const selectedTerm = termResult.value || null;
-                        var url = '@Url.Action("ApproveByFinance", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId, terms = "__term__" })';
-                        url = url.replace('__term__', selectedTerm || '');
-                        window.location.href = url;
+
+                        Swal.fire({
+                            title: 'Add any instructions (optional)',
+                            input: 'textarea',
+                            inputPlaceholder: 'Enter instructions here...',
+                            showCancelButton: false,
+                            confirmButtonText: 'Submit'
+                        }).then((instructionResult) => {
+                            const instruction = instructionResult.value || null;
+                            var url = '@Html.Raw(Url.Action("ApproveByFinance", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId, terms = "__term__", instructions = "__instruction__" }))';
+                            url = url.replace('__term__', encodeURIComponent(selectedTerm || ''));
+                            url = url.replace('__instruction__', encodeURIComponent(instruction || ''));
+                            window.location.href = url;
+                            console.log(window.location.href = url);
+                        });
                     });
                 } else if (result.isDenied) {
                     window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';
@@ -206,4 +218,5 @@
         });
     </script>
 }
+
 

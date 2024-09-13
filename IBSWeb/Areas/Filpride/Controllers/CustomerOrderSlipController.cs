@@ -339,7 +339,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> ApproveByFinance(int? id, string? terms, CancellationToken cancellationToken)
+        public async Task<IActionResult> ApproveByFinance(int? id, string? terms, string? instructions, CancellationToken cancellationToken)
         {
             if (id == null)
             {
@@ -361,6 +361,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.SecondApprovedBy = _userManager.GetUserName(User);
                     existingRecord.SecondApprovedDate = DateTime.Now;
                     existingRecord.Terms = terms;
+                    existingRecord.FinanceInstruction = instructions;
                     await _unitOfWork.FilprideCustomerOrderSlip.FinanceApproved(existingRecord, cancellationToken);
                 }
 

@@ -121,6 +121,8 @@ namespace IBS.Models.Filpride.Integrated
 
         public string? Terms { get; set; }
 
+        public string? FinanceInstruction { get; set; }
+
         #endregion
 
         #region Appointing Hauler
