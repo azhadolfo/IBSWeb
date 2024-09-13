@@ -43,7 +43,6 @@ namespace IBS.DataAccess.Repository
         public IDeliveryReceiptRepository FilprideDeliveryReceipt { get; private set; }
         public ICustomerRepository FilprideCustomer { get; private set; }
         public ISupplierRepository FilprideSupplier { get; private set; }
-        public IHaulerRepository FilprideHauler { get; private set; }
         public IPickUpPointRepository FilpridePickUpPoint { get; private set; }
         public IFreightRepository FilprideFreight { get; private set; }
 
@@ -120,7 +119,6 @@ namespace IBS.DataAccess.Repository
             FilprideDeliveryReceipt = new DeliveryReceiptRepository(_db);
             FilprideCustomer = new CustomerRepository(_db);
             FilprideSupplier = new SupplierRepository(_db);
-            FilprideHauler = new HaulerRepository(_db);
             FilpridePickUpPoint = new PickUpPointRepository(_db);
             FilprideFreight = new FreightRepository(_db);
 
@@ -253,6 +251,32 @@ namespace IBS.DataAccess.Repository
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
                 .Where(s => s.IsActive && s.Company == company)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = s.SupplierCode + " " + s.SupplierName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetFilprideCommissioneeListAsyncById(string company, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideSuppliers
+                .OrderBy(s => s.SupplierCode)
+                .Where(s => s.IsActive && s.Company == company && s.Category == "Commissionee")
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = s.SupplierCode + " " + s.SupplierName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetFilprideHaulerListAsyncById(string company, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideSuppliers
+                .OrderBy(s => s.SupplierCode)
+                .Where(s => s.IsActive && s.Company == company && s.Category == "Hauler")
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),

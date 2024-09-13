@@ -48,15 +48,6 @@ namespace IBS.Models.Filpride.Integrated
 
         #endregion
 
-        #region--Hauler properties
-
-        public int? HaulerId { get; set; }
-
-        [ForeignKey(nameof(HaulerId))]
-        public FilprideHauler? Hauler { get; set; }
-
-        #endregion
-
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Freight { get; set; }

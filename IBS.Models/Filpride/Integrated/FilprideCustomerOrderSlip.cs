@@ -127,7 +127,7 @@ namespace IBS.Models.Filpride.Integrated
 
         public int? HaulerId { get; set; }
 
-        public FilprideHauler? Hauler { get; set; }
+        public FilprideSupplier? Hauler { get; set; }
 
         #endregion
 

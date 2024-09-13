@@ -28,6 +28,17 @@
                     <input asp-for="Category" class="form-check-input" type="radio" id="inlineRadio2" value="Non-Trade" aria-labelledby="labelInlineRadio2" onclick="toggleSelect('nonTradeList')">
                     <label class="form-check-label" for="inlineRadio2" id="labelInlineRadio2">Non-Trade</label>
                 </div>
+
+                <div class="form-check form-check-inline">
+                    <input asp-for="Category" class="form-check-input" type="radio" id="inlineRadio3" value="Commissionee" aria-labelledby="labelInlineRadio3" onclick="toggleSelect('commissioneeList')">
+                    <label class="form-check-label" for="inlineRadio3" id="labelInlineRadio3">Commissionee</label>
+                </div>
+
+                <div class="form-check form-check-inline">
+                    <input asp-for="Category" class="form-check-input" type="radio" id="inlineRadio4" value="Hauler" aria-labelledby="labelInlineRadio4" onclick="toggleSelect('haulerList')">
+                    <label class="form-check-label" for="inlineRadio4" id="labelInlineRadio4">Hauler</label>
+                </div>
+
                 <br />
                 <span class="text-danger"></span>
             </fieldset>
@@ -205,26 +216,40 @@
         function toggleSelect(id) {
             var tradeList = document.getElementById('tradeList');
             var nonTradeList = document.getElementById('nonTradeList');
-            var inlineRadio1 = document.getElementById('inlineRadio1');
-            var inlineRadio2 = document.getElementById('inlineRadio2');
+            var radios = [
+                document.getElementById('inlineRadio1'),
+                document.getElementById('inlineRadio2'),
+                document.getElementById('inlineRadio3'),
+                document.getElementById('inlineRadio4')
+            ];
             const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
 
-            if (id === 'tradeList') {
-                tradeList.style.display = 'block';
-                nonTradeList.style.display = 'none';
-                inlineRadio1.checked = true;
-                inlineRadio2.checked = false;
+            const resetCommonFields = () => {
                 $("#DefaultExpenseNumber").val(null).trigger('change');
                 $(".withHoldingTaxPercent").val(null).trigger('change');
-                withHoldingTaxPercent.style.display = 'none';
-            } else if (id === 'nonTradeList') {
-                tradeList.style.display = 'none';
-                nonTradeList.style.display = 'block';
-                inlineRadio1.checked = false;
-                inlineRadio2.checked = true;
-                $("#TradeName").val("");
-                withHoldingTaxPercent.style.display = 'block';
-                $("#TaxType").val(null).trigger('change');
+            };
+
+            // Hide trade and non-trade lists by default
+            tradeList.style.display = 'none';
+            nonTradeList.style.display = 'none';
+            withHoldingTaxPercent.style.display = 'none';
+            radios.forEach(radio => radio.checked = false);
+
+            switch (id) {
+                case 'tradeList':
+                case 'commissioneeList':
+                case 'haulerList':
+                    tradeList.style.display = 'block';
+                    resetCommonFields();
+                    radios[id === 'tradeList' ? 0 : (id === 'commissioneeList' ? 2 : 3)].checked = true;
+                    break;
+                case 'nonTradeList':
+                    nonTradeList.style.display = 'block';
+                    radios[1].checked = true;
+                    $("#TradeName").val("");
+                    withHoldingTaxPercent.style.display = 'block';
+                    $("#TaxType").val(null).trigger('change');
+                    break;
             }
         }
     </script>

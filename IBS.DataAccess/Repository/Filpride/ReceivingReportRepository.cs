@@ -231,7 +231,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 PONo = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo,
                 QuantityDelivered = deliveryReceipt.Quantity,
                 QuantityReceived = deliveryReceipt.Quantity,
-                TruckOrVessels = deliveryReceipt.Hauler?.HaulerName ?? "DIRECT DELIVERY",
+                TruckOrVessels = deliveryReceipt.CustomerOrderSlip.PickUpPoint.Depot,
                 OtherRef = deliveryReceipt.AuthorityToLoadNo,
                 Remarks = "PENDING",
                 Company = deliveryReceipt.Company,

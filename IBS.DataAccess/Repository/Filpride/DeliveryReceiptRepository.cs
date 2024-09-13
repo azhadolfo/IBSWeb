@@ -43,8 +43,8 @@ namespace IBS.DataAccess.Repository.Filpride
             IQueryable<FilprideDeliveryReceipt> query = dbSet
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
-                .Include(dr => dr.Customer)
-                .Include(dr => dr.Hauler);
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Hauler)
+                .Include(dr => dr.Customer);
 
             if (filter != null)
             {
@@ -59,8 +59,8 @@ namespace IBS.DataAccess.Repository.Filpride
             return await dbSet.Where(filter)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Hauler)
                 .Include(dr => dr.Customer)
-                .Include(dr => dr.Hauler)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -71,7 +71,6 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Date = viewModel.Date;
             existingRecord.EstimatedTimeOfArrival = viewModel.ETA;
             existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
-            existingRecord.HaulerId = viewModel.HaulerId;
             existingRecord.CustomerId = viewModel.CustomerId;
             existingRecord.Freight = viewModel.Freight;
             existingRecord.AuthorityToLoadNo = viewModel.AuthorityToLoadNo;

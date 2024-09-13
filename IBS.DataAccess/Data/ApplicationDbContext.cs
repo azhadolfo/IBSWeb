@@ -93,8 +93,6 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideSupplier> FilprideSuppliers { get; set; }
 
-        public DbSet<FilprideHauler> FilprideHaulers { get; set; }
-
         public DbSet<FilpridePickUpPoint> FilpridePickUpPoints { get; set; }
 
         #endregion
@@ -433,11 +431,6 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(dr => dr.CustomerOrderSlipId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-                dr.HasOne(dr => dr.Hauler)
-                .WithMany()
-                .HasForeignKey(dr => dr.HaulerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
                 dr.HasOne(dr => dr.Customer)
                 .WithMany()
                 .HasForeignKey(dr => dr.CustomerId)
@@ -458,12 +451,6 @@ namespace IBS.DataAccess.Data
             {
                 s.HasIndex(s => s.SupplierCode);
                 s.HasIndex(s => s.SupplierName);
-            });
-
-            builder.Entity<FilprideHauler>(h =>
-            {
-                h.HasIndex(h => h.HaulerCode);
-                h.HasIndex(h => h.HaulerName);
             });
 
             #endregion

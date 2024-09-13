@@ -67,11 +67,14 @@ namespace IBS.DataAccess.Repository.IRepository
         IDeliveryReceiptRepository FilprideDeliveryReceipt { get; }
         ISupplierRepository FilprideSupplier { get; }
         ICustomerRepository FilprideCustomer { get; }
-        IHaulerRepository FilprideHauler { get; }
 
         Task<List<SelectListItem>> GetFilprideCustomerListAsync(string company, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetFilprideSupplierListAsyncById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideCommissioneeListAsyncById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideHaulerListAsyncById(string company, CancellationToken cancellationToken = default);
 
         #endregion
 

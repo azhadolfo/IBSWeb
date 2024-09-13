@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240913041250_RemoveTheHaulerAndMoveToSupplier")]
+    partial class RemoveTheHaulerAndMoveToSupplier
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2575,6 +2578,61 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_customers_customer_name");
 
                     b.ToTable("filpride_customers", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideHauler", b =>
+                {
+                    b.Property<int>("HaulerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("hauler_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("HaulerId"));
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
+
+                    b.Property<string>("ContactNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("contact_no");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<string>("HaulerAddress")
+                        .IsRequired()
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("hauler_address");
+
+                    b.Property<string>("HaulerCode")
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("hauler_code");
+
+                    b.Property<string>("HaulerName")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("hauler_name");
+
+                    b.HasKey("HaulerId")
+                        .HasName("pk_filpride_haulers");
+
+                    b.ToTable("filpride_haulers", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilpridePickUpPoint", b =>
