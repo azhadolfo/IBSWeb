@@ -90,9 +90,9 @@
                 <!-- Commission info fields -->
                 <div id="commissionInfo" style="display: none;">
                     <div class="form-group py-2 col-12">
-                        <label class="control-label">Commissioner List<span class="required">*</span></label>
+                        <label class="control-label">Commissionee List<span class="required">*</span></label>
                         <select asp-for="CommissioneeId" asp-items="@Model.Commissionee" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected>Select commissioner</option>
+                            <option value="" selected>Select commissionee</option>
                         </select>
                         <span asp-validation-for="CommissioneeId" class="text-danger"></span>
                     </div>

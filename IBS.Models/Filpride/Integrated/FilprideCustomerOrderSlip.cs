@@ -61,7 +61,7 @@ namespace IBS.Models.Filpride.Integrated
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal BalanceQuantity { get; set; }
 
-        #region Commissioner's Properties
+        #region Commissionee's Properties
         public bool HasCommission { get; set; }
 
         public int? CommissioneeId { get; set; }

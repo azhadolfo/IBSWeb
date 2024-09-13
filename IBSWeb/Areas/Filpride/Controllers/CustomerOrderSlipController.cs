@@ -115,7 +115,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             CustomerOrderSlipViewModel viewModel = new()
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
-                Commissionee = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
+                Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
             };
 
             return View(viewModel);
@@ -163,14 +163,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-                    viewModel.Commissionee = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-            viewModel.Commissionee = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -206,7 +206,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                     HasCommission = exisitingRecord.HasCommission,
                     CommissioneeId = exisitingRecord.CommissioneeId,
-                    Commissionee = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
+                    Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
                     CommissionerRate = exisitingRecord.CommissionRate,
                     CustomerPoNo = exisitingRecord.CustomerPoNo,
                     Quantity = exisitingRecord.Quantity,
@@ -242,12 +242,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+                    viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
