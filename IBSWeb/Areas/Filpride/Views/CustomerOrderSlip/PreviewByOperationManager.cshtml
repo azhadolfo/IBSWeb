@@ -91,23 +91,8 @@
     </div>
 
     <div class="row pt-2">
-        @*@{
-            if (Model.FirstApprovedBy == null)
-            {
-                <div class="col-6 col-md-3">
-                    <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
-                </div>
-            }
-            else
-            {
-                <div class="col-6 col-md-3">
-                    <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Print" asp-route-id="@Model.CustomerOrderSlipNo" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
-                </div>
-            }
-        }*@
-
         <div class="col-6 col-md-3">
-            <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
+            <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
         </div>
 
         <div class="col-6 col-md-3">

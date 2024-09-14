@@ -17,9 +17,11 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(CustomerOrderSlipId))]
         public FilprideCustomerOrderSlip? CustomerOrderSlip { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         [Column(TypeName = "date")]
         public DateOnly DateBooked { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         [Column(TypeName = "date")]
         public DateOnly ValidUntil { get; set; }
 

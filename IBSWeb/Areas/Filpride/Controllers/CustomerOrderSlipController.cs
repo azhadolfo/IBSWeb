@@ -31,7 +31,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index(CancellationToken cancellationToken)
+        public IActionResult Index()
         {
             return View();
         }
@@ -678,7 +678,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 TempData["success"] = "ATL booked successfully";
                 await _unitOfWork.SaveAsync(cancellationToken);
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(AuthorityToLoadController.Print), "AuthorityToLoad", new { area = nameof(Filpride), id = model.AuthorityToLoadId });
             }
             catch (Exception ex)
             {

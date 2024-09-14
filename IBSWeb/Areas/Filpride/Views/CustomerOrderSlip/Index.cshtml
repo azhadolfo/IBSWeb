@@ -22,9 +22,9 @@
                 </a>
             </div>
         </div>
-        <table class="table table-bordered table-striped" id="paginatedTable">
+        <table class="table table-bordered table-hover" id="paginatedTable">
             <thead>
-                <tr class="text-nowrap">
+                <tr class="text-nowrap table-secondary">
                     <th>
                         @Html.DisplayNameFor(m => m.CustomerOrderSlipNo)
                     </th>
@@ -185,13 +185,6 @@
                             supplierAtlNo: atlNo,
                             bookedDate: bookingDate,
                             __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                        },
-                        success: function (response) {
-                            Swal.fire('Success', 'ATL Booked Successfully!', 'success');
-                            // Optionally, reload the table or page here
-                        },
-                        error: function (xhr, status, error) {
-                            Swal.fire('Error', 'There was an error booking the ATL.', 'error');
                         }
                     });
                 }
@@ -220,13 +213,6 @@
                             id: customerOrderSlipId,
                             bookedDate: result.value,
                             __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                        },
-                        success: function (response) {
-                            Swal.fire('Success', 'ATL Booked Successfully!', 'success');
-                            // Optionally reload the DataTable or page here
-                        },
-                        error: function () {
-                            Swal.fire('Error', 'There was an error booking the ATL.', 'error');
                         }
                     });
                 }

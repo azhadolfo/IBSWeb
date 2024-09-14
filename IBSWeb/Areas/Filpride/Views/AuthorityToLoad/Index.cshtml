@@ -1,0 +1,87 @@
+﻿@model IEnumerable<FilprideAuthorityToLoad>
+
+@{
+    ViewData["Title"] = "Authority To Load";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">AUTHORITY TO LOAD</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <table class="table table-bordered table-hover" id="paginatedTable">
+            <thead>
+                <tr class="text-nowrap table-secondary">
+                    <th>
+                        ATL No
+                    </th>
+                    <th>
+                        Date Booked
+                    </th>
+                    <th>
+                        Valid Until
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(m => m.CustomerOrderSlip.CustomerOrderSlipNo)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(m => m.Remarks)
+                    </th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#paginatedTable').DataTable({
+                "processing": true, // Enable processing indicator
+                "serverSide": true, // Enable server-side processing
+                "stateSave": true,
+                "ajax": {
+                    "url": "@Url.Action("GetAuthorityToLoads", "AuthorityToLoad", new { area = "Filpride" })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    }
+                },
+                "columns": [
+                    { "data": "authorityToLoadNo" },
+                    {
+                        "data": "dateBooked",
+                        "render": function(data) {
+                            var date = new Date(data);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                        }
+                    },
+                    {
+                        "data": "validUntil",
+                        "render": function(data) {
+                            var date = new Date(data);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                        }
+                    },
+                    { "data": "customerOrderSlip.customerOrderSlipNo" },
+                    { "data": "remarks" },
+                    {
+                        "data": "authorityToLoadId",
+                        "render": function(data) {
+                            return `<a class="btn btn-primary" href="@Url.Action("Print", "AuthorityToLoad", new { area = "Filpride" })/${data}">Print</a>`;
+                        }
+                    }
+                ],
+                "order": [[0, "asc"]],
+                "pageLength": 10 // Default number of rows per page
+            });
+        });
+    </script>
+}
