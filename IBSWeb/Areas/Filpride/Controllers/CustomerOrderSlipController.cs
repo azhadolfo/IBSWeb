@@ -31,14 +31,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public IActionResult Index(CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            var cosList = await _unitOfWork.FilprideCustomerOrderSlip
-                .GetAllAsync(cos => cos.Company == companyClaims, cancellationToken);
-
-            return View(cosList);
+            return View();
         }
 
         [HttpPost]
@@ -644,6 +639,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BookAuthorityToLoad(int id, string? supplierAtlNo, DateOnly bookedDate, CancellationToken cancellationToken)
+        {
+            if (id == 0)
+            {
+                return NotFound();
+            }
+
+            var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+            if (existingCos == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                FilprideAuthorityToLoad model = new()
+                {
+                    AuthorityToLoadNo = await _unitOfWork.FilprideAuthorityToLoad.GenerateAtlNo(cancellationToken),
+                    CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
+                    DateBooked = bookedDate,
+                    ValidUntil = bookedDate.AddDays(5),
+                    UppiAtlNo = supplierAtlNo,
+                    Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
+                    CreatedBy = _userManager.GetUserName(User),
+                    CreatedDate = DateTime.Now,
+                };
+
+                await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
+
+                existingCos.AuthorityToLoadNo = model.AuthorityToLoadNo;
+                existingCos.Status = nameof(CosStatus.Completed);
+
+                TempData["success"] = "ATL booked successfully";
+                await _unitOfWork.SaveAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
     }
 }

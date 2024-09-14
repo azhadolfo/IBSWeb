@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240914062643_CreateAuthorityToLoadTable")]
+    partial class CreateAuthorityToLoadTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2129,10 +2132,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<int>("CustomerOrderSlipId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_order_slip_id");
-
                     b.Property<DateOnly>("DateBooked")
                         .HasColumnType("date")
                         .HasColumnName("date_booked");
@@ -2153,9 +2152,6 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("AuthorityToLoadId")
                         .HasName("pk_filpride_authority_to_loads");
 
-                    b.HasIndex("CustomerOrderSlipId")
-                        .HasDatabaseName("ix_filpride_authority_to_loads_customer_order_slip_id");
-
                     b.ToTable("filpride_authority_to_loads", (string)null);
                 });
 
@@ -2168,9 +2164,9 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerOrderSlipId"));
 
-                    b.Property<string>("AuthorityToLoadNo")
-                        .HasColumnType("text")
-                        .HasColumnName("authority_to_load_no");
+                    b.Property<int?>("AuthorityToLoadId")
+                        .HasColumnType("integer")
+                        .HasColumnName("authority_to_load_id");
 
                     b.Property<decimal>("BalanceQuantity")
                         .HasColumnType("numeric(18,4)")
@@ -2331,6 +2327,9 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("CustomerOrderSlipId")
                         .HasName("pk_filpride_customer_order_slips");
+
+                    b.HasIndex("AuthorityToLoadId")
+                        .HasDatabaseName("ix_filpride_customer_order_slips_authority_to_load_id");
 
                     b.HasIndex("CommissioneeId")
                         .HasDatabaseName("ix_filpride_customer_order_slips_commissionee_id");
@@ -6096,20 +6095,13 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("PickUpPoint");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", "CustomerOrderSlip")
-                        .WithMany()
-                        .HasForeignKey("CustomerOrderSlipId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_authority_to_loads_filpride_customer_order_slips_c");
-
-                    b.Navigation("CustomerOrderSlip");
-                });
-
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", b =>
                 {
+                    b.HasOne("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", "AuthorityToLoad")
+                        .WithMany()
+                        .HasForeignKey("AuthorityToLoadId")
+                        .HasConstraintName("fk_filpride_customer_order_slips_filpride_authority_to_loads_a");
+
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Commissionee")
                         .WithMany()
                         .HasForeignKey("CommissioneeId")
@@ -6139,6 +6131,8 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("PurchaseOrderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_filpride_customer_order_slips_filpride_purchase_orders_purc");
+
+                    b.Navigation("AuthorityToLoad");
 
                     b.Navigation("Commissionee");
 

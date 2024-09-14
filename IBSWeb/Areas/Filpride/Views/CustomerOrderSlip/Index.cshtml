@@ -108,6 +108,7 @@
                         "data": null,
                         "render": function (data, type, row) {
                             var status = row.status;
+                            console.log(row)
                             var customerOrderSlipId = row.customerOrderSlipId;
                             var actions = `<div class="dropdown">
                                              <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
@@ -127,7 +128,7 @@
                                                 <li><a class="dropdown-item" href="@Url.Action("AppointHauler", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Hauler</a></li>`;
                                     break;
                                 case 'HaulerAppointed':
-                                    actions += `<li><a class="dropdown-item" href="@Url.Action("Edit", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit</a></li>`;
+                                    actions += `<li><a class="dropdown-item BookATL" data-supplier-id="${row.purchaseOrder.supplier.supplierName}" data-id="${customerOrderSlipId}" href="#">Book ATL</a></li>`;
                                     break;
                                 case 'Completed':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Print</a></li>`;
@@ -144,5 +145,93 @@
                 ]
             });
         });
+    </script>
+    <script>
+    $(document).on('click', '.BookATL', function (e) {
+    e.preventDefault();
+
+        var supplierId = $(this).data('supplier-id').toUpperCase();
+        var customerOrderSlipId = $(this).data('id');
+
+        if (supplierId.includes("UNIOIL")) {
+            // If the supplier is 'Azh', ask for the Supplier ATL No and Date of Booking
+            Swal.fire({
+                title: 'Book Authority To Load',
+                html: `
+                    <input type="text" id="atlNo" class="swal2-input" placeholder="UPPI ATL No">
+                    <input type="date" id="bookingDate" class="swal2-input" placeholder="Date of Booking">`,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Submit',
+                preConfirm: () => {
+                    const atlNo = Swal.getPopup().querySelector('#atlNo').value;
+                    const bookingDate = Swal.getPopup().querySelector('#bookingDate').value;
+                    if (!atlNo || !bookingDate) {
+                        Swal.showValidationMessage(`Please enter both UPPI ATL No and Date of Booking.`);
+                    }
+                    return { atlNo: atlNo, bookingDate: bookingDate };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var atlNo = result.value.atlNo;
+                    var bookingDate = result.value.bookingDate;
+
+                    // Send the Supplier ATL No, Booking Date, and Customer Order Slip ID to the server
+                    $.ajax({
+                        url: '@Url.Action("BookAuthorityToLoad", "CustomerOrderSlip", new { area = "Filpride" })',
+                        type: 'POST',
+                        data: {
+                            id: customerOrderSlipId,
+                            supplierAtlNo: atlNo,
+                            bookedDate: bookingDate,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function (response) {
+                            Swal.fire('Success', 'ATL Booked Successfully!', 'success');
+                            // Optionally, reload the table or page here
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire('Error', 'There was an error booking the ATL.', 'error');
+                        }
+                    });
+                }
+            });
+        } else {
+            // For other suppliers, only ask for the Date of Booking
+            Swal.fire({
+            title: 'Book Authority To Load',
+            html: '<input type="date" id="bookedDate" class="swal2-input" placeholder="Select Date">',
+            confirmButtonText: 'Submit',
+            focusConfirm: false,
+            preConfirm: () => {
+                const bookedDate = Swal.getPopup().querySelector('#bookedDate').value;
+                if (!bookedDate) {
+                    Swal.showValidationMessage('Please select a date');
+                }
+                return bookedDate;
+            }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Send the date to the controller via AJAX
+                    $.ajax({
+                        url: '@Url.Action("BookAuthorityToLoad", "CustomerOrderSlip", new { area = "Filpride" })',
+                        type: 'POST',
+                        data: {
+                            id: customerOrderSlipId,
+                            bookedDate: result.value,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function (response) {
+                            Swal.fire('Success', 'ATL Booked Successfully!', 'success');
+                            // Optionally reload the DataTable or page here
+                        },
+                        error: function () {
+                            Swal.fire('Error', 'There was an error booking the ATL.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    });
     </script>
 }

@@ -120,6 +120,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IFreightRepository FilprideFreight { get; }
 
+        IAuthorityToLoadRepository FilprideAuthorityToLoad { get; }
+
         #endregion
 
         #endregion

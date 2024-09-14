@@ -128,31 +128,6 @@
     </div>
 </div>
 
-@*@section Scripts {
-        <script>
-            document.getElementById('approveButton').addEventListener('click', function () {
-                const grossMarginValue = document.getElementById('grossMarginInput').value;
-                Swal.fire({
-                    title: 'Choose an action',
-                    text: "Approve or Disapprove the action.",
-                    icon: 'question',
-                    showCancelButton: true,
-                    showDenyButton: true,
-                    confirmButtonText: 'Approve',
-                    denyButtonText: 'Disapprove',
-                    cancelButtonText: 'Cancel'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        var url = '@Url.Action("ApproveByFinance", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';//pass the terms
-                        window.location.href = url;
-                    } else if (result.isDenied) {
-                        window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';
-                    }
-                });
-            });
-        </script>
-    }*@
-
 @section Scripts {
     <script>
         document.getElementById('approveButton').addEventListener('click', function () {
@@ -208,7 +183,6 @@
                             url = url.replace('__term__', encodeURIComponent(selectedTerm || ''));
                             url = url.replace('__instruction__', encodeURIComponent(instruction || ''));
                             window.location.href = url;
-                            console.log(window.location.href = url);
                         });
                     });
                 } else if (result.isDenied) {

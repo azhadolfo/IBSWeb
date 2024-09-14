@@ -43,7 +43,9 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideCustomerOrderSlip> query = dbSet
                 .Include(cos => cos.Customer)
-                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product);
+                .Include(cos => cos.Hauler)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier);
 
             if (filter != null)
             {
@@ -57,7 +59,9 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await dbSet.Where(filter)
                 .Include(cos => cos.Customer)
+                .Include(cos => cos.Hauler)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 

@@ -137,6 +137,13 @@ namespace IBS.Models.Filpride.Integrated
 
         #endregion
 
+        #region Booking of ATL
+
+        [Column(TypeName = "varchar(20)")]
+        public string? AuthorityToLoadNo { get; set; }
+
+        #endregion
+
         public bool IsDelivered { get; set; }
 
         [Column(TypeName = "varchar(100)")]
