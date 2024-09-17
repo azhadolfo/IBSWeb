@@ -1,4 +1,5 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Repository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +10,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
+    [DepartmentAuthorize(SD.Department_RCD)]
     public class AuthorityToLoadController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -96,6 +98,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
         {
             if (id == null)

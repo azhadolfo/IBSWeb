@@ -19,7 +19,8 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilprideAuthorityToLoad? lastAtl = await _db
                 .FilprideAuthorityToLoads
-                .OrderBy(c => c.AuthorityToLoadNo)
+                .OrderBy(c => c.AuthorityToLoadId)
+                .ThenBy(c => c.AuthorityToLoadNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             var yearToday = DateTime.Now.Year;
