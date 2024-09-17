@@ -270,6 +270,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
+                    existingRecord.CustomerId = model.CustomerId;
                     existingRecord.TransactionDate = model.TransactionDate;
                     existingRecord.OtherRefNo = model.OtherRefNo;
                     existingRecord.PurchaseOrderId = model.PurchaseOrderId;
