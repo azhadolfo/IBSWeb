@@ -1,5 +1,5 @@
-﻿@    using Microsoft.AspNetCore.Identity
-@    using IBS.Utility
+﻿@using Microsoft.AspNetCore.Identity
+@using IBS.Utility
 @model FilprideDeliveryReceipt
 @inject UserManager<IdentityUser> UserManager
 
@@ -81,9 +81,9 @@
             <tr>
                 <td class="p-4 w-50" style="padding-left:20px;" scope="row">@Html.DisplayFor(model => model.Remarks)</td>
                 <td class="p-4 w-50" style="padding-left:20px;">
-                    <b>Hauler:</b> &nbsp; @Model.Hauler?.HaulerName<br />
-                    <b>Load Port:</b> &nbsp; @Model.CustomerOrderSlip.PurchaseOrder?.Port.GetEnumDisplayName()<br />
-                    <b>Freight:</b> &nbsp; @Html.DisplayFor(model => model.Freight)<br />
+                    <b>Hauler:</b> &nbsp; @Model.CustomerOrderSlip.Hauler?.SupplierName<br />
+                    <b>Load Port:</b> &nbsp; @Model.CustomerOrderSlip.PickUpPoint?.Depot<br />
+                    <b>Freight:</b> &nbsp; @Html.DisplayFor(model => model.CustomerOrderSlip.Freight)<br />
                 </td>
             </tr>
         </tbody>
@@ -135,7 +135,7 @@ else
         else
         {
             <div class="col-6 col-md-3">
-                <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Print" asp-route-id="@Model.DeliveryReceiptNo" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Print" asp-route-id="@Model.DeliveryReceiptId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
             </div>
         }
     }
@@ -159,7 +159,7 @@ else
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Proceed to the controller action
-                    window.location.href = '@Url.Action("Post", "DeliveryReceipt", new { area = "Filpride", id = Model.DeliveryReceiptNo })';
+                    window.location.href = '@Url.Action("Post", "DeliveryReceipt", new { area = "Filpride", id = Model.DeliveryReceiptId })';
                 }
             });
         });
