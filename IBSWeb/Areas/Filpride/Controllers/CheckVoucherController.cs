@@ -505,7 +505,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Add or update records
                     for (int i = 0; i < viewModel.AccountTitle.Length; i++)
                     {
-                        cashInBank = viewModel.Credit[3];
+                        cashInBank = viewModel.Credit[2];
 
                         if (accountTitleDict.TryGetValue(viewModel.AccountNumber[i], out var ids))
                         {
@@ -823,7 +823,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Saving the default entries
                     var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, cancellationToken);
-                    var cashInBank = viewModel.Credit[3]; ;
+                    var cashInBank = viewModel.Credit[2]; ;
                     var cvh = new FilprideCheckVoucherHeader
                     {
                         CheckVoucherHeaderNo = generateCVNo,
