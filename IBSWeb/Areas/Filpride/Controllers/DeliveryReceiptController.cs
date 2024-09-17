@@ -67,10 +67,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Date = viewModel.Date,
                         EstimatedTimeOfArrival = viewModel.ETA,
                         CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
-                        DeliveryOption = viewModel.DeliveryOption,
                         CustomerId = viewModel.CustomerId,
-                        Freight = viewModel.Freight,
-                        AuthorityToLoadNo = viewModel.AuthorityToLoadNo,
                         Remarks = viewModel.Remarks,
                         Quantity = viewModel.Volume,
                         TotalAmount = viewModel.TotalAmount,
@@ -139,9 +136,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Price = existingRecord.CustomerOrderSlip.DeliveredPrice,
                     Volume = existingRecord.Quantity,
                     TotalAmount = existingRecord.TotalAmount,
-                    DeliveryOption = existingRecord.DeliveryOption,
-                    Freight = existingRecord.Freight,
-                    AuthorityToLoadNo = existingRecord.AuthorityToLoadNo,
                     Remarks = existingRecord.Remarks
                 };
 

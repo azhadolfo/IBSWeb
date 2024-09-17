@@ -44,6 +44,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Hauler)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
                 .Include(dr => dr.Customer);
 
             if (filter != null)
@@ -60,6 +61,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Hauler)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
                 .Include(dr => dr.Customer)
                 .FirstOrDefaultAsync(cancellationToken);
         }
@@ -72,8 +74,6 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.EstimatedTimeOfArrival = viewModel.ETA;
             existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
             existingRecord.CustomerId = viewModel.CustomerId;
-            existingRecord.Freight = viewModel.Freight;
-            existingRecord.AuthorityToLoadNo = viewModel.AuthorityToLoadNo;
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.Quantity = viewModel.Volume;
 
@@ -115,7 +115,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.DeliveryReceiptId.ToString(),
-                        Text = $"{dr.DeliveryReceiptNo} - {dr.DeliveryOption.ToUpper()}"
+                        Text = dr.DeliveryReceiptNo
                     })
                     .ToListAsync(cancellationToken);
         }

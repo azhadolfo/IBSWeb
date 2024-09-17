@@ -48,13 +48,6 @@ namespace IBS.Models.Filpride.Integrated
 
         #endregion
 
-        [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        public decimal Freight { get; set; }
-
-        [Column(TypeName = "varchar(20)")]
-        public string AuthorityToLoadNo { get; set; }
-
         [Column(TypeName = "varchar(200)")]
         public string Remarks { get; set; }
 
@@ -67,9 +60,6 @@ namespace IBS.Models.Filpride.Integrated
         public decimal TotalAmount { get; set; }
 
         public bool IsPrinted { get; set; }
-
-        [Column(TypeName = "varchar(15)")]
-        public string DeliveryOption { get; set; }
 
         public string Company { get; set; } = string.Empty;
     }
