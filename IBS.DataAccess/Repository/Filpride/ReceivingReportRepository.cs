@@ -232,7 +232,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 QuantityDelivered = deliveryReceipt.Quantity,
                 QuantityReceived = deliveryReceipt.Quantity,
                 TruckOrVessels = deliveryReceipt.CustomerOrderSlip.PickUpPoint.Depot,
-                OtherRef = deliveryReceipt.AuthorityToLoadNo,
+                OtherRef = deliveryReceipt.CustomerOrderSlip.AuthorityToLoadNo,
                 Remarks = "PENDING",
                 Company = deliveryReceipt.Company,
                 CreatedBy = "SYSTEM GENERATED",
@@ -284,6 +284,10 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 ewtAmount = ComputeEwtAmount(netOfVatAmount, 0.01m);
                 netOfEwtAmount = ComputeNetOfEwt(model.Amount, ewtAmount);
+            }
+            else
+            {
+                netOfEwtAmount = model.Amount;
             }
 
 

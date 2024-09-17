@@ -47,20 +47,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         public decimal TotalAmount { get; set; }
 
-        public string DeliveryOption { get; set; }
-
-        #region--Hauler
-
-        public int? HaulerId { get; set; }
-
-        public List<SelectListItem>? Haulers { get; set; }
-
-        #endregion
-
-        public decimal Freight { get; set; }
-
-        public string AuthorityToLoadNo { get; set; }
-
         public string Remarks { get; set; }
 
         public string? CurrentUser { get; set; }
