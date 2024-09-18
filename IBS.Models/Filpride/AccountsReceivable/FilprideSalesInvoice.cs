@@ -1,4 +1,5 @@
 ﻿using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -94,7 +95,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
 
         [Display(Name = "PO No.")]
-        public int PurchaseOrderId { get; set; }
+        public int PurchaseOrderId { get; set; } = 0;
 
         [NotMapped]
         public List<SelectListItem>? PO { get; set; }
@@ -117,5 +118,25 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public int ReceivingReportId { get; set; }
 
         public string Status { get; set; } = nameof(Utility.Status.Pending);
+
+        #region Enhancing
+
+        public int? DeliveryReceiptId { get; set; }
+
+        [ForeignKey(nameof(DeliveryReceiptId))]
+        public FilprideDeliveryReceipt? DeliveryReceipt { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? DR { get; set; }
+
+        public int? CustomerOrderSlipId { get; set; }
+
+        [ForeignKey(nameof(CustomerOrderSlipId))]
+        public FilprideCustomerOrderSlip? CustomerOrderSlip { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? COS { get; set; }
+
+        #endregion
     }
 }
