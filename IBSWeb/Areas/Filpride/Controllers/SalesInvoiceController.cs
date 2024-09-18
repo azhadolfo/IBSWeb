@@ -210,25 +210,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     customer.BusinessStyle,
                     Terms = customer.CustomerTerms,
                     customer.CustomerType,
-                    customer.WithHoldingTax
+                    customer.WithHoldingTax,
+                    CosList = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListPerCustomerAsync(customerId, cancellationToken)
                 });
             }
             return Json(null); // Return null if no matching customer is found
         }
 
         [HttpGet]
-        public async Task<JsonResult> GetProductDetails(int productId, CancellationToken cancellationToken)
+        public async Task<JsonResult> GetProductAndDRDetails(int cosId, CancellationToken cancellationToken)
         {
-            var product = await _unitOfWork.Product.GetAsync(c => c.ProductId == productId, cancellationToken);
-            if (product != null)
+            var cos = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(c => c.CustomerOrderSlipId == cosId, cancellationToken);
+            if (cos != null)
             {
                 return Json(new
                 {
-                    product.ProductName,
-                    product.ProductUnit
+                    cos.PurchaseOrder.Product.ProductId,
+                    ProductName = cos.PurchaseOrder.Product.ProductCode + cos.PurchaseOrder.Product.ProductName,
+                    cos.PurchaseOrder.Product.ProductUnit,
+                    cos.DeliveredPrice,
+                    DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListByCustomerAsync(cos.CustomerId, cancellationToken)
+
                 });
             }
-            return Json(null); // Return null if no matching product is found
+            return Json(null);
         }
 
         [HttpGet]
@@ -718,19 +723,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(Print), new { id });
         }
 
-        public IActionResult GetRRs(int purchaseOrderId)
+        public async Task<IActionResult> GetDrDetails(int drId, CancellationToken cancellationToken)
         {
-            var rrs = _dbContext.FilprideReceivingReports
-                              .Where(rr => rr.POId == purchaseOrderId && rr.ReceivedDate != null)
-                              .Select(rr => new
-                              {
-                                  rr.ReceivingReportId,
-                                  rr.ReceivingReportNo,
-                                  rr.ReceivedDate
-                              })
-                              .ToList();
+            var dr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(d => d.DeliveryReceiptId == drId, cancellationToken);
+            if (dr != null)
+            {
+                var automatedRr = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == dr.DeliveryReceiptId, cancellationToken);
 
-            return Json(rrs);
+                return Json(new
+                {
+                    TransactionDate = dr.DeliveredDate,
+                    dr.Quantity,
+                    automatedRr.ReceivingReportId,
+                    automatedRr.PurchaseOrder.PurchaseOrderId
+                });
+            }
+
+            return Json(null);
         }
 
         //Download as .xlsx file.(Export)

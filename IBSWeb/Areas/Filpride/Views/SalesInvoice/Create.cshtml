@@ -44,60 +44,58 @@
                             <span asp-validation-for="CustomerId" class="text-danger"></span>
                         </div>
 
-                        <input type="hidden" id="soldTo" class="form-control" readonly disabled />
+                        <input type="hidden" id="soldTo" class="form-control" readonly />
 
                         <div class="form-group mb-3">
                             <label class="control-label">Tin No</label>
-                            <input id="tinNo" class="form-control" readonly disabled />
+                            <input id="tinNo" class="form-control" readonly />
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Customer Type</label>
-                            <input id="customerType" class="form-control" readonly disabled />
+                            <input id="customerType" class="form-control" readonly />
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Address</label>
-                            <input id="address" class="form-control" readonly disabled />
+                            <input id="address" class="form-control" readonly />
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Business Style</label>
-                            <input id="businessStyle" class="form-control" readonly disabled />
+                            <input id="businessStyle" class="form-control" readonly />
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Terms</label>
-                            <input id="terms" class="form-control" readonly disabled />
+                            <input id="terms" class="form-control" readonly />
                         </div>
                     </div>
 
                     <div class="col">
 
+                        <input type="hidden" asp-for="ProductId" />
                         <div class="form-group mb-3">
-                            <label class="control-label">Product Name<span class="required">*</span></label>
-                            <select asp-for="ProductId" asp-items="@Model.Products" class="form-control GetPOList js-select2" style="width:100%">
-                                <option></option>
-                            </select>
-                            <span asp-validation-for="ProductId" class="text-danger"></span>
+                            <label class="control-label">Product Name</label>
+                            <input id="productName" class="form-control" readonly />
                         </div>
 
-                        <input type="hidden" id="productName" class="form-control" readonly disabled />
+                        <input type="hidden" id="productName" class="form-control" readonly />
 
                         <div class="form-group mb-3">
                             <label class="control-label">Unit</label>
-                            <input id="productUnit" class="form-control" readonly disabled />
+                            <input id="productUnit" class="form-control" readonly />
                         </div>
 
                         <div class="form-group mb-3">
-                            <label asp-for="Quantity" class="control-label">Quantity<span class="required">*</span></label>
-                            <input asp-for="Quantity" class="form-control money" value="" placeholder="0.000" />
+                            <label asp-for="Quantity" class="control-label">Quantity</label>
+                            <input asp-for="Quantity" class="form-control money" value="" placeholder="0.0000" readonly tabindex="-1"/>
                             <span asp-validation-for="Quantity" class="text-danger"></span>
                         </div>
 
                         <div class="form-group mb-3">
-                            <label asp-for="UnitPrice" class="control-label"></label><span class="required">*</span>
-                            <input asp-for="UnitPrice" class="form-control money" value="" placeholder="0.000" />
+                            <label asp-for="UnitPrice" class="control-label"></label>
+                            <input asp-for="UnitPrice" class="form-control money" value="" placeholder="0.0000" readonly tabindex="-1" />
                             <span asp-validation-for="UnitPrice" class="text-danger"></span>
                         </div>
 
@@ -116,19 +114,20 @@
                         </div>
 
                         <div class="form-group mb-3">
-                            <label asp-for="PurchaseOrderId" class="control-label">Suppliers PO No.<span class="required">*</span></label>
-                            <select asp-for="PurchaseOrderId" class="form-control js-select2 GetRRList" asp-items="@Model.PO">
+                            <label asp-for="CustomerOrderSlipId" class="control-label">COS No.<span class="required">*</span></label>
+                            <select asp-for="CustomerOrderSlipId" class="form-control js-select2 GetRRList" asp-items="@Model.COS" style="width:100%">
                                 <option></option>
                             </select>
-                            <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
+                            <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
                         </div>
-
+                        <input type="hidden" asp-for="PurchaseOrderId" />
+                        <input type="hidden" asp-for="ReceivingReportId" />
                         <div class="form-group mb-3">
-                            <label asp-for="ReceivingReportId" class="control-label">RR No<span class="required">*</span></label>
-                            <select asp-for="ReceivingReportId" class="form-control js-select2" asp-items="@Model.RR">
+                            <label asp-for="DeliveryReceiptId" class="control-label">DR No<span class="required">*</span></label>
+                            <select asp-for="DeliveryReceiptId" class="form-control js-select2" asp-items="@Model.DR" style="width:100%"->
                                 <option></option>
                             </select>
-                            <span asp-validation-for="ReceivingReportId" class="text-danger"></span>
+                            <span asp-validation-for="DeliveryReceiptId" class="text-danger"></span>
                         </div>
 
                         <div class="form-floating mb-3">
@@ -163,177 +162,99 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
-    <script>
+<script>
         $(function () {
+            // When Customer is selected
             $("#CustomerId").change(function () {
                 var customerId = $(this).val();
                 if (customerId !== "") {
-                    // Make an AJAX request to get the customer details based on the selected CustomerId
                     $.ajax({
-                        url: '@Url.Action("GetCustomerDetails", "SalesInvoice", new { area = "Filpride" })', // Replace with the actual controller and action names
+                        url: '@Url.Action("GetCustomerDetails", "SalesInvoice", new { area = "Filpride" })',
                         method: "GET",
                         data: { customerId: customerId },
                         success: function (data) {
                             if (data) {
+
                                 $("#soldTo").val(data.soldTo);
                                 $("#address").val(data.address);
                                 $("#tinNo").val(data.tinNo);
                                 $("#businessStyle").val(data.businessStyle);
                                 $("#terms").val(data.terms);
                                 $("#customerType").val(data.customerType);
-                                $("#withHoldingTax").val(data.withHoldingTax);
-                                // Populate other fields as needed
-                            } else {
-                                // Clear the fields if no customer is selected
-                                $("#soldTo").val("");
-                                $("#address").val("");
-                                $("#tinNo").val("");
-                                $("#businessStyle").val("");
-                                $("#terms").val("");
-                                $("#customerType").val("");
-                                $("#withHoldingTax").val(data.withHoldingTax);
-                                // Clear other fields as needed
+
+                                // Populate COS dropdown
+                                var cosSelect = $("#CustomerOrderSlipId");
+                                cosSelect.empty();
+                                $.each(data.cosList, function (index, cos) {
+                                    cosSelect.append($('<option>', {
+                                        value: cos.value,
+                                        text: cos.text
+                                    }));
+                                });
+
+                                // Trigger product selection
+                                cosSelect.trigger("change");
                             }
                         }
                     });
-                } else {
-                    // Clear the fields if no customer is selected
-                    $("#soldTo").val("");
-                    $("#address").val("");
-                    $("#tinNo").val("");
-                    $("#businessStyle").val("");
-                    $("#terms").val("");
-                    $("#customerType").val("");
-                    $("#withHoldingTax").val(data.withHoldingTax);
-                    // Clear other fields as needed
                 }
             });
-            $("#ProductId").change(function () {
-                var productId = $(this).val();
-                if (productId !== "") {
-                    // Make an AJAX request to get the customer details based on the selected CustomerId
+
+            // When COS is selected
+            $("#CustomerOrderSlipId").change(function () {
+                var cosId = $(this).val();
+                if (cosId !== "") {
                     $.ajax({
-                        url: '@Url.Action("GetProductDetails", "SalesInvoice", new { area = "Filpride" })', // Replace with the actual controller and action names
+                        url: '@Url.Action("GetProductAndDRDetails", "SalesInvoice", new { area = "Filpride" })',
                         method: "GET",
-                        data: { productId: productId },
+                        data: { cosId: cosId },
                         success: function (data) {
                             if (data) {
+                                // Set the Product
+                                console.log(data)
+                                $("#ProductId").val(data.productId);
                                 $("#productName").val(data.productName);
                                 $("#productUnit").val(data.productUnit);
-                            } else {
-                                // Clear the fields if no customer is selected
-                                $("#productName").val("");
-                                $("#productUnit").val("");
+                                $("#UnitPrice").val(data.deliveredPrice);
+                                // Populate DR dropdown
+                                var drSelect = $("#DeliveryReceiptId");
+                                drSelect.empty();
+                                $.each(data.drList, function (index, dr) {
+                                    drSelect.append($('<option>', {
+                                        value: dr.value,
+                                        text: dr.text
+                                    }));
+                                });
+
+                                // Trigger DR selection
+                                drSelect.trigger("change");
                             }
                         }
                     });
-                } else {
-                    // Clear the fields if no customer is selected
-                    $("#productName").val("");
-                    $("#productUnit").val("");
                 }
             });
-        });
-    </script>
-    <script>
-        $(function () {
-            $(".GetPOList").change(function () {
-                var productId = $(this).val();
-                if (productId !== "") {
-                    // Make an AJAX request to get the POs based on the selected SupplierId
+
+            // When DR is selected
+            $("#DeliveryReceiptId").change(function () {
+                var drId = $(this).val();
+                if (drId !== "") {
                     $.ajax({
-                        url: '@Url.Action("GetPOs", "SalesInvoice")',
+                        url: '@Url.Action("GetDrDetails", "SalesInvoice", new { area = "Filpride" })',
                         method: "GET",
-                        data: { productId: productId },
+                        data: { drId: drId },
                         success: function (data) {
                             if (data) {
-                                // Clear existing options
-                                $("#PurchaseOrderId").empty();
-                                // Add "No Value" option
-                                $('#PurchaseOrderId').append('<option value="">Select PO</option>');
-                                // Add new options based on the fetched data
-                                $.each(data, function (index, po) {
-                                    if (po && po.poNumber) {
-                                        $('#PurchaseOrderId').append('<option value="' + po.id + '">' + po.poNumber + '</option>');
-                                    }
-                                });
-                            } else {
-                                // Clear the fields if no POs are found
-                                $("#PurchaseOrderId").empty();
-                                $('#PurchaseOrderId').append('<option value="">No Value</option>');
+                                // Set the Transaction Date
+                                $("#TransactionDate").val(data.transactionDate);
+                                $("#Quantity").val(data.quantity);
+                                $("#ReceivingReportId").val(data.receivingReportId);
+                                $("#PurchaseOrderId").val(data.purchaseOrderId);
                             }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Error fetching POs:', error);
                         }
                     });
-                } else {
-                    // Clear the fields if no supplier is selected
-                    $("#PurchaseOrderId").empty();
-                    $('#PurchaseOrderId').append('<option value="">No Value</option>');
                 }
             });
         });
-    </script>
-    <script>
-    $(function () {
-        $(".GetRRList").change(function () {
-            var purchaseOrderId = $(this).val();
-            if (purchaseOrderId !== "") {
-                // Make an AJAX request to get the RRs based on the selected PurchaseOrderId
-                $.ajax({
-                    url: '@Url.Action("GetRRs", "SalesInvoice")',
-                    method: "GET",
-                    data: { purchaseOrderId: purchaseOrderId },
-                    success: function (data) {
-                        if (data) {
-                            // Clear existing options in the RR dropdown
-                            $("#ReceivingReportId").empty();
-
-                            $('#ReceivingReportId').append('<option value="">Select RR</option>');
-                            // Reset transaction date
-                            $("input[name='TransactionDate']").val("");
-
-                            $.each(data, function (index, rr) {
-                                if (rr && rr.receivingReportNo && rr.receivedDate) {
-                                    $('#ReceivingReportId').append('<option value="' + rr.receivingReportId + '" data-rr-date="' + rr.receivedDate + '">' + rr.receivingReportNo + '</option>');
-                                } else {
-                                    console.error("Invalid RR object:", rr);
-                                }
-                            });
-
-                            // If only one RR is returned, auto-select it and set the TransactionDate
-                            if (data.length === 1) {
-                                $("#ReceivingReportId").val(data[0].receivingReportId);
-                                $("input[name='TransactionDate']").val(data[0].receivedDate);
-                            }
-                        } else {
-                            // Clear the fields if no RRs are found
-                            $("#ReceivingReportId").empty();
-                            $("input[name='TransactionDate']").val("");
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching RRs:', error);
-                    }
-                });
-            } else {
-                // Clear the fields if no PO is selected
-                $("#ReceivingReportId").empty();
-                $("input[name='TransactionDate']").val("");
-            }
-        });
-
-        // Update TransactionDate when an RR is selected
-        $("#ReceivingReportId").change(function () {
-            var rrId = $(this).val();
-            if (rrId !== "") {
-                var selectedRR = $(this).find("option:selected").data("rr-date");
-                console.log(selectedRR)
-                $("input[name='TransactionDate']").val(selectedRR);
-            }
-        });
-    });
-    </script>
+</script>
 
 }

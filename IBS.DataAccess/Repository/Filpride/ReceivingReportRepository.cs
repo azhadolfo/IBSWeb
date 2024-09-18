@@ -225,6 +225,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilprideReceivingReport model = new()
             {
+                DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId,
                 Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 POId = deliveryReceipt.CustomerOrderSlip.PurchaseOrderId
                 ?? throw new ArgumentNullException("Purchase Order id is null."),
