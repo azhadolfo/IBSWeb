@@ -19,6 +19,9 @@ namespace IBS.Models
         [Display(Name = "Edited Date")]
         public DateTime? EditedDate { get; set; }
 
+        [Column(TypeName = "varchar(255)")]
+        public string? CancellationRemarks { get; set; }
+
         [Column(TypeName = "varchar(50)")]
         public string? CanceledBy { get; set; }
 

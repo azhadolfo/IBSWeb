@@ -107,7 +107,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `@Url.Action("Cancel", "PurchaseOrder", new { area = "Filpride" })/${id}`;
+                    var url = `@Url.Action("Cancel", "PurchaseOrder", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
                     window.location.href = url;
                 }
             })
