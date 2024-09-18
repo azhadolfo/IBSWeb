@@ -223,14 +223,7 @@
                             <tr>
                                 <input type="hidden" name="AccountNumber" value="2010101" />
                                 <td><input type='text' name="AccountTitle" value='AP-Trade Payable' class="w-100" style='border:none' readonly /></td>
-                                <td><input type='text' name="Debit" value='0.000' class="w-100 totalNetOfEWT" style='border:none' readonly /></td>
-                                <td><input type='text' name="Credit" value='0.000' class="w-100" style='border:none' readonly /></td>
-                                <td></td>
-                            </tr>
-                            <tr class="EWTDebit">
-                                <input type="hidden" name="AccountNumber" value="2010302" />
-                                <td><input type='text' name="AccountTitle" value='Expanded Witholding Tax 1%' class="w-100" style='border:none' readonly /></td>
-                                <td><input type='text' name="Debit" value='0.000' class="w-100 totalEWT" style='border:none' readonly /></td>
+                                <td><input type='text' name="Debit" value='0.000' class="w-100 apTradePayable" style='border:none' readonly /></td>
                                 <td><input type='text' name="Credit" value='0.000' class="w-100" style='border:none' readonly /></td>
                                 <td></td>
                             </tr>
@@ -241,7 +234,6 @@
                                 <td><input type='text' name="Credit" value='0.000' class="w-100 totalEWT" style='border:none' readonly /></td>
                                 <td></td>
                             </tr>
-
                             <tr>
                                 <input type="hidden" name="AccountNumber" class="accountNo" />
                                 <td><input type='text' name="AccountTitle" value="Cash in Bank" class="w-100 accountTitle" style='border:none' readonly /></td>
@@ -422,9 +414,9 @@
                         data: { supplierId: suppId },
                         success: function (data) {
                             if (data.taxType === "Withholding Tax") {
-                                $(".EWTDebit, .EWTCredit").show(); // Show the EWT table rows
+                                $(".EWTCredit").show(); // Show the EWT table rows
                             } else {
-                                $(".EWTDebit, .EWTCredit").hide(); // Hide the EWT table rows
+                                $(".EWTCredit").hide(); // Hide the EWT table rows
                             }
                             if (data.address !== null || data.tinNo !== null) {
                                 $("#SupplierAddress").val(data.address);
@@ -448,6 +440,7 @@
                                     var amountInputs = document.querySelectorAll('.inputAmount');
                                     var totalNetOfEWT = 0;
                                     var totalEWT = 0;
+                                    var apTradePayable = 0;
                                     amountInputs.forEach(function (input) {
                                         if (data.taxType === "Withholding Tax") {
                                             var rawValue = input.value;
@@ -458,14 +451,17 @@
                                             var rrAmountNetOfEWT = rrAmount - ewt;
                                             totalNetOfEWT += rrAmountNetOfEWT;
                                             totalEWT += ewt;
+                                            apTradePayable += rrAmount;
                                         } else {
                                             var rawValue = input.value;
                                             var rrAmount = parseNumber(rawValue);
                                             totalNetOfEWT += rrAmount;
+                                            apTradePayable += rrAmount;
                                         }
                                     });
                                     $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
                                     $(".totalEWT").val(formatNumber(totalEWT));
+                                    $(".apTradePayable").val(formatNumber(apTradePayable));
                                     updateTotalDebitAndCredit();
                                 }
 
@@ -478,7 +474,7 @@
                     });
                 } else {
                     // Clear the fields if no supplier is selected
-                    $(".EWTDebit, .EWTCredit").hide();
+                    $(".EWTCredit").hide();
                     $("#SupplierAddress").val("");
                     $("#SupplierTinNo").val("");
                     $(".supplierName").val("");
@@ -748,8 +744,9 @@
             var amountInputs = document.querySelectorAll('.inputAmount');
             var totalNetOfEWT = 0;
             var totalEWT = 0;
+            var apTradePayable = 0;
             amountInputs.forEach(function (input) {
-                if ($(".EWTDebit, .EWTCredit").is(':visible')) {
+                if ($(".EWTCredit").is(':visible')) {
                     var rawValue = input.value;
                     var rrAmount = parseNumber(rawValue);
                     var netOfVat = rrAmount / 1.12;
@@ -758,14 +755,17 @@
                     var rrAmountNetOfEWT = rrAmount - ewt;
                     totalNetOfEWT += rrAmountNetOfEWT;
                     totalEWT += ewt;
+                    apTradePayable += rrAmount;
                 } else {
                     var rawValue = input.value;
                     var rrAmount = parseNumber(rawValue);
                     totalNetOfEWT += rrAmount;
+                    apTradePayable += rrAmount;
                 }
             });
             $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
             $(".totalEWT").val(formatNumber(totalEWT));
+            $(".apTradePayable").val(formatNumber(apTradePayable));
             updateTotalDebitAndCredit();
         }
 
@@ -948,10 +948,8 @@
                     debitClass = 'totalNetOfEWT';
                 }
                 if (accountTitles[i] === 'Expanded Witholding Tax 1%') {
-                    if (debits[i] != 0) {
-                        debitClass = 'totalEWT';
-                        trClass = 'EWTDebit';
-                    } else if (credits[i] != 0) {
+
+                    if (credits[i] != 0) {
                         creditClass = 'totalEWT';
                         trClass = 'EWTCredit';
                     }

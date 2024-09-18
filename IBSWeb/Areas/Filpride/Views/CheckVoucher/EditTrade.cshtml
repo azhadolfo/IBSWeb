@@ -408,9 +408,9 @@
                         data: { supplierId: suppId },
                         success: function (data) {
                             if (data.taxType === "Withholding Tax") {
-                                $(".EWTDebit, .EWTCredit").show(); // Show the EWT table rows
+                                $(".EWTCredit").show(); // Show the EWT table rows
                             } else {
-                                $(".EWTDebit, .EWTCredit").hide(); // Hide the EWT table rows
+                                $(".EWTCredit").hide(); // Hide the EWT table rows
                             }
                             if (data.address !== null || data.tinNo !== null) {
                                 $("#SupplierAddress").val(data.address);
@@ -434,6 +434,7 @@
                                     var amountInputs = document.querySelectorAll('.inputAmount');
                                     var totalNetOfEWT = 0;
                                     var totalEWT = 0;
+                                    var apTradePayable = 0;
                                     amountInputs.forEach(function (input) {
                                         if (data.taxType === "Withholding Tax") {
                                             var rrAmount = parseNumber(input.value);
@@ -443,13 +444,16 @@
                                             var rrAmountNetOfEWT = rrAmount - ewt;
                                             totalNetOfEWT += rrAmountNetOfEWT;
                                             totalEWT += ewt;
+                                            apTradePayable += rrAmount;
                                         } else {
                                             var rrAmount = parseNumber(input.value);
                                             totalNetOfEWT += rrAmount;
+                                            apTradePayable += rrAmount;
                                         }
                                     });
                                     $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
                                     $(".totalEWT").val(formatNumber(totalEWT));
+                                    $(".apTradePayable").val(formatNumber(apTradePayable));
                                     updateTotalDebitAndCredit();
                                 }
 
@@ -462,7 +466,7 @@
                     });
                 } else {
                     // Clear the fields if no supplier is selected
-                    $(".EWTDebit, .EWTCredit").hide();
+                    $(".EWTCredit").hide();
                     $("#SupplierAddress").val("");
                     $("#SupplierTinNo").val("");
                     $(".supplierName").val("");
@@ -907,13 +911,11 @@
 
                 // Determine class for debits based on conditions
                 if (accountTitles[i] === 'AP-Trade Payable' && accountTitles[i] !== 'AP-Non Trade Payable') {
-                    debitClass = 'totalNetOfEWT';
+                    debitClass = 'apTradePayable';
                 }
                 if (accountTitles[i] === 'Expanded Witholding Tax 1%') {
-                    if (debits[i] != 0) {
-                        debitClass = 'totalEWT';
-                        trClass = 'EWTDebit';
-                    } else if (credits[i] != 0) {
+
+                    if (credits[i] != 0) {
                         creditClass = 'totalEWT';
                         trClass = 'EWTCredit';
                     }
