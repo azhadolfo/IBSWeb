@@ -607,7 +607,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
-        public async Task<IActionResult> Cancel(int id, string cancellationRemarks, CancellationToken cancellationToken)
+        public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
 
@@ -619,9 +619,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledDate = DateTime.Now;
                     model.PaymentStatus = nameof(Status.Canceled);
                     model.Status = nameof(Status.Canceled);
-
-                    ///PENDING
-                    //model.CancellationRemarks = cancellationRemarks;
+                    model.CancellationRemarks = cancellationRemarks;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Sales Invoice has been Cancelled.";

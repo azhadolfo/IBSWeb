@@ -1696,7 +1696,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
-        public async Task<IActionResult> Cancel(int id, string cancellationRemarks, CancellationToken cancellationToken)
+        public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var model = await _dbContext.FilprideCollectionReceipts.FindAsync(id, cancellationToken);
 
@@ -1707,9 +1707,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
                     model.Status = nameof(Status.Canceled);
-
-                    ///PENDING
-                    //model.CancellationRemarks = cancellationRemarks;
+                    model.CancellationRemarks = cancellationRemarks;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Collection Receipt has been Cancelled.";

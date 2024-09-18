@@ -685,7 +685,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
-        public async Task<IActionResult> Cancel(int id, string cancellationRemarks, CancellationToken cancellationToken)
+        public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var model = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
 
@@ -696,9 +696,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
                     model.Status = nameof(Status.Canceled);
-
-                    ///PENDING - further discussion
-                    //model.CancellationRemarks = cancellationRemarks;
+                    model.CancellationRemarks = cancellationRemarks;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Check Voucher has been Cancelled.";

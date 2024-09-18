@@ -312,9 +312,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
                     model.Status = nameof(Status.Canceled);
-
-                    ///PENDING - leo
-                    //model.CancellationRemarks = cancellationRemarks;
+                    model.CancellationRemarks = cancellationRemarks;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Purchase Order has been Cancelled.";
