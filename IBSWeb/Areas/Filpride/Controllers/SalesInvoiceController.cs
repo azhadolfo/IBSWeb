@@ -614,7 +614,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideSalesBook>(sb => sb.SerialNo == model.SalesInvoiceNo, cancellationToken);
                         await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.SalesInvoiceNo, cancellationToken);
-                        await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideInventory>(i => i.Reference == model.SalesInvoiceNo, cancellationToken);
                         await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
 
                         #region --Audit Trail Recording
