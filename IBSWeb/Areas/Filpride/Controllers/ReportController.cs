@@ -407,12 +407,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(JournalBook));
         }
 
-        public IActionResult AuditTrailBook()
+        public IActionResult AuditTrail()
         {
             return View();
         }
 
-        public async Task<IActionResult> AuditTrailBookReport(ViewModelBook model)
+        public async Task<IActionResult> AuditTrailReport(ViewModelBook model)
         {
             ViewBag.DateFrom = model.DateFrom;
             ViewBag.DateTo = model.DateTo;
@@ -422,7 +422,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
-                    var auditTrail = await _unitOfWork.FilprideReport.GetAuditTrailBooks(model.DateFrom, model.DateTo, companyClaims);
+                    var auditTrail = await _unitOfWork.FilprideReport.GetAuditTrails(model.DateFrom, model.DateTo, companyClaims);
                     var lastRecord = auditTrail.LastOrDefault();
                     if (lastRecord != null)
                     {
@@ -434,15 +434,100 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(AuditTrailBook));
+                    return RedirectToAction(nameof(AuditTrail));
                 }
             }
 
             TempData["error"] = "Please input date from";
-            return RedirectToAction(nameof(AuditTrailBook));
+            return RedirectToAction(nameof(AuditTrail));
         }
 
         //Generate as .txt file
+
+        #region -- Generate Audit Trail .Txt File --
+
+        public async Task<IActionResult> GenerateAuditTrailTxtFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var dateFrom = model.DateFrom;
+                    var dateTo = model.DateTo;
+                    var extractedBy = _userManager.GetUserName(this.User);
+                    var companyClaims = await GetCompanyClaimAsync();
+
+                    var auditTrail = await _unitOfWork.FilprideReport.GetAuditTrails(model.DateFrom, model.DateTo, companyClaims);
+                    if (auditTrail.Count == 0)
+                    {
+                        TempData["error"] = "No Record Found";
+                        return RedirectToAction(nameof(AuditTrail));
+                    }
+                    var lastRecord = auditTrail.LastOrDefault();
+                    var firstRecord = auditTrail.FirstOrDefault();
+                    if (lastRecord != null)
+                    {
+                        ViewBag.LastRecord = lastRecord.Date;
+                    }
+
+                    var fileContent = new StringBuilder();
+
+                    fileContent.AppendLine($"TAXPAYER'S NAME: Filpride Resources Inc.");
+                    fileContent.AppendLine($"TIN: 000-216-589-00000");
+                    fileContent.AppendLine($"ADDRESS: 57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan, Olongapo City, 2200 Zambales, Philippines");
+                    fileContent.AppendLine();
+                    fileContent.AppendLine($"Accounting System: Accounting Administration System");
+                    fileContent.AppendLine($"Acknowledgement Certificate Control No.: {CS.ACCN}");
+                    fileContent.AppendLine($"Date Issued: {CS.DateIssued}");
+                    fileContent.AppendLine();
+                    fileContent.AppendLine("Accounting Books File Attributes/Layout Definition");
+                    fileContent.AppendLine("File Name: Audit Trail Report");
+                    fileContent.AppendLine("File Type: Text File");
+                    fileContent.AppendLine($"{"Number of Records: ",-35}{auditTrail.Count}");
+                    fileContent.AppendLine($"{"Amount Field Control Total: ",-35}{"N/A"}");
+                    fileContent.AppendLine($"{"Period Covered: ",-35}{dateFrom}{" to "}{dateTo} ");
+                    fileContent.AppendLine($"{"Transaction cut-off Date & Time: ",-35}{ViewBag.LastRecord}");
+                    fileContent.AppendLine($"{"Extracted By: ",-35}{extractedBy.ToUpper()}");
+                    fileContent.AppendLine();
+                    fileContent.AppendLine($"{"Field Name"}\t{"Description"}\t{"From"}\t{"To"}\t{"Length"}\t{"Example"}");
+                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-8}\t{"1"}\t{"25"}\t{"25"}\t{firstRecord.Date}");
+                    fileContent.AppendLine($"{"Username"}\t{"Username"}\t{"27"}\t{"46"}\t{"20"}\t{firstRecord.Username}");
+                    fileContent.AppendLine($"{"MachineName"}\t{"Machine Name"}\t{"48"}\t{"77"}\t{"30"}\t{firstRecord.MachineName}");
+                    fileContent.AppendLine($"{"Activity"}\t{"Activity"}\t{"79"}\t{"278"}\t{"200"}\t{firstRecord.Activity}");
+                    fileContent.AppendLine($"{"DocumentType"}\t{"Document Type"}\t{"280"}\t{"299"}\t{"20"}\t{firstRecord.DocumentType}");
+                    fileContent.AppendLine();
+                    fileContent.AppendLine("AUDIT TRAIL REPORT");
+                    fileContent.AppendLine();
+                    fileContent.AppendLine($"{"Date",-25}\t{"Username",-20}\t{"Machine Name",-30}\t{"Activity",-200}\t{"Document Type",-20}");
+
+                    // Generate the records
+                    foreach (var record in auditTrail)
+                    {
+                        fileContent.AppendLine($"{record.Date.ToString("MM/dd/yyyy hh:mm:ss tt"),-25}\t{record.Username,-20}\t{record.MachineName,-30}\t{record.Activity,-200}\t{record.DocumentType,-20}");
+                    }
+
+                    fileContent.AppendLine();
+                    fileContent.AppendLine($"Software Name: Accounting Administration System (AAS)");
+                    fileContent.AppendLine($"Version: v1.1");
+                    fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
+                    fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
+
+                    // Convert the content to a byte array
+                    var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());
+
+                    // Return the file to the user
+                    return File(bytes, "text/plain", "AuditTrailReport.txt");
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(AuditTrail));
+                }
+            }
+            return View(model);
+        }
+
+        #endregion -- Generate Audit Trail .Txt File --
 
         #region -- Generate Disbursement Book .Txt File --
 
