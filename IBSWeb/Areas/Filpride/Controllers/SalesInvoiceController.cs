@@ -150,7 +150,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrailBook auditTrailBook = new(model.CreatedBy, $"Create new sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -299,7 +299,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrailBook auditTrailBook = new(model.EditedBy, $"Edited sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.EditedBy, $"Edited sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -569,7 +569,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrailBook auditTrailBook = new(model.PostedBy, $"Posted sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -620,7 +620,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrailBook auditTrailBook = new(model.VoidedBy, $"Voided sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -657,7 +657,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrailBook auditTrailBook = new(model.CanceledBy, $"Canceled sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -697,7 +697,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var printedBy = _userManager.GetUserName(User);
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrailBook auditTrailBook = new(printedBy, $"Printed original copy of sales invoice# {si.SalesInvoiceNo}", "Sales Invoice", ipAddress, si.Company);
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of sales invoice# {si.SalesInvoiceNo}", "Sales Invoice", ipAddress, si.Company);
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

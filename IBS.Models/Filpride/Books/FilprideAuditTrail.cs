@@ -3,7 +3,7 @@ using System.Net;
 
 namespace IBS.Models.Filpride.Books
 {
-    public class FilprideAuditTrailBook
+    public class FilprideAuditTrail
     {
         public Guid Id { get; set; }
 
@@ -21,11 +21,11 @@ namespace IBS.Models.Filpride.Books
 
         public string Company { get; set; }
 
-        public FilprideAuditTrailBook()
+        public FilprideAuditTrail()
         {
         }
 
-        public FilprideAuditTrailBook(string username, string activity, string documentType, string ipAddress, string company)
+        public FilprideAuditTrail(string username, string activity, string documentType, string ipAddress, string company)
         {
             Username = username;
             Date = DateTime.Now;

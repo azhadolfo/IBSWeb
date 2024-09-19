@@ -149,7 +149,7 @@ namespace IBS.DataAccess.Data
         public DbSet<FilpridePurchaseBook> FilpridePurchaseBooks { get; set; }
         public DbSet<FilprideSalesBook> FilprideSalesBooks { get; set; }
         public DbSet<FilprideInventory> FilprideInventories { get; set; }
-        public DbSet<FilprideAuditTrailBook> FilprideAuditTrailBooks { get; set; }
+        public DbSet<FilprideAuditTrail> FilprideAuditTrails { get; set; }
 
         #endregion
 
