@@ -21,5 +21,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         List<FilprideDisbursementBook> GetDisbursementBooks(DateOnly dateFrom, DateOnly dateTo, string company);
 
         List<FilprideJournalBook> GetJournalBooks(DateOnly dateFrom, DateOnly dateTo, string company);
+
+        Task<List<FilprideAuditTrailBook>> GetAuditTrailBooks(DateOnly dateFrom, DateOnly dateTo, string company);
     }
 }

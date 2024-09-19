@@ -76,7 +76,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CreatedBy.ToLower().Contains(searchValue)
                         )
                     .ToList();
-
                 }
 
                 // Sorting
@@ -171,6 +170,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
                     model.Amount = model.QuantityReceived * existingPo.Price;
                     model.Company = companyClaims;
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CreatedBy, $"Create new receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -288,6 +295,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTime.Now;
 
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.EditedBy, $"Edited receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                     TempData["success"] = "Receiving Report updated successfully";
@@ -329,7 +344,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
-
                     if (model.ReceivedDate == null)
                     {
                         TempData["error"] = "Please indicate the received date.";
@@ -341,6 +355,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.PostedBy = _userManager.GetUserName(this.User);
                         model.PostedDate = DateTime.Now;
                         model.Status = nameof(Status.Posted);
+
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.PostedBy, $"Posted receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
 
                         await _unitOfWork.FilprideReceivingReport.PostAsync(model, cancellationToken);
 
@@ -392,6 +414,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideReceivingReport.RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
                         model.QuantityReceived = 0;
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.VoidedBy, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Receiving Report has been Voided.";
                     }
@@ -422,6 +452,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.QuantityReceived = 0;
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CanceledBy, $"Canceled receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Receiving Report has been Cancelled.";
@@ -477,18 +515,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.FilprideReceivingReport.GetAsync(x => x.ReceivingReportId == id, cancellationToken);
-            if (cv?.IsPrinted == false)
+            var rr = await _unitOfWork.FilprideReceivingReport.GetAsync(x => x.ReceivingReportId == id, cancellationToken);
+            if (!rr.IsPrinted)
             {
                 #region --Audit Trail Recording
 
-                //var printedBy = _userManager.GetUserName(this.User);
-                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of cv# {cv.CVNo}", "Check Vouchers");
-                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+                var printedBy = _userManager.GetUserName(User);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrailBook auditTrailBook = new(printedBy, $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", ipAddress, rr.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                cv.IsPrinted = true;
+                rr.IsPrinted = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });

@@ -71,7 +71,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CreatedBy.ToLower().Contains(searchValue)
                         )
                     .ToList();
-
                 }
 
                 // Sorting
@@ -221,6 +220,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
                         );
                     }
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.Header.CreatedBy, $"Created new journal voucher# {model.Header.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, model.Header.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -419,6 +426,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #endregion --Journal Book Recording(JV)--
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(modelHeader.PostedBy, $"Posted journal voucher# {modelHeader.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, modelHeader.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Journal Voucher has been Posted.";
                     }
@@ -456,6 +471,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideJournalBook>(crb => crb.Reference == model.JournalVoucherHeaderNo);
                         await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.JournalVoucherHeaderNo);
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.VoidedBy, $"Voided journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Journal Voucher has been Voided.";
                         return RedirectToAction(nameof(Index));
@@ -466,7 +489,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
                 }
-
             }
 
             return NotFound();
@@ -484,6 +506,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledDate = DateTime.Now;
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CanceledBy, $"Canceled journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Journal Voucher has been Cancelled.";
@@ -595,7 +625,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Add or update records
                     for (int i = 0; i < viewModel.AccountTitle.Length; i++)
                     {
-
                         if (accountTitleDict.TryGetValue(viewModel.AccountNumber[i], out var ids))
                         {
                             // Update the first matching record and remove it from the list
@@ -652,9 +681,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.Particulars = viewModel.Particulars;
                     existingHeaderModel.CRNo = viewModel.CRNo;
                     existingHeaderModel.JVReason = viewModel.JVReason;
-                    existingHeaderModel.CreatedBy = _userManager.GetUserName(this.User);
+                    existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
+                    existingHeaderModel.EditedDate = DateTime.Now;
 
                     #endregion --Saving the default entries
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, existingHeaderModel.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     TempData["success"] = "Journal Voucher edited successfully";
@@ -678,9 +716,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                //var printedBy = _userManager.GetUserName(this.User);
-                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of jv# {jv.CVNo}", "Check Vouchers");
-                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+                var printedBy = _userManager.GetUserName(User);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrailBook auditTrailBook = new(printedBy, $"Printed original copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, cv.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 

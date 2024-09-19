@@ -262,6 +262,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.DebitAmount = model.Amount ?? 0;
                     }
 
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CreatedBy, $"Create new debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -755,6 +763,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             #endregion --General Ledger Book Recording(SV)--
                         }
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.PostedBy, $"Posted debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Debit Memo has been Posted.";
                     }
@@ -791,6 +807,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.DebitMemoNo);
                         await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo);
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.VoidedBy, $"Voided debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Debit Memo has been Voided.";
                         return RedirectToAction(nameof(Index));
@@ -801,7 +825,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
                 }
-
             }
 
             return NotFound();
@@ -818,6 +841,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
                     model.CancellationRemarks = cancellationRemarks;
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CanceledBy, $"Canceled debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Debit Memo has been Cancelled.";
@@ -973,6 +1004,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingDM.DebitAmount = model.Amount ?? 0;
                     }
 
+                    model.EditedBy = _userManager.GetUserName(User);
+                    model.EditedDate = DateTime.Now;
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.EditedBy, $"Edited debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Debit Memo edited successfully";
                     return RedirectToAction(nameof(Index));
@@ -990,18 +1032,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.FilprideDebitMemo.GetAsync(x => x.DebitMemoId == id, cancellationToken);
-            if (cv?.IsPrinted == false)
+            var dm = await _unitOfWork.FilprideDebitMemo.GetAsync(x => x.DebitMemoId == id, cancellationToken);
+            if (!dm.IsPrinted)
             {
                 #region --Audit Trail Recording
 
-                //var printedBy = _userManager.GetUserName(this.User);
-                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of cv# {cv.CVNo}", "Check Vouchers");
-                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+                var printedBy = _userManager.GetUserName(User);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrailBook auditTrailBook = new(printedBy, $"Printed original copy of debit memo# {dm.DebitMemoNo}", "Debit Memo", ipAddress, dm.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                cv.IsPrinted = true;
+                dm.IsPrinted = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });
