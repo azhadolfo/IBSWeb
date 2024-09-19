@@ -213,7 +213,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return salesBooks;
         }
 
-        public async Task<List<FilprideAuditTrailBook>> GetAuditTrailBooks(DateOnly dateFrom, DateOnly dateTo, string company)
+        public async Task<List<FilprideAuditTrailBook>> GetAuditTrails(DateOnly dateFrom, DateOnly dateTo, string company)
         {
             if (dateFrom > dateTo)
             {
