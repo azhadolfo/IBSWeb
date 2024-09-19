@@ -213,7 +213,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return salesBooks;
         }
 
-        public async Task<List<FilprideAuditTrailBook>> GetAuditTrails(DateOnly dateFrom, DateOnly dateTo, string company)
+        public async Task<List<FilprideAuditTrail>> GetAuditTrails(DateOnly dateFrom, DateOnly dateTo, string company)
         {
             if (dateFrom > dateTo)
             {
@@ -221,7 +221,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var auditTrailBooks = await _db
-                .FilprideAuditTrailBooks
+                .FilprideAuditTrails
                 .Where(a => a.Company == company && DateOnly.FromDateTime(a.Date) >= dateFrom && DateOnly.FromDateTime(a.Date) <= dateTo)
                 .OrderBy(a => a.Date)
                 .ToListAsync();
