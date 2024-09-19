@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(model);
                 }
 
-                if (model.WithholdingTaxtitle != null)
+                if (model.WithholdingTaxtitle != null && model.WithholdingTaxPercent != 0)
                 {
                     model.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
                 }
@@ -194,7 +194,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.ProofOfExemptionFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(document, localPath, cancellationToken);
                     }
 
-                    if (model.WithholdingTaxtitle != null)
+                    if (model.WithholdingTaxtitle != null && model.WithholdingTaxPercent != 0)
                     {
                         model.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
                     }
