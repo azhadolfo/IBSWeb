@@ -597,7 +597,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(i => i.Product)
                 .FirstOrDefaultAsync(i => i.Reference == model.SalesInvoiceNo && i.Company == model.Company);
 
-            if (model != null)
+            if (model != null && existingInventory != null)
             {
                 try
                 {
@@ -637,7 +637,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            return NotFound();
+            return BadRequest();
         }
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
