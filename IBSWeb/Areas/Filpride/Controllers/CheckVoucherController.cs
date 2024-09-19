@@ -78,7 +78,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CreatedBy.ToLower().Contains(searchValue)
                         )
                     .ToList();
-
                 }
 
                 // Sorting
@@ -374,6 +373,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #endregion --Disbursement Book Recording(CV)--
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(modelHeader.PostedBy, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, modelHeader.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Check Voucher has been Posted.";
                     }
@@ -605,7 +612,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.CheckDate = viewModel.CheckDate;
                     existingHeaderModel.Total = cashInBank;
                     existingHeaderModel.Amount = viewModel.Amount;
-                    existingHeaderModel.CreatedBy = viewModel.CreatedBy;
+                    existingHeaderModel.EditedBy = _userManager.GetUserName(User);
+                    existingHeaderModel.EditedDate = DateTime.Now;
 
                     #endregion --Saving the default entries
 
@@ -631,6 +639,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         //if necessary add field to store location path
                         // model.Header.SupportingFilePath = fileSavePath
                     }
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, existingHeaderModel.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     TempData["success"] = "Trade edited successfully";
@@ -670,6 +686,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo);
                         await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo);
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.VoidedBy, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Check Voucher has been Voided.";
                         return RedirectToAction(nameof(Index));
@@ -697,6 +721,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledDate = DateTime.Now;
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CanceledBy, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Check Voucher has been Cancelled.";
@@ -891,6 +923,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     TempData["success"] = "Check voucher trade created successfully";
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(cvh.CreatedBy, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, cvh.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     return RedirectToAction(nameof(Index));
@@ -1150,6 +1190,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     #endregion -- Uploading file --
 
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(checkVoucherHeader.CreatedBy, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, checkVoucherHeader.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                     TempData["success"] = "Check voucher invoicing created successfully.";
@@ -1331,6 +1379,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion
 
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(checkVoucherHeader.CreatedBy, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, checkVoucherHeader.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                     TempData["success"] = "Check voucher payment created successfully";
@@ -1506,6 +1562,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (existingModel != null)
                     {
+                        existingModel.EditedBy = _userManager.GetUserName(User);
+                        existingModel.EditedDate = DateTime.Now;
                         existingModel.Date = viewModel.TransactionDate;
                         existingModel.SupplierId = viewModel.SupplierId;
                         existingModel.PONo = [viewModel.PoNo];
@@ -1637,6 +1695,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         //if necessary add field to store location path
                         // model.Header.SupportingFilePath = fileSavePath
                     }
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(existingModel.EditedBy, $"Edited check voucher# {existingModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, existingModel.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     TempData["success"] = "Non-trade invoicing edited successfully";
@@ -1852,7 +1918,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.Payee = viewModel.Payee;
                     existingHeaderModel.CheckDate = viewModel.CheckDate;
                     existingHeaderModel.Total = cashInBank;
-                    existingHeaderModel.CreatedBy = _userManager.GetUserName(this.User);
+                    existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
+                    existingHeaderModel.EditedDate = DateTime.Now;
 
                     #endregion --Saving the default entries
 
@@ -1901,6 +1968,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         // model.Header.SupportingFilePath = fileSavePath
                     }
 
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, existingHeaderModel.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     TempData["success"] = "Non-trade payment edited successfully";
                     return RedirectToAction(nameof(Index));
@@ -1920,13 +1995,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
             var cv = await _unitOfWork.FilprideCheckVoucher.GetAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
-            if (cv?.IsPrinted == false)
+            if (!cv.IsPrinted)
             {
                 #region --Audit Trail Recording
 
-                //var printedBy = _userManager.GetUserName(this.User);
-                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of cv# {cv.CVNo}", "Check Vouchers");
-                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+                var printedBy = _userManager.GetUserName(User);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrailBook auditTrailBook = new(printedBy, $"Printed original copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, cv.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 

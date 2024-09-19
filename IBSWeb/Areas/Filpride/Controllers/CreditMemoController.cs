@@ -71,7 +71,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CreatedBy.ToLower().Contains(searchValue)
                         )
                     .ToList();
-
                 }
 
                 // Sorting
@@ -263,6 +262,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     await _dbContext.AddAsync(model, cancellationToken);
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CreatedBy, $"Create new credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Credit memo created successfully.";
                     return RedirectToAction(nameof(Index));
@@ -354,7 +362,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     .FilprideCreditMemos
                                     .FirstOrDefaultAsync(cm => cm.CreditMemoId == model.CreditMemoId);
 
-                    model.CreatedBy = _userManager.GetUserName(this.User);
+                    model.EditedBy = _userManager.GetUserName(this.User);
+                    model.EditedDate = DateTime.Now;
 
                     if (model.Source == "Sales Invoice")
                     {
@@ -372,7 +381,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #endregion -- Saving Default Enries --
 
                         existingCM.CreditAmount = (decimal)(model.Quantity * -model.AdjustedPrice);
-
                     }
                     else if (model.Source == "Service Invoice")
                     {
@@ -401,6 +409,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         existingCM.CreditAmount = -model.Amount ?? 0;
                     }
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.EditedBy, $"Edited credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Credit Memo edited successfully";
@@ -928,7 +944,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             #endregion --General Ledger Book Recording(SV)--
                         }
 
-                        //await _receiptRepo.UpdateCreditMemo(model.SalesInvoice.Id, model.Total, offsetAmount);
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.PostedBy, $"Posted credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Credit Memo has been Posted.";
@@ -967,6 +989,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.CreditMemoNo);
                         await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CreditMemoNo);
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.VoidedBy, $"Voided credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Credit Memo has been Voided.";
                         return RedirectToAction(nameof(Index));
@@ -994,6 +1024,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledDate = DateTime.Now;
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CanceledBy, $"Canceled credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Credit Memo has been Cancelled.";
@@ -1028,18 +1066,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.FilprideCreditMemo.GetAsync(x => x.CreditMemoId == id, cancellationToken);
-            if (cv?.IsPrinted == false)
+            var cm = await _unitOfWork.FilprideCreditMemo.GetAsync(x => x.CreditMemoId == id, cancellationToken);
+            if (!cm.IsPrinted)
             {
                 #region --Audit Trail Recording
 
-                //var printedBy = _userManager.GetUserName(this.User);
-                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of cv# {cv.CVNo}", "Check Vouchers");
-                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+                var printedBy = _userManager.GetUserName(User);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrailBook auditTrailBook = new(printedBy, $"Printed original copy of credit memo# {cm.CreditMemoNo}", "Credit Memo", ipAddress, cm.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                cv.IsPrinted = true;
+                cm.IsPrinted = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });

@@ -214,6 +214,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --Saving the default properties
 
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrailBook auditTrailBook = new(model.CreatedBy, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await _dbContext.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
@@ -459,6 +467,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #endregion --General Ledger Book Recording
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.PostedBy, $"Posted service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Service invoice has been posted.";
                         return RedirectToAction(nameof(Print), new { id });
@@ -491,6 +507,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CanceledBy, $"Canceled service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Service invoice has been Cancelled.";
                 }
@@ -522,13 +546,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
                         await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.ServiceInvoiceNo, cancellationToken);
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.VoidedBy, $"Voided service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Service invoice has been voided.";
                         return RedirectToAction(nameof(Index));
                     }
                     catch (Exception ex)
                     {
-
                         TempData["error"] = ex.Message;
                         return RedirectToAction(nameof(Index));
                     }
@@ -607,6 +638,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.Period = model.Period;
                     existingModel.DueDate = model.DueDate;
                     existingModel.Instructions = model.Instructions;
+                    existingModel.EditedBy = _userManager.GetUserName(User);
+                    existingModel.EditedDate = DateTime.Now;
 
                     decimal total = 0;
                     total += model.Amount;
@@ -614,12 +647,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Saving the default properties
 
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.EditedBy, $"Edited service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-
                     TempData["error"] = ex.Message;
                     return View(existingModel);
                 }
@@ -630,18 +670,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.FilprideServiceInvoice.GetAsync(x => x.ServiceInvoiceId == id, cancellationToken);
-            if (cv?.IsPrinted == false)
+            var sv = await _unitOfWork.FilprideServiceInvoice.GetAsync(x => x.ServiceInvoiceId == id, cancellationToken);
+            if (!sv.IsPrinted)
             {
                 #region --Audit Trail Recording
 
-                //var printedBy = _userManager.GetUserName(this.User);
-                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of cv# {cv.CVNo}", "Check Vouchers");
-                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+                var printedBy = _userManager.GetUserName(User);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrailBook auditTrailBook = new(printedBy, $"Printed original copy of service invoice# {sv.ServiceInvoiceNo}", "Service Invoice", ipAddress, sv.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                cv.IsPrinted = true;
+                sv.IsPrinted = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });

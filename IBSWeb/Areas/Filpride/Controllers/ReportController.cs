@@ -263,7 +263,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(PurchaseBook));
             }
@@ -408,7 +407,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(JournalBook));
         }
 
+        public IActionResult AuditTrailBook()
+        {
+            return View();
+        }
+
+        public async Task<IActionResult> AuditTrailBookReport(ViewModelBook model)
+        {
+            ViewBag.DateFrom = model.DateFrom;
+            ViewBag.DateTo = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var auditTrail = await _unitOfWork.FilprideReport.GetAuditTrailBooks(model.DateFrom, model.DateTo, companyClaims);
+                    var lastRecord = auditTrail.LastOrDefault();
+                    if (lastRecord != null)
+                    {
+                        ViewBag.LastRecord = lastRecord.Date;
+                    }
+
+                    return View(auditTrail);
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(AuditTrailBook));
+                }
+            }
+
+            TempData["error"] = "Please input date from";
+            return RedirectToAction(nameof(AuditTrailBook));
+        }
+
         //Generate as .txt file
+
         #region -- Generate Disbursement Book .Txt File --
 
         public async Task<IActionResult> GenerateDisbursementBookTxtFile(ViewModelBook model)
@@ -1099,8 +1134,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion -- Generate Sales Book .Txt File --
 
-
         //Generate as .csv file
+
         #region -- Generate DisbursmentBook .Csv File --
 
         public async Task<IActionResult> GenerateDisbursementBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)

@@ -268,6 +268,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Offsetting function
 
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CreatedBy, $"Create new collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     TempData["success"] = "Collection receipt created successfully.";
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
@@ -462,7 +470,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -727,7 +734,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -886,13 +892,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Offsetting function
 
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CreatedBy, $"Create new collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Collection receipt created successfully.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -1118,6 +1131,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.EWT = model.EWT;
                     existingModel.WVAT = model.WVAT;
                     existingModel.Total = computeTotalInModelIfZero;
+                    existingModel.EditedBy = _userManager.GetUserName(User);
+                    existingModel.EditedDate = DateTime.Now;
 
                     try
                     {
@@ -1255,12 +1270,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Offsetting function
 
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(existingModel.EditedBy, $"Edited collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, existingModel.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -1616,6 +1638,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             await _unitOfWork.FilprideCollectionReceipt.UpdateSV(model.ServiceInvoice.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
                         }
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.PostedBy, $"Posted collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Collection Receipt has been Posted.";
                     }
@@ -1680,6 +1710,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             return RedirectToAction(nameof(Index));
                         }
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrailBook auditTrailBook = new(model.VoidedBy, $"Voided collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         await transaction.CommitAsync();
                         TempData["success"] = "Collection Receipt has been Voided.";
@@ -1709,6 +1747,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrailBook auditTrailBook = new(model.CanceledBy, $"Canceled collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Collection Receipt has been Cancelled.";
                 }
@@ -1720,18 +1766,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.FilprideCollectionReceipt.GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
-            if (cv?.IsPrinted == false)
+            var cr = await _unitOfWork.FilprideCollectionReceipt.GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
+            if (!cr.IsPrinted)
             {
                 #region --Audit Trail Recording
 
-                //var printedBy = _userManager.GetUserName(this.User);
-                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of cv# {cv.CVNo}", "Check Vouchers");
-                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+                var printedBy = _userManager.GetUserName(User);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrailBook auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", ipAddress, cr.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                cv.IsPrinted = true;
+                cr.IsPrinted = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });
@@ -1783,6 +1830,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return View(cr);
         }
+
         public async Task<IActionResult> PrintedMultipleCR(int id, CancellationToken cancellationToken)
         {
             var findIdOfCR = await _dbContext
@@ -1800,13 +1848,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (findIdOfCR != null && !findIdOfCR.IsPrinted)
             {
-                //#region --Audit Trail Recording
+                #region --Audit Trail Recording
 
-                //var printedBy = _userManager.GetUserName(this.User);
-                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of cr# {findIdOfCR.CRNo}", "Collection Receipt");
-                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+                var printedBy = _userManager.GetUserName(User);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrailBook auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {findIdOfCR.CollectionReceiptNo}", "Collection Receipt", ipAddress, findIdOfCR.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
-                //#endregion --Audit Trail Recording
+                #endregion --Audit Trail Recording
 
                 findIdOfCR.IsPrinted = true;
                 await _dbContext.SaveChangesAsync(cancellationToken);
