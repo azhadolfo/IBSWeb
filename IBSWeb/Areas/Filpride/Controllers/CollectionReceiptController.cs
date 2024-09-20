@@ -426,6 +426,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     catch (Exception ex)
                     {
+                        TempData["error"] = ex.Message;
+                        return View(model);
                     }
 
                     await _dbContext.AddAsync(model, cancellationToken);
@@ -465,6 +467,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Offsetting function
 
+                    TempData["success"] = "Multilple collection receipt successfully created!";
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
                 }
