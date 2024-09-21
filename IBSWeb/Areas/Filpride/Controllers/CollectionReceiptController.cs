@@ -1281,6 +1281,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Audit Trail Recording
 
+                    TempData["success"] = "Collection receipt successfully updated.";
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
                 }

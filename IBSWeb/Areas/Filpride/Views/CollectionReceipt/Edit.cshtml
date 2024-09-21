@@ -27,9 +27,10 @@ Amount Paid:    <span id="amountPaid"></span>
 Balance:        <span id="balance"></span>
            </pre>
         </div>
-        <form asp-action="CollectionEdit" method="post" enctype="multipart/form-data">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
             <div class="col-md-4">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="CollectionReceiptId" />
                 <div class="form-group mb-3">
                     <label class="control-label">Customers</label>
                     <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2" style="width:100%" required>
