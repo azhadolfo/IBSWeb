@@ -77,7 +77,7 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th class="text-center table-primary" colspan="2">Net Delivered Price</th>
+                    <th class="text-center table-primary" colspan="2">Net Delivered Price <i class="bi bi-info-circle" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="All figures are exclusive of VAT."></i></th>
                 </tr>
             </thead>
             <tbody>
@@ -122,6 +122,11 @@
                     window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';
                 }
             });
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('[data-bs-toggle="popover"]').popover();
         });
     </script>
 }
