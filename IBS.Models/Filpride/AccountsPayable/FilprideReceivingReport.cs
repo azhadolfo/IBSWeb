@@ -29,8 +29,10 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [ForeignKey("POId")]
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
+
         [NotMapped]
         public List<SelectListItem>? PurchaseOrders { get; set; }
+
         [Display(Name = "PO No")]
         [Column(TypeName = "varchar(12)")]
         public string? PONo { get; set; }
@@ -74,9 +76,9 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "numeric(18,4)")]
         public decimal Amount { get; set; }
 
-        [Display(Name = "Other Reference")]
+        [Display(Name = "ATL No")]
         [Column(TypeName = "varchar(100)")]
-        public string? OtherRef { get; set; }
+        public string? AuthorityToLoadNo { get; set; }
 
         [Required]
         public string Remarks { get; set; }

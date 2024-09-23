@@ -71,7 +71,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.QuantityReceived.ToString().Contains(searchValue) ||
                         s.QuantityDelivered.ToString().Contains(searchValue) ||
                         s.Amount.ToString().Contains(searchValue) ||
-                        s.OtherRef?.ToLower().Contains(searchValue) == null ||
+                        s.AuthorityToLoadNo?.ToLower().Contains(searchValue) == null ||
                         s.Remarks.ToLower().Contains(searchValue) ||
                         s.CreatedBy.ToLower().Contains(searchValue)
                         )
@@ -280,7 +280,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.QuantityDelivered = model.QuantityDelivered;
                     existingModel.QuantityReceived = model.QuantityReceived;
                     existingModel.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
-                    existingModel.OtherRef = model.OtherRef;
+                    existingModel.AuthorityToLoadNo = model.AuthorityToLoadNo;
                     existingModel.Remarks = model.Remarks;
                     existingModel.ReceivedDate = model.ReceivedDate;
                     existingModel.Amount = model.QuantityReceived * po.Price;
