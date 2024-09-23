@@ -108,8 +108,8 @@
         else if (Model.Customer.WithHoldingTax && Model.Customer.WithHoldingVat)
         {
             <p style="line-height: 1; margin-top:20px;">
-                Creditable Withholding Tax with the amount of <b>@Html.DisplayFor(model => withHoldingTaxAmount)</b> is computed for this invoice.<br />
-                Creditable Withholding Vat with the amount of <b>@Html.DisplayFor(model => withHoldingVatAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Tax with the amount of <b>@withHoldingTaxAmount.ToString("N4")</b> is computed for this invoice.<br />
+                Creditable Withholding Vat with the amount of <b>@withHoldingVatAmount.ToString("N4")</b> is computed for this invoice.<br />
                 Please attach BIR Form 2306 and 2307 to your payment if you deducted Expanded Withholding Tax and Vat.
             </p>
         }
@@ -119,22 +119,22 @@
         if (Model.Customer.WithHoldingTax && !Model.Customer.WithHoldingVat)
         {
             <p style="line-height: 1; margin-top:20px;">
-                Creditable Withholding Tax with the amount of <b>@Html.DisplayFor(model => withHoldingTaxAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Tax with the amount of <b>@withHoldingTaxAmount.ToString("N4")</b> is computed for this invoice.<br />
                 Please attach BIR Form 2307 to your payment if you deducted Expanded Withholding Tax.
             </p>
         }
         else if (Model.Customer.WithHoldingVat && !Model.Customer.WithHoldingTax)
         {
             <p style="line-height: 1; margin-top:20px;">
-                Creditable Withholding Vat with the amount of <b>@Html.DisplayFor(model => withHoldingVatAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Vat with the amount of <b>@withHoldingVatAmount.ToString("N4")</b> is computed for this invoice.<br />
                 Please attach BIR Form 2306 to your payment if you deducted Expanded Withholding Vat.
             </p>
         }
         else if (Model.Customer.WithHoldingTax && Model.Customer.WithHoldingVat)
         {
             <p style="line-height: 1; margin-top:20px;">
-                Creditable Withholding Tax with the amount of <b>@Html.DisplayFor(model => withHoldingTaxAmount)</b> is computed for this invoice.<br />
-                Creditable Withholding Vat with the amount of <b>@Html.DisplayFor(model => withHoldingVatAmount)</b> is computed for this invoice.<br />
+                Creditable Withholding Tax with the amount of <b>@withHoldingTaxAmount.ToString("N4")</b> is computed for this invoice.<br />
+                Creditable Withholding Vat with the amount of <b>@withHoldingVatAmount.ToString("N4")</b> is computed for this invoice.<br />
                 Please attach BIR Form 2306 and 2307 to your payment if you deducted Expanded Withholding Tax and Vat.
             </p>
         }
