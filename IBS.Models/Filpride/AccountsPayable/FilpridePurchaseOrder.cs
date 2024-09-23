@@ -70,7 +70,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "timestamp with time zone")]
         public DateTime ReceivedDate { get; set; }
 
-        public string SalesOrderNo { get; set; }
+        public string SupplierSalesOrderNo { get; set; }
 
         public bool IsClosed { get; set; }
 

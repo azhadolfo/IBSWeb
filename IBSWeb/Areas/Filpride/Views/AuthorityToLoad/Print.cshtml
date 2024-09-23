@@ -50,7 +50,7 @@
                     <th>Customer</th>
                     <th>Product</th>
                     <th>Volume</th>
-                    <th>SO#</th>
+                    <th>Supplier SO#</th>
                     <th>Filpride PO#</th>
                 </tr>
             </thead>
@@ -59,7 +59,7 @@
                     <td>@Model.CustomerOrderSlip.Customer.CustomerName</td>
                     <td>@Model.CustomerOrderSlip.PurchaseOrder.Product.ProductName</td>
                     <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
-                    <td>@Model.CustomerOrderSlip.PurchaseOrder.SalesOrderNo</td>
+                    <td>@Model.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo</td>
                     <td>@Model.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo</td>
                 </tr>
             </tbody>
