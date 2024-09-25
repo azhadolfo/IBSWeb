@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -41,8 +42,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
+            if (view == nameof(DynamicView.CheckVoucher))
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher
+                    .GetAllAsync(cv => cv.Company == companyClaims, cancellationToken);
+
+                return View("ExportIndex", checkVoucherHeaders);
+            }
+
             return View();
         }
 
@@ -2010,6 +2021,170 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        //Download as .xlsx file.(Export)
+        #region -- export xlsx record --
+
+        [HttpPost]
+        public async Task<IActionResult> Export(string selectedRecord)
+        {
+            if (string.IsNullOrEmpty(selectedRecord))
+            {
+                // Handle the case where no invoices are selected
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
+
+                // Retrieve the selected invoices from the database
+                var selectedList = await _unitOfWork.FilprideCheckVoucher
+                    .GetAllAsync(cvh => recordIds.Contains(cvh.CheckVoucherHeaderId));
+
+                // Create the Excel package
+                using (var package = new ExcelPackage())
+                {
+                    // Add a new worksheet to the Excel package
+                    var worksheet = package.Workbook.Worksheets.Add("CheckVoucherHeader");
+                    var worksheet2 = package.Workbook.Worksheets.Add("CheckVoucherDetails");
+
+                    worksheet.Cells["A1"].Value = "TransactionDate";
+                    worksheet.Cells["B1"].Value = "ReceivingReportNo";
+                    worksheet.Cells["C1"].Value = "SalesInvoiceNo";
+                    worksheet.Cells["D1"].Value = "PurchaseOrderNo";
+                    worksheet.Cells["E1"].Value = "Particulars";
+                    worksheet.Cells["F1"].Value = "CheckNo";
+                    worksheet.Cells["G1"].Value = "Category";
+                    worksheet.Cells["H1"].Value = "Payee";
+                    worksheet.Cells["I1"].Value = "CheckDate";
+                    worksheet.Cells["J1"].Value = "StartDate";
+                    worksheet.Cells["K1"].Value = "EndDate";
+                    worksheet.Cells["L1"].Value = "NumberOfMonths";
+                    worksheet.Cells["M1"].Value = "NumberOfMonthsCreated";
+                    worksheet.Cells["N1"].Value = "LastCreatedDate";
+                    worksheet.Cells["O1"].Value = "AmountPerMonth";
+                    worksheet.Cells["P1"].Value = "IsComplete";
+                    worksheet.Cells["Q1"].Value = "AccruedType";
+                    worksheet.Cells["R1"].Value = "Reference";
+                    worksheet.Cells["S1"].Value = "CreatedBy";
+                    worksheet.Cells["T1"].Value = "CreatedDate";
+                    worksheet.Cells["U1"].Value = "Total";
+                    worksheet.Cells["V1"].Value = "Amount";
+                    worksheet.Cells["W1"].Value = "CheckAmount";
+                    worksheet.Cells["X1"].Value = "CVType";
+                    worksheet.Cells["Y1"].Value = "AmountPaid";
+                    worksheet.Cells["Z1"].Value = "IsPaid";
+                    worksheet.Cells["AA1"].Value = "CancellationRemarks";
+                    worksheet.Cells["AB1"].Value = "OriginalBankId";
+                    worksheet.Cells["AC1"].Value = "OriginalSeriesNumber";
+                    worksheet.Cells["AD1"].Value = "OriginalSupplierId";
+                    worksheet.Cells["AE1"].Value = "OriginalDocumentId";
+
+                    worksheet2.Cells["A1"].Value = "AccountNo";
+                    worksheet2.Cells["B1"].Value = "AccountName";
+                    worksheet2.Cells["C1"].Value = "TransactionNo";
+                    worksheet2.Cells["D1"].Value = "Debit";
+                    worksheet2.Cells["E1"].Value = "Credit";
+
+                    int row = 2;
+
+                    List<FilprideCheckVoucherDetail> getCVDetails = new();
+
+                    foreach (var item in selectedList)
+                    {
+                        worksheet.Cells[row, 1].Value = item.Date.ToString("yyyy-MM-dd");
+                        if (item.RRNo != null && !item.RRNo.Contains(null))
+                        {
+                            worksheet.Cells[row, 2].Value = string.Join(", ", item.RRNo.Select(rrNo => rrNo.ToString()));
+                        }
+                        if (item.SINo != null && !item.SINo.Contains(null))
+                        {
+                            worksheet.Cells[row, 3].Value = string.Join(", ", item.SINo.Select(siNo => siNo.ToString()));
+                        }
+                        if (item.PONo != null && !item.PONo.Contains(null))
+                        {
+                            worksheet.Cells[row, 4].Value = string.Join(", ", item.PONo.Select(poNo => poNo.ToString()));
+                        }
+
+                        worksheet.Cells[row, 5].Value = item.Particulars;
+                        worksheet.Cells[row, 6].Value = item.CheckNo;
+                        worksheet.Cells[row, 7].Value = item.Category;
+                        worksheet.Cells[row, 8].Value = item.Payee;
+                        worksheet.Cells[row, 9].Value = item.CheckDate?.ToString("yyyy-MM-dd");
+                        worksheet.Cells[row, 10].Value = item.StartDate?.ToString("yyyy-MM-dd");
+                        worksheet.Cells[row, 11].Value = item.EndDate?.ToString("yyyy-MM-dd");
+                        worksheet.Cells[row, 12].Value = item.NumberOfMonths;
+                        worksheet.Cells[row, 13].Value = item.NumberOfMonthsCreated;
+                        worksheet.Cells[row, 14].Value = item.LastCreatedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                        worksheet.Cells[row, 15].Value = item.AmountPerMonth;
+                        worksheet.Cells[row, 16].Value = item.IsComplete;
+                        worksheet.Cells[row, 17].Value = item.AccruedType;
+                        worksheet.Cells[row, 18].Value = item.Reference;
+                        worksheet.Cells[row, 19].Value = item.CreatedBy;
+                        worksheet.Cells[row, 20].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                        worksheet.Cells[row, 21].Value = item.Total;
+                        if (item.Amount != null)
+                        {
+                            worksheet.Cells[row, 22].Value = string.Join(" ", item.Amount.Select(amount => amount.ToString("N2")));
+                        }
+                        worksheet.Cells[row, 23].Value = item.CheckAmount;
+                        worksheet.Cells[row, 24].Value = item.CvType;
+                        worksheet.Cells[row, 25].Value = item.AmountPaid;
+                        worksheet.Cells[row, 26].Value = item.IsPaid;
+                        worksheet.Cells[row, 27].Value = item.CancellationRemarks;
+                        worksheet.Cells[row, 28].Value = item.BankId;
+                        worksheet.Cells[row, 29].Value = item.CheckVoucherHeaderNo;
+                        worksheet.Cells[row, 30].Value = item.SupplierId;
+                        worksheet.Cells[row, 31].Value = item.CheckVoucherHeaderId;
+
+                        row++;
+                    }
+
+                    var cvNos = selectedList.Select(item => item.CheckVoucherHeaderNo).ToList();
+
+                    getCVDetails = await _dbContext.FilprideCheckVoucherDetails
+                        .Where(cvd => cvNos.Contains(cvd.TransactionNo))
+                        .OrderBy(cvd => cvd.CheckVoucherHeaderId)
+                        .ToListAsync();
+
+                    int cvdRow = 2;
+
+                    foreach (var item in getCVDetails)
+                    {
+                        worksheet2.Cells[cvdRow, 1].Value = item.AccountNo;
+                        worksheet2.Cells[cvdRow, 2].Value = item.AccountName;
+                        worksheet2.Cells[cvdRow, 3].Value = item.TransactionNo;
+                        worksheet2.Cells[cvdRow, 4].Value = item.Debit;
+                        worksheet2.Cells[cvdRow, 5].Value = item.Credit;
+
+                        cvdRow++;
+                    }
+
+                    // Convert the Excel package to a byte array
+                    var excelBytes = await package.GetAsByteArrayAsync();
+
+                    return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CheckVoucherList.xlsx");
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        #endregion -- export xlsx record --
+
+        [HttpGet]
+        public IActionResult GetAllCheckVoucherIds()
+        {
+            var cvIds = _dbContext.FilprideCheckVoucherHeaders
+                                     .Select(cv => cv.CheckVoucherHeaderId) // Assuming Id is the primary key
+                                     .ToList();
+
+            return Json(cvIds);
         }
     }
 }

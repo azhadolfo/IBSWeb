@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -39,8 +40,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
+            if (view == nameof(DynamicView.CreditMemo))
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var creditMemos = await _unitOfWork.FilprideCreditMemo
+                    .GetAllAsync(cm => cm.Company == companyClaims, cancellationToken);
+
+                return View("ExportIndex", creditMemos);
+            }
+
             return View();
         }
 
@@ -1082,6 +1093,97 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        //Download as .xlsx file.(Export)
+
+        #region -- export xlsx record --
+
+        [HttpPost]
+        public async Task<IActionResult> Export(string selectedRecord)
+        {
+            if (string.IsNullOrEmpty(selectedRecord))
+            {
+                // Handle the case where no invoices are selected
+                return RedirectToAction(nameof(Index));
+            }
+
+            var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
+
+            // Retrieve the selected invoices from the database
+            var selectedList = await _dbContext.FilprideCreditMemos
+                .Where(cm => recordIds.Contains(cm.CreditMemoId))
+                .OrderBy(cm => cm.CreditMemoNo)
+                .ToListAsync();
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("CreditMemo");
+
+            worksheet.Cells["A1"].Value = "TransactionDate";
+            worksheet.Cells["B1"].Value = "DebitAmount";
+            worksheet.Cells["C1"].Value = "Description";
+            worksheet.Cells["D1"].Value = "AdjustedPrice";
+            worksheet.Cells["E1"].Value = "Quantity";
+            worksheet.Cells["F1"].Value = "Source";
+            worksheet.Cells["G1"].Value = "Remarks";
+            worksheet.Cells["H1"].Value = "Period";
+            worksheet.Cells["I1"].Value = "Amount";
+            worksheet.Cells["J1"].Value = "CurrentAndPreviousAmount";
+            worksheet.Cells["K1"].Value = "UnearnedAmount";
+            worksheet.Cells["L1"].Value = "ServicesId";
+            worksheet.Cells["M1"].Value = "CreatedBy";
+            worksheet.Cells["N1"].Value = "CreatedDate";
+            worksheet.Cells["O1"].Value = "CancellationRemarks";
+            worksheet.Cells["P1"].Value = "OriginalSalesInvoiceId";
+            worksheet.Cells["Q1"].Value = "OriginalSeriesNumber";
+            worksheet.Cells["R1"].Value = "OriginalServiceInvoiceId";
+            worksheet.Cells["S1"].Value = "OriginalDocumentId";
+
+            int row = 2;
+
+            foreach (var item in selectedList)
+            {
+                worksheet.Cells[row, 1].Value = item.TransactionDate.ToString("yyyy-MM-dd");
+                worksheet.Cells[row, 2].Value = item.CreditAmount;
+                worksheet.Cells[row, 3].Value = item.Description;
+                worksheet.Cells[row, 4].Value = item.AdjustedPrice;
+                worksheet.Cells[row, 5].Value = item.Quantity;
+                worksheet.Cells[row, 6].Value = item.Source;
+                worksheet.Cells[row, 7].Value = item.Remarks;
+                worksheet.Cells[row, 8].Value = item.Period;
+                worksheet.Cells[row, 9].Value = item.Amount;
+                worksheet.Cells[row, 10].Value = item.CurrentAndPreviousAmount;
+                worksheet.Cells[row, 11].Value = item.UnearnedAmount;
+                worksheet.Cells[row, 12].Value = item.ServicesId;
+                worksheet.Cells[row, 13].Value = item.CreatedBy;
+                worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 15].Value = item.CancellationRemarks;
+                worksheet.Cells[row, 16].Value = item.SalesInvoiceId;
+                worksheet.Cells[row, 17].Value = item.CreditMemoNo;
+                worksheet.Cells[row, 18].Value = item.ServiceInvoiceId;
+                worksheet.Cells[row, 19].Value = item.CreditMemoId;
+
+                row++;
+            }
+
+            // Convert the Excel package to a byte array
+            var excelBytes = await package.GetAsByteArrayAsync();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CreditMemoList.xlsx");
+        }
+
+        #endregion -- export xlsx record --
+
+        [HttpGet]
+        public IActionResult GetAllCreditMemoIds()
+        {
+            var cmIds = _dbContext.FilprideCreditMemos
+                                     .Select(cm => cm.CreditMemoId) // Assuming Id is the primary key
+                                     .ToList();
+
+            return Json(cmIds);
         }
     }
 }
