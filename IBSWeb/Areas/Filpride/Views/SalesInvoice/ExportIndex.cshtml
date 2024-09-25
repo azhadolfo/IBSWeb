@@ -1,0 +1,183 @@
+﻿@model IEnumerable<FilprideSalesInvoice>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@{
+    ViewData["Title"] = "Export Sales Invoice";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">SALES INVOICE</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+            <div class="col-6 text-end">
+                <p>
+                    <button type="button" class="btn btn-primary" onclick="exportToCsv()">Export Selected to CSV</button>
+                </p>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-hover" id="dataTable">
+            <thead class="table-secondary">
+                <tr class="text-nowrap">
+                    <th>
+                        @Html.DisplayNameFor(model => model.SalesInvoiceNo)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Customer.CustomerName)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.TransactionDate)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Customer.CustomerTerms)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Amount)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.CreatedBy)
+                    </th>
+                    <th>
+                        Status
+                    </th>
+                    <th data-orderable="false">
+                        <input type="checkbox" class="text-center" id="selectAll" onclick="toggleSelectAll(this)">
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var invoice in Model)
+                {
+                    <tr class="align-text-bottom">
+                        <td>
+                            @Html.DisplayFor(model => invoice.SalesInvoiceNo)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => invoice.Customer.CustomerName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => invoice.TransactionDate)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => invoice.Customer.CustomerTerms)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => invoice.Amount)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => invoice.CreatedBy)
+                        </td>
+                        <td>
+                            @{
+                                var status = invoice.PostedBy != null && invoice.VoidedBy == null && invoice.CanceledBy == null
+                                ? "Posted"
+                                : invoice.VoidedBy != null
+                                ? "Voided"
+                                : invoice.CanceledBy != null
+                                ? "Cancelled"
+                                : "Pending";
+                            }
+                            <span class="badge rounded-pill @if(status == "Posted") {
+                                                    <text>bg-info</text>
+                            } else if(status == "Voided") {
+                                                    <text>bg-danger</text>
+                            } else if(status == "Cancelled") {
+                                                    <text>bg-warning</text>
+                            }">@status</span>
+                        </td>
+                        <td>
+                            <input type="checkbox" class="selectCheckbox text-center" value="@invoice.SalesInvoiceId">
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+@section Scripts {
+    <script>
+    let selectedRecords = new Set(); // To track selected record IDs
+    let allRecordsSelected = false;  // Flag to check if "Select All" is toggled across all pages
+
+    function toggleSelectAll(selectAllCheckbox) {
+        const checkboxes = document.querySelectorAll('.selectCheckbox');
+
+        if (selectAllCheckbox.checked) {
+            // Select all visible checkboxes and mark all records as selected
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+                selectedRecords.add(checkbox.value);
+            });
+            allRecordsSelected = true;
+        } else {
+            // Unselect all visible checkboxes and mark all records as unselected
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                selectedRecords.clear();  // Clear the set
+            });
+            allRecordsSelected = false;
+        }
+    }
+
+    // Update selectedRecords when individual checkboxes are toggled
+    document.addEventListener('change', function (e) {
+        if (e.target && e.target.classList.contains('selectCheckbox')) {
+            if (e.target.checked) {
+                selectedRecords.add(e.target.value);
+            } else {
+                selectedRecords.delete(e.target.value);
+            }
+        }
+    });
+
+    function exportToCsv() {
+        let selectedIds = '';
+
+        if (allRecordsSelected) {
+            // Optionally make an AJAX call to get all IDs if "Select All" was selected
+            // Example of a call:
+            fetch('@Url.Action("GetAllSalesInvoiceIds", "SalesInvoice", new { area = "Filpride" })')
+                .then(response => response.json())
+                .then(data => {
+                    selectedIds = data.join(',');
+                    submitForm(selectedIds);
+                })
+                .catch(error => console.error('Error:', error));
+        } else {
+            // Only get IDs from selected checkboxes in current set
+            selectedIds = Array.from(selectedRecords).join(',');
+            if (selectedIds) {
+                submitForm(selectedIds);
+            } else {
+                alert('No SalesInvoice selected.');
+            }
+        }
+    }
+
+    function submitForm(selectedIds) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '@Url.Action("Export", "SalesInvoice", new { area = "Filpride" })';
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'selectedRecord';
+        input.value = selectedIds;
+
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+    </script>
+
+}

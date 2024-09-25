@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -38,8 +39,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
+            if (view == nameof(DynamicView.SalesInvoice))
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var salesInvoices = await _unitOfWork.FilprideSalesInvoice
+                    .GetAllAsync(si => si.Company == companyClaims, cancellationToken);
+
+                return View("ExportIndex", salesInvoices);
+            }
+
             return View();
         }
 
@@ -720,6 +731,99 @@ namespace IBSWeb.Areas.Filpride.Controllers
                               .ToList();
 
             return Json(rrs);
+        }
+
+        //Download as .xlsx file.(Export)
+        #region -- export xlsx record --
+
+        [HttpPost]
+        public async Task<IActionResult> Export(string selectedRecord)
+        {
+            if (string.IsNullOrEmpty(selectedRecord))
+            {
+                // Handle the case where no invoices are selected
+                return RedirectToAction(nameof(Index));
+            }
+
+            var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
+
+            var selectedList = await _unitOfWork.FilprideSalesInvoice
+                .GetAllAsync(invoice => recordIds.Contains(invoice.SalesInvoiceId));
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("SalesInvoice");
+
+            worksheet.Cells["A1"].Value = "OtherRefNo";
+            worksheet.Cells["B1"].Value = "Quantity";
+            worksheet.Cells["C1"].Value = "UnitPrice";
+            worksheet.Cells["D1"].Value = "Amount";
+            worksheet.Cells["E1"].Value = "Remarks";
+            worksheet.Cells["F1"].Value = "Status";
+            worksheet.Cells["G1"].Value = "TransactionDate";
+            worksheet.Cells["H1"].Value = "Discount";
+            worksheet.Cells["I1"].Value = "AmountPaid";
+            worksheet.Cells["J1"].Value = "Balance";
+            worksheet.Cells["K1"].Value = "IsPaid";
+            worksheet.Cells["L1"].Value = "IsTaxAndVatPaid";
+            worksheet.Cells["M1"].Value = "DueDate";
+            worksheet.Cells["N1"].Value = "CreatedBy";
+            worksheet.Cells["O1"].Value = "CreatedDate";
+            worksheet.Cells["P1"].Value = "CancellationRemarks";
+            worksheet.Cells["Q1"].Value = "OriginalReceivingReportId";
+            worksheet.Cells["R1"].Value = "OriginalCustomerId";
+            worksheet.Cells["S1"].Value = "OriginalPOId";
+            worksheet.Cells["T1"].Value = "OriginalProductId";
+            worksheet.Cells["U1"].Value = "OriginalSeriesNumber";
+            worksheet.Cells["V1"].Value = "OriginalDocumentId";
+
+            int row = 2;
+
+            foreach (var item in selectedList)
+            {
+                worksheet.Cells[row, 1].Value = item.OtherRefNo;
+                worksheet.Cells[row, 2].Value = item.Quantity;
+                worksheet.Cells[row, 3].Value = item.UnitPrice;
+                worksheet.Cells[row, 4].Value = item.Amount;
+                worksheet.Cells[row, 5].Value = item.Remarks;
+                worksheet.Cells[row, 6].Value = item.Status;
+                worksheet.Cells[row, 7].Value = item.TransactionDate.ToString("yyyy-MM-dd");
+                worksheet.Cells[row, 8].Value = item.Discount;
+                worksheet.Cells[row, 9].Value = item.AmountPaid;
+                worksheet.Cells[row, 10].Value = item.Balance;
+                worksheet.Cells[row, 11].Value = item.IsPaid;
+                worksheet.Cells[row, 12].Value = item.IsTaxAndVatPaid;
+                worksheet.Cells[row, 13].Value = item.DueDate.ToString("yyyy-MM-dd");
+                worksheet.Cells[row, 14].Value = item.CreatedBy;
+                worksheet.Cells[row, 15].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 16].Value = item.CancellationRemarks;
+                worksheet.Cells[row, 17].Value = item.ReceivingReportId;
+                worksheet.Cells[row, 18].Value = item.CustomerId;
+                worksheet.Cells[row, 19].Value = item.PurchaseOrderId;
+                worksheet.Cells[row, 20].Value = item.ProductId;
+                worksheet.Cells[row, 21].Value = item.SalesInvoiceNo;
+                worksheet.Cells[row, 22].Value = item.SalesInvoiceId;
+
+                row++;
+            }
+
+            // Convert the Excel package to a byte array
+            var excelBytes = await package.GetAsByteArrayAsync();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SalesInvoiceList.xlsx");
+        }
+
+        #endregion -- export xlsx record --
+
+        [HttpGet]
+        public IActionResult GetAllSalesInvoiceIds()
+        {
+            var invoiceIds = _dbContext.FilprideSalesInvoices
+                                     .Select(invoice => invoice.SalesInvoiceId) // Assuming Id is the primary key
+                                     .ToList();
+
+            return Json(invoiceIds);
         }
     }
 }
