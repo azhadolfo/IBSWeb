@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -38,8 +39,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
+            if (view == nameof(DynamicView.ServiceInvoice))
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var serviceInvoices = await _unitOfWork.FilprideServiceInvoice
+                    .GetAllAsync(sv => sv.Company == companyClaims, cancellationToken);
+
+                return View("ExportIndex", serviceInvoices);
+            }
+
             return View();
         }
 
@@ -686,6 +697,97 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        //Download as .xlsx file.(Export)
+
+        #region -- export xlsx record --
+
+        [HttpPost]
+        public async Task<IActionResult> Export(string selectedRecord)
+        {
+            if (string.IsNullOrEmpty(selectedRecord))
+            {
+                // Handle the case where no invoices are selected
+                return RedirectToAction(nameof(Index));
+            }
+
+            var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
+
+            // Retrieve the selected invoices from the database
+            var selectedList = await _dbContext.FilprideServiceInvoices
+                .Where(sv => recordIds.Contains(sv.ServiceInvoiceId))
+                .OrderBy(sv => sv.ServiceInvoiceNo)
+                .ToListAsync();
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("ServiceInvoices");
+
+            worksheet.Cells["A1"].Value = "DueDate";
+            worksheet.Cells["B1"].Value = "Period";
+            worksheet.Cells["C1"].Value = "Amount";
+            worksheet.Cells["D1"].Value = "Total";
+            worksheet.Cells["E1"].Value = "Discount";
+            worksheet.Cells["F1"].Value = "CurrentAndPreviousMonth";
+            worksheet.Cells["G1"].Value = "UnearnedAmount";
+            worksheet.Cells["H1"].Value = "Status";
+            worksheet.Cells["I1"].Value = "AmountPaid";
+            worksheet.Cells["J1"].Value = "Balance";
+            worksheet.Cells["K1"].Value = "Instructions";
+            worksheet.Cells["L1"].Value = "IsPaid";
+            worksheet.Cells["M1"].Value = "CreatedBy";
+            worksheet.Cells["N1"].Value = "CreatedDate";
+            worksheet.Cells["O1"].Value = "CancellationRemarks";
+            worksheet.Cells["P1"].Value = "OriginalCustomerId";
+            worksheet.Cells["Q1"].Value = "OriginalSeriesNumber";
+            worksheet.Cells["R1"].Value = "OriginalServicesId";
+            worksheet.Cells["S1"].Value = "OriginalDocumentId";
+
+            int row = 2;
+
+            foreach (var item in selectedList)
+            {
+                worksheet.Cells[row, 1].Value = item.DueDate.ToString("yyyy-MM-dd");
+                worksheet.Cells[row, 2].Value = item.Period.ToString("yyyy-MM-dd");
+                worksheet.Cells[row, 3].Value = item.Amount;
+                worksheet.Cells[row, 4].Value = item.Total;
+                worksheet.Cells[row, 5].Value = item.Discount;
+                worksheet.Cells[row, 6].Value = item.CurrentAndPreviousAmount;
+                worksheet.Cells[row, 7].Value = item.UnearnedAmount;
+                worksheet.Cells[row, 8].Value = item.Status;
+                worksheet.Cells[row, 9].Value = item.AmountPaid;
+                worksheet.Cells[row, 10].Value = item.Balance;
+                worksheet.Cells[row, 11].Value = item.Instructions;
+                worksheet.Cells[row, 12].Value = item.IsPaid;
+                worksheet.Cells[row, 13].Value = item.CreatedBy;
+                worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 15].Value = item.CancellationRemarks;
+                worksheet.Cells[row, 16].Value = item.CustomerId;
+                worksheet.Cells[row, 17].Value = item.ServiceInvoiceNo;
+                worksheet.Cells[row, 18].Value = item.ServiceId;
+                worksheet.Cells[row, 19].Value = item.ServiceInvoiceId;
+
+                row++;
+            }
+
+            // Convert the Excel package to a byte array
+            var excelBytes = await package.GetAsByteArrayAsync();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ServiceInvoiceList.xlsx");
+        }
+
+        #endregion -- export xlsx record --
+
+        [HttpGet]
+        public IActionResult GetAllServiceInvoiceIds()
+        {
+            var svIds = _dbContext.FilprideServiceInvoices
+                                     .Select(sv => sv.ServiceInvoiceId) // Assuming Id is the primary key
+                                     .ToList();
+
+            return Json(svIds);
         }
     }
 }

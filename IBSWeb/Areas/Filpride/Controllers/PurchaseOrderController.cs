@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -39,8 +40,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
+            if (view == nameof(DynamicView.PurchaseOrder))
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAllAsync(po => po.Company == companyClaims, cancellationToken);
+
+                return View("ExportIndex", purchaseOrders);
+            }
+
             return View();
         }
 
@@ -478,6 +489,94 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        //Download as .xlsx file.(Export)
+        #region -- export xlsx record --
+
+        [HttpPost]
+        public async Task<IActionResult> Export(string selectedRecord)
+        {
+            if (string.IsNullOrEmpty(selectedRecord))
+            {
+                // Handle the case where no invoices are selected
+                return RedirectToAction(nameof(Index));
+            }
+
+            var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
+
+            // Retrieve the selected invoices from the database
+            var selectedList = await _dbContext.FilpridePurchaseOrders
+                .Where(po => recordIds.Contains(po.PurchaseOrderId))
+                .OrderBy(po => po.PurchaseOrderNo)
+                .ToListAsync();
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("PurchaseOrder");
+
+            worksheet.Cells["A1"].Value = "Date";
+            worksheet.Cells["B1"].Value = "Terms";
+            worksheet.Cells["C1"].Value = "Quantity";
+            worksheet.Cells["D1"].Value = "Price";
+            worksheet.Cells["E1"].Value = "Amount";
+            worksheet.Cells["F1"].Value = "FinalPrice";
+            worksheet.Cells["G1"].Value = "QuantityReceived";
+            worksheet.Cells["H1"].Value = "IsReceived";
+            worksheet.Cells["I1"].Value = "ReceivedDate";
+            worksheet.Cells["J1"].Value = "Remarks";
+            worksheet.Cells["K1"].Value = "CreatedBy";
+            worksheet.Cells["L1"].Value = "CreatedDate";
+            worksheet.Cells["M1"].Value = "IsClosed";
+            worksheet.Cells["N1"].Value = "CancellationRemarks";
+            worksheet.Cells["O1"].Value = "OriginalProductId";
+            worksheet.Cells["P1"].Value = "OriginalSeriesNumber";
+            worksheet.Cells["Q1"].Value = "OriginalSupplierId";
+            worksheet.Cells["R1"].Value = "OriginalDocumentId";
+
+            int row = 2;
+
+            foreach (var item in selectedList)
+            {
+                worksheet.Cells[row, 1].Value = item.Date.ToString("yyyy-MM-dd");
+                worksheet.Cells[row, 2].Value = item.Terms;
+                worksheet.Cells[row, 3].Value = item.Quantity;
+                worksheet.Cells[row, 4].Value = item.Price;
+                worksheet.Cells[row, 5].Value = item.Amount;
+                worksheet.Cells[row, 6].Value = item.FinalPrice;
+                worksheet.Cells[row, 7].Value = item.QuantityReceived;
+                worksheet.Cells[row, 8].Value = item.IsReceived;
+                worksheet.Cells[row, 9].Value = item.ReceivedDate != default ? item.ReceivedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz") : default;
+                worksheet.Cells[row, 10].Value = item.Remarks;
+                worksheet.Cells[row, 11].Value = item.CreatedBy;
+                worksheet.Cells[row, 12].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 13].Value = item.IsClosed;
+                worksheet.Cells[row, 14].Value = item.CancellationRemarks;
+                worksheet.Cells[row, 15].Value = item.ProductId;
+                worksheet.Cells[row, 16].Value = item.PurchaseOrderNo;
+                worksheet.Cells[row, 17].Value = item.SupplierId;
+                worksheet.Cells[row, 18].Value = item.PurchaseOrderId;
+
+                row++;
+            }
+
+            // Convert the Excel package to a byte array
+            var excelBytes = await package.GetAsByteArrayAsync();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PurchaseOrderList.xlsx");
+        }
+
+        #endregion -- export xlsx record --
+
+        [HttpGet]
+        public IActionResult GetAllPurchaseOrderIds()
+        {
+            var poIds = _dbContext.FilpridePurchaseOrders
+                                     .Select(po => po.PurchaseOrderId) // Assuming Id is the primary key
+                                     .ToList();
+
+            return Json(poIds);
         }
     }
 }

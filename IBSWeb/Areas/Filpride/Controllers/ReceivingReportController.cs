@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -38,8 +39,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
+            if (view == nameof(DynamicView.ReceivingReport))
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var receivingReports = await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(rr => rr.Company == companyClaims, cancellationToken);
+
+                return View("ExportIndex", receivingReports);
+            }
+
             return View();
         }
 
@@ -531,6 +542,103 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        //Download as .xlsx file.(Export)
+
+        #region -- export xlsx record --
+
+        [HttpPost]
+        public async Task<IActionResult> Export(string selectedRecord)
+        {
+            if (string.IsNullOrEmpty(selectedRecord))
+            {
+                // Handle the case where no invoices are selected
+                return RedirectToAction(nameof(Index));
+            }
+
+            var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
+
+            // Retrieve the selected records from the database
+            var selectedList = await _dbContext.FilprideReceivingReports
+                .Where(rr => recordIds.Contains(rr.ReceivingReportId))
+                .OrderBy(rr => rr.ReceivingReportNo)
+                .ToListAsync();
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("ReceivingReport");
+
+            worksheet.Cells["A1"].Value = "Date";
+            worksheet.Cells["B1"].Value = "DueDate";
+            worksheet.Cells["C1"].Value = "SupplierInvoiceNumber";
+            worksheet.Cells["D1"].Value = "SupplierInvoiceDate";
+            worksheet.Cells["E1"].Value = "TruckOrVessels";
+            worksheet.Cells["F1"].Value = "QuantityDelivered";
+            worksheet.Cells["G1"].Value = "QuantityReceived";
+            worksheet.Cells["H1"].Value = "GainOrLoss";
+            worksheet.Cells["I1"].Value = "Amount";
+            worksheet.Cells["J1"].Value = "OtherRef";
+            worksheet.Cells["K1"].Value = "Remarks";
+            worksheet.Cells["L1"].Value = "AmountPaid";
+            worksheet.Cells["M1"].Value = "IsPaid";
+            worksheet.Cells["N1"].Value = "PaidDate";
+            worksheet.Cells["O1"].Value = "CanceledQuantity";
+            worksheet.Cells["P1"].Value = "CreatedBy";
+            worksheet.Cells["Q1"].Value = "CreatedDate";
+            worksheet.Cells["R1"].Value = "CancellationRemarks";
+            worksheet.Cells["S1"].Value = "ReceivedDate";
+            worksheet.Cells["T1"].Value = "OriginalPOId";
+            worksheet.Cells["U1"].Value = "OriginalSeriesNumber";
+            worksheet.Cells["V1"].Value = "OriginalDocumentId";
+
+            int row = 2;
+
+            foreach (var item in selectedList)
+            {
+                worksheet.Cells[row, 1].Value = item.Date.ToString("yyyy-MM-dd");
+                worksheet.Cells[row, 2].Value = item.DueDate.ToString("yyyy-MM-dd");
+                worksheet.Cells[row, 3].Value = item.SupplierInvoiceNumber;
+                worksheet.Cells[row, 4].Value = item.SupplierInvoiceDate;
+                worksheet.Cells[row, 5].Value = item.TruckOrVessels;
+                worksheet.Cells[row, 6].Value = item.QuantityDelivered;
+                worksheet.Cells[row, 7].Value = item.QuantityReceived;
+                worksheet.Cells[row, 8].Value = item.GainOrLoss;
+                worksheet.Cells[row, 9].Value = item.Amount;
+                worksheet.Cells[row, 10].Value = item.OtherRef;
+                worksheet.Cells[row, 11].Value = item.Remarks;
+                worksheet.Cells[row, 12].Value = item.AmountPaid;
+                worksheet.Cells[row, 13].Value = item.IsPaid;
+                worksheet.Cells[row, 14].Value = item.PaidDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 15].Value = item.CanceledQuantity;
+                worksheet.Cells[row, 16].Value = item.CreatedBy;
+                worksheet.Cells[row, 17].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 18].Value = item.CancellationRemarks;
+                worksheet.Cells[row, 19].Value = item.ReceivedDate?.ToString("yyyy-MM-dd");
+                worksheet.Cells[row, 20].Value = item.POId;
+                worksheet.Cells[row, 21].Value = item.ReceivingReportNo;
+                worksheet.Cells[row, 22].Value = item.ReceivingReportId;
+
+                row++;
+            }
+
+            // Convert the Excel package to a byte array
+            var excelBytes = await package.GetAsByteArrayAsync();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReceivingReportList.xlsx");
+        }
+
+        #endregion -- export xlsx record --
+
+        [HttpGet]
+        public IActionResult GetAllReceivingReportIds()
+        {
+            var rrIds = _dbContext.FilprideReceivingReports
+                                     .Select(rr => rr.ReceivingReportId) // Assuming Id is the primary key
+                                     .ToList();
+
+            return Json(rrIds);
         }
     }
 }
