@@ -425,7 +425,6 @@ namespace IBS.DataAccess.Data
             builder.Entity<FilprideDeliveryReceipt>(dr =>
             {
                 dr.HasIndex(dr => dr.DeliveryReceiptNo).IsUnique();
-                dr.HasIndex(dr => dr.InvoiceNo).IsUnique();
                 dr.HasIndex(dr => dr.Date);
 
                 dr.HasOne(dr => dr.CustomerOrderSlip)

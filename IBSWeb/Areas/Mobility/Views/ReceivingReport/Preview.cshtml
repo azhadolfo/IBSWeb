@@ -41,10 +41,7 @@
                     <tr>
                         <td><b>Invoice#:</b></td>
                         <td>
-                            @if (Model.FilprideDeliveryReceipt.InvoiceNo != Model.FilprideDeliveryReceipt.DeliveryReceiptNo)
-                            {
-                                @Html.DisplayFor(model => model.FilprideDeliveryReceipt.DeliveryReceiptNo)
-                            }
+                            @Html.DisplayFor(model => model.FilprideDeliveryReceipt.DeliveryReceiptNo)
                         </td>
                     </tr>
                 </tbody>

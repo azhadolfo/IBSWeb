@@ -27,9 +27,6 @@ namespace IBS.Models.Filpride.Integrated
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly? DeliveredDate { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
-        public string InvoiceNo { get; set; }
-
         #region--Customer properties
 
         public int CustomerId { get; set; }

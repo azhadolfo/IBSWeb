@@ -131,8 +131,8 @@
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input asp-for="OtherRefNo" class="form-control" placeholder="Optional" />
-                            <label asp-for="OtherRefNo" class="control-label">Other Ref No.<span class="required">*</span></label>
+                            <input asp-for="OtherRefNo" class="form-control" placeholder="Optional" readonly tabindex="-1"/>
+                            <label asp-for="OtherRefNo" class="control-label">Other Ref No.</label>
                             <span asp-validation-for="OtherRefNo" class="text-danger"></span>
                         </div>
                     </div>
@@ -249,6 +249,7 @@
                                 $("#Quantity").val(data.quantity);
                                 $("#ReceivingReportId").val(data.receivingReportId);
                                 $("#PurchaseOrderId").val(data.purchaseOrderId);
+                                $("#OtherRefNo").val(data.otherRefNo);
                             }
                         }
                     });
