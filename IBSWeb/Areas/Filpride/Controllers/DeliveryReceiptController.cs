@@ -75,8 +75,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CreatedBy = _userManager.GetUserName(User)
                     };
 
-                    model.InvoiceNo = viewModel.InvoiceNo ?? model.DeliveryReceiptNo;
-
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
 
@@ -123,7 +121,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     DeliverReceiptId = existingRecord.DeliveryReceiptId,
                     Date = existingRecord.Date,
                     ETA = existingRecord.EstimatedTimeOfArrival,
-                    InvoiceNo = existingRecord.InvoiceNo,
                     CustomerId = existingRecord.Customer.CustomerId,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                     CustomerAddress = existingRecord.Customer.CustomerAddress,

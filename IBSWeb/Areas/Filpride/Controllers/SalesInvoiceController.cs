@@ -735,7 +735,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TransactionDate = dr.DeliveredDate,
                     dr.Quantity,
                     automatedRr.ReceivingReportId,
-                    automatedRr.PurchaseOrder.PurchaseOrderId
+                    automatedRr.PurchaseOrder.PurchaseOrderId,
+                    OtherRefNo = $"Customer PO#{dr.CustomerOrderSlip.CustomerPoNo}, Filpride RR#{automatedRr.ReceivingReportNo}"
                 });
             }
 
