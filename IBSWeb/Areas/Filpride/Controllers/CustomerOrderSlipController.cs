@@ -327,7 +327,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 TempData["success"] = "Customer order slip approved by operation manager successfully.";
-                return RedirectToAction(nameof(Preview), new { id });
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {

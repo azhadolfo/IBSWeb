@@ -40,7 +40,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         #endregion Product properties
 
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(100)")]
         [Display(Name = "Other Ref No")]
         public string OtherRefNo { get; set; }
 
