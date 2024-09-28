@@ -137,8 +137,10 @@
                             var statusClass = row.status == "@nameof(Status.Posted)" ? "bg-info" :
                                               row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
                                               row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
+                            var paymentStatus = (row.paymentStatus == "@nameof(Status.Pending)" && row.status == "@nameof(Status.Posted)")
+                                                ? "Outstanding" : row.paymentStatus == "Paid" && row.status == "@nameof(Status.Posted)" ? "Paid" : row.status;
 
-                            return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
+                            return `<span class="badge rounded-pill ${statusClass}">${paymentStatus}</span>`;
                         }
                     },
                     {
