@@ -24,7 +24,7 @@
                     </select>
                     <span asp-validation-for="HaulerId" class="text-danger"></span>
                 </div>
-                <div class="form-floating py-2 col-12">
+                <div class="form-floating py-2 col-12" style="display:@(Model.DeliveryOption == SD.DeliveryOption_ForPickUp ? "" : "none")">
                     <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" required min="0.01" />
                     <label asp-for="Freight" class="ms-2">Freight<span class="required">*</span></label>
                     <span asp-validation-for="Freight" class="text-danger"></span>
