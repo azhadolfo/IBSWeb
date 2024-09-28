@@ -107,11 +107,11 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetDeliveryReceiptListByCustomerAsync(int customerId, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetDeliveryReceiptListByCos(int cosId, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideDeliveryReceipts
                     .OrderBy(dr => dr.DeliveryReceiptId)
-                    .Where(dr => dr.PostedBy != null && dr.CustomerId == customerId && dr.DeliveredDate != null)
+                    .Where(dr => dr.PostedBy != null && dr.CustomerOrderSlipId == cosId && dr.DeliveredDate != null)
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.DeliveryReceiptId.ToString(),
