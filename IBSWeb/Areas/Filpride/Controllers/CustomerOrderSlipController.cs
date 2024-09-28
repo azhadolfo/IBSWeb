@@ -505,7 +505,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CreatedBy = viewModel.CurrentUser,
                             CreatedDate = DateTime.Now,
                             PostedBy = viewModel.CurrentUser,
-                            PostedDate = DateTime.Now
+                            PostedDate = DateTime.Now,
+                            Status = nameof(Status.Posted)
                         };
 
                         subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
@@ -594,6 +595,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new CustomerOrderSlipAppointingHauler
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                DeliveryOption = existingRecord.DeliveryOption,
                 Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
             };
 
@@ -620,7 +622,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     existingCos.HaulerId = viewModel.HaulerId;
-                    existingCos.Freight = viewModel.Freight;
+
+                    if (viewModel.Freight != 0)
+                    {
+                        existingCos.Freight = viewModel.Freight;
+                    }
+
                     existingCos.Driver = viewModel.Driver;
                     existingCos.PlateNo = viewModel.PlateNo;
                     existingCos.Status = nameof(CosStatus.HaulerAppointed);

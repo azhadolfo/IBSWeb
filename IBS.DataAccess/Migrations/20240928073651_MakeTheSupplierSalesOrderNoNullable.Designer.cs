@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240928073651_MakeTheSupplierSalesOrderNoNullable")]
+    partial class MakeTheSupplierSalesOrderNoNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -58,10 +61,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
-
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
 
                     b.Property<string>("Category")
                         .IsRequired()
@@ -280,10 +279,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
 
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
-
                     b.Property<string>("Company")
                         .IsRequired()
                         .HasColumnType("text")
@@ -381,10 +376,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
-
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
 
                     b.Property<string>("Company")
                         .IsRequired()
@@ -550,10 +541,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("canceled_quantity");
 
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
-
                     b.Property<string>("Company")
                         .IsRequired()
                         .HasColumnType("text")
@@ -702,10 +689,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
-
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
 
                     b.Property<decimal>("CashAmount")
                         .HasColumnType("numeric(18,4)")
@@ -918,10 +901,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
 
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
-
                     b.Property<string>("Company")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1062,10 +1041,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
-
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
 
                     b.Property<string>("Company")
                         .IsRequired()
@@ -1239,10 +1214,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
 
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
-
                     b.Property<string>("Company")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1348,48 +1319,6 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_service_invoices_service_id");
 
                     b.ToTable("filpride_service_invoices", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideAuditTrail", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Activity")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("activity");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("company");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date");
-
-                    b.Property<string>("DocumentType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("document_type");
-
-                    b.Property<string>("MachineName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("machine_name");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("username");
-
-                    b.HasKey("Id")
-                        .HasName("pk_filpride_audit_trails");
-
-                    b.ToTable("filpride_audit_trails", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideCashReceiptBook", b =>
@@ -1995,10 +1924,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
 
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
-
                     b.Property<string>("Company")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2464,10 +2389,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
-
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
 
                     b.Property<string>("Company")
                         .IsRequired()
@@ -3475,10 +3396,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
 
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
-
                     b.Property<decimal>("Closing")
                         .HasColumnType("numeric")
                         .HasColumnName("closing");
@@ -3807,10 +3724,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
-
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
 
                     b.Property<string>("CashierCode")
                         .IsRequired()
@@ -4229,10 +4142,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
 
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
-
                     b.Property<string>("Cashier")
                         .IsRequired()
                         .HasColumnType("varchar(20)")
@@ -4459,10 +4368,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
 
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
-
                     b.Property<string>("CashierCode")
                         .IsRequired()
                         .HasColumnType("varchar(5)")
@@ -4675,10 +4580,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
-
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
 
                     b.Property<string>("CashierCode")
                         .IsRequired()
@@ -4917,10 +4818,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
 
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
                         .HasColumnName("created_by");
@@ -5031,10 +4928,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
-
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
@@ -5147,10 +5040,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
-
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
@@ -5366,10 +5255,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("CanceledDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("canceled_date");
-
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
 
                     b.Property<string>("Cashier")
                         .IsRequired()
