@@ -226,10 +226,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new
                 {
                     cos.PurchaseOrder.Product.ProductId,
-                    ProductName = cos.PurchaseOrder.Product.ProductCode + cos.PurchaseOrder.Product.ProductName,
+                    ProductName = $"{cos.PurchaseOrder.Product.ProductCode} {cos.PurchaseOrder.Product.ProductName}",
                     cos.PurchaseOrder.Product.ProductUnit,
                     cos.DeliveredPrice,
-                    DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListByCustomerAsync(cos.CustomerId, cancellationToken)
+                    DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListByCos(cos.CustomerOrderSlipId, cancellationToken)
 
                 });
             }
@@ -305,6 +305,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.Amount = model.Quantity * model.UnitPrice;
                     existingRecord.ProductId = model.ProductId;
                     existingRecord.ReceivingReportId = model.ReceivingReportId;
+                    existingRecord.CustomerOrderSlipId = model.CustomerOrderSlipId;
+                    existingRecord.DeliveryReceiptId = model.DeliveryReceiptId;
                     existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Customer.CustomerTerms, model.TransactionDate);
 
                     if (existingRecord.Amount >= model.Discount)
