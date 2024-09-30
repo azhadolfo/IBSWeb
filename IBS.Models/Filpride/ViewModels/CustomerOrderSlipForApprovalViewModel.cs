@@ -35,5 +35,7 @@ namespace IBS.Models.Filpride.ViewModels
         public decimal Total { get; set; }
 
         #endregion
+
+        public string Status { get; set; }
     }
 }

@@ -7,6 +7,12 @@
 }
 
 <div class="container mt-4">
+    @if (Model.Status == nameof(CosStatus.Disapproved))
+    {
+        <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+            <b>DISAPPROVED</b>
+        </div>
+    }
     <div class="text-end">
         <img src="~/img/Filpride.jpg" width="130px" />
     </div>
@@ -91,9 +97,13 @@
     </div>
 
     <div class="row pt-2">
-        <div class="col-6 col-md-3">
-            <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
-        </div>
+
+        @if (Model.Status != nameof(CosStatus.Disapproved))
+        {
+            <div class="col-6 col-md-3">
+                <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
+            </div>
+        }
 
         <div class="col-6 col-md-3">
             <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
