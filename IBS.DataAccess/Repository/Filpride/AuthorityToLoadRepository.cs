@@ -32,11 +32,11 @@ namespace IBS.DataAccess.Repository.Filpride
                 if (int.TryParse(lastAtlParts.Last(), out var lastIncrement))
                 {
                     var newIncrement = lastIncrement + 1;
-                    return $"{yearToday}-{newIncrement}";
+                    return $"FRI-{yearToday}-{newIncrement}";
                 }
             }
 
-            return $"{yearToday}-1";
+            return $"FRI-{yearToday}-1";
         }
 
         public override async Task<IEnumerable<FilprideAuthorityToLoad>> GetAllAsync(Expression<Func<FilprideAuthorityToLoad, bool>>? filter, CancellationToken cancellationToken = default)

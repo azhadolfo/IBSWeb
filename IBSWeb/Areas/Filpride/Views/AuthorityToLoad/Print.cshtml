@@ -16,7 +16,6 @@
             VAT Reg. TIN: 000-216-589-00000
         </p>
         <h3><b>AUTHORITY TO LOAD</b></h3>
-        <h6 class="text-end"><b>No.&nbsp;@Html.DisplayFor(model => model.AuthorityToLoadNo)</b></h6>
     </div>
     <div class="table-responsive">
         <table class="table table-borderless">
@@ -44,8 +43,14 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th colspan="5" class="text-center table-secondary">@(Model.UppiAtlNo != null ? Model.UppiAtlNo : Model.AuthorityToLoadNo)</th>
+                    <th colspan="5" class="text-center table-secondary">Filpride's ATL#: @Model.AuthorityToLoadNo</th>
                 </tr>
+                @if (Model.UppiAtlNo != null)
+                {
+                <tr>
+                    <th colspan="5" class="text-center table-secondary">Supplier's ATL#: @Model.UppiAtlNo</th>
+                </tr>
+                }
                 <tr>
                     <th>Customer</th>
                     <th>Product</th>
@@ -53,17 +58,17 @@
                     <th>Supplier SO#</th>
                     <th>Filpride PO#</th>
                 </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>@Model.CustomerOrderSlip.Customer.CustomerName</td>
-                    <td>@Model.CustomerOrderSlip.PurchaseOrder.Product.ProductName</td>
-                    <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
-                    <td>@Model.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo</td>
-                    <td>@Model.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo</td>
-                </tr>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@Model.CustomerOrderSlip.Customer.CustomerName</td>
+                        <td>@Model.CustomerOrderSlip.PurchaseOrder.Product.ProductName</td>
+                        <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
+                        <td>@Model.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo</td>
+                        <td>@Model.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo</td>
+                    </tr>
+                </tbody>
+            </table>
     </div>
     <div class="table-responsive">
         <table class="table table-borderless">
