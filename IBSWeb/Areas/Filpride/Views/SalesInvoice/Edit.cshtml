@@ -97,7 +97,7 @@
                         </div>
                         <div class="form-group mb-3">
                             <label asp-for="CustomerOrderSlipId" class="control-label">COS No.<span class="required">*</span></label>
-                            <select asp-for="CustomerOrderSlipId" class="form-control js-select2 GetRRList" asp-items="@Model.COS" style="width:100%">
+                            <select asp-for="CustomerOrderSlipId" class="form-control js-select2 GetRRList" asp-items="@Model.COS" style="width:100%" required>
                                 <option></option>
                             </select>
                             <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
@@ -106,7 +106,7 @@
                         <input type="hidden" asp-for="ReceivingReportId" />
                         <div class="form-group mb-3">
                             <label asp-for="DeliveryReceiptId" class="control-label">DR No<span class="required">*</span></label>
-                            <select asp-for="DeliveryReceiptId" class="form-control js-select2" asp-items="@Model.DR" style="width:100%" ->
+                            <select asp-for="DeliveryReceiptId" class="form-control js-select2" asp-items="@Model.DR" style="width:100%" required>
                                 <option></option>
                             </select>
                             <span asp-validation-for="DeliveryReceiptId" class="text-danger"></span>
@@ -210,6 +210,14 @@
                             // Trigger DR selection
                             drSelect.val('@Model.DeliveryReceiptId').trigger("change");
                         }
+                        else {
+                            var drSelect = $("#DeliveryReceiptId");
+                            drSelect.empty();
+                            $("#ProductId").val("");
+                            $("#productName").val("");
+                            $("#productUnit").val("");
+                            $("#UnitPrice").val("");
+                        }
                     }
                 });
             }
@@ -231,6 +239,13 @@
                             $("#ReceivingReportId").val(data.receivingReportId);
                             $("#PurchaseOrderId").val(data.purchaseOrderId);
                             $("#OtherRefNo").val(data.otherRefNo);
+                        }
+                        else {
+                            $("#TransactionDate").val("");
+                            $("#Quantity").val("");
+                            $("#ReceivingReportId").val("");
+                            $("#PurchaseOrderId").val("");
+                            $("#OtherRefNo").val("");
                         }
                     }
                 });
