@@ -98,7 +98,7 @@
                                         <li><a class="dropdown-item" onclick="confirmVoid(@obj.DeliveryReceiptId)">Void</a></li>
                                     }
 
-                                    @if (obj.DeliveredDate == null)
+                                    @if (obj.DeliveredDate == null && obj.PostedBy != null)
                                     {
                                         <li><a class="dropdown-item" onclick="markAsDelivered(@obj.DeliveryReceiptId)">Mark As Delivered</a></li>
                                     }

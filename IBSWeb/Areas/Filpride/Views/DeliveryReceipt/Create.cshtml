@@ -29,6 +29,11 @@
                         <span asp-validation-for="ETA" class="text-danger"></span>
                     </div>
                 </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="ManualDrNo" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="ManualDrNo">Manual DR#<span class="required">*</span></label>
+                    <span asp-validation-for="ManualDrNo" class="text-danger"></span>
+                </div>
                 <fieldset class="border p-2 py-2">
                     <legend class="w-auto px-2">Customer Details</legend>
                     <div class="form-group py-2 col-12">
@@ -65,9 +70,9 @@
                         <span asp-validation-for="Product" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="InitialVolume" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                        <label asp-for="InitialVolume">Initial Volume</label>
-                        <span asp-validation-for="InitialVolume" class="text-danger"></span>
+                        <input asp-for="CosVolume" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                        <label asp-for="CosVolume">Cos Volume</label>
+                        <span asp-validation-for="CosVolume" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="RemainingVolume" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
@@ -84,6 +89,11 @@
                     <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="Volume">Volume<span class="required">*</span></label>
                     <span asp-validation-for="Volume" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Demuragge" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="Demuragge">Demuragge<span class="required">*</span></label>
+                    <span asp-validation-for="Demuragge" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="TotalAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
@@ -157,7 +167,7 @@
                         success: function (data) {
                             if (data) {
                                 $('input[name="Product"]').val(data.product);
-                                $('input[name="InitialVolume"]').val(formatNumber(data.initialVolume));
+                                $('input[name="CosVolume"]').val(formatNumber(data.quantity));
                                 $('input[name="RemainingVolume"]').val(formatNumber(data.remainingVolume));
                                 $('input[name="Price"]').val(formatNumber(data.price));
                             } else {
@@ -172,7 +182,7 @@
                     });
                 } else {
                     $('input[name="Product"]').val('');
-                    $('input[name="InitialVolume"]').val('');
+                    $('input[name="CosVolume"]').val('');
                     $('input[name="RemainingVolume"]').val('');
                     $('input[name="Price"]').val('');
                 }

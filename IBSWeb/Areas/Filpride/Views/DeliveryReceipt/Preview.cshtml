@@ -129,7 +129,7 @@ else
         if (Model.PostedBy == null)
         {
             <div class="col-6 col-md-3">
-                <a id="approveButton" class="btn btn-primary form-control buttons">Approve</a>
+                <a id="approveButton" class="btn btn-primary form-control buttons">Post</a>
             </div>
         }
         else
@@ -155,7 +155,7 @@ else
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, approve it!'
+                confirmButtonText: 'Yes, post it!'
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Proceed to the controller action
