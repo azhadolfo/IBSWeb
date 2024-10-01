@@ -42,9 +42,6 @@ namespace IBS.Models.Filpride.Integrated
         [Display(Name = "Customer PO No.")]
         public string CustomerPoNo { get; set; }
 
-        [Column(TypeName = "timestamp without time zone")]
-        public DateTime DeliveryDateAndTime { get; set; }
-
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Quantity { get; set; }
@@ -72,6 +69,15 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal CommissionRate { get; set; }
+        #endregion
+
+        [Column(TypeName = "varchar(100)")]
+        public string AccountSpecialist { get; set; }
+
+        #region Product's Properties
+
+        public int ProductId { get; set; }
+
         #endregion
 
         #endregion

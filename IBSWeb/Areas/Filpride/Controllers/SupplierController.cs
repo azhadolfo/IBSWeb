@@ -59,7 +59,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             FilprideSupplier model = new();
-            model.DefaultExpenses = await _dbContext.ChartOfAccounts
+            model.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
@@ -67,7 +67,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
-            model.WithholdingTaxList = await _dbContext.ChartOfAccounts
+            model.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.AccountNumber == "2010302" || coa.AccountNumber == "2010303")
                 .Select(s => new SelectListItem
                 {
@@ -154,7 +154,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (supplier != null)
             {
-                supplier.DefaultExpenses = await _dbContext.ChartOfAccounts
+                supplier.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
@@ -163,7 +163,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-                supplier.WithholdingTaxList = await _dbContext.ChartOfAccounts
+                supplier.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
                     .Where(coa => coa.AccountNumber == "2010302" || coa.AccountNumber == "2010303")
                     .Select(s => new SelectListItem
                     {

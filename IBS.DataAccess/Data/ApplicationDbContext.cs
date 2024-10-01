@@ -104,7 +104,9 @@ namespace IBS.DataAccess.Data
         #region --Master File Entity
 
         public DbSet<Company> Companies { get; set; }
-        public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
+        public DbSet<MobilityChartOfAccount> MobilityChartOfAccounts { get; set; }
+
+        public DbSet<FilprideChartOfAccount> FilprideChartOfAccounts { get; set; }
         public DbSet<Product> Products { get; set; }
 
         #endregion --Master File Entities
@@ -180,7 +182,15 @@ namespace IBS.DataAccess.Data
             #endregion
 
             #region--Chart Of Account
-            builder.Entity<ChartOfAccount>(coa =>
+            builder.Entity<MobilityChartOfAccount>(coa =>
+            {
+                coa.HasIndex(coa => coa.AccountNumber).IsUnique();
+                coa.HasIndex(coa => coa.AccountName);
+            });
+            #endregion
+
+            #region--Chart Of Account
+            builder.Entity<FilprideChartOfAccount>(coa =>
             {
                 coa.HasIndex(coa => coa.AccountNumber).IsUnique();
                 coa.HasIndex(coa => coa.AccountName);

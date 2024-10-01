@@ -18,10 +18,9 @@ namespace IBS.DataAccess.Repository
         public IProductRepository Product { get; private set; }
         public ICompanyRepository Company { get; private set; }
 
-        public IChartOfAccountRepository ChartOfAccount { get; private set; }
-
         #region--Mobility
 
+        public Mobility.IRepository.IChartOfAccountRepository MobilityChartOfAccount { get; private set; }
         public ISalesHeaderRepository MobilitySalesHeader { get; private set; }
         public ISalesDetailRepository MobilitySalesDetail { get; private set; }
         public IFuelPurchaseRepository MobilityFuelPurchase { get; private set; }
@@ -46,6 +45,7 @@ namespace IBS.DataAccess.Repository
         public IPickUpPointRepository FilpridePickUpPoint { get; private set; }
         public IFreightRepository FilprideFreight { get; private set; }
         public IAuthorityToLoadRepository FilprideAuthorityToLoad { get; private set; }
+        public Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; private set; }
 
         #endregion
 
@@ -95,10 +95,10 @@ namespace IBS.DataAccess.Repository
 
             Product = new ProductRepository(_db);
             Company = new CompanyRepository(_db);
-            ChartOfAccount = new ChartOfAccountRepository(_db);
 
             #region--Mobility
 
+            MobilityChartOfAccount = new Mobility.ChartOfAccountRepository(_db);
             MobilitySalesHeader = new SalesHeaderRepository(_db);
             MobilitySalesDetail = new SalesDetailRepository(_db);
             MobilityFuelPurchase = new FuelPurchaseRepository(_db);
@@ -123,6 +123,7 @@ namespace IBS.DataAccess.Repository
             FilpridePickUpPoint = new PickUpPointRepository(_db);
             FilprideFreight = new FreightRepository(_db);
             FilprideAuthorityToLoad = new AuthorityToLoadRepository(_db);
+            FilprideChartOfAccount = new Filpride.ChartOfAccountRepository(_db);
 
             #endregion
 
@@ -317,7 +318,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task<List<SelectListItem>> GetChartOfAccountListAsyncById(CancellationToken cancellationToken = default)
         {
-            return await _db.ChartOfAccounts
+            return await _db.MobilityChartOfAccounts
                 .OrderBy(c => c.AccountId)
                 .Where(c => c.Level == 4)
                 .Select(c => new SelectListItem
@@ -330,7 +331,7 @@ namespace IBS.DataAccess.Repository
 
         public async Task<List<SelectListItem>> GetChartOfAccountListAsyncByNo(CancellationToken cancellationToken = default)
         {
-            return await _db.ChartOfAccounts
+            return await _db.MobilityChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
                 .Where(c => c.Level == 4)
                 .Select(c => new SelectListItem

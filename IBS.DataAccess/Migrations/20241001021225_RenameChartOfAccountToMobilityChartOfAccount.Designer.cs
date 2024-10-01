@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241001021225_RenameChartOfAccountToMobilityChartOfAccount")]
+    partial class RenameChartOfAccountToMobilityChartOfAccount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2259,11 +2262,6 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerOrderSlipId"));
 
-                    b.Property<string>("AccountSpecialist")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("account_specialist");
-
                     b.Property<string>("AuthorityToLoadNo")
                         .HasColumnType("varchar(20)")
                         .HasColumnName("authority_to_load_no");
@@ -2318,6 +2316,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("DeliveredQuantity")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("delivered_quantity");
+
+                    b.Property<DateTime>("DeliveryDateAndTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("delivery_date_and_time");
 
                     b.Property<string>("DeliveryOption")
                         .HasColumnType("varchar(20)")
@@ -2386,10 +2388,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("PlateNo")
                         .HasColumnType("text")
                         .HasColumnName("plate_no");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer")
-                        .HasColumnName("product_id");
 
                     b.Property<int?>("PurchaseOrderId")
                         .HasColumnType("integer")
@@ -2622,73 +2620,6 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_filpride_bank_accounts");
 
                     b.ToTable("filpride_bank_accounts", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideChartOfAccount", b =>
-                {
-                    b.Property<int>("AccountId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("account_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AccountId"));
-
-                    b.Property<string>("AccountName")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("account_name");
-
-                    b.Property<string>("AccountNumber")
-                        .HasColumnType("varchar(15)")
-                        .HasColumnName("account_number");
-
-                    b.Property<string>("AccountType")
-                        .HasColumnType("varchar(25)")
-                        .HasColumnName("account_type");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
-                    b.Property<bool>("IsMain")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_main");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer")
-                        .HasColumnName("level");
-
-                    b.Property<string>("NormalBalance")
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("normal_balance");
-
-                    b.Property<string>("Parent")
-                        .HasColumnType("varchar(15)")
-                        .HasColumnName("parent");
-
-                    b.HasKey("AccountId")
-                        .HasName("pk_filpride_chart_of_accounts");
-
-                    b.HasIndex("AccountName")
-                        .HasDatabaseName("ix_filpride_chart_of_accounts_account_name");
-
-                    b.HasIndex("AccountNumber")
-                        .IsUnique()
-                        .HasDatabaseName("ix_filpride_chart_of_accounts_account_number");
-
-                    b.ToTable("filpride_chart_of_accounts", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideCustomer", b =>
@@ -3112,6 +3043,73 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("companies", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.MasterFile.MobilityChartOfAccount", b =>
+                {
+                    b.Property<int>("AccountId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("account_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AccountId"));
+
+                    b.Property<string>("AccountName")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("account_name");
+
+                    b.Property<string>("AccountNumber")
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("account_number");
+
+                    b.Property<string>("AccountType")
+                        .HasColumnType("varchar(25)")
+                        .HasColumnName("account_type");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<bool>("IsMain")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_main");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer")
+                        .HasColumnName("level");
+
+                    b.Property<string>("NormalBalance")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("normal_balance");
+
+                    b.Property<string>("Parent")
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("parent");
+
+                    b.HasKey("AccountId")
+                        .HasName("pk_mobility_chart_of_accounts");
+
+                    b.HasIndex("AccountName")
+                        .HasDatabaseName("ix_mobility_chart_of_accounts_account_name");
+
+                    b.HasIndex("AccountNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_mobility_chart_of_accounts_account_number");
+
+                    b.ToTable("mobility_chart_of_accounts", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.MasterFile.Product", b =>
                 {
                     b.Property<int>("ProductId")
@@ -3286,73 +3284,6 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_mobility_lube_deliveries_stncode");
 
                     b.ToTable("mobility_lube_deliveries", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilityChartOfAccount", b =>
-                {
-                    b.Property<int>("AccountId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("account_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AccountId"));
-
-                    b.Property<string>("AccountName")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("account_name");
-
-                    b.Property<string>("AccountNumber")
-                        .HasColumnType("varchar(15)")
-                        .HasColumnName("account_number");
-
-                    b.Property<string>("AccountType")
-                        .HasColumnType("varchar(25)")
-                        .HasColumnName("account_type");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
-                    b.Property<bool>("IsMain")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_main");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer")
-                        .HasColumnName("level");
-
-                    b.Property<string>("NormalBalance")
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("normal_balance");
-
-                    b.Property<string>("Parent")
-                        .HasColumnType("varchar(15)")
-                        .HasColumnName("parent");
-
-                    b.HasKey("AccountId")
-                        .HasName("pk_mobility_chart_of_accounts");
-
-                    b.HasIndex("AccountName")
-                        .HasDatabaseName("ix_mobility_chart_of_accounts_account_name");
-
-                    b.HasIndex("AccountNumber")
-                        .IsUnique()
-                        .HasDatabaseName("ix_mobility_chart_of_accounts_account_number");
-
-                    b.ToTable("mobility_chart_of_accounts", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilityCustomer", b =>

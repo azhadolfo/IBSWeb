@@ -132,7 +132,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
 
-            viewModel.ChartOfAccounts = await _dbContext.ChartOfAccounts
+            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -162,7 +162,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            model.ChartOfAccounts = await _dbContext.ChartOfAccounts
+            model.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -312,7 +312,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
 
-            viewModel.ChartOfAccounts = await _dbContext.ChartOfAccounts
+            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -343,7 +343,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            model.ChartOfAccounts = await _dbContext.ChartOfAccounts
+            model.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -528,7 +528,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            existingModel.ChartOfAccounts = await _dbContext.ChartOfAccounts
+            existingModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -789,7 +789,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            model.ChartOfAccounts = await _dbContext.ChartOfAccounts
+            model.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -1089,7 +1089,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            existingModel.ChartOfAccounts = await _dbContext.ChartOfAccounts
+            existingModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem

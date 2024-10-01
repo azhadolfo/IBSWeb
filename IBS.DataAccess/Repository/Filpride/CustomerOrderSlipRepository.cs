@@ -70,12 +70,12 @@ namespace IBS.DataAccess.Repository.Filpride
             var existingRecord = await GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
 
             existingRecord.Date = viewModel.Date;
-            existingRecord.DeliveryDateAndTime = viewModel.DeliveryDateAndTime;
             existingRecord.CustomerId = viewModel.CustomerId;
             existingRecord.CustomerPoNo = viewModel.CustomerPoNo;
             existingRecord.Quantity = viewModel.Quantity;
             existingRecord.DeliveredPrice = viewModel.DeliveredPrice;
             existingRecord.TotalAmount = viewModel.TotalAmount;
+            existingRecord.AccountSpecialist = viewModel.AccountSpecialist;
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.HasCommission = viewModel.HasCommission;
             existingRecord.CommissioneeId = viewModel.CommissioneeId;

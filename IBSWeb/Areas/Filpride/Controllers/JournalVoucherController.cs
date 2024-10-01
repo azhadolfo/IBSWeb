@@ -130,7 +130,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Header.COA = await _dbContext.ChartOfAccounts
+            viewModel.Header.COA = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -158,7 +158,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Header.COA = await _dbContext.ChartOfAccounts
+            model.Header.COA = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -212,7 +212,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     for (int i = 0; i < accountNumber.Length; i++)
                     {
                         var currentAccountNumber = accountNumber[i];
-                        var accountTitle = await _dbContext.ChartOfAccounts
+                        var accountTitle = await _dbContext.FilprideChartOfAccounts
                             .FirstOrDefaultAsync(coa => coa.AccountNumber == currentAccountNumber);
                         var currentDebit = debit[i];
                         var currentCredit = credit[i];
@@ -564,7 +564,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var poIds = _dbContext.FilpridePurchaseOrders.Where(model => model.Company == companyClaims && existingHeaderModel.CheckVoucherHeader.PONo.Contains(model.PurchaseOrderNo)).Select(model => model.PurchaseOrderId).ToArray();
             var rrIds = _dbContext.FilprideReceivingReports.Where(model => model.Company == companyClaims && existingHeaderModel.CheckVoucherHeader.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
 
-            var coa = await _dbContext.ChartOfAccounts
+            var coa = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !new[] { "2010102", "2010101", "1010101" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && coa.Level == 4 || coa.Level == 5)
                         .Select(s => new SelectListItem
                         {
@@ -596,7 +596,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = cvh.CheckVoucherHeaderNo
                 })
                 .ToListAsync(cancellationToken),
-                COA = await _dbContext.ChartOfAccounts
+                COA = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem

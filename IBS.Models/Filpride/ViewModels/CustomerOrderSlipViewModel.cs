@@ -5,12 +5,9 @@ namespace IBS.Models.Filpride.ViewModels
 {
     public class CustomerOrderSlipViewModel
     {
-        #region For Marketing - Step 1
         public int CustomerOrderSlipId { get; set; }
 
         public DateOnly Date { get; set; }
-
-        public DateTime DeliveryDateAndTime { get; set; }
 
         #region Customer properties
 
@@ -53,7 +50,11 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string Remarks { get; set; }
 
-        #endregion
+        public string AccountSpecialist { get; set; }
+
+        public int ProductId { get; set; }
+
+        public List<SelectListItem>? Products { get; set; }
 
         public string? CurrentUser { get; set; }
     }

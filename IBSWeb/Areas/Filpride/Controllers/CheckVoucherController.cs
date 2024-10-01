@@ -436,7 +436,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var poIds = _dbContext.FilpridePurchaseOrders.Where(model => model.Company == companyClaims && existingHeaderModel.PONo.Contains(model.PurchaseOrderNo)).Select(model => model.PurchaseOrderId).ToArray();
             var rrIds = _dbContext.FilprideReceivingReports.Where(model => model.Company == companyClaims && existingHeaderModel.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
 
-            var coa = await _dbContext.ChartOfAccounts
+            var coa = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !new[] { "2010102", "2010101", "1010101" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && coa.Level == 4 || coa.Level == 5)
                         .Select(s => new SelectListItem
                         {
@@ -756,7 +756,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             CheckVoucherTradeViewModel model = new();
-            model.COA = await _dbContext.ChartOfAccounts
+            model.COA = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => !new[] { "2010102", "2010101", "1010101" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
@@ -804,7 +804,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
                         if (cv.Any())
                         {
-                            viewModel.COA = await _dbContext.ChartOfAccounts
+                            viewModel.COA = await _dbContext.FilprideChartOfAccounts
                                 .Where(coa => !new[] { "2010102", "2010101", "1010101" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && coa.Level == 4 || coa.Level == 5)
                                 .Select(s => new SelectListItem
                                 {
@@ -949,7 +949,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.COA = await _dbContext.ChartOfAccounts
+                    viewModel.COA = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !new[] { "2010102", "2010101", "1010101" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && coa.Level == 4 || coa.Level == 5)
                         .Select(s => new SelectListItem
                         {
@@ -998,7 +998,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(viewModel);
                 }
             }
-            viewModel.COA = await _dbContext.ChartOfAccounts
+            viewModel.COA = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => !new[] { "2010102", "2010101", "1010101" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
@@ -1053,7 +1053,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new CheckVoucherNonTradeInvoicingViewModel();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.ChartOfAccounts = await _dbContext.ChartOfAccounts
+            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
@@ -1062,7 +1062,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            viewModel.DefaultExpenses = await _dbContext.ChartOfAccounts
+            viewModel.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
@@ -1216,7 +1216,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.ChartOfAccounts = await _dbContext.ChartOfAccounts
+                    viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => coa.Level == 4 || coa.Level == 5)
                         .Select(s => new SelectListItem
                         {
@@ -1239,7 +1239,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            viewModel.ChartOfAccounts = await _dbContext.ChartOfAccounts
+            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
@@ -1267,7 +1267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new CheckVoucherNonTradePaymentViewModel();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.ChartOfAccounts = await _dbContext.ChartOfAccounts
+            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
@@ -1405,7 +1405,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.ChartOfAccounts = await _dbContext.ChartOfAccounts
+                    viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => coa.Level == 4 || coa.Level == 5)
                         .Select(s => new SelectListItem
                         {
@@ -1437,7 +1437,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            viewModel.ChartOfAccounts = await _dbContext.ChartOfAccounts
+            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => coa.Level == 4 || coa.Level == 5)
                         .Select(s => new SelectListItem
                         {
@@ -1512,7 +1512,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync();
 
-            existingModel.COA = await _dbContext.ChartOfAccounts
+            existingModel.COA = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => coa.Level == 4 || coa.Level == 5)
                         .Select(s => new SelectListItem
                         {
@@ -1542,7 +1542,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Particulars = existingModel.Particulars,
                 AccountNumber = accountNumbers,
                 AccountTitle = accountTitles,
-                DefaultExpenses = await _dbContext.ChartOfAccounts
+                DefaultExpenses = await _dbContext.FilprideChartOfAccounts
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -1641,7 +1641,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             ids.RemoveAt(0);
                             var details = existingDetailsModel.First(o => o.CheckVoucherDetailId == detailsId);
 
-                            var acctNo = await _dbContext.ChartOfAccounts
+                            var acctNo = await _dbContext.FilprideChartOfAccounts
                                 .FirstOrDefaultAsync(x => x.AccountName == viewModel.AccountTitle[i]);
 
                             details.AccountNo = acctNo.AccountNumber ?? throw new ArgumentNullException("Account title not found!");
@@ -1802,7 +1802,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken),
 
-                ChartOfAccounts = await _dbContext.ChartOfAccounts
+                ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => coa.Level == 4 || coa.Level == 5)
                         .Select(s => new SelectListItem
                         {

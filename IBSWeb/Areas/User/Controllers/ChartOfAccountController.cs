@@ -1,5 +1,5 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.MasterFile;
+using IBS.Models.Mobility.MasterFile;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,8 +25,8 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index()
         {
-            IEnumerable<ChartOfAccount> coa = await _unitOfWork
-                .ChartOfAccount
+            IEnumerable<MobilityChartOfAccount> coa = await _unitOfWork
+                .MobilityChartOfAccount
                 .GetAllAsync();
 
             return View(coa);
@@ -35,24 +35,24 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            ChartOfAccount chartOfAccount = new()
+            MobilityChartOfAccount chartOfAccount = new()
             {
-                Accounts = await _unitOfWork.ChartOfAccount.GetMainAccount()
+                Accounts = await _unitOfWork.MobilityChartOfAccount.GetMainAccount()
             };
 
             return View(chartOfAccount);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(ChartOfAccount model, string thirdLevel, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(MobilityChartOfAccount model, string thirdLevel, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
-                    model = await _unitOfWork.ChartOfAccount.GenerateAccount(model, thirdLevel, cancellationToken);
+                    model = await _unitOfWork.MobilityChartOfAccount.GenerateAccount(model, thirdLevel, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.ChartOfAccount.AddAsync(model, cancellationToken);
+                    await _unitOfWork.MobilityChartOfAccount.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
 
                     TempData["success"] = "Account created successfully";
@@ -72,7 +72,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> GetChartOfAccount(string parentNo, CancellationToken cancellationToken)
         {
-            return Json(await _unitOfWork.ChartOfAccount.GetMemberAccount(parentNo, cancellationToken));
+            return Json(await _unitOfWork.MobilityChartOfAccount.GetMemberAccount(parentNo, cancellationToken));
         }
 
 
@@ -84,7 +84,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            ChartOfAccount account = await _unitOfWork.ChartOfAccount
+            MobilityChartOfAccount account = await _unitOfWork.MobilityChartOfAccount
                 .GetAsync(c => c.AccountId == id, cancellationToken);
 
             if (account == null)
@@ -96,14 +96,14 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(ChartOfAccount model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(MobilityChartOfAccount model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
                     model.EditedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.ChartOfAccount.UpdateAsync(model, cancellationToken);
+                    await _unitOfWork.MobilityChartOfAccount.UpdateAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
 
                     TempData["success"] = "Account updated successfully";

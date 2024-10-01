@@ -1,13 +1,13 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.MasterFile.IRepository;
+using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Dtos;
-using IBS.Models.MasterFile;
+using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
-namespace IBS.DataAccess.Repository.MasterFile
+namespace IBS.DataAccess.Repository.Filpride
 {
-    public class ChartOfAccountRepository : Repository<ChartOfAccount>, IChartOfAccountRepository
+    public class ChartOfAccountRepository : Repository<FilprideChartOfAccount>, IChartOfAccountRepository
     {
         private ApplicationDbContext _db;
 
@@ -16,9 +16,9 @@ namespace IBS.DataAccess.Repository.MasterFile
             _db = db;
         }
 
-        public async Task<ChartOfAccount> GenerateAccount(ChartOfAccount model, string thirdLevel, CancellationToken cancellationToken = default)
+        public async Task<FilprideChartOfAccount> GenerateAccount(FilprideChartOfAccount model, string thirdLevel, CancellationToken cancellationToken = default)
         {
-            ChartOfAccount existingCoa = await _db.ChartOfAccounts
+            FilprideChartOfAccount existingCoa = await _db.FilprideChartOfAccounts
                 .FirstOrDefaultAsync(coa => coa.AccountNumber == thirdLevel, cancellationToken) ?? throw new InvalidOperationException($"Chart of account with number '{thirdLevel}' not found.");
 
             model.AccountType = existingCoa.AccountType;
@@ -32,7 +32,7 @@ namespace IBS.DataAccess.Repository.MasterFile
 
         public async Task<List<SelectListItem>> GetMainAccount(CancellationToken cancellationToken = default)
         {
-            return await _db.ChartOfAccounts
+            return await _db.MobilityChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
                 .Where(c => c.Level == 1)
                 .Select(c => new SelectListItem
@@ -45,7 +45,7 @@ namespace IBS.DataAccess.Repository.MasterFile
 
         public async Task<List<SelectListItem>> GetMemberAccount(string parentAcc, CancellationToken cancellationToken = default)
         {
-            return await _db.ChartOfAccounts
+            return await _db.MobilityChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
                 .Where(c => c.Parent == parentAcc)
                 .Select(c => new SelectListItem
@@ -58,7 +58,7 @@ namespace IBS.DataAccess.Repository.MasterFile
 
         public IEnumerable<ChartOfAccountDto> GetSummaryReportView(CancellationToken cancellationToken = default)
         {
-            var query = from c in _db.ChartOfAccounts
+            var query = from c in _db.MobilityChartOfAccounts
                         join gl in _db.MobilityGeneralLedgers on c.AccountNumber equals gl.AccountNumber into glGroup
                         from gl in glGroup.DefaultIfEmpty()
                         group new { c, gl } by new { c.Level, c.AccountNumber, c.AccountName, c.AccountType, c.Parent } into g
@@ -99,9 +99,9 @@ namespace IBS.DataAccess.Repository.MasterFile
             return accountDictionary.Values.Where(x => x.Level == 1);
         }
 
-        public async Task UpdateAsync(ChartOfAccount model, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(FilprideChartOfAccount model, CancellationToken cancellationToken = default)
         {
-            ChartOfAccount existingAccount = await _db.ChartOfAccounts
+            FilprideChartOfAccount existingAccount = await _db.FilprideChartOfAccounts
                 .FindAsync(model.AccountId, cancellationToken) ?? throw new InvalidOperationException($"Account with id '{model.AccountId}' not found.");
 
             existingAccount.AccountName = model.AccountName;
@@ -120,7 +120,7 @@ namespace IBS.DataAccess.Repository.MasterFile
 
         private async Task<string> GenerateNumberAsync(string parent, CancellationToken cancellationToken = default)
         {
-            ChartOfAccount? lastAccount = await _db.ChartOfAccounts
+            FilprideChartOfAccount? lastAccount = await _db.FilprideChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
                 .LastOrDefaultAsync(coa => coa.Parent == parent, cancellationToken);
 
