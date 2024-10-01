@@ -48,5 +48,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string Remarks { get; set; }
 
         public string? CurrentUser { get; set; }
+
+        public decimal Demuragge { get; set; } = 0;
     }
 }

@@ -99,11 +99,11 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetPurchaseOrderListAsyncByProduct(int productId, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetPurchaseOrderListAsyncBySupplierAndProduct(int supplierId, int productId, CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
-                .Where(p => p.ProductId == productId && !p.IsReceived)
+                .Where(p => p.SupplierId == supplierId && p.ProductId == productId && !p.IsReceived)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),

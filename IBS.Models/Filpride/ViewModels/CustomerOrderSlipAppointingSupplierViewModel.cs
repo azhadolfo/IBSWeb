@@ -25,5 +25,7 @@ namespace IBS.Models.Filpride.ViewModels
         public List<SelectListItem>? PickUpPoints { get; set; }
 
         public string? CurrentUser { get; set; }
+
+        public int ProductId { get; set; }
     }
 }

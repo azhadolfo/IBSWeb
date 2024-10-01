@@ -142,6 +142,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Remarks = viewModel.Remarks,
                         Company = companyClaims,
                         CreatedBy = _userManager.GetUserName(User),
+                        ProductId = viewModel.ProductId,
                         Status = nameof(CosStatus.Created)
                     };
 
@@ -212,6 +213,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     DeliveredPrice = exisitingRecord.DeliveredPrice,
                     Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount((exisitingRecord.TotalAmount / 1.12m)),
                     TotalAmount = exisitingRecord.TotalAmount,
+                    ProductId = exisitingRecord.ProductId,
+                    Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
                     AccountSpecialist = exisitingRecord.AccountSpecialist,
                     Remarks = exisitingRecord.Remarks,
                 };
@@ -452,8 +455,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                ProductId = existingRecord.ProductId,
                 Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
-                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncByProduct(existingRecord.ProductId, cancellationToken)
+                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken)
             };
 
             return View(viewModel);
@@ -546,15 +550,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> GetPurchaseOrders(int? supplierId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetPurchaseOrders(int? supplierId, int? productId, CancellationToken cancellationToken)
         {
-            if (supplierId == null)
+            if (supplierId == null || productId == null)
             {
                 return NotFound();
             }
 
             var purchaseOrderList = await _unitOfWork.FilpridePurchaseOrder
-                .GetPurchaseOrderListAsyncBySupplier((int)supplierId, cancellationToken);
+                .GetPurchaseOrderListAsyncBySupplierAndProduct((int)supplierId, (int)productId, cancellationToken);
 
             return Json(purchaseOrderList);
         }
