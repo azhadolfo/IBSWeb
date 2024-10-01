@@ -98,7 +98,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.Completed) && !cos.IsDelivered)
+                .Where(cos => cos.Status == nameof(CosStatus.Completed))
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -111,7 +111,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.Completed) && cos.CustomerId == customerId && !cos.IsDelivered)
+                .Where(cos => cos.Status == nameof(CosStatus.Completed) && cos.CustomerId == customerId)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),

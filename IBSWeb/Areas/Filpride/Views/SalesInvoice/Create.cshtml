@@ -113,7 +113,7 @@
 
                         <div class="form-group mb-3">
                             <label asp-for="CustomerOrderSlipId" class="control-label">COS No.<span class="required">*</span></label>
-                            <select asp-for="CustomerOrderSlipId" class="form-control js-select2 GetRRList" asp-items="@Model.COS" style="width:100%">
+                            <select asp-for="CustomerOrderSlipId" class="form-control js-select2 GetRRList" asp-items="@Model.COS" style="width:100%" required>
                                 <option></option>
                             </select>
                             <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
@@ -122,7 +122,7 @@
                         <input type="hidden" asp-for="ReceivingReportId" />
                         <div class="form-group mb-3">
                             <label asp-for="DeliveryReceiptId" class="control-label">DR No<span class="required">*</span></label>
-                            <select asp-for="DeliveryReceiptId" class="form-control js-select2" asp-items="@Model.DR" style="width:100%"->
+                            <select asp-for="DeliveryReceiptId" class="form-control js-select2" asp-items="@Model.DR" style="width:100%" required>
                                 <option></option>
                             </select>
                             <span asp-validation-for="DeliveryReceiptId" class="text-danger"></span>
@@ -172,7 +172,7 @@
                         data: { customerId: customerId },
                         success: function (data) {
                             if (data) {
-
+                                console.log(data)
                                 $("#soldTo").val(data.soldTo);
                                 $("#address").val(data.address);
                                 $("#tinNo").val(data.tinNo);
