@@ -1,6 +1,6 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
+using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
@@ -87,7 +87,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
-            ChartOfAccount chartOfAccount = await _unitOfWork.ChartOfAccount.GetAsync(c => c.AccountNumber == accountNo, cancellationToken);
+            MobilityChartOfAccount chartOfAccount = await _unitOfWork.MobilityChartOfAccount.GetAsync(c => c.AccountNumber == accountNo, cancellationToken);
 
             SetViewData(chartOfAccount, accountNo, productCode, dateFrom, dateTo);
 
@@ -115,7 +115,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
         }
 
-        private void SetViewData(ChartOfAccount chartOfAccount, string accountNo, string productCode, DateOnly dateFrom, DateOnly dateTo)
+        private void SetViewData(MobilityChartOfAccount chartOfAccount, string accountNo, string productCode, DateOnly dateFrom, DateOnly dateTo)
         {
             ViewData["AccountNo"] = chartOfAccount?.AccountNumber ?? accountNo;
             ViewData["AccountName"] = chartOfAccount?.AccountName ?? accountNo;

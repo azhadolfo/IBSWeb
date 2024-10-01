@@ -11,8 +11,6 @@ namespace IBS.DataAccess.Repository.IRepository
 
         ICompanyRepository Company { get; }
 
-        IChartOfAccountRepository ChartOfAccount { get; }
-
         Task SaveAsync(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetProductListAsyncByCode(CancellationToken cancellationToken = default);
@@ -26,6 +24,8 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<List<SelectListItem>> GetCompanyListAsyncByName(CancellationToken cancellationToken = default);
 
         #region--Mobility
+
+        Mobility.IRepository.IChartOfAccountRepository MobilityChartOfAccount { get; }
 
         IFuelPurchaseRepository MobilityFuelPurchase { get; }
 
@@ -48,6 +48,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IGeneralLedgerRepository MobilityGeneralLedger { get; }
 
         Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; }
+
         Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; }
 
         Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default);
@@ -63,6 +64,8 @@ namespace IBS.DataAccess.Repository.IRepository
         #endregion
 
         #region--Filpride
+
+        Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; }
         ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; }
         IDeliveryReceiptRepository FilprideDeliveryReceipt { get; }
         ISupplierRepository FilprideSupplier { get; }

@@ -99,6 +99,19 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<List<SelectListItem>> GetPurchaseOrderListAsyncByProduct(int productId, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilpridePurchaseOrders
+                .OrderBy(p => p.PurchaseOrderNo)
+                .Where(p => p.ProductId == productId && !p.IsReceived)
+                .Select(po => new SelectListItem
+                {
+                    Value = po.PurchaseOrderId.ToString(),
+                    Text = po.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<string> GenerateCodeForSubPoAsync(string purchaseOrderNo, string company, CancellationToken cancellationToken = default)
         {
             var latestSubPoCode = await _db.FilpridePurchaseOrders

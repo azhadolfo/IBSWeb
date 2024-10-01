@@ -1,7 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Models.MasterFile;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -86,7 +85,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region Generate Account No
 
-                    var lastCibAccount = await _dbContext.ChartOfAccounts
+                    var lastCibAccount = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => coa.Level == 5 && coa.AccountNumber.StartsWith("1010101"))
                         .OrderByDescending(coa => coa.AccountNumber)
                         .FirstOrDefaultAsync(cancellationToken);
@@ -107,7 +106,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- COA Entry --
 
-                    var coa = new ChartOfAccount
+                    var coa = new FilprideChartOfAccount
                     {
                         IsMain = false,
                         AccountNumber = model.AccountNoCOA,
@@ -120,7 +119,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Level = 5
                     };
 
-                    await _dbContext.ChartOfAccounts.AddAsync(coa, cancellationToken);
+                    await _dbContext.FilprideChartOfAccounts.AddAsync(coa, cancellationToken);
 
                     #endregion -- COA Entry --
 

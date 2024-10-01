@@ -1,19 +1,19 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
-using IBS.Models.MasterFile;
+using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.DataAccess.Repository.MasterFile.IRepository
+namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
-    public interface IChartOfAccountRepository : IRepository<ChartOfAccount>
+    public interface IChartOfAccountRepository : IRepository<FilprideChartOfAccount>
     {
         Task<List<SelectListItem>> GetMainAccount(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMemberAccount(string parentAcc, CancellationToken cancellationToken = default);
 
-        Task<ChartOfAccount> GenerateAccount(ChartOfAccount model, string thirdLevel, CancellationToken cancellationToken = default);
+        Task<FilprideChartOfAccount> GenerateAccount(FilprideChartOfAccount model, string thirdLevel, CancellationToken cancellationToken = default);
 
-        Task UpdateAsync(ChartOfAccount model, CancellationToken cancellationToken = default);
+        Task UpdateAsync(FilprideChartOfAccount model, CancellationToken cancellationToken = default);
 
         IEnumerable<ChartOfAccountDto> GetSummaryReportView(CancellationToken cancellationToken = default);
     }

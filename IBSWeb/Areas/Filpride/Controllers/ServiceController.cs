@@ -52,7 +52,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var viewModel = new FilprideService();
 
-            viewModel.CurrentAndPreviousTitles = await _dbContext.ChartOfAccounts
+            viewModel.CurrentAndPreviousTitles = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -62,7 +62,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            viewModel.UnearnedTitles = await _dbContext.ChartOfAccounts
+            viewModel.UnearnedTitles = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -79,7 +79,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideService services, CancellationToken cancellationToken)
         {
-            services.CurrentAndPreviousTitles = await _dbContext.ChartOfAccounts
+            services.CurrentAndPreviousTitles = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -89,7 +89,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            services.UnearnedTitles = await _dbContext.ChartOfAccounts
+            services.UnearnedTitles = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
                 .Select(s => new SelectListItem
@@ -114,10 +114,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(services);
                 }
 
-                var currentAndPrevious = await _dbContext.ChartOfAccounts
+                var currentAndPrevious = await _dbContext.FilprideChartOfAccounts
                     .FindAsync(services.CurrentAndPreviousId, cancellationToken);
 
-                var unearned = await _dbContext.ChartOfAccounts
+                var unearned = await _dbContext.FilprideChartOfAccounts
                     .FindAsync(services.UnearnedId, cancellationToken);
 
                 services.CurrentAndPreviousNo = currentAndPrevious.AccountNumber;

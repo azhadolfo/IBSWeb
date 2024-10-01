@@ -219,7 +219,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.COA = await _dbContext.ChartOfAccounts
+            viewModel.COA = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 && (coa.AccountName.StartsWith("AR-Non Trade Receivable") || coa.AccountName.StartsWith("Cost of Goods Sold") || coa.AccountNumber.StartsWith("6010103")))
                 .Select(s => new SelectListItem
                 {
@@ -286,7 +286,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
 
-                    viewModel.COA = await _dbContext.ChartOfAccounts
+                    viewModel.COA = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => coa.Level == 4 && (coa.AccountName.StartsWith("AR-Non Trade Receivable") || coa.AccountName.StartsWith("Cost of Goods Sold") || coa.AccountNumber.StartsWith("6010103")))
                         .Select(s => new SelectListItem
                         {
@@ -302,7 +302,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
-            viewModel.COA = await _dbContext.ChartOfAccounts
+            viewModel.COA = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 && (coa.AccountName.StartsWith("AR-Non Trade Receivable") || coa.AccountName.StartsWith("Cost of Goods Sold") || coa.AccountNumber.StartsWith("6010103")))
                 .Select(s => new SelectListItem
                 {

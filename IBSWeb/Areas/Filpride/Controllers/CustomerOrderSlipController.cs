@@ -113,6 +113,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                 Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
+                Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
             };
 
             return View(viewModel);
@@ -131,13 +132,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(cancellationToken),
                         Date = viewModel.Date,
-                        DeliveryDateAndTime = viewModel.DeliveryDateAndTime,
                         CustomerId = viewModel.CustomerId,
                         CustomerPoNo = viewModel.CustomerPoNo,
                         Quantity = viewModel.Quantity,
                         BalanceQuantity = viewModel.Quantity,
                         DeliveredPrice = viewModel.DeliveredPrice,
                         TotalAmount = viewModel.TotalAmount,
+                        AccountSpecialist = viewModel.AccountSpecialist,
                         Remarks = viewModel.Remarks,
                         Company = companyClaims,
                         CreatedBy = _userManager.GetUserName(User),
@@ -161,6 +162,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -168,6 +170,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
             viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -196,7 +199,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     CustomerOrderSlipId = exisitingRecord.CustomerOrderSlipId,
                     Date = exisitingRecord.Date,
-                    DeliveryDateAndTime = exisitingRecord.DeliveryDateAndTime,
                     CustomerId = exisitingRecord.CustomerId,
                     CustomerAddress = exisitingRecord.Customer.CustomerAddress,
                     TinNo = exisitingRecord.Customer.CustomerTin,
@@ -210,6 +212,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     DeliveredPrice = exisitingRecord.DeliveredPrice,
                     Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount((exisitingRecord.TotalAmount / 1.12m)),
                     TotalAmount = exisitingRecord.TotalAmount,
+                    AccountSpecialist = exisitingRecord.AccountSpecialist,
                     Remarks = exisitingRecord.Remarks,
                 };
 
@@ -240,6 +243,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -247,6 +251,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
             viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -448,7 +453,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                 Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
-                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken)
+                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncByProduct(existingRecord.ProductId, cancellationToken)
             };
 
             return View(viewModel);

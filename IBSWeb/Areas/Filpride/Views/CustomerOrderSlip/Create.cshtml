@@ -22,11 +22,6 @@
                         <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
-                    <div class="form-floating col-6">
-                        <input asp-for="DeliveryDateAndTime" type="datetime-local" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-ddThh:mm")" />
-                        <label asp-for="DeliveryDateAndTime" class="ms-2">Delivery Date & Time<span class="required">*</span></label>
-                        <span asp-validation-for="DeliveryDateAndTime" class="text-danger"></span>
-                    </div>
                 </div>
                 <fieldset class="border p-2 py-2">
                     <legend class="w-auto px-2">Delivered To</legend>
@@ -46,6 +41,13 @@
                         <input asp-for="TinNo" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                         <label asp-for="TinNo"></label>
                         <span asp-validation-for="TinNo" class="text-danger"></span>
+                    </div>
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Product List<span class="required">*</span></label>
+                        <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected>Select product</option>
+                        </select>
+                        <span asp-validation-for="ProductId" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="CustomerPoNo" class="form-control border-0 shadow" placeholder="" />
@@ -101,6 +103,12 @@
                         <label asp-for="CommissionerRate" class="ms-2">Commission Rate<span class="required">*</span></label>
                         <span asp-validation-for="CommissionerRate" class="text-danger"></span>
                     </div>
+                </div>
+
+                <div class="form-floating col-12 py-2">
+                    <input asp-for="AccountSpecialist" class="form-control border-0 shadow" placeholder="Enter Account Specialist" />
+                    <label asp-for="AccountSpecialist" class="ms-2">Account Specialist<span class="required">*</span></label>
+                    <span asp-validation-for="AccountSpecialist" class="text-danger"></span>
                 </div>
 
                 <div class="form-floating py-2 col-12">
