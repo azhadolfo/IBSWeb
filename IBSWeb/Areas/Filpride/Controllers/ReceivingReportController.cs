@@ -606,7 +606,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 7].Value = item.QuantityReceived;
                 worksheet.Cells[row, 8].Value = item.GainOrLoss;
                 worksheet.Cells[row, 9].Value = item.Amount;
-                worksheet.Cells[row, 10].Value = item.OtherRef;
+                worksheet.Cells[row, 10].Value = item.AuthorityToLoadNo;
                 worksheet.Cells[row, 11].Value = item.Remarks;
                 worksheet.Cells[row, 12].Value = item.AmountPaid;
                 worksheet.Cells[row, 13].Value = item.IsPaid;
