@@ -1,7 +1,9 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
+using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -128,7 +130,62 @@ namespace IBS.DataAccess.Repository.Filpride
 
             #endregion
 
-            //PENDING process the method here
+            #region General Ledger Book Recording
+
+            var ledgers = new List<FilprideGeneralLedgerBook>();
+
+            ledgers.Add(new FilprideGeneralLedgerBook
+            {
+                Date = deliveryReceipt.Date,
+                Reference = deliveryReceipt.DeliveryReceiptNo,
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                AccountNo = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? "1010201" : "1010101",
+                AccountTitle = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? "Cash in Bank" : "AR-Trade Receivable",
+                Debit = deliveryReceipt.TotalAmount,
+                Credit = 0,
+                Company = deliveryReceipt.Company,
+                CreatedBy = deliveryReceipt.CreatedBy,
+                CreatedDate = deliveryReceipt.CreatedDate
+            });
+
+            var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Product.ProductName);
+
+            ledgers.Add(new FilprideGeneralLedgerBook
+            {
+                Date = deliveryReceipt.Date,
+                Reference = deliveryReceipt.DeliveryReceiptNo,
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                AccountNo = salesAcctNo,
+                AccountTitle = salesAcctTitle,
+                Debit = 0,
+                Credit = ComputeNetOfVat(deliveryReceipt.TotalAmount),
+                Company = deliveryReceipt.Company,
+                CreatedBy = deliveryReceipt.CreatedBy,
+                CreatedDate = deliveryReceipt.CreatedDate
+            });
+
+            ledgers.Add(new FilprideGeneralLedgerBook
+            {
+                Date = deliveryReceipt.Date,
+                Reference = deliveryReceipt.DeliveryReceiptNo,
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                AccountNo = "2010301",
+                AccountTitle = "Vat Output",
+                Debit = 0,
+                Credit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.TotalAmount)),
+                Company = deliveryReceipt.Company,
+                CreatedBy = deliveryReceipt.CreatedBy,
+                CreatedDate = deliveryReceipt.CreatedDate
+            });
+
+            if (!IsJournalEntriesBalanced(ledgers))
+            {
+                throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+            }
+
+            await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+
+            #endregion
 
             await _db.SaveChangesAsync(cancellationToken);
         }
@@ -147,8 +204,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     cos.IsDelivered = true;
                 }
-
-                await _db.SaveChangesAsync(cancellationToken);
             }
         }
     }
