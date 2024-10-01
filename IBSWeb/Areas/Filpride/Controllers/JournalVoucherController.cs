@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -39,8 +40,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
+            if (view == nameof(DynamicView.JournalVoucher))
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var journalVoucherHeader = await _unitOfWork.FilprideJournalVoucher
+                    .GetAllAsync(jv => jv.Company == companyClaims, cancellationToken);
+
+                return View("ExportIndex", journalVoucherHeader);
+            }
+
             return View();
         }
 
@@ -71,7 +82,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CreatedBy.ToLower().Contains(searchValue)
                         )
                     .ToList();
-
                 }
 
                 // Sorting
@@ -221,6 +231,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
                         );
                     }
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(model.Header.CreatedBy, $"Created new journal voucher# {model.Header.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, model.Header.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -419,6 +437,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #endregion --Journal Book Recording(JV)--
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy, $"Posted journal voucher# {modelHeader.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, modelHeader.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Journal Voucher has been Posted.";
                     }
@@ -456,6 +482,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideJournalBook>(crb => crb.Reference == model.JournalVoucherHeaderNo);
                         await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.JournalVoucherHeaderNo);
 
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Journal Voucher has been Voided.";
                         return RedirectToAction(nameof(Index));
@@ -466,13 +500,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
                 }
-
             }
 
             return NotFound();
         }
 
-        public async Task<IActionResult> Cancel(int id, string cancellationRemarks, CancellationToken cancellationToken)
+        public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var model = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(id, cancellationToken);
 
@@ -483,9 +516,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
                     model.Status = nameof(Status.Canceled);
+                    model.CancellationRemarks = cancellationRemarks;
 
-                    ///PENDING - leo
-                    //model.CancellationRemarks = cancellationRemarks;
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Journal Voucher has been Cancelled.";
@@ -597,7 +636,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Add or update records
                     for (int i = 0; i < viewModel.AccountTitle.Length; i++)
                     {
-
                         if (accountTitleDict.TryGetValue(viewModel.AccountNumber[i], out var ids))
                         {
                             // Update the first matching record and remove it from the list
@@ -654,9 +692,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.Particulars = viewModel.Particulars;
                     existingHeaderModel.CRNo = viewModel.CRNo;
                     existingHeaderModel.JVReason = viewModel.JVReason;
-                    existingHeaderModel.CreatedBy = _userManager.GetUserName(this.User);
+                    existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
+                    existingHeaderModel.EditedDate = DateTime.Now;
 
                     #endregion --Saving the default entries
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, existingHeaderModel.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     TempData["success"] = "Journal Voucher edited successfully";
@@ -680,9 +727,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                //var printedBy = _userManager.GetUserName(this.User);
-                //AuditTrail auditTrail = new(printedBy, $"Printed original copy of jv# {jv.CVNo}", "Check Vouchers");
-                //await _dbContext.AddAsync(auditTrail, cancellationToken);
+                var printedBy = _userManager.GetUserName(User);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, cv.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -690,6 +738,110 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });
+        }
+
+        //Download as .xlsx file.(Export)
+
+        #region -- export xlsx record --
+
+        [HttpPost]
+        public async Task<IActionResult> Export(string selectedRecord)
+        {
+            if (string.IsNullOrEmpty(selectedRecord))
+            {
+                // Handle the case where no invoices are selected
+                return RedirectToAction(nameof(Index));
+            }
+
+            var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
+
+            // Retrieve the selected invoices from the database
+            var selectedList = await _dbContext.FilprideJournalVoucherHeaders
+                .Where(jv => recordIds.Contains(jv.JournalVoucherHeaderId))
+                .OrderBy(jv => jv.JournalVoucherHeaderNo)
+                .ToListAsync();
+
+            // Create the Excel package
+            using (var package = new ExcelPackage())
+            {
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("JournalVoucherHeader");
+                var worksheet2 = package.Workbook.Worksheets.Add("JournalVoucherDetails");
+
+                worksheet.Cells["A1"].Value = "TransactionDate";
+                worksheet.Cells["B1"].Value = "Reference";
+                worksheet.Cells["C1"].Value = "Particulars";
+                worksheet.Cells["D1"].Value = "CRNo";
+                worksheet.Cells["E1"].Value = "JVReason";
+                worksheet.Cells["F1"].Value = "CreatedBy";
+                worksheet.Cells["G1"].Value = "CreatedDate";
+                worksheet.Cells["H1"].Value = "CancellationRemarks";
+                worksheet.Cells["I1"].Value = "OriginalCVId";
+                worksheet.Cells["J1"].Value = "OriginalSeriesNumber";
+                worksheet.Cells["K1"].Value = "OriginalDocumentId";
+
+                worksheet2.Cells["A1"].Value = "AccountNo";
+                worksheet2.Cells["B1"].Value = "AccountName";
+                worksheet2.Cells["C1"].Value = "TransactionNo";
+                worksheet2.Cells["D1"].Value = "Debit";
+                worksheet2.Cells["E1"].Value = "Credit";
+
+                int row = 2;
+
+                foreach (var item in selectedList)
+                {
+                    worksheet.Cells[row, 1].Value = item.Date.ToString("yyyy-MM-dd");
+                    worksheet.Cells[row, 2].Value = item.References;
+                    worksheet.Cells[row, 3].Value = item.Particulars;
+                    worksheet.Cells[row, 4].Value = item.CRNo;
+                    worksheet.Cells[row, 5].Value = item.JVReason;
+                    worksheet.Cells[row, 6].Value = item.CreatedBy;
+                    worksheet.Cells[row, 7].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet.Cells[row, 8].Value = item.CancellationRemarks;
+                    worksheet.Cells[row, 9].Value = item.CVId;
+                    worksheet.Cells[row, 10].Value = item.JournalVoucherHeaderNo;
+                    worksheet.Cells[row, 11].Value = item.JournalVoucherHeaderId;
+
+                    row++;
+                }
+
+                var jvNos = selectedList.Select(item => item.JournalVoucherHeaderNo).ToList();
+
+                var getJVDetails = await _dbContext.FilprideJournalVoucherDetails
+                    .Where(jvd => jvNos.Contains(jvd.TransactionNo))
+                    .OrderBy(jvd => jvd.JournalVoucherDetailId)
+                    .ToListAsync();
+
+                int cvdRow = 2;
+
+                foreach (var item in getJVDetails)
+                {
+                    worksheet2.Cells[cvdRow, 1].Value = item.AccountNo;
+                    worksheet2.Cells[cvdRow, 2].Value = item.AccountName;
+                    worksheet2.Cells[cvdRow, 3].Value = item.TransactionNo;
+                    worksheet2.Cells[cvdRow, 4].Value = item.Debit;
+                    worksheet2.Cells[cvdRow, 5].Value = item.Credit;
+
+                    cvdRow++;
+                }
+
+                // Convert the Excel package to a byte array
+                var excelBytes = await package.GetAsByteArrayAsync();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "JournalVoucherList.xlsx");
+            }
+        }
+
+        #endregion -- export xlsx record --
+
+        [HttpGet]
+        public IActionResult GetAllJournalVoucherIds()
+        {
+            var jvIds = _dbContext.FilprideJournalVoucherHeaders
+                                     .Select(jv => jv.JournalVoucherHeaderId) // Assuming Id is the primary key
+                                     .ToList();
+
+            return Json(jvIds);
         }
     }
 }

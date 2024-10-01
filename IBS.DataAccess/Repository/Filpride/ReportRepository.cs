@@ -212,5 +212,21 @@ namespace IBS.DataAccess.Repository.Filpride
 
             return salesBooks;
         }
+
+        public async Task<List<FilprideAuditTrail>> GetAuditTrails(DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var auditTrailBooks = await _db
+                .FilprideAuditTrails
+                .Where(a => a.Company == company && DateOnly.FromDateTime(a.Date) >= dateFrom && DateOnly.FromDateTime(a.Date) <= dateTo)
+                .OrderBy(a => a.Date)
+                .ToListAsync();
+
+            return auditTrailBooks;
+        }
     }
 }

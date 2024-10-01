@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -33,13 +34,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            return _dbContext.FilprideServices != null ?
-                        View(await _dbContext.FilprideServices.Where(s => s.Company == companyClaims).ToListAsync(cancellationToken)) :
-                        Problem("Entity set 'ApplicationDbContext.Services'  is null.");
+            var services = await _dbContext.FilprideServices.Where(s => s.Company == companyClaims).ToListAsync(cancellationToken);
+
+            if (view == nameof(DynamicView.Service))
+            {
+                return View("ExportIndex", services);
+            }
+
+            return View(services);
         }
 
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
@@ -193,6 +199,77 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private bool ServicesExists(int id)
         {
             return (_dbContext.FilprideServices?.Any(e => e.ServiceId == id)).GetValueOrDefault();
+        }
+
+        //Download as .xlsx file.(Export)
+
+        #region -- export xlsx record --
+
+        [HttpPost]
+        public async Task<IActionResult> Export(string selectedRecord)
+        {
+            if (string.IsNullOrEmpty(selectedRecord))
+            {
+                // Handle the case where no invoices are selected
+                return RedirectToAction(nameof(Index));
+            }
+
+            var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
+
+            // Retrieve the selected invoices from the database
+            var selectedList = await _dbContext.FilprideServices
+                .Where(service => recordIds.Contains(service.ServiceId))
+                .OrderBy(service => service.ServiceId)
+                .ToListAsync();
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("Services");
+
+            worksheet.Cells["A1"].Value = "CurrentAndPreviousTitle";
+            worksheet.Cells["B1"].Value = "UneranedTitle";
+            worksheet.Cells["C1"].Value = "Name";
+            worksheet.Cells["D1"].Value = "Percent";
+            worksheet.Cells["E1"].Value = "CreatedBy";
+            worksheet.Cells["F1"].Value = "CreatedDate";
+            worksheet.Cells["G1"].Value = "CurrentAndPreviousNo";
+            worksheet.Cells["H1"].Value = "UnearnedNo";
+            worksheet.Cells["I1"].Value = "OriginalServiceId";
+
+            int row = 2;
+
+            foreach (var item in selectedList)
+            {
+                worksheet.Cells[row, 1].Value = item.CurrentAndPreviousTitle;
+                worksheet.Cells[row, 2].Value = item.UnearnedTitle;
+                worksheet.Cells[row, 3].Value = item.Name;
+                worksheet.Cells[row, 4].Value = item.Percent;
+                worksheet.Cells[row, 5].Value = item.CreatedBy;
+                worksheet.Cells[row, 6].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 7].Value = item.CurrentAndPreviousNo;
+                worksheet.Cells[row, 8].Value = item.UnearnedNo;
+                worksheet.Cells[row, 9].Value = item.ServiceId;
+
+                row++;
+            }
+
+            // Convert the Excel package to a byte array
+            var excelBytes = await package.GetAsByteArrayAsync();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ServiceList.xlsx");
+        }
+
+        #endregion -- export xlsx record --
+
+        [HttpGet]
+        public IActionResult GetAllServiceIds()
+        {
+            var serviceIds = _dbContext.FilprideServices
+                                     .Select(s => s.ServiceId) // Assuming Id is the primary key
+                                     .ToList();
+
+            return Json(serviceIds);
         }
     }
 }

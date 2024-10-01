@@ -92,7 +92,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `@Url.Action("Cancel", "CollectionReceipt", new { area = "Filpride" })/${id}`;
+                    var url = `@Url.Action("Cancel", "CollectionReceipt", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
                     window.location.href = url;
                 }
             })
@@ -177,7 +177,7 @@
                                     }
                                     dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.CollectionReceiptId})">Cancel</a></li>`;
                                 } else {
-                                    if (row.MultipleSIId != null) {
+                                    if (row.multipleSIId != null) {
                                         dropdownHtml += `
                                         <li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
 

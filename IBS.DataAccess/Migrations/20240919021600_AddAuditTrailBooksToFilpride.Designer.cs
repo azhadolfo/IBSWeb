@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240919021600_AddAuditTrailBooksToFilpride")]
+    partial class AddAuditTrailBooksToFilpride
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -472,6 +475,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(200)")
                         .HasColumnName("remarks");
 
+                    b.Property<string>("SalesOrderNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sales_order_no");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text")
@@ -484,10 +492,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int>("SupplierId")
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
-
-                    b.Property<string>("SupplierSalesOrderNo")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("supplier_sales_order_no");
 
                     b.Property<string>("Terms")
                         .IsRequired()
@@ -533,10 +537,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("AmountPaid")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount_paid");
-
-                    b.Property<string>("AuthorityToLoadNo")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("authority_to_load_no");
 
                     b.Property<string>("CanceledBy")
                         .HasColumnType("varchar(50)")
@@ -598,6 +598,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsPrinted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
+
+                    b.Property<string>("OtherRef")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("other_ref");
 
                     b.Property<int>("POId")
                         .HasColumnType("integer")
@@ -1084,14 +1088,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
 
-                    b.Property<int?>("CustomerOrderSlipId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_order_slip_id");
-
-                    b.Property<int?>("DeliveryReceiptId")
-                        .HasColumnType("integer")
-                        .HasColumnName("delivery_receipt_id");
-
                     b.Property<decimal>("Discount")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("discount");
@@ -1122,7 +1118,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("OtherRefNo")
                         .IsRequired()
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("other_ref_no");
 
                     b.Property<string>("PaymentStatus")
@@ -1194,12 +1190,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_filpride_sales_invoices_customer_id");
-
-                    b.HasIndex("CustomerOrderSlipId")
-                        .HasDatabaseName("ix_filpride_sales_invoices_customer_order_slip_id");
-
-                    b.HasIndex("DeliveryReceiptId")
-                        .HasDatabaseName("ix_filpride_sales_invoices_delivery_receipt_id");
 
                     b.HasIndex("ProductId")
                         .HasDatabaseName("ix_filpride_sales_invoices_product_id");
@@ -1350,7 +1340,7 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_service_invoices", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideAuditTrail", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideAuditTrailBook", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1387,9 +1377,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("username");
 
                     b.HasKey("Id")
-                        .HasName("pk_filpride_audit_trails");
+                        .HasName("pk_filpride_audit_trail_books");
 
-                    b.ToTable("filpride_audit_trails", (string)null);
+                    b.ToTable("filpride_audit_trail_books", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.Books.FilprideCashReceiptBook", b =>
@@ -2515,6 +2505,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("estimated_time_of_arrival");
 
+                    b.Property<string>("InvoiceNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("invoice_no");
+
                     b.Property<bool>("IsPrinted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
@@ -2563,6 +2558,10 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("DeliveryReceiptNo")
                         .IsUnique()
                         .HasDatabaseName("ix_filpride_delivery_receipts_delivery_receipt_no");
+
+                    b.HasIndex("InvoiceNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_filpride_delivery_receipts_invoice_no");
 
                     b.ToTable("filpride_delivery_receipts", (string)null);
                 });
@@ -6100,16 +6099,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_sales_invoices_filpride_customers_customer_id");
 
-                    b.HasOne("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", "CustomerOrderSlip")
-                        .WithMany()
-                        .HasForeignKey("CustomerOrderSlipId")
-                        .HasConstraintName("fk_filpride_sales_invoices_filpride_customer_order_slips_custo");
-
-                    b.HasOne("IBS.Models.Filpride.Integrated.FilprideDeliveryReceipt", "DeliveryReceipt")
-                        .WithMany()
-                        .HasForeignKey("DeliveryReceiptId")
-                        .HasConstraintName("fk_filpride_sales_invoices_filpride_delivery_receipts_delivery");
-
                     b.HasOne("IBS.Models.MasterFile.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
@@ -6125,10 +6114,6 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_filpride_sales_invoices_filpride_purchase_orders_purchase_o");
 
                     b.Navigation("Customer");
-
-                    b.Navigation("CustomerOrderSlip");
-
-                    b.Navigation("DeliveryReceipt");
 
                     b.Navigation("Product");
 
