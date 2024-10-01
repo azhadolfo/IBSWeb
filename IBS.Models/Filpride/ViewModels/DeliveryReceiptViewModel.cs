@@ -33,7 +33,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string? Product { get; set; }
 
-        public decimal? InitialVolume { get; set; }
+        public decimal? CosVolume { get; set; }
 
         public decimal? RemainingVolume { get; set; }
 
@@ -48,6 +48,8 @@ namespace IBS.Models.Filpride.ViewModels
         public string Remarks { get; set; }
 
         public string? CurrentUser { get; set; }
+
+        public string ManualDrNo { get; set; }
 
         public decimal Demuragge { get; set; } = 0;
     }

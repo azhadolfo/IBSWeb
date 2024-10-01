@@ -72,7 +72,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Quantity = viewModel.Volume,
                         TotalAmount = viewModel.TotalAmount,
                         Company = companyClaims,
-                        CreatedBy = _userManager.GetUserName(User)
+                        CreatedBy = _userManager.GetUserName(User),
+                        ManualDrNo = viewModel.ManualDrNo,
+                        Demuragge = viewModel.Demuragge
                     };
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
@@ -128,12 +130,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                     CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListAsync(cancellationToken),
                     Product = existingRecord.CustomerOrderSlip.PurchaseOrder.Product.ProductName,
-                    InitialVolume = existingRecord.CustomerOrderSlip.Quantity,
+                    CosVolume = existingRecord.CustomerOrderSlip.Quantity,
                     RemainingVolume = existingRecord.CustomerOrderSlip.BalanceQuantity,
                     Price = existingRecord.CustomerOrderSlip.DeliveredPrice,
                     Volume = existingRecord.Quantity,
                     TotalAmount = existingRecord.TotalAmount,
-                    Remarks = existingRecord.Remarks
+                    Remarks = existingRecord.Remarks,
+                    ManualDrNo = existingRecord.ManualDrNo,
+                    Demuragge = existingRecord.Demuragge
                 };
 
                 return View(viewModel);
@@ -312,7 +316,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(new
             {
                 Product = cos.PurchaseOrder.Product?.ProductName,
-                InitialVolume = cos.Quantity,
+                cos.Quantity,
                 RemainingVolume = cos.BalanceQuantity,
                 Price = cos.DeliveredPrice
             });
@@ -341,7 +345,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.SaveAsync(cancellationToken);
 
-                TempData["success"] = "Delivery receipt is delivered";
+                TempData["success"] = "Product has been delivered";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)

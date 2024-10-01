@@ -30,6 +30,11 @@
                         <span asp-validation-for="ETA" class="text-danger"></span>
                     </div>
                 </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="ManualDrNo" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="ManualDrNo">Manual DR#<span class="required">*</span></label>
+                    <span asp-validation-for="ManualDrNo" class="text-danger"></span>
+                </div>
                 <fieldset class="border p-2 py-2">
                     <legend class="w-auto px-2">Customer Details</legend>
                     <div class="form-group py-2 col-12">
@@ -66,9 +71,9 @@
                         <span asp-validation-for="Product" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="InitialVolume" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                        <label asp-for="InitialVolume">Initial Volume</label>
-                        <span asp-validation-for="InitialVolume" class="text-danger"></span>
+                        <input asp-for="CosVolume" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                        <label asp-for="CosVolume">Cos Volume</label>
+                        <span asp-validation-for="CosVolume" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="RemainingVolume" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
@@ -87,38 +92,14 @@
                     <span asp-validation-for="Volume" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
+                    <input asp-for="Demuragge" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="Demuragge">Demuragge<span class="required">*</span></label>
+                    <span asp-validation-for="Demuragge" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
                     <input asp-for="TotalAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                     <label asp-for="TotalAmount">Total Amount</label>
                     <span asp-validation-for="TotalAmount" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Delivery Option<span class="required">*</span></label><br />
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUp" id="DeliveryOption_ForPickUp" />
-                        <label class="form-check-label" for="DeliveryOption_ForPickUp">@SD.DeliveryOption_ForPickUp</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_DirectDelivery" id="DeliveryOption_DirectDelivery" />
-                        <label class="form-check-label" for="DeliveryOption_DirectDelivery">@SD.DeliveryOption_DirectDelivery</label>
-                    </div>
-                    <span asp-validation-for="DeliveryOption" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Hauler List<span class="required">*</span></label>
-                    <select asp-for="HaulerId" asp-items="@Model.Haulers" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select hauler</option>
-                    </select>
-                    <span asp-validation-for="HaulerId" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="AuthorityToLoadNo" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="AuthorityToLoadNo">ATL No<span class="required">*</span></label>
-                    <span asp-validation-for="AuthorityToLoadNo" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="Freight">Freight<span class="required">*</span></label>
-                    <span asp-validation-for="Freight" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
@@ -134,7 +115,7 @@
                     </div>
                 </div>
                 </input>
-        </form>
+</form>
     </div>
 </div>
 
@@ -186,7 +167,7 @@
                         success: function (data) {
                             if (data) {
                                 $('input[name="Product"]').val(data.product);
-                                $('input[name="InitialVolume"]').val(formatNumber(data.initialVolume));
+                                $('input[name="CosVolume"]').val(formatNumber(data.quantity));
                                 $('input[name="RemainingVolume"]').val(formatNumber(data.remainingVolume));
                                 $('input[name="Price"]').val(formatNumber(data.price));
                             } else {
@@ -201,7 +182,7 @@
                     });
                 } else {
                     $('input[name="Product"]').val('');
-                    $('input[name="InitialVolume"]').val('');
+                    $('input[name="CosVolume"]').val('');
                     $('input[name="RemainingVolume"]').val('');
                     $('input[name="Price"]').val('');
                 }

@@ -60,6 +60,9 @@ namespace IBS.Models.Filpride.Integrated
 
         public string Company { get; set; } = string.Empty;
 
+        [Column(TypeName = "varchar(50)")]
+        public string ManualDrNo { get; set; }
+
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Demuragge { get; set; }
