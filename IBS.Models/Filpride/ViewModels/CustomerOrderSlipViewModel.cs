@@ -22,6 +22,8 @@ namespace IBS.Models.Filpride.ViewModels
         [Display(Name = "TIN")]
         public string? TinNo { get; set; }
 
+        public string? Terms { get; set; }
+
         #endregion Customer properties
 
         [Required(ErrorMessage = "Customer PO No field is required.")]

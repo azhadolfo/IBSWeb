@@ -191,7 +191,8 @@ namespace IBS.DataAccess.Repository
                     CustomerCode = c.CustomerCode,
                     CustomerName = c.CustomerName,
                     CustomerAddress = c.CustomerAddress,
-                    CustomerTin = c.CustomerTin
+                    CustomerTin = c.CustomerTin,
+                    CustomerTerms = c.CustomerTerms
                 })
                 .FirstOrDefaultAsync(cancellationToken);
         }

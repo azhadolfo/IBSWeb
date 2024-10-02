@@ -1,5 +1,6 @@
 ﻿using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.MasterFile;
+using IBS.Models.MasterFile;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -76,6 +77,9 @@ namespace IBS.Models.Filpride.Integrated
         #region Product's Properties
 
         public int ProductId { get; set; }
+
+        [ForeignKey(nameof(ProductId))]
+        public Product? Product { get; set; }
 
         #endregion
 

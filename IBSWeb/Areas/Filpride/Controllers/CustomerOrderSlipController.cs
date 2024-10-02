@@ -435,7 +435,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(new
             {
                 Address = customerDto.CustomerAddress,
-                TinNo = customerDto.CustomerTin
+                TinNo = customerDto.CustomerTin,
+                Terms = customerDto.CustomerTerms
             });
         }
 

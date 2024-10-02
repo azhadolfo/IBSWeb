@@ -11,5 +11,6 @@
         public string CustomerAddress { get; set; }
 
         public string CustomerTin { get; set; }
+        public string CustomerTerms { get; set; }
     }
 }
