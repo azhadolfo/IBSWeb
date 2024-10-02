@@ -206,5 +206,18 @@ namespace IBS.DataAccess.Repository.Filpride
                 }
             }
         }
+
+        public async Task DeductTheVolumeToCos(int cosId, decimal drVolume, CancellationToken cancellationToken = default)
+        {
+            var cos = await _db.FilprideCustomerOrderSlips
+                .FirstOrDefaultAsync(po => po.CustomerOrderSlipId == cosId, cancellationToken) ?? throw new InvalidOperationException("No record found.");
+
+            if (cos != null)
+            {
+                cos.DeliveredQuantity -= drVolume;
+                cos.BalanceQuantity += drVolume;
+                cos.IsDelivered = false;
+            }
+        }
     }
 }

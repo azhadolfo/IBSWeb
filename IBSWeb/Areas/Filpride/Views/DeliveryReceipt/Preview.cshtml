@@ -110,20 +110,6 @@ else
     </div>
 }
 
-<div class="text-start w-100 footer mt-5">
-    <p class="m-0 p-0">
-        <em>
-            <strong>Software Name :</strong> Integrated Business System (IBS)
-            <br />
-            <strong>Version :</strong> v1.0.0
-            <br />
-            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
-            <br />
-            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MMM dd, yyyy hh:mm tt")
-        </em>
-    </p>
-</div>
-
 <div class="row pt-2">
     @{
         if (Model.PostedBy == null)
