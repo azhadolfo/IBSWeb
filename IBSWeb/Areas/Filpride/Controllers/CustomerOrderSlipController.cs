@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
@@ -13,7 +14,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    [DepartmentAuthorize(SD.Department_RCD)]
+    [DepartmentAuthorize(SD.Department_RCD, SD.Department_Finance, SD.Department_Marketing, SD.Department_TradeAndSupply, SD.Department_Logistics)]
     public class CustomerOrderSlipController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -154,6 +155,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
                     await _unitOfWork.SaveAsync(cancellationToken);
 
                     TempData["success"] = "Customer order slip created successfully.";

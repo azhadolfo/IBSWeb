@@ -1,4 +1,5 @@
 ﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
@@ -13,6 +14,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
+    [DepartmentAuthorize(SD.Department_RCD, SD.Department_Finance, SD.Department_Marketing, SD.Department_TradeAndSupply, SD.Department_Logistics)]
     public class DeliveryReceiptController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;

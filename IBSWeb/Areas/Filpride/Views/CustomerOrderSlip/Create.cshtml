@@ -105,9 +105,15 @@
                     </div>
                 </div>
 
-                <div class="form-floating col-12 py-2">
-                    <input asp-for="AccountSpecialist" class="form-control border-0 shadow" placeholder="Enter Account Specialist" />
-                    <label asp-for="AccountSpecialist" class="ms-2">Account Specialist<span class="required">*</span></label>
+                <div class="form-group py-2 col-12">
+                    <label asp-for="AccountSpecialist" class="control-label">Account Specialist<span class="required">*</span></label>
+                    <select asp-for="AccountSpecialist" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select Account Specialist</option>
+                        <option value="MJ">MJ</option>
+                        <option value="ELENA">ELENA</option>
+                        <option value="MARLU">MARLU</option>
+                        <option value="RON">RON</option>
+                    </select>
                     <span asp-validation-for="AccountSpecialist" class="text-danger"></span>
                 </div>
 
@@ -228,4 +234,19 @@
             });
         });
     </script>
+    <script>
+        $(document).ready(function () {
+            $('select[name="CustomerId"]').on('change', function () {
+                var selectedCustomer = $('select[name="CustomerId"] option:selected').text();
+
+                if (selectedCustomer.includes("MOBILITY")) {
+                    $('#accountSpecialistDiv').hide();
+                    $('select[name="AccountSpecialist"]').val(''); // Clear selection if hidden
+                } else {
+                    $('#accountSpecialistDiv').show();
+                }
+            });
+        });
+    </script>
+
 }
