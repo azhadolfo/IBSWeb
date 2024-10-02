@@ -35,7 +35,6 @@ namespace IBS.Models.Filpride.Integrated
         [Display(Name = "Total Amount")]
         public decimal TotalAmount { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
         public string Remarks { get; set; }
 
         [Column(TypeName = "varchar(100)")]
