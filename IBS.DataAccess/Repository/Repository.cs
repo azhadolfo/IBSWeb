@@ -50,8 +50,8 @@ namespace IBS.DataAccess.Repository
         {
             try
             {
-                decimal totalDebit = journals.Sum(j => j.Debit);
-                decimal totalCredit = journals.Sum(j => j.Credit);
+                decimal totalDebit = Math.Round(journals.Sum(j => j.Debit), 4);
+                decimal totalCredit = Math.Round(journals.Sum(j => j.Credit), 4);
 
                 return totalDebit == totalCredit;
             }
@@ -65,8 +65,8 @@ namespace IBS.DataAccess.Repository
         {
             try
             {
-                decimal totalDebit = journals.Sum(j => j.Debit);
-                decimal totalCredit = journals.Sum(j => j.Credit);
+                decimal totalDebit = Math.Round(journals.Sum(j => j.Debit), 4);
+                decimal totalCredit = Math.Round(journals.Sum(j => j.Credit), 4);
 
                 return totalDebit == totalCredit;
             }
