@@ -66,5 +66,7 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Demuragge { get; set; }
+
+        public string Status { get; set; } = nameof(Utility.Status.Pending);
     }
 }

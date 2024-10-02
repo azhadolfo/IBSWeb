@@ -22,7 +22,7 @@
                 </a>
             </div>
         </div>
-        <table class="table table-bordered table-hover" id="dataTable">
+        <table class="table table-bordered table-hover" id="paginatedTable">
             <thead>
                 <tr class="text-nowrap table-secondary">
                     <th>
@@ -43,77 +43,76 @@
                     <th>
                         Status
                     </th>
-                    <th></th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach (var obj in Model.OrderBy(u => u.DeliveryReceiptNo))
-                {
-                    <tr>
-                        <td>
-                            @obj.DeliveryReceiptNo
-                        </td>
-                        <td>
-                            @Html.DisplayFor(model => obj.Date)
-                        </td>
-                        <td>
-                            @obj.CustomerOrderSlip?.CustomerOrderSlipNo
-                        </td>
-                        <td>
-                            @obj.Customer.CustomerName
-                        </td>
-                        <td>
-                            @Html.DisplayFor(model => obj.TotalAmount)
-                        </td>
-                        <td>
-                            @{
-                                var status = obj.PostedBy != null && obj.VoidedBy == null && obj.CanceledBy == null
-                                    ? "Posted"
-                                    : obj.VoidedBy != null
-                                        ? "Voided"
-                                        : obj.CanceledBy != null
-                                            ? "Cancelled"
-                                            : "Pending";
-                            }
-                            <span class="badge rounded-pill @if(status == "Posted") {<text>bg-info</text>} else if(status == "Voided") {<text>bg-danger</text>} else if(status == "Cancelled") {<text>bg-warning</text>}">@status</span>
-                        </td>
-                        <td class="text-center">
-                            <div class="dropdown" style="@(obj.VoidedBy != null || obj.CanceledBy != null ? "display:none;" : "")">
-                                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Actions
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                    @if (obj.PostedBy == null)
-                                    {
-                                        <li><a class="dropdown-item" asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Edit" asp-route-id="@obj.DeliveryReceiptId">Edit</a></li>
-                                        <li>
-                                            <a class="dropdown-item" asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Preview" asp-route-id="@obj.DeliveryReceiptId">Preview</a>
-                                        </li>
-                                        <li><a class="dropdown-item" onclick="confirmCancel(@obj.DeliveryReceiptId)">Cancel</a></li>
-                                    }
-                                    else
-                                    {
-                                        <li><a class="dropdown-item" asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Preview" asp-route-id="@obj.DeliveryReceiptId">Print</a></li>
-
-                                        <li><a class="dropdown-item" onclick="confirmVoid(@obj.DeliveryReceiptId)">Void</a></li>
-                                    }
-
-                                    @if (obj.DeliveredDate == null && obj.PostedBy != null)
-                                    {
-                                        <li><a class="dropdown-item" onclick="markAsDelivered(@obj.DeliveryReceiptId)">Mark As Delivered</a></li>
-                                    }
-
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
         </table>
     </div>
 </div>
 
 @section Scripts {
+    <script>
+        $('#paginatedTable').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": "@Url.Action("GetDeliveryReceipts", "DeliveryReceipt", new { area = "Filpride" })",
+                "type": "POST",
+                "data": function (d) {
+                    return $.extend({}, d, {
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    });
+                },
+            },
+            "columns": [
+                { "data": "deliveryReceiptNo" },
+                { "data": "date", "render": function (data) {
+                    var date = new Date(data);
+                    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                }},
+                { "data": "customerOrderSlip.customerOrderSlipNo" },
+                { "data": "customer.customerName" },
+                { "data": "totalAmount", "render": $.fn.dataTable.render.number(',', '.', 2) },
+                {
+                    "data": "status",
+                    "render": function(data, type, row) {
+                        var statusClass = row.status == "@nameof(Status.Posted)" || row.status == "Delivered" ? "bg-info" :
+                                          row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
+                                          row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
+
+                        return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
+                    }
+                },
+                {
+                    "data": "deliveryReceiptId",
+                    "render": function (data, type, row) {
+                        let actions = `<div class="dropdown" style="${row.voidedBy || row.canceledBy ? 'display:none;' : ''}">
+                            <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown">`;
+
+                        if (!row.postedBy) {
+                            actions += `<li><a class="dropdown-item" href="@Url.Action("Edit", "DeliveryReceipt", new { area = "Filpride" })/${data}">Edit</a></li>
+                                        <li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Preview</a></li>
+                                        <li><a class="dropdown-item" onclick="confirmCancel(${data})">Cancel</a></li>`;
+                        } else {
+                            actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Print</a></li>
+                                        <li><a class="dropdown-item" onclick="confirmVoid(${data})">Void</a></li>`;
+                        }
+
+                        if (!row.deliveredDate && row.postedBy) {
+                            actions += `<li><a class="dropdown-item" onclick="markAsDelivered(${data})">Mark As Delivered</a></li>`;
+                        }
+
+                        actions += `</ul></div>`;
+                        return actions;
+                    }
+                }
+            ]
+        });
+
+    </script>
     <script>
         function confirmVoid(id) {
             Swal.fire({
@@ -127,7 +126,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Void", "SalesInvoice", new { area = "Filpride" })/${id}`;
+                    var url = `@Url.Action("Void", "DeliveryReceipt", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
@@ -153,8 +152,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    //var url = `/SalesInvoice/Cancel?invoiceId=${invoiceId}&cancellationRemarks=${encodedRemarks}`;
-                    var url = `@Url.Action("Cancel", "SalesInvoice", new { area = "Filpride" })/${id}`;
+                    var url = `@Url.Action("Cancel", "DeliveryReceipt", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
                     window.location.href = url;
                 }
             })
