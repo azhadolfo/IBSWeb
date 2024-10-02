@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using IBS.Models.Filpride.MasterFile;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride.Books
@@ -40,5 +41,32 @@ namespace IBS.Models.Filpride.Books
         public bool IsPosted { get; set; } = true;
 
         public string Company { get; set; } = string.Empty;
+
+        #region Bank Properties
+
+        public int? BankAccountId { get; set; }
+
+        [ForeignKey(nameof(BankAccountId))]
+        public FilprideBankAccount? BankAccount { get; set; }
+
+        #endregion
+
+        #region Supplier Properties
+
+        public int? SupplierId { get; set; }
+
+        [ForeignKey(nameof(SupplierId))]
+        public FilprideSupplier? Supplier { get; set; }
+
+        #endregion
+
+        #region
+
+        public int? CustomerId { get; set; }
+
+        [ForeignKey(nameof(CustomerId))]
+        public FilprideCustomer? Customer { get; set; }
+
+        #endregion
     }
 }
