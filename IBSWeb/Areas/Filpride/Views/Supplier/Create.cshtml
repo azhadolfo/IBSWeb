@@ -43,17 +43,17 @@
                 <span class="text-danger"></span>
             </fieldset>
             <div class="form-floating mb-3" id="tradeList" style="display: none;">
-                <input asp-for="TradeName" class="form-control uppercase" placeholder="" />
+                <input asp-for="TradeName" class="form-control " placeholder="" />
                 <label asp-for="TradeName" class="control-label">Trade Name<span class="required">*</span></label>
                 <span asp-validation-for="TradeName" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="SupplierName" class="form-control uppercase" placeholder="" />
+                <input asp-for="SupplierName" class="form-control " placeholder="" />
                 <label asp-for="SupplierName" class="control-label">Name<span class="required">*</span></label>
                 <span asp-validation-for="SupplierName" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="SupplierAddress" class="form-control uppercase" placeholder="" />
+                <input asp-for="SupplierAddress" class="form-control " placeholder="" />
                 <label asp-for="SupplierAddress" class="control-label">Address<span class="required">*</span></label>
                 <span asp-validation-for="SupplierAddress" class="text-danger"></span>
             </div>
@@ -64,7 +64,7 @@
                     <span asp-validation-for="SupplierTin" class="text-danger"></span>
                 </div>
                 <div class="form-floating col">
-                    <input asp-for="Branch" class="form-control uppercase" placeholder="" />
+                    <input asp-for="Branch" class="form-control " placeholder="" />
                     <label asp-for="Branch" class="control-label ms-2">Branch</label>
                     <span asp-validation-for="Branch" class="text-danger"></span>
                 </div>
@@ -127,7 +127,7 @@
             </div>
             <div id="exemptionFields" style="display:none;">
                 <div class="form-floating mb-3">
-                    <textarea asp-for="ReasonOfExemption" class="form-control uppercase" placeholder="Reason of exemption" style="height: 100px" required></textarea>
+                    <textarea asp-for="ReasonOfExemption" class="form-control " placeholder="Reason of exemption" style="height: 100px" required></textarea>
                     <label asp-for="ReasonOfExemption" class="control-label">Reason<span class="required">*</span></label>
                     <span asp-validation-for="ReasonOfExemption" class="text-danger"></span>
                 </div>

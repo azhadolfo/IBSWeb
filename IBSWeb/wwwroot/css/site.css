@@ -506,10 +506,6 @@ input[readonly] {
     color: red;
 }
 
-.uppercase {
-    text-transform: uppercase;
-}
-
 .fixed-width {
     white-space: nowrap;
     overflow: hidden;
