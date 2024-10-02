@@ -638,6 +638,28 @@ namespace IBS.DataAccess.Data
 
             #endregion -- Accounts Payable --
 
+            #region-- Books --
+
+            builder.Entity<FilprideGeneralLedgerBook>(gl =>
+            {
+                gl.HasOne(gl => gl.Supplier)
+                .WithMany()
+                .HasForeignKey(gl => gl.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                gl.HasOne(gl => gl.Customer)
+                .WithMany()
+                .HasForeignKey(gl => gl.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                gl.HasOne(gl => gl.BankAccount)
+                .WithMany()
+                .HasForeignKey(gl => gl.BankAccountId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion
+
             #endregion
         }
 

@@ -333,8 +333,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                     FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Posted delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    await _unitOfWork.FilprideDeliveryReceipt.PostAsync(existingRecord, cancellationToken);
                 }
 
                 TempData["success"] = "Delivery receipt approved successfully.";
@@ -419,6 +417,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.Status = "Delivered";
 
                 await _unitOfWork.FilprideReceivingReport.AutoGenerateReceivingReport(existingRecord, cancellationToken);
+                await _unitOfWork.FilprideDeliveryReceipt.PostAsync(existingRecord, cancellationToken);
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Mark as delivered the delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
