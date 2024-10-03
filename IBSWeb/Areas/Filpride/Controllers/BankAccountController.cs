@@ -83,45 +83,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     model.Company = await GetCompanyClaimAsync();
 
-                    #region Generate Account No
-
-                    var lastCibAccount = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 5 && coa.AccountNumber.StartsWith("1010101"))
-                        .OrderByDescending(coa => coa.AccountNumber)
-                        .FirstOrDefaultAsync(cancellationToken);
-
-                    if (lastCibAccount != null)
-                    {
-                        var lastAccountNumber = lastCibAccount.AccountNumber;
-                        model.AccountNoCOA = (long.Parse(lastAccountNumber) + 1).ToString();
-                    }
-                    else
-                    {
-                        model.AccountNoCOA = "101010101";
-                    }
-
-                    #endregion Generate Account No
-
                     model.CreatedBy = _userManager.GetUserName(this.User);
-
-                    #region -- COA Entry --
-
-                    var coa = new FilprideChartOfAccount
-                    {
-                        IsMain = false,
-                        AccountNumber = model.AccountNoCOA,
-                        AccountName = "Cash in Bank" + " - " + model.AccountNo + " " + model.AccountName,
-                        AccountType = "Asset",
-                        NormalBalance = "Debit",
-                        Parent = "1010101",
-                        CreatedBy = _userManager.GetUserName(this.User),
-                        CreatedDate = DateTime.Now,
-                        Level = 5
-                    };
-
-                    await _dbContext.FilprideChartOfAccounts.AddAsync(coa, cancellationToken);
-
-                    #endregion -- COA Entry --
 
                     await _dbContext.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);

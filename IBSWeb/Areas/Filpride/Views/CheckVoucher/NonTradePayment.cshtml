@@ -104,7 +104,7 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <input type="hidden" name="AccountNumber" class="cib-acct-no" value="" />
+                                    <input type="hidden" name="AccountNumber" value="1010101" />
                                     <input name='AccountTitle' value='Cash in Bank' class="w-100" style='border:none' readonly />
                                 </td>
                                 <td><input name="Debit" value='0.0000' class="w-100" style='border:none' readonly /></td>
@@ -210,33 +210,6 @@
                 $("#PayeeTin").val("");
                 $("#Total").val("");
             }
-        });
-
-        $(document).ready(function () {
-            // Add event listener for the Bank Account select dropdown
-            $("#BankId").change(function () {
-                var bankId = $(this).val();
-
-                // Check if a valid bank is selected
-                if (bankId !== "") {
-                    $.ajax({
-                        url: '@Url.Action("GetBankAccount", "CheckVoucher", new { area = "Filpride" })', // Replace with your controller and action method
-                        type: 'GET',
-                        data: { bankId: bankId },
-                        success: function (data) {
-                            if (data) {
-                                var accountNoInput = $(".cib-acct-no");
-                                var accountTitleInput = $("input[value='Cash in Bank']");
-                                accountNoInput.val(`${data.accountNoCOA}`)
-                                accountTitleInput.val(`Cash in Bank - ${data.accountNo} ${data.accountName}`);
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error("Error occurred:", status, error);
-                        }
-                    });
-                }
-            });
         });
     </script>
     <script>
