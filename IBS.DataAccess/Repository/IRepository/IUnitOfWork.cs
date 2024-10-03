@@ -70,6 +70,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IDeliveryReceiptRepository FilprideDeliveryReceipt { get; }
         ISupplierRepository FilprideSupplier { get; }
         ICustomerRepository FilprideCustomer { get; }
+        IAuditTrailRepository FilprideAuditTrail { get; }
 
         Task<List<SelectListItem>> GetFilprideCustomerListAsync(string company, CancellationToken cancellationToken = default);
 

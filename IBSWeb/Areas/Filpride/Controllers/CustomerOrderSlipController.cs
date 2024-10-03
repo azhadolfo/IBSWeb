@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
@@ -154,7 +155,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
-                    await _unitOfWork.SaveAsync(cancellationToken);
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new customer order slip# {model.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, model.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     TempData["success"] = "Customer order slip created successfully.";
                     return RedirectToAction(nameof(Index));
@@ -335,6 +339,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, grossMargin, cancellationToken);
                 }
 
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingRecord.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
                 TempData["success"] = "Customer order slip approved by operation manager successfully.";
                 return RedirectToAction(nameof(Index));
             }
@@ -370,6 +378,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.FinanceInstruction = instructions;
                     await _unitOfWork.FilprideCustomerOrderSlip.FinanceApproved(existingRecord, cancellationToken);
                 }
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingRecord.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Customer order slip approved by finance successfully.";
                 return RedirectToAction(nameof(Preview), new { id });
@@ -532,6 +544,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     TempData["success"] = "Appointed supplier successfully.";
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
                     await _unitOfWork.SaveAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
 
@@ -643,6 +660,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingCos.PlateNo = viewModel.PlateNo;
                     existingCos.Status = nameof(CosStatus.HaulerAppointed);
 
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Appoint hauler customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
                     TempData["success"] = "Appointed hauler successfully.";
                     await _unitOfWork.SaveAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
@@ -694,6 +715,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingCos.AuthorityToLoadNo = model.AuthorityToLoadNo;
                 existingCos.Status = nameof(CosStatus.Completed);
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "ATL booked successfully";
                 await _unitOfWork.SaveAsync(cancellationToken);

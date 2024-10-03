@@ -1,5 +1,4 @@
-﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository;
+﻿using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
@@ -21,13 +20,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        private readonly ApplicationDbContext _dbContext;
-
-        public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
-            _dbContext = dbContext;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -148,7 +144,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                     FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     await _unitOfWork.SaveAsync(cancellationToken);
 
@@ -334,7 +330,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                     FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Posted delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
                 }
 
                 TempData["success"] = "Delivery receipt approved successfully.";
@@ -423,7 +419,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Mark as delivered the delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
 
@@ -454,7 +450,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                     FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
@@ -493,11 +489,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                         FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await _unitOfWork.SaveAsync(cancellationToken);
                         TempData["success"] = "Delivery receipt has been Voided.";
                     }
                     return RedirectToAction(nameof(Index));
