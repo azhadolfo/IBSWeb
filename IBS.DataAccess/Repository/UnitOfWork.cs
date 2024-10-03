@@ -46,6 +46,7 @@ namespace IBS.DataAccess.Repository
         public IFreightRepository FilprideFreight { get; private set; }
         public IAuthorityToLoadRepository FilprideAuthorityToLoad { get; private set; }
         public Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; private set; }
+        public IAuditTrailRepository FilprideAuditTrail { get; private set; }
 
         #endregion
 
@@ -124,6 +125,7 @@ namespace IBS.DataAccess.Repository
             FilprideFreight = new FreightRepository(_db);
             FilprideAuthorityToLoad = new AuthorityToLoadRepository(_db);
             FilprideChartOfAccount = new Filpride.ChartOfAccountRepository(_db);
+            FilprideAuditTrail = new AuditTrailRepository(_db);
 
             #endregion
 
