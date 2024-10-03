@@ -116,7 +116,6 @@ else
                 $('.dropdown-item').find('.selected-sort').hide();
                 $(this).find('.selected-sort').show();
                 var sortedModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.TransactionDate)));
-                console.log(sortedModel)
                 sortedModel.sort(function (a, b) {
                     var propA = a[sortBy] || '';
                     var propB = b[sortBy] || '';

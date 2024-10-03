@@ -253,7 +253,6 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
         // Get the pre tag element
         var resultPre = document.getElementById('resultPre');
 
-        console.log("@totalAmount");
         // Replace the placeholder in the HTML with the actual number of records
         resultPre.innerHTML = resultPre.innerHTML.replace('@numberOfRecords', (allTrElements.length - 1));
         resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount.ToString("N4")");

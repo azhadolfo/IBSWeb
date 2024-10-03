@@ -89,7 +89,6 @@
                         type: 'GET',
                         data: { drId: drId },
                         success: function (data) {
-                            console.log(data)
                             $('input[name="InvoiceQuantity"]').val(formatNumber(data.quantity));
                             $('input[name="ReceivedQuantity"]').val(formatNumber(data.quantity));
                             $('input[name="Product"]').val(data.product);

@@ -62,13 +62,11 @@
         $(document).ready(function () {
             $("#mainLevel").change(function () {
                 var main = $(this).val();
-                console.log(main);
                 $.ajax({
                     url: "/User/ChartOfAccount/GetChartOfAccount",
                     type: "GET",
                     data: { parentNo: main },
                     success: function (data) {
-                        console.log(data);
                         // Check if data is an array and not null
                         if (Array.isArray(data) && data.length > 0) {
 
@@ -101,13 +99,11 @@
 
             $("#secondLevel").change(function () {
                 var second = $(this).val();
-                console.log(second);
                 $.ajax({
                     url: "/User/ChartOfAccount/GetChartOfAccount",
                     type: "GET",
                     data: { parentNo: second },
                     success: function (data) {
-                        console.log(data);
                         // Check if data is an array and not null
                         if (Array.isArray(data) && data.length > 0) {
 

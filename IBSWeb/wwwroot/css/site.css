@@ -512,3 +512,18 @@ input[readonly] {
     text-overflow: ellipsis;
     width: 300px; /* Set your desired fixed width */
 }
+
+/* Reduce font size for the entire table */
+table {
+    font-size: 0.95em; /* Adjust as needed */
+}
+
+    /* Optionally, reduce the size of specific elements like table headers */
+    table th {
+        font-size: 0.90em; /* Adjust as needed */
+    }
+
+    /* Also adjust the font size of table data cells */
+    table td {
+        font-size: 0.90em; /* Adjust as needed */
+    }

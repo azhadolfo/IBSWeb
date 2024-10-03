@@ -200,7 +200,6 @@
                     method: "GET",
                     data: { cvId: cvId },
                     success: function (data) {
-                        console.log(data);
                         if (data) {
                             $("#Payee").val(data.payee);
                             $("#PayeeAddress").val(data.payeeAddress);

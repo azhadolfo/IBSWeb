@@ -130,14 +130,12 @@
         // Function to handle invoice change event
         function handlePoChange() {
             var id = $("#POId").val();
-            console.log(id);
             if (id != "") {
                 $.ajax({
                     url: '@Url.Action("GetLiquidations", "ReceivingReport", new { area = "Filpride" })',
                     type: "GET",
                     data: { id: id },
                     success: function (data) {
-                        console.log(data);
                         // Update PO No and Quantity
                         document.getElementById("poNo").innerHTML = data.poNo;
                         document.getElementById("poQuantity").innerHTML = data.poQuantity;

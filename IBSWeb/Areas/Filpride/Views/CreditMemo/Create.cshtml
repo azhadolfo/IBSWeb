@@ -150,7 +150,6 @@
     <script>
         $("#ServiceInvoiceId").change(function () {
             var svId = $(this).val();
-            console.log(svId); // Add this line for debugging
             if (svId !== "") {
                 // Make an AJAX request to get the customer details based on the selected CustomerId
                 $.ajax({

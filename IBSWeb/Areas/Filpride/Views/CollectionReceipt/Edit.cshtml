@@ -317,8 +317,6 @@ Balance:        <span id="balance"></span>
         function handleInvoiceChange() {
             var salesInvoice = $("#salesInvoice").val();
             var serviceInvoice = $("#serviceInvoice").val();
-            console.log(salesInvoice)
-            console.log(serviceInvoice)
 
             if (salesInvoice != undefined) {
                 $.ajax({
@@ -330,7 +328,6 @@ Balance:        <span id="balance"></span>
                         isServices: false   // or true based on your condition
                     },
                     success: function (data) {
-                        console.log(data);
                         document.getElementById("amount").innerHTML = data.amount;
                         document.getElementById("amountPaid").innerHTML = data.amountPaid;
                         document.getElementById("balance").innerHTML = data.balance;
@@ -349,7 +346,6 @@ Balance:        <span id="balance"></span>
                         isServices: true   // or true based on your condition
                     },
                     success: function (data) {
-                        console.log(data);
                         document.getElementById("amount").innerHTML = data.amount;
                         document.getElementById("amountPaid").innerHTML = data.amountPaid;
                         document.getElementById("balance").innerHTML = data.balance;
