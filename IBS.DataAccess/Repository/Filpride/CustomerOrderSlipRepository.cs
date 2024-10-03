@@ -176,12 +176,12 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(cos => cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.Now) && cos.Status == nameof(CosStatus.Completed))
                 .SumAsync(cos => cos.TotalAmount, cancellationToken);
 
-            var creditLimit = await _db.FilprideCustomers
+            var availableCreditLimit = await _db.FilprideCustomers
                 .Where(c => c.CustomerId == customerId)
-                .Select(c => c.CreditLimit)
+                .Select(c => c.CreditLimitAsOfToday)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            return creditLimit - (drForTheMonth + outstandingCos);
+            return availableCreditLimit - (drForTheMonth + outstandingCos);
         }
 
         public async Task FinanceApproved(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default)

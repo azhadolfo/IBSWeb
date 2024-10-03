@@ -38,6 +38,11 @@
                     <span asp-validation-for="CreditLimit" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
+                    <input asp-for="CreditLimitAsOfToday" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="CreditLimitAsOfToday" class="ms-2">Available Credit Limit As of Today<span class="required">*</span></label>
+                    <span asp-validation-for="CreditLimitAsOfToday" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
                     <input asp-for="BusinessStyle" class="form-control border-0 shadow " placeholder="" />
                     <label asp-for="BusinessStyle" class="ms-2">Business Style</label>
                     <span asp-validation-for="BusinessStyle" class="text-danger"></span>

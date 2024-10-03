@@ -70,6 +70,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.WithHoldingTax = model.WithHoldingTax;
             existingCustomer.ClusterCode = model.ClusterCode;
             existingCustomer.CreditLimit = model.CreditLimit;
+            existingCustomer.CreditLimitAsOfToday = model.CreditLimitAsOfToday;
 
             if (_db.ChangeTracker.HasChanges())
             {
