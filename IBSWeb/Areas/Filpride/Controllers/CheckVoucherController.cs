@@ -215,16 +215,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(null);
         }
 
-        public async Task<IActionResult> GetBankAccount(int bankId)
-        {
-            if (bankId != 0)
-            {
-                var existingBankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == bankId);
-                return Json(new { AccountNoCOA = existingBankAccount.AccountNoCOA, AccountNo = existingBankAccount.AccountNo, AccountName = existingBankAccount.AccountName });
-            }
-            return Json(null);
-        }
-
         public async Task<IActionResult> GetAutomaticEntry(DateTime startDate, DateTime? endDate)
         {
             if (startDate != default && endDate != default)
