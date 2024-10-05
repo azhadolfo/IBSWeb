@@ -10,7 +10,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    [DepartmentAuthorize(SD.Department_RCD)]
+    [DepartmentAuthorize(SD.Department_RCD, SD.Department_TradeAndSupply)]
     public class AuthorityToLoadController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
