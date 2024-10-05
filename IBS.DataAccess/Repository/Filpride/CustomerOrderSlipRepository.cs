@@ -43,7 +43,6 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideCustomerOrderSlip> query = dbSet
                 .Include(cos => cos.Customer)
-                .Include(cos => cos.Hauler)
                 .Include(cos => cos.Product)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier);
@@ -60,7 +59,6 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await dbSet.Where(filter)
                 .Include(cos => cos.Customer)
-                .Include(cos => cos.Hauler)
                 .Include(cos => cos.Product)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
@@ -186,7 +184,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task FinanceApproved(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default)
         {
-            customerOrderSlip.Status = nameof(CosStatus.ApprovedByFinance);
+            customerOrderSlip.Status = nameof(CosStatus.Completed);
 
             await _db.SaveChangesAsync(cancellationToken);
         }

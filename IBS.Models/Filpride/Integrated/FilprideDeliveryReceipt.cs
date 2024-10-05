@@ -68,5 +68,31 @@ namespace IBS.Models.Filpride.Integrated
         public decimal Demuragge { get; set; }
 
         public string Status { get; set; } = nameof(Utility.Status.Pending);
+
+        #region Appointing Hauler
+
+        public int? HaulerId { get; set; }
+
+        [ForeignKey(nameof(HaulerId))]
+        public FilprideSupplier? Hauler { get; set; }
+
+        [Column(TypeName = "varchar(200)")]
+        public string Driver { get; set; }
+
+        [Column(TypeName = "varchar(200)")]
+        public string PlateNo { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        public decimal Freight { get; set; }
+
+        #endregion
+
+        #region Booking of ATL
+
+        [Column(TypeName = "varchar(20)")]
+        public string? AuthorityToLoadNo { get; set; }
+
+        #endregion
     }
 }

@@ -56,8 +56,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.DateBooked.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.ValidUntil.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.UppiAtlNo?.ToLower().Contains(searchValue) == true ||
-                        s.Remarks.ToLower().Contains(searchValue) == true ||
-                        s.CustomerOrderSlip?.CustomerOrderSlipNo?.ToLower().Contains(searchValue) == true
+                        s.Remarks.ToLower().Contains(searchValue) ||
+                        s.DeliveryReceipt?.DeliveryReceiptNo?.ToLower().Contains(searchValue) == true
                         )
                     .ToList();
 

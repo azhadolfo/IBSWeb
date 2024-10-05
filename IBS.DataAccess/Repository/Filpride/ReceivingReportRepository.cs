@@ -233,7 +233,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 QuantityDelivered = deliveryReceipt.Quantity,
                 QuantityReceived = deliveryReceipt.Quantity,
                 TruckOrVessels = deliveryReceipt.CustomerOrderSlip.PickUpPoint.Depot,
-                AuthorityToLoadNo = deliveryReceipt.CustomerOrderSlip.AuthorityToLoadNo,
+                AuthorityToLoadNo = deliveryReceipt.AuthorityToLoadNo,
                 Remarks = "PENDING",
                 Company = deliveryReceipt.Company,
                 CreatedBy = "SYSTEM GENERATED",

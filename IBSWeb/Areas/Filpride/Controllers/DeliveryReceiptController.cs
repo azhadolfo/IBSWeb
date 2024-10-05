@@ -508,5 +508,54 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return BadRequest();
         }
 
+        public async Task<IActionResult> BookAuthorityToLoad(int id, string? supplierAtlNo, DateOnly bookedDate, CancellationToken cancellationToken)
+        {
+            if (id == 0)
+            {
+                return NotFound();
+            }
+
+            var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAsync(cos => cos.DeliveryReceiptId == id, cancellationToken);
+
+            if (existingRecord == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                FilprideAuthorityToLoad model = new()
+                {
+                    AuthorityToLoadNo = await _unitOfWork.FilprideAuthorityToLoad.GenerateAtlNo(cancellationToken),
+                    DeliveryReceiptId = existingRecord.DeliveryReceiptId,
+                    DateBooked = bookedDate,
+                    ValidUntil = bookedDate.AddDays(5),
+                    UppiAtlNo = supplierAtlNo,
+                    Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
+                    CreatedBy = _userManager.GetUserName(User),
+                    CreatedDate = DateTime.Now,
+                };
+
+                await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
+
+                existingRecord.AuthorityToLoadNo = model.AuthorityToLoadNo;
+                existingRecord.Status = nameof(CosStatus.Completed);
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                TempData["success"] = "ATL booked successfully";
+                await _unitOfWork.SaveAsync(cancellationToken);
+                return RedirectToAction(nameof(AuthorityToLoadController.Print), "AuthorityToLoad", new { area = nameof(Filpride), id = model.AuthorityToLoadId });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
     }
 }

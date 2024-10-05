@@ -159,7 +159,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return await dbSet.Where(filter)
                 .Include(si => si.Product)
                 .Include(si => si.Customer)
-                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Hauler)
+                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr.Hauler)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -168,7 +168,7 @@ namespace IBS.DataAccess.Repository.Filpride
             IQueryable<FilprideSalesInvoice> query = dbSet
                 .Include(si => si.Product)
                 .Include(si => si.Customer)
-                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Hauler);
+                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr.Hauler);
 
             if (filter != null)
             {

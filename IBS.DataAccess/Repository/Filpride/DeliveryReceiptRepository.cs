@@ -45,7 +45,7 @@ namespace IBS.DataAccess.Repository.Filpride
             IQueryable<FilprideDeliveryReceipt> query = dbSet
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Hauler)
+                .Include(dr => dr.Hauler)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
                 .Include(dr => dr.Customer);
 
@@ -62,7 +62,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return await dbSet.Where(filter)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Hauler)
+                .Include(dr => dr.Hauler)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
                 .Include(dr => dr.Customer)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -141,9 +141,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = deliveryReceipt.Date,
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                 AccountNo = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? "1010201" : "1010101",
                 AccountTitle = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? "Cash in Bank" : "AR-Trade Receivable",
                 Debit = deliveryReceipt.TotalAmount,
@@ -156,9 +156,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = deliveryReceipt.Date,
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                 AccountNo = salesAcctNo,
                 AccountTitle = salesAcctTitle,
                 Debit = 0,
@@ -170,9 +170,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = deliveryReceipt.Date,
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                 AccountNo = "2010301",
                 AccountTitle = "Vat Output",
                 Debit = 0,
@@ -184,9 +184,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = deliveryReceipt.Date,
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                 AccountNo = cogsAcctNo,
                 AccountTitle = cogsAcctTitle,
                 Debit = ComputeNetOfVat(deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price * deliveryReceipt.Quantity),
@@ -198,9 +198,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = deliveryReceipt.Date,
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                 AccountNo = "1010602",
                 AccountTitle = "Vat Input",
                 Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price * deliveryReceipt.Quantity)),
@@ -212,9 +212,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = deliveryReceipt.Date,
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                 AccountNo = "2010101",
                 AccountTitle = "Accounts Payables - Trade",
                 Debit = 0,
@@ -227,9 +227,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = deliveryReceipt.Date,
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                 AccountNo = "5010109",
                 AccountTitle = "COGS - Freight",
                 Debit = ComputeNetOfVat((decimal)deliveryReceipt.CustomerOrderSlip.Freight * deliveryReceipt.Quantity),
@@ -241,9 +241,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = deliveryReceipt.Date,
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                 AccountNo = "1010602",
                 AccountTitle = "Vat Input",
                 Debit = ComputeVatAmount(ComputeNetOfVat((decimal)deliveryReceipt.CustomerOrderSlip.Freight * deliveryReceipt.Quantity)),
@@ -255,9 +255,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = deliveryReceipt.Date,
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                 AccountNo = "5010108",
                 AccountTitle = "COGS - Demurrage",
                 Debit = ComputeNetOfVat(deliveryReceipt.Demuragge),
@@ -269,9 +269,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = deliveryReceipt.Date,
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                 AccountNo = "1010602",
                 AccountTitle = "Vat Input",
                 Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.Demuragge)),
@@ -283,9 +283,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
-                Date = deliveryReceipt.Date,
+                Date = (DateOnly)deliveryReceipt.DeliveredDate,
                 Reference = deliveryReceipt.DeliveryReceiptNo,
-                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.CustomerOrderSlip.Hauler.SupplierName}",
+                Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                 AccountNo = "2010101",
                 AccountTitle = "Accounts Payables - Trade",
                 Debit = 0,
@@ -293,7 +293,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 Company = deliveryReceipt.Company,
                 CreatedBy = deliveryReceipt.CreatedBy,
                 CreatedDate = deliveryReceipt.CreatedDate,
-                SupplierId = deliveryReceipt.CustomerOrderSlip.HaulerId
+                SupplierId = deliveryReceipt.HaulerId
             });
 
 
