@@ -71,7 +71,7 @@ namespace IBS.Models.Filpride.Integrated
 
         #region Appointing Hauler
 
-        public int? HaulerId { get; set; }
+        public int HaulerId { get; set; }
 
         [ForeignKey(nameof(HaulerId))]
         public FilprideSupplier? Hauler { get; set; }
@@ -85,6 +85,10 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Freight { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        public decimal ECC { get; set; }
 
         #endregion
 

@@ -78,11 +78,14 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CustomerId = viewModel.CustomerId;
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.Quantity = viewModel.Volume;
-
-            if (existingRecord.TotalAmount != viewModel.TotalAmount)
-            {
-                existingRecord.TotalAmount = viewModel.TotalAmount;
-            }
+            existingRecord.TotalAmount = viewModel.TotalAmount;
+            existingRecord.ManualDrNo = viewModel.ManualDrNo;
+            existingRecord.Freight = viewModel.Freight;
+            existingRecord.Demuragge = viewModel.Demuragge;
+            existingRecord.ECC = viewModel.ECC;
+            existingRecord.Driver = viewModel.Driver;
+            existingRecord.PlateNo = viewModel.PlateNo;
+            existingRecord.HaulerId = viewModel.HaulerId;
 
             if (_db.ChangeTracker.HasChanges())
             {

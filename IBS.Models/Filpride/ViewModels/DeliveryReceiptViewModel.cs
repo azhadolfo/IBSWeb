@@ -55,14 +55,13 @@ namespace IBS.Models.Filpride.ViewModels
 
         #region Appointing Hauler
 
-        public string DeliveryOption { get; set; } = string.Empty;
-
         public int HaulerId { get; set; }
 
         public List<SelectListItem>? Haulers { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Freight { get; set; } = 0;
+
+        public decimal ECC { get; set; } = 0;
 
         public string Driver { get; set; }
 

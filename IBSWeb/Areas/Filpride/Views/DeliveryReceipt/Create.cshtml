@@ -90,10 +90,37 @@
                     <label asp-for="Volume">Volume<span class="required">*</span></label>
                     <span asp-validation-for="Volume" class="text-danger"></span>
                 </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Hauler List<span class="required">*</span></label>
+                    <select asp-for="HaulerId" asp-items="@Model.Haulers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select hauler</option>
+                    </select>
+                    <span asp-validation-for="HaulerId" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" required min="0.01" />
+                    <label asp-for="Freight">Freight<span class="required">*</span></label>
+                    <span asp-validation-for="Freight" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="ECC" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="ECC">ECC</label>
+                    <span asp-validation-for="ECC" class="text-danger"></span>
+                </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="Demuragge" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="Demuragge">Demuragge<span class="required">*</span></label>
+                    <label asp-for="Demuragge">Demuragge</label>
                     <span asp-validation-for="Demuragge" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Driver" class="form-control border-0 shadow" placeholder="" required />
+                    <label asp-for="Driver">Driver<span class="required">*</span></label>
+                    <span asp-validation-for="Driver" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="PlateNo" class="form-control border-0 shadow" placeholder="" required />
+                    <label asp-for="PlateNo">Plate #<span class="required">*</span></label>
+                    <span asp-validation-for="PlateNo" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="TotalAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
@@ -166,6 +193,14 @@
                         data: { id: cosId },
                         success: function (data) {
                             if (data) {
+                                console.log(data)
+                                if (data.deliveryOption === "@SD.DeliveryOption_ForPickUp") {
+                                    $('input[name="Freight"]').parent().show();
+                                } else {
+                                    $('input[name="Freight"]').parent().hide();
+                                    $('input[name="Freight"]').val(data.freight);
+                                }
+
                                 $('input[name="Product"]').val(data.product);
                                 $('input[name="CosVolume"]').val(formatNumber(data.quantity));
                                 $('input[name="RemainingVolume"]').val(formatNumber(data.remainingVolume));
