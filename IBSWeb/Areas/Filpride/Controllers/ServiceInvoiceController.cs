@@ -541,6 +541,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
+                var hasAlreadyBeenUsed =
+                    await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken) ||
+                    await _dbContext.FilprideDebitMemos.AnyAsync(dm => dm.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken) ||
+                    await _dbContext.FilprideCreditMemos.AnyAsync(cm => cm.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+
+                if (hasAlreadyBeenUsed)
+                {
+                    TempData["error"] = "Please note that this record has already been utilized in a sales invoice. As a result, voiding it is not permitted.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+
                 if (model.VoidedBy == null)
                 {
                     try

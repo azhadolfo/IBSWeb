@@ -14,7 +14,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    [DepartmentAuthorize(SD.Department_RCD, SD.Department_Finance, SD.Department_Marketing, SD.Department_TradeAndSupply, SD.Department_Logistics)]
+    [DepartmentAuthorize(SD.Department_RCD, SD.Department_Finance, SD.Department_Marketing, SD.Department_TradeAndSupply, SD.Department_Logistics, SD.Department_CreditAndCollection)]
     public class CustomerOrderSlipController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -59,8 +59,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.Customer.CustomerName?.ToLower().Contains(searchValue) == true ||
-                        s.Quantity.ToString().Contains(searchValue) == true ||
-                        s.TotalAmount.ToString().Contains(searchValue) == true ||
+                        s.Quantity.ToString().Contains(searchValue) ||
+                        s.TotalAmount.ToString().Contains(searchValue) ||
                         s.Remarks?.ToLower().Contains(searchValue) == true ||
                         s.Status.ToLower().Contains(searchValue)
                         )

@@ -137,26 +137,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var dateFrom = viewModel.DateTo.AddDays(-viewModel.DateTo.Day + 1);
 
-                var previousMonth = viewModel.DateTo.Month - 1;
-
                 var endingBalance = await _dbContext.FilprideInventories
                     .OrderBy(e => e.Date)
                     .ThenBy(e => e.InventoryId)
                     .Where(e => e.Company == companyClaims)
-                    .LastOrDefaultAsync(e => viewModel.POId == null || e.POId == viewModel.POId && e.Date.Month == previousMonth, cancellationToken);
+                    .LastOrDefaultAsync(e =>
+                        (viewModel.POId == null || e.POId == viewModel.POId) &&
+                        (e.Date.Month - 1 == dateFrom.Month), cancellationToken)
+                    ?? await _dbContext.FilprideInventories
+                    .OrderBy(e => e.Date)
+                    .ThenBy(e => e.InventoryId)
+                    .Where(e => e.Company == companyClaims)
+                    .LastOrDefaultAsync(e =>
+                        viewModel.POId == null || e.POId == viewModel.POId, cancellationToken);
 
                 List<FilprideInventory> inventories = new List<FilprideInventory>();
                 if (endingBalance != null)
                 {
                     inventories = await _dbContext.FilprideInventories
-                       .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId) || i.InventoryId == endingBalance.InventoryId)
-                       .ToListAsync(cancellationToken);
+                        .OrderBy(e => e.Date)
+                        .ThenBy(e => e.InventoryId)
+                        .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId) || i.InventoryId == endingBalance.InventoryId)
+                        .ToListAsync(cancellationToken);
                 }
                 else
                 {
                     inventories = await _dbContext.FilprideInventories
-                       .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId))
-                       .ToListAsync(cancellationToken);
+                        .OrderBy(e => e.Date)
+                        .ThenBy(e => e.InventoryId)
+                        .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId))
+                        .ToListAsync(cancellationToken);
                 }
 
                 var product = await _dbContext.Products
