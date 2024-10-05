@@ -126,6 +126,7 @@
             <div class="form-floating mb-3">
                 <input asp-for="AuthorityToLoadNo" class="form-control" placeholder="" />
                 <label asp-for="AuthorityToLoadNo" class="control-label ms-2"></label>
+                <span asp-validation-for="AuthorityToLoadNo" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
                 <textarea asp-for="Remarks" class="form-control" placeholder="" style="height: 100px"></textarea>

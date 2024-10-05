@@ -309,7 +309,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.EditedBy, $"Edited receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -406,6 +406,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null && existingInventory != null)
             {
+                var hasAlreadyBeenUsed = await _dbContext.FilprideSalesInvoices
+                    .AnyAsync(si => si.ReceivingReportId == model.ReceivingReportId, cancellationToken);
+
+                if (hasAlreadyBeenUsed)
+                {
+                    TempData["error"] = "Please note that this record has already been utilized in a sales invoice. As a result, voiding it is not permitted.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+
                 if (model.VoidedBy == null)
                 {
                     if (model.PostedBy != null)
