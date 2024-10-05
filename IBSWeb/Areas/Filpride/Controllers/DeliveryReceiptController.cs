@@ -109,7 +109,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             DeliveryReceiptViewModel viewModel = new()
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
-                CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken)
+                CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
+                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
             };
 
             return View(viewModel);
@@ -137,7 +138,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Company = companyClaims,
                         CreatedBy = _userManager.GetUserName(User),
                         ManualDrNo = viewModel.ManualDrNo,
-                        Demuragge = viewModel.Demuragge
+                        Freight = viewModel.Freight,
+                        Demuragge = viewModel.Demuragge,
+                        ECC = viewModel.ECC,
+                        Driver = viewModel.Driver,
+                        PlateNo = viewModel.PlateNo,
+                        HaulerId = viewModel.HaulerId
                     };
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
@@ -205,8 +211,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TotalAmount = existingRecord.TotalAmount,
                     Remarks = existingRecord.Remarks,
                     ManualDrNo = existingRecord.ManualDrNo,
-                    Demuragge = existingRecord.Demuragge
+                    Freight = existingRecord.Freight,
+                    Demuragge = existingRecord.Demuragge,
+                    ECC = existingRecord.ECC,
+                    Driver = existingRecord.Driver,
+                    PlateNo = existingRecord.PlateNo,
+                    HaulerId = existingRecord.HaulerId,
+                    Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
                 };
+
+                ViewBag.DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption;
 
                 return View(viewModel);
             }
@@ -390,7 +404,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Product = cos.PurchaseOrder.Product?.ProductName,
                 cos.Quantity,
                 RemainingVolume = cos.BalanceQuantity,
-                Price = cos.DeliveredPrice
+                Price = cos.DeliveredPrice,
+                cos.DeliveryOption,
+                cos.Freight
             });
         }
 
