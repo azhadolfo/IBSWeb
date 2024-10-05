@@ -422,11 +422,6 @@ namespace IBS.DataAccess.Data
                 .HasForeignKey(cos => cos.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-                cos.HasOne(cos => cos.Hauler)
-                .WithMany()
-                .HasForeignKey(cos => cos.HaulerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
                 cos.HasOne(cos => cos.Commissionee)
                 .WithMany()
                 .HasForeignKey(cos => cos.CommissioneeId)
@@ -446,6 +441,11 @@ namespace IBS.DataAccess.Data
                 dr.HasOne(dr => dr.Customer)
                 .WithMany()
                 .HasForeignKey(dr => dr.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                dr.HasOne(dr => dr.Hauler)
+                .WithMany()
+                .HasForeignKey(dr => dr.HaulerId)
                 .OnDelete(DeleteBehavior.Restrict);
             });
 

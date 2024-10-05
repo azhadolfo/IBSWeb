@@ -126,13 +126,6 @@
                                 case 'ApprovedByOpsManager':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                                     break;
-                                case 'ApprovedByFinance':
-                                    actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>
-                                                <li><a class="dropdown-item" href="@Url.Action("AppointHauler", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Hauler</a></li>`;
-                                    break;
-                                case 'HaulerAppointed':
-                                    actions += `<li><a class="dropdown-item BookATL" href="#" onclick="bookAuthorityToLoad('${customerOrderSlipId}', '${row.purchaseOrder.supplier.supplierName}')">Book ATL</a></li>`;
-                                    break;
                                 case 'Completed':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Print</a></li>`;
                                     break;

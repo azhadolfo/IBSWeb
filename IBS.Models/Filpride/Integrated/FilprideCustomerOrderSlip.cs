@@ -134,25 +134,6 @@ namespace IBS.Models.Filpride.Integrated
 
         #endregion
 
-        #region Appointing Hauler
-
-        public int? HaulerId { get; set; }
-
-        public FilprideSupplier? Hauler { get; set; }
-
-        public string? Driver { get; set; }
-
-        public string? PlateNo { get; set; }
-
-        #endregion
-
-        #region Booking of ATL
-
-        [Column(TypeName = "varchar(20)")]
-        public string? AuthorityToLoadNo { get; set; }
-
-        #endregion
-
         public bool IsDelivered { get; set; }
 
         [Column(TypeName = "varchar(100)")]

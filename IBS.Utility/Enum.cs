@@ -31,8 +31,6 @@
         Created,
         SupplierAppointed,
         ApprovedByOpsManager,
-        ApprovedByFinance,
-        HaulerAppointed,
         Completed,
         Disapproved
     }

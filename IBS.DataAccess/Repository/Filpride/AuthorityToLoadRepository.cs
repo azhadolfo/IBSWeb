@@ -42,11 +42,11 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<IEnumerable<FilprideAuthorityToLoad>> GetAllAsync(Expression<Func<FilprideAuthorityToLoad, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<FilprideAuthorityToLoad> query = dbSet
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.Hauler)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.Customer)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint);
+                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(atl => atl.DeliveryReceipt).ThenInclude(cos => cos.Hauler)
+                .Include(atl => atl.DeliveryReceipt).ThenInclude(cos => cos.Customer)
+                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint);
 
             if (filter != null)
             {
@@ -59,11 +59,11 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<FilprideAuthorityToLoad> GetAsync(Expression<Func<FilprideAuthorityToLoad, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.Hauler)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.Customer)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
+                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(atl => atl.DeliveryReceipt).ThenInclude(cos => cos.Hauler)
+                .Include(atl => atl.DeliveryReceipt).ThenInclude(cos => cos.Customer)
+                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
                 .FirstOrDefaultAsync(cancellationToken);
         }
     }

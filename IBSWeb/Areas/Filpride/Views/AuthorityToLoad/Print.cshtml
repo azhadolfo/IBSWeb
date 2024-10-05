@@ -21,19 +21,19 @@
         <table class="table table-borderless">
             <tbody>
                 <tr>
-                    <td><b>Supplier:</b> @Model.CustomerOrderSlip?.PurchaseOrder?.Supplier?.SupplierName</td>
-                    <td class="text-end"><b>Customer PO Ref#:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.CustomerPoNo)</td>
+                    <td><b>Supplier:</b> @Model.DeliveryReceipt?.CustomerOrderSlip.PurchaseOrder?.Supplier?.SupplierName</td>
+                    <td class="text-end"><b>Customer PO Ref#:</b> @Html.DisplayFor(model => model.DeliveryReceipt.CustomerOrderSlip.CustomerPoNo)</td>
                 </tr>
                 <tr>
                     <td><b>Date Booked:</b> @Html.DisplayFor(model => model.DateBooked)</td>
-                    <td class="text-end"><b>Freight:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.Freight)</td>
+                    <td class="text-end"><b>Freight:</b> @Html.DisplayFor(model => model.DeliveryReceipt.Freight)</td>
                 </tr>
                 <tr>
                     <td><b>Valid Until:</b> @Html.DisplayFor(model => model.ValidUntil)</td>
                     <td></td>
                 </tr>
                 <tr>
-                    <td><b>Load Port:</b> @Model.CustomerOrderSlip?.PickUpPoint.Depot</td>
+                    <td><b>Load Port:</b> @Model.DeliveryReceipt?.CustomerOrderSlip.PickUpPoint.Depot</td>
                     <td></td>
                 </tr>
             </tbody>
@@ -61,11 +61,11 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>@Model.CustomerOrderSlip.Customer.CustomerName</td>
-                        <td>@Model.CustomerOrderSlip.PurchaseOrder.Product.ProductName</td>
-                        <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
-                        <td>@Model.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo</td>
-                        <td>@Model.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo</td>
+                        <td>@Model.DeliveryReceipt.Customer.CustomerName</td>
+                        <td>@Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.Product.ProductName</td>
+                        <td>@Html.DisplayFor(model => model.DeliveryReceipt.Quantity)</td>
+                        <td>@Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo</td>
+                        <td>@Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo</td>
                     </tr>
                 </tbody>
             </table>
@@ -74,13 +74,13 @@
         <table class="table table-borderless">
             <tbody>
                 <tr>
-                    <td><b>Hauler:</b> @Model.CustomerOrderSlip?.Hauler?.SupplierName</td>
+                    <td><b>Hauler:</b> @Model.DeliveryReceipt?.Hauler?.SupplierName</td>
                 </tr>
                 <tr>
-                    <td><b>Driver:</b> @Model.CustomerOrderSlip?.Driver</td>
+                    <td><b>Driver:</b> @Model.DeliveryReceipt?.Driver</td>
                 </tr>
                 <tr>
-                    <td><b>Plate #:</b> @Model.CustomerOrderSlip.PlateNo</td>
+                    <td><b>Plate #:</b> @Model.DeliveryReceipt.PlateNo</td>
                 </tr>
                 <tr>
                     <td class="mt-5"><b>Remarks:</b><pre>@Model.Remarks</pre></td>
