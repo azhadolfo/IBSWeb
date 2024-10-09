@@ -253,6 +253,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     if (existingModel == null)
@@ -315,12 +317,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
-
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Receiving Report updated successfully";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -418,6 +421,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (model.VoidedBy == null)
                 {
+                    await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                     if (model.PostedBy != null)
                     {
                         model.PostedBy = null;
@@ -444,10 +449,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #endregion --Audit Trail Recording
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Receiving Report has been Voided.";
                     }
                     catch (Exception ex)
                     {
+                        await transaction.RollbackAsync(cancellationToken);
                         TempData["error"] = ex.Message;
                         return RedirectToAction(nameof(Index));
                     }

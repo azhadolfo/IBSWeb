@@ -282,6 +282,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (modelHeader != null)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     if (modelHeader.PostedBy == null)
@@ -383,12 +385,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #endregion --Audit Trail Recording
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Check Voucher has been Posted.";
                     }
                     return RedirectToAction(nameof(Print), new { id });
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
+
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
                 }
@@ -473,6 +478,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     var companyClaims = await GetCompanyClaimAsync();
@@ -650,12 +657,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Trade edited successfully";
                     return RedirectToAction(nameof(Index));
                     #endregion -- Uploading file --
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -671,6 +680,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     if (model.VoidedBy == null)
@@ -696,12 +707,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #endregion --Audit Trail Recording
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Check Voucher has been Voided.";
                         return RedirectToAction(nameof(Index));
                     }
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
                 }
@@ -783,6 +796,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     #region --Check if duplicate record
@@ -933,7 +948,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Audit Trail Recording
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
                     #endregion -- Uploading file --
                 }
@@ -984,6 +1000,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync();
 
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -1080,6 +1097,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     #region -- Saving the default entries --
@@ -1200,7 +1219,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
-
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Check voucher invoicing created successfully.";
                     return RedirectToAction(nameof(Index));
                 }
@@ -1224,6 +1243,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync();
 
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -1294,6 +1314,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     #region--Get Check Voucher Invoicing
@@ -1389,7 +1411,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
-
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Check voucher payment created successfully";
                     return RedirectToAction(nameof(Index));
                 }
@@ -1422,6 +1444,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync();
 
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -1553,6 +1576,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     #region --Saving the default entries
@@ -1705,7 +1730,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Audit Trail Recording
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Non-trade invoicing edited successfully";
                     return RedirectToAction(nameof(Index));
                     #endregion -- Uploading file --
@@ -1721,6 +1747,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     })
                     .ToListAsync();
 
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -1812,6 +1839,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     var companyClaims = await GetCompanyClaimAsync();
@@ -1977,13 +2006,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Audit Trail Recording
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Non-trade payment edited successfully";
                     return RedirectToAction(nameof(Index));
                     #endregion -- Uploading file --
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }

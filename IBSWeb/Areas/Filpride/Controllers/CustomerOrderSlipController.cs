@@ -1,4 +1,5 @@
-﻿using IBS.DataAccess.Repository;
+﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
@@ -21,10 +22,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        public CustomerOrderSlipController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
+        private readonly ApplicationDbContext _dbContext;
+
+        public CustomerOrderSlipController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _dbContext = dbContext;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -127,6 +131,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     FilprideCustomerOrderSlip model = new()
@@ -160,6 +166,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new customer order slip# {model.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, model.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Customer order slip created successfully.";
                     return RedirectToAction(nameof(Index));
                 }
@@ -168,6 +175,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
                     viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -238,11 +246,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
 
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Customer order slip updated successfully.";
                     return RedirectToAction(nameof(Index));
                 }
@@ -251,6 +262,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
                     viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -484,6 +496,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
@@ -554,6 +568,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     await _unitOfWork.SaveAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
 
                 }
@@ -562,6 +577,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
                     viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }

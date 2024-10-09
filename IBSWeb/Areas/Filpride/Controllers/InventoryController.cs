@@ -68,6 +68,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     var hasBeginningInventory = await _unitOfWork.FilprideInventory.HasAlreadyBeginningInventory(viewModel.ProductId, viewModel.POId, companyClaims, cancellationToken);
@@ -82,11 +84,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     viewModel.CurrentUser = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideInventory.AddBeginningInventory(viewModel, companyClaims, cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Beginning balance created successfully";
                     return RedirectToAction(nameof(BeginningInventory));
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.ToString();
                     return View();
                 }
@@ -275,10 +279,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideInventory.AddActualInventory(viewModel, companyClaims, cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Actual inventory created successfully";
                     return RedirectToAction(nameof(ActualInventory));
                 }
@@ -305,6 +312,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
 
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
@@ -327,6 +335,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> ValidateInventory(int? id, CancellationToken cancellationToken)
         {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
                 if (id == null || id == 0)
@@ -412,6 +422,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
+                    await transaction.CommitAsync(cancellationToken);
                     return Ok();
                 }
                 else
@@ -421,6 +432,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return BadRequest();
             }

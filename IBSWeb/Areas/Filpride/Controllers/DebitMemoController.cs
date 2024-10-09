@@ -199,6 +199,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     if (model.SalesInvoiceId != null)
@@ -283,13 +285,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
-
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Debit memo created successfully.";
 
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -323,6 +326,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     if (model.PostedBy == null)
@@ -783,12 +788,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #endregion --Audit Trail Recording
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Debit Memo has been Posted.";
                     }
                     return RedirectToAction(nameof(Print), new { id });
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
                 }
@@ -803,6 +810,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     if (model.VoidedBy == null)
@@ -827,12 +836,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #endregion --Audit Trail Recording
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Debit Memo has been Voided.";
                         return RedirectToAction(nameof(Index));
                     }
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
                 }
@@ -962,6 +973,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     var existingDM = await _dbContext
@@ -1027,11 +1040,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Debit Memo edited successfully";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
