@@ -93,7 +93,7 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(PurchaseOrderId))]
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(50)")]
         public string? DeliveryOption { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]

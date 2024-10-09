@@ -35,8 +35,12 @@
                 <div class="form-group py-2 col-12">
                     <label class="control-label">Delivery Option<span class="required">*</span></label><br />
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUp" id="DeliveryType_ForPickUp" />
-                        <label class="form-check-label" for="DeliveryType_ForPickUp">@SD.DeliveryOption_ForPickUp</label>
+                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByHauler" id="DeliveryType_ForPickUpByHauler" />
+                        <label class="form-check-label" for="DeliveryType_ForPickUpByHauler">@SD.DeliveryOption_ForPickUpByHauler</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByClient" id="DeliveryType_ForPickUpByClient" />
+                        <label class="form-check-label" for="DeliveryType_ForPickUpByClient">@SD.DeliveryOption_ForPickUpByClient</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_DirectDelivery" id="DeliveryType_DirectDelivery" />

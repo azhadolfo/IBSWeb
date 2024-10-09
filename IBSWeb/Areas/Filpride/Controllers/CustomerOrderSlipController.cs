@@ -285,12 +285,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerOrderSlip = existingRecord,
                     NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.PurchaseOrder.Price),
                     NetOfVatCosPrice = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.DeliveredPrice),
-                    NetOfVatFreightCharge = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat((decimal)existingRecord.Freight),
+                    NetOfVatFreightCharge = (decimal)(existingRecord.Freight != 0 ? _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat((decimal)existingRecord.Freight) : existingRecord.Freight),
                     VatAmount = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount(_unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.TotalAmount)),
                     Status = existingRecord.Status
                 };
 
-                model.GrossMargin = model.NetOfVatCosPrice - model.NetOfVatProductCost - model.NetOfVatFreightCharge - (decimal)existingRecord.CommissionRate;
+                model.GrossMargin = model.NetOfVatCosPrice - model.NetOfVatProductCost - model.NetOfVatFreightCharge - existingRecord.CommissionRate;
 
                 if (existingRecord.FirstApprovedBy == null)
                 {
@@ -535,12 +535,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
                         await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
                     }
-                    else
+                    else if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
                     {
                         var highestFreight = await _unitOfWork.FilprideFreight
                             .GetAsync(f => f.ClusterCode == existingCos.Customer.ClusterCode && f.PickUpPointId == existingCos.PickUpPointId) ?? throw new ArgumentNullException("No freight reference found!");
 
                         existingCos.Freight = highestFreight.Freight;
+                    }
+                    else
+                    {
+                        existingCos.Freight = 0;
                     }
 
                     TempData["success"] = "Appointed supplier successfully.";
