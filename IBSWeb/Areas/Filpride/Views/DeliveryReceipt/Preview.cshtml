@@ -35,12 +35,12 @@
     <table class="w-100">
         <tbody>
             <tr>
-                <td class="w-75"><b>Sold To:</b> &nbsp;@Model.CustomerOrderSlip.Customer?.CustomerName</td>
+                <td class="w-75"><b>Sold To:</b> &nbsp;@Model.CustomerOrderSlip.Customer?.CustomerName.ToUpper()</td>
                 <td class="w-25 text-end"><b>Date:</b> &nbsp;@Model.Date.ToString("MMM dd, yyyy")</td>
             </tr>
             <tr>
-                <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerOrderSlip.Customer?.CustomerAddress</td>
-                <td class="w-25 text-end"><b>PO No:</b> &nbsp;@Model.CustomerOrderSlip.PurchaseOrder?.PurchaseOrderNo</td>
+                <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerOrderSlip.Customer?.CustomerAddress.ToUpper()</td>
+                <td class="w-25 text-end"><b>PO No:</b> &nbsp;@Model.CustomerOrderSlip.PurchaseOrder?.PurchaseOrderNo.ToUpper()</td>
             </tr>
             <tr>
                 <td></td>
@@ -61,7 +61,7 @@
         </thead>
         <tbody>
             <tr>
-                <td scope="row">@Model.CustomerOrderSlip.PurchaseOrder.Product?.ProductName</td>
+                <td scope="row">@Model.CustomerOrderSlip.PurchaseOrder.Product?.ProductName.ToUpper()</td>
                 <td>@Model.CustomerOrderSlip.PurchaseOrder.Product?.ProductUnit</td>
                 <td>@Html.DisplayFor(model => model.Quantity)</td>
             </tr>
@@ -81,20 +81,13 @@
             <tr>
                 <td class="p-4 w-50" style="padding-left:20px;" scope="row">@Html.DisplayFor(model => model.Remarks)</td>
                 <td class="p-4 w-50" style="padding-left:20px;">
-                    <b>Hauler:</b> &nbsp; @Model.CustomerOrderSlip.Hauler?.SupplierName<br />
-                    <b>Load Port:</b> &nbsp; @Model.CustomerOrderSlip.PickUpPoint?.Depot<br />
+                    <b>Hauler:</b> &nbsp; @Model.Hauler?.SupplierName.ToUpper()<br />
+                    <b>Load Port:</b> &nbsp; @Model.CustomerOrderSlip.PickUpPoint?.Depot.ToUpper()<br />
                     <b>Freight:</b> &nbsp; @Html.DisplayFor(model => model.CustomerOrderSlip.Freight)<br />
                 </td>
             </tr>
         </tbody>
     </table>
-</div>
-
-<div class="text-center w-100" style="margin-top:10px;">
-    <p>
-        Series: DR0000000001 - DR9999999999<br />
-        Date and Time Created:&nbsp; @Model.CreatedDate.ToString("MMM dd, yyyy hh:mm tt")
-    </p>
 </div>
 
 @if (!Model.IsPrinted)
