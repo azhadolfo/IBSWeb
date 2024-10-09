@@ -194,7 +194,7 @@
                         success: function (data) {
                             if (data) {
                                 console.log(data)
-                                if (data.deliveryOption === "@SD.DeliveryOption_ForPickUp") {
+                                if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
                                     $('input[name="Freight"]').parent().show();
                                 } else {
                                     $('input[name="Freight"]').parent().hide();
