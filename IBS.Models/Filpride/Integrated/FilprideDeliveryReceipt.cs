@@ -98,5 +98,7 @@ namespace IBS.Models.Filpride.Integrated
         public string? AuthorityToLoadNo { get; set; }
 
         #endregion
+
+        public bool HasAlreadyInvoiced { get; set; }
     }
 }

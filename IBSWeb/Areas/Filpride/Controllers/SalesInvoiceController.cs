@@ -229,7 +229,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ProductName = $"{cos.PurchaseOrder.Product.ProductCode} {cos.PurchaseOrder.Product.ProductName}",
                     cos.PurchaseOrder.Product.ProductUnit,
                     cos.DeliveredPrice,
-                    DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListByCos(cos.CustomerOrderSlipId, cancellationToken)
+                    DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(cos.CustomerOrderSlipId, cancellationToken)
 
                 });
             }
@@ -581,6 +581,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region--Inventory Recording
 
                         await _unitOfWork.FilprideInventory.AddSalesToInventoryAsync(model, cancellationToken);
+
+                        #endregion
+
+                        #region--DR process
+
+                        var existingDr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken) ?? throw new ArgumentNullException($"The DR#{model.DeliveryReceiptId} not found! Contact MIS Enterprise.");
+
+                        existingDr.HasAlreadyInvoiced = true;
 
                         #endregion
 
