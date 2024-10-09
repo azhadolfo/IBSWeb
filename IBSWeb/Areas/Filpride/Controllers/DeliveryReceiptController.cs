@@ -634,7 +634,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 package.SaveAs(stream);
 
                 var content = stream.ToArray();
-                return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DeliveryReceipt.xlsx");
+                return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{deliveryReceipt.DeliveryReceiptNo}.xlsx");
             }
         }
     }
