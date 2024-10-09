@@ -1,4 +1,5 @@
-﻿using IBS.DataAccess.Repository;
+﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
@@ -20,10 +21,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
+        private readonly ApplicationDbContext _dbContext;
+
+        public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _dbContext = dbContext;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -425,6 +429,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
             try
             {
                 existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
@@ -439,11 +445,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.SaveAsync(cancellationToken);
 
+                await transaction.CommitAsync(cancellationToken);
+
                 TempData["success"] = "Product has been delivered";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -532,7 +541,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
-                .GetAsync(cos => cos.DeliveryReceiptId == id, cancellationToken);
+                .GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
 
             if (existingRecord == null)
             {
@@ -556,7 +565,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
 
                 existingRecord.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                existingRecord.Status = nameof(CosStatus.Completed);
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
