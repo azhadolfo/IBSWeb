@@ -83,23 +83,20 @@
                         "render": function (data) {
                             var badgeClass = "";
                             switch (data) {
-                                case 'Created':
+                                case '@CosStatus.Created':
                                     badgeClass = "badge bg-primary";
                                     break;
-                                case 'SupplierAppointed':
+                                case '@CosStatus.SupplierAppointed':
                                     badgeClass = "badge bg-info";
                                     break;
-                                case 'ApprovedByOpsManager':
+                                case '@CosStatus.ApprovedByOpsManager':
                                     badgeClass = "badge bg-warning";
                                     break;
-                                case 'ApprovedByFinance':
+                                case '@CosStatus.Completed':
                                     badgeClass = "badge bg-success";
                                     break;
-                                case 'HaulerAppointed':
-                                    badgeClass = "badge bg-dark";
-                                    break;
-                                case 'Completed':
-                                    badgeClass = "badge bg-success";
+                                case '@CosStatus.Expired' || '@CosStatus.Disapproved':
+                                    badgeClass = "badge bg-danger";
                                     break;
                                 default:
                                     badgeClass = "badge bg-secondary";

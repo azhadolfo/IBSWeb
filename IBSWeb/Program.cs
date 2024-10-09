@@ -34,6 +34,8 @@ builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IHostedService, ImportService>();
 builder.Services.AddHostedService<AutomatedEntries>();
+builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
+
 
 var app = builder.Build();
 

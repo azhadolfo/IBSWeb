@@ -32,7 +32,8 @@
         SupplierAppointed,
         ApprovedByOpsManager,
         Completed,
-        Disapproved
+        Disapproved,
+        Expired
     }
 
     public enum Status
