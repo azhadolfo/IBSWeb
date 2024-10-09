@@ -171,72 +171,86 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
             if (ModelState.IsValid)
             {
-                #region --Retrieval of Services
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-                var services = await _dbContext.FilprideServices.FindAsync(model.ServiceId, cancellationToken);
-
-                #endregion --Retrieval of Services
-
-                #region --Retrieval of Customer
-
-                var customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
-
-                #endregion --Retrieval of Customer
-
-                #region --Saving the default properties
-
-                model.ServiceInvoiceNo = await _unitOfWork.FilprideServiceInvoice.GenerateCodeAsync(companyClaims, cancellationToken);
-
-                model.CreatedBy = _userManager.GetUserName(this.User);
-
-                model.Total = model.Amount;
-
-                model.Company = companyClaims;
-
-                if (DateOnly.FromDateTime(model.CreatedDate) < model.Period)
+                try
                 {
-                    model.UnearnedAmount += model.Amount;
-                }
-                else
-                {
-                    model.CurrentAndPreviousAmount += model.Amount;
-                }
+                    #region --Retrieval of Services
 
-                if (customer.CustomerType == "Vatable")
-                {
-                    model.CurrentAndPreviousAmount = Math.Round(model.CurrentAndPreviousAmount / 1.12m, 4);
-                    model.UnearnedAmount = Math.Round(model.UnearnedAmount / 1.12m, 4);
+                    var services = await _dbContext.FilprideServices.FindAsync(model.ServiceId, cancellationToken);
 
-                    var total = model.CurrentAndPreviousAmount + model.UnearnedAmount;
+                    #endregion --Retrieval of Services
 
-                    var netOfVatAmount = _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(model.Amount);
+                    #region --Retrieval of Customer
 
-                    var roundedNetAmount = Math.Round(netOfVatAmount, 4);
+                    var customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
 
-                    if (roundedNetAmount > total)
+                    #endregion --Retrieval of Customer
+
+                    #region --Saving the default properties
+
+                    model.ServiceInvoiceNo = await _unitOfWork.FilprideServiceInvoice.GenerateCodeAsync(companyClaims, cancellationToken);
+
+                    model.CreatedBy = _userManager.GetUserName(this.User);
+
+                    model.Total = model.Amount;
+
+                    model.Company = companyClaims;
+
+                    if (DateOnly.FromDateTime(model.CreatedDate) < model.Period)
                     {
-                        var shortAmount = netOfVatAmount - total;
-
-                        model.CurrentAndPreviousAmount += shortAmount;
+                        model.UnearnedAmount += model.Amount;
                     }
+                    else
+                    {
+                        model.CurrentAndPreviousAmount += model.Amount;
+                    }
+
+                    if (customer.CustomerType == "Vatable")
+                    {
+                        model.CurrentAndPreviousAmount = Math.Round(model.CurrentAndPreviousAmount / 1.12m, 4);
+                        model.UnearnedAmount = Math.Round(model.UnearnedAmount / 1.12m, 4);
+
+                        var total = model.CurrentAndPreviousAmount + model.UnearnedAmount;
+
+                        var netOfVatAmount = _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(model.Amount);
+
+                        var roundedNetAmount = Math.Round(netOfVatAmount, 4);
+
+                        if (roundedNetAmount > total)
+                        {
+                            var shortAmount = netOfVatAmount - total;
+
+                            model.CurrentAndPreviousAmount += shortAmount;
+                        }
+                    }
+
+                    _dbContext.Add(model);
+
+                    #endregion --Saving the default properties
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    TempData["success"] = "Service invoice created successfully.";
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
                 }
-
-                _dbContext.Add(model);
-
-                #endregion --Saving the default properties
-
-                #region --Audit Trail Recording
-
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion --Audit Trail Recording
-
-                await _dbContext.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return View(model);
+                }
             }
 
+            TempData["error"] = "The submitted information is invalid.";
             return View(model);
         }
 
@@ -260,6 +274,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _unitOfWork.FilprideServiceInvoice
                 .GetAsync(s => s.ServiceInvoiceId == id, cancellationToken);
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -487,6 +503,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #endregion --Audit Trail Recording
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Service invoice has been posted.";
                         return RedirectToAction(nameof(Print), new { id });
                     }
@@ -498,6 +515,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -555,6 +573,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (model.VoidedBy == null)
                 {
+                    await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                     try
                     {
                         if (model.PostedBy != null)
@@ -578,11 +598,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #endregion --Audit Trail Recording
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Service invoice has been voided.";
                         return RedirectToAction(nameof(Index));
                     }
                     catch (Exception ex)
                     {
+                        await transaction.RollbackAsync(cancellationToken);
                         TempData["error"] = ex.Message;
                         return RedirectToAction(nameof(Index));
                     }
@@ -640,6 +662,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     #region --Retrieval of Services
@@ -679,10 +703,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(existingModel);
                 }
