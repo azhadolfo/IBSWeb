@@ -8,6 +8,7 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -23,11 +24,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -595,5 +599,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        public async Task<IActionResult> GenerateExcel(int id)
+        {
+            var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == id);
+
+            if (deliveryReceipt == null)
+            {
+                return NotFound();
+            }
+
+            var receivingReport = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == deliveryReceipt.DeliveryReceiptId);
+
+            // Get the full path to the template in the wwwroot folder
+            var templatePath = Path.Combine(_webHostEnvironment.WebRootPath, "templates", "DR Format.xlsx");
+            byte[] fileBytes = System.IO.File.ReadAllBytes(templatePath);
+
+            using (var package = new ExcelPackage(new MemoryStream(fileBytes)))
+            {
+                ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming the template has one sheet
+
+                worksheet.Cells["H2"].Value = deliveryReceipt.AuthorityToLoadNo;
+                worksheet.Cells["H7"].Value = receivingReport.ReceivingReportNo;
+                worksheet.Cells["H9"].Value = deliveryReceipt.DeliveryReceiptNo;
+                worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
+                worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip.CustomerOrderSlipNo;
+                worksheet.Cells["B11"].Value = deliveryReceipt.CustomerOrderSlip.PickUpPoint.Depot.ToUpper();
+                worksheet.Cells["C12"].Value = deliveryReceipt.Customer.CustomerName.ToUpper();
+                worksheet.Cells["C13"].Value = deliveryReceipt.Customer.CustomerAddress.ToUpper();
+                worksheet.Cells["B17"].Value = deliveryReceipt.CustomerOrderSlip.Product.ProductName;
+                worksheet.Cells["H17"].Value = deliveryReceipt.Quantity.ToString("N0");
+                worksheet.Cells["H19"].Value = $"{deliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo} {deliveryReceipt.CustomerOrderSlip.DeliveryOption}";
+
+                var stream = new MemoryStream();
+                package.SaveAs(stream);
+
+                var content = stream.ToArray();
+                return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DeliveryReceipt.xlsx");
+            }
+        }
     }
 }
