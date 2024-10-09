@@ -510,8 +510,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.Address = model.SalesInvoice.Customer.CustomerAddress;
                                 sales.Description = model.SalesInvoice.Product.ProductName;
                                 sales.Amount = model.CreditAmount;
-                                sales.VatableSales = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(sales.Amount);
-                                sales.VatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(sales.VatableSales);
+                                sales.VatableSales = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.Amount))) * -1;
+                                sales.VatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.VatableSales))) * -1;
                                 //sales.Discount = model.Discount;
                                 sales.NetSales = sales.VatableSales;
                                 sales.CreatedBy = model.CreatedBy;
@@ -569,8 +569,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             if (model.SalesInvoice.Customer.VatType == SD.VatType_Vatable)
                             {
-                                netOfVatAmount = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(model.CreditAmount);
-                                vatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(netOfVatAmount);
+                                netOfVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(model.CreditAmount))) * -1;
+                                vatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(netOfVatAmount))) * -1;
                             }
                             else
                             {
@@ -579,12 +579,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             if (model.SalesInvoice.Customer.WithHoldingTax)
                             {
-                                withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.01m);
+                                withHoldingTaxAmount = (_unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.01m)) * -1;
                             }
 
                             if (model.SalesInvoice.Customer.WithHoldingVat)
                             {
-                                withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m);
+                                withHoldingVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.05m)) * -1;
                             }
 
                             var ledgers = new List<FilprideGeneralLedgerBook>();
@@ -850,8 +850,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             if (model.ServiceInvoice.Customer.VatType == SD.VatType_Vatable)
                             {
-                                netOfVatAmount = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(model.CreditAmount);
-                                vatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(netOfVatAmount);
+                                netOfVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(model.CreditAmount))) * -1;
+                                vatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(netOfVatAmount))) * -1;
                             }
                             else
                             {
@@ -860,12 +860,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             if (model.ServiceInvoice.Customer.WithHoldingTax)
                             {
-                                withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.01m);
+                                withHoldingTaxAmount = (_unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.01m)) * -1;
                             }
 
                             if (model.ServiceInvoice.Customer.WithHoldingVat)
                             {
-                                withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m);
+                                withHoldingVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.05m)) * -1;
                             }
 
                             var ledgers = new List<FilprideGeneralLedgerBook>();
