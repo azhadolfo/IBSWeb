@@ -139,15 +139,18 @@
                                               row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
                             var paymentStatus = (row.paymentStatus == "@nameof(Status.Pending)" && row.status == "@nameof(Status.Posted)")
                                                 ? "Outstanding" : row.paymentStatus == "Paid" && row.status == "@nameof(Status.Posted)" ? "Paid" : row.status;
+                            if (paymentStatus == "Paid") {
+                                statusClass = "bg-success";
+                            }
 
-                            return `<span class="badge rounded-pill ${statusClass}">${paymentStatus}</span>`;
+                            return `<span class="badge rounded-pill w-100 ${statusClass}">${paymentStatus}</span>`;
                         }
                     },
                     {
                         "data": "salesInvoiceId",
                         "render": function (data, type, row) {
                             var dropdown = `<div class="dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
-                                                <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                                     Actions
                                                 </button>
                                                 <ul class="dropdown-menu" aria-labelledby="actionsDropdown">

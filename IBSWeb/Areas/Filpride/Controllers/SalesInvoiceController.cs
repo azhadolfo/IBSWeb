@@ -82,7 +82,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.UnitPrice.ToString().Contains(searchValue) ||
                             s.Amount.ToString().Contains(searchValue) ||
                             s.Remarks.ToLower().Contains(searchValue) ||
-                            s.CreatedBy.ToLower().Contains(searchValue)
+                            s.CreatedBy.ToLower().Contains(searchValue) ||
+                            s.Status.ToLower().Contains(searchValue) ||
+                            s.PaymentStatus.ToLower().Contains(searchValue)
                             )
                         .ToList();
                 }

@@ -59,6 +59,7 @@
             $('#paginatedTable').DataTable({
                 "processing": true,
                 "serverSide": true,
+                "stateSave": true,
                 "ajax": {
                     "url": "@Url.Action("GetCustomerOrderSlips", "CustomerOrderSlip", new { area = "Filpride" })",
                     "type": "POST",
@@ -103,7 +104,7 @@
                                     badgeClass = "badge bg-secondary";
                                     break;
                             }
-                            return `<span class="${badgeClass}">${data}</span>`;
+                            return `<span class="${badgeClass} rounded-pill w-100">${data}</span>`;
                         }
                     },
                     {
@@ -112,7 +113,7 @@
                             var status = row.status;
                             var customerOrderSlipId = row.customerOrderSlipId;
                             var actions = `<div class="dropdown">
-                                             <button class="btn btn-light dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                             <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                              <ul class="dropdown-menu" aria-labelledby="actionsDropdown">`;
 
                             switch (status) {
