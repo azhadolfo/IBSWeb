@@ -46,5 +46,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<SupplierDto> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default);
 
         Task<CustomerDto> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default);
+
+        Task<List<AccountTitleDto>> GetListOfAccountTitleDto(CancellationToken cancellationToken = default);
     }
 }

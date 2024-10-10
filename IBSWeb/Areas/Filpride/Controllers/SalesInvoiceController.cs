@@ -379,6 +379,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.PostedDate = DateTime.Now;
                         model.Status = nameof(Status.Posted);
 
+                        var accountTitlesDto = await _unitOfWork.FilprideChartOfAccount.GetListOfAccountTitleDto(cancellationToken);
+
                         #region --Sales Book Recording
 
                         var sales = new FilprideSalesBook();
@@ -453,14 +455,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var ledgers = new List<FilprideGeneralLedgerBook>();
 
+                        var arTradeReceivableTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010201") ?? throw new ArgumentException("Account title '1010201' not found.");
+
                         ledgers.Add(
                             new FilprideGeneralLedgerBook
                             {
                                 Date = model.TransactionDate,
                                 Reference = model.SalesInvoiceNo,
                                 Description = model.Product.ProductName,
-                                AccountNo = "1010201",
-                                AccountTitle = "AR-Trade Receivable",
+                                AccountNo = arTradeReceivableTitle.AccountNumber,
+                                AccountTitle = arTradeReceivableTitle.AccountName,
                                 Debit = netDiscount - (withHoldingTaxAmount + withHoldingVatAmount),
                                 Credit = 0,
                                 Company = model.Company,
@@ -471,14 +475,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (withHoldingTaxAmount > 0)
                         {
+                            var withHoldingTaxTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010202") ?? throw new ArgumentException("Account title '1010202' not found.");
+
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
                                 {
                                     Date = model.TransactionDate,
                                     Reference = model.SalesInvoiceNo,
                                     Description = model.Product.ProductName,
-                                    AccountNo = "1010202",
-                                    AccountTitle = "Deferred Creditable Withholding Tax",
+                                    AccountNo = withHoldingTaxTitle.AccountNumber,
+                                    AccountTitle = withHoldingTaxTitle.AccountName,
                                     Debit = withHoldingTaxAmount,
                                     Credit = 0,
                                     Company = model.Company,
@@ -489,14 +495,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                         if (withHoldingVatAmount > 0)
                         {
+                            var withHoldingVatTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010203") ?? throw new ArgumentException("Account title '1010203' not found.");
+
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
                                 {
                                     Date = model.TransactionDate,
                                     Reference = model.SalesInvoiceNo,
                                     Description = model.Product.ProductName,
-                                    AccountNo = "1010203",
-                                    AccountTitle = "Deferred Creditable Withholding Vat",
+                                    AccountNo = withHoldingVatTitle.AccountNumber,
+                                    AccountTitle = withHoldingVatTitle.AccountName,
                                     Debit = withHoldingVatAmount,
                                     Credit = 0,
                                     Company = model.Company,
@@ -505,16 +513,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 }
                             );
                         }
-                        if (model.Product.ProductName == "BIODIESEL")
-                        {
-                            ledgers.Add(
+
+                        var (salesAccountNo, salesAccountTitle) = _unitOfWork.FilprideSalesInvoice.GetSalesAccountTitle(model.Product.ProductCode);
+
+                        ledgers.Add(
                                 new FilprideGeneralLedgerBook
                                 {
                                     Date = model.TransactionDate,
                                     Reference = model.SalesInvoiceNo,
                                     Description = model.Product.ProductName,
-                                    AccountNo = "4010101",
-                                    AccountTitle = "Sales - Biodiesel",
+                                    AccountNo = salesAccountNo,
+                                    AccountTitle = salesAccountTitle,
                                     Debit = 0,
                                     Credit = netOfVatAmount,
                                     Company = model.Company,
@@ -522,54 +531,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CreatedDate = model.CreatedDate
                                 }
                             );
-                        }
-                        else if (model.Product.ProductName == "ECONOGAS")
-                        {
-                            ledgers.Add(
-                                new FilprideGeneralLedgerBook
-                                {
-                                    Date = model.TransactionDate,
-                                    Reference = model.SalesInvoiceNo,
-                                    Description = model.Product.ProductName,
-                                    AccountNo = "4010102",
-                                    AccountTitle = "Sales - Econogas",
-                                    Debit = 0,
-                                    Credit = netOfVatAmount,
-                                    Company = model.Company,
-                                    CreatedBy = model.CreatedBy,
-                                    CreatedDate = model.CreatedDate
-                                }
-                            );
-                        }
-                        else if (model.Product.ProductName == "ENVIROGAS")
-                        {
-                            ledgers.Add(
-                                new FilprideGeneralLedgerBook
-                                {
-                                    Date = model.TransactionDate,
-                                    Reference = model.SalesInvoiceNo,
-                                    Description = model.Product.ProductName,
-                                    AccountNo = "4010103",
-                                    AccountTitle = "Sales - Envirogas",
-                                    Debit = 0,
-                                    Credit = netOfVatAmount,
-                                    Company = model.Company,
-                                    CreatedBy = model.CreatedBy,
-                                    CreatedDate = model.CreatedDate
-                                }
-                            );
-                        }
 
                         if (vatAmount > 0)
                         {
+                            var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010301") ?? throw new ArgumentException("Account title '2010301' not found.");
+
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
                                 {
                                     Date = model.TransactionDate,
                                     Reference = model.SalesInvoiceNo,
                                     Description = model.Product.ProductName,
-                                    AccountNo = "2010301",
-                                    AccountTitle = "Vat Output",
+                                    AccountNo = vatOutputTitle.AccountNumber,
+                                    AccountTitle = vatOutputTitle.AccountName,
                                     Debit = 0,
                                     Credit = vatAmount,
                                     Company = model.Company,

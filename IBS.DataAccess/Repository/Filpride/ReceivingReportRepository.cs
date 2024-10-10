@@ -292,55 +292,25 @@ namespace IBS.DataAccess.Repository.Filpride
                 netOfEwtAmount = model.Amount;
             }
 
+            var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.PurchaseOrder.Product.ProductCode);
+            var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
+            var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010602") ?? throw new ArgumentException("Account title '1010602' not found.");
+            var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010302") ?? throw new ArgumentException("Account title '2010302' not found.");
+            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010101") ?? throw new ArgumentException("Account title '2010101' not found.");
 
-            if (model.PurchaseOrder.Product.ProductName == "BIODIESEL")
+            ledgers.Add(new FilprideGeneralLedgerBook
             {
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = model.Date,
-                    Reference = model.ReceivingReportNo,
-                    Description = "Receipt of Goods",
-                    AccountNo = "1010401",
-                    AccountTitle = "Inventory - Biodiesel",
-                    Debit = netOfVatAmount,
-                    Credit = 0,
-                    CreatedBy = model.CreatedBy,
-                    CreatedDate = model.CreatedDate,
-                    Company = model.Company
-                });
-            }
-            else if (model.PurchaseOrder.Product.ProductName == "ECONOGAS")
-            {
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = model.Date,
-                    Reference = model.ReceivingReportNo,
-                    Description = "Receipt of Goods",
-                    AccountNo = "1010402",
-                    AccountTitle = "Inventory - Econogas",
-                    Debit = netOfVatAmount,
-                    Credit = 0,
-                    CreatedBy = model.CreatedBy,
-                    CreatedDate = model.CreatedDate,
-                    Company = model.Company
-                });
-            }
-            else
-            {
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = model.Date,
-                    Reference = model.ReceivingReportNo,
-                    Description = "Receipt of Goods",
-                    AccountNo = "1010403",
-                    AccountTitle = "Inventory - Envirogas",
-                    Debit = netOfVatAmount,
-                    Credit = 0,
-                    CreatedBy = model.CreatedBy,
-                    CreatedDate = model.CreatedDate,
-                    Company = model.Company
-                });
-            }
+                Date = model.Date,
+                Reference = model.ReceivingReportNo,
+                Description = "Receipt of Goods",
+                AccountNo = inventoryAcctNo,
+                AccountTitle = inventoryAcctTitle,
+                Debit = netOfVatAmount,
+                Credit = 0,
+                CreatedBy = model.CreatedBy,
+                CreatedDate = model.CreatedDate,
+                Company = model.Company
+            });
 
             if (vatAmount > 0)
             {
@@ -349,8 +319,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = model.Date,
                     Reference = model.ReceivingReportNo,
                     Description = "Receipt of Goods",
-                    AccountNo = "1010602",
-                    AccountTitle = "Vat Input",
+                    AccountNo = vatInputTitle.AccountNumber,
+                    AccountTitle = vatInputTitle.AccountName,
                     Debit = vatAmount,
                     Credit = 0,
                     CreatedBy = model.CreatedBy,
@@ -366,8 +336,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = model.Date,
                     Reference = model.ReceivingReportNo,
                     Description = "Receipt of Goods",
-                    AccountNo = "2010302",
-                    AccountTitle = "Expanded Withholding Tax 1%",
+                    AccountNo = ewtTitle.AccountNumber,
+                    AccountTitle = ewtTitle.AccountName,
                     Debit = 0,
                     Credit = ewtAmount,
                     CreatedBy = model.CreatedBy,
@@ -381,8 +351,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 Date = model.Date,
                 Reference = model.ReceivingReportNo,
                 Description = "Receipt of Goods",
-                AccountNo = "2010101",
-                AccountTitle = "AP-Trade Payable",
+                AccountNo = apTradeTitle.AccountNumber,
+                AccountTitle = apTradeTitle.AccountName,
                 Debit = 0,
                 Credit = netOfEwtAmount,
                 CreatedBy = model.CreatedBy,
@@ -411,9 +381,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             #region --Purchase Book Recording
 
-            var purchaseBook = new List<FilpridePurchaseBook>();
-
-            purchaseBook.Add(new FilpridePurchaseBook
+            FilpridePurchaseBook purchaseBook = new()
             {
                 Date = model.Date,
                 SupplierName = model.PurchaseOrder.Supplier.SupplierName,
@@ -429,9 +397,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 PONo = model.PurchaseOrder.PurchaseOrderNo,
                 DueDate = model.DueDate,
                 Company = model.Company
-            });
+            };
 
-            await _db.AddRangeAsync(purchaseBook, cancellationToken);
+            await _db.AddAsync(purchaseBook, cancellationToken);
             #endregion --Purchase Book Recording
 
             await _db.SaveChangesAsync(cancellationToken);

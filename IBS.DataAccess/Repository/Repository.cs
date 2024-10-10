@@ -249,5 +249,17 @@ namespace IBS.DataAccess.Repository
 
             return grossAmount - ewtAmount;
         }
+
+        public async Task<List<AccountTitleDto>> GetListOfAccountTitleDto(CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideChartOfAccounts
+               .Where(coa => coa.Level == 4)
+               .Select(coa => new AccountTitleDto
+               {
+                   AccountNumber = coa.AccountNumber,
+                   AccountName = coa.AccountName
+               })
+               .ToListAsync(cancellationToken);
+        }
     }
 }
