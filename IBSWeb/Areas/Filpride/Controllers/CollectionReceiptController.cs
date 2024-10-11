@@ -1854,36 +1854,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> MultipleCollectionPrint(int id, CancellationToken cancellationToken)
         {
-            var cr = await _dbContext
-                .FilprideCollectionReceipts
-                .Include(cr => cr.Customer)
-                .Include(cr => cr.SalesInvoice)
-                .ThenInclude(s => s.Customer)
-                .Include(cr => cr.SalesInvoice)
-                .ThenInclude(s => s.Product)
-                .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Customer)
-                .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Service)
-                .FirstOrDefaultAsync(collectionReceipt => collectionReceipt.CollectionReceiptId == id, cancellationToken);
+            var cr = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
             return View(cr);
         }
 
         public async Task<IActionResult> PrintedMultipleCR(int id, CancellationToken cancellationToken)
         {
-            var findIdOfCR = await _dbContext
-                .FilprideCollectionReceipts
-                .Include(cr => cr.Customer)
-                .Include(cr => cr.SalesInvoice)
-                .ThenInclude(s => s.Customer)
-                .Include(cr => cr.SalesInvoice)
-                .ThenInclude(s => s.Product)
-                .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Customer)
-                .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Service)
-                .FirstOrDefaultAsync(collectionReceipt => collectionReceipt.CollectionReceiptId == id, cancellationToken);
+            var findIdOfCR = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
             if (findIdOfCR != null && !findIdOfCR.IsPrinted)
             {
