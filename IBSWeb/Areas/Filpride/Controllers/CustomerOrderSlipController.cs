@@ -520,11 +520,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     existingCos.PurchaseOrderId = viewModel.PurchaseOrderId;
-                    existingCos.DeliveryOption = viewModel.DeliveryOption;
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
                     existingCos.Status = nameof(CosStatus.SupplierAppointed);
 
-                    if (existingCos.DeliveryOption == SD.DeliveryOption_DirectDelivery)
+                    if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingCos.DeliveryOption != SD.DeliveryOption_DirectDelivery)
                     {
                         existingCos.Freight = viewModel.Freight;
 
@@ -571,6 +570,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         existingCos.Freight = 0;
                     }
+
+                    existingCos.DeliveryOption = viewModel.DeliveryOption;
 
                     TempData["success"] = "Appointed supplier successfully.";
 
