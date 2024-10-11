@@ -104,22 +104,12 @@ else
 }
 
 <div class="row pt-2">
-    @if (Model.PostedBy == null)
-    {
-        <div class="col-6 col-md-3">
-            <a id="approveButton" class="btn btn-primary form-control buttons">Post</a>
-        </div>
-    }
-    else
-    {
-        <div class="col-6 col-md-3">
-            <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Print" asp-route-id="@Model.DeliveryReceiptId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="GenerateExcel" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Print Excel</a>
-        </div>
-    }
-
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Print" asp-route-id="@Model.DeliveryReceiptId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="GenerateExcel" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Print Excel</a>
+    </div>
     <div class="col-6 col-md-3">
         <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
     </div>

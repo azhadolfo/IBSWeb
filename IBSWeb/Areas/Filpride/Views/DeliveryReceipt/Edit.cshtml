@@ -98,7 +98,7 @@
                     </select>
                     <span asp-validation-for="HaulerId" class="text-danger"></span>
                 </div>
-                <div class="form-floating py-2 col-12" style="display:@(ViewBag.DeliveryOption == SD.DeliveryOption_ForPickUp ? "" : "none")">
+                <div class="form-floating py-2 col-12" style="display:@(ViewBag.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler ? "" : "none")">
                     <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" required min="0.01" />
                     <label asp-for="Freight">Freight<span class="required">*</span></label>
                     <span asp-validation-for="Freight" class="text-danger"></span>
@@ -194,7 +194,7 @@
                         success: function (data) {
                             if (data) {
 
-                                if (data.deliveryOption === "@SD.DeliveryOption_ForPickUp") {
+                                if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
                                     $('input[name="Freight"]').parent().show();
                                 } else {
                                     $('input[name="Freight"]').parent().hide();

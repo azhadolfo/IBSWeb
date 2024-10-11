@@ -153,7 +153,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ECC = viewModel.ECC,
                         Driver = viewModel.Driver,
                         PlateNo = viewModel.PlateNo,
-                        HaulerId = viewModel.HaulerId
+                        HaulerId = viewModel.HaulerId,
+                        Status = "Draft"
                     };
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
@@ -581,6 +582,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
 
                 existingRecord.AuthorityToLoadNo = model.AuthorityToLoadNo;
+                existingRecord.Status = nameof(Status.Pending);
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
