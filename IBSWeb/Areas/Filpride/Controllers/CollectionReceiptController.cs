@@ -1877,7 +1877,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 findIdOfCR.IsPrinted = true;
                 await _dbContext.SaveChangesAsync(cancellationToken);
             }
-            return RedirectToAction("MultipleCollectionPrint", new { id = id });
+            return RedirectToAction(nameof(MultipleCollectionPrint), new { id });
         }
 
         //Download as .xlsx file.(Export)
