@@ -176,7 +176,7 @@
                                                     <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${data})">Cancel</a></li>
                                                 ` : `
                                                     <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Print</a></li>
-                                                    ${row.amountPaid == 0 ? `
+                                                    ${row.quantityReceived == 0 ? `
                                                         <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${data})">Void</a></li>
                                                     ` : `
                                                         <li><button class="dropdown-item" disabled readonly>Void</button></li>
