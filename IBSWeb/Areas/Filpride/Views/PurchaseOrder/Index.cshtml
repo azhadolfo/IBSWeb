@@ -159,6 +159,11 @@
                                           row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
                                           row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
 
+                        if (row.isReceived) {
+                            row.status = "Lifted";
+                            statusClass = "bg-success"
+                        }
+
                         return `<span class="badge rounded-pill w-100 ${statusClass}">${row.status}</span>`;
                     }
                 },

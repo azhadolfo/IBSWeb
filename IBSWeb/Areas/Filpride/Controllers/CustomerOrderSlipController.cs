@@ -485,6 +485,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken)
             };
 
+            if (existingRecord.Status == nameof(CosStatus.SupplierAppointed))
+            {
+                viewModel.SupplierId = existingRecord.PurchaseOrder.SupplierId;
+                viewModel.PurchaseOrderId = existingRecord.PurchaseOrder.PurchaseOrderId;
+                viewModel.DeliveryOption = existingRecord.DeliveryOption;
+                viewModel.Freight = (decimal)existingRecord.Freight;
+                viewModel.PickUpPointId = (int)existingRecord.PickUpPointId;
+                viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint
+                .GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
+            }
+
             return View(viewModel);
         }
 
@@ -509,11 +520,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     existingCos.PurchaseOrderId = viewModel.PurchaseOrderId;
-                    existingCos.DeliveryOption = viewModel.DeliveryOption;
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
                     existingCos.Status = nameof(CosStatus.SupplierAppointed);
 
-                    if (existingCos.DeliveryOption == SD.DeliveryOption_DirectDelivery)
+                    if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingCos.DeliveryOption != SD.DeliveryOption_DirectDelivery)
                     {
                         existingCos.Freight = viewModel.Freight;
 
@@ -560,6 +570,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         existingCos.Freight = 0;
                     }
+
+                    existingCos.DeliveryOption = viewModel.DeliveryOption;
 
                     TempData["success"] = "Appointed supplier successfully.";
 
