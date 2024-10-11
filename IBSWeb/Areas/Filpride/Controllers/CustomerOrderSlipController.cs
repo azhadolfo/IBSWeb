@@ -485,6 +485,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken)
             };
 
+            if (existingRecord.Status == nameof(CosStatus.SupplierAppointed))
+            {
+                viewModel.SupplierId = existingRecord.PurchaseOrder.SupplierId;
+                viewModel.PurchaseOrderId = existingRecord.PurchaseOrder.PurchaseOrderId;
+                viewModel.DeliveryOption = existingRecord.DeliveryOption;
+                viewModel.Freight = (decimal)existingRecord.Freight;
+                viewModel.PickUpPointId = (int)existingRecord.PickUpPointId;
+                viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint
+                .GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
+            }
+
             return View(viewModel);
         }
 
