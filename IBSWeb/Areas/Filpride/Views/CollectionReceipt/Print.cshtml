@@ -229,7 +229,7 @@
                 <td class="text-center"></td>
                 <td class="text-center"></td>
                 <td class="text-center">
-                    @if (Model.CashAmount != 0)
+                    @if (Model.CashAmount > 0)
                     {
                         <p style="height: 9px;">@Html.DisplayFor(model => model.CashAmount)</p>
                     }
@@ -283,7 +283,7 @@
                     }
                 </td>
                 <td class="text-center">
-                    @if (Model.CheckAmount != 0)
+                    @if (Model.CheckAmount > 0)
                     {
                         <p style="height: 9px;">@Html.DisplayFor(model => model.CheckAmount)</p>
                     }
@@ -337,7 +337,7 @@
                     }
                 </td>
                 <td class="text-center">
-                    @if (Model.ManagerCheckAmount != 0)
+                    @if (Model.ManagerCheckAmount > 0)
                     {
                         <p style="height: 9px;">@Html.DisplayFor(model => model.ManagerCheckAmount)</p>
                     }
