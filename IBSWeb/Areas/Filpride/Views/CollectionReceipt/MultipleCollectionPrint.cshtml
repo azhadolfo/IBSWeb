@@ -1,7 +1,4 @@
-﻿@* @using Accounting_System.Models.AccountsReceivable
-@using Accounting_System.Utility
- *@
-@model FilprideCollectionReceipt
+﻿@model FilprideCollectionReceipt
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
@@ -399,7 +396,7 @@ else
         else
         {
             <div class="col-6 col-md-3">
-                <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Printed" asp-route-id="@Model.CollectionReceiptId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionPrint" asp-route-id="@Model.CollectionReceiptId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
             </div>
         }
     }
