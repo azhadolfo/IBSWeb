@@ -1,0 +1,104 @@
+﻿@model IEnumerable<FilprideCustomerOrderSlip>
+
+@{
+    ViewData["Title"] = "COS Unserved Volume";
+    var dateFrom = ViewBag.DateFrom;
+    var dateTo = ViewBag.DateTo;
+}
+
+<style>
+    /* Custom class to override Bootstrap's default table styling */
+    .custom-header th {
+        background-color: #9966ff !important;
+        text-align: center;
+    }
+
+    .custom-content {
+        background-color: #94dcf8 !important;
+    }
+
+    th:nth-child(1),
+    th:nth-child(2),
+    th:nth-child(6),
+    th:nth-child(7) {
+        width: 100px; /* Adjust the width of columns like COS Date, Del Date, etc. */
+    }
+
+    th:nth-child(3),
+    th:nth-child(4),
+    th:nth-child(5) {
+        width: 250px; /* Customer, Product, and PO No. columns */
+    }
+
+    th:nth-child(8),
+    th:nth-child(9),
+    th:nth-child(10),
+    th:nth-child(11) {
+        width: 150px; /* COS Price, Unserved Volume, Amount, etc. */
+    }
+
+    /* Add horizontal scroll if content overflows */
+    .table-responsive {
+        overflow-x: auto;
+    }
+</style>
+
+<div class="mb-3">
+    <h5><b>@dateFrom - @dateTo</b></h5>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead class="text-center align-items-center">
+            <tr>
+                <th colspan="12">SUMMARY OF BOOKED SALES</th>
+            </tr>
+            <tr class="custom-header">
+                <th>COS Date</th>
+                <th>Date of Del</th>
+                <th>Customer</th>
+                <th>Product</th>
+                <th>P.O. No.</th>
+                <th>COS No.</th>
+                <th>Price</th>
+                <th>Unserved Volume</th>
+                <th>Amount</th>
+                <th>COS Status</th>
+                <th>Exp of COS</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Date</td>
+                    <td>@item.Date</td>
+                    <td>@item.Customer.CustomerName</td>
+                    <td>@item.Product.ProductName</td>
+                    <td>@item.CustomerPoNo</td>
+                    <td>@item.CustomerOrderSlipNo</td>
+                    <td class="text-end">@item.DeliveredPrice.ToString("N4")</td>
+                    <td class="text-end">@((item.Quantity - item.DeliveredQuantity).ToString("N4"))</td>
+                    <td class="text-end">@item.TotalAmount.ToString("N4")</td>
+                    <td>APPROVED</td>
+                    <td class="text-center">@item.ExpirationDate</td>
+                </tr>
+            }
+            <tr>
+                <td colspan="7">TOTAL</td>
+                <td class="text-end custom-content">@Model.Sum(cos => (cos.Quantity - cos.DeliveredQuantity)).ToString("N4")</td>
+                <td class="text-end custom-content">@Model.Sum(cos => cos.TotalAmount).ToString("N4")</td>
+                <td colspan="2"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="row mt-5">
+    <div class="col-6 col-md-3">
+        <a onclick="window.print()" id="printButton" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="Report" asp-action="COSUnservedVolume" id="otherButton" class="btn btn-outline-primary border form-control buttons">Back</a>
+    </div>
+</div>

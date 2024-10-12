@@ -442,6 +442,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(AuditTrail));
         }
 
+        public IActionResult COSUnservedVolume()
+        {
+            return View();
+        }
+
+        public async Task<IActionResult> GenerateCOSUnservedVolume(ViewModelBook model)
+        {
+            ViewBag.DateFrom = model.DateFrom.ToString("MMMM dd, yyyy");
+            ViewBag.DateTo = model.DateTo.ToString("MMMM dd, yyyy"); ;
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var cosSummary = await _unitOfWork.FilprideReport.GetCosUnserveVolume(model.DateFrom, model.DateTo, companyClaims);
+
+                    return View(cosSummary);
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(COSUnservedVolume));
+                }
+            }
+
+            TempData["error"] = "Please input date from";
+            return RedirectToAction(nameof(COSUnservedVolume));
+        }
+
         //Generate as .txt file
 
         #region -- Generate Audit Trail .Txt File --
@@ -2086,5 +2116,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- Generate SalesBook .Csv File --
+
     }
 }

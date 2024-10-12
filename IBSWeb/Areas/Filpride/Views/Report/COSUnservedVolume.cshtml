@@ -1,0 +1,52 @@
+﻿@model ViewModelBook
+
+@{
+    ViewData["Title"] = "COS Unserved Volume";
+    var dateFrom = ViewBag.DateFrom;
+    var dateTo = ViewBag.DateTo;
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2 text-">@ViewData["Title"]</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form id="dynamicForm" method="post">
+            <div class="row">
+                <div class="mb-3">
+                    <label asp-for="DateFrom" class="control-label"></label>
+                    <input type="date" asp-for="DateFrom" class="form-control" value="@dateFrom" />
+                    <span asp-validation-for="DateFrom" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="DateTo" class="control-label"></label>
+                    <input type="date" asp-for="DateTo" class="form-control" value="@dateTo" />
+                    <span asp-validation-for="DateTo" class="text-danger"></span>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateCOSUnservedVolume')"><i class="bi bi-printer"></i> Generate</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <button type="button" class="btn btn-primary form-control" disabled onclick="submitForm('GenerateCOSUnservedVolumeCsv')"><i class="bi bi-file-text"></i> Generate as Excel</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+<script>
+    function submitForm(action) {
+        var form = document.getElementById('dynamicForm');
+        form.action = action;
+        form.submit();
+    }
+</script>
+}
