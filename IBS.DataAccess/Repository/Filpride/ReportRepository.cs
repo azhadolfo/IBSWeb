@@ -2,6 +2,8 @@
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
+using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -227,6 +229,21 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync();
 
             return auditTrailBooks;
+        }
+
+        public async Task<List<FilprideCustomerOrderSlip>> GetCosUnserveVolume(DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            return await _db.FilprideCustomerOrderSlips
+                .Include(a => a.Customer)
+                .Include(a => a.Product)
+                .Where(a => a.Company == company && a.Date >= dateFrom && a.Date <= dateTo && a.Status == nameof(CosStatus.Completed) && a.DeliveredQuantity < a.Quantity)
+                .OrderBy(a => a.Date)
+                .ToListAsync();
         }
     }
 }
