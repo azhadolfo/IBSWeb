@@ -344,11 +344,50 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                string message = string.Empty;
+
                 if (existingRecord.FirstApprovedBy == null)
                 {
                     existingRecord.FirstApprovedBy = _userManager.GetUserName(User);
                     existingRecord.FirstApprovedDate = DateTime.Now;
                     existingRecord.OperationManagerReason = reason;
+
+                    var existingPo = await _unitOfWork.FilpridePurchaseOrder
+                            .GetAsync(po => po.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken);
+
+                    if (existingPo == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery)
+                    {
+                        var subPoModel = new FilpridePurchaseOrder
+                        {
+                            PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, cancellationToken),
+                            Date = DateOnly.FromDateTime(DateTime.Now),
+                            SupplierId = existingRecord.PurchaseOrder.SupplierId,
+                            ProductId = existingPo.ProductId,
+                            Terms = existingPo.Terms,
+                            Quantity = existingRecord.Quantity,
+                            Price = (decimal)existingRecord.Freight,
+                            Remarks = $"{existingRecord.SubPORemarks}\n Please note: The values in this purchase order are for the freight charge.",
+                            Company = existingPo.Company,
+                            IsSubPo = true,
+                            CustomerId = existingRecord.CustomerId,
+                            SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
+                            CreatedBy = existingRecord.FirstApprovedBy,
+                            CreatedDate = DateTime.Now,
+                            PostedBy = existingRecord.FirstApprovedBy,
+                            PostedDate = DateTime.Now,
+                            Status = nameof(Status.Posted)
+                        };
+
+                        subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
+                        await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
+                        message = $"Sub Purchase Order Number: {subPoModel.PurchaseOrderNo} has been successfully generated.";
+                    }
+
                     await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, grossMargin, cancellationToken);
                 }
 
@@ -356,7 +395,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                TempData["success"] = "Customer order slip approved by operation manager successfully.";
+                TempData["success"] = $"Customer Order Slip has been successfully approved by the Operations Manager. \n\n {message}";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -527,43 +566,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingCos.DeliveryOption != SD.DeliveryOption_DirectDelivery)
                     {
                         existingCos.Freight = viewModel.Freight;
-
-                        var existingPo = await _unitOfWork.FilpridePurchaseOrder
-                            .GetAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
-
-                        if (existingPo == null)
-                        {
-                            return BadRequest();
-                        }
-
-                        var subPoModel = new FilpridePurchaseOrder
-                        {
-                            PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, cancellationToken),
-                            Date = DateOnly.FromDateTime(DateTime.Now),
-                            SupplierId = viewModel.SupplierId,
-                            ProductId = existingPo.ProductId,
-                            Terms = existingPo.Terms,
-                            Quantity = existingCos.Quantity,
-                            Price = viewModel.Freight,
-                            Remarks = viewModel.SubPoRemarks,
-                            Company = existingPo.Company,
-                            IsSubPo = true,
-                            CustomerId = existingCos.CustomerId,
-                            SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
-                            CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
-                            PostedBy = viewModel.CurrentUser,
-                            PostedDate = DateTime.Now,
-                            Status = nameof(Status.Posted)
-                        };
-
-                        subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
-                        await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
+                        existingCos.SubPORemarks = viewModel.SubPoRemarks;
                     }
                     else if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
                     {
                         var highestFreight = await _unitOfWork.FilprideFreight
-                            .GetAsync(f => f.ClusterCode == existingCos.Customer.ClusterCode && f.PickUpPointId == existingCos.PickUpPointId) ?? throw new ArgumentNullException("No freight reference found!");
+                            .GetAsync(f => f.ClusterCode == existingCos.Customer.ClusterCode && f.PickUpPointId == existingCos.PickUpPointId, cancellationToken) ?? throw new ArgumentNullException("No freight reference found!");
 
                         existingCos.Freight = highestFreight.Freight;
                     }

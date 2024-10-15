@@ -106,6 +106,8 @@ namespace IBS.Models.Filpride.Integrated
         public FilpridePickUpPoint? PickUpPoint { get; set; }
 
         #endregion
+        public string? SubPORemarks { get; set; }
+
         #endregion
 
         #region Approval of Operation Manager
