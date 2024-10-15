@@ -321,16 +321,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> ApproveByOperationManager(int? id, decimal grossMargin, CancellationToken cancellationToken)
+        public async Task<IActionResult> ApproveByOperationManager(int? id, decimal grossMargin, string reason, CancellationToken cancellationToken)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            if (grossMargin <= 0)
+            if (grossMargin <= 0 && string.IsNullOrWhiteSpace(reason))
             {
-                TempData["error"] = "Gross margin cannot be negative and zero";
+                TempData["error"] = "Reason is required for negative or zero gross margin.";
                 return RedirectToAction(nameof(Preview), new { id });
             }
 
@@ -348,6 +348,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     existingRecord.FirstApprovedBy = _userManager.GetUserName(User);
                     existingRecord.FirstApprovedDate = DateTime.Now;
+                    existingRecord.OperationManagerReason = reason;
                     await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, grossMargin, cancellationToken);
                 }
 

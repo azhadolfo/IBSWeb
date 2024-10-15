@@ -115,23 +115,44 @@
     <script>
         document.getElementById('approveButton').addEventListener('click', function () {
             const grossMarginValue = document.getElementById('grossMarginInput').value;
-            Swal.fire({
-                title: 'Choose an action',
-                text: "Approve or Disapprove the action.",
-                icon: 'question',
-                showCancelButton: true,
-                showDenyButton: true,
-                confirmButtonText: 'Approve',
-                denyButtonText: 'Disapprove',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    var url = `@Url.Action("ApproveByOperationManager", "CustomerOrderSlip", new { area = "Filpride" })?id=${@Model.CustomerOrderSlip.CustomerOrderSlipId}&grossMargin=${grossMarginValue}`;
-                    window.location.href = url;
-                } else if (result.isDenied) {
-                    window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';
-                }
-            });
+            console.log(grossMarginValue)
+            if (grossMarginValue.includes('(')) {
+                Swal.fire({
+                    title: 'Negative or Zero Gross Margin',
+                    text: 'Please provide a reason for approving a negative or zero gross margin.',
+                    input: 'text',
+                    inputPlaceholder: 'Enter reason',
+                    showCancelButton: true,
+                    confirmButtonText: 'Approve',
+                    cancelButtonText: 'Cancel',
+                    preConfirm: (reason) => {
+                        if (!reason) {
+                            Swal.showValidationMessage('Reason is required.');
+                        }
+                        return reason;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const reason = result.value;
+                        var url = `@Url.Action("ApproveByOperationManager", "CustomerOrderSlip", new { area = "Filpride" })?id=${@Model.CustomerOrderSlip.CustomerOrderSlipId}&grossMargin=${grossMarginValue}&reason=${reason}`;
+                        window.location.href = url;
+                    }
+                });
+            } else {
+                Swal.fire({
+                    title: 'Confirm Approval',
+                    text: "Are you sure you want to approve?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Approve',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        var url = `@Url.Action("ApproveByOperationManager", "CustomerOrderSlip", new { area = "Filpride" })?id=${@Model.CustomerOrderSlip.CustomerOrderSlipId}&grossMargin=${grossMarginValue}`;
+                        window.location.href = url;
+                    }
+                });
+            }
         });
     </script>
     <script>

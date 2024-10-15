@@ -119,6 +119,8 @@ namespace IBS.Models.Filpride.Integrated
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly? ExpirationDate { get; set; }
 
+        public string? OperationManagerReason { get; set; }
+
         #endregion
 
         #region Approval of Finance
