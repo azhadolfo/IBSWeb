@@ -230,6 +230,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
                     AccountSpecialist = exisitingRecord.AccountSpecialist,
                     Remarks = exisitingRecord.Remarks,
+                    OtcCosNo = exisitingRecord.OldCosNo
                 };
 
                 return View(viewModel);
