@@ -107,5 +107,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public FilprideCustomer? Customer { get; set; }
 
         #endregion
+
+        public string OldPoNo { get; set; }
     }
 }

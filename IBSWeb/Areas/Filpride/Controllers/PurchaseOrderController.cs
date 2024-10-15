@@ -239,9 +239,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.SupplierSalesOrderNo = model.SupplierSalesOrderNo;
                     existingModel.Remarks = model.Remarks;
                     existingModel.Terms = model.Terms;
-
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTime.Now;
+                    existingModel.OldPoNo = model.OldPoNo;
 
                     #region --Audit Trail Recording
 

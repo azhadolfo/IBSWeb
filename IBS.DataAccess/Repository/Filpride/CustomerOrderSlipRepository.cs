@@ -81,6 +81,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CommissioneeId = viewModel.CommissioneeId;
             existingRecord.CommissionRate = viewModel.CommissionerRate;
             existingRecord.ProductId = viewModel.ProductId;
+            existingRecord.OldCosNo = viewModel.OtcCosNo;
 
             if (_db.ChangeTracker.HasChanges())
             {

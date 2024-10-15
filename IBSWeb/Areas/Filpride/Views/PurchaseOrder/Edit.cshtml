@@ -21,6 +21,11 @@
                 <label asp-for="Date">Date</label>
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
+            <div class="form-floating py-2 col-12">
+                <input asp-for="OldPoNo" class="form-control border-0 shadow price" placeholder="" />
+                <label asp-for="OldPoNo">IS PO#<span class="required">*</span></label>
+                <span asp-validation-for="OldPoNo" class="text-danger"></span>
+            </div>
             <div class="form-group py-2 col-12">
                 <label class="control-label">Supplier List</label>
                 <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 border-0 shadow" style="width:100%">

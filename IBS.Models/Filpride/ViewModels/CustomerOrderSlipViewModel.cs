@@ -59,5 +59,7 @@ namespace IBS.Models.Filpride.ViewModels
         public List<SelectListItem>? Products { get; set; }
 
         public string? CurrentUser { get; set; }
+
+        public string OtcCosNo { get; set; }
     }
 }

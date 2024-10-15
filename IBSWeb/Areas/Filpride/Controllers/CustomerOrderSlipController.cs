@@ -150,7 +150,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Company = companyClaims,
                         CreatedBy = _userManager.GetUserName(User),
                         ProductId = viewModel.ProductId,
-                        Status = nameof(CosStatus.Created)
+                        Status = nameof(CosStatus.Created),
+                        OldCosNo = viewModel.OtcCosNo
                     };
 
                     if (viewModel.HasCommission)
