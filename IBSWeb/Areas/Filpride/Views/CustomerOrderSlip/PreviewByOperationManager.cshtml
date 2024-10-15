@@ -144,12 +144,16 @@
                     text: "Are you sure you want to approve?",
                     icon: 'question',
                     showCancelButton: true,
+                    showDenyButton: true,
                     confirmButtonText: 'Approve',
+                    denyButtonText: 'Disapprove',
                     cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         var url = `@Url.Action("ApproveByOperationManager", "CustomerOrderSlip", new { area = "Filpride" })?id=${@Model.CustomerOrderSlip.CustomerOrderSlipId}&grossMargin=${grossMarginValue}`;
                         window.location.href = url;
+                    } else if (result.isDenied) {
+                    window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';
                     }
                 });
             }
