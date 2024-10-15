@@ -568,7 +568,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingCos.Freight = viewModel.Freight;
                         existingCos.SubPORemarks = viewModel.SubPoRemarks;
                     }
-                    else if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                    else if (viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
                     {
                         var highestFreight = await _unitOfWork.FilprideFreight
                             .GetAsync(f => f.ClusterCode == existingCos.Customer.ClusterCode && f.PickUpPointId == existingCos.PickUpPointId, cancellationToken) ?? throw new ArgumentNullException("No freight reference found!");
