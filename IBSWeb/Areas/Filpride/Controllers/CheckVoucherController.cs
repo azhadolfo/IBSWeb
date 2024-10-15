@@ -82,10 +82,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
                         s.Total.ToString().Contains(searchValue) ||
                         s.Amount?.ToString().Contains(searchValue) == true ||
-                        s.Particulars.ToLower().Contains(searchValue) ||
+                        s.Particulars?.ToLower().Contains(searchValue) == true ||
                         s.Category.ToLower().Contains(searchValue) ||
-                        s.Payee.ToLower().Contains(searchValue) ||
-                        s.CvType.ToLower().Contains(searchValue) ||
+                        s.Payee?.ToLower().Contains(searchValue) == true ||
+                        s.CvType?.ToLower().Contains(searchValue) == true ||
                         s.CreatedBy.ToLower().Contains(searchValue)
                         )
                     .ToList();
