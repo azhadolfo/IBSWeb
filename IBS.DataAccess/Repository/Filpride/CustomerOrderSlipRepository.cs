@@ -156,7 +156,7 @@ namespace IBS.DataAccess.Repository.Filpride
             if (existingGrossMargin != grossMargin)
             {
                 decimal newNetOfVatCosPrice = grossMargin + (decimal)(existingRecord.CommissionRate + netOfVatFreightCharge + netOfVatProductCost);
-                return (ComputeVatAmount(newNetOfVatCosPrice) + newNetOfVatCosPrice);
+                return Math.Round((ComputeVatAmount(newNetOfVatCosPrice) + newNetOfVatCosPrice), 4);
             }
 
             return existingRecord.DeliveredPrice;
