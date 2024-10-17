@@ -174,13 +174,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return View(model);
                     }
 
-                    model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, cancellationToken);
+                    model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, existingPo.Type, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
                     model.PONo = existingPo.PurchaseOrderNo;
                     model.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
                     model.Amount = model.QuantityReceived * existingPo.Price;
                     model.Company = companyClaims;
+                    model.Type = existingPo.Type;
 
                     #region --Audit Trail Recording
 

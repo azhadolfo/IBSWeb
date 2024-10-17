@@ -103,11 +103,23 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
+        {
+            if (type == nameof(DocumentType.Documented))
+            {
+                return await GenerateCodeForDocumented(company, cancellationToken);
+            }
+            else
+            {
+                return await GenerateCodeForUnDocumented(company, cancellationToken);
+            }
+        }
+
+        private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
             FilprideReceivingReport? lastRr = await _db
                 .FilprideReceivingReports
-                .Where(rr => rr.Company == company && !rr.ReceivingReportNo.StartsWith("RRBEG"))
+                .Where(rr => rr.Company == company && !rr.ReceivingReportNo.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -122,6 +134,28 @@ namespace IBS.DataAccess.Repository.Filpride
             else
             {
                 return "RR0000000001";
+            }
+        }
+
+        private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
+        {
+            FilprideReceivingReport? lastRr = await _db
+                .FilprideReceivingReports
+                .Where(rr => rr.Company == company && !rr.ReceivingReportNo.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Undocumented))
+                .OrderBy(c => c.ReceivingReportNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastRr != null)
+            {
+                string lastSeries = lastRr.ReceivingReportNo;
+                string numericPart = lastSeries.Substring(3);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+            }
+            else
+            {
+                return "RRU000000001";
             }
         }
 
@@ -250,7 +284,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             model.ReceivedDate = model.Date;
-            model.ReceivingReportNo = await GenerateCodeAsync(model.Company, cancellationToken);
+            model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type, cancellationToken);
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
             model.Amount = model.QuantityReceived * deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price;
