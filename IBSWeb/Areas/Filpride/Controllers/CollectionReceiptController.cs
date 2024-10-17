@@ -1011,12 +1011,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 return Json(new
                 {
-                    Amount = netDiscount.ToString("N4"),
-                    AmountPaid = si.AmountPaid.ToString("N4"),
-                    Balance = si.Balance.ToString("N4"),
-                    Ewt = withHoldingTaxAmount.ToString("N4"),
-                    Wvat = withHoldingVatAmount.ToString("N4"),
-                    Total = (netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)).ToString("N4")
+                    Amount = netDiscount.ToString("N2"),
+                    AmountPaid = si.AmountPaid.ToString("N2"),
+                    Balance = si.Balance.ToString("N2"),
+                    Ewt = withHoldingTaxAmount.ToString("N2"),
+                    Wvat = withHoldingVatAmount.ToString("N2"),
+                    Total = (netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)).ToString("N2")
                 });
             }
             else if (isServices && !isSales)
@@ -1029,12 +1029,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 return Json(new
                 {
-                    Amount = sv.Total.ToString("N4"),
-                    AmountPaid = sv.AmountPaid.ToString("N4"),
-                    Balance = sv.Balance.ToString("N4"),
-                    Ewt = withHoldingTaxAmount.ToString("N4"),
-                    Wvat = withHoldingVatAmount.ToString("N4"),
-                    Total = (sv.Total - (withHoldingTaxAmount + withHoldingVatAmount)).ToString("N4")
+                    Amount = sv.Total.ToString("N2"),
+                    AmountPaid = sv.AmountPaid.ToString("N2"),
+                    Balance = sv.Balance.ToString("N2"),
+                    Ewt = withHoldingTaxAmount.ToString("N2"),
+                    Wvat = withHoldingVatAmount.ToString("N2"),
+                    Total = (sv.Total - (withHoldingTaxAmount + withHoldingVatAmount)).ToString("N2")
                 });
             }
             return Json(null);

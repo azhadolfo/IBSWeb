@@ -67,7 +67,7 @@
                             {
                                 <span class="text-danger">
                                     @Html.DisplayFor(model => item.Price)
-                                    <i class="bi bi-info-circle" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Price corrected from @item.PreviousPrice.Value.ToString("N4")"></i>
+                                    <i class="bi bi-info-circle" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Price corrected from @item.PreviousPrice.Value.ToString("N2")"></i>
                                 </span>
                             }
                             else
@@ -99,24 +99,24 @@
                         }
                     }
                     <td colspan="3" class="text-center">Total for @displayName</td>
-                    <td class="text-end">@group.Sum(d => d.Liters).ToString("N4")</td>
-                    <td class="text-end">@group.Sum(d => d.Calibration).ToString("N4")</td>
-                    <td class="text-end">@group.Sum(d => d.LitersSold).ToString("N4")</td>
+                    <td class="text-end">@group.Sum(d => d.Liters).ToString("N2")</td>
+                    <td class="text-end">@group.Sum(d => d.Calibration).ToString("N2")</td>
+                    <td class="text-end">@group.Sum(d => d.LitersSold).ToString("N2")</td>
                     <td class="text-end">@group.Sum(d => d.TransactionCount)</td>
                     <td class="text-end"></td>
-                    <td class="text-end">@group.Sum(d => d.Sale).ToString("N4")</td>
-                    <td class="text-end">@group.Sum(d => d.Value).ToString("N4")</td>
+                    <td class="text-end">@group.Sum(d => d.Sale).ToString("N2")</td>
+                    <td class="text-end">@group.Sum(d => d.Value).ToString("N2")</td>
                 </tr>
             }
             <tr class="table-primary fw-semibold">
                 <td colspan="3" class="text-center">Total</td>
-                <td class="text-end">@Model.SalesDetails.Sum(d => d.Liters).ToString("N4")</td>
-                <td class="text-end">@Model.SalesDetails.Sum(d => d.Calibration).ToString("N4")</td>
-                <td class="text-end">@Model.SalesDetails.Sum(d => d.LitersSold).ToString("N4")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.Liters).ToString("N2")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.Calibration).ToString("N2")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.LitersSold).ToString("N2")</td>
                 <td class="text-end">@Model.SalesDetails.Sum(d => d.TransactionCount)</td>
                 <td class="text-end"></td>
-                <td class="text-end">@Model.SalesDetails.Sum(d => d.Sale).ToString("N4")</td>
-                <td class="text-end">@Model.SalesDetails.Sum(d => d.Value).ToString("N4")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.Sale).ToString("N2")</td>
+                <td class="text-end">@Model.SalesDetails.Sum(d => d.Value).ToString("N2")</td>
             </tr>
         </tbody>
     </table>

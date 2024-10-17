@@ -153,22 +153,22 @@ Date Issued: @* @CS.DateIssued *@
                                 @Html.DisplayFor(model => po.PurchaseOrder.Product.ProductName)
                             </td>
                             <td class="text-end">
-                                @quantity.ToString("N4")
+                                @quantity.ToString("N2")
                             </td>
                             <td class="text-end">
                                 @Html.DisplayFor(model => po.Amount)
                             </td>
                             <td class="text-end">
-                                @(Math.Round((po.Amount / 1.12m) * 0.12m, 4))
+                                @(Math.Round((po.Amount / 1.12m) * 0.12m, 2))
                             </td>
                             <td class="text-end">
                                 0.000
                             </td>
                             <td class="text-end">
-                                @(Math.Round((po.Amount / 1.12m) * 0.01m, 4))
+                                @(Math.Round((po.Amount / 1.12m) * 0.01m, 2))
                             </td>
                             <td class="text-end">
-                                @(Math.Round(po.Amount / 1.12m, 4))
+                                @(Math.Round(po.Amount / 1.12m, 2))
                             </td>
                         </tr>
                     }
@@ -182,12 +182,12 @@ Date Issued: @* @CS.DateIssued *@
                             <td></td>
                             <td></td>
                             <td class="text-center"><b>SUB TOTAL:</b></td>
-                            <td class="text-end">@subTotalQTY.ToString("N4")</td>
-                            <td class="text-end">@amount.ToString("N4")</td>
-                            <td class="text-end">@vatableAmount.ToString("N4")</td>
-                            <td class="text-end">@totalDefAmount.ToString("N4")</td>
-                            <td class="text-end">@wthAmount.ToString("N4")</td>
-                            <td class="text-end">@netPurchases.ToString("N4")</td>
+                            <td class="text-end">@subTotalQTY.ToString("N2")</td>
+                            <td class="text-end">@amount.ToString("N2")</td>
+                            <td class="text-end">@vatableAmount.ToString("N2")</td>
+                            <td class="text-end">@totalDefAmount.ToString("N2")</td>
+                            <td class="text-end">@wthAmount.ToString("N2")</td>
+                            <td class="text-end">@netPurchases.ToString("N2")</td>
                         </tr>
                     }
                 }
@@ -200,12 +200,12 @@ Date Issued: @* @CS.DateIssued *@
                 <td></td>
                 <td></td>
                 <td class="text-center"><b>GRAND TOTAL:</b></td>
-                <td class="text-end">@totalQuantity.ToString("N4")</td>
-                <td class="text-end">@totalAmount.ToString("N4")</td>
-                <td class="text-end">@totalVatableAmount.ToString("N4")</td>
-                <td class="text-end">@totalDefAmount.ToString("N4")</td>
-                <td class="text-end">@totalWthAmount.ToString("N4")</td>
-                <td class="text-end">@totalNetPurchases.ToString("N4")</td>
+                <td class="text-end">@totalQuantity.ToString("N2")</td>
+                <td class="text-end">@totalAmount.ToString("N2")</td>
+                <td class="text-end">@totalVatableAmount.ToString("N2")</td>
+                <td class="text-end">@totalDefAmount.ToString("N2")</td>
+                <td class="text-end">@totalWthAmount.ToString("N2")</td>
+                <td class="text-end">@totalNetPurchases.ToString("N2")</td>
             </tr>
         </tbody>
     </table>

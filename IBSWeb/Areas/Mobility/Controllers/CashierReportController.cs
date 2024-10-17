@@ -247,8 +247,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 FirstDsrClosingBefore = offline.FirstDsrClosing,
                 SecondDsrOpeningBefore = offline.SecondDsrOpening,
                 SecondDsrClosingBefore = offline.SecondDsrClosing,
-                Liters = offline.Liters.ToString("N4"),
-                Balance = offline.Balance.ToString("N4"),
+                Liters = offline.Liters.ToString("N2"),
+                Balance = offline.Balance.ToString("N2"),
                 offline.FirstDsrNo,
                 offline.SecondDsrNo
             };

@@ -119,9 +119,9 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
                     <td></td>
                     <td></td>
                     <td class="text-center"><b>TOTAL:</b></td>
-                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalQuantity.ToString("N4")</td>
-                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalPriceUnitAmount.ToString("N4")</td>
-                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalAmount.ToString("N4")</td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalQuantity.ToString("N2")</td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalPriceUnitAmount.ToString("N2")</td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalAmount.ToString("N2")</td>
                 }
             </tr>
         </tbody>
@@ -255,7 +255,7 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
 
         // Replace the placeholder in the HTML with the actual number of records
         resultPre.innerHTML = resultPre.innerHTML.replace('@numberOfRecords', (allTrElements.length - 1));
-        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount.ToString("N4")");
+        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount.ToString("N2")");
     </script>
 
 }

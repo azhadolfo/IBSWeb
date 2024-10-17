@@ -26,11 +26,11 @@ namespace IBS.Models.Filpride.Books
         public string? Reference { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
         public decimal Quantity { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
         public decimal Cost { get; set; }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace IBS.Models.Filpride.Books
         ///
         /// </summary>
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
         public decimal Total { get; set; }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace IBS.Models.Filpride.Books
         ///
         /// </summary>
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
         [Display(Name = "Inventory Balance")]
         public decimal InventoryBalance { get; set; }
 
@@ -65,7 +65,7 @@ namespace IBS.Models.Filpride.Books
         ///
         /// </summary>
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
         [Display(Name = "Average Cost")]
         public decimal AverageCost { get; set; }
 
@@ -79,7 +79,7 @@ namespace IBS.Models.Filpride.Books
         ///
         /// </summary>
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
         [Display(Name = "Total Balance")]
         public decimal TotalBalance { get; set; }
 

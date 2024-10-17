@@ -77,17 +77,17 @@
                     <td>@item.Product.ProductName</td>
                     <td>@item.CustomerPoNo</td>
                     <td>@item.CustomerOrderSlipNo</td>
-                    <td class="text-end">@item.DeliveredPrice.ToString("N4")</td>
-                    <td class="text-end">@((item.Quantity - item.DeliveredQuantity).ToString("N4"))</td>
-                    <td class="text-end">@item.TotalAmount.ToString("N4")</td>
+                    <td class="text-end">@item.DeliveredPrice.ToString("N2")</td>
+                    <td class="text-end">@((item.Quantity - item.DeliveredQuantity).ToString("N2"))</td>
+                    <td class="text-end">@item.TotalAmount.ToString("N2")</td>
                     <td>APPROVED</td>
                     <td class="text-center">@item.ExpirationDate</td>
                 </tr>
             }
             <tr>
                 <td colspan="7">TOTAL</td>
-                <td class="text-end custom-content">@Model.Sum(cos => (cos.Quantity - cos.DeliveredQuantity)).ToString("N4")</td>
-                <td class="text-end custom-content">@Model.Sum(cos => cos.TotalAmount).ToString("N4")</td>
+                <td class="text-end custom-content">@Model.Sum(cos => (cos.Quantity - cos.DeliveredQuantity)).ToString("N2")</td>
+                <td class="text-end custom-content">@Model.Sum(cos => cos.TotalAmount).ToString("N2")</td>
                 <td colspan="2"></td>
             </tr>
         </tbody>

@@ -40,17 +40,17 @@ namespace IBS.Models.Filpride
 
         [Display(Name = "Debit Amount")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
         public decimal DebitAmount { get; set; }
 
         public string Description { get; set; }
 
         [Display(Name = "Price Adjustment")]
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
         public decimal? AdjustedPrice { get; set; }
 
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
         public decimal? Quantity { get; set; }
 
         public string Source { get; set; }
@@ -62,15 +62,15 @@ namespace IBS.Models.Filpride
         public DateOnly Period { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
         public decimal? Amount { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
         public decimal CurrentAndPreviousAmount { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
         public decimal UnearnedAmount { get; set; }
 
         public int ServicesId { get; set; }
