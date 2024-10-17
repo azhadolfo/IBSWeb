@@ -240,7 +240,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 CreatedDate = DateTime.Now,
                 PostedBy = "SYSTEM GENERATED",
                 PostedDate = DateTime.Now,
-                Status = nameof(Status.Posted)
+                Status = nameof(Status.Posted),
+                Type = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Type
             };
 
             if (model.QuantityDelivered > (deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Quantity - deliveryReceipt.CustomerOrderSlip.PurchaseOrder.QuantityReceived))

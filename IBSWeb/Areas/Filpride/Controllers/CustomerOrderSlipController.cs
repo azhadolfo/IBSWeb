@@ -61,6 +61,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cosList = cosList
                     .Where(s =>
                         s.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
+                        s.OldCosNo.ToLower().Contains(searchValue) ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.Customer.CustomerName?.ToLower().Contains(searchValue) == true ||
                         s.Quantity.ToString().Contains(searchValue) ||
@@ -366,7 +367,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var subPoModel = new FilpridePurchaseOrder
                         {
-                            PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, cancellationToken),
+                            PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo.Type, cancellationToken),
                             Date = DateOnly.FromDateTime(DateTime.Now),
                             SupplierId = existingRecord.PurchaseOrder.SupplierId,
                             ProductId = existingPo.ProductId,

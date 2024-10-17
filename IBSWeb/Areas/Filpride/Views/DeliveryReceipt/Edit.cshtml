@@ -141,8 +141,8 @@
                         <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                     </div>
                 </div>
-                </input>
-</form>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -151,7 +151,7 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
-<script>
+    <script>
         $(document).ready(function () {
             //Get customer
             $('select[name="CustomerId"]').on('change', function () {
@@ -256,5 +256,5 @@
                 }
             }
         });
-</script>
+    </script>
 }

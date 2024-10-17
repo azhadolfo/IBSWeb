@@ -20,7 +20,7 @@
         Credit
     }
 
-    public enum SalesInvoiceType
+    public enum DocumentType
     {
         Documented,
         Undocumented

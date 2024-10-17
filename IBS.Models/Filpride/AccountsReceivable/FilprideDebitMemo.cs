@@ -80,5 +80,7 @@ namespace IBS.Models.Filpride
         public bool IsPrinted { get; set; }
 
         public string Status { get; set; } = nameof(Utility.Status.Pending);
+
+        public string? Type { get; set; }
     }
 }

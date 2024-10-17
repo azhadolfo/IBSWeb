@@ -103,7 +103,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideDeliveryReceipts
                 .OrderBy(dr => dr.DeliveryReceiptId)
-                .Where(dr => dr.PostedBy != null && dr.DeliveredDate != null)
+                .Where(dr => dr.DeliveredDate != null)
                 .Select(dr => new SelectListItem
                 {
                     Value = dr.DeliveryReceiptId.ToString(),
@@ -116,7 +116,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideDeliveryReceipts
                     .OrderBy(dr => dr.DeliveryReceiptId)
-                    .Where(dr => dr.PostedBy != null && dr.CustomerOrderSlipId == cosId && dr.DeliveredDate != null && !dr.HasAlreadyInvoiced)
+                    .Where(dr => dr.CustomerOrderSlipId == cosId && dr.DeliveredDate != null && !dr.HasAlreadyInvoiced)
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.DeliveryReceiptId.ToString(),
