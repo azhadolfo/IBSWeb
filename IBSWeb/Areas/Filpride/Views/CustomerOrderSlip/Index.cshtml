@@ -81,8 +81,20 @@
                     }},
                     { "data": "customer.customerName" },
                     { "data": "product.productName" },
-                    { "data": "quantity", "render": $.fn.dataTable.render.number(',', '.', 2) },
-                    { "data": "totalAmount", "render": $.fn.dataTable.render.number(',', '.', 2) },
+                    {
+                        "data": "quantity",
+                        "render": function (data, type, row) {
+                            var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
+                            return `<span class="text-end d-block">${amount}</span>`;
+                        }
+                    },
+                    {
+                        "data": "totalAmount",
+                        "render": function (data, type, row) {
+                            var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
+                            return `<span class="text-end d-block">${amount}</span>`;
+                        }
+                    },
                     {
                         "data": "status",
                         "render": function (data) {
