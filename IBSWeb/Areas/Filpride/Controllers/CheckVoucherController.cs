@@ -1490,6 +1490,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(c => c.Supplier)
                     .FirstOrDefaultAsync(c => c.CheckVoucherHeaderId == cvId);
 
+                var cvd = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.TransactionNo == cv.CheckVoucherHeaderNo && cvd.AccountNo == "2010102").Select(cvd => cvd.Credit).FirstOrDefaultAsync();
+
                 if (cv != null)
                 {
                     return Json(new
@@ -1497,7 +1499,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Payee = cv.Supplier.SupplierName,
                         PayeeAddress = cv.Supplier.SupplierAddress,
                         PayeeTin = cv.Supplier.SupplierTin,
-                        Total = cv.Total
+                        Total = cvd
                     });
                 }
                 return Json(null);

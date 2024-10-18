@@ -572,9 +572,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region--DR process
 
+                        if (model.DeliveryReceiptId != null)
+                        {
                         var existingDr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken) ?? throw new ArgumentNullException($"The DR#{model.DeliveryReceiptId} not found! Contact MIS Enterprise.");
 
                         existingDr.HasAlreadyInvoiced = true;
+                        }
 
                         #endregion
 

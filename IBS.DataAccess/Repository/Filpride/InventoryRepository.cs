@@ -228,7 +228,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 decimal total = salesInvoice.Quantity * previousInventory.AverageCost;
                 decimal inventoryBalance = previousInventory.InventoryBalance - salesInvoice.Quantity;
                 decimal totalBalance = previousInventory.TotalBalance - total;
-                decimal averageCost = inventoryBalance == 0 && totalBalance == 0 ? previousInventory.AverageCost : totalBalance / inventoryBalance;
+                decimal averageCost = inventoryBalance <= 0 || totalBalance <= 0 ? previousInventory.AverageCost : totalBalance / inventoryBalance;
 
                 FilprideInventory inventory = new()
                 {

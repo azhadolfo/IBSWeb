@@ -41,9 +41,11 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var invoiceVoucher = await GetAsync(i => i.CheckVoucherHeaderId == invoiceVoucherId, cancellationToken) ?? throw new InvalidOperationException($"Check voucher with id '{invoiceVoucherId}' not found.");
 
+            var detailsVoucher = await _db.FilprideCheckVoucherDetails.Where(cvd => cvd.TransactionNo == invoiceVoucher.CheckVoucherHeaderNo && cvd.AccountNo == "2010102").Select(cvd => cvd.Credit).FirstOrDefaultAsync();
+
             invoiceVoucher.AmountPaid += paymentAmount;
 
-            if (invoiceVoucher.AmountPaid >= invoiceVoucher.Total)
+            if (invoiceVoucher.AmountPaid >= detailsVoucher)
             {
                 invoiceVoucher.IsPaid = true;
             }

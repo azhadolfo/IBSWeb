@@ -320,12 +320,12 @@
             }
         </script>
         <script>
-            function saveAccountingEntry() {
+            function saveAccountingEntry(event) {
                 // Get the values from the modal inputs
                 var accountNumber = $("#AccountNo").val();
                 var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
                 var debit = parseNumber($("#debit").val());
-                var credit = accountNumberText($("#credit").val());
+                var credit = parseNumber($("#credit").val());
 
                 if (debit === 0 && credit === 0) {
                     event.preventDefault();
@@ -343,14 +343,14 @@
 
                 // Create a new row with the text only and a hidden input for the value
                 var newRow = `<tr>
-                                                                                <td>
-                                                                                    <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
-                                                                                    <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                                                                </td>
-                                                                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                                                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                                                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                                                         </tr>`;
+                                                                                                    <td>
+                                                                                                        <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
+                                                                                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
+                                                                                                    </td>
+                                                                                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                                                                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                                                                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                                                                             </tr>`;
 
                 // Append the new row to the table body
                 $("#accountingEntriesBody").append(newRow);
@@ -361,25 +361,18 @@
                 // Clear the modal inputs
                 $("#AccountNo").val(""); // Reset the select to its default state
                 $("#AccountNo").trigger("change"); // Trigger change event for the select
-                $("#Debit").val("0.0000");
-                $("#Credit").val("0.0000");
+                $("#Debit").val("0.000");
+                $("#Credit").val("0.000");
 
                 updateTotalDebitAndCredit();
             }
 
-            $(document).ready(function () {
-                $("#calculateButton").click(updateTotalDebitAndCredit);
-            });
-
             function updateTotalDebitAndCredit() {
                 var totalDebit = 0;
-                var totalDebitAmount = 0;
                 var totalCredit = 0;
-                var totalCreditAmount = 0;
-                var creditAcctEntries = 0;
 
                 // Loop through each row in the table body and sum up the debit values
-                $("#accountingEntriesBody tr").each(function () {
+                $("#accountingEntriesBody tr, .defaultEntry tr").each(function () {
                     var debitInput = $(this).find("td:eq(1) input").val();
                     var creditInput = $(this).find("td:eq(2) input").val();
                     // Ensure debitInput and creditInput are strings before using replace
@@ -392,11 +385,12 @@
                     totalDebit += debit;
                     totalCredit += credit;
                 });
+
                 // Display the total debit value
                 $(".totalDebit").text(formatNumber(totalDebit));
                 $(".totalCredit").text(formatNumber(totalCredit));
-                $("#debit").val("0.0000");
-                $("#credit").val("0.0000");
+                $("#debit").val("0.000");
+                $("#credit").val("0.000");
             }
 
             // Function to remove the corresponding row
