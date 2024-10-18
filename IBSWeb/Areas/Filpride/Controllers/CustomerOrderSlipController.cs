@@ -383,7 +383,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CreatedDate = DateTime.Now,
                             PostedBy = existingRecord.FirstApprovedBy,
                             PostedDate = DateTime.Now,
-                            Status = nameof(Status.Posted)
+                            Status = nameof(Status.Posted),
+                            OldPoNo = existingPo.OldPoNo
                         };
 
                         subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;

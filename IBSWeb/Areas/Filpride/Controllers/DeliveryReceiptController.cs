@@ -229,7 +229,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Driver = existingRecord.Driver,
                     PlateNo = existingRecord.PlateNo,
                     HaulerId = existingRecord.HaulerId,
-                    Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
+                    Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
+                    DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption
                 };
 
                 ViewBag.DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption;
@@ -264,6 +265,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -272,6 +274,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -591,7 +594,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["success"] = "ATL booked successfully";
                 await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                return RedirectToAction(nameof(AuthorityToLoadController.Print), "AuthorityToLoad", new { area = nameof(Filpride), id = model.AuthorityToLoadId });
+                return Json(new { success = true, atlId = model.AuthorityToLoadId });
             }
             catch (Exception ex)
             {
