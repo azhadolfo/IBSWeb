@@ -44,6 +44,9 @@
                         @Html.DisplayNameFor(model => model.Customer.CustomerTerms)
                     </th>
                     <th>
+                        Product
+                    </th>
+                    <th>
                         @Html.DisplayNameFor(model => model.Amount)
                     </th>
                     <th>
@@ -133,6 +136,7 @@
                         }
                     },
                     { "data": "customer.customerTerms" },
+                    { "data": "product.productName" },
                     {
                         "data": "amount",
                         "render": function (data, type, row) {

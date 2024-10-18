@@ -84,7 +84,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.Remarks.ToLower().Contains(searchValue) ||
                             s.CreatedBy.ToLower().Contains(searchValue) ||
                             s.Status.ToLower().Contains(searchValue) ||
-                            s.PaymentStatus.ToLower().Contains(searchValue)
+                            s.PaymentStatus.ToLower().Contains(searchValue) ||
+                            s.DeliveryReceipt?.DeliveryReceiptNo.ToLower().Contains(searchValue) == true
                             )
                         .ToList();
                 }
@@ -574,9 +575,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (model.DeliveryReceiptId != null)
                         {
-                        var existingDr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken) ?? throw new ArgumentNullException($"The DR#{model.DeliveryReceiptId} not found! Contact MIS Enterprise.");
+                            var existingDr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken) ?? throw new ArgumentNullException($"The DR#{model.DeliveryReceiptId} not found! Contact MIS Enterprise.");
 
-                        existingDr.HasAlreadyInvoiced = true;
+                            existingDr.HasAlreadyInvoiced = true;
                         }
 
                         #endregion
