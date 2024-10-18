@@ -90,11 +90,17 @@
                                           row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
                                           row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
 
+                        if (row.hasAlreadyInvoiced) {
+                            row.status = "Invoiced";
+                            statusClass = "bg-success";
+                        }
+
                         return `<span class="badge rounded-pill w-100 ${statusClass}">${row.status}</span>`;
                     }
                 },
                 {
                     "data": "deliveryReceiptId",
+                    "orderable": false,
                     "render": function (data, type, row) {
                         let actions = `<div class="dropdown" style="${row.voidedBy || row.canceledBy ? 'display:none;' : ''}">
                             <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">

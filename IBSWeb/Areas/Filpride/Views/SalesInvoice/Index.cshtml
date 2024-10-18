@@ -32,6 +32,9 @@
                         @Html.DisplayNameFor(model => model.SalesInvoiceNo)
                     </th>
                     <th>
+                        DR No
+                    </th>
+                    <th>
                         @Html.DisplayNameFor(model => model.Customer.CustomerName)
                     </th>
                     <th>
@@ -118,6 +121,7 @@
                 },
                 "columns": [
                     { "data": "salesInvoiceNo" },
+                    { "data": "deliveryReceipt.deliveryReceiptNo" },
                     { "data": "customer.customerName" },
                     {
                         "data": "transactionDate",
@@ -154,6 +158,7 @@
                     },
                     {
                         "data": "salesInvoiceId",
+                        "orderable": false,
                         "render": function (data, type, row) {
                             var dropdown = `<div class="dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
                                                 <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
