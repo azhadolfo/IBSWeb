@@ -87,7 +87,7 @@
                                 <tr>
                                     <td>
                                         <input type="hidden" name="AccountTitle" class="defaultExpenseTitle" />
-                                        <select asp-for="AccountNumber" asp-items="@Model.DefaultExpenses" class="form-select js-select-defaultExpense defaultExpenseText" style="width: 100%">
+                                        <select asp-for="AccountNumber" asp-items="@Model.DefaultExpenses" class="form-select js-select-defaultExpense" style="width: 100%">
                                             <option></option>
                                         </select>
                                     </td>
@@ -196,6 +196,7 @@
             $(".supplier").change(function () {
                 var supplierId = $(this).val();
                 computeDefaultEntry(supplierId)
+                getDefaultExpense(supplierId)
             });
             function computeDefaultEntry(supplierId) {
 
@@ -221,15 +222,12 @@
                                 $("#SupplierTinNo").val(data.tinNo);
                                 $(".withholdingTaxNumber").val(data.withholdingTax !== null ? data.withholdingTax.split(' ')[0] : null);
                                 $(".withholdingTaxTitle").val(data.withholdingTax !== null ? data.withholdingTax.replace(/^\s*\S+\s*/, '').trim() : null);
-                                $(".defaultExpenseText").val(data.defaultExpense !== null ? data.defaultExpense.split(' ')[0] : null).trigger('change');
-                                getDefaultExpense(data.defaultExpense)
                             } else {
                                 $("#SupplierName").val("");
                                 $("#SupplierAddress").val("");
                                 $("#SupplierTinNo").val("");
                                 $(".withholdingTaxNumber").val("");
                                 $(".withholdingTaxtitle").val("");
-                                $(".defaultExpenseText").val(null).trigger('change');
                             }
                             $(document).ready(function () {
                                 $(".supplier").change(function () {
@@ -307,16 +305,44 @@
                     $("#SupplierTinNo").val("");
                     $(".withholdingTaxNumber").val("");
                     $(".withholdingTaxtitle").val("");
-                    $(".defaultExpenseText").val(null).trigger('change');
                 }
             };
         </script>
         <script>
-            function getDefaultExpense(defaultExpense) {
-                var defaultExpenseTitle = defaultExpense.replace(/^\S+\s/, '');
-                var defaultExpenseNumber = defaultExpense.split(' ')[0];
-                $(".defaultExpenseTitle").val(defaultExpenseTitle);
-                $(".defaultExpenseText").val(defaultExpenseNumber);
+            function getDefaultExpense(supplierId) {
+                // Make an AJAX request to get the RRs based on the selected POIds and display criteria
+                $.ajax({
+                    url: '@Url.Action("GetDefaultExpense", "CheckVoucher", new { area = "Filpride" })',
+                    method: "GET",
+                    data: { supplierId: supplierId }, // Pass PO numbers to controller
+                    traditional: true, // Ensure jQuery sends the array properly
+                    success: function (data) {
+                        if (data) {
+                            // Clear existing options
+                            $("#AccountNumber").empty();
+                            // Add new options based on the fetched data
+                            $.each(data, function (index, defaultExpense) {
+                                let selected = defaultExpense.isSelected ? 'selected' : '';
+                                $('#AccountNumber').append('<option value="' + defaultExpense.accountNumber + '" ' + selected + '>' + defaultExpense.accountTitle + '</option>');
+                                var accountNumberText = $("#AccountNumber option:selected").text();
+                                $('.defaultExpenseTitle').val(accountNumberText);
+                            });
+
+                            // Handle dropdown change event
+                            $('#AccountNumber').on('change', function () {
+                                let selectedValue = $(this).val();
+                                var accountNumberText = $("#AccountNumber option:selected").text();
+                                $('.defaultExpenseTitle').val(accountNumberText);
+                            });
+                        } else {
+                            // Clear the fields if no RRs are found
+                            $("#AccountNumber").empty();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching:', error);
+                    }
+                });
             }
         </script>
         <script>
