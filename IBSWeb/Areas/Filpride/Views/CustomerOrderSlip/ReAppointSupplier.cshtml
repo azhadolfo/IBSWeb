@@ -8,7 +8,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Appoint Supplier</h2>
+                <h2 class="text-white py-2">Reappoint Supplier</h2>
             </div>
         </div>
     </div>
@@ -154,22 +154,24 @@
             });
 
             $('#PurchaseOrderIds').change(function () {
-            var selectedPOs = $(this).val();
-            var cosVolume = @Model.COSVolume;
+                var selectedPOs = $(this).val();
+                var cosVolume = @Model.COSVolume;
+                var purchaseOrderQuantities = @Html.Raw(Json.Serialize(Model.PurchaseOrderQuantities));
+                console.log(purchaseOrderQuantities)
+                $('#poQuantities').empty();
 
-            $('#poQuantities').empty();
+                $.each(selectedPOs, function (index, po) {
+                    var quantity = purchaseOrderQuantities[po] || 0;  // Default to 0 if not found
+                    $('#poQuantities').append(
+                        `<div class="form-group py-2">
+                            <label for="quantity_${po}">Enter Quantity for PO ${po}</label>
+                            <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${cosVolume}" value="${quantity}" placeholder="Quantity (max: ${cosVolume})" required/>
+                        </div>`
+                    );
+                });
 
-            $.each(selectedPOs, function (index, po) {
-                $('#poQuantities').append(
-                    `<div class="form-group py-2">
-                        <label for="quantity_${po}">Enter Quantity for PO ${po}</label>
-                        <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${cosVolume}" placeholder="Quantity (max: ${cosVolume})" required/>
-                    </div>`
-                );
+                $('#poQuantitySection').show();
             });
-
-            $('#poQuantitySection').show();
-        });
 
         });
 </script>

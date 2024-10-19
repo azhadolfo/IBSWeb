@@ -89,6 +89,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideAuthorityToLoad> FilprideAuthorityToLoads { get; set; }
 
+        public DbSet<FilprideCOSAppointedSupplier> FilprideCOSAppointedSuppliers { get; set; }
+
         #region--Master File
 
         public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
@@ -447,6 +449,16 @@ namespace IBS.DataAccess.Data
                 .WithMany()
                 .HasForeignKey(dr => dr.HaulerId)
                 .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideCOSAppointedSupplier>(a =>
+            {
+                a.HasOne(a => a.PurchaseOrder)
+                .WithMany()
+                .HasForeignKey(a => a.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                a.HasIndex(a => a.CustomerOrderSlipId);
             });
 
             #region-- Master File
