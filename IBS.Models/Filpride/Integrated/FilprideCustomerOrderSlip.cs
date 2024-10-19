@@ -105,6 +105,11 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(PickUpPointId))]
         public FilpridePickUpPoint? PickUpPoint { get; set; }
 
+        public int? SupplierId { get; set; }
+
+        [ForeignKey(nameof(SupplierId))]
+        public FilprideSupplier? Supplier { get; set; }
+
         #endregion
         public string? SubPORemarks { get; set; }
 
@@ -162,5 +167,7 @@ namespace IBS.Models.Filpride.Integrated
         public string Status { get; set; } //Created, Supplier Appointed, Approved by Ops Manager, Approved by Finance, Hauler Appointed, Completed
 
         public string OldCosNo { get; set; }
+
+        public bool HasMultiplePO { get; set; }
     }
 }
