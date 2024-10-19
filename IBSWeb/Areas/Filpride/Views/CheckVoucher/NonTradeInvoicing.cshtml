@@ -246,40 +246,36 @@
                                     var vatInput = 0;
                                     var netOfVatAmount = 0;
                                     amountInputs.forEach(function (input) {
+                                        var rawValue = input.value;
+                                        var totalValue = parseNumber(rawValue);
+
+                                        // Perform calculations
+                                        var netOfVat = totalValue / 1.12;
+                                        var roundedNetOfVat = Math.round(netOfVat * 10000) / 10000; // Rounding to 2 decimal places
+
+                                        var vat = roundedNetOfVat * 0.12;
+                                        var roundedVat = Math.round(vat * 100) / 100; // Rounding to 2 decimal places
+
+                                        var ewt = roundedNetOfVat * (data.category === "Trade" ? 0.01 : data.taxPercent / 100);
+                                        var roundedEwt = Math.round(ewt * 10000) / 10000; // Rounding to 2 decimal places
+
+                                        var rrAmountNetOfEWT = totalValue - roundedEwt;
+                                        var roundedRrAmountNetOfEWT = Math.round(rrAmountNetOfEWT * 10000) / 10000; // Rounding to 2 decimal places
+
                                         if (data.vatType === "Vatable" && data.taxType === "Withholding Tax") {
-                                            var rawValue = input.value;
-                                            var totalValue = parseNumber(rawValue);
-                                            var netOfVat = totalValue / 1.12;
-                                            var vat = netOfVat * 0.12;
-                                            var ewt = netOfVat * (data.category === "Trade" ? 0.01 : data.taxPercent / 100);
-                                            var rrAmountNetOfEWT = totalValue - ewt;
-                                            totalNetOfEWT += rrAmountNetOfEWT;
-                                            totalEWT += ewt;
-                                            vatInput = vat;
-                                            netOfVatAmount = netOfVat;
+                                            totalNetOfEWT += roundedRrAmountNetOfEWT;
+                                            totalEWT += roundedEwt;
+                                            vatInput = roundedVat;
+                                            netOfVatAmount = roundedNetOfVat;
                                         } else if (data.vatType === "Vatable") {
-                                            var rawValue = input.value;
-                                            var totalValue = parseNumber(rawValue);
-                                            var netOfVat = totalValue / 1.12;
-                                            var vat = netOfVat * 0.12;
-                                            var ewt = netOfVat * (data.category === "Trade" ? 0.01 : data.taxPercent / 100);
-                                            var rrAmountNetOfEWT = totalValue - ewt;
-                                            totalNetOfEWT += rrAmountNetOfEWT;
-                                            vatInput = vat;
-                                            netOfVatAmount = netOfVat;
+                                            totalNetOfEWT += roundedRrAmountNetOfEWT;
+                                            vatInput = roundedVat;
+                                            netOfVatAmount = roundedNetOfVat;
                                         } else if (data.taxType === "Withholding Tax") {
-                                            var rawValue = input.value;
-                                            var totalValue = parseNumber(rawValue);
-                                            var netOfVat = totalValue;
-                                            var vat = netOfVat * 0.12;
-                                            var ewt = netOfVat * (data.category === "Trade" ? 0.01 : data.taxPercent / 100);
-                                            var rrAmountNetOfEWT = totalValue - ewt;
-                                            totalNetOfEWT += rrAmountNetOfEWT;
-                                            totalEWT += ewt;
-                                            netOfVatAmount = netOfVat;
+                                            totalNetOfEWT += roundedRrAmountNetOfEWT;
+                                            totalEWT += roundedEwt;
+                                            netOfVatAmount = roundedNetOfVat;
                                         } else {
-                                            var rawValue = input.value;
-                                            var totalValue = parseNumber(rawValue);
                                             totalNetOfEWT += totalValue;
                                             netOfVatAmount += totalValue;
                                         }
@@ -369,14 +365,14 @@
 
                 // Create a new row with the text only and a hidden input for the value
                 var newRow = `<tr>
-                                                                                                    <td>
-                                                                                                        <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
-                                                                                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                                                                                    </td>
-                                                                                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                                                                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                                                                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                                                                             </tr>`;
+                                    <td>
+                                        <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
+                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
+                                    </td>
+                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                </tr>`;
 
                 // Append the new row to the table body
                 $("#accountingEntriesBody").append(newRow);
