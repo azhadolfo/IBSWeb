@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using System.Threading;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -183,6 +184,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 return Json(null);
             }
+            return Json(null);
+        }
+
+        public async Task<IActionResult> GetDefaultExpense(int? supplierId)
+        {
+            var supplier = await _dbContext.FilprideSuppliers
+                .Where(supp => supp.SupplierId == supplierId)
+                .Select(supp => supp.DefaultExpenseNumber)
+                .FirstOrDefaultAsync();
+
+            var defaultExpense = await _dbContext.FilprideChartOfAccounts
+                .Where(coa => (coa.Level == 4 || coa.Level == 5))
+                .OrderBy(coa => coa.AccountId)
+                .ToListAsync();
+
+            if (defaultExpense != null && defaultExpense.Count > 0)
+            {
+                var defaultExpenseList = defaultExpense.Select(coa => new
+                {
+                    AccountNumber = coa.AccountNumber,
+                    AccountTitle = coa.AccountName,
+                    IsSelected = coa.AccountNumber == supplier?.Split(' ')[0]
+                }).ToList();
+
+                return Json(defaultExpenseList);
+            }
+
+
             return Json(null);
         }
 
@@ -1066,15 +1095,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     Value = s.AccountNumber,
                     Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
-
-            viewModel.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountName
                 })
                 .ToListAsync(cancellationToken);
 
