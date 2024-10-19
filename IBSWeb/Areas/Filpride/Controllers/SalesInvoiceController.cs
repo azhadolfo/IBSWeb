@@ -753,7 +753,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     dr.Quantity,
                     automatedRr.ReceivingReportId,
                     automatedRr.PurchaseOrder.PurchaseOrderId,
-                    OtherRefNo = automatedRr.ReceivingReportNo,
+                    OtherRefNo = dr.ManualDrNo,
                     Remarks = $"Customer PO# {dr.CustomerOrderSlip.CustomerPoNo}"
                 });
             }
