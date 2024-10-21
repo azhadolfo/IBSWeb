@@ -682,7 +682,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Freight = (decimal)existingRecord.Freight,
                     PickUpPointId = (int)existingRecord.PickUpPointId,
                     PickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                    .GetPickUpPointListBasedOnSupplier((int)existingRecord.SupplierId, cancellationToken)
+                    .GetPickUpPointListBasedOnSupplier((int)existingRecord.SupplierId, cancellationToken),
+                    SubPoRemarks = existingRecord.SubPORemarks
                 };
 
 
