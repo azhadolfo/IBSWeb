@@ -54,9 +54,9 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>@Model.CustomerOrderSlip.PurchaseOrder.Product?.ProductName</td>
+                    <td>@Model.CustomerOrderSlip.Product?.ProductName</td>
                     <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
-                    <td>@Model.CustomerOrderSlip.PurchaseOrder.Product?.ProductUnit</td>
+                    <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
                     <td>@Html.DisplayFor(model => model.VatAmount)</td>
                     <td>@Html.DisplayFor(model => model.CustomerOrderSlip.DeliveredPrice)</td>
                     <td>@Html.DisplayFor(model => model.CustomerOrderSlip.TotalAmount)</td>

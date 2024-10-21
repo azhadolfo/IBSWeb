@@ -32,7 +32,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<List<SelectListItem>> GetMainAccount(CancellationToken cancellationToken = default)
         {
-            return await _db.MobilityChartOfAccounts
+            return await _db.FilprideChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
                 .Where(c => c.Level == 1)
                 .Select(c => new SelectListItem
@@ -45,7 +45,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<List<SelectListItem>> GetMemberAccount(string parentAcc, CancellationToken cancellationToken = default)
         {
-            return await _db.MobilityChartOfAccounts
+            return await _db.FilprideChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
                 .Where(c => c.Parent == parentAcc)
                 .Select(c => new SelectListItem
@@ -58,8 +58,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public IEnumerable<ChartOfAccountDto> GetSummaryReportView(CancellationToken cancellationToken = default)
         {
-            var query = from c in _db.MobilityChartOfAccounts
-                        join gl in _db.MobilityGeneralLedgers on c.AccountNumber equals gl.AccountNumber into glGroup
+            var query = from c in _db.FilprideChartOfAccounts
+                        join gl in _db.FilprideGeneralLedgerBooks on c.AccountNumber equals gl.AccountNo into glGroup
                         from gl in glGroup.DefaultIfEmpty()
                         group new { c, gl } by new { c.Level, c.AccountNumber, c.AccountName, c.AccountType, c.Parent } into g
                         select new ChartOfAccountDto

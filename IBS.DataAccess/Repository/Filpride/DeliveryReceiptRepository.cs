@@ -144,11 +144,11 @@ namespace IBS.DataAccess.Repository.Filpride
                 var netOfVatAmount = ComputeNetOfVat(deliveryReceipt.TotalAmount);
                 var vatAmount = ComputeVatAmount(netOfVatAmount);
                 var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-                var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010201") ?? throw new ArgumentException("Account title '1010201' not found.");
-                var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010101") ?? throw new ArgumentException("Account title '1010101' not found.");
+                var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010101") ?? throw new ArgumentException("Account title '1010101' not found.");
+                var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010201") ?? throw new ArgumentException("Account title '1010201' not found.");
                 var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010301") ?? throw new ArgumentException("Account title '2010301' not found.");
                 var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010602") ?? throw new ArgumentException("Account title '1010602' not found.");
-                var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010101") ?? throw new ArgumentException("Account title '2010101' not found.");
+                var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "2020101") ?? throw new ArgumentException("Account title '2020101' not found.");
                 var cogsFreightTitle = accountTitlesDto.Find(c => c.AccountNumber == "5010109") ?? throw new ArgumentException("Account title '5010109' not found.");
                 var cogsDemurrageTitle = accountTitlesDto.Find(c => c.AccountNumber == "5010108") ?? throw new ArgumentException("Account title '5010108' not found.");
 
@@ -158,7 +158,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Reference = deliveryReceipt.DeliveryReceiptNo,
                     Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                     AccountNo = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountNumber : arTradeTitle.AccountNumber,
-                    AccountTitle = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountName : cashInBankTitle.AccountName,
+                    AccountTitle = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountName : arTradeTitle.AccountName,
                     Debit = deliveryReceipt.TotalAmount,
                     Credit = 0,
                     Company = deliveryReceipt.Company,

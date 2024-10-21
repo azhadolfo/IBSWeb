@@ -647,6 +647,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.SalesInvoiceNo, cancellationToken);
                         await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
 
+                        var dr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(d => d.HasAlreadyInvoiced && d.DeliveryReceiptId == model.DeliveryReceiptId);
+
+                        dr.HasAlreadyInvoiced = false;
+
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();

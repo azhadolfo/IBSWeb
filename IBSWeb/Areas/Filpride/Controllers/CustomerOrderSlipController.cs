@@ -299,12 +299,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CustomerOrderSlipForApprovalViewModel model = new()
                 {
                     CustomerOrderSlip = existingRecord,
-                    NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.PurchaseOrder.Price),
                     NetOfVatCosPrice = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.DeliveredPrice),
                     NetOfVatFreightCharge = (decimal)(existingRecord.Freight != 0 ? _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat((decimal)existingRecord.Freight) : existingRecord.Freight),
                     VatAmount = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount(_unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.TotalAmount)),
                     Status = existingRecord.Status
                 };
+
+                if (!existingRecord.HasMultiplePO)
+                {
+                    model.NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.PurchaseOrder.Price);
+                }
+                else
+                {
+                    var appointedSupplier = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                        .ToListAsync(cancellationToken);
+
+                    decimal totalPoAmount = 0;
+
+                    foreach (var item in appointedSupplier)
+                    {
+                        var po = await _unitOfWork.FilpridePurchaseOrder.GetAsync(p => p.PurchaseOrderId == item.PurchaseOrderId, cancellationToken);
+
+                        totalPoAmount += item.Quantity * _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(po.Price);
+                    }
+
+                    model.NetOfVatProductCost = totalPoAmount / appointedSupplier.Sum(a => a.Quantity);
+                }
+
 
                 model.GrossMargin = model.NetOfVatCosPrice - model.NetOfVatProductCost - model.NetOfVatFreightCharge - existingRecord.CommissionRate;
 
@@ -356,41 +378,87 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.FirstApprovedDate = DateTime.Now;
                     existingRecord.OperationManagerReason = reason;
 
-                    var existingPo = await _unitOfWork.FilpridePurchaseOrder
-                            .GetAsync(po => po.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken);
-
-                    if (existingPo == null)
-                    {
-                        return BadRequest();
-                    }
-
                     if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery)
                     {
-                        var subPoModel = new FilpridePurchaseOrder
+                        if (!existingRecord.HasMultiplePO)
                         {
-                            PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo.Type, cancellationToken),
-                            Date = DateOnly.FromDateTime(DateTime.Now),
-                            SupplierId = existingRecord.PurchaseOrder.SupplierId,
-                            ProductId = existingPo.ProductId,
-                            Terms = existingPo.Terms,
-                            Quantity = existingRecord.Quantity,
-                            Price = (decimal)existingRecord.Freight,
-                            Remarks = $"{existingRecord.SubPORemarks}\n Please note: The values in this purchase order are for the freight charge.",
-                            Company = existingPo.Company,
-                            IsSubPo = true,
-                            CustomerId = existingRecord.CustomerId,
-                            SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
-                            CreatedBy = existingRecord.FirstApprovedBy,
-                            CreatedDate = DateTime.Now,
-                            PostedBy = existingRecord.FirstApprovedBy,
-                            PostedDate = DateTime.Now,
-                            Status = nameof(Status.Posted),
-                            OldPoNo = existingPo.OldPoNo
-                        };
+                            var existingPo = await _unitOfWork.FilpridePurchaseOrder
+                           .GetAsync(po => po.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken);
 
-                        subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
-                        await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
-                        message = $"Sub Purchase Order Number: {subPoModel.PurchaseOrderNo} has been successfully generated.";
+                            if (existingPo == null)
+                            {
+                                return BadRequest();
+                            }
+
+                            var subPoModel = new FilpridePurchaseOrder
+                            {
+                                PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo.Type, cancellationToken),
+                                Date = DateOnly.FromDateTime(DateTime.Now),
+                                SupplierId = (int)existingRecord.SupplierId,
+                                ProductId = existingPo.ProductId,
+                                Terms = existingPo.Terms,
+                                Quantity = existingRecord.Quantity,
+                                Price = (decimal)existingRecord.Freight,
+                                Remarks = $"{existingRecord.SubPORemarks}\n Please note: The values in this purchase order are for the freight charge.",
+                                Company = existingPo.Company,
+                                IsSubPo = true,
+                                CustomerId = existingRecord.CustomerId,
+                                SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
+                                CreatedBy = existingRecord.FirstApprovedBy,
+                                CreatedDate = DateTime.Now,
+                                PostedBy = existingRecord.FirstApprovedBy,
+                                PostedDate = DateTime.Now,
+                                Status = nameof(Status.Posted),
+                                OldPoNo = existingPo.OldPoNo
+                            };
+
+                            subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
+                            await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
+                            message = $"Sub Purchase Order Number: {subPoModel.PurchaseOrderNo} has been successfully generated.";
+                        }
+                        else
+                        {
+                            var multiplePO = await _dbContext.FilprideCOSAppointedSuppliers
+                                .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                                .ToListAsync(cancellationToken);
+
+                            var poNumbers = new List<string>();
+
+                            foreach (var item in multiplePO)
+                            {
+                                var existingPo = await _unitOfWork.FilpridePurchaseOrder
+                                    .GetAsync(po => po.PurchaseOrderId == item.PurchaseOrderId, cancellationToken);
+
+                                var subPoModel = new FilpridePurchaseOrder
+                                {
+                                    PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo.Type, cancellationToken),
+                                    Date = DateOnly.FromDateTime(DateTime.Now),
+                                    SupplierId = (int)existingRecord.SupplierId,
+                                    ProductId = existingRecord.ProductId,
+                                    Terms = existingPo.Terms,
+                                    Quantity = item.Quantity,
+                                    Price = (decimal)existingRecord.Freight,
+                                    Amount = item.Quantity * (decimal)existingRecord.Freight,
+                                    Remarks = $"{existingRecord.SubPORemarks}\n Please note: The values in this purchase order are for the freight charge.",
+                                    Company = existingPo.Company,
+                                    IsSubPo = true,
+                                    CustomerId = existingRecord.CustomerId,
+                                    SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
+                                    CreatedBy = existingRecord.FirstApprovedBy,
+                                    CreatedDate = DateTime.Now,
+                                    PostedBy = existingRecord.FirstApprovedBy,
+                                    PostedDate = DateTime.Now,
+                                    Status = nameof(Status.Posted),
+                                    OldPoNo = existingPo.OldPoNo
+                                };
+
+                                poNumbers.Add(subPoModel.PurchaseOrderNo);
+                                await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
+                                await _unitOfWork.SaveAsync(cancellationToken);
+                            }
+
+                            message = $"Sub Purchase Order Numbers: {string.Join(", ", poNumbers)} have been successfully generated.";
+                        }
                     }
 
                     await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, grossMargin, cancellationToken);
