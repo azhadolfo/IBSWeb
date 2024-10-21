@@ -69,7 +69,6 @@
                 <div class="form-group py-2 col-12">
                     <label class="control-label">Port List<span class="required">*</span></label>
                     <select asp-for="PickUpPointId" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select pick up point</option>
                     </select>
                     <span asp-validation-for="PickUpPointId" class="text-danger"></span>
                 </div>
@@ -93,86 +92,137 @@
 <script>
         $(document).ready(function () {
 
-            $('input[name="DeliveryOption"]').change(function() {
-                if ($(this).val() === '@SD.DeliveryOption_DirectDelivery') {
+            // Function to handle freight section visibility
+            function handleFreightSection(deliveryOption) {
+                if (deliveryOption === '@SD.DeliveryOption_DirectDelivery') {
                     $('#freightRemarksSection').show();
                 } else {
                     $('#freightRemarksSection').hide();
                 }
+            }
+
+            // Trigger change event when a radio button is selected
+            $('input[name="DeliveryOption"]').change(function () {
+                handleFreightSection($(this).val());
             });
 
-            $('#SupplierId').change(function() {
-                var supplierId = $(this).val();
-                var productId = $('#ProductId').val();
-                var $poSelect = $('#PurchaseOrderIds');
-                var $pickUpSelect = $('#PickUpPointId');
+            // Ensure the freight section visibility on page load based on the selected value
+            handleFreightSection($('input[name="DeliveryOption"]:checked').val());
 
-                // Clear existing options
-                $poSelect.empty();
+             $('#SupplierId').change(function() {
+                 var supplierId = $(this).val();
+                 var productId = $('#ProductId').val();
+                 var $poSelect = $('#PurchaseOrderIds');
+                 var $pickUpSelect = $('#PickUpPointId');
 
-                if (supplierId) {
-                    $.ajax({
-                        url: '@Url.Action("GetPurchaseOrders", "CustomerOrderSlip")',
-                        type: 'GET',
-                        data: { supplierId: supplierId, productId : productId },
-                        success: function(data) {
-                            $.each(data, function(index, po) {
-                                $poSelect.append($('<option></option>').val(po.value).text(po.text));
-                            });
-                        },
-                        error: function() {
-                            alert('Failed to retrieve POs');
-                        }
-                    });
-                }
-            });
+                 // Clear existing options
+                 $poSelect.empty();
 
-            $('#PurchaseOrderIds').change(function() {
-                var poId = $(this).val();
-                var supplierId = $('#SupplierId').val(); // Get the selected supplier ID
-                var $pickUpSelect = $('#PickUpPointId');
+                 if (supplierId) {
+                     $.ajax({
+                         url: '@Url.Action("GetPurchaseOrders", "CustomerOrderSlip")',
+                         type: 'GET',
+                         data: { supplierId: supplierId, productId : productId },
+                         success: function(data) {
+                             $.each(data, function(index, po) {
+                                 $poSelect.append($('<option></option>').val(po.value).text(po.text));
+                             });
+                         },
+                         error: function() {
+                             alert('Failed to retrieve POs');
+                         }
+                     });
+                 }
 
-                // Clear existing options
-                $pickUpSelect.empty();
-                $pickUpSelect.append('<option value="" selected>Select Pick Up Point</option>');
+                 // Clear existing options
+                 $pickUpSelect.empty();
 
-                if (poId && supplierId) {
-                    $.ajax({
-                        url: '@Url.Action("GetPickUpPoints", "CustomerOrderSlip")',
-                        type: 'GET',
-                        data: { purchaseOrderId: poId, supplierId: supplierId },
-                        success: function(data) {
-                            $.each(data, function(index, pickUpPoint) {
-                                $pickUpSelect.append($('<option></option>').val(pickUpPoint.value).text(pickUpPoint.text));
-                            });
-                        },
-                        error: function() {
-                            alert('Failed to retrieve Pick Up Points');
-                        }
-                    });
-                }
-            });
+                  if (supplierId) {
+                      $.ajax({
+                          url: '@Url.Action("GetPickUpPoints", "CustomerOrderSlip")',
+                          type: 'GET',
+                          data: { supplierId: supplierId },
+                          success: function(data) {
+                              $.each(data, function(index, pickUpPoint) {
+                                  $pickUpSelect.append($('<option></option>').val(pickUpPoint.value).text(pickUpPoint.text));
+                              });
+                          },
+                          error: function() {
+                              alert('Failed to retrieve Pick Up Points');
+                          }
+                      });
+                  }
+
+             });
+
 
             $('#PurchaseOrderIds').change(function () {
                 var selectedPOs = $(this).val();
                 var cosVolume = @Model.COSVolume;
                 var purchaseOrderQuantities = @Html.Raw(Json.Serialize(Model.PurchaseOrderQuantities));
-                console.log(purchaseOrderQuantities)
+
                 $('#poQuantities').empty();
 
-                $.each(selectedPOs, function (index, po) {
-                    var quantity = purchaseOrderQuantities[po] || 0;  // Default to 0 if not found
-                    $('#poQuantities').append(
-                        `<div class="form-group py-2">
-                            <label for="quantity_${po}">Enter Quantity for PO ${po}</label>
-                            <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${cosVolume}" value="${quantity}" placeholder="Quantity (max: ${cosVolume})" required/>
-                        </div>`
-                    );
-                });
+                if (selectedPOs.length > 1) {
+                    $.each(selectedPOs, function (index, po) {
+                        // Get the selected option's text
+                        var selectedText = $('#PurchaseOrderIds option[value="' + po + '"]').text();
+                        var quantity = purchaseOrderQuantities[po] || 0;  // Default to 0 if not found
+                        $('#poQuantities').append(
+                            `<div class="form-group py-2">
+                                <label for="quantity_${po}">Enter Quantity for PO ${selectedText}</label>
+                                <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${cosVolume}" value="${quantity}" placeholder="Quantity (max: ${cosVolume})" required/>
+                            </div>`
+                        );
+                    });
+                }
 
                 $('#poQuantitySection').show();
             });
 
+
+               $('form').on('submit', function(event) {
+                    // Trigger the validation logic here
+                    var totalQuantity = 0;
+                    var cosVolume = @Model.COSVolume;
+                    var selectedPO = $('#PurchaseOrderIds').val(); // Assuming you have a select element for PO selection
+                    var isValid = true;
+                    if (selectedPO.length > 1) { // Only perform validation if PO is not 1
+                        $('#poQuantities input[type="number"]').each(function() {
+                            var enteredQuantity = parseFloat($(this).val()) || 0;
+                            var maxQuantity = parseFloat($(this).attr('max'));
+
+                            if (enteredQuantity > maxQuantity) {
+                                alert(`Quantity exceeds the available balance for this PO (max: ${maxQuantity}).`);
+                                isValid = false;
+                                return false; // Exit the loop
+                            }
+
+                            totalQuantity += enteredQuantity;
+                        });
+
+                        // Check if total quantity is equal to COS volume
+                        if (totalQuantity !== cosVolume) {
+                            alert(`Total quantity (${totalQuantity}) must equal the available COS volume of ${cosVolume}.`);
+                            isValid = false;
+                        }
+                    }
+
+                    if (!isValid) {
+                        event.preventDefault(); // Prevent form submission
+                    }
+                });
+
         });
+</script>
+<script>
+    // Trigger the change event when the page loads to show the quantities for pre-selected POs
+    $(document).ready(function () {
+        $('#PurchaseOrderIds').change();
+        // Trigger change event when a radio button is selected
+        $('input[name="DeliveryOption"]').change(function () {
+            handleFreightSection($(this).val());
+        });
+    });
 </script>
 }

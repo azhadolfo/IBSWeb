@@ -125,51 +125,88 @@
                         }
                     });
                 }
-            });
-
-            $('#PurchaseOrderIds').change(function() {
-                var poId = $(this).val();
-                var supplierId = $('#SupplierId').val(); // Get the selected supplier ID
-                var $pickUpSelect = $('#PickUpPointId');
 
                 // Clear existing options
                 $pickUpSelect.empty();
-                $pickUpSelect.append('<option value="" selected>Select Pick Up Point</option>');
 
-                if (poId && supplierId) {
-                    $.ajax({
-                        url: '@Url.Action("GetPickUpPoints", "CustomerOrderSlip")',
-                        type: 'GET',
-                        data: { purchaseOrderId: poId, supplierId: supplierId },
-                        success: function(data) {
-                            $.each(data, function(index, pickUpPoint) {
-                                $pickUpSelect.append($('<option></option>').val(pickUpPoint.value).text(pickUpPoint.text));
-                            });
-                        },
-                        error: function() {
-                            alert('Failed to retrieve Pick Up Points');
-                        }
-                    });
-                }
+                 if (supplierId) {
+                     $.ajax({
+                         url: '@Url.Action("GetPickUpPoints", "CustomerOrderSlip")',
+                         type: 'GET',
+                         data: { supplierId: supplierId },
+                         success: function(data) {
+                             $.each(data, function(index, pickUpPoint) {
+                                 $pickUpSelect.append($('<option></option>').val(pickUpPoint.value).text(pickUpPoint.text));
+                             });
+                         },
+                         error: function() {
+                             alert('Failed to retrieve Pick Up Points');
+                         }
+                     });
+                 }
+
             });
 
             $('#PurchaseOrderIds').change(function () {
-            var selectedPOs = $(this).val();
-            var cosVolume = @Model.COSVolume;
+                var selectedPOs = $(this).val();
+                var cosVolume = @Model.COSVolume;
+                var purchaseOrderQuantities = @Html.Raw(Json.Serialize(Model.PurchaseOrderQuantities));
 
-            $('#poQuantities').empty();
+                $('#poQuantities').empty();
 
-            $.each(selectedPOs, function (index, po) {
-                $('#poQuantities').append(
-                    `<div class="form-group py-2">
-                        <label for="quantity_${po}">Enter Quantity for PO ${po}</label>
-                        <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${cosVolume}" placeholder="Quantity (max: ${cosVolume})" required/>
-                    </div>`
-                );
+                if (selectedPOs.length > 1) {
+                    $.each(selectedPOs, function (index, po) {
+                        var selectedText = $('#PurchaseOrderIds option[value="' + po + '"]').text();
+
+                        $('#poQuantities').append(
+                            `<div class="form-group py-2">
+                                <label for="quantity_${po}">Enter Quantity for ${selectedText}</label>
+                                <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${cosVolume}" placeholder="Quantity (max: ${cosVolume})" required/>
+                            </div>`
+                        );
+                    });
+
+                    $('#poQuantitySection').show();
+                } else {
+                    $('#poQuantitySection').hide();
+                }
             });
 
-            $('#poQuantitySection').show();
-        });
+
+
+           $('form').on('submit', function(event) {
+                // Trigger the validation logic here
+                var totalQuantity = 0;
+                var cosVolume = @Model.COSVolume;
+                var selectedPO = $('#PurchaseOrderIds').val(); // Assuming you have a select element for PO selection
+                var isValid = true;
+               console.log(selectedPO)
+                if (selectedPO.length > 1) { // Only perform validation if PO is not 1
+                    $('#poQuantities input[type="number"]').each(function() {
+                        var enteredQuantity = parseFloat($(this).val()) || 0;
+                        var maxQuantity = parseFloat($(this).attr('max'));
+
+                        if (enteredQuantity > maxQuantity) {
+                            alert(`Quantity exceeds the available balance for this PO (max: ${maxQuantity}).`);
+                            isValid = false;
+                            return false; // Exit the loop
+                        }
+
+                        totalQuantity += enteredQuantity;
+                    });
+
+                    // Check if total quantity is equal to COS volume
+                    if (totalQuantity !== cosVolume) {
+                        alert(`Total quantity (${totalQuantity}) must equal the available COS volume of ${cosVolume}.`);
+                        isValid = false;
+                    }
+                }
+
+                if (!isValid) {
+                    event.preventDefault(); // Prevent form submission
+                }
+            });
+
 
         });
 </script>
