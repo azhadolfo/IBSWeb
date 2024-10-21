@@ -1,4 +1,5 @@
-﻿using IBS.Models.Filpride.MasterFile;
+﻿using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.MasterFile;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -100,5 +101,10 @@ namespace IBS.Models.Filpride.Integrated
         #endregion
 
         public bool HasAlreadyInvoiced { get; set; }
+
+        public int? PurchaseOrderId { get; set; }
+
+        [ForeignKey(nameof(PurchaseOrderId))]
+        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
     }
 }

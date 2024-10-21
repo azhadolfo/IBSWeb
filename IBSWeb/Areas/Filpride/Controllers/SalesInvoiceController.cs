@@ -232,9 +232,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return Json(new
                 {
-                    cos.PurchaseOrder.Product.ProductId,
-                    ProductName = $"{cos.PurchaseOrder.Product.ProductCode} {cos.PurchaseOrder.Product.ProductName}",
-                    cos.PurchaseOrder.Product.ProductUnit,
+                    cos.Product.ProductId,
+                    ProductName = $"{cos.Product.ProductCode} {cos.Product.ProductName}",
+                    cos.Product.ProductUnit,
                     cos.DeliveredPrice,
                     DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(cos.CustomerOrderSlipId, cancellationToken)
 

@@ -125,7 +125,7 @@
                             }
                         }
                         else {
-                            actions += `<li><a class="dropdown-item BookATL" href="#" onclick="bookAuthorityToLoad('${row.deliveryReceiptId}', '${row.customerOrderSlip.purchaseOrder.supplier.supplierName}')">Book ATL</a></li>
+                            actions += `<li><a class="dropdown-item BookATL" href="#" onclick="bookAuthorityToLoad('${row.deliveryReceiptId}', '${row.customerOrderSlip.supplier != null ? row.customerOrderSlip.supplier.supplierName : row.customerOrderSlip.purchaseOrder.supplier.supplierName}')">Book ATL</a></li>
                               <li><a class="dropdown-item" href="@Url.Action("Edit", "DeliveryReceipt", new { area = "Filpride" })/${data}">Edit</a></li>`;
                         }
 
