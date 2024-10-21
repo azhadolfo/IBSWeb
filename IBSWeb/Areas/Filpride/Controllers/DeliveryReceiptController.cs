@@ -8,6 +8,7 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 
@@ -138,6 +139,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId);
+
+                    if (customerOrderSlip == null)
+                    {
+                        return BadRequest();
+                    }
+
                     FilprideDeliveryReceipt model = new()
                     {
                         DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(cancellationToken),
@@ -159,6 +167,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         HaulerId = viewModel.HaulerId,
                         Status = "Draft"
                     };
+
+                    if (!customerOrderSlip.HasMultiplePO)
+                    {
+                        model.PurchaseOrderId = customerOrderSlip.PurchaseOrderId;
+                    }
+                    else
+                    {
+                        var selectedPo = await _dbContext.FilprideCOSAppointedSuppliers
+                            .OrderBy(s => s.PurchaseOrderId)
+                            .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == model.CustomerOrderSlipId && !s.IsAssignedToDR);
+
+                        model.PurchaseOrderId = selectedPo.PurchaseOrderId;
+
+                        selectedPo.IsAssignedToDR = true;
+
+                    }
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
 
@@ -218,7 +242,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerTin = existingRecord.Customer.CustomerTin,
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                     CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
-                    Product = existingRecord.CustomerOrderSlip.PurchaseOrder.Product.ProductName,
+                    Product = existingRecord.CustomerOrderSlip.Product.ProductName,
                     CosVolume = existingRecord.CustomerOrderSlip.Quantity,
                     RemainingVolume = existingRecord.CustomerOrderSlip.BalanceQuantity,
                     Price = existingRecord.CustomerOrderSlip.DeliveredPrice,
@@ -422,7 +446,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return Json(new
             {
-                Product = cos.PurchaseOrder.Product?.ProductName,
+                Product = cos.Product.ProductName,
                 cos.Quantity,
                 RemainingVolume = cos.BalanceQuantity,
                 Price = cos.DeliveredPrice,
@@ -597,7 +621,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["success"] = "ATL booked successfully";
                 await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                return Json(new { success = true, atlId = model.AuthorityToLoadId });
+                return RedirectToAction(nameof(AuthorityToLoadController.Print), "AuthorityToLoad", new { area = nameof(Filpride), id = model.AuthorityToLoadId });
             }
             catch (Exception ex)
             {
@@ -627,7 +651,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming the template has one sheet
 
                 worksheet.Cells["H2"].Value = deliveryReceipt.AuthorityToLoadNo;
-                worksheet.Cells["H7"].Value = receivingReport.ReceivingReportNo;
+                worksheet.Cells["H7"].Value = receivingReport?.ReceivingReportNo;
                 worksheet.Cells["H9"].Value = deliveryReceipt.DeliveryReceiptNo;
                 worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
                 worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip.CustomerOrderSlipNo;
@@ -636,7 +660,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["C13"].Value = deliveryReceipt.Customer.CustomerAddress.ToUpper();
                 worksheet.Cells["B17"].Value = deliveryReceipt.CustomerOrderSlip.Product.ProductName;
                 worksheet.Cells["H17"].Value = deliveryReceipt.Quantity.ToString("N0");
-                worksheet.Cells["H19"].Value = $"{deliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo} {deliveryReceipt.CustomerOrderSlip.DeliveryOption}";
+                worksheet.Cells["H19"].Value = deliveryReceipt.Remarks;
 
                 var stream = new MemoryStream();
                 package.SaveAs(stream);

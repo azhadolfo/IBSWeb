@@ -43,11 +43,13 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<IEnumerable<FilprideDeliveryReceipt>> GetAllAsync(Expression<Func<FilprideDeliveryReceipt, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<FilprideDeliveryReceipt> query = dbSet
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(po => po.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Supplier)
                 .Include(dr => dr.Hauler)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
-                .Include(dr => dr.Customer);
+                .Include(dr => dr.Customer)
+                .Include(dr => dr.PurchaseOrder);
 
             if (filter != null)
             {
@@ -60,11 +62,13 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<FilprideDeliveryReceipt> GetAsync(Expression<Func<FilprideDeliveryReceipt, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(po => po.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Supplier)
                 .Include(dr => dr.Hauler)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
                 .Include(dr => dr.Customer)
+                .Include(dr => dr.PurchaseOrder)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -138,9 +142,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 #region General Ledger Book Recording
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
-                var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Product.ProductName);
-                var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Product.ProductName);
-                var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Product.ProductName);
+                var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductName);
+                var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductName);
+                var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductName);
                 var netOfVatAmount = ComputeNetOfVat(deliveryReceipt.TotalAmount);
                 var vatAmount = ComputeVatAmount(netOfVatAmount);
                 var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
@@ -202,7 +206,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                     AccountNo = cogsAcctNo,
                     AccountTitle = cogsAcctTitle,
-                    Debit = ComputeNetOfVat(deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price * deliveryReceipt.Quantity),
+                    Debit = ComputeNetOfVat((deliveryReceipt.PurchaseOrder?.Price ?? deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price) * deliveryReceipt.Quantity),
                     Credit = 0,
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.CreatedBy,
@@ -216,7 +220,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler.SupplierName}",
                     AccountNo = vatInputTitle.AccountNumber,
                     AccountTitle = vatInputTitle.AccountName,
-                    Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price * deliveryReceipt.Quantity)),
+                    Debit = ComputeVatAmount(ComputeNetOfVat((deliveryReceipt.PurchaseOrder?.Price ?? deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price) * deliveryReceipt.Quantity)),
                     Credit = 0,
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.CreatedBy,
@@ -231,11 +235,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountNo = arTradeTitle.AccountNumber,
                     AccountTitle = arTradeTitle.AccountName,
                     Debit = 0,
-                    Credit = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price * deliveryReceipt.Quantity,
+                    Credit = (deliveryReceipt.PurchaseOrder?.Price ?? deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price) * deliveryReceipt.Quantity,
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.CreatedBy,
                     CreatedDate = deliveryReceipt.CreatedDate,
-                    SupplierId = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.SupplierId
+                    SupplierId = deliveryReceipt.CustomerOrderSlip.Supplier?.SupplierId ?? deliveryReceipt.CustomerOrderSlip.PurchaseOrder.SupplierId
                 });
 
                 if (deliveryReceipt.Freight > 0 || deliveryReceipt.ECC > 0)

@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241021045656_RenameTheIsServedToIsAssignedToDR")]
+    partial class RenameTheIsServedToIsAssignedToDR
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2676,10 +2679,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("posted_date");
 
-                    b.Property<int?>("PurchaseOrderId")
-                        .HasColumnType("integer")
-                        .HasColumnName("purchase_order_id");
-
                     b.Property<decimal>("Quantity")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("quantity");
@@ -2724,9 +2723,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("HaulerId")
                         .HasDatabaseName("ix_filpride_delivery_receipts_hauler_id");
-
-                    b.HasIndex("PurchaseOrderId")
-                        .HasDatabaseName("ix_filpride_delivery_receipts_purchase_order_id");
 
                     b.ToTable("filpride_delivery_receipts", (string)null);
                 });
@@ -6573,18 +6569,11 @@ namespace IBS.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_filpride_delivery_receipts_filpride_suppliers_hauler_id");
 
-                    b.HasOne("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", "PurchaseOrder")
-                        .WithMany()
-                        .HasForeignKey("PurchaseOrderId")
-                        .HasConstraintName("fk_filpride_delivery_receipts_filpride_purchase_orders_purchas");
-
                     b.Navigation("Customer");
 
                     b.Navigation("CustomerOrderSlip");
 
                     b.Navigation("Hauler");
-
-                    b.Navigation("PurchaseOrder");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilpridePickUpPoint", b =>

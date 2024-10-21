@@ -23,6 +23,7 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "numeric(18,4)")]
         public decimal UnservedQuantity { get; set; }
 
-        public bool IsServed { get; set; }
+        public bool IsAssignedToDR { get; set; }
+
     }
 }

@@ -21,7 +21,7 @@
         <table class="table table-borderless">
             <tbody>
                 <tr>
-                    <td><b>Supplier:</b> @Model.DeliveryReceipt?.CustomerOrderSlip.PurchaseOrder?.Supplier?.SupplierName</td>
+                    <td><b>Supplier:</b> @(Model.DeliveryReceipt.CustomerOrderSlip.Supplier?.SupplierName ?? Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.SupplierName)</td>
                     <td class="text-end"><b>Customer PO Ref#:</b> @Html.DisplayFor(model => model.DeliveryReceipt.CustomerOrderSlip.CustomerPoNo)</td>
                 </tr>
                 <tr>
@@ -62,10 +62,10 @@
                 <tbody>
                     <tr>
                         <td>@Model.DeliveryReceipt.Customer.CustomerName</td>
-                        <td>@Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.Product.ProductName</td>
+                        <td>@Model.DeliveryReceipt.CustomerOrderSlip.Product.ProductName</td>
                         <td>@Html.DisplayFor(model => model.DeliveryReceipt.Quantity)</td>
-                        <td>@Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo</td>
-                        <td>@Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo</td>
+                        <td>@(Model.DeliveryReceipt.PurchaseOrder?.SupplierSalesOrderNo ?? Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo)</td>
+                        <td>@(Model.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo ?? Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo)</td>
                     </tr>
                 </tbody>
             </table>

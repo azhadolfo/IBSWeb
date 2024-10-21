@@ -261,9 +261,8 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId,
                 Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                POId = deliveryReceipt.CustomerOrderSlip.PurchaseOrderId
-                ?? throw new ArgumentNullException("Purchase Order id is null."),
-                PONo = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo,
+                POId = (int)(deliveryReceipt.PurchaseOrder?.PurchaseOrderId ?? deliveryReceipt.CustomerOrderSlip.PurchaseOrderId),
+                PONo = deliveryReceipt.PurchaseOrder?.PurchaseOrderNo ?? deliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo,
                 QuantityDelivered = deliveryReceipt.Quantity,
                 QuantityReceived = deliveryReceipt.Quantity,
                 TruckOrVessels = deliveryReceipt.CustomerOrderSlip.PickUpPoint.Depot,
@@ -275,19 +274,28 @@ namespace IBS.DataAccess.Repository.Filpride
                 PostedBy = "SYSTEM GENERATED",
                 PostedDate = DateTime.Now,
                 Status = nameof(Status.Posted),
-                Type = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Type
+                Type = deliveryReceipt.PurchaseOrder?.Type ?? deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Type
             };
 
-            if (model.QuantityDelivered > (deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Quantity - deliveryReceipt.CustomerOrderSlip.PurchaseOrder.QuantityReceived))
+            if (model.QuantityDelivered > (deliveryReceipt.PurchaseOrder?.Quantity ?? deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Quantity - deliveryReceipt.CustomerOrderSlip.PurchaseOrder.QuantityReceived))
             {
                 throw new ArgumentException("Inputted quantity is exceed to remaining quantity delivered");
+            }
+
+            if (deliveryReceipt.CustomerOrderSlip.HasMultiplePO)
+            {
+                var appointedSupplier = await _db.FilprideCOSAppointedSuppliers
+                    .OrderBy(a => a.SequenceId)
+                    .FirstOrDefaultAsync(a => a.CustomerOrderSlipId == deliveryReceipt.CustomerOrderSlipId && a.PurchaseOrderId == deliveryReceipt.PurchaseOrderId);
+
+                appointedSupplier.UnservedQuantity -= deliveryReceipt.Quantity;
             }
 
             model.ReceivedDate = model.Date;
             model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type, cancellationToken);
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
-            model.Amount = model.QuantityReceived * deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price;
+            model.Amount = model.QuantityReceived * deliveryReceipt.PurchaseOrder?.Price ?? deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price;
 
             await _db.AddAsync(model, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
