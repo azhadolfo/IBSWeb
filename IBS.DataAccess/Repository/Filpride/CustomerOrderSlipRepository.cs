@@ -149,12 +149,34 @@ namespace IBS.DataAccess.Repository.Filpride
 
         private decimal UpdateCosPrice(decimal grossMargin, FilprideCustomerOrderSlip existingRecord)
         {
-            var netOfVatProductCost = existingRecord.PurchaseOrder.Price / 1.12m;
+            decimal netOfVatProductCost = 0;
+
+            if (!existingRecord.HasMultiplePO)
+            {
+                netOfVatProductCost = existingRecord.PurchaseOrder.Price / 1.12m;
+            }
+            else
+            {
+                var appointedSupplier = _db.FilprideCOSAppointedSuppliers
+                        .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                        .ToList();
+
+                decimal totalPoAmount = 0;
+
+                foreach (var item in appointedSupplier)
+                {
+                    var po = _db.FilpridePurchaseOrders.Find(item.PurchaseOrderId);
+                    totalPoAmount += item.Quantity * ComputeNetOfVat(po.Price);
+                }
+
+                netOfVatProductCost = totalPoAmount / appointedSupplier.Sum(a => a.Quantity);
+            }
+
             var netOfVatCosPrice = existingRecord.DeliveredPrice / 1.12m;
             var netOfVatFreightCharge = existingRecord.Freight / 1.12m;
             var existingGrossMargin = netOfVatCosPrice - netOfVatProductCost - netOfVatFreightCharge - existingRecord.CommissionRate;
 
-            if (existingGrossMargin != grossMargin)
+            if (Math.Round((decimal)existingGrossMargin, 2) != grossMargin)
             {
                 decimal newNetOfVatCosPrice = grossMargin + (decimal)(existingRecord.CommissionRate + netOfVatFreightCharge + netOfVatProductCost);
                 return Math.Round((ComputeVatAmount(newNetOfVatCosPrice) + newNetOfVatCosPrice), 4);
