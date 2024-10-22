@@ -24,11 +24,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        public ReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        public ReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -471,6 +474,139 @@ namespace IBSWeb.Areas.Filpride.Controllers
             TempData["error"] = "Please input date from";
             return RedirectToAction(nameof(COSUnservedVolume));
         }
+
+        [HttpGet]
+        public IActionResult DispatchReport()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DispatchReport(string? reportType, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(reportType))
+            {
+                return BadRequest();
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+            var currentUser = _userManager.GetUserName(User);
+            var today = DateTime.Now;
+            var firstDayOfMonth = new DateOnly(today.Year, today.Month, 1);
+            var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+            var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAllAsync(i => i.Company == companyClaims
+                    && i.AuthorityToLoadNo != null
+                    && i.Date >= firstDayOfMonth
+                    && i.Date <= lastDayOfMonth
+                    && (reportType == "AllDeliveries" || i.Status == nameof(Status.Pending)), cancellationToken);
+
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Dispatch Report");
+
+                // Insert image from root directory
+                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg"); // Update this to your image file name
+                var picture = worksheet.Drawings.AddPicture("CompanyLogo", new FileInfo(imagePath));
+                picture.SetPosition(0, 0, 0, 0); // Adjust position as needed
+                picture.SetSize(200, 60); // Adjust size as needed
+
+                // Setting up the header
+                worksheet.Cells["A5"].Value = "OPERATION - LOGISTICS";
+                worksheet.Cells["A6"].Value = $"DISPATCH REPORT AS OF {lastDayOfMonth:dd MMM, yyyy}";
+                worksheet.Cells["A7"].Value = reportType == "AllDeliveries"
+                    ? "ALL DELIVERIES"
+                    : "IN TRANSIT DELIVERIES";
+
+                // Table headers
+                worksheet.Cells["A9"].Value = "DR DATE";
+                worksheet.Cells["A9"].AutoFitColumns();
+                worksheet.Cells["B9"].Value = "CUSTOMER NAME";
+                worksheet.Cells["C9"].Value = "TYPE";
+                worksheet.Cells["D9"].Value = "DR NO.";
+                worksheet.Cells["E9"].Value = "PRODUCTS";
+                worksheet.Cells["F9"].Value = "QTY.";
+                worksheet.Cells["G9"].Value = "AMOUNT";
+                worksheet.Cells["H9"].Value = "PICK-UP POINT";
+                worksheet.Cells["I9"].Value = "PO #";
+                worksheet.Cells["J9"].Value = "ATL#/SO#";
+                worksheet.Cells["K9"].Value = "COS NO.";
+                worksheet.Cells["L9"].Value = "HAULER NAME";
+                worksheet.Cells["M9"].Value = "DELIVERY DATE";
+                worksheet.Cells["N9"].Value = "STATUS";
+
+                int currentRow = 10;
+                foreach (var dr in deliveryReceipts.OrderBy(d => d.Date))
+                {
+                    worksheet.Cells[currentRow, 1].Value = dr.Date.ToString("dd-MMM-yy");
+                    worksheet.Cells[currentRow, 2].Value = dr.Customer.CustomerName;
+                    worksheet.Cells[currentRow, 3].Value = dr.Customer.CustomerType;
+                    worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
+                    worksheet.Cells[currentRow, 5].Value = dr.CustomerOrderSlip.Product.ProductName;
+                    worksheet.Cells[currentRow, 6].Value = dr.Quantity;
+                    worksheet.Cells[currentRow, 7].Value = dr.TotalAmount;
+                    worksheet.Cells[currentRow, 8].Value = dr.CustomerOrderSlip.PickUpPoint.Depot;
+                    worksheet.Cells[currentRow, 9].Value = dr.PurchaseOrder?.PurchaseOrderNo ?? dr.CustomerOrderSlip.PurchaseOrder?.PurchaseOrderNo;
+                    worksheet.Cells[currentRow, 10].Value = dr.AuthorityToLoadNo;
+                    worksheet.Cells[currentRow, 11].Value = dr.CustomerOrderSlip.CustomerOrderSlipNo;
+                    worksheet.Cells[currentRow, 12].Value = dr.Hauler.SupplierName;
+                    worksheet.Cells[currentRow, 13].Value = dr.DeliveredDate?.ToString("dd-MMM-yy");
+                    worksheet.Cells[currentRow, 14].Value = dr.Status == nameof(Status.Pending) ? "IN TRANSIT" : dr.Status.ToUpper();
+                    currentRow++;
+                }
+
+                // Total row
+                worksheet.Cells[currentRow + 1, 5].Value = "TOTAL";
+                worksheet.Cells[currentRow + 1, 6].Value = deliveryReceipts.Sum(dr => dr.Quantity);
+                worksheet.Cells[currentRow + 1, 7].Value = deliveryReceipts.Sum(dr => dr.TotalAmount);
+
+                // Adding borders and bold styling to the total row
+                using (var totalRowRange = worksheet.Cells[currentRow + 1, 1, currentRow + 1, 14]) // Whole row
+                {
+                    totalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    totalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    totalRowRange.Style.Font.Bold = true; // Make text bold
+                    totalRowRange.Style.Numberformat.Format = "#,##0.00";
+                }
+
+                // Generated by, checked by, received by footer
+                worksheet.Cells[currentRow + 3, 1].Value = "Generated by:";
+                worksheet.Cells[currentRow + 3, 4].Value = "Noted & Checked by:";
+                worksheet.Cells[currentRow + 3, 8].Value = "Received by:";
+
+                worksheet.Cells[currentRow + 4, 1].Value = currentUser.ToUpper();
+                worksheet.Cells[currentRow + 4, 4].Value = "JOEYLITO M. CAILAN";
+                worksheet.Cells[currentRow + 4, 8].Value = "IVY PAGKATIPUNAN";
+
+                worksheet.Cells[currentRow + 5, 1].Value = $"Date & Time: {today:MM/dd/yyyy - hh:mm tt}";
+                worksheet.Cells[currentRow + 5, 4].Value = "LOGISTICS SUPERVISOR";
+                worksheet.Cells[currentRow + 5, 8].Value = "CNC SUPERVISOR";
+
+                // Styling and formatting (optional)
+                worksheet.Cells["A1:N9"].Style.Font.Bold = true;
+                worksheet.Cells["B:N"].AutoFitColumns();
+                worksheet.Cells["F:G"].Style.Numberformat.Format = "#,##0.00";
+
+                using (var range = worksheet.Cells["A9:N9"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.Color.SetColor(Color.White);
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(0, 102, 204));
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                }
+
+                // Return Excel file as response
+                var stream = new MemoryStream();
+                package.SaveAs(stream);
+                stream.Position = 0;
+                var fileName = "DispatchReport.xlsx";
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+        }
+
 
         //Generate as .txt file
 
