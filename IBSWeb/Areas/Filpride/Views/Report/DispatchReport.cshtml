@@ -1,0 +1,33 @@
+﻿@{
+    ViewData["Title"] = "Dispatch Report";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">@ViewData["Title"]</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post">
+            <div class="form-group row">
+                <label for="reportType" class="col-sm-4 col-form-label text-right">Select Report Type</label>
+                <div class="col-sm-6">
+                    <select class="form-control" id="reportType" name="reportType" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="InTransit">In-Transit Deliveries</option>
+                        <option value="AllDeliveries">All Deliveries</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group row mt-4">
+                <div class="col-sm-12 text-center">
+                    <button type="submit" class="btn btn-primary btn-lg">Generate Excel Report</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
