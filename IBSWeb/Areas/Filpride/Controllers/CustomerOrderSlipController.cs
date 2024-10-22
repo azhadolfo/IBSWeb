@@ -921,8 +921,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var purchaseOrderList = await _unitOfWork.FilpridePurchaseOrder
-                .GetPurchaseOrderListAsyncBySupplierAndProduct((int)supplierId, (int)productId, cancellationToken);
+            var purchaseOrderList = await _dbContext.FilpridePurchaseOrders
+                .Where(p => p.SupplierId == supplierId && p.ProductId == productId && !p.IsReceived && !p.IsSubPo)
+                .Select(p => new
+                {
+                    Value = p.PurchaseOrderId,
+                    Text = p.PurchaseOrderNo,
+                    AvailableBalance = p.Quantity - p.QuantityReceived
+                }).ToListAsync(cancellationToken);
 
             return Json(purchaseOrderList);
         }
