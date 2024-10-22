@@ -125,7 +125,10 @@
                          data: { supplierId: supplierId, productId : productId },
                          success: function(data) {
                              $.each(data, function(index, po) {
-                                 $poSelect.append($('<option></option>').val(po.value).text(po.text));
+                                 $poSelect.append($('<option></option>')
+                                     .val(po.value)
+                                     .text(po.text)
+                                     .data('available-balance', po.availableBalance));
                              });
                          },
                          error: function() {
@@ -158,7 +161,6 @@
 
             $('#PurchaseOrderIds').change(function () {
                 var selectedPOs = $(this).val();
-                var cosVolume = @Model.COSVolume;
                 var purchaseOrderQuantities = @Html.Raw(Json.Serialize(Model.PurchaseOrderQuantities));
 
                 $('#poQuantities').empty();
@@ -166,12 +168,15 @@
                 if (selectedPOs.length > 1) {
                     $.each(selectedPOs, function (index, po) {
                         // Get the selected option's text
-                        var selectedText = $('#PurchaseOrderIds option[value="' + po + '"]').text();
+                        var selectedOption = $('#PurchaseOrderIds option[value="' + po + '"]');
                         var quantity = purchaseOrderQuantities[po] || 0;  // Default to 0 if not found
+                        var selectedText = selectedOption.text();
+                        var availableBalance = selectedOption.data('available-balance');
+
                         $('#poQuantities').append(
                             `<div class="form-group py-2">
                                 <label for="quantity_${po}">Enter Quantity for PO ${selectedText}</label>
-                                <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${cosVolume}" value="${quantity}" placeholder="Quantity (max: ${cosVolume})" required/>
+                                <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${availableBalance}" value="${quantity}" placeholder="Quantity (max: ${availableBalance})" required/>
                             </div>`
                         );
                     });
@@ -182,36 +187,47 @@
 
 
                $('form').on('submit', function(event) {
-                    // Trigger the validation logic here
-                    var totalQuantity = 0;
-                    var cosVolume = @Model.COSVolume;
-                    var selectedPO = $('#PurchaseOrderIds').val(); // Assuming you have a select element for PO selection
-                    var isValid = true;
-                    if (selectedPO.length > 1) { // Only perform validation if PO is not 1
-                        $('#poQuantities input[type="number"]').each(function() {
-                            var enteredQuantity = parseFloat($(this).val()) || 0;
-                            var maxQuantity = parseFloat($(this).attr('max'));
+                     var totalQuantity = 0;
+                     var cosVolume = @Model.COSVolume;
+                     var selectedPO = $('#PurchaseOrderIds').val();
+                     var isValid = true;
 
-                            if (enteredQuantity > maxQuantity) {
-                                alert(`Quantity exceeds the available balance for this PO (max: ${maxQuantity}).`);
-                                isValid = false;
-                                return false; // Exit the loop
-                            }
+                     if (selectedPO.length > 1) {
+                         $('#poQuantities input[type="number"]').each(function() {
+                             var enteredQuantity = parseFloat($(this).val()) || 0;
+                             var maxQuantity = parseFloat($(this).attr('max'));
 
-                            totalQuantity += enteredQuantity;
-                        });
+                             if (enteredQuantity > maxQuantity) {
+                                 alert(`Quantity exceeds the available balance for this PO (max: ${maxQuantity}).`);
+                                 isValid = false;
+                                 return false;
+                             }
 
-                        // Check if total quantity is equal to COS volume
-                        if (totalQuantity !== cosVolume) {
-                            alert(`Total quantity (${totalQuantity}) must equal the available COS volume of ${cosVolume}.`);
-                            isValid = false;
-                        }
-                    }
+                             totalQuantity += enteredQuantity;
+                         });
 
-                    if (!isValid) {
-                        event.preventDefault(); // Prevent form submission
-                    }
-                });
+                         // Check if total quantity is equal to COS volume
+                         if (totalQuantity !== cosVolume) {
+                             alert(`Total quantity (${totalQuantity}) must equal the available COS volume of ${cosVolume}.`);
+                             isValid = false;
+                         }
+                     }
+
+                     // Additional validation for total quantity not exceeding the PO available balance
+                     var totalAvailableBalance = 0;
+                     $('#PurchaseOrderIds option:selected').each(function() {
+                         totalAvailableBalance += parseFloat($(this).data('available-balance')) || 0;
+                     });
+
+                     if (totalQuantity > totalAvailableBalance) {
+                         alert(`Total quantity (${totalQuantity}) exceeds the total available balance of the selected POs (${totalAvailableBalance}).`);
+                         isValid = false;
+                     }
+
+                     if (!isValid) {
+                         event.preventDefault();
+                     }
+                 });
 
         });
 </script>
@@ -219,6 +235,7 @@
     // Trigger the change event when the page loads to show the quantities for pre-selected POs
     $(document).ready(function () {
         $('#PurchaseOrderIds').change();
+        $('#SupplierId').change();
         // Trigger change event when a radio button is selected
         $('input[name="DeliveryOption"]').change(function () {
             handleFreightSection($(this).val());
