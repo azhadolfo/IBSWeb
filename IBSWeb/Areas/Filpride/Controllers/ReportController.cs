@@ -575,7 +575,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[currentRow, 17].Value = freight;
                     sumOfFreight += freight;
 
-                    decimal demurrage = (dr.Demuragge > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.Demuragge) : dr.Demuragge) * dr.Quantity;
+                    decimal demurrage = (dr.Demuragge > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.Demuragge) : dr.Demuragge);
                     worksheet.Cells[currentRow, 18].Value = demurrage;
                     sumOfDemurrage += demurrage;
 
@@ -583,10 +583,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[currentRow, 19].Value = ecc;
                     sumOfECC += ecc;
 
-                    decimal totalFreight = dr.Freight + dr.Demuragge + dr.ECC;
+                    decimal totalFreight = dr.Freight + dr.ECC;
                     decimal netTotalFreight = (totalFreight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(totalFreight) : totalFreight) * dr.Quantity;
                     worksheet.Cells[currentRow, 20].Value = netTotalFreight;
-                    sumOfTotalFreight += netTotalFreight;
+                    sumOfTotalFreight += netTotalFreight + dr.Demuragge;
 
                     currentRow++;
                 }
