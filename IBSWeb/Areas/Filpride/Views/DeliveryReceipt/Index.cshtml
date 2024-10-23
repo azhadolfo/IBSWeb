@@ -44,6 +44,9 @@
                         Product
                     </th>
                     <th>
+                        Quantity
+                    </th>
+                    <th>
                         Total Amount
                     </th>
                     <th>
@@ -81,6 +84,13 @@
                 { "data": "customerOrderSlip.customerOrderSlipNo" },
                 { "data": "customer.customerName" },
                 { "data": "customerOrderSlip.product.productName" },
+                {
+                    "data": "quantity",
+                    "render": function (data, type, row) {
+                        var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
+                        return `<span class="text-end d-block">${amount}</span>`;
+                    }
+                },
                 {
                     "data": "totalAmount",
                     "render": function (data, type, row) {

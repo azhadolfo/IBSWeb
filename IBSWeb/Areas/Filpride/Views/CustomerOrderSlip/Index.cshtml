@@ -32,6 +32,9 @@
                         OTC COS No
                     </th>
                     <th>
+                        IS PO No
+                    </th>
+                    <th>
                         @Html.DisplayNameFor(m => m.Date)
                     </th>
                     <th>
@@ -75,6 +78,7 @@
                 "columns": [
                     { "data": "customerOrderSlipNo" },
                     { "data": "oldCosNo" },
+                    { "data": "purchaseOrder.oldPoNo" },
                     { "data": "date", "render": function (data) {
                         var date = new Date(data);
                         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
