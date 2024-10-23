@@ -44,8 +44,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideDeliveryReceipt> query = dbSet
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(po => po.Product)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Supplier)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .Include(dr => dr.Hauler)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
                 .Include(dr => dr.Customer)
@@ -63,8 +62,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await dbSet.Where(filter)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(po => po.Product)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Supplier)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .Include(dr => dr.Hauler)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
                 .Include(dr => dr.Customer)
@@ -238,7 +236,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.CreatedBy,
                     CreatedDate = deliveryReceipt.CreatedDate,
-                    SupplierId = deliveryReceipt.CustomerOrderSlip.Supplier?.SupplierId ?? deliveryReceipt.CustomerOrderSlip.PurchaseOrder.SupplierId
+                    SupplierId = deliveryReceipt.PurchaseOrder.Supplier.SupplierId
                 });
 
                 if (deliveryReceipt.Freight > 0)
