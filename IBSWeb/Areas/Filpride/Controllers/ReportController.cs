@@ -535,8 +535,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["L9"].Value = "HAULER NAME";
                 worksheet.Cells["M9"].Value = "DELIVERY DATE";
                 worksheet.Cells["N9"].Value = "STATUS";
+                worksheet.Cells["O9"].Value = "SUPPLIER";
+                worksheet.Cells["P9"].Value = "COST";
+                worksheet.Cells["Q9"].Value = "FREIGHT";
+                worksheet.Cells["R9"].Value = "DEMURRAGE";
+                worksheet.Cells["S9"].Value = "ECC";
+                worksheet.Cells["T9"].Value = "TOTAL FREIGHT";
 
                 int currentRow = 10;
+                decimal sumOfCost = 0;
+                decimal sumOfFreight = 0;
+                decimal sumOfDemurrage = 0;
+                decimal sumOfECC = 0;
+                decimal sumOfTotalFreight = 0;
+
                 foreach (var dr in deliveryReceipts.OrderBy(d => d.Date))
                 {
                     worksheet.Cells[currentRow, 1].Value = dr.Date.ToString("dd-MMM-yy");
@@ -553,16 +565,45 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[currentRow, 12].Value = dr.Hauler.SupplierName;
                     worksheet.Cells[currentRow, 13].Value = dr.DeliveredDate?.ToString("dd-MMM-yy");
                     worksheet.Cells[currentRow, 14].Value = dr.Status == nameof(Status.Pending) ? "IN TRANSIT" : dr.Status.ToUpper();
+                    worksheet.Cells[currentRow, 15].Value = dr.PurchaseOrder.Supplier.SupplierName;
+
+                    decimal cost = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.PurchaseOrder.Price) * dr.Quantity;
+                    worksheet.Cells[currentRow, 16].Value = cost;
+                    sumOfCost += cost;
+
+                    decimal freight = (dr.Freight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.Freight) : dr.Freight) * dr.Quantity;
+                    worksheet.Cells[currentRow, 17].Value = freight;
+                    sumOfFreight += freight;
+
+                    decimal demurrage = (dr.Demuragge > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.Demuragge) : dr.Demuragge) * dr.Quantity;
+                    worksheet.Cells[currentRow, 18].Value = demurrage;
+                    sumOfDemurrage += demurrage;
+
+                    decimal ecc = (dr.ECC > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.ECC) : dr.ECC) * dr.Quantity;
+                    worksheet.Cells[currentRow, 19].Value = ecc;
+                    sumOfECC += ecc;
+
+                    decimal totalFreight = dr.Freight + dr.Demuragge + dr.ECC;
+                    decimal netTotalFreight = (totalFreight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(totalFreight) : totalFreight) * dr.Quantity;
+                    worksheet.Cells[currentRow, 20].Value = netTotalFreight;
+                    sumOfTotalFreight += netTotalFreight;
+
                     currentRow++;
                 }
+
 
                 // Total row
                 worksheet.Cells[currentRow + 1, 5].Value = "TOTAL";
                 worksheet.Cells[currentRow + 1, 6].Value = deliveryReceipts.Sum(dr => dr.Quantity);
                 worksheet.Cells[currentRow + 1, 7].Value = deliveryReceipts.Sum(dr => dr.TotalAmount);
+                worksheet.Cells[currentRow + 1, 16].Value = sumOfCost;
+                worksheet.Cells[currentRow + 1, 17].Value = sumOfFreight;
+                worksheet.Cells[currentRow + 1, 18].Value = sumOfDemurrage;
+                worksheet.Cells[currentRow + 1, 19].Value = sumOfECC;
+                worksheet.Cells[currentRow + 1, 20].Value = sumOfTotalFreight;
 
                 // Adding borders and bold styling to the total row
-                using (var totalRowRange = worksheet.Cells[currentRow + 1, 1, currentRow + 1, 14]) // Whole row
+                using (var totalRowRange = worksheet.Cells[currentRow + 1, 1, currentRow + 1, 20]) // Whole row
                 {
                     totalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     totalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
@@ -584,11 +625,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[currentRow + 5, 8].Value = "CNC SUPERVISOR";
 
                 // Styling and formatting (optional)
-                worksheet.Cells["A1:N9"].Style.Font.Bold = true;
-                worksheet.Cells["B:N"].AutoFitColumns();
-                worksheet.Cells["F:G"].Style.Numberformat.Format = "#,##0.00";
+                worksheet.Cells["B:T"].AutoFitColumns();
+                worksheet.Cells["F,G,P:T"].Style.Numberformat.Format = "#,##0.00";
 
-                using (var range = worksheet.Cells["A9:N9"])
+                using (var range = worksheet.Cells["A9:T9"])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Font.Color.SetColor(Color.White);
