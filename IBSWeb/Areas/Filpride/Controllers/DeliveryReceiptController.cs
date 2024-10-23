@@ -652,7 +652,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells["H2"].Value = deliveryReceipt.AuthorityToLoadNo;
                 worksheet.Cells["H7"].Value = receivingReport?.ReceivingReportNo;
-                worksheet.Cells["H9"].Value = deliveryReceipt.DeliveryReceiptNo;
+                worksheet.Cells["H9"].Value = deliveryReceipt.ManualDrNo;
                 worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
                 worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip.CustomerOrderSlipNo;
                 worksheet.Cells["B11"].Value = deliveryReceipt.CustomerOrderSlip.PickUpPoint.Depot.ToUpper();
