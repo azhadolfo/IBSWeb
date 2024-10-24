@@ -896,8 +896,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Retrieve Supplier
 
+                    #region -- Get PO --
+
+                    var getPurchaseOrder = await _dbContext.FilpridePurchaseOrders
+                                                    .Where(po => viewModel.POSeries.Contains(po.PurchaseOrderNo))
+                                                    .FirstOrDefaultAsync();
+
+                    #endregion -- Get PO --
+
                     #region --Saving the default entries
-                    var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, cancellationToken);
+                    var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getPurchaseOrder.Type, cancellationToken);
                     var cashInBank = viewModel.Credit[2]; ;
                     var cvh = new FilprideCheckVoucherHeader
                     {
@@ -915,7 +923,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Total = cashInBank,
                         Amount = viewModel.Amount,
                         CreatedBy = _userManager.GetUserName(this.User),
-                        Company = companyClaims
+                        Company = companyClaims,
+                        Type = getPurchaseOrder.Type,
                     };
 
                     await _dbContext.FilprideCheckVoucherHeaders.AddAsync(cvh, cancellationToken);
@@ -1125,7 +1134,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     FilprideCheckVoucherHeader checkVoucherHeader = new()
                     {
-                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, cancellationToken),
+                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken),
                         Date = viewModel.TransactionDate,
                         Payee = viewModel.SupplierName,
                         PONo = [viewModel.PoNo],
@@ -1136,7 +1145,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CreatedBy = _userManager.GetUserName(this.User),
                         Category = "Non-Trade",
                         CvType = "Invoicing",
-                        Company = companyClaims
+                        Company = companyClaims,
+                        Type = viewModel.Type
                     };
 
                     #endregion -- Saving the default entries --
@@ -1349,7 +1359,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     FilprideCheckVoucherHeader checkVoucherHeader = new()
                     {
-                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, cancellationToken),
+                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, invoicingVoucher.Type, cancellationToken),
                         Date = viewModel.TransactionDate,
                         PONo = invoicingVoucher.PONo,
                         SINo = invoicingVoucher.SINo,
@@ -1365,7 +1375,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CheckNo = viewModel.CheckNo,
                         CheckDate = viewModel.CheckDate,
                         CheckAmount = viewModel.Total,
-                        Company = companyClaims
+                        Company = companyClaims,
+                        Type = invoicingVoucher.Type
                     };
 
                     await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);

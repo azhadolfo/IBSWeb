@@ -188,13 +188,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
                                                    .FirstOrDefaultAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
-                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
+
+                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeForSIAsync(companyClaims, existingSalesInvoice.Type, cancellationToken);
 
                     model.SINo = existingSalesInvoice.SalesInvoiceNo;
                     model.CollectionReceiptNo = generateCRNo;
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Total = computeTotalInModelIfZero;
                     model.Company = companyClaims;
+                    model.Type = existingSalesInvoice.Type;
+
 
                     try
                     {
@@ -388,10 +391,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             model.MultipleSI[i] = salesInvoice.SalesInvoiceNo;
                             model.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
+                            model.Type = salesInvoice.Type;
                         }
                     }
 
-                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
+                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeForSIAsync(companyClaims, model.Type, cancellationToken);
 
                     model.CollectionReceiptNo = generateCRNo;
                     model.CreatedBy = _userManager.GetUserName(this.User);

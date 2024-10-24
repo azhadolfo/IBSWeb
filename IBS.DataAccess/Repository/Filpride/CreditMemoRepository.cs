@@ -1,6 +1,8 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
+using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -15,11 +17,23 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
+        {
+            if (type == nameof(DocumentType.Documented))
+            {
+                return await GenerateCodeForDocumented(company, cancellationToken);
+            }
+            else
+            {
+                return await GenerateCodeForUnDocumented(company, cancellationToken);
+            }
+        }
+
+        private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
             FilprideCreditMemo? lastCm = await _db
                 .FilprideCreditMemos
-                .Where(cm => cm.Company == company)
+                .Where(cm => cm.Company == company && cm.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.CreditMemoNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -34,6 +48,28 @@ namespace IBS.DataAccess.Repository.Filpride
             else
             {
                 return "CM0000000001";
+            }
+        }
+
+        private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
+        {
+            FilprideCreditMemo? lastCm = await _db
+                .FilprideCreditMemos
+                .Where(cm => cm.Company == company && cm.Type == nameof(DocumentType.Undocumented))
+                .OrderBy(c => c.CreditMemoNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastCm != null)
+            {
+                string lastSeries = lastCm.CreditMemoNo;
+                string numericPart = lastSeries.Substring(3);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+            }
+            else
+            {
+                return "CMU000000001";
             }
         }
 
