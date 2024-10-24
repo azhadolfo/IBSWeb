@@ -46,5 +46,10 @@ namespace IBS.Models.Mobility.MasterFile
 
         [Display(Name = "Edited Date")]
         public DateTime? EditedDate { get; set; }
+
+        [Required]
+        [Display(Name = "Payment Terms")]
+        [Column(TypeName = "varchar(10)")]
+        public string CustomerTerms { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241022091604_AddCustomerTermsInCustomerModel")]
+    partial class AddCustomerTermsInCustomerModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -5843,14 +5846,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("amount");
 
-                    b.Property<string>("ApprovedBy")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("approved_by");
-
-                    b.Property<DateTime?>("ApprovedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("approved_date");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
                         .HasColumnName("created_by");
@@ -5907,7 +5902,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("plate_no");
 
                     b.Property<decimal>("PricePerLiter")
-                        .HasColumnType("numeric(18,2)")
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("price_per_liter");
 
                     b.Property<int>("ProductId")
@@ -5915,17 +5910,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("product_id");
 
                     b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric")
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("quantity");
 
                     b.Property<string>("StationCode")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("station_code");
-
-                    b.Property<int>("StationId")
-                        .HasColumnType("integer")
-                        .HasColumnName("station_id");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -5937,21 +5928,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("terms");
 
-                    b.Property<string>("TripTicket")
-                        .HasColumnType("text")
-                        .HasColumnName("trip_ticket");
-
                     b.Property<string>("Upload")
                         .HasColumnType("varchar(1024)")
                         .HasColumnName("upload");
-
-                    b.Property<string>("UploadedBy")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("uploaded_by");
-
-                    b.Property<DateTime?>("UploadedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("uploaded_date");
 
                     b.HasKey("CustomerOrderSlipId")
                         .HasName("pk_mobility_customer_order_slips");
@@ -5961,9 +5940,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("ProductId")
                         .HasDatabaseName("ix_mobility_customer_order_slips_product_id");
-
-                    b.HasIndex("StationId")
-                        .HasDatabaseName("ix_mobility_customer_order_slips_station_id");
 
                     b.ToTable("mobility_customer_order_slips", (string)null);
                 });
@@ -6706,16 +6682,7 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_mobility_customer_order_slips_products_product_id");
 
-                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityStation", "MobilityStation")
-                        .WithMany()
-                        .HasForeignKey("StationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_mobility_customer_order_slips_mobility_stations_station_id");
-
                     b.Navigation("Customer");
-
-                    b.Navigation("MobilityStation");
 
                     b.Navigation("Product");
                 });
