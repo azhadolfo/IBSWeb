@@ -745,12 +745,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
                     PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
                     COSVolume = existingRecord.Quantity,
-                    SupplierId = (int)existingRecord.SupplierId,
+                    SupplierId = (int)(existingRecord.Supplier?.SupplierId ?? existingRecord.PurchaseOrder.SupplierId),
                     DeliveryOption = existingRecord.DeliveryOption,
                     Freight = (decimal)existingRecord.Freight,
                     PickUpPointId = (int)existingRecord.PickUpPointId,
                     PickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                    .GetPickUpPointListBasedOnSupplier((int)existingRecord.SupplierId, cancellationToken),
+                    .GetPickUpPointListBasedOnSupplier((int)(existingRecord.Supplier?.SupplierId ?? existingRecord.PurchaseOrder.SupplierId), cancellationToken),
                     SubPoRemarks = existingRecord.SubPORemarks
                 };
 
