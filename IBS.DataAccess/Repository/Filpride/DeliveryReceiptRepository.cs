@@ -378,6 +378,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 if (cos.BalanceQuantity <= 0)
                 {
                     cos.IsDelivered = true;
+                    cos.Status = nameof(CosStatus.Completed);
                 }
             }
         }

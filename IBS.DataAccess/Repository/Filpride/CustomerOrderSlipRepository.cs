@@ -99,7 +99,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.Completed) && !cos.IsDelivered)
+                .Where(cos => cos.Status == nameof(CosStatus.Approved) && !cos.IsDelivered)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -112,7 +112,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.Completed) && cos.CustomerId == customerId && !cos.IsDelivered)
+                .Where(cos => cos.Status == nameof(CosStatus.Approved) && cos.CustomerId == customerId && !cos.IsDelivered)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -125,7 +125,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.Completed) && cos.CustomerId == customerId)
+                .Where(cos => cos.Status == nameof(CosStatus.Approved) && cos.CustomerId == customerId)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -142,7 +142,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             customerOrderSlip.TotalAmount = customerOrderSlip.Quantity * customerOrderSlip.DeliveredPrice;
 
-            customerOrderSlip.Status = nameof(CosStatus.ApprovedByOpsManager);
+            customerOrderSlip.Status = nameof(CosStatus.ApprovedByOM);
 
             await _db.SaveChangesAsync(cancellationToken);
         }
@@ -194,7 +194,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .SumAsync(dr => dr.TotalAmount, cancellationToken);
 
             var outstandingCos = await _db.FilprideCustomerOrderSlips
-                .Where(cos => cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.Now) && cos.Status == nameof(CosStatus.Completed))
+                .Where(cos => cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.Now) && cos.Status == nameof(CosStatus.Approved))
                 .SumAsync(cos => cos.TotalAmount, cancellationToken);
 
             var availableCreditLimit = await _db.FilprideCustomers
@@ -207,7 +207,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task FinanceApproved(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default)
         {
-            customerOrderSlip.Status = nameof(CosStatus.Completed);
+            customerOrderSlip.Status = nameof(CosStatus.Approved);
 
             await _db.SaveChangesAsync(cancellationToken);
         }

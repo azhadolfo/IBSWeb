@@ -30,7 +30,8 @@
     {
         Created,
         SupplierAppointed,
-        ApprovedByOpsManager,
+        ApprovedByOM,
+        Approved,
         Completed,
         Disapproved,
         Expired

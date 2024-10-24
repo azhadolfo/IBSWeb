@@ -394,7 +394,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo.Type, cancellationToken),
                                 Date = DateOnly.FromDateTime(DateTime.Now),
-                                SupplierId = (int)existingRecord.SupplierId,
+                                SupplierId = existingPo.SupplierId,
                                 ProductId = existingPo.ProductId,
                                 Terms = existingPo.Terms,
                                 Quantity = existingRecord.Quantity,
@@ -433,7 +433,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo.Type, cancellationToken),
                                     Date = DateOnly.FromDateTime(DateTime.Now),
-                                    SupplierId = (int)existingRecord.SupplierId,
+                                    SupplierId = existingPo.SupplierId,
                                     ProductId = existingRecord.ProductId,
                                     Terms = existingPo.Terms,
                                     Quantity = item.Quantity,

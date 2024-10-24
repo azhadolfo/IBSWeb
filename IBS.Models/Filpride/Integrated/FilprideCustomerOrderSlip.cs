@@ -164,7 +164,7 @@ namespace IBS.Models.Filpride.Integrated
 
         public string Company { get; set; } = string.Empty;
 
-        public string Status { get; set; } //Created, Supplier Appointed, Approved by Ops Manager, Approved by Finance, Hauler Appointed, Completed
+        public string Status { get; set; } //Created, Supplier Appointed, Approved by Ops Manager, Approved by Finance, Hauler Appointed, Approved
 
         public string OldCosNo { get; set; }
 
