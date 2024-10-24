@@ -180,8 +180,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         model.PurchaseOrderId = selectedPo.PurchaseOrderId;
 
-                        selectedPo.IsAssignedToDR = true;
-
                     }
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
@@ -199,6 +197,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -654,7 +653,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["H7"].Value = receivingReport?.ReceivingReportNo;
                 worksheet.Cells["H9"].Value = deliveryReceipt.ManualDrNo;
                 worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
-                worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip.CustomerOrderSlipNo;
+                worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip.OldCosNo;
                 worksheet.Cells["B11"].Value = deliveryReceipt.CustomerOrderSlip.PickUpPoint.Depot.ToUpper();
                 worksheet.Cells["C12"].Value = deliveryReceipt.Customer.CustomerName.ToUpper();
                 worksheet.Cells["C13"].Value = deliveryReceipt.Customer.CustomerAddress.ToUpper();

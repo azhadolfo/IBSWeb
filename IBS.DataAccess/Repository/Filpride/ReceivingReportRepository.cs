@@ -289,6 +289,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     .FirstOrDefaultAsync(a => a.CustomerOrderSlipId == deliveryReceipt.CustomerOrderSlipId && a.PurchaseOrderId == deliveryReceipt.PurchaseOrderId);
 
                 appointedSupplier.UnservedQuantity -= deliveryReceipt.Quantity;
+
+                if (appointedSupplier.UnservedQuantity <= 0)
+                {
+                    appointedSupplier.IsAssignedToDR = true;
+                }
             }
 
             model.ReceivedDate = model.Date;
