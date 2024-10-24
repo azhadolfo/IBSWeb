@@ -56,6 +56,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<List<SelectListItem>> GetMobilityStationListAsyncByCode(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMobilityCustomerListAsyncByCodeName(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetMobilityCustomerListAsyncById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMobilityCustomerListAsyncByCode(CancellationToken cancellationToken = default);
 

@@ -1,0 +1,182 @@
+﻿@model IEnumerable<MobilityCustomerOrderSlip>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@using IBS.Utility
+
+@{
+    ViewData["Title"] = "Customer Order Slip";
+    var userDepartment = ViewBag.userDepartment;
+    var currentStationCode = ViewData["StationCode"] as string;
+}
+
+<div class="card shadow border-0 mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">CUSTOMER ORDER SLIP</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body p-4 table-responsive">
+
+        <div class="row pb-3">
+            @if (userDepartment == SD.Department_Marketing || User.IsInRole("Admin"))
+            {
+                <div class="col-12 text-end">
+                    <a asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create COS
+                    </a>
+                </div>
+            }
+        </div>
+
+        <div class="text-center" >
+            <label>
+                <input type="radio" name="radioOption" value="" class="search-radio ms-5"> All
+            </label>
+            <label>
+                <input type="radio" name="radioOption" value="Approved" class="search-radio ms-5"> Approved
+            </label>
+            <label>
+                <input type="radio" name="radioOption" value="Disapproved" class="search-radio ms-5"> Disapproved
+            </label>
+            @if (userDepartment != SD.Department_StationCashier)
+            {
+                <label>
+                    <input type="radio" name="radioOption" value="Pending" class="search-radio ms-5"> Pending
+                </label>
+            }
+            <label>
+                <input type="radio" name="radioOption" value="Done" class="search-radio ms-5"> Done
+            </label>
+        </div>
+
+        <table class="table table-bordered table-striped table-hover" id="dataTable">
+            <thead>
+                <tr>
+                    <th class="text-start">@Html.DisplayNameFor(model => model.CustomerOrderSlipNo)</th>
+                    @if (currentStationCode == "ALL")
+                    {
+                        <th class="text-start">@Html.DisplayNameFor(model => model.StationCode)</th>
+                    }
+                    <th class="text-start">@Html.DisplayNameFor(model => model.Date)</th>
+                    <th class="text-start">@Html.DisplayNameFor(model => model.Customer)</th>
+                    <th class="text-start">@Html.DisplayNameFor(model => model.Driver)</th>
+                    <th class="text-start">@Html.DisplayNameFor(model => model.PlateNo)</th>
+                    <th class="text-start">@Html.DisplayNameFor(model => model.Product)</th>
+                    <th class="text-start">@Html.DisplayNameFor(model => model.Quantity)</th>
+                    <th class="text-start">@Html.DisplayNameFor(model => model.Amount)</th>
+                    <th class="text-start">@Html.DisplayNameFor(model => model.Status)</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    if ((userDepartment == SD.Department_StationCashier) && (item.Status == "Pending"))
+                    {
+                        
+                    }
+                    else
+                    {
+                        <tr>
+                            <td class="text-start align-middle">
+                                @item.CustomerOrderSlipNo
+                            </td>
+                            @if (currentStationCode == "ALL")
+                            {
+                                <td class="text-start align-middle">
+                                    @Html.DisplayFor(model => item.MobilityStation.StationName)
+                                </td>
+                            }
+                            <td class="text-start align-middle">
+                                @item.Date.ToString("yyyy/MM/dd")
+                            </td>
+                            <td class="text-start align-middle">
+                                @item.Customer.CustomerName
+                            </td>
+                            <td class="text-start align-middle">
+                                @item.Driver
+                            </td>
+                            <td class="text-start align-middle">
+                                @item.PlateNo
+                            </td>
+                            <td class="text-start align-middle">
+                                @item.Product.ProductName
+                            </td>
+                            <td class="text-start align-middle">
+                                @Html.DisplayFor(model => item.Quantity)
+                            </td>
+                            <td class="text-start align-middle">
+                                @Html.DisplayFor(model => item.Amount)
+                            </td>
+                            <td class="text-center align-middle">
+                                @{
+                                    var status = item.Status == "Disapproved"
+                                    ? "Disapproved"
+                                    : item.Status == "Approved"
+                                    ? "Approved"
+                                    : item.Status == "Done"
+                                    ? "Done"
+                                    : "Pending";
+                                }
+                                <span class="badge rounded-pill @if(item.Status == "Approved") {
+                                                            <text>bg-info</text>
+                                    } else if(status == "Disapproved") {
+                                                            <text>bg-danger</text>
+                                    } else if(status == "Pending") {
+                                                            <text>bg-warning</text>
+                                    } else if(status == "Done") {
+                                                            <text>bg-success</text>
+                                    }" style="font-size: 14px">@Html.DisplayFor(model => item.Status)</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                    <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                        @if ((userDepartment == SD.Department_Marketing || User.IsInRole("Admin")) && item.Status == "Pending")
+                                        {
+                                            <li><a class="dropdown-item" href="@Url.Action("Edit", "CustomerOrderSlip", new { area = "Mobility" })/@item.CustomerOrderSlipId">Edit</a></li>
+                                        }
+                                        <li><a class="dropdown-item" href="@Url.Action("Print", "CustomerOrderSlip", new { area = "Mobility" })/@item.CustomerOrderSlipId">Preview</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            $('.search-radio').change(function () {
+
+                var searchValue = $(this).val();
+
+                table.destroy();
+
+                table = $('#dataTable').DataTable({
+                    stateSave: false,
+                    processing: true
+                });
+
+                table.search(searchValue, true, false).draw();
+                var currentStationCode = '@ViewData["StationCode"]';
+                var columnNumber = currentStationCode == "ALL" ? 9 : 8;
+                if (searchValue != "") {
+                    table.column(columnNumber)
+                        .search('^' + $.fn.dataTable.util.escapeRegex(searchValue) + '$', true, false)
+                        .draw();
+                }
+            });
+        });
+    </script>
+}

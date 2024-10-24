@@ -1,0 +1,126 @@
+﻿@model MobilityCustomerOrderSlip
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@using IBS.Utility
+
+@{
+    ViewData["Title"] = "Customer Order Slip";
+    var userDepartment = ViewBag.GetUserDepartment;
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">CUSTOMER ORDER SLIP</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row mt-2">
+            <div class="col-9">
+                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Customer.CustomerName):</b> @Html.DisplayFor(model => model.Customer.CustomerName)</h6>
+                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Address):</b> @Html.DisplayFor(model => model.Address)</h6>
+                <h6 class="px-2"><b>Plate Number:</b> @Html.DisplayFor(model => model.PlateNo)</h6>
+                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Driver):</b> @Html.DisplayFor(model => model.Driver)</h6>
+                @if (!string.IsNullOrEmpty(Model.TripTicket))
+                {
+                    <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.TripTicket):</b> @Html.DisplayFor(model => model.TripTicket)</h6>
+                }
+            </div>
+            <div class="col-3" style="white-space: nowrap;">
+                    <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.Date):</b> @Html.DisplayFor(model => model.Date)</h6>
+                    <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.MobilityStation.StationName):</b> @Html.DisplayFor(model => model.MobilityStation.StationName)</h6>
+                    <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.Terms):</b> @Html.DisplayFor(model => model.Customer.CustomerTerms)</h6>
+                    @if(Model.LoadDate.HasValue)
+                    {
+                        <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.LoadDate):</b> @Html.DisplayFor(model => model.LoadDate)</h6>
+                    }
+            </div>
+        </div>
+
+        </br>
+
+        <table class="table table-bordered table-striped px-4">
+            <thead>
+                <tr>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Quantity)</th>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.PricePerLiter)</th>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Amount)</th>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Product.ProductName)</th>
+                </tr>
+            </thead>
+            <tr>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Quantity)</td>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.PricePerLiter)</td>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Amount)</td>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Product.ProductName)</td>
+            </tr>
+        </table>
+
+        </br>   
+        
+        @if (!string.IsNullOrEmpty(Model.Upload))
+        {
+            <div class="w-100 text-center">
+                <a href="/documents/uploaded by cashier/@Model.Upload" target="_blank">
+                    <img src="/documents/uploaded by cashier/@Model.Upload" class="img-fluid" style="max-height: 400px; width:auto; cursor: pointer;" alt="placeholder">
+                </a>
+            </div>
+        }
+
+        </br>
+        <div class="row pt-2">
+            @if (userDepartment == SD.Department_Finance && Model.Status == "Pending" || User.IsInRole("Admin") && Model.Status == "Pending")
+            {
+                <div class="col-6 col-md-3">
+                    <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
+                </div>
+            }
+            @if (string.IsNullOrEmpty(Model.Upload) && Model.Status == "Approved" && (userDepartment == SD.Department_StationCashier || User.IsInRole("Admin")))
+            {
+                <div class="col-6 col-md-3">
+                    <a asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-route-id="@Model.CustomerOrderSlipId" asp-action="Upload" class="btn btn-primary border form-control buttons">Enter proof of transaction</a>
+                </div>
+            }
+            <div class="col-6 col-md-3">
+                <a @* asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Printed" asp-route-id="@Model.CustomerOrderSlipId" *@ onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border form-control buttons"> Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        (document).getElementById('approveButton').addEventListener('click', function () {
+            Swal.fire({
+                title: 'Choose an action',
+                text: "Approve this COS entry?",
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'Approve',
+                denyButtonText: 'Disapprove',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var url = `@Url.Action("ApproveCOS", "CustomerOrderSlip", new { area = "Mobility" })/${@Model.CustomerOrderSlipId}`;
+                    window.location.href = url;
+                } else if (result.isDenied) {
+                    var url = `@Url.Action("DisapproveCOS", "CustomerOrderSlip", new { area = "Mobility" })/${@Model.CustomerOrderSlipId}`;
+                    window.location.href = url;
+                }
+            });
+        });
+    </script>
+    <script>
+        function printPage() {
+            // Call the print function
+            window.print();
+        }
+    </script>
+}
