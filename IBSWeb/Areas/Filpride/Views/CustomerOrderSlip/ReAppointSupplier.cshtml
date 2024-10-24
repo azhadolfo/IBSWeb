@@ -165,7 +165,7 @@
 
                 $('#poQuantities').empty();
 
-                if (selectedPOs.length > 1) {
+                if (selectedPOs.length > 0) {
                     $.each(selectedPOs, function (index, po) {
                         // Get the selected option's text
                         var selectedOption = $('#PurchaseOrderIds option[value="' + po + '"]');
@@ -173,10 +173,13 @@
                         var selectedText = selectedOption.text();
                         var availableBalance = selectedOption.data('available-balance');
 
+                        // Set the first PO's balance as default quantity
+                        var defaultQuantity = index === 0 ? availableBalance : '';
+
                         $('#poQuantities').append(
                             `<div class="form-group py-2">
                                 <label for="quantity_${po}">Enter Quantity for PO ${selectedText}</label>
-                                <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${availableBalance}" value="${quantity}" placeholder="Quantity (max: ${availableBalance})" required/>
+                                <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${availableBalance}" placeholder="Quantity (max: ${availableBalance})" value="${defaultQuantity}" required/>
                             </div>`
                         );
                     });
@@ -192,8 +195,8 @@
                      var selectedPO = $('#PurchaseOrderIds').val();
                      var isValid = true;
 
-                     if (selectedPO.length > 1) {
-                         $('#poQuantities input[type="number"]').each(function() {
+                     if (selectedPO.length > 0) {
+                         $('#poQuantities input[type="number"]').each(function () {
                              var enteredQuantity = parseFloat($(this).val()) || 0;
                              var maxQuantity = parseFloat($(this).attr('max'));
 
@@ -208,14 +211,14 @@
 
                          // Check if total quantity is equal to COS volume
                          if (totalQuantity !== cosVolume) {
-                             alert(`Total quantity (${totalQuantity}) must equal the available COS volume of ${cosVolume}.`);
+                             alert(`Total quantity (${totalQuantity}) must equal the available COS quantity of ${cosVolume}.`);
                              isValid = false;
                          }
                      }
 
                      // Additional validation for total quantity not exceeding the PO available balance
                      var totalAvailableBalance = 0;
-                     $('#PurchaseOrderIds option:selected').each(function() {
+                     $('#PurchaseOrderIds option:selected').each(function () {
                          totalAvailableBalance += parseFloat($(this).data('available-balance')) || 0;
                      });
 
