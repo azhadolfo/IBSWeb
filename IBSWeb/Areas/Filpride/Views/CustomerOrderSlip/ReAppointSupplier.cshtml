@@ -176,6 +176,16 @@
                         // Set the first PO's balance as default quantity
                         var defaultQuantity = index === 0 ? availableBalance : '';
 
+                        if (index === 0 && availableBalance >= cosVolume) {
+                            defaultQuantity = cosVolume;
+                        }
+                        else if (index === 0 && availableBalance < cosVolume) {
+                            defaultQuantity = availableBalance;
+                        }
+                        else {
+                            defaultQuantity = '';
+                        }
+
                         $('#poQuantities').append(
                             `<div class="form-group py-2">
                                 <label for="quantity_${po}">Enter Quantity for PO ${selectedText}</label>

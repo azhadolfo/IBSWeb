@@ -90,7 +90,7 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    <script>
+<script>
     $(document).ready(function () {
 
         $('input[name="DeliveryOption"]').change(function () {
@@ -160,9 +160,20 @@
                     var selectedOption = $('#PurchaseOrderIds option[value="' + po + '"]');
                     var selectedText = selectedOption.text();
                     var availableBalance = selectedOption.data('available-balance');
+                    var cosVolume = @Model.COSVolume;
 
                     // Set the first PO's balance as default quantity
                     var defaultQuantity = index === 0 ? availableBalance : '';
+
+                    if (index === 0 && availableBalance >= cosVolume) {
+                        defaultQuantity = cosVolume;
+                    }
+                    else if (index === 0 && availableBalance < cosVolume) {
+                        defaultQuantity = availableBalance;
+                    }
+                    else {
+                        defaultQuantity = '';
+                    }
 
                     $('#poQuantities').append(
                         `<div class="form-group py-2">
@@ -221,6 +232,6 @@
         });
 
     });
-    </script>
+</script>
 
 }
