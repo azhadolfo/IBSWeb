@@ -321,7 +321,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Upload(int id, IFormFile file, DateOnly loadDate, string tripTicket, CancellationToken cancellationToken)
+        public async Task<IActionResult> Print(int id, IFormFile file, DateTime loadDate, string tripTicket, CancellationToken cancellationToken)
         {
             if (file.ContentType == "image/png" || file.ContentType == "image/jpg" || file.ContentType == "image/jpeg")
             {
