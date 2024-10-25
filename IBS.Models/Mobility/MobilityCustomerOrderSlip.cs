@@ -73,7 +73,7 @@ namespace IBS.Models.Mobility.ViewModels
         public string? Upload { get; set; }
 
         [Display(Name ="Date Loaded")]
-        public DateOnly? LoadDate { get; set; }
+        public DateTime? LoadDate { get; set; }
 
         [Display(Name = "Station")]
         public string StationCode { get; set; }
