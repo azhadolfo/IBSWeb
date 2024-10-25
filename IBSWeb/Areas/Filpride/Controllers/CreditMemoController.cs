@@ -765,9 +765,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             if (existingSv.Customer.VatType == "Vatable")
                             {
-                                var total = Math.Round(model.Amount ?? 0 / 1.12m, 2);
+                                var total = Math.Round(model.Amount ?? 0 / 1.12m, 4);
 
-                                var roundedNetAmount = Math.Round(viewModelDMCM.NetAmount, 2);
+                                var roundedNetAmount = Math.Round(viewModelDMCM.NetAmount, 4);
 
                                 if (roundedNetAmount > total)
                                 {

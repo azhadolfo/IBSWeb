@@ -88,14 +88,14 @@
                     {
                         "data": "quantity",
                         "render": function (data, type, row) {
-                            var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
+                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
                             return `<span class="text-end d-block">${amount}</span>`;
                         }
                     },
                     {
                         "data": "totalAmount",
                         "render": function (data, type, row) {
-                            var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
+                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
                             return `<span class="text-end d-block">${amount}</span>`;
                         }
                     },

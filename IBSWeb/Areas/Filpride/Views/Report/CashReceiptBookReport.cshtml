@@ -139,8 +139,8 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
                 <td></td>
                 <td></td>
                 <td class="text-center"><b>TOTAL:</b></td>
-                <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalCreditAmount.ToString("N2")</td>
-                <td class="text-end" style="padding: 10px 30px 10px 30px;"><div>@totalDebitAmount.ToString("N2")</div></td>
+                <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalCreditAmount.ToString("N4")</td>
+                <td class="text-end" style="padding: 10px 30px 10px 30px;"><div>@totalDebitAmount.ToString("N4")</div></td>
             </tr>
         </tbody>
     </table>
@@ -289,7 +289,7 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
 
         // Replace the placeholder in the HTML with the actual number of records
         resultPre.innerHTML = resultPre.innerHTML.replace('@numberOfRecords', (allTrElements.length - 1));
-        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalDebitAmount.ToString("N2")");
+        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalDebitAmount.ToString("N4")");
     </script>
 
 }

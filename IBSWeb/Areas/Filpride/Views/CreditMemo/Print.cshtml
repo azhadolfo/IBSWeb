@@ -73,7 +73,7 @@
                     <td>@Model.SalesInvoice.TransactionDate.ToString("MM/dd/yyyy")</td>
                     <td>@Html.DisplayFor(model => model.SalesInvoice.Product.ProductName)</td>
                     <td>@Html.DisplayFor(model => model.Description)</td>
-                    <td>@Math.Abs(Model.CreditAmount).ToString("N2")</td>
+                    <td>@Math.Abs(Model.CreditAmount).ToString("N4")</td>
                 </tr>
             </tbody>
         </table>
@@ -93,7 +93,7 @@
                                         <td class="w-50"><p style="height: 9px; margin-left:8%;"><b>Vatable Sales: </b></p></td>
                                         @if (netOfVatAmount != 0)
                                         {
-                                            <td class="text-end">@Math.Abs(netOfVatAmount).ToString("N2")</td>
+                                            <td class="text-end">@Math.Abs(netOfVatAmount).ToString("N4")</td>
                                         }
                                         else
                                         {
@@ -104,7 +104,7 @@
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
                                         @if (Model.SalesInvoice.Customer.CustomerType == "Zero Rated")
                                         {
-                                            <td class="text-end">@Math.Abs(Model.CreditAmount).ToString("N2")</td>
+                                            <td class="text-end">@Math.Abs(Model.CreditAmount).ToString("N4")</td>
                                         }
                                         else
                                         {
@@ -128,7 +128,7 @@
 
                                         @if (vatAmount != 0)
                                         {
-                                            <td class="text-end">@Math.Abs(vatAmount).ToString("N2")</td>
+                                            <td class="text-end">@Math.Abs(vatAmount).ToString("N4")</td>
                                         }
                                         else
                                         {
@@ -137,7 +137,7 @@
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>TOTAL SALES: </b></p></td>
-                                        <td class="text-end">@Math.Abs(Model.CreditAmount).ToString("N2")</td>
+                                        <td class="text-end">@Math.Abs(Model.CreditAmount).ToString("N4")</td>
                                     </tr>
                                 </tbody>
                             </table>

@@ -27,9 +27,9 @@
                         @firstLevel.AccountNumber - @firstLevel.AccountName
                     </span>
                 </td>
-                <td>@firstLevel.Debit.ToString("N2")</td>
-                <td>@firstLevel.Credit.ToString("N2")</td>
-                <td>@firstLevel.Balance.ToString("N2")</td>
+                <td>@firstLevel.Debit.ToString("N4")</td>
+                <td>@firstLevel.Credit.ToString("N4")</td>
+                <td>@firstLevel.Balance.ToString("N4")</td>
             </tr>
             @if (firstLevel.Children.Any(c => c.Balance != 0))
             {
@@ -41,9 +41,9 @@
                                 <i class="bi bi-arrow-return-right"></i> @secondLevel.AccountNumber - @secondLevel.AccountName
                             </span>
                         </td>
-                        <td>@secondLevel.Debit.ToString("N2")</td>
-                        <td>@secondLevel.Credit.ToString("N2")</td>
-                        <td>@secondLevel.Balance.ToString("N2")</td>
+                        <td>@secondLevel.Debit.ToString("N4")</td>
+                        <td>@secondLevel.Credit.ToString("N4")</td>
+                        <td>@secondLevel.Balance.ToString("N4")</td>
                     </tr>
                     if (secondLevel.Children.Any(c => c.Balance != 0))
                     {
@@ -55,9 +55,9 @@
                                         <i class="bi bi-arrow-return-right"></i> @thirdLevel.AccountNumber - @thirdLevel.AccountName
                                     </span>
                                 </td>
-                                <td>@thirdLevel.Debit.ToString("N2")</td>
-                                <td>@thirdLevel.Credit.ToString("N2")</td>
-                                <td>@thirdLevel.Balance.ToString("N2")</td>
+                                <td>@thirdLevel.Debit.ToString("N4")</td>
+                                <td>@thirdLevel.Credit.ToString("N4")</td>
+                                <td>@thirdLevel.Balance.ToString("N4")</td>
                             </tr>
                             if (thirdLevel.Children.Any(c => c.Balance != 0))
                             {
@@ -69,9 +69,9 @@
                                                 <i class="bi bi-arrow-return-right"></i> @fourthLevel.AccountNumber - @fourthLevel.AccountName
                                             </span>
                                         </td>
-                                        <td>@fourthLevel.Debit.ToString("N2")</td>
-                                        <td>@fourthLevel.Credit.ToString("N2")</td>
-                                        <td>@fourthLevel.Balance.ToString("N2")</td>
+                                        <td>@fourthLevel.Debit.ToString("N4")</td>
+                                        <td>@fourthLevel.Credit.ToString("N4")</td>
+                                        <td>@fourthLevel.Balance.ToString("N4")</td>
                                     </tr>
                                 }
                             }
@@ -84,9 +84,9 @@
     <tfoot>
         <tr>
             <td><b>Grand Total</b></td>
-            <td><b>@totalDebit.ToString("N2")</b></td>
-            <td><b>@totalCredit.ToString("N2")</b></td>
-            <td><b>@totalBalance.ToString("N2")</b></td>
+            <td><b>@totalDebit.ToString("N4")</b></td>
+            <td><b>@totalCredit.ToString("N4")</b></td>
+            <td><b>@totalBalance.ToString("N4")</b></td>
         </tr>
     </tfoot>
 </table>

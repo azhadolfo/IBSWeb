@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
-using System.Threading;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -611,7 +610,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             if (i < existingHeaderModel.Amount.Length)
                             {
-                                var amount = Math.Round(viewModel.Amount[i] - existingHeaderModel.Amount[i], 2);
+                                var amount = Math.Round(viewModel.Amount[i] - existingHeaderModel.Amount[i], 4);
                                 receivingReport.AmountPaid += amount;
                             }
                             else
@@ -2181,7 +2180,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 21].Value = item.Total;
                         if (item.Amount != null)
                         {
-                            worksheet.Cells[row, 22].Value = string.Join(" ", item.Amount.Select(amount => amount.ToString("N2")));
+                            worksheet.Cells[row, 22].Value = string.Join(" ", item.Amount.Select(amount => amount.ToString("N4")));
                         }
                         worksheet.Cells[row, 23].Value = item.CheckAmount;
                         worksheet.Cells[row, 24].Value = item.CvType;

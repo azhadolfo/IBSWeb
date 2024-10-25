@@ -19,7 +19,7 @@ namespace IBS.Models.Filpride
 
         public bool IsRemoved { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Amount { get; set; }
 

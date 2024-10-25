@@ -124,7 +124,7 @@
                 <td style="width:65%;">@Html.DisplayFor(model => model.Header.Payee)</td>
                 @if (Model.Header.Total != 0)
                 {
-                    <td class="text-end">@Model.Header.Total.ToString("N2")</td>
+                    <td class="text-end">@Model.Header.Total.ToString("N4")</td>
                 }
                 else
                 {
@@ -137,7 +137,7 @@
                     decimal convertToWords = Model.Header.Total;
 
                     int integerPart = Convert.ToInt32(Math.Floor(convertToWords));
-                    decimal decimalPart = Math.Round((convertToWords - integerPart), 2);
+                    decimal decimalPart = Math.Round((convertToWords - integerPart), 4);
 
                     // Convert integer part to words
                     string integerWords = integerPart.ToWords();
@@ -231,8 +231,8 @@
             <tr style="border-bottom:double;"></tr>
             <tr>
                 <td></td>
-                <td class="text-end">@Model.Details.Sum(d => d.Debit).ToString("N2")</td>
-                <td class="text-end">@Model.Details.Sum(d => d.Credit).ToString("N2")</td>
+                <td class="text-end">@Model.Details.Sum(d => d.Debit).ToString("N4")</td>
+                <td class="text-end">@Model.Details.Sum(d => d.Credit).ToString("N4")</td>
             </tr>
         </tbody>
     </table>

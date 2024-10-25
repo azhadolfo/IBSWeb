@@ -188,13 +188,13 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
                 <td></td>
                 <td></td>
                 <td class="text-center"><b>TOTAL:</b></td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalAmount.ToString("N2")</td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalVatableAmount.ToString("N2")</td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalVatableSales.ToString("N2")</td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalExempted.ToString("N2")</td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalZeroRated.ToString("N2")</div></td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalDiscount.ToString("N2")</div></td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalNetSales.ToString("N2")</div></td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalAmount.ToString("N4")</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalVatableAmount.ToString("N4")</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalVatableSales.ToString("N4")</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalExempted.ToString("N4")</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalZeroRated.ToString("N4")</div></td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalDiscount.ToString("N4")</div></td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalNetSales.ToString("N4")</div></td>
             </tr>
         </tbody>
     </table>
@@ -375,7 +375,7 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
 
         // Replace the placeholder in the HTML with the actual number of records
         resultPre.innerHTML = resultPre.innerHTML.replace('@numberOfRecords', (allTrElements.length - 1));
-        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount.ToString("N2")");
+        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount.ToString("N4")");
 
     </script>
 

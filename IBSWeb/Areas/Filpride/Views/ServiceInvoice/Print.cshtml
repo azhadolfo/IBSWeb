@@ -108,7 +108,7 @@
                                 <td class="text-end">
                                     @if (Model.Customer.VatType == "Vatable")
                                     {
-                                        <p class="mb-0">@((Model.Total / 1.12m).ToString("N2"))</p>
+                                        <p class="mb-0">@((Model.Total / 1.12m).ToString("N4"))</p>
                                     }
                                 </td>
                             </tr>
@@ -120,7 +120,7 @@
                                     {
                                         if (Model.Discount > 0)
                                         {
-                                            <p class="mb-0">@((Model.Total - Model.Discount).ToString("N2"))</p>
+                                            <p class="mb-0">@((Model.Total - Model.Discount).ToString("N4"))</p>
                                         }
                                         else
                                         {
@@ -138,7 +138,7 @@
                                     {
                                         if (Model.Discount > 0)
                                         {
-                                            <p class="mb-0">@((Model.Total - Model.Discount).ToString("N2"))</p>
+                                            <p class="mb-0">@((Model.Total - Model.Discount).ToString("N4"))</p>
                                         }
                                         else
                                         {
@@ -153,7 +153,7 @@
                                 <td class="text-end">
                                     @if (Model.Customer.VatType == "Vatable")
                                     {
-                                        <p class="mb-0">@(((Model.Total / 1.12m) * 0.12m).ToString("N2"))</p>
+                                        <p class="mb-0">@(((Model.Total / 1.12m) * 0.12m).ToString("N4"))</p>
                                     }
                                 </td>
                             </tr>

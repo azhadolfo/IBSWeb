@@ -1088,7 +1088,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         fileContent.AppendLine($"{record.Date.ToString("MM/dd/yyyy"),-10}\t{record.Product.ProductCode,-20}\t{record.Product.ProductCode,-50}\t{record.Unit,-2}\t{record.Quantity,18}\t{record.Cost,18}\t{record.Total,18}");
                     }
                     fileContent.AppendLine(new string('-', 171));
-                    fileContent.AppendLine($"{"",-10}\t{"",-20}\t{"",-50}\t{"TOTAL:",2}\t{totalQuantity,18}\t{totalPriceUnitAmount.ToString("N2"),18}\t{totalAmount,18}");
+                    fileContent.AppendLine($"{"",-10}\t{"",-20}\t{"",-50}\t{"TOTAL:",2}\t{totalQuantity,18}\t{totalPriceUnitAmount.ToString("N4"),18}\t{totalAmount,18}");
 
                     fileContent.AppendLine();
                     fileContent.AppendLine($"Software Name: {CS.AAS}");

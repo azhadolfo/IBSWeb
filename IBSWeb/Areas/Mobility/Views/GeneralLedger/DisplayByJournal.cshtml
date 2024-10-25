@@ -85,8 +85,8 @@
                 }
                 <tr class="table-primary">
                     <td colspan="4" class="text-center">TOTAL</td>
-                    <td class="text-end">@Model.Sum(j => j.Debit).ToString("N2")</td>
-                    <td class="text-end">@Model.Sum(j => j.Credit).ToString("N2")</td>
+                    <td class="text-end">@Model.Sum(j => j.Debit).ToString("N4")</td>
+                    <td class="text-end">@Model.Sum(j => j.Credit).ToString("N4")</td>
                 </tr>
             </tbody>
         </table>

@@ -9,11 +9,11 @@ namespace IBS.Models.Filpride.ViewModels
         public DateOnly Date { get; set; }
 
         [Required(ErrorMessage = "Quantity must be greater than zero")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Quantity { get; set; }
 
         [Required(ErrorMessage = "Cost must be greater than zero")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Cost { get; set; }
 
         [Required(ErrorMessage = "The product field is required")]

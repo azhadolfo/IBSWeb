@@ -529,7 +529,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new
                 {
                     poNo = po.PurchaseOrderNo,
-                    poQuantity = po.Quantity.ToString("N2"),
+                    poQuantity = po.Quantity.ToString("N4"),
                     rrList = rr,
                     rrListPostedOnly = rrPostedOnly,
                     rrListNotPosted = rrNotPosted,

@@ -263,16 +263,16 @@
 
                                         // Perform calculations
                                         var netOfVat = totalValue / 1.12;
-                                        var roundedNetOfVat = Math.round(netOfVat * 10000) / 10000; // Rounding to 2 decimal places
+                                        var roundedNetOfVat = Math.round((netOfVat * 10000) / 10000, 4);
 
                                         var vat = roundedNetOfVat * 0.12;
-                                        var roundedVat = Math.round(vat * 100) / 100; // Rounding to 2 decimal places
+                                        var roundedVat = Math.round((vat * 100) / 100, 4);
 
                                         var ewt = roundedNetOfVat * (data.category === "Trade" ? 0.01 : data.taxPercent / 100);
-                                        var roundedEwt = Math.round(ewt * 10000) / 10000; // Rounding to 2 decimal places
+                                        var roundedEwt = Math.round((ewt * 10000) / 10000, 4);
 
                                         var rrAmountNetOfEWT = totalValue - roundedEwt;
-                                        var roundedRrAmountNetOfEWT = Math.round(rrAmountNetOfEWT * 10000) / 10000; // Rounding to 2 decimal places
+                                        var roundedRrAmountNetOfEWT = Math.round((rrAmountNetOfEWT * 10000) / 10000, 4);
 
                                         if (data.vatType === "Vatable" && data.taxType === "Withholding Tax") {
                                             totalNetOfEWT += roundedRrAmountNetOfEWT;

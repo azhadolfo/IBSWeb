@@ -395,8 +395,8 @@
                                             ? `<td><input type="text" name="AccountTitle" value="${accountTitles[i]}" class="${widthClass}" style="border:none" readonly /></td>`
                                             : `<td><select name="AccountTitle" class="${defaultExpenseClass}">${options}</select></td>`
                                         }
-                                    <td><input type="text" name="Debit" value="${debits[i].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" class="${widthClass}" style="border:none" readonly /></td>
-                                    <td><input type="text" name="Credit" value="${credits[i].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}" class="${creditClass}" style="border:none" readonly /></td>
+                                    <td><input type="text" name="Debit" value="${debits[i].toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}" class="${widthClass}" style="border:none" readonly /></td>
+                                    <td><input type="text" name="Credit" value="${credits[i].toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}" class="${creditClass}" style="border:none" readonly /></td>
                                     ${i < 4
                                             ? '<td></td>'
                                             : '<td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>'
