@@ -176,7 +176,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var netOfVatFreightCharge = existingRecord.Freight / 1.12m;
             var existingGrossMargin = netOfVatCosPrice - netOfVatProductCost - netOfVatFreightCharge - existingRecord.CommissionRate;
 
-            if (Math.Round((decimal)existingGrossMargin, 2) != grossMargin)
+            if (Math.Round((decimal)existingGrossMargin, 4) != grossMargin)
             {
                 decimal newNetOfVatCosPrice = grossMargin + (decimal)(existingRecord.CommissionRate + netOfVatFreightCharge + netOfVatProductCost);
                 return Math.Round((ComputeVatAmount(newNetOfVatCosPrice) + newNetOfVatCosPrice), 4);
