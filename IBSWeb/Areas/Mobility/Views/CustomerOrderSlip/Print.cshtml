@@ -20,7 +20,7 @@
     </div>
     <div class="card-body p-4 table-responsive">
         <div class="row mt-2">
-            <div class="col-9">
+            <div class="col-6">
                 <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Customer.CustomerName):</b> @Html.DisplayFor(model => model.Customer.CustomerName)</h6>
                 <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Address):</b> @Html.DisplayFor(model => model.Address)</h6>
                 <h6 class="px-2"><b>Plate Number:</b> @Html.DisplayFor(model => model.PlateNo)</h6>
@@ -30,7 +30,7 @@
                     <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.TripTicket):</b> @Html.DisplayFor(model => model.TripTicket)</h6>
                 }
             </div>
-            <div class="col-3" style="white-space: nowrap;">
+            <div class="col-6" style="white-space: nowrap;">
                     <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.Date):</b> @Html.DisplayFor(model => model.Date)</h6>
                     <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.MobilityStation.StationName):</b> @Html.DisplayFor(model => model.MobilityStation.StationName)</h6>
                     <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.Terms):</b> @Html.DisplayFor(model => model.Customer.CustomerTerms)</h6>
@@ -130,8 +130,8 @@
             </br>
 
             <div class="w-100 text-center">
-                <a id="documentLink" href="" target="_blank">
-                    </br><img id="output" class="img-fluid" style="max-height: 400px; width:auto; cursor: pointer;" />
+                <a id="documentLink" @* href="" target="_blank" cursor: pointer; *@>
+                    </br><img id="output" class="img-fluid" style="max-height: 400px; width:auto; " />
                 </a>
             </div>
 
@@ -204,7 +204,7 @@
             var objectURL = URL.createObjectURL(event.target.files[0]);
             image.src = objectURL;
             var documentLink = document.getElementById('documentLink');
-            documentLink.href = objectURL;
+            // documentLink.href = objectURL;
         };
 
         (document).getElementById('uploadButton').addEventListener('click', function () {
@@ -213,7 +213,7 @@
             var uploadDate = document.getElementById('uploadDate');
             var tripTicket = document.getElementById('tripTicket');
 
-            if (uploadDate.value.trim() === "" || tripTicket.value.trim() === "") {
+            if (uploadDate.value.trim() === "" || tripTicket.value.trim() === "" || fileUpload.value.trim === "") {
                 Swal.fire({
                     title: 'Error',
                     text: 'Please fill in all required fields.',

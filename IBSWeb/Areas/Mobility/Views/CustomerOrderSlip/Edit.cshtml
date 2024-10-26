@@ -27,7 +27,7 @@
 
                 <div class="row pt-2">
                     <div class="form-floating py-2 px-2 col-@if(stationCode != "ALL") {<text>12</text>} else {<text>6</text>}">
-                        <input type="date" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" asp-for="Date" class="form-control border-0 shadow" placeholder="" />
+                        <input type="date" asp-for="Date" class="form-control border-0 shadow" placeholder="" />
                         <label class="ms-2">Date<span class="required">*</span></label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>

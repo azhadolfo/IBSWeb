@@ -380,7 +380,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             TempData["error"] = "Please upload an image file only!";
 
-            return RedirectToAction(nameof(Upload), new {id});
+            return RedirectToAction(nameof(Print), new {id});
         }
     }
 }
