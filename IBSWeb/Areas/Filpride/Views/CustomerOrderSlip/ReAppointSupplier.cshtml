@@ -172,6 +172,7 @@
                         var quantity = purchaseOrderQuantities[po] || 0;  // Default to 0 if not found
                         var selectedText = selectedOption.text();
                         var availableBalance = selectedOption.data('available-balance');
+                        var cosVolume = @Model.COSVolume;
 
                         // Set the first PO's balance as default quantity
                         var defaultQuantity = index === 0 ? availableBalance : '';
@@ -204,7 +205,7 @@
                      var cosVolume = @Model.COSVolume;
                      var selectedPO = $('#PurchaseOrderIds').val();
                      var isValid = true;
-
+                     console.log(cosVolume)
                      if (selectedPO.length > 0) {
                          $('#poQuantities input[type="number"]').each(function () {
                              var enteredQuantity = parseFloat($(this).val()) || 0;
@@ -247,7 +248,6 @@
 <script>
     // Trigger the change event when the page loads to show the quantities for pre-selected POs
     $(document).ready(function () {
-        $('#PurchaseOrderIds').change();
         $('#SupplierId').change();
         // Trigger change event when a radio button is selected
         $('input[name="DeliveryOption"]').change(function () {

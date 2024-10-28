@@ -559,10 +559,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[currentRow, 6].Value = dr.Quantity;
                     worksheet.Cells[currentRow, 7].Value = dr.TotalAmount;
                     worksheet.Cells[currentRow, 8].Value = dr.CustomerOrderSlip.PickUpPoint.Depot;
-                    worksheet.Cells[currentRow, 9].Value = dr.PurchaseOrder?.PurchaseOrderNo ?? dr.CustomerOrderSlip.PurchaseOrder?.PurchaseOrderNo;
+                    worksheet.Cells[currentRow, 9].Value = dr.PurchaseOrder.PurchaseOrderNo;
                     worksheet.Cells[currentRow, 10].Value = dr.AuthorityToLoadNo;
                     worksheet.Cells[currentRow, 11].Value = dr.CustomerOrderSlip.CustomerOrderSlipNo;
-                    worksheet.Cells[currentRow, 12].Value = dr.Hauler.SupplierName;
+                    worksheet.Cells[currentRow, 12].Value = dr.Hauler?.SupplierName;
                     worksheet.Cells[currentRow, 13].Value = dr.DeliveredDate?.ToString("dd-MMM-yy");
                     worksheet.Cells[currentRow, 14].Value = dr.Status == nameof(Status.Pending) ? "IN TRANSIT" : dr.Status.ToUpper();
                     worksheet.Cells[currentRow, 15].Value = dr.PurchaseOrder.Supplier.SupplierName;
