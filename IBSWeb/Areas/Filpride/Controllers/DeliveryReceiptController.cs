@@ -532,6 +532,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
+                var hasAlreadyBeenUsed = await _dbContext.FilprideReceivingReports
+                   .AnyAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status != nameof(Status.Voided), cancellationToken);
+
+                if (hasAlreadyBeenUsed)
+                {
+                    TempData["error"] = "Please note that this record has already been utilized in a receiving report. As a result, voiding it is not permitted.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 try
