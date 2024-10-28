@@ -71,7 +71,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.Status.ToLower().Contains(searchValue)
                         )
                     .ToList();
-
                 }
 
                 // Sorting
@@ -108,8 +107,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-
-
 
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
@@ -327,7 +324,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.NetOfVatProductCost = totalPoAmount / appointedSupplier.Sum(a => a.Quantity);
                 }
 
-
                 model.GrossMargin = model.NetOfVatCosPrice - model.NetOfVatProductCost - model.NetOfVatFreightCharge - existingRecord.CommissionRate;
 
                 if (existingRecord.FirstApprovedBy == null)
@@ -409,7 +405,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 PostedBy = existingRecord.FirstApprovedBy,
                                 PostedDate = DateTime.Now,
                                 Status = nameof(Status.Posted),
-                                OldPoNo = existingPo.OldPoNo
+                                OldPoNo = existingPo.OldPoNo,
+                                Type = existingPo.Type
                             };
 
                             subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
@@ -705,7 +702,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.SaveAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
-
                 }
                 catch (Exception ex)
                 {
@@ -754,7 +750,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     SubPoRemarks = existingRecord.SubPORemarks
                 };
 
-
                 if (!existingRecord.HasMultiplePO)
                 {
                     viewModel.PurchaseOrderIds.Add((int)existingRecord.PurchaseOrderId);
@@ -779,7 +774,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
-
         }
 
         [HttpPost]
@@ -896,7 +890,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.SaveAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
-
                 }
                 catch (Exception ex)
                 {
