@@ -89,7 +89,7 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-<script>
+    <script>
         $(document).ready(function () {
 
             // Function to handle freight section visibility
@@ -158,7 +158,6 @@
 
              });
 
-
             $('#PurchaseOrderIds').change(function () {
                 var selectedPOs = $(this).val();
                 var purchaseOrderQuantities = @Html.Raw(Json.Serialize(Model.PurchaseOrderQuantities));
@@ -190,7 +189,7 @@
                         $('#poQuantities').append(
                             `<div class="form-group py-2">
                                 <label for="quantity_${po}">Enter Quantity for PO ${selectedText}</label>
-                                <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${availableBalance}" placeholder="Quantity (max: ${availableBalance})" value="${defaultQuantity}" required/>
+                                <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${availableBalance}" placeholder="Quantity (max: ${availableBalance})" value="${defaultQuantity}" required />
                             </div>`
                         );
                     });
@@ -198,7 +197,6 @@
 
                 $('#poQuantitySection').show();
             });
-
 
                $('form').on('submit', function(event) {
                      var totalQuantity = 0;
@@ -244,15 +242,15 @@
                  });
 
         });
-</script>
-<script>
-    // Trigger the change event when the page loads to show the quantities for pre-selected POs
-    $(document).ready(function () {
-        $('#SupplierId').change();
-        // Trigger change event when a radio button is selected
-        $('input[name="DeliveryOption"]').change(function () {
-            handleFreightSection($(this).val());
+    </script>
+    <script>
+        // Trigger the change event when the page loads to show the quantities for pre-selected POs
+        $(document).ready(function () {
+            $('#SupplierId').change();
+            // Trigger change event when a radio button is selected
+            $('input[name="DeliveryOption"]').change(function () {
+                handleFreightSection($(this).val());
+            });
         });
-    });
-</script>
+    </script>
 }

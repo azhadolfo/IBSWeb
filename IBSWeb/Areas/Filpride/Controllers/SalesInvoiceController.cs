@@ -237,7 +237,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cos.Product.ProductUnit,
                     cos.DeliveredPrice,
                     DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(cos.CustomerOrderSlipId, cancellationToken)
-
                 });
             }
             return Json(null);
@@ -618,9 +617,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (model != null && existingInventory != null)
             {
                 var hasAlreadyBeenUsed =
-                    await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.SalesInvoiceId == model.SalesInvoiceId, cancellationToken) ||
-                    await _dbContext.FilprideDebitMemos.AnyAsync(dm => dm.SalesInvoiceId == model.SalesInvoiceId, cancellationToken) ||
-                    await _dbContext.FilprideCreditMemos.AnyAsync(cm => cm.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
+                    await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.SalesInvoiceId == model.SalesInvoiceId && cr.Status != nameof(Status.Voided), cancellationToken) ||
+                    await _dbContext.FilprideDebitMemos.AnyAsync(dm => dm.SalesInvoiceId == model.SalesInvoiceId && dm.Status != nameof(Status.Voided), cancellationToken) ||
+                    await _dbContext.FilprideCreditMemos.AnyAsync(cm => cm.SalesInvoiceId == model.SalesInvoiceId && cm.Status != nameof(Status.Voided), cancellationToken);
 
                 if (hasAlreadyBeenUsed)
                 {
@@ -649,7 +648,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var dr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(d => d.HasAlreadyInvoiced && d.DeliveryReceiptId == model.DeliveryReceiptId);
 
+                        if (dr != null)
+                        {
                         dr.HasAlreadyInvoiced = false;
+                        }
 
                         #region --Audit Trail Recording
 

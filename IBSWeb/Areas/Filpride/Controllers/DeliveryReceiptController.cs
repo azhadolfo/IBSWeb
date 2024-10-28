@@ -75,7 +75,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CustomerOrderSlip.Product.ProductName.ToLower().Contains(searchValue)
                         )
                     .ToList();
-
                 }
 
                 // Sorting
@@ -179,7 +178,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == model.CustomerOrderSlipId && !s.IsAssignedToDR);
 
                         model.PurchaseOrderId = selectedPo.PurchaseOrderId;
-
                     }
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
@@ -551,6 +549,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
                         await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
+                        ///PENDING : Create the removal of receiving report
 
                         #region --Audit Trail Recording
 
