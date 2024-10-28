@@ -400,7 +400,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 IsSubPo = true,
                                 CustomerId = existingRecord.CustomerId,
                                 SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
-                                CreatedBy = existingRecord.FirstApprovedBy,
+                                CreatedBy = "SYSTEM GENERATED",
                                 CreatedDate = DateTime.Now,
                                 PostedBy = existingRecord.FirstApprovedBy,
                                 PostedDate = DateTime.Now,
