@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Mobility.MasterFile
@@ -28,7 +29,7 @@ namespace IBS.Models.Mobility.MasterFile
         [Column(TypeName = "varchar(3)")]
         [StringLength(3)]
         public string StationCode { get; set; }
-
+        public string CustomerAddress { get; set; }
         public bool IsActive { get; set; } = true;
 
         [Display(Name = "Created By")]
@@ -51,5 +52,12 @@ namespace IBS.Models.Mobility.MasterFile
         [Display(Name = "Payment Terms")]
         [Column(TypeName = "varchar(10)")]
         public string CustomerTerms { get; set; }
+
+        #region --Select List--
+
+        [NotMapped]
+        public List<SelectListItem>? MobilityStations { get; set; }
+
+        #endregion --Select List--
     }
 }
