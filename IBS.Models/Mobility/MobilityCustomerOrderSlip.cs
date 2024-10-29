@@ -128,7 +128,7 @@ namespace IBS.Models.Mobility.ViewModels
 
         #endregion
 
-        #region Customer properties
+        #region Stations properties
 
         public int StationId { get; set; }
 

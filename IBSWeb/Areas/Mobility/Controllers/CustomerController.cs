@@ -6,6 +6,8 @@ using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
+
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -35,11 +37,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
-            return View();
+            MobilityCustomer model = new()
+            {
+                MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
+            };
+            return View(model);
         }
 
         [HttpPost]

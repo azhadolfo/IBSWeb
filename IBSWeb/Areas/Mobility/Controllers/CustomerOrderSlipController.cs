@@ -283,6 +283,72 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return View(model);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Print(int id, IFormFile file, DateTime loadDate, string tripTicket, CancellationToken cancellationToken)
+        {
+            if (file.ContentType == "image/png" || file.ContentType == "image/jpg" || file.ContentType == "image/jpeg")
+            {
+                if (file.Length <= 20000000)
+                {
+                    var model = await _dbContext.MobilityCustomerOrderSlips
+                        .Include(m => m.Customer)
+                        .Include(m => m.Product)
+                        .FirstOrDefaultAsync(m => m.CustomerOrderSlipId == id);
+                    string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "Mobility COS", "uploaded by cashier");
+
+                    #region --check folder, delete old file--
+                    if (!Directory.Exists(localPath))
+                    {
+                        Directory.CreateDirectory(localPath);
+                    }
+
+                    //if a file already exists, will delete
+                    if (!string.IsNullOrEmpty(model.Upload))
+                    {
+                        string oldFilePath = Path.Combine(localPath, model.Upload);
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            try
+                            {
+                                System.IO.File.Delete(oldFilePath);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error deleting file: {ex.Message}");
+                            }
+                        }
+                    }
+                    #endregion --operate folder, delete old file--
+
+                    string newFileExtension = Path.GetExtension(file.FileName);
+                    string newFileName = string.Concat(model.Customer.CustomerName, "_", model.Product.ProductName, "_", model.Date.ToString("yyyyMMdd"), DateTime.Now.ToString("HHmmss"), newFileExtension);
+                    string fileSavePath = Path.Combine(localPath, newFileName);
+
+                    await using (FileStream stream = new(fileSavePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream, cancellationToken);
+                    }
+
+                    model.Upload = newFileName;
+                    model.LoadDate = loadDate;
+                    model.TripTicket = tripTicket;
+                    model.Status = "Done";
+                    model.UploadedBy = _userManager.GetUserName(User);
+                    model.UploadedDate = DateTime.Now;
+
+                    await _dbContext.SaveChangesAsync();
+
+                    TempData["success"] = "Record Updated Successfully!";
+
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            TempData["error"] = "Please upload an image file only!";
+
+            return RedirectToAction(nameof(Print), new { id });
+        }
+
         public async Task<IActionResult> ApproveCOS(int id, CancellationToken cancellationToken)
         {
             var model = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
@@ -320,67 +386,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return View(model);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Print(int id, IFormFile file, DateTime loadDate, string tripTicket, CancellationToken cancellationToken)
-        {
-            if (file.ContentType == "image/png" || file.ContentType == "image/jpg" || file.ContentType == "image/jpeg")
-            {
-                if (file.Length <= 20000000)
-                {
-                    var model = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
-                    string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "documents", "uploaded by cashier");
-
-                    #region --check folder, delete old file--
-                    if (!Directory.Exists(localPath))
-                    {
-                        Directory.CreateDirectory(localPath);
-                    }
-
-                    //if a file already exists, will delete
-                    if (!string.IsNullOrEmpty(model.Upload))
-                    {
-                        string oldFilePath = Path.Combine(localPath, model.Upload);
-                        if (System.IO.File.Exists(oldFilePath))
-                        {
-                            try
-                            {
-                                System.IO.File.Delete(oldFilePath);
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Error deleting file: {ex.Message}");
-                            }
-                        }
-                    }
-                    #endregion --operate folder, delete old file--
-
-                    string newFileExtension = Path.GetExtension(file.FileName);
-                    string newFileName = string.Concat(model.Customer, "_", model.Date.ToString("yyyy-MM-dd"), "_", model.Product, "_", model.Amount.ToString(), "_", DateTime.Now.ToString("HHmmss"), newFileExtension);
-                    string fileSavePath = Path.Combine(localPath, newFileName);
-
-                    await using (FileStream stream = new(fileSavePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream, cancellationToken);
-                    }
-
-                    model.Upload = newFileName;
-                    model.LoadDate = loadDate;
-                    model.TripTicket = tripTicket;
-                    model.Status = "Done";
-                    model.UploadedBy = _userManager.GetUserName(User);
-                    model.UploadedDate = DateTime.Now;
-
-                    await _dbContext.SaveChangesAsync();
-
-                    TempData["success"] = "Record Updated Successfully!";
-
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-
-            TempData["error"] = "Please upload an image file only!";
-
-            return RedirectToAction(nameof(Print), new {id});
-        }
+        
     }
 }
