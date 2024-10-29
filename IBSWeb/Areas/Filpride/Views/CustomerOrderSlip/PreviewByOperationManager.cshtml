@@ -40,7 +40,14 @@
                 </tr>
                 <tr>
                     <td><b>Terms:</b> @Model.CustomerOrderSlip.Customer?.CustomerTerms</td>
-                    <td class="text-end"><b>PO No:</b> @Model.CustomerOrderSlip.CustomerPoNo</td>
+                    <td class="text-end"><b>Customer PO#:</b> @Model.CustomerOrderSlip.CustomerPoNo</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="text-end">
+                        <b>IS PO#:</b>
+                        @Model.CustomerOrderSlip.PurchaseOrder?.OldPoNo
+                    </td>
                 </tr>
             </tbody>
         </table>
