@@ -37,12 +37,23 @@
                     <label asp-for="CustomerCodeName" class="ms-2">Customer Code Name<span class="required">*</span></label>
                     <span asp-validation-for="CustomerCodeName" class="text-danger"></span>
                 </div>
-                @* <div class="form-floating py-2 col-12">
+                <div class="form-floating py-2 col-12">
                     <input asp-for="CustomerAddress" class="form-control border-0 shadow " placeholder="" />
                     <label asp-for="CustomerAddress" class="ms-2">Customer Address<span class="required">*</span></label>
                     <span asp-validation-for="CustomerAddress" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
+                    <input asp-for="AmountLimit" class="form-control border-0 shadow " placeholder="" />
+                    <label asp-for="AmountLimit" class="ms-2">Credit Limit(Amount)<span class="required">*</span></label>
+                    <span asp-validation-for="AmountLimit" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="QuantityLimit" class="form-control border-0 shadow " placeholder="" />
+                    <label asp-for="QuantityLimit" class="ms-2">Credit Limit(Quantity)<span class="required">*</span></label>
+                    <span asp-validation-for="QuantityLimit" class="text-danger"></span>
+                </div>
+
+                @* <div class="form-floating py-2 col-12">
                     <input asp-for="CustomerTin" class="form-control border-0 shadow " placeholder="" />
                     <label asp-for="CustomerTin" class="ms-2">Customer Tin<span class="required">*</span></label>
                     <span asp-validation-for="CustomerTin" class="text-danger"></span>
