@@ -61,5 +61,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string? CurrentUser { get; set; }
 
         public string OtcCosNo { get; set; }
+
+        public string? Status { get; set; }
     }
 }

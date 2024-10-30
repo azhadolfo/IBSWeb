@@ -150,6 +150,9 @@
                                 case '@CosStatus.HaulerAppointed':
                                 case '@CosStatus.ForAtlBooking':
                                     // Check for Supplier Appointment Status
+
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
+
                                     if (row.supplierId != null ) {
                                         actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
                                     } else {
@@ -169,6 +172,7 @@
 
                                     break;
                                 case '@CosStatus.ForApproval':
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                                     break;
                                 case '@CosStatus.ApprovedByOM':
