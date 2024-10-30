@@ -132,10 +132,10 @@ namespace IBS.DataAccess.Repository
         {
             return productCode switch
             {
-                "PET001" => ("4010101", "Sales - Biodiesel"),
-                "PET002" => ("4010102", "Sales - Econogas"),
-                "PET003" => ("4010103", "Sales - Envirogas"),
-                _ => ("4011001", "Sales - Lubes"),
+                "PET001" => ("401010100", "Sales - Biodiesel"),
+                "PET002" => ("401010200", "Sales - Econogas"),
+                "PET003" => ("401010300", "Sales - Envirogas"),
+                _ => ("401100100", "Sales - Lubes"),
             };
         }
 
@@ -154,9 +154,9 @@ namespace IBS.DataAccess.Repository
         {
             return productCode switch
             {
-                "PET001" => ("1010401", "Inventory - Biodiesel"),
-                "PET002" => ("1010402", "Inventory - Econogas"),
-                "PET003" => ("1010403", "Inventory - Envirogas"),
+                "PET001" => ("101040100", "Inventory - Biodiesel"),
+                "PET002" => ("101040200", "Inventory - Econogas"),
+                "PET003" => ("101040300", "Inventory - Envirogas"),
                 _ => ("1010410", "Inventory - Lubes"),
             };
         }
@@ -196,6 +196,7 @@ namespace IBS.DataAccess.Repository
                 })
                 .FirstOrDefaultAsync(cancellationToken);
         }
+
         public async Task RemoveRecords<TEntity>(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
        where TEntity : class
         {

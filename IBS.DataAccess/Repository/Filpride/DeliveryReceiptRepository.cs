@@ -74,6 +74,12 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var existingRecord = await GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
 
+            #region--Update COS
+
+            await UpdateCosRemainingVolumeAsync(existingRecord.CustomerOrderSlipId, (viewModel.Volume - existingRecord.Quantity), cancellationToken);
+
+            #endregion
+
             existingRecord.Date = viewModel.Date;
             existingRecord.EstimatedTimeOfArrival = viewModel.ETA;
             existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
@@ -128,12 +134,6 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             try
             {
-                #region--Update COS
-
-                await UpdateCosRemainingVolumeAsync(deliveryReceipt.CustomerOrderSlipId, deliveryReceipt.Quantity, cancellationToken);
-
-                #endregion
-
                 #region General Ledger Book Recording
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
@@ -143,11 +143,11 @@ namespace IBS.DataAccess.Repository.Filpride
                 var netOfVatAmount = ComputeNetOfVat(deliveryReceipt.TotalAmount);
                 var vatAmount = ComputeVatAmount(netOfVatAmount);
                 var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-                var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010101") ?? throw new ArgumentException("Account title '1010101' not found.");
-                var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010201") ?? throw new ArgumentException("Account title '1010201' not found.");
-                var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010301") ?? throw new ArgumentException("Account title '2010301' not found.");
-                var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010602") ?? throw new ArgumentException("Account title '1010602' not found.");
-                var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "2020101") ?? throw new ArgumentException("Account title '2020101' not found.");
+                var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
+                var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account title '101020100' not found.");
+                var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
+                var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+                var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
                 var cogsFreightTitle = accountTitlesDto.Find(c => c.AccountNumber == "5010109") ?? throw new ArgumentException("Account title '5010109' not found.");
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -351,7 +351,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
 
-                #endregion
+                #endregion General Ledger Book Recording
 
                 await _db.SaveChangesAsync(cancellationToken);
             }
@@ -368,8 +368,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (cos != null)
             {
-                cos.DeliveredQuantity = drVolume;
-                cos.BalanceQuantity -= cos.DeliveredQuantity;
+                cos.DeliveredQuantity += drVolume;
+                cos.BalanceQuantity -= drVolume;
 
                 if (cos.BalanceQuantity <= 0)
                 {

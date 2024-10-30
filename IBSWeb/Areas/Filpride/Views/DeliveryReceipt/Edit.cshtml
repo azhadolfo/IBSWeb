@@ -92,7 +92,7 @@
                     </div>
                 </fieldset>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" />
+                    <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" required min="0.01" />
                     <label asp-for="Volume">Volume<span class="required">*</span></label>
                     <span asp-validation-for="Volume" class="text-danger"></span>
                 </div>
@@ -226,10 +226,13 @@
 
             // Calculate Total Amount
             $('input[name="Volume"]').on('input', function () {
-                var volume = parseNumber($(this).val());
-                var price = parseNumber($('input[name="Price"]').val());
-                var totalAmount = volume * price;
-                $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
+                calculateTotalAmount();
+            });
+
+            //Validate volume
+            $("#Volume").change(function () {
+                validateVolume();
+                calculateTotalAmount();
             });
 
             // Update COS list based on customer
@@ -255,6 +258,22 @@
                             console.log("Error: " + error);
                         }
                     });
+                }
+            }
+
+            function calculateTotalAmount() {
+                var volume = parseNumber($('input[name="Volume"]').val());
+                var price = parseNumber($('input[name="Price"]').val());
+                var totalAmount = volume * price;
+                $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
+            }
+
+            function validateVolume() {
+                var remainingVolume = parseNumber($("#RemainingVolume").val());
+                var volume = parseNumber($("#Volume").val());
+                if (volume > remainingVolume) {
+                    alert("Volume cannot exceed the remaining volume.");
+                    $("#Volume").val(remainingVolume);
                 }
             }
         });

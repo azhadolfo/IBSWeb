@@ -91,7 +91,7 @@
                     </div>
                 </fieldset>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" />
+                    <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" required min="0.01" />
                     <label asp-for="Volume">Volume<span class="required">*</span></label>
                     <span asp-validation-for="Volume" class="text-danger"></span>
                 </div>
@@ -183,6 +183,7 @@
                             if (data) {
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
                                     $('input[name="Freight"]').parent().show();
+                                    $('input[name="Freight"]').val(data.freight);
                                     // make the plate no and driver required
                                     $('input[name="Driver"]').prop('required', true);
                                     $('input[name="PlateNo"]').prop('required', true);

@@ -138,7 +138,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId);
+                    var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
 
                     if (customerOrderSlip == null)
                     {
@@ -163,9 +163,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ECC = viewModel.ECC,
                         Driver = customerOrderSlip.Driver,
                         PlateNo = customerOrderSlip.PlateNo,
-                        HaulerId = customerOrderSlip.HaulerId,
-                        Status = "Draft"
+                        HaulerId = customerOrderSlip.HaulerId
                     };
+
+                    customerOrderSlip.DeliveredQuantity += model.Quantity;
+                    customerOrderSlip.BalanceQuantity -= model.Quantity;
+
+                    if (customerOrderSlip.BalanceQuantity <= 0)
+                    {
+                        customerOrderSlip.IsDelivered = true;
+                        customerOrderSlip.Status = nameof(CosStatus.Completed);
+                    }
 
                     if (!customerOrderSlip.HasMultiplePO)
                     {
@@ -501,6 +509,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledDate = DateTime.Now;
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
+                    await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
 
                     #region --Audit Trail Recording
 
