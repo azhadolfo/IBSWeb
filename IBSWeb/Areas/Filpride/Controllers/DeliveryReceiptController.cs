@@ -122,7 +122,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                 CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
-                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
             };
 
             return View(viewModel);
@@ -162,9 +161,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Freight = viewModel.Freight,
                         Demuragge = viewModel.Demuragge,
                         ECC = viewModel.ECC,
-                        Driver = viewModel.Driver,
-                        PlateNo = viewModel.PlateNo,
-                        HaulerId = viewModel.HaulerId,
+                        Driver = customerOrderSlip.Driver,
+                        PlateNo = customerOrderSlip.PlateNo,
+                        HaulerId = customerOrderSlip.HaulerId,
                         Status = "Draft"
                     };
 
@@ -196,7 +195,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
-                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -251,10 +249,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Freight = existingRecord.Freight,
                     Demuragge = existingRecord.Demuragge,
                     ECC = existingRecord.ECC,
-                    Driver = existingRecord.Driver,
-                    PlateNo = existingRecord.PlateNo,
-                    HaulerId = existingRecord.HaulerId,
-                    Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
                     DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption
                 };
 
@@ -290,7 +284,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
-                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -299,7 +292,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
-            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }

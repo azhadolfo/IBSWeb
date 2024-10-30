@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241029035500_AddHaulerAndBookATlToFilprideCOS")]
+    partial class AddHaulerAndBookATlToFilprideCOS
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2278,15 +2281,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<int?>("CustomerOrderSlipId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_order_slip_id");
-
                     b.Property<DateOnly>("DateBooked")
                         .HasColumnType("date")
                         .HasColumnName("date_booked");
 
-                    b.Property<int?>("DeliveryReceiptId")
+                    b.Property<int>("DeliveryReceiptId")
                         .HasColumnType("integer")
                         .HasColumnName("delivery_receipt_id");
 
@@ -2305,9 +2304,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("AuthorityToLoadId")
                         .HasName("pk_filpride_authority_to_loads");
-
-                    b.HasIndex("CustomerOrderSlipId")
-                        .HasDatabaseName("ix_filpride_authority_to_loads_customer_order_slip_id");
 
                     b.HasIndex("DeliveryReceiptId")
                         .HasDatabaseName("ix_filpride_authority_to_loads_delivery_receipt_id");
@@ -6504,17 +6500,12 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", "CustomerOrderSlip")
-                        .WithMany()
-                        .HasForeignKey("CustomerOrderSlipId")
-                        .HasConstraintName("fk_filpride_authority_to_loads_filpride_customer_order_slips_c");
-
                     b.HasOne("IBS.Models.Filpride.Integrated.FilprideDeliveryReceipt", "DeliveryReceipt")
                         .WithMany()
                         .HasForeignKey("DeliveryReceiptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_filpride_authority_to_loads_filpride_delivery_receipts_deli");
-
-                    b.Navigation("CustomerOrderSlip");
 
                     b.Navigation("DeliveryReceipt");
                 });

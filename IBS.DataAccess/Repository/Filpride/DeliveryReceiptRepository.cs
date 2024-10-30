@@ -85,9 +85,6 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Freight = viewModel.Freight;
             existingRecord.Demuragge = viewModel.Demuragge;
             existingRecord.ECC = viewModel.ECC;
-            existingRecord.Driver = viewModel.Driver;
-            existingRecord.PlateNo = viewModel.PlateNo;
-            existingRecord.HaulerId = viewModel.HaulerId;
 
             if (_db.ChangeTracker.HasChanges())
             {
@@ -346,7 +343,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedDate = deliveryReceipt.CreatedDate,
                     SupplierId = deliveryReceipt.HaulerId
                 });
-
 
                 if (!IsJournalEntriesBalanced(ledgers))
                 {

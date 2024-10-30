@@ -108,6 +108,8 @@
                                     badgeClass = "badge bg-primary";
                                     break;
                                 case '@CosStatus.SupplierAppointed':
+                                case '@CosStatus.HaulerAppointed':
+                                case '@CosStatus.ForAtlBooking':
                                     badgeClass = "badge bg-info";
                                     break;
                                 case '@CosStatus.ApprovedByOM':
@@ -141,11 +143,33 @@
                             switch (status) {
                                 case '@CosStatus.Created':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>
-                                                <li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>`;
+                                                <li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>
+                                                <li><a class="dropdown-item" href="@Url.Action("AppointHauler", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Hauler</a></li>`;
                                     break;
                                 case '@CosStatus.SupplierAppointed':
-                                    actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>
-                                                <li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
+                                case '@CosStatus.HaulerAppointed':
+                                case '@CosStatus.ForAtlBooking':
+                                    // Check for Supplier Appointment Status
+                                    if (row.supplierId != null ) {
+                                        actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
+                                    } else {
+                                        actions += `<li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>`;
+                                    }
+
+                                    // Check for Hauler Appointment Status
+                                    if (row.haulerId != null) {
+                                        actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointHauler", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Hauler</a></li>`;
+                                    } else {
+                                        actions += `<li><a class="dropdown-item" href="@Url.Action("AppointHauler", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Hauler</a></li>`;
+                                    }
+
+                                    if (status === '@CosStatus.ForAtlBooking') {
+                                        actions += `<li><a class="dropdown-item BookATL" href="#" onclick="bookAuthorityToLoad('${customerOrderSlipId}', '${row.supplier.supplierName}')">Book ATL</a></li>`;
+                                    }
+
+                                    break;
+                                case '@CosStatus.ForApproval':
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                                     break;
                                 case '@CosStatus.ApprovedByOM':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;

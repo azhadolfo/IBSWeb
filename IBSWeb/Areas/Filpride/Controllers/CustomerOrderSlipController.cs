@@ -647,20 +647,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
-                    existingCos.Status = nameof(CosStatus.SupplierAppointed);
+
+                    if (existingCos.Status == nameof(CosStatus.HaulerAppointed))
+                    {
+                        existingCos.Status = nameof(CosStatus.ForAtlBooking);
+                    }
+                    else
+                    {
+                        existingCos.Status = nameof(CosStatus.SupplierAppointed);
+                    }
+
                     existingCos.SupplierId = viewModel.SupplierId;
 
                     if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery)
                     {
                         existingCos.Freight = viewModel.Freight;
                         existingCos.SubPORemarks = viewModel.SubPoRemarks;
-                    }
-                    else if (viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
-                    {
-                        var highestFreight = await _unitOfWork.FilprideFreight
-                            .GetAsync(f => f.ClusterCode == existingCos.Customer.ClusterCode && f.PickUpPointId == existingCos.PickUpPointId, cancellationToken) ?? throw new ArgumentNullException("No freight reference found!");
-
-                        existingCos.Freight = highestFreight.Freight;
                     }
                     else
                     {
@@ -797,7 +799,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
-                    existingCos.Status = nameof(CosStatus.SupplierAppointed);
                     existingCos.SupplierId = viewModel.SupplierId;
 
                     if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery)
@@ -881,10 +882,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingCos.PurchaseOrderId = viewModel.PurchaseOrderIds.FirstOrDefault();
                     }
 
-                    TempData["success"] = "Appointed supplier successfully.";
+                    TempData["success"] = "Reappointed supplier successfully.";
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Reappoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -950,6 +951,193 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .GetCustomerCreditBalance((int)customerId, cancellationToken);
 
             return Json(balance);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AppointHauler(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var companyClaims = await GetCompanyClaimAsync();
+            var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+            var viewModel = new CustomerOrderSlipAppointingHauler
+            {
+                CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                DeliveryOption = existingRecord.DeliveryOption,
+                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
+            };
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AppointHauler(CustomerOrderSlipAppointingHauler viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    viewModel.CurrentUser = _userManager.GetUserName(User);
+
+                    var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                    if (existingCos == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    existingCos.HaulerId = viewModel.HaulerId;
+                    if (viewModel.Freight != 0)
+                    {
+                        existingCos.Freight = viewModel.Freight;
+                    }
+
+                    if (existingCos.Status == nameof(CosStatus.SupplierAppointed))
+                    {
+                        existingCos.Status = nameof(CosStatus.ForAtlBooking);
+                    }
+                    else
+                    {
+                        existingCos.Status = nameof(CosStatus.HaulerAppointed);
+                    }
+
+                    existingCos.Driver = viewModel.Driver;
+                    existingCos.PlateNo = viewModel.PlateNo;
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint hauler customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    TempData["success"] = "Appointed hauler successfully.";
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return View(viewModel);
+                }
+            }
+            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
+            TempData["error"] = "The submitted information is invalid.";
+            return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ReAppointHauler(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var companyClaims = await GetCompanyClaimAsync();
+            var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+            var viewModel = new CustomerOrderSlipAppointingHauler
+            {
+                CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                DeliveryOption = existingRecord.DeliveryOption,
+                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
+                HaulerId = (int)existingRecord.HaulerId,
+                Freight = (decimal)existingRecord.Freight,
+                Driver = existingRecord.Driver,
+                PlateNo = existingRecord.PlateNo
+            };
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ReAppointHauler(CustomerOrderSlipAppointingHauler viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    viewModel.CurrentUser = _userManager.GetUserName(User);
+
+                    var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                    if (existingCos == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    existingCos.HaulerId = viewModel.HaulerId;
+
+                    if (viewModel.Freight != 0 && viewModel.Freight != existingCos.Freight)
+                    {
+                        existingCos.Freight = viewModel.Freight;
+                    }
+
+                    existingCos.Driver = viewModel.Driver;
+                    existingCos.PlateNo = viewModel.PlateNo;
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Reappoint hauler customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    TempData["success"] = "Reappointed hauler successfully.";
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return View(viewModel);
+                }
+            }
+
+            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
+            TempData["error"] = "The submitted information is invalid.";
+            return View(viewModel);
+        }
+
+        public async Task<IActionResult> BookAuthorityToLoad(int id, string? supplierAtlNo, DateOnly bookedDate, CancellationToken cancellationToken)
+        {
+            if (id == 0)
+            {
+                return NotFound();
+            }
+            var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+            if (existingCos == null)
+            {
+                return NotFound();
+            }
+            try
+            {
+                FilprideAuthorityToLoad model = new()
+                {
+                    AuthorityToLoadNo = await _unitOfWork.FilprideAuthorityToLoad.GenerateAtlNo(cancellationToken),
+                    CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
+                    DateBooked = bookedDate,
+                    ValidUntil = bookedDate.AddDays(5),
+                    UppiAtlNo = supplierAtlNo,
+                    Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
+                    CreatedBy = _userManager.GetUserName(User),
+                    CreatedDate = DateTime.Now,
+                };
+                await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
+                existingCos.AuthorityToLoadNo = model.AuthorityToLoadNo;
+                existingCos.Status = nameof(CosStatus.ForApproval);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                TempData["success"] = "ATL booked successfully";
+                await _unitOfWork.SaveAsync(cancellationToken);
+                return RedirectToAction(nameof(AuthorityToLoadController.Print), "AuthorityToLoad", new { area = nameof(Filpride), id = model.AuthorityToLoadId });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
     }
 }

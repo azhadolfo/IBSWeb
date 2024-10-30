@@ -55,21 +55,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public decimal Demuragge { get; set; } = 0;
 
-        #region Appointing Hauler
-
-        public int? HaulerId { get; set; }
-
-        public List<SelectListItem>? Haulers { get; set; }
-
         public decimal Freight { get; set; } = 0;
 
         public decimal ECC { get; set; } = 0;
-
-        public string? Driver { get; set; }
-
-        public string? PlateNo { get; set; }
-
-        #endregion
-
     }
 }

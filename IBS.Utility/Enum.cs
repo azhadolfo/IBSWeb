@@ -30,6 +30,9 @@
     {
         Created,
         SupplierAppointed,
+        HaulerAppointed,
+        ForAtlBooking,
+        ForApproval,
         ApprovedByOM,
         Approved,
         Completed,
