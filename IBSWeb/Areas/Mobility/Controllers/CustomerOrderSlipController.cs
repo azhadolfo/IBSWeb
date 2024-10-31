@@ -45,10 +45,20 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
+            #region -- get user department --
+
+            var findUser = await _dbContext.ApplicationUsers
+                .Where(user => user.Id == _userManager.GetUserId(this.User))
+                .FirstOrDefaultAsync();
+
+            ViewBag.userDepartment = findUser?.Department;
+
+            #endregion -- get user department --
+
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
 
-            List<MobilityCustomerOrderSlip> customerOrderSlip;
+            List<MobilityCustomerOrderSlip> customerOrderSlip = new List<MobilityCustomerOrderSlip>();
 
             if (stationCodeClaims != "ALL")
             {
@@ -59,7 +69,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     .Where(record => record.StationCode == stationCodeClaims)
                     .ToListAsync(cancellationToken);
             }
-            else
+            if (stationCodeClaims == "ALL" && findUser?.Department != "Station Cashier")
             {
                 customerOrderSlip = await _dbContext.MobilityCustomerOrderSlips
                     .Include(c => c.Customer)
@@ -68,15 +78,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     .ToListAsync(cancellationToken);
             }
 
-            #region -- get user department --
-
-            var findUser = await _dbContext.ApplicationUsers
-                .Where(user => user.Id == _userManager.GetUserId(this.User))
-                .FirstOrDefaultAsync();
-
-            ViewBag.userDepartment = findUser?.Department;
-
-            #endregion -- get user department --
 
             return View(customerOrderSlip);
         }
@@ -102,30 +103,26 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
+
             if (ModelState.IsValid)
             {
                 try
                 {
                     #region -- selected customer --
-
                     var selectedCustomer = await _dbContext.MobilityCustomers
-                                        .Where(c => c.CustomerId == model.CustomerId)
-                                        .FirstOrDefaultAsync(cancellationToken);
-
+                        .Where(c => c.CustomerId == model.CustomerId)
+                        .FirstOrDefaultAsync(cancellationToken);
                     #endregion -- selected customer --
 
                     #region -- get mobility station --
-
                     var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
 
                     var getMobilityStation = await _dbContext.MobilityStations
-                                        .Where(s => s.StationCode == stationCode)
-                                        .FirstOrDefaultAsync(cancellationToken);
-
+                        .Where(s => s.StationCode == stationCode)
+                        .FirstOrDefaultAsync(cancellationToken);
                     #endregion -- selected customer --
 
                     #region -- Generate COS No --
-
                     MobilityCustomerOrderSlip? lastCos = await _dbContext
                         .MobilityCustomerOrderSlips
                         .OrderBy(c => c.CustomerOrderSlipNo)
@@ -144,7 +141,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         series = "COS0000000001";
                     }
-
                     #endregion -- Generate COS No --
 
                     model.CustomerOrderSlipNo = series;
@@ -154,6 +150,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     model.CreatedBy = _userManager.GetUserName(User);
                     model.CreatedDate = DateTime.Now;
                     model.StationId = getMobilityStation.StationId;
+                    model.Address = selectedCustomer.CustomerAddress;
                     if (stationCodeClaims == "ALL")
                     {
                         model.StationCode = getMobilityStation.StationCode;
@@ -205,6 +202,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 try
                 {
+                    #region -- selected customer --
+                    var selectedCustomer = await _dbContext.MobilityCustomers
+                        .Where(c => c.CustomerId == model.CustomerId)
+                        .FirstOrDefaultAsync(cancellationToken);
+                    #endregion -- selected customer --
+
                     #region -- getMobilityStation --
 
                     var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
@@ -226,13 +229,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     existingModel.PlateNo = model.PlateNo;
                     existingModel.Driver = model.Driver;
                     existingModel.CustomerId = model.CustomerId;
-                    existingModel.StationCode = model.StationCode;
-                    existingModel.Terms = model.Terms;
+                    existingModel.StationCode = getMobilityStation.StationCode;
+                    existingModel.Terms = selectedCustomer.CustomerTerms;
                     existingModel.StationId = getMobilityStation.StationId;
-                    if (stationCodeClaims == "ALL")
-                    {
-                        existingModel.StationCode = stationCodeClaims;
-                    }
+                    existingModel.Address = selectedCustomer.CustomerAddress;
+                    existingModel.EditedBy = _userManager.GetUserName(User);
+                    existingModel.EditedDate = DateTime.Now;
                     #endregion -- Assign New Values --
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -332,7 +334,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     model.Upload = newFileName;
                     model.LoadDate = loadDate;
                     model.TripTicket = tripTicket;
-                    model.Status = "Done";
+                    model.Status = "Lifted";
                     model.UploadedBy = _userManager.GetUserName(User);
                     model.UploadedDate = DateTime.Now;
 

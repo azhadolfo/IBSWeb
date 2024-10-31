@@ -42,6 +42,7 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityPOSales> MobilityPOSales { get; set; }
         public DbSet<MobilityOffline> MobilityOfflines { get; set; }
         public DbSet<MobilityCustomerOrderSlip> MobilityCustomerOrderSlips { get; set; }
+        public DbSet<MobilityCustomerPurchaseOrder> MobilityCustomerPurchaseOrders { get; set; }
         #endregion
 
         #region--Purchase Entity

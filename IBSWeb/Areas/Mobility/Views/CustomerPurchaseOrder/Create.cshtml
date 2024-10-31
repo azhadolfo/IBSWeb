@@ -1,8 +1,8 @@
-﻿@model MobilityCustomerOrderSlip
+﻿@model MobilityCustomerPurchaseOrder
 @using IBS.Utility
 
 @{
-    ViewData["Title"] = "Create Customer Order Slip";
+    ViewData["Title"] = "Create Customer Purchase Order";
     var stationCode = ViewData["StationCode"] as string;
 }
 
@@ -11,7 +11,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">CREATE CUSTOMER ORDER SLIP</h2>
+                <h2 class="text-white py-2">CREATE CUSTOMER PURCHASE ORDER</h2>
             </div>
         </div>
     </div>
@@ -20,10 +20,6 @@
         <form method="post" class="row">
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
-                @if (stationCode != "ALL")
-                {
-                    <input type="hidden" asp-for="StationCode" value="@stationCode" />
-                }
 
                 <div class="row pt-2">
                     <div class="form-floating py-2 px-2 col-12">
@@ -35,7 +31,7 @@
 
                 <div class="row pt-2">
                     <div class="form-group py-2 col-12" style="display: @(stationCode != "ALL" ? "none" : "") ">
-                        <label class="control-label">Station<span class="required">*</span></label>
+                        <label class="control-label">Stations List<span class="required">*</span></label>
                         <select asp-for="StationCode" asp-items="@Model.MobilityStations" class="form-select js-select2 border-0 shadow" style="width:100%">
                             <option value="" selected disabled>Select Station</option>
                         </select>
@@ -47,28 +43,15 @@
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Customer<span class="required">*</span></label>
                         <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected disabled>Select Customer</option>
+                            <option value="" selected disabled>Select Station</option>
                         </select>
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="row pt-2">
-                    <div class="form-floating py-2 px-2 col-6">
-                        <input asp-for="Driver" class="form-control border-0 shadow" placeholder="" required />
-                        <label asp-for="Driver">Driver<span class="required">*</span></label>
-                        <span asp-validation-for="Driver" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 px-2 col-6">
-                        <input asp-for="PlateNo" class="form-control border-0 shadow" placeholder="" required />
-                        <label asp-for="PlateNo">Plate Number<span class="required">*</span></label>
-                        <span asp-validation-for="PlateNo" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row pt-2">
                     <div class="form-group py-2 col-6">
-                        <label class="control-label">Product<span class="required">*</span></label>
+                        <label class="control-label">Product List<span class="required">*</span></label>
                         <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
                             <option value="" selected disabled>Select product</option>
                         </select>
@@ -88,9 +71,9 @@
                         <span asp-validation-for="Quantity" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 px-2 col-6">
-                        <input asp-for="PricePerLiter" class="form-control border-0 shadow" placeholder="" min="1" required />
-                        <label asp-for="PricePerLiter">Price per Liter<span class="required">*</span></label>
-                        <span asp-validation-for="PricePerLiter" class="text-danger"></span>
+                        <input asp-for="Price" class="form-control border-0 shadow" placeholder="" min="1" required />
+                        <label asp-for="Price">Price per Liter<span class="required">*</span></label>
+                        <span asp-validation-for="Price" class="text-danger"></span>
                     </div>
                 </div>
 
@@ -99,7 +82,7 @@
                         <button type="submit" class="btn btn-primary form-control">Create</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Mobility" asp-controller="CustomerPurchaseOrder" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -113,10 +96,10 @@
     }
     <script>
         $(document).ready(function () {
-            $('input[name="Quantity"], input[name="PricePerLiter"]').on('input', function () {
+            $('input[name="Quantity"], input[name="Price"]').on('input', function () {
                 var quantity = $('input[name="Quantity"]').val();
-                var pricePerLiter = $('input[name="PricePerLiter"]').val();
-                var amount = quantity * pricePerLiter;
+                var price = $('input[name="Price"]').val();
+                var amount = quantity * price;
                 $('input[name="Amount"]').val(amount);
             });
         });

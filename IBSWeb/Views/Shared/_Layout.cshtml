@@ -94,9 +94,17 @@
                                         </ul>
                                     </li>
                                     <li class="nav-item dropdown-layout">
-                                        <a class="nav-link" asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
-                                            Customer Order Slip
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                            Mobility Customer
                                         </a>
+                                        <ul class="dropdown-menu">
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index">Customer Order Slip</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CustomerPurchaseOrder" asp-action="Index">Customer Purchase Order</a>
+                                            </li>
+                                        </ul>
                                     </li>
                                     <li class="nav-item dropdown-layout">
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">

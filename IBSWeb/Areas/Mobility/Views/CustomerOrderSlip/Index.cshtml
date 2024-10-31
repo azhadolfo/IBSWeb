@@ -120,8 +120,8 @@
                                     ? "Disapproved"
                                     : item.Status == "Approved"
                                     ? "Approved"
-                                    : item.Status == "Done"
-                                    ? "Done"
+                                    : item.Status == "Lifted"
+                                    ? "Lifted"
                                     : "Pending";
                                 }
                                 <span class="badge rounded-pill @if(item.Status == "Approved") {
@@ -130,7 +130,7 @@
                                                             <text>bg-danger</text>
                                     } else if(status == "Pending") {
                                                             <text>bg-warning</text>
-                                    } else if(status == "Done") {
+                                    } else if(status == "Lifted") {
                                                             <text>bg-success</text>
                                     }" style="font-size: 14px">@Html.DisplayFor(model => item.Status)</span>
                             </td>
@@ -155,6 +155,21 @@
 </div>
 
 @section Scripts{
+    <script>
+        $(document).ready(function () {
+            var userDepartment = '@ViewBag.userDepartment';
+            var currentStationCode = '@ViewData["StationCode"]';
+
+            if (userDepartment === "Cashier" && currentStationCode === "ALL") {
+                // Redirect to the logout page with the return URL
+                window.location.href = '@Url.Page("/Account/Logout", new { area = "Identity", returnUrl = Url.Action("Index", "Home", new { area = "" }) })';
+            }
+        });
+    </script>
+
+
+
+
     <script>
         $(document).ready(function () {
             $('.search-radio').change(function () {
