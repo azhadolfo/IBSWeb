@@ -457,7 +457,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var ledgers = new List<FilprideGeneralLedgerBook>();
 
-                        var arTradeReceivableTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010201") ?? throw new ArgumentException("Account title '1010201' not found.");
+                        var arTradeReceivableTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account title '101020100' not found.");
 
                         ledgers.Add(
                             new FilprideGeneralLedgerBook
@@ -477,7 +477,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (withHoldingTaxAmount > 0)
                         {
-                            var withHoldingTaxTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010202") ?? throw new ArgumentException("Account title '1010202' not found.");
+                            var withHoldingTaxTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
 
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
@@ -497,7 +497,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                         if (withHoldingVatAmount > 0)
                         {
-                            var withHoldingVatTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010203") ?? throw new ArgumentException("Account title '1010203' not found.");
+                            var withHoldingVatTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
 
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
@@ -536,7 +536,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (vatAmount > 0)
                         {
-                            var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010301") ?? throw new ArgumentException("Account title '2010301' not found.");
+                            var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
 
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
@@ -650,7 +650,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (dr != null)
                         {
-                        dr.HasAlreadyInvoiced = false;
+                            dr.HasAlreadyInvoiced = false;
                         }
 
                         #region --Audit Trail Recording

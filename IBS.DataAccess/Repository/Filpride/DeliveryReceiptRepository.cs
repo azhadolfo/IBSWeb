@@ -148,7 +148,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
                 var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
                 var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
-                var cogsFreightTitle = accountTitlesDto.Find(c => c.AccountNumber == "5010109") ?? throw new ArgumentException("Account title '5010109' not found.");
+                var freightOutTitle = accountTitlesDto.Find(c => c.AccountNumber == "502012700") ?? throw new ArgumentException("Account title '502012700' not found.");
 
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
@@ -243,8 +243,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
-                        AccountNo = cogsFreightTitle.AccountNumber,
-                        AccountTitle = cogsFreightTitle.AccountName,
+                        AccountNo = freightOutTitle.AccountNumber,
+                        AccountTitle = freightOutTitle.AccountName,
                         Debit = ComputeNetOfVat(deliveryReceipt.Freight * deliveryReceipt.Quantity),
                         Credit = 0,
                         Company = deliveryReceipt.Company,
@@ -274,8 +274,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for ECC",
-                        AccountNo = cogsFreightTitle.AccountNumber,
-                        AccountTitle = cogsFreightTitle.AccountName,
+                        AccountNo = freightOutTitle.AccountNumber,
+                        AccountTitle = freightOutTitle.AccountName,
                         Debit = ComputeNetOfVat(deliveryReceipt.ECC * deliveryReceipt.Quantity),
                         Credit = 0,
                         Company = deliveryReceipt.Company,
@@ -305,8 +305,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Demurrage",
-                        AccountNo = cogsFreightTitle.AccountNumber,
-                        AccountTitle = cogsFreightTitle.AccountName,
+                        AccountNo = freightOutTitle.AccountNumber,
+                        AccountTitle = freightOutTitle.AccountName,
                         Debit = ComputeNetOfVat(deliveryReceipt.Demuragge),
                         Credit = 0,
                         Company = deliveryReceipt.Company,

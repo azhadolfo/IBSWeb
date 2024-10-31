@@ -143,10 +143,10 @@ namespace IBS.DataAccess.Repository
         {
             return productCode switch
             {
-                "PET001" => ("5010101", "COGS - Biodiesel"),
-                "PET002" => ("5010102", "COGS - Econogas"),
-                "PET003" => ("5010103", "COGS - Envirogas"),
-                _ => ("5011001", "COGS - Lubes"),
+                "PET001" => ("501010100", "COGS - Biodiesel"),
+                "PET002" => ("501010200", "COGS - Econogas"),
+                "PET003" => ("501010300", "COGS - Envirogas"),
+                _ => ("501100100", "COGS - Lubes"),
             };
         }
 
@@ -157,7 +157,7 @@ namespace IBS.DataAccess.Repository
                 "PET001" => ("101040100", "Inventory - Biodiesel"),
                 "PET002" => ("101040200", "Inventory - Econogas"),
                 "PET003" => ("101040300", "Inventory - Envirogas"),
-                _ => ("1010410", "Inventory - Lubes"),
+                _ => ("101041000", "Inventory - Lubes"),
             };
         }
 

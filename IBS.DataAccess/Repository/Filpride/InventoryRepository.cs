@@ -307,6 +307,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     }
                 }
 
+                var (salesAccountNo, salesAccountTitle) = GetSalesAccountTitle(salesInvoice.Product.ProductCode);
+
                 var ledgers = new List<FilprideGeneralLedgerBook>
                 {
                     new FilprideGeneralLedgerBook
@@ -314,8 +316,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = salesInvoice.TransactionDate,
                         Reference = salesInvoice.SalesInvoiceNo,
                         Description = salesInvoice.Product.ProductName,
-                        AccountNo = salesInvoice.Product.ProductCode == "PET001" ? "5010101" : salesInvoice.Product.ProductCode == "PET002" ? "5010102" : "5010103",
-                        AccountTitle = salesInvoice.Product.ProductCode == "PET001" ? "Cost of Goods Sold - Biodiesel" : salesInvoice.Product.ProductCode == "PET002" ? "Cost of Goods Sold - Econogas" : "Cost of Goods Sold - Envirogas",
+                        AccountNo = salesAccountNo,
+                        AccountTitle = salesAccountTitle,
                         Debit = inventory.Total,
                         Credit = 0,
                         Company = salesInvoice.Company,
@@ -327,8 +329,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = salesInvoice.TransactionDate,
                         Reference = salesInvoice.SalesInvoiceNo,
                         Description = salesInvoice.Product.ProductName,
-                        AccountNo = salesInvoice.Product.ProductCode == "PET001" ? "1010401" : salesInvoice.Product.ProductCode == "PET002" ? "1010402" : "1010403",
-                        AccountTitle = salesInvoice.Product.ProductCode == "PET001" ? "Inventory - Biodiesel" : salesInvoice.Product.ProductCode == "PET002" ? "Inventory - Econogas" : "Inventory - Envirogas",
+                        AccountNo = salesAccountNo,
+                        AccountTitle = salesAccountTitle,
                         Debit = 0,
                         Credit = inventory.Total,
                         Company = salesInvoice.Company,
@@ -905,7 +907,6 @@ namespace IBS.DataAccess.Repository.Filpride
                         }
 
                         _db.FilprideGeneralLedgerBooks.UpdateRange(journalEntries);
-
                     }
                     else if (transaction.Particular == "Purchases")
                     {
