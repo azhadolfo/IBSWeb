@@ -148,7 +148,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
                 var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
                 var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
-                var freightOutTitle = accountTitlesDto.Find(c => c.AccountNumber == "502012700") ?? throw new ArgumentException("Account title '502012700' not found.");
+                var freightOutTitle = accountTitlesDto.Find(c => c.AccountNumber == "551010200") ?? throw new ArgumentException("Account title '551010200' not found.");
 
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
