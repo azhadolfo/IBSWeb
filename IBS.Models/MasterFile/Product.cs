@@ -14,7 +14,7 @@ namespace IBS.Models.MasterFile
         public string ProductCode { get; set; }
 
         [Display(Name = "Product Name")]
-        [Column(TypeName = "varchar(50)")]
+        [Column(TypeName = "varchar()")]
         public string ProductName { get; set; }
 
         [Display(Name = "Product Unit")]

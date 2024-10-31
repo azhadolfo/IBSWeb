@@ -10,7 +10,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Edit Cashier Report</h2>
+                <h2 class="text-white py-2">EDIT CUSTOMER ORDER SLIP</h2>
             </div>
         </div>
     </div>
@@ -26,13 +26,16 @@
                 }
 
                 <div class="row pt-2">
-                    <div class="form-floating py-2 px-2 col-@if(stationCode != "ALL") {<text>12</text>} else {<text>6</text>}">
+                    <div class="form-floating py-2 px-2 col-12">
                         <input type="date" asp-for="Date" class="form-control border-0 shadow" placeholder="" />
                         <label class="ms-2">Date<span class="required">*</span></label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
-                    <div class="form-group py-2 col-6" style="display: @(stationCode != "ALL" ? "none" : "") ">
-                        <label class="control-label">Stations List<span class="required">*</span></label>
+                </div>
+
+                <div class="row pt-2">
+                    <div class="form-group py-2 col-12" style="display: @(stationCode != "ALL" ? "none" : "") ">
+                        <label class="control-label">Station<span class="required">*</span></label>
                         <select asp-for="StationCode" asp-items="@Model.MobilityStations" class="form-select js-select2 border-0 shadow" style="width:100%">
                             <option value="" selected disabled>Select Station</option>
                         </select>
@@ -41,17 +44,12 @@
                 </div>
 
                 <div class="row pt-2">
-                    <div class="form-group py-2 col-6">
+                    <div class="form-group py-2 col-12">
                         <label class="control-label">Customer<span class="required">*</span></label>
                         <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected disabled>Select Station</option>
+                            <option value="" selected disabled>Select Customer</option>
                         </select>
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating px-2 py-2 col-6">
-                        <input asp-for="Address" class="form-control border-0 shadow" placeholder="" required />
-                        <label asp-for="Address">Address<span class="required">*</span></label>
-                        <span asp-validation-for="Address" class="text-danger"></span>
                     </div>
                 </div>
 
@@ -70,7 +68,7 @@
 
                 <div class="row pt-2">
                     <div class="form-group py-2 col-6">
-                        <label class="control-label">Product List<span class="required">*</span></label>
+                        <label class="control-label">Product<span class="required">*</span></label>
                         <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
                             <option value="" selected disabled>Select product</option>
                         </select>

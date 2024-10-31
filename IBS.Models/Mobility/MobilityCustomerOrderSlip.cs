@@ -30,42 +30,23 @@ namespace IBS.Models.Mobility.ViewModels
         [Display(Name ="Date")]
         public DateOnly Date { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
         public decimal Quantity { get; set; }
 
         [Display(Name = "Price")]
         [Column(TypeName = "numeric(18,2)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
         public decimal PricePerLiter { get; set; }
 
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
-        #region Product's Properties
-
-        public int ProductId { get; set; }
-
-        [ForeignKey(nameof(ProductId))]
-        public Product? Product { get; set; }
-
-        #endregion
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
         public decimal Amount { get; set; }
 
         [Display(Name ="Plate Number")]
         public string PlateNo { get; set; }
 
         public string Driver { get; set; }
-
-        //public string Customer {  get; set; }
-
-        #region Customer properties
-
-        public int CustomerId { get; set; }
-
-        [ForeignKey(nameof(CustomerId))]
-        public MobilityCustomer? Customer { get; set; }
-
-        #endregion
 
         public string Status { get; set; } = string.Empty;
 
@@ -104,27 +85,26 @@ namespace IBS.Models.Mobility.ViewModels
         public string? UploadedBy { get; set; }
 
         public DateTime? UploadedDate { get; set; }
+        [Display(Name = "Trip Ticket")]
         public string? TripTicket {  get; set; }
 
         public bool IsPrinted { get; set; }
 
-        #region -- suggestion it can be add to database if needed
+        #region Product's Properties
 
-        //[Column(TypeName = "varchar(100)")]
-        //[Display(Name = "Customer PO No.")]
-        //public string CustomerPoNo { get; set; }
+        public int ProductId { get; set; }
 
-        //[Column(TypeName = "numeric(18,4)")]
-        //[DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        //public decimal DeliveredPrice { get; set; }
+        [ForeignKey(nameof(ProductId))]
+        public Product? Product { get; set; }
 
-        //[Column(TypeName = "numeric(18,4)")]
-        //[DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        //public decimal DeliveredQuantity { get; set; }
+        #endregion
 
-        //[Column(TypeName = "numeric(18,4)")]
-        //[DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        //public decimal BalanceQuantity { get; set; }
+        #region Customer properties
+
+        public int CustomerId { get; set; }
+
+        [ForeignKey(nameof(CustomerId))]
+        public MobilityCustomer? Customer { get; set; }
 
         #endregion
 
@@ -147,6 +127,26 @@ namespace IBS.Models.Mobility.ViewModels
 
         [NotMapped]
         public List<SelectListItem>? Customers { get; set; }
+
+        #endregion
+
+        #region -- suggestion it can be add to database if needed
+
+        //[Column(TypeName = "varchar(100)")]
+        //[Display(Name = "Customer PO No.")]
+        //public string CustomerPoNo { get; set; }
+
+        //[Column(TypeName = "numeric(18,4)")]
+        //[DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        //public decimal DeliveredPrice { get; set; }
+
+        //[Column(TypeName = "numeric(18,4)")]
+        //[DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        //public decimal DeliveredQuantity { get; set; }
+
+        //[Column(TypeName = "numeric(18,4)")]
+        //[DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        //public decimal BalanceQuantity { get; set; }
 
         #endregion
     }

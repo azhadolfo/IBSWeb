@@ -71,12 +71,13 @@
         {
             <div class="w-100 text-center">
                 <a href="@imageSrc" target="_blank">
-                    <img src="@imageSrc" class="img-fluid" style="max-height: 400px; width:auto; cursor: pointer;" alt="placeholder">
+                    <img src="@imageSrc" class="img-fluid" style="max-height: 300px; width:auto; cursor: pointer;" alt="placeholder">
                 </a>
             </div>
         }
 
         </br>
+
         <div class="row pt-2" id="buttons">
             @if (userDepartment == SD.Department_Finance && Model.Status == "Pending" || User.IsInRole("Admin") && Model.Status == "Pending")
             {
@@ -135,9 +136,7 @@
             </br>
 
             <div class="w-100 text-center">
-                <a id="documentLink" @* href="" target="_blank" cursor: pointer; *@>
-                    </br><img id="output" class="img-fluid" style="max-height: 400px; width:auto; " />
-                </a>
+                </br><img id="output" class="img-fluid" style="max-height: 300px; width:auto; " />
             </div>
 
             </br>
@@ -210,7 +209,6 @@
             image.src = URL.createObjectURL(event.target.files[0]);
             var objectURL = URL.createObjectURL(event.target.files[0]);
             image.src = objectURL;
-            var documentLink = document.getElementById('documentLink');
         };
 
         (document).getElementById('uploadButton').addEventListener('click', function () {
@@ -230,7 +228,7 @@
             else {
                 if (fileUpload.files.length > 0) {
                     Swal.fire({
-                        title: 'Enter these to the record?',
+                        title: 'Enter proof of transaction?',
                         text: "You can't change these later",
                         icon: 'question',
                         showCancelButton: true,
@@ -243,8 +241,16 @@
                         }
                     });
                 }
+                else
+                {
+                    Swal.fire({
+                        title: 'Oops!',
+                        text: 'Please put proof of transaction!',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                }
             }
-
         });
     </script>
 }
