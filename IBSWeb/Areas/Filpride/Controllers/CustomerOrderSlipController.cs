@@ -1126,7 +1126,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 };
                 await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
                 existingCos.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                existingCos.Status = nameof(CosStatus.ForApproval);
+                existingCos.Status = nameof(CosStatus.ForApprovalOfOM);
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);

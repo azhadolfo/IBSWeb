@@ -144,7 +144,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             customerOrderSlip.TotalAmount = customerOrderSlip.Quantity * customerOrderSlip.DeliveredPrice;
 
-            customerOrderSlip.Status = nameof(CosStatus.ApprovedByOM);
+            customerOrderSlip.Status = nameof(CosStatus.ForApprovalOfFM);
 
             await _db.SaveChangesAsync(cancellationToken);
         }

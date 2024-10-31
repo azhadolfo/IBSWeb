@@ -112,7 +112,7 @@
                                 case '@CosStatus.ForAtlBooking':
                                     badgeClass = "badge bg-info";
                                     break;
-                                case '@CosStatus.ApprovedByOM':
+                                case '@CosStatus.ForApprovalOfFM':
                                     badgeClass = "badge bg-warning";
                                     break;
                                 case '@CosStatus.Approved':
@@ -171,11 +171,11 @@
                                     }
 
                                     break;
-                                case '@CosStatus.ForApproval':
+                                case '@CosStatus.ForApprovalOfOM':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                                     break;
-                                case '@CosStatus.ApprovedByOM':
+                                case '@CosStatus.ForApprovalOfFM':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                                     break;
                                 case '@CosStatus.Approved':
