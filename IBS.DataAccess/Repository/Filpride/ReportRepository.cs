@@ -231,7 +231,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return auditTrailBooks;
         }
 
-        public async Task<List<FilprideCustomerOrderSlip>> GetCosUnserveVolume(DateOnly dateFrom, DateOnly dateTo, string company)
+        public async Task<List<FilprideCustomerOrderSlip>> GetCosUnservedVolume(DateOnly dateFrom, DateOnly dateTo, string company)
         {
             if (dateFrom > dateTo)
             {

@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Print ATL";
+    var purchaseOrders = ViewData["PurchaseOrders"] as List<FilprideCOSAppointedSupplier>;
 }
 
 <div class="container mt-4">
@@ -60,13 +61,34 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>@Model.CustomerOrderSlip.Customer.CustomerName</td>
-                    <td>@Model.CustomerOrderSlip.Product.ProductName</td>
-                    <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
-                    <td>@(Model.CustomerOrderSlip.PurchaseOrder?.SupplierSalesOrderNo)</td>
-                    <td>@(Model.CustomerOrderSlip.PurchaseOrder?.PurchaseOrderNo)</td>
-                </tr>
+                @if (purchaseOrders.Count > 0)
+                {
+                    var isFirstRow = true;
+                    foreach (var po in purchaseOrders)
+                    {
+                        <tr>
+                            @if (isFirstRow)
+                            {
+                                <td rowspan="@purchaseOrders.Count" class="align-content-center">@Model.CustomerOrderSlip.Customer.CustomerName</td>
+                                <td rowspan="@purchaseOrders.Count" class="align-content-center">@Model.CustomerOrderSlip.Product.ProductName</td>
+                                <td rowspan="@purchaseOrders.Count" class="align-content-center">@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
+                                isFirstRow = false;
+                            }
+                            <td>@po.PurchaseOrder.SupplierSalesOrderNo</td>
+                            <td>@po.PurchaseOrder.PurchaseOrderNo</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td>@Model.CustomerOrderSlip.Customer.CustomerName</td>
+                        <td>@Model.CustomerOrderSlip.Product.ProductName</td>
+                        <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
+                        <td>@(Model.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo)</td>
+                        <td>@(Model.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo)</td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
