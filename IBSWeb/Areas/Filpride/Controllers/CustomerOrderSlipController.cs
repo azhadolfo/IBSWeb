@@ -649,7 +649,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
 
-                    if (existingCos.Status == nameof(CosStatus.HaulerAppointed))
+                    if (existingCos.HaulerId != null)
                     {
                         existingCos.Status = nameof(CosStatus.ForAtlBooking);
                     }
@@ -664,6 +664,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         existingCos.Freight = viewModel.Freight;
                         existingCos.SubPORemarks = viewModel.SubPoRemarks;
+                    }
+                    else if (existingCos.HaulerId != null && viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                    {
+                        //Do nothing because it means the logistics already assigned the freight
                     }
                     else
                     {
@@ -807,12 +811,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingCos.Freight = viewModel.Freight;
                         existingCos.SubPORemarks = viewModel.SubPoRemarks;
                     }
-                    else if (viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                    else if (existingCos.HaulerId != null && viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
                     {
-                        var highestFreight = await _unitOfWork.FilprideFreight
-                            .GetAsync(f => f.ClusterCode == existingCos.Customer.ClusterCode && f.PickUpPointId == existingCos.PickUpPointId, cancellationToken) ?? throw new ArgumentNullException("No freight reference found!");
-
-                        existingCos.Freight = highestFreight.Freight;
+                        //Do nothing because it means the logistics already assigned the freight
                     }
                     else
                     {
@@ -992,17 +993,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     existingCos.HaulerId = viewModel.HaulerId;
-                    if (viewModel.Freight != 0)
-                    {
-                        existingCos.Freight = viewModel.Freight;
-                    }
 
-                    if (existingCos.Status == nameof(CosStatus.SupplierAppointed))
+                    if (existingCos.SupplierId != null)
                     {
+                        if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                        {
+                            existingCos.Freight = viewModel.Freight;
+                        }
+
                         existingCos.Status = nameof(CosStatus.ForAtlBooking);
                     }
                     else
                     {
+                        existingCos.Freight = viewModel.Freight;
                         existingCos.Status = nameof(CosStatus.HaulerAppointed);
                     }
 
@@ -1071,7 +1074,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingCos.HaulerId = viewModel.HaulerId;
 
-                    if (viewModel.Freight != 0 && viewModel.Freight != existingCos.Freight)
+                    if (existingCos.SupplierId != null)
+                    {
+                        if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                        {
+                            existingCos.Freight = viewModel.Freight;
+                        }
+                    }
+                    else
                     {
                         existingCos.Freight = viewModel.Freight;
                     }
