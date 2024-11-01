@@ -53,10 +53,16 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string ManualDrNo { get; set; }
 
-        public decimal Demuragge { get; set; } = 0;
-
         public decimal Freight { get; set; } = 0;
 
         public decimal ECC { get; set; } = 0;
+
+        public string ATLNo { get; set; }
+
+        public string Hauler { get; set; }
+
+        public string Driver { get; set; }
+
+        public string PlateNo { get; set; }
     }
 }

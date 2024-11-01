@@ -159,11 +159,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CreatedBy = _userManager.GetUserName(User),
                         ManualDrNo = viewModel.ManualDrNo,
                         Freight = viewModel.Freight,
-                        Demuragge = viewModel.Demuragge,
                         ECC = viewModel.ECC,
-                        Driver = customerOrderSlip.Driver,
-                        PlateNo = customerOrderSlip.PlateNo,
-                        HaulerId = customerOrderSlip.HaulerId
+                        Driver = viewModel.Driver,
+                        PlateNo = viewModel.PlateNo,
+                        HaulerId = customerOrderSlip.HaulerId,
+                        AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo
                     };
 
                     customerOrderSlip.DeliveredQuantity += model.Quantity;
@@ -255,9 +255,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Remarks = existingRecord.Remarks,
                     ManualDrNo = existingRecord.ManualDrNo,
                     Freight = existingRecord.Freight,
-                    Demuragge = existingRecord.Demuragge,
                     ECC = existingRecord.ECC,
-                    DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption
+                    DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption,
+                    Hauler = existingRecord.Hauler.SupplierName,
+                    Driver = existingRecord.Driver,
+                    PlateNo = existingRecord.PlateNo,
+                    ATLNo = existingRecord.AuthorityToLoadNo
                 };
 
                 ViewBag.DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption;
@@ -449,6 +452,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 RemainingVolume = cos.BalanceQuantity,
                 Price = cos.DeliveredPrice,
                 cos.DeliveryOption,
+                ATLNo = cos.AuthorityToLoadNo,
+                Hauler = cos.Hauler.SupplierName,
+                cos.Driver,
+                cos.PlateNo,
                 cos.Freight
             });
         }

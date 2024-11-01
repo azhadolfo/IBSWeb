@@ -96,19 +96,34 @@
                     <span asp-validation-for="Volume" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" required min="0.01" />
-                    <label asp-for="Freight">Freight<span class="required">*</span></label>
+                    <input asp-for="ATLNo" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                    <label asp-for="ATLNo" class="ms-2">ATL#</label>
+                    <span asp-validation-for="ATLNo" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Hauler" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                    <label asp-for="Hauler" class="ms-2">Hauler</label>
+                    <span asp-validation-for="Hauler" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Driver" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="Driver" class="ms-2">Driver<span class="required">*</span></label>
+                    <span asp-validation-for="Driver" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="PlateNo" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="PlateNo" class="ms-2">Plate #<span class="required">*</span></label>
+                    <span asp-validation-for="PlateNo" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                    <label asp-for="Freight">Freight</label>
                     <span asp-validation-for="Freight" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="ECC" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="ECC">ECC</label>
                     <span asp-validation-for="ECC" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Demuragge" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="Demuragge">Demuragge</label>
-                    <span asp-validation-for="Demuragge" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="TotalAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
@@ -184,20 +199,19 @@
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
                                     $('input[name="Freight"]').parent().show();
                                     $('input[name="Freight"]').val(data.freight);
-                                    // make the plate no and driver required
-                                    $('input[name="Driver"]').prop('required', true);
-                                    $('input[name="PlateNo"]').prop('required', true);
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
                                     $('input[name="Freight"]').parent().hide();
                                     $('input[name="Freight"]').val(data.freight);
-                                    // make the plate no and driver optional
-                                    $('input[name="Driver"]').prop('required', false);
-                                    $('input[name="PlateNo"]').prop('required', false);
                                 } else {
                                     // hide the hauler list
-                                    $('#haulerList').hide();
+                                    $('#Hauler').hide();
                                     $('input[name="Freight"]').parent().hide();
                                 }
+
+                                $('input[name="ATLNo"]').val(data.atlNo);
+                                $('input[name="Hauler"]').val(data.hauler);
+                                $('input[name="Driver"]').val(data.driver);
+                                $('input[name="PlateNo"]').val(data.plateNo);
 
                                 $('input[name="Product"]').val(data.product);
                                 $('input[name="CosVolume"]').val(formatNumber(data.quantity));

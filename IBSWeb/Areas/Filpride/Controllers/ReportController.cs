@@ -538,14 +538,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["O9"].Value = "SUPPLIER";
                 worksheet.Cells["P9"].Value = "COST";
                 worksheet.Cells["Q9"].Value = "FREIGHT";
-                worksheet.Cells["R9"].Value = "DEMURRAGE";
-                worksheet.Cells["S9"].Value = "ECC";
-                worksheet.Cells["T9"].Value = "TOTAL FREIGHT";
+                worksheet.Cells["R9"].Value = "ECC";
+                worksheet.Cells["S9"].Value = "TOTAL FREIGHT";
 
                 int currentRow = 10;
                 decimal sumOfCost = 0;
                 decimal sumOfFreight = 0;
-                decimal sumOfDemurrage = 0;
                 decimal sumOfECC = 0;
                 decimal sumOfTotalFreight = 0;
 
@@ -575,22 +573,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[currentRow, 17].Value = freight;
                     sumOfFreight += freight;
 
-                    decimal demurrage = (dr.Demuragge > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.Demuragge) : dr.Demuragge);
-                    worksheet.Cells[currentRow, 18].Value = demurrage;
-                    sumOfDemurrage += demurrage;
-
                     decimal ecc = (dr.ECC > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.ECC) : dr.ECC) * dr.Quantity;
-                    worksheet.Cells[currentRow, 19].Value = ecc;
+                    worksheet.Cells[currentRow, 18].Value = ecc;
                     sumOfECC += ecc;
 
                     decimal totalFreight = dr.Freight + dr.ECC;
                     decimal netTotalFreight = (totalFreight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(totalFreight) : totalFreight) * dr.Quantity;
-                    worksheet.Cells[currentRow, 20].Value = netTotalFreight;
-                    sumOfTotalFreight += netTotalFreight + dr.Demuragge;
+                    worksheet.Cells[currentRow, 19].Value = netTotalFreight;
+                    sumOfTotalFreight += netTotalFreight;
 
                     currentRow++;
                 }
-
 
                 // Total row
                 worksheet.Cells[currentRow + 1, 5].Value = "TOTAL";
@@ -598,12 +591,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[currentRow + 1, 7].Value = deliveryReceipts.Sum(dr => dr.TotalAmount);
                 worksheet.Cells[currentRow + 1, 16].Value = sumOfCost;
                 worksheet.Cells[currentRow + 1, 17].Value = sumOfFreight;
-                worksheet.Cells[currentRow + 1, 18].Value = sumOfDemurrage;
-                worksheet.Cells[currentRow + 1, 19].Value = sumOfECC;
-                worksheet.Cells[currentRow + 1, 20].Value = sumOfTotalFreight;
+                worksheet.Cells[currentRow + 1, 18].Value = sumOfECC;
+                worksheet.Cells[currentRow + 1, 19].Value = sumOfTotalFreight;
 
                 // Adding borders and bold styling to the total row
-                using (var totalRowRange = worksheet.Cells[currentRow + 1, 1, currentRow + 1, 20]) // Whole row
+                using (var totalRowRange = worksheet.Cells[currentRow + 1, 1, currentRow + 1, 19]) // Whole row
                 {
                     totalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     totalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
@@ -628,7 +620,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["B:T"].AutoFitColumns();
                 worksheet.Cells["F,G,P:T"].Style.Numberformat.Format = "#,##0.00";
 
-                using (var range = worksheet.Cells["A9:T9"])
+                using (var range = worksheet.Cells["A9:S9"])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Font.Color.SetColor(Color.White);
@@ -646,7 +638,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
         }
-
 
         //Generate as .txt file
 
@@ -2292,6 +2283,5 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- Generate SalesBook .Csv File --
-
     }
 }
