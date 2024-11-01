@@ -146,12 +146,12 @@ namespace IBS.DataAccess.Repository.Filpride
                 var netOfVatAmount = ComputeNetOfVat(deliveryReceipt.TotalAmount);
                 var vatAmount = ComputeVatAmount(netOfVatAmount);
                 var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-                var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010101") ?? throw new ArgumentException("Account title '1010101' not found.");
-                var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010201") ?? throw new ArgumentException("Account title '1010201' not found.");
-                var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010301") ?? throw new ArgumentException("Account title '2010301' not found.");
-                var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010602") ?? throw new ArgumentException("Account title '1010602' not found.");
-                var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "2020101") ?? throw new ArgumentException("Account title '2020101' not found.");
-                var cogsFreightTitle = accountTitlesDto.Find(c => c.AccountNumber == "5010109") ?? throw new ArgumentException("Account title '5010109' not found.");
+                var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
+                var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account title '101020100' not found.");
+                var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
+                var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+                var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
+                var freightOutTitle = accountTitlesDto.Find(c => c.AccountNumber == "551010200") ?? throw new ArgumentException("Account title '551010200' not found.");
 
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
@@ -246,8 +246,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
-                        AccountNo = cogsFreightTitle.AccountNumber,
-                        AccountTitle = cogsFreightTitle.AccountName,
+                        AccountNo = freightOutTitle.AccountNumber,
+                        AccountTitle = freightOutTitle.AccountName,
                         Debit = ComputeNetOfVat(deliveryReceipt.Freight * deliveryReceipt.Quantity),
                         Credit = 0,
                         Company = deliveryReceipt.Company,
@@ -277,8 +277,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for ECC",
-                        AccountNo = cogsFreightTitle.AccountNumber,
-                        AccountTitle = cogsFreightTitle.AccountName,
+                        AccountNo = freightOutTitle.AccountNumber,
+                        AccountTitle = freightOutTitle.AccountName,
                         Debit = ComputeNetOfVat(deliveryReceipt.ECC * deliveryReceipt.Quantity),
                         Credit = 0,
                         Company = deliveryReceipt.Company,
@@ -308,8 +308,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Demurrage",
-                        AccountNo = cogsFreightTitle.AccountNumber,
-                        AccountTitle = cogsFreightTitle.AccountName,
+                        AccountNo = freightOutTitle.AccountNumber,
+                        AccountTitle = freightOutTitle.AccountName,
                         Debit = ComputeNetOfVat(deliveryReceipt.Demuragge),
                         Credit = 0,
                         Company = deliveryReceipt.Company,
@@ -346,7 +346,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedDate = deliveryReceipt.CreatedDate,
                     SupplierId = deliveryReceipt.HaulerId
                 });
-
 
                 if (!IsJournalEntriesBalanced(ledgers))
                 {

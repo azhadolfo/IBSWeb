@@ -306,7 +306,6 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.SaveChangesAsync(cancellationToken);
 
             await PostAsync(model, cancellationToken);
-
         }
 
         public async Task PostAsync(FilprideReceivingReport model, CancellationToken cancellationToken = default)
@@ -342,9 +341,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.PurchaseOrder.Product.ProductCode);
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-            var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010602") ?? throw new ArgumentException("Account title '1010602' not found.");
-            var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010302") ?? throw new ArgumentException("Account title '2010302' not found.");
-            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010101") ?? throw new ArgumentException("Account title '2010101' not found.");
+            var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+            var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030200") ?? throw new ArgumentException("Account title '201030200' not found.");
+            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010100") ?? throw new ArgumentException("Account title '201010100' not found.");
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
