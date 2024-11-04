@@ -323,7 +323,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     #endregion --operate folder, delete old file--
 
                     string newFileExtension = Path.GetExtension(file.FileName);
-                    string newFileName = string.Concat(model.Customer.CustomerName, "_", model.Product.ProductName, "_", model.Date.ToString("yyyyMMdd"), DateTime.Now.ToString("HHmmss"), newFileExtension);
+                    string newFileName = string.Concat(model.Customer.CustomerCodeName, "_", model.Product.ProductName, "_", model.Date.ToString("yyyyMMdd"), DateTime.Now.ToString("HHmmss"), newFileExtension);
                     string fileSavePath = Path.Combine(localPath, newFileName);
 
                     await using (FileStream stream = new(fileSavePath, FileMode.Create))

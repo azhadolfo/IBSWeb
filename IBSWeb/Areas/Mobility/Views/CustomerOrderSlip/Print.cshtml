@@ -65,18 +65,18 @@
             </tr>
         </table>
 
-        </br>   
         
         @if (!string.IsNullOrEmpty(Model.Upload))
         {
+            <br />
             <div class="w-100 text-center">
                 <a href="@imageSrc" target="_blank">
                     <img src="@imageSrc" class="img-fluid" style="max-height: 300px; width:auto; cursor: pointer;" alt="placeholder">
                 </a>
             </div>
+            <br />
         }
 
-        </br>
 
         <div class="row pt-2" id="buttons">
             @if (userDepartment == SD.Department_Finance && Model.Status == "Pending" || User.IsInRole("Admin") && Model.Status == "Pending")
@@ -143,18 +143,11 @@
 
             <div class="row pt-2">
                 <div class="col-6 col-md-3">
-                    <button id="uploadButton" class="btn btn-primary form-control">Submit</button>
+                    <button id="uploadButton" class="btn btn-primary form-control buttons">Submit</button>
                 </div>
-                <div class="col-6 col-md-3">
-                    <button id="submitButton" type="submit" class="btn btn-primary form-control" style="display: none;">
-                        Submit
-                    </button>
-                </div>
-                <div class="col-6 col-md-3">
-                    <a @* asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Printed" asp-route-id="@Model.CustomerOrderSlipId" *@ onclick="window.print()" class="btn btn-primary form-control buttons">
-                        Print
-                    </a>
-                </div>
+                <button id="submitButton" type="submit" class="btn btn-primary form-control" style="display: none;">
+                    Submit
+                </button>
                 <div class="col-6 col-md-3">
                     <a asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border form-control buttons">
                         Back to List
