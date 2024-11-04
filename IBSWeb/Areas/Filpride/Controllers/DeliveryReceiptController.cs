@@ -69,7 +69,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.Customer.CustomerName?.ToLower().Contains(searchValue) == true ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.TotalAmount.ToString().Contains(searchValue) ||
-                        s.Remarks?.ToLower().Contains(searchValue) == true ||
                         s.ManualDrNo.ToLower().Contains(searchValue) ||
                         s.CustomerOrderSlip.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
                         s.CustomerOrderSlip.Product.ProductName.ToLower().Contains(searchValue) ||

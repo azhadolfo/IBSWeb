@@ -63,11 +63,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(s =>
                         s.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
                         s.OldCosNo.ToLower().Contains(searchValue) ||
+                        s.PurchaseOrder?.OldPoNo.ToLower().Contains(searchValue) == true ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.Customer.CustomerName?.ToLower().Contains(searchValue) == true ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.TotalAmount.ToString().Contains(searchValue) ||
-                        s.Remarks?.ToLower().Contains(searchValue) == true ||
                         s.Status.ToLower().Contains(searchValue)
                         )
                     .ToList();

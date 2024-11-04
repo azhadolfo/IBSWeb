@@ -74,17 +74,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.SalesInvoiceNo.ToLower().Contains(searchValue) ||
                             s.Customer.CustomerName.ToLower().Contains(searchValue) ||
                             s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
-                            s.Product.ProductCode.ToLower().Contains(searchValue) ||
                             s.Product.ProductName.ToLower().Contains(searchValue) ||
-                            s.OtherRefNo.ToLower().Contains(searchValue) ||
                             s.TransactionDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
-                            s.Quantity.ToString().Contains(searchValue) ||
-                            s.UnitPrice.ToString().Contains(searchValue) ||
                             s.Amount.ToString().Contains(searchValue) ||
-                            s.Remarks.ToLower().Contains(searchValue) ||
                             s.CreatedBy.ToLower().Contains(searchValue) ||
                             s.Status.ToLower().Contains(searchValue) ||
-                            s.PaymentStatus.ToLower().Contains(searchValue) ||
                             s.DeliveryReceipt?.DeliveryReceiptNo.ToLower().Contains(searchValue) == true
                             )
                         .ToList();

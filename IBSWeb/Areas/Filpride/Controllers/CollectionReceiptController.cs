@@ -77,13 +77,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Where(s =>
                             s.CollectionReceiptNo.ToLower().Contains(searchValue) ||
                             s.Customer.CustomerName.ToLower().Contains(searchValue) ||
-                            s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
                             s.SINo?.ToLower().Contains(searchValue) == true ||
                             s.SVNo?.ToLower().Contains(searchValue) == true ||
                             s.MultipleSI?.Contains(searchValue) == true ||
                             s.Customer.CustomerName.ToLower().Contains(searchValue) ||
                             s.TransactionDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
-                            s.Remarks?.ToLower().Contains(searchValue) == true ||
                             s.CreatedBy.ToLower().Contains(searchValue)
                             )
                         .ToList();
@@ -197,7 +195,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Total = computeTotalInModelIfZero;
                     model.Company = companyClaims;
                     model.Type = existingSalesInvoice.Type;
-
 
                     try
                     {
