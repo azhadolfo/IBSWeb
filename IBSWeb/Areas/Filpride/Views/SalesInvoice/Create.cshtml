@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Create Sales Invoice";
     Layout = "~/Views/Shared/_Layout.cshtml";
-
+    var firstDayOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).ToString("yyyy-MM-dd");
 }
 
 <div class="card shadow border-0 mt-4">
@@ -87,7 +87,7 @@
 
                         <div class="form-group mb-3">
                             <label asp-for="Quantity" class="control-label">Quantity</label>
-                            <input asp-for="Quantity" class="form-control money" value="" placeholder="0.0000" readonly tabindex="-1"/>
+                            <input asp-for="Quantity" class="form-control money" value="" placeholder="0.0000" readonly tabindex="-1" />
                             <span asp-validation-for="Quantity" class="text-danger"></span>
                         </div>
 
@@ -107,7 +107,7 @@
                     <div class="col">
                         <div class="form-group mb-3">
                             <label asp-for="TransactionDate" class="control-label">Transaction Date<span class="required">*</span></label>
-                            <input type="date" asp-for="TransactionDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            <input type="date" asp-for="TransactionDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" min="@firstDayOfMonth" />
                             <span asp-validation-for="TransactionDate" class="text-danger"></span>
                         </div>
 
@@ -129,7 +129,7 @@
                         </div>
 
                         <div class="form-floating mb-3">
-                            <input asp-for="OtherRefNo" class="form-control" placeholder="Optional" readonly tabindex="-1"/>
+                            <input asp-for="OtherRefNo" class="form-control" placeholder="Optional" readonly tabindex="-1" />
                             <label asp-for="OtherRefNo" class="control-label">Other Ref No.</label>
                             <span asp-validation-for="OtherRefNo" class="text-danger"></span>
                         </div>
@@ -160,7 +160,7 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
-<script>
+    <script>
         $(function () {
             // When Customer is selected
             $("#CustomerId").change(function () {
@@ -253,6 +253,6 @@
                 }
             });
         });
-</script>
+    </script>
 
 }
