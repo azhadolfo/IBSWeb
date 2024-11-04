@@ -10,11 +10,6 @@ namespace IBS.Models.Mobility.MasterFile
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CustomerId { get; set; }
 
-        [Display(Name = "Customer Code")]
-        [Column(TypeName = "varchar(7)")]
-        [StringLength(7)]
-        public string? CustomerCode { get; set; }
-
         [Display(Name = "Customer Name")]
         [Column(TypeName = "varchar(50)")]
         [StringLength(50)]

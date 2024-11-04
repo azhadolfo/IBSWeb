@@ -145,9 +145,11 @@
                 <div class="col-6 col-md-3">
                     <button id="uploadButton" class="btn btn-primary form-control">Submit</button>
                 </div>
-                <button id="submitButton" type="submit" class="btn btn-primary form-control" style="display: none;">
-                    Submit
-                </button>
+                <div class="col-6 col-md-3">
+                    <button id="submitButton" type="submit" class="btn btn-primary form-control" style="display: none;">
+                        Submit
+                    </button>
+                </div>
                 <div class="col-6 col-md-3">
                     <a @* asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Printed" asp-route-id="@Model.CustomerOrderSlipId" *@ onclick="window.print()" class="btn btn-primary form-control buttons">
                         Print

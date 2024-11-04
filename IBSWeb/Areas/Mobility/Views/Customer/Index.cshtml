@@ -27,9 +27,6 @@
             <thead>
                 <tr class="text-nowrap">
                     <th>
-                        @Html.DisplayNameFor(model => model.CustomerCode)
-                    </th>
-                    <th>
                         @Html.DisplayNameFor(model => model.CustomerName)
                     </th>
                     <th>
@@ -49,9 +46,6 @@
                 {
                     <tr>
                         <td>
-                            @obj.CustomerCode
-                        </td>
-                        <td>
                             @obj.CustomerName
                         </td>
                         <td>
@@ -65,7 +59,7 @@
                         </td>
                         <td>
                             <div class="w-100 btn-group" role="group">
-                                <a asp-area="Filpride" asp-controller="Customer" asp-action="Edit" asp-route-id="@obj.CustomerId" class="btn btn-primary mx-2">
+                                <a asp-area="Mobility" asp-controller="Customer" asp-action="Edit" asp-route-id="@obj.CustomerId" class="btn btn-primary mx-2">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
                                 @if (obj.IsActive)

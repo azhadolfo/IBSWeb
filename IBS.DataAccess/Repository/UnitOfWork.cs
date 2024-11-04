@@ -204,7 +204,7 @@ namespace IBS.DataAccess.Repository
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerCodeName,
-                    Text = c.CustomerCode + " " + c.CustomerCodeName
+                    Text = c.CustomerName.ToString()
                 })
                 .ToListAsync(cancellationToken);
         }
@@ -216,8 +216,8 @@ namespace IBS.DataAccess.Repository
                 .Where(c => c.IsActive)
                 .Select(c => new SelectListItem
                 {
-                    Value = c.CustomerCode,
-                    Text = c.CustomerCode + " " + c.CustomerCodeName
+                    Value = c.CustomerCodeName,
+                    Text = c.CustomerName.ToString()
                 })
                 .ToListAsync(cancellationToken);
         }
@@ -230,7 +230,7 @@ namespace IBS.DataAccess.Repository
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),
-                    Text = c.CustomerCode + " " + c.CustomerCodeName
+                    Text = c.CustomerName.ToString()
                 })
                 .ToListAsync(cancellationToken);
         }
