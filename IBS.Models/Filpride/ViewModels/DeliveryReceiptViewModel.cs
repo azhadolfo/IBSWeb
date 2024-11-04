@@ -33,18 +33,23 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string? Product { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal? CosVolume { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal? RemainingVolume { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal? Price { get; set; }
 
         public string? DeliveryOption { get; set; }
 
         #endregion
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Volume { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal TotalAmount { get; set; }
 
         public string Remarks { get; set; }
@@ -61,8 +66,10 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem>? Haulers { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Freight { get; set; } = 0;
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal ECC { get; set; } = 0;
 
         public string? Driver { get; set; }
@@ -70,6 +77,5 @@ namespace IBS.Models.Filpride.ViewModels
         public string? PlateNo { get; set; }
 
         #endregion
-
     }
 }
