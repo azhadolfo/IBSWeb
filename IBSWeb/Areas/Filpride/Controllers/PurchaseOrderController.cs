@@ -78,6 +78,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.Product.ProductName.ToLower().Contains(searchValue) ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.Quantity.ToString().Contains(searchValue) ||
+                        s.Remarks.ToString().Contains(searchValue) ||
                         s.CreatedBy.ToLower().Contains(searchValue)
                         )
                     .ToList();
