@@ -388,10 +388,10 @@ namespace IBS.DataAccess.Data
                 s.HasIndex(s => s.StationName).IsUnique();
             });
 
-            //FilprideCustomer
+            //MobilityCustomer
             builder.Entity<MobilityCustomer>(c =>
             {
-                c.HasIndex(c => c.CustomerCode).IsUnique();
+                c.HasIndex(c => c.CustomerId).IsUnique();
             });
 
             #endregion
