@@ -1,39 +1,51 @@
 ﻿@model List<UserNotification>
 
-<h2>Notifications</h2>
-<div id="notificationList" style="max-width: 600px; margin: auto;">
+<h2 class="text-center mt-3">Notifications</h2>
+
+<div id="notificationList" class="container mt-4">
     @foreach (var item in Model)
     {
-        <div class="notification-item" data-message="@item.Notification.Message" data-date="@item.Notification.CreatedDate">
-            <p>@item.Notification.Message</p>
-            <small>@item.Notification.CreatedDate.ToString("g")</small>
+        <div class="notification-item d-flex justify-content-between align-items-center"
+             data-message="@item.Notification.Message" data-date="@item.Notification.CreatedDate">
+            <div>
+                <p class="mb-1 font-weight-bold">@item.Notification.Message</p>
+                <small class="text-muted">@item.Notification.CreatedDate.ToString("g")</small>
+            </div>
             @if (!item.IsRead)
             {
                 <form asp-action="MarkAsRead" method="post" style="display:inline;">
                     <input type="hidden" name="userNotificationId" value="@item.UserNotificationId" />
-                    <button type="submit" class="btn btn-sm btn-secondary">Mark as Read</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Mark as Read</button>
                 </form>
             }
         </div>
     }
 </div>
 
-<!-- Modal -->
-<div id="notificationModal" class="modal" style="display:none;">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Notification Details</h2>
-        <p id="modalMessage"></p>
-        <small id="modalDate"></small>
+<!-- Notification Modal -->
+<div id="notificationModal" class="modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Notification Details</h5>
+                <button type="button" class="close" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage" class="font-weight-bold"></p>
+                <small id="modalDate" class="text-muted"></small>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- CSS for Modal and Notification Styles -->
+<!-- Styles for Improved Layout and Modal -->
 <style>
     .notification-item {
-        border-bottom: 1px solid #ccc;
-        padding: 10px;
+        padding: 15px;
+        border-bottom: 1px solid #e0e0e0;
+        background-color: #f9f9f9;
         cursor: pointer;
+        transition: background-color 0.2s ease;
     }
 
         .notification-item:hover {
@@ -43,37 +55,34 @@
     .modal {
         display: none;
         position: fixed;
-        z-index: 1;
+        z-index: 1050;
         left: 0;
         top: 0;
         width: 100%;
         height: 100%;
-        overflow: auto;
-        background-color: rgb(0,0,0);
-        background-color: rgba(0,0,0,0.4);
-        padding-top: 60px;
+        overflow: hidden;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-dialog {
+        margin: 15% auto;
+        max-width: 500px;
     }
 
     .modal-content {
-        background-color: #fefefe;
-        margin: 5% auto;
         padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
     }
 
     .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #555;
+        cursor: pointer;
     }
 
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
+        .close:hover {
+            color: #333;
         }
 </style>
 
@@ -85,17 +94,17 @@
             const date = this.getAttribute('data-date');
 
             document.getElementById('modalMessage').textContent = message;
-            document.getElementById('modalDate').textContent = date;
+            document.getElementById('modalDate').textContent = new Date(date).toLocaleString();
 
             document.getElementById('notificationModal').style.display = 'block';
         });
     });
 
-    document.querySelector('.close').onclick = function() {
+    document.querySelector('.close').onclick = function () {
         document.getElementById('notificationModal').style.display = 'none';
     }
 
-    window.onclick = function(event) {
+    window.onclick = function (event) {
         if (event.target == document.getElementById('notificationModal')) {
             document.getElementById('notificationModal').style.display = 'none';
         }

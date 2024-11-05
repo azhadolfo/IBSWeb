@@ -7,8 +7,10 @@ using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 
@@ -25,11 +27,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        public CustomerOrderSlipController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        private readonly IHubContext<NotificationHub> _hubContext;
+
+        public CustomerOrderSlipController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IHubContext<NotificationHub> hubContext)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
+            _hubContext = hubContext;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -801,6 +806,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingCos == null)
                     {
                         return BadRequest();
+                    }
+
+                    if (existingCos.DeliveryOption != viewModel.DeliveryOption)
+                    {
+                        var logisticUser = await _dbContext.ApplicationUsers
+                            .Where(u => u.Department == SD.Department_Logistics.ToString())
+                            .ToListAsync();
+
+                        foreach (var user in logisticUser)
+                        {
+                            var message = $"{viewModel.CurrentUser.ToUpper()} has updated the delivery option of {existingCos.CustomerOrderSlipNo} from {existingCos.DeliveryOption} to {viewModel.DeliveryOption}. Please reappoint your hauler if necessary.";
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                            .Where(h => h.UserName == user.UserName)
+                            .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
                     }
 
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
