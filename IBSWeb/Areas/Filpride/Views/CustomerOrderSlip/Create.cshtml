@@ -103,13 +103,13 @@
                 <div id="commissionInfo" style="display: none;">
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Commissionee List<span class="required">*</span></label>
-                        <select asp-for="CommissioneeId" asp-items="@Model.Commissionee" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <select asp-for="CommissioneeId" asp-items="@Model.Commissionee" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                             <option value="" selected>Select commissionee</option>
                         </select>
                         <span asp-validation-for="CommissioneeId" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-12 py-2">
-                        <input asp-for="CommissionerRate" class="form-control border-0 shadow" placeholder="Enter Commission Rate" />
+                        <input asp-for="CommissionerRate" class="form-control border-0 shadow" placeholder="Enter Commission Rate" min="0.01" />
                         <label asp-for="CommissionerRate" class="ms-2">Commission Rate<span class="required">*</span></label>
                         <span asp-validation-for="CommissionerRate" class="text-danger"></span>
                     </div>
@@ -149,7 +149,7 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-<script>
+    <script>
         $(document).ready(function () {
             $('select[name="CustomerId"]').on('change', function () {
                 var customerId = $(this).val();
@@ -222,7 +222,7 @@
             }
         }
         });
-</script>
+    </script>
     <script>
         $(document).ready(function () {
             function toggleCommissionFields() {
