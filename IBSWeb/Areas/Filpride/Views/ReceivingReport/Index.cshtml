@@ -29,6 +29,9 @@
                         @Html.DisplayNameFor(model => model.PurchaseOrder.PurchaseOrderNo)
                     </th>
                     <th>
+                        DR No
+                    </th>
+                    <th>
                         Product
                     </th>
                     <th>
@@ -123,6 +126,7 @@
                         }
                     },
                     { "data": "purchaseOrder.purchaseOrderNo" },
+                    { "data": data => data.deliveryReceipt ? data.deliveryReceipt.deliveryReceiptNo : "" },
                     { "data": "purchaseOrder.product.productName" },
                     {
                         "data": "quantityDelivered",
