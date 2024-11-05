@@ -2,6 +2,8 @@
 {
     public static class SD
     {
+        #region Terms
+
         public const string Terms_Cod = "COD";
         public const string Terms_Prepaid = "PREPAID";
         public const string Terms_7d = "7D";
@@ -19,17 +21,33 @@
         public const string Terms_M29 = "M29";
         public const string Terms_M30 = "M30";
 
+        #endregion Terms
+
+        #region Vat Type
+
         public const string VatType_Vatable = "Vatable";
         public const string VatType_ZeroRated = "Zero-Rated";
         public const string VatType_Exempt = "Exempt";
+
+        #endregion Vat Type
+
+        #region Tax Type
 
         public const string TaxType_WithTax = "Withholding Tax";
         public const string TaxType_WithVax = "Withholding Vat";
         public const string TaxType_Exempt = "Exempt";
 
+        #endregion Tax Type
+
+        #region Delivery Option
+
         public const string DeliveryOption_ForPickUpByClient = "For Pick Up By Client";
         public const string DeliveryOption_DirectDelivery = "Direct Delivery";
         public const string DeliveryOption_ForPickUpByHauler = "For Pick Up By Hauler";
+
+        #endregion Delivery Option
+
+        #region Department
 
         public const string Department_Accounting = "Accounting";
         public const string Department_CreditAndCollection = "Credit and Collection";
@@ -45,5 +63,14 @@
         public const string Department_SiteDevAndSiteAcquisition = "Site Dev and Acquisition";
         public const string Department_TradeAndSupply = "Trade and Supply";
         public const string Department_TrainingAndCompliance = "Training and Compliance";
+
+        #endregion Department
+
+        #region Position
+
+        public const string Position_OperationManager = "Operation Manager";
+        public const string Position_FinanceManager = "Finance Manager";
+
+        #endregion Position
     }
 }

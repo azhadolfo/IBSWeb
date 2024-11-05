@@ -206,14 +206,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
 
-                        var user = await _userManager.FindByNameAsync("azh");
+                        var operationManager = await _dbContext.ApplicationUsers
+                            .FirstOrDefaultAsync(a => a.Position == SD.Position_OperationManager);
 
                         var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy}. Please review and approve.";
 
-                        await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+                        await _unitOfWork.Notifications.AddNotificationAsync(operationManager.Id, message);
 
                         var hubConnections = await _dbContext.HubConnections
-                            .Where(h => h.UserName == user.UserName)
+                            .Where(h => h.UserName == operationManager.UserName)
                             .ToListAsync(cancellationToken);
 
                         foreach (var hubConnection in hubConnections)
@@ -322,14 +323,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
 
-                        var user = await _userManager.FindByNameAsync("azh");
+                        var operationManager = await _dbContext.ApplicationUsers
+                            .FirstOrDefaultAsync(a => a.Position == SD.Position_OperationManager);
 
                         var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser}. Please review and approve.";
 
-                        await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+                        await _unitOfWork.Notifications.AddNotificationAsync(operationManager.Id, message);
 
                         var hubConnections = await _dbContext.HubConnections
-                            .Where(h => h.UserName == user.UserName)
+                            .Where(h => h.UserName == operationManager.UserName)
                             .ToListAsync(cancellationToken);
 
                         foreach (var hubConnection in hubConnections)
