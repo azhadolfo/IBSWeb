@@ -475,6 +475,92 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(COSUnservedVolume));
         }
 
+        public async Task<IActionResult> GenerateCOSUnservedVolumeToExcel(ViewModelBook model)
+        {
+            ViewBag.DateFrom = model.DateFrom.ToString("MMMM dd, yyyy");
+            ViewBag.DateTo = model.DateTo.ToString("MMMM dd, yyyy");
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var cosSummary = await _unitOfWork.FilprideReport.GetCosUnserveVolume(model.DateFrom, model.DateTo, companyClaims);
+
+                    using var package = new ExcelPackage();
+                    var worksheet = package.Workbook.Worksheets.Add("COS Unserved Volume");
+
+                    // Setting header
+                    worksheet.Cells["A1"].Value = "SUMMARY OF BOOKED SALES";
+                    worksheet.Cells["A2"].Value = $"{ViewBag.DateFrom} - {ViewBag.DateTo}";
+                    worksheet.Cells["A1:J1"].Merge = true;
+                    worksheet.Cells["A1:J1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells["A1:J1"].Style.Font.Bold = true;
+
+                    // Define table headers
+                    var headers = new[]
+                    {
+                "COS Date", "Date of Del", "Customer", "Product", "P.O. No.",
+                "COS No.", "Price", "Unserved Volume", "Amount", "COS Status", "Exp of COS"
+            };
+
+                    for (int i = 0; i < headers.Length; i++)
+                    {
+                        worksheet.Cells[3, i + 1].Value = headers[i];
+                        worksheet.Cells[3, i + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        worksheet.Cells[3, i + 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.ColorTranslator.FromHtml("#9966ff"));
+                        worksheet.Cells[3, i + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        worksheet.Cells[3, i + 1].Style.Font.Bold = true;
+                    }
+
+                    // Populate data rows
+                    int row = 4;
+                    foreach (var item in cosSummary)
+                    {
+                        worksheet.Cells[row, 1].Value = item.Date;
+                        worksheet.Cells[row, 2].Value = item.Date;
+                        worksheet.Cells[row, 3].Value = item.Customer.CustomerName;
+                        worksheet.Cells[row, 4].Value = item.Product.ProductName;
+                        worksheet.Cells[row, 5].Value = item.CustomerPoNo;
+                        worksheet.Cells[row, 6].Value = item.CustomerOrderSlipNo;
+                        worksheet.Cells[row, 7].Value = item.DeliveredPrice;
+                        worksheet.Cells[row, 8].Value = item.Quantity - item.DeliveredQuantity;
+                        worksheet.Cells[row, 9].Value = item.TotalAmount;
+                        worksheet.Cells[row, 10].Value = "APPROVED";
+                        worksheet.Cells[row, 11].Value = item.ExpirationDate;
+
+                        worksheet.Cells[row, 7, row, 9].Style.Numberformat.Format = "#,##0.0000";
+                        row++;
+                    }
+
+                    // Add total row
+                    worksheet.Cells[row, 7].Value = "TOTAL";
+                    worksheet.Cells[row, 8].Formula = $"SUM(H4:H{row - 1})";
+                    worksheet.Cells[row, 9].Formula = $"SUM(I4:I{row - 1})";
+                    worksheet.Cells[row, 7, row, 9].Style.Font.Bold = true;
+                    worksheet.Cells[row, 8, row, 9].Style.Numberformat.Format = "#,##0.0000";
+
+                    // Auto-fit columns for readability
+                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                    // Return as Excel file
+                    var stream = new MemoryStream();
+                    package.SaveAs(stream);
+                    stream.Position = 0;
+                    var fileName = $"COS_Unserved_Volume_{DateTime.Now:yyyyMMdd}.xlsx";
+                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(COSUnservedVolume));
+                }
+            }
+
+            TempData["error"] = "Please input date from";
+            return RedirectToAction(nameof(COSUnservedVolume));
+        }
+
         [HttpGet]
         public IActionResult DispatchReport()
         {
@@ -591,7 +677,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     currentRow++;
                 }
 
-
                 // Total row
                 worksheet.Cells[currentRow + 1, 5].Value = "TOTAL";
                 worksheet.Cells[currentRow + 1, 6].Value = deliveryReceipts.Sum(dr => dr.Quantity);
@@ -646,7 +731,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
         }
-
 
         //Generate as .txt file
 
@@ -2292,6 +2376,5 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- Generate SalesBook .Csv File --
-
     }
 }
