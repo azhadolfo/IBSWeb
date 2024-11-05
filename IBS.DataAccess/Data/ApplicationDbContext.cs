@@ -30,6 +30,12 @@ namespace IBS.DataAccess.Data
 
         public DbSet<LogMessage> LogMessages { get; set; }
 
+        public DbSet<Notification> Notifications { get; set; }
+
+        public DbSet<UserNotification> UserNotifications { get; set; }
+
+        public DbSet<HubConnection> HubConnections { get; set; }
+
         #region--MOBILITY
 
         #region--Sales Entity

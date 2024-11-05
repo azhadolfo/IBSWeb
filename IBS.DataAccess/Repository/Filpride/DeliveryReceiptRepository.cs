@@ -80,6 +80,11 @@ namespace IBS.DataAccess.Repository.Filpride
 
             #endregion
 
+            if (existingRecord.ECC != viewModel.ECC)
+            {
+                // promp the hub context
+            }
+
             existingRecord.Date = viewModel.Date;
             existingRecord.EstimatedTimeOfArrival = viewModel.ETA;
             existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;

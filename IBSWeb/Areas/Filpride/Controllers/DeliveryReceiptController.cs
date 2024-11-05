@@ -6,8 +6,10 @@ using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
@@ -27,12 +29,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment)
+        private readonly IHubContext<NotificationHub> _hubContext;
+
+        public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment, IHubContext<NotificationHub> hubContext)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
             _webHostEnvironment = webHostEnvironment;
+            _hubContext = hubContext;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -195,7 +200,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     await _unitOfWork.SaveAsync(cancellationToken);
+
+                    if (viewModel.IsECCEdited)
+                    {
+                        var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
+                            .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
+
+                        var user = await _userManager.FindByNameAsync("azh");
+
+                        var message = $"Delivery Receipt #{existingRecord.DeliveryReceiptNo} has been generated and includes an ECC entry created by {viewModel.CurrentUser}. Please review and approve if this aligns with your expectations.";
+
+                        await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                        var hubConnections = await _dbContext.HubConnections
+                            .Where(h => h.UserName == user.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var hubConnection in hubConnections)
+                        {
+                            await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                        }
+                    }
+
                     await transaction.CommitAsync(cancellationToken);
+
                     TempData["success"] = "Delivery receipt created successfully.";
                     return RedirectToAction(nameof(Index));
                 }
@@ -287,7 +316,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideDeliveryReceipt.UpdateAsync(viewModel, cancellationToken);
+
+                    if (viewModel.IsECCEdited)
+                    {
+                        var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
+                            .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
+
+                        var user = await _userManager.FindByNameAsync("azh");
+
+                        var message = $"Delivery Receipt #{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser}. Please review and approve if this aligns with your expectations.";
+
+                        await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                        var hubConnections = await _dbContext.HubConnections
+                            .Where(h => h.UserName == user.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var hubConnection in hubConnections)
+                        {
+                            await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                        }
+                    }
+
                     await transaction.CommitAsync(cancellationToken);
+
                     TempData["success"] = "Delivery receipt updated successfully.";
                     return RedirectToAction(nameof(Index));
                 }
@@ -453,7 +506,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Price = cos.DeliveredPrice,
                 cos.DeliveryOption,
                 ATLNo = cos.AuthorityToLoadNo,
-                Hauler = cos.Hauler.SupplierName,
+                Hauler = cos.Hauler?.SupplierName,
                 cos.Driver,
                 cos.PlateNo,
                 cos.Freight

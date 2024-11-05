@@ -18,6 +18,8 @@ namespace IBS.DataAccess.Repository
         public IProductRepository Product { get; private set; }
         public ICompanyRepository Company { get; private set; }
 
+        public INotificationRepository Notifications { get; private set; }
+
         #region--Mobility
 
         public Mobility.IRepository.IChartOfAccountRepository MobilityChartOfAccount { get; private set; }
@@ -96,6 +98,7 @@ namespace IBS.DataAccess.Repository
 
             Product = new ProductRepository(_db);
             Company = new CompanyRepository(_db);
+            Notifications = new NotificationRepository(_db);
 
             #region--Mobility
 

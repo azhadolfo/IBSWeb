@@ -9,6 +9,8 @@
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
+
+    var userName = UserManager.GetUserName(this.User);
 }
 
 <!DOCTYPE html>
@@ -405,6 +407,13 @@
                                 </li>
                             }
                         </ul>
+                        <!-- Notification Icon and Dropdown -->
+                        <div class="nav-item dropdown ms-auto">
+                            <a href="@Url.Action("Index", "Notification", new { area = "User" })" class="nav-link text-light position-relative">
+                                <i class="bi bi-envelope"></i>
+                                <span id="notificationCount" class="badge bg-danger position-absolute top-0 start-100 translate-middle">0</span>
+                            </a>
+                        </div>
                         <partial name="_LoginPartial" />
                     </div>
                 }
@@ -414,6 +423,7 @@
     <div class="container">
         <partial name="_Notification" />
         <main role="main">
+            <input type="hidden" id="hfUsername" value="@userName" />
             @RenderBody()
         </main>
     </div>
@@ -430,7 +440,31 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script><!--select 2 scripts-->
     <script src="https://cdn.datatables.net/2.0.1/js/dataTables.js"></script><!--data tables scripts-->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><!--sweet alert scripts-->
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script src="~/js/notification.js"></script>
+    <script>
+    $(document).ready(function () {
+        // Function to fetch and update notification count
+        function updateNotificationCount() {
+            $.ajax({
+                url: '@Url.Action("GetNotificationCount", "Notification", new { area = "User" })',
+                type: 'GET',
+                success: function (count) {
+                    $('#notificationCount').text(count);
+                },
+                error: function () {
+                    console.error("Error fetching notification count");
+                }
+            });
+        }
 
+        // Initial load
+        updateNotificationCount();
+
+        // Optional: Poll every 30 seconds to update count
+        setInterval(updateNotificationCount, 30000); // 30,000 ms = 30 seconds
+    });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

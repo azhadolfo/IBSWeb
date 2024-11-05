@@ -1,0 +1,103 @@
+﻿@model List<UserNotification>
+
+<h2>Notifications</h2>
+<div id="notificationList" style="max-width: 600px; margin: auto;">
+    @foreach (var item in Model)
+    {
+        <div class="notification-item" data-message="@item.Notification.Message" data-date="@item.Notification.CreatedDate">
+            <p>@item.Notification.Message</p>
+            <small>@item.Notification.CreatedDate.ToString("g")</small>
+            @if (!item.IsRead)
+            {
+                <form asp-action="MarkAsRead" method="post" style="display:inline;">
+                    <input type="hidden" name="userNotificationId" value="@item.UserNotificationId" />
+                    <button type="submit" class="btn btn-sm btn-secondary">Mark as Read</button>
+                </form>
+            }
+        </div>
+    }
+</div>
+
+<!-- Modal -->
+<div id="notificationModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Notification Details</h2>
+        <p id="modalMessage"></p>
+        <small id="modalDate"></small>
+    </div>
+</div>
+
+<!-- CSS for Modal and Notification Styles -->
+<style>
+    .notification-item {
+        border-bottom: 1px solid #ccc;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+        .notification-item:hover {
+            background-color: #f1f1f1;
+        }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0,0,0);
+        background-color: rgba(0,0,0,0.4);
+        padding-top: 60px;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+</style>
+
+<!-- JavaScript for Modal Functionality -->
+<script>
+    document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', function () {
+            const message = this.getAttribute('data-message');
+            const date = this.getAttribute('data-date');
+
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('modalDate').textContent = date;
+
+            document.getElementById('notificationModal').style.display = 'block';
+        });
+    });
+
+    document.querySelector('.close').onclick = function() {
+        document.getElementById('notificationModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('notificationModal')) {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+    }
+</script>

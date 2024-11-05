@@ -64,5 +64,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string Driver { get; set; }
 
         public string PlateNo { get; set; }
+
+        public bool IsECCEdited => ECC > 0; // True if ECC is greater than zero
     }
 }
