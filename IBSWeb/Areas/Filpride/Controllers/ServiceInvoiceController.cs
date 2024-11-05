@@ -696,13 +696,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.EditedBy, $"Edited service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Service invoice updated successfully.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
