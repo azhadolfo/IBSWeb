@@ -46,7 +46,7 @@
             </div>
         </div>
 
-        </br>
+        <br />
 
         <table class="table table-bordered table-striped px-4">
             <thead>
@@ -124,7 +124,7 @@
                 </div>
             </div>
 
-            </br>
+            <br />
 
             <div class="form-group mb-3">
                 <label for="file" class="form-label">Upload image of driver/vehicle</label>
@@ -133,13 +133,13 @@
             </div>
             Note: Please include the timestamp in the image
         
-            </br>
+            <br />
 
             <div class="w-100 text-center">
-                </br><img id="output" class="img-fluid" style="max-height: 300px; width:auto; " />
+                <br /><img id="output" class="img-fluid" style="max-height: 300px; width:auto; " />
             </div>
 
-            </br>
+            <br />
 
             <div class="row pt-2">
                 <div class="col-6 col-md-3">
@@ -155,7 +155,6 @@
                 </div>
             </div>
         </form>
-
     </div>
 </div>
 <script>
@@ -170,7 +169,7 @@
 </script>
 @section Scripts{
     <script>
-        (document).getElementById('approveButton').addEventListener('click', function () {
+        document.getElementById('approveButton').addEventListener('click', function () {
             Swal.fire({
                 title: 'Choose an action',
                 text: "Approve this COS entry?",
@@ -185,12 +184,32 @@
                     var url = `@Url.Action("ApproveCOS", "CustomerOrderSlip", new { area = "Mobility" })/${@Model.CustomerOrderSlipId}`;
                     window.location.href = url;
                 } else if (result.isDenied) {
-                    var url = `@Url.Action("DisapproveCOS", "CustomerOrderSlip", new { area = "Mobility" })/${@Model.CustomerOrderSlipId}`;
-                    window.location.href = url;
+                    Swal.fire({
+                        input: "textarea",
+                        inputLabel: "Remarks",
+                        inputPlaceholder: "Please indicate reason for disapproval...",
+                        inputAttributes: {
+                            "aria-label": "Please indicate reason for disapproval..."
+                        },
+                        showCancelButton: true
+                    }).then((inputResult) => {
+                        if (inputResult.value) {
+                            // Encode the message to safely include it in the URL
+                            var encodedMessage = encodeURIComponent(inputResult.value);
+
+                            // Build the URL with the encoded message as a query parameter
+                            var url = `@Url.Action("DisapproveCOS", "CustomerOrderSlip", new { area = "Mobility" })/${@Model.CustomerOrderSlipId}?message=${encodedMessage}`;
+
+                            // Redirect to the URL
+                            window.location.href = url;
+                        }
+                    });
+
                 }
             });
         });
     </script>
+
 
     <script>
         function printPage() {

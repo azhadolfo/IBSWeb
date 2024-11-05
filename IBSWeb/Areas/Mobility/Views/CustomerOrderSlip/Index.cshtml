@@ -8,6 +8,7 @@
     ViewData["Title"] = "Customer Order Slip";
     var userDepartment = ViewBag.userDepartment;
     var currentStationCode = ViewData["StationCode"] as string;
+    var currentStationName = ViewData["StationName"] as string;
 }
 
 <div class="card shadow border-0 mt-4">
@@ -15,7 +16,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">CUSTOMER ORDER SLIP</h2>
+                <h2 class="text-white py-2">CUSTOMER ORDER SLIP: @currentStationName</h2>
             </div>
         </div>
     </div>
@@ -40,17 +41,17 @@
             <label>
                 <input type="radio" name="radioOption" value="Approved" class="search-radio ms-2"> Approved
             </label>
-            <label>
-                <input type="radio" name="radioOption" value="Disapproved" class="search-radio ms-2"> Disapproved
-            </label>
             @if (userDepartment != SD.Department_StationCashier)
             {
+                <label>
+                    <input type="radio" name="radioOption" value="Disapproved" class="search-radio ms-2"> Disapproved
+                </label>
                 <label>
                     <input type="radio" name="radioOption" value="Pending" class="search-radio ms-2"> Pending
                 </label>
             }
             <label>
-                <input type="radio" name="radioOption" value="Done" class="search-radio ms-2"> Done
+                <input type="radio" name="radioOption" value="Lifted" class="search-radio ms-2"> Lifted
             </label>
         </div>
 
@@ -77,7 +78,7 @@
             <tbody>
                 @foreach (var item in Model)
                 {
-                    if ((userDepartment == SD.Department_StationCashier) && (item.Status == "Pending"))
+                    if ((userDepartment == SD.Department_StationCashier) && (item.Status == "Pending" || item.Status == "Disapproved"))
                     {
                         
                     }
@@ -138,7 +139,7 @@
                                 <div class="dropdown">
                                     <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                     <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                        @if ((userDepartment == SD.Department_Marketing || User.IsInRole("Admin")) && item.Status == "Pending")
+                                        @if ((userDepartment == SD.Department_Marketing || User.IsInRole("Admin")) && (item.Status == "Pending" || item.Status == "Disapproved"))
                                         {
                                             <li><a class="dropdown-item" href="@Url.Action("Edit", "CustomerOrderSlip", new { area = "Mobility" })/@item.CustomerOrderSlipId">Edit</a></li>
                                         }
@@ -166,10 +167,6 @@
             }
         });
     </script>
-
-
-
-
     <script>
         $(document).ready(function () {
             $('.search-radio').change(function () {

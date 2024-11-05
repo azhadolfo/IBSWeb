@@ -42,6 +42,25 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
         }
 
+        private async void GetStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken)
+        {
+            if (stationCodeClaims != "ALL")
+            {
+                var station = await _dbContext.MobilityStations
+                .Where(station => station.StationCode == stationCodeClaims)
+                .FirstOrDefaultAsync(cancellationToken);
+
+                string stationName = station?.StationName ?? "Unknown Station";
+                string fullStationName = stationName + " STATION";
+                ViewData["StationName"] = fullStationName;
+
+            }
+            else
+            {
+                ViewData["StationName"] = "ALL STATIONS";
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
@@ -57,6 +76,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
+            GetStationNameAsync(stationCodeClaims, cancellationToken);
 
             List<MobilityCustomerOrderSlip> customerOrderSlip = new List<MobilityCustomerOrderSlip>();
 
@@ -77,8 +97,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     .Include(s => s.MobilityStation)
                     .ToListAsync(cancellationToken);
             }
-
-
             return View(customerOrderSlip);
         }
 
@@ -86,11 +104,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+            string stationCodeString = stationCodeClaims.ToString();
             ViewData["StationCode"] = stationCodeClaims;
+            GetStationNameAsync(stationCodeClaims, cancellationToken);
 
             MobilityCustomerOrderSlip model = new()
             {
-                Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken),
+                Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken),
                 MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken),
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
             };
@@ -103,6 +123,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
+            GetStationNameAsync(stationCodeClaims, cancellationToken);
+            string stationCodeString = stationCodeClaims.ToString();
 
             if (ModelState.IsValid)
             {
@@ -165,7 +187,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 catch (Exception ex)
                 {
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                    model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken);
+                    model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -173,7 +195,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             else
             {
                 model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken);
+                model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
                 ModelState.AddModelError("", "The information you submitted is not valid!");
                 return View(model);
             }
@@ -184,11 +206,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
+            GetStationNameAsync(stationCodeClaims, cancellationToken);
+            string stationCodeString = stationCodeClaims.ToString();
 
             var customerOrderSlip = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
             customerOrderSlip.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             customerOrderSlip.MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken);
-            customerOrderSlip.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken);
+            customerOrderSlip.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
 
             return View(customerOrderSlip);
         }
@@ -198,6 +222,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
+            GetStationNameAsync(stationCodeClaims, cancellationToken);
+            string stationCodeString = stationCodeClaims.ToString();
+
             if (ModelState.IsValid)
             {
                 try
@@ -235,6 +262,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     existingModel.Address = selectedCustomer.CustomerAddress;
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTime.Now;
+                    existingModel.Status = "Pending";
                     #endregion -- Assign New Values --
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -245,7 +273,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 catch (Exception ex)
                 {
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                    model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken);
+                    model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -253,7 +281,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             else
             {
                 model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken);
+                model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
                 ModelState.AddModelError("", "The information you submitted is not valid!");
                 return View(model);
             }
@@ -365,10 +393,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> DisapproveCOS(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> DisapproveCOS(int id, string message, CancellationToken cancellationToken)
         {
             var model = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
             model.Status = "Disapproved";
+            model.Remarks = message;
             model.DisapprovedBy = _userManager.GetUserName(User);
             model.DisapprovedDate = DateTime.Now;
 

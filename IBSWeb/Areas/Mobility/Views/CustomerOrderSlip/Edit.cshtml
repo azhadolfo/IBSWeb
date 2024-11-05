@@ -4,13 +4,14 @@
 @{
     ViewData["Title"] = "Edit Customer Order Slip";
     var stationCode = ViewData["StationCode"] as string;
+    var currentStationName = ViewData["StationName"] as string;
 }
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">EDIT CUSTOMER ORDER SLIP</h2>
+                <h2 class="text-white py-2">EDIT CUSTOMER ORDER SLIP: @currentStationName</h2>
             </div>
         </div>
     </div>
@@ -20,9 +21,21 @@
                 <div asp-validation-summary="ModelOnly"></div>
 
                 <input type="hidden" asp-for="CustomerOrderSlipId" />
+
                 @if (stationCode != "ALL")
                 {
                     <input type="hidden" asp-for="StationCode" value="@stationCode" />
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Remarks))
+                {
+                    <div class="row pt-2">
+                        <div class="form-floating py-2 px-2 col-12">
+                            <input asp-for="Remarks" class="form-control border-0 shadow" placeholder="" readonly />
+                            <label asp-for="Remarks">Reason for disapproval:</label>
+                            <span asp-validation-for="Remarks" class="text-danger"></span>
+                        </div>
+                    </div>
                 }
 
                 <div class="row pt-2">
@@ -93,7 +106,7 @@
                         <span asp-validation-for="PricePerLiter" class="text-danger"></span>
                     </div>
                 </div>
-
+                
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
                         <button type="submit" class="btn btn-primary form-control">Apply Changes</button>
