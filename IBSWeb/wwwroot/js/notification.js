@@ -24,7 +24,7 @@ connection.on("ReceivedNotification", function (message) {
         title: message,
         allowOutsideClick: false,
         icon: 'info',
-        confirmButtonText: 'Go to Inbox'
+        confirmButtonText: 'Go to Notifications'
     }).then((result) => {
         if (result.isConfirmed) {
             window.location.href = '/User/Notification/Index';

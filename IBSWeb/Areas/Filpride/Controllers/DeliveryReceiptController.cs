@@ -208,7 +208,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var user = await _userManager.FindByNameAsync("azh");
 
-                        var message = $"Delivery Receipt #{existingRecord.DeliveryReceiptNo} has been generated and includes an ECC entry created by {viewModel.CurrentUser}. Please review and approve if this aligns with your expectations.";
+                        var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy}. Please review and approve.";
 
                         await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
 
@@ -324,7 +324,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var user = await _userManager.FindByNameAsync("azh");
 
-                        var message = $"Delivery Receipt #{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser}. Please review and approve if this aligns with your expectations.";
+                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser}. Please review and approve.";
 
                         await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
 
