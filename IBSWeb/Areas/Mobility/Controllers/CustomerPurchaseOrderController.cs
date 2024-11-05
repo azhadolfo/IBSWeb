@@ -52,10 +52,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
+            string stationCodeClaimsString = stationCodeClaims.ToString();
 
             MobilityCustomerPurchaseOrder model = new()
             {
-                Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken),
+                Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeClaimsString, cancellationToken),
                 MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken),
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
             };
@@ -68,6 +69,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
+            string stationCodeClaimsString = stationCodeClaims.ToString();
             if (ModelState.IsValid)
             {
                 try
@@ -124,7 +126,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 catch (Exception ex)
                 {
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                    model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken);
+                    model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeClaimsString, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -132,7 +134,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             else
             {
                 model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(cancellationToken);
+                model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeClaimsString, cancellationToken);
                 ModelState.AddModelError("", "The information you submitted is not valid!");
                 return View(model);
             }

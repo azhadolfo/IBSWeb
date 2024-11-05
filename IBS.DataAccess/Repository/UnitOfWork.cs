@@ -8,6 +8,7 @@ using IBS.DataAccess.Repository.Mobility;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace IBS.DataAccess.Repository
 {
@@ -222,11 +223,12 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMobilityCustomerListAsyncById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMobilityCustomerListAsyncById(string stationCodeClaims, CancellationToken cancellationToken = default)
         {
             return await _db.MobilityCustomers
                 .OrderBy(c => c.CustomerId)
                 .Where(c => c.IsActive)
+                .Where(c => c.StationCode == stationCodeClaims)
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),

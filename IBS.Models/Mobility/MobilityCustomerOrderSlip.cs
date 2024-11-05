@@ -89,6 +89,7 @@ namespace IBS.Models.Mobility.ViewModels
         public string? TripTicket {  get; set; }
 
         public bool IsPrinted { get; set; }
+        public string? Remarks { get; set; }
 
         #region Product's Properties
 
