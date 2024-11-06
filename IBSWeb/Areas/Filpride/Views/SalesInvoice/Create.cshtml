@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Create Sales Invoice";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var firstDayOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).ToString("yyyy-MM-dd");
+    var firstDayOfMonth = new DateTime(DateTime.Now.Year, (DateTime.Now.Month - 1), 1).ToString("yyyy-MM-dd");
 }
 
 <div class="card shadow border-0 mt-4">
