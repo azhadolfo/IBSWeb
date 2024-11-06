@@ -257,8 +257,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
                     viewModel.CurrentUser = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
+
+                    if (existingRecord.AuthorityToLoadNo != null)
+                    {
+                        var tnsAndLogisticUsers = await _dbContext.ApplicationUsers
+                            .Where(a => a.Department == SD.Department_TradeAndSupply || a.Department == SD.Department_Logistics)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var user in tnsAndLogisticUsers)
+                        {
+                            var message = $"{viewModel.CurrentUser} has been modified the {existingRecord.CustomerOrderSlipNo}. Would you like to re-appoint the {(user.Department == SD.Department_TradeAndSupply ? "supplier?" : "hauler?")}.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                            .Where(h => h.UserName == user.UserName)
+                            .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
+                    }
 
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Customer order slip updated successfully.";
@@ -812,7 +838,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var logisticUser = await _dbContext.ApplicationUsers
                             .Where(u => u.Department == SD.Department_Logistics.ToString())
-                            .ToListAsync();
+                            .ToListAsync(cancellationToken);
 
                         foreach (var user in logisticUser)
                         {

@@ -204,7 +204,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var operationManager = await _dbContext.ApplicationUsers
                             .FirstOrDefaultAsync(a => a.Position == SD.Position_OperationManager, cancellationToken);
 
-                        var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy}. Please review and approve.";
+                        var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy.ToUpper()}. Please review and approve.";
 
                         await _unitOfWork.Notifications.AddNotificationAsync(operationManager.Id, message);
 
@@ -229,7 +229,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         foreach (var user in tnsUser)
                         {
-                            var message = $"Please be informed that {model.CreatedBy} has updated the 'Driver' and 'Plate#' for {model.DeliveryReceiptNo}.";
+                            var message = $"Please be informed that {model.CreatedBy.ToUpper()} has updated the 'Driver' and 'Plate#' for {model.DeliveryReceiptNo}.";
 
                             await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
 
@@ -348,7 +348,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var operationManager = await _dbContext.ApplicationUsers
                             .FirstOrDefaultAsync(a => a.Position == SD.Position_OperationManager);
 
-                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser}. Please review and approve.";
+                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser.ToUpper()}. Please review and approve.";
 
                         await _unitOfWork.Notifications.AddNotificationAsync(operationManager.Id, message);
 
@@ -373,7 +373,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         foreach (var user in tnsUser)
                         {
-                            var message = $"Please be informed that {viewModel.CurrentUser} has updated the 'Driver' and 'Plate#' for {existingRecord.DeliveryReceiptNo}.";
+                            var message = $"Please be informed that {viewModel.CurrentUser.ToUpper()} has updated the 'Driver' and 'Plate#' for {existingRecord.DeliveryReceiptNo}.";
 
                             await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
 
