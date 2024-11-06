@@ -270,7 +270,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         foreach (var user in tnsAndLogisticUsers)
                         {
-                            var message = $"{viewModel.CurrentUser} has been modified the {existingRecord.CustomerOrderSlipNo}. Would you like to re-appoint the {(user.Department == SD.Department_TradeAndSupply ? "supplier?" : "hauler?")}.";
+                            var message = $"{viewModel.CurrentUser.ToUpper()} has modified the {existingRecord.CustomerOrderSlipNo}. Kindly reappoint the {(user.Department == SD.Department_TradeAndSupply ? "supplier" : "hauler")}, if necessary.";
 
                             await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
 
