@@ -199,8 +199,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, model.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                    await _unitOfWork.SaveAsync(cancellationToken);
-
                     if (viewModel.IsECCEdited)
                     {
                         var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
@@ -222,7 +220,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             await _hubContext.Clients.Client(hubConnection.ConnectionId)
                                 .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
                         }
+
+                        model.Status = nameof(DRStatus.ForApprovalOfOM);
                     }
+
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);
 
@@ -316,7 +318,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
-                    await _unitOfWork.FilprideDeliveryReceipt.UpdateAsync(viewModel, cancellationToken);
 
                     if (viewModel.IsECCEdited)
                     {
@@ -339,7 +340,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             await _hubContext.Clients.Client(hubConnection.ConnectionId)
                                 .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
                         }
+
+                        existingRecord.Status = nameof(DRStatus.ForApprovalOfOM);
                     }
+
+                    await _unitOfWork.FilprideDeliveryReceipt.UpdateAsync(viewModel, cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);
 
@@ -441,10 +446,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     existingRecord.PostedBy = _userManager.GetUserName(User);
                     existingRecord.PostedDate = DateTime.Now;
-                    existingRecord.Status = nameof(Status.Posted);
+                    existingRecord.Status = nameof(DRStatus.Pending);
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Posted delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Approved delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
                 }
 
@@ -535,7 +540,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
-                existingRecord.Status = "Delivered";
+                existingRecord.Status = nameof(DRStatus.Delivered);
 
                 await _unitOfWork.FilprideReceivingReport.AutoGenerateReceivingReport(existingRecord, cancellationToken);
                 await _unitOfWork.FilprideDeliveryReceipt.PostAsync(existingRecord, cancellationToken);
@@ -569,7 +574,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
-                    model.Status = nameof(Status.Canceled);
+                    model.Status = nameof(DRStatus.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
                     await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
 
@@ -618,7 +623,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
                         model.VoidedDate = DateTime.Now;
-                        model.Status = nameof(Status.Voided);
+                        model.Status = nameof(DRStatus.Voided);
 
                         await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
                         await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);

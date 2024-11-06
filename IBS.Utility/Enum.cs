@@ -48,6 +48,16 @@
         Canceled
     }
 
+    public enum DRStatus
+    {
+        Pending,
+        Delivered,
+        Invoiced,
+        ForApprovalOfOM,
+        Canceled,
+        Voided
+    }
+
     public enum ClusterArea
     {
         South,

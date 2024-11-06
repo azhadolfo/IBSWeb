@@ -577,6 +577,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             var existingDr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken) ?? throw new ArgumentNullException($"The DR#{model.DeliveryReceiptId} not found! Contact MIS Enterprise.");
 
                             existingDr.HasAlreadyInvoiced = true;
+                            existingDr.Status = nameof(DRStatus.Invoiced);
                         }
 
                         #endregion
@@ -651,6 +652,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         if (dr != null)
                         {
                             dr.HasAlreadyInvoiced = false;
+                            dr.Status = nameof(DRStatus.Delivered);
                         }
 
                         #region --Audit Trail Recording
