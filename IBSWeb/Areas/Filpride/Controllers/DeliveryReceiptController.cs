@@ -201,11 +201,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (viewModel.IsECCEdited)
                     {
-                        var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
-                            .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
-
                         var operationManager = await _dbContext.ApplicationUsers
-                            .FirstOrDefaultAsync(a => a.Position == SD.Position_OperationManager);
+                            .FirstOrDefaultAsync(a => a.Position == SD.Position_OperationManager, cancellationToken);
 
                         var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy}. Please review and approve.";
 
@@ -222,6 +219,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.Status = nameof(DRStatus.ForApprovalOfOM);
+                    }
+
+                    if (viewModel.Driver != customerOrderSlip.Driver || viewModel.PlateNo != customerOrderSlip.PlateNo)
+                    {
+                        var tnsUser = await _dbContext.ApplicationUsers
+                            .Where(a => a.Department == SD.Department_TradeAndSupply)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var user in tnsUser)
+                        {
+                            var message = $"Please be informed that {model.CreatedBy} has updated the 'Driver' and 'Plate#' for {model.DeliveryReceiptNo}.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                           .Where(h => h.UserName == user.UserName)
+                           .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
                     }
 
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -319,11 +340,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
 
-                    if (viewModel.IsECCEdited)
-                    {
-                        var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
+                    var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
 
+                    if (viewModel.IsECCEdited)
+                    {
                         var operationManager = await _dbContext.ApplicationUsers
                             .FirstOrDefaultAsync(a => a.Position == SD.Position_OperationManager);
 
@@ -342,6 +363,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         existingRecord.Status = nameof(DRStatus.ForApprovalOfOM);
+                    }
+
+                    if (viewModel.Driver != existingRecord.Driver || viewModel.PlateNo != existingRecord.PlateNo)
+                    {
+                        var tnsUser = await _dbContext.ApplicationUsers
+                            .Where(a => a.Department == SD.Department_TradeAndSupply)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var user in tnsUser)
+                        {
+                            var message = $"Please be informed that {viewModel.CurrentUser} has updated the 'Driver' and 'Plate#' for {existingRecord.DeliveryReceiptNo}.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                           .Where(h => h.UserName == user.UserName)
+                           .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
                     }
 
                     await _unitOfWork.FilprideDeliveryReceipt.UpdateAsync(viewModel, cancellationToken);
@@ -442,16 +487,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                if (existingRecord.PostedBy == null)
-                {
-                    existingRecord.PostedBy = _userManager.GetUserName(User);
-                    existingRecord.PostedDate = DateTime.Now;
-                    existingRecord.Status = nameof(DRStatus.Pending);
+                existingRecord.PostedBy = _userManager.GetUserName(User);
+                existingRecord.PostedDate = DateTime.Now;
+                existingRecord.Status = nameof(DRStatus.Pending);
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Approved delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-                }
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Approved delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Delivery receipt approved successfully.";
                 return RedirectToAction(nameof(Preview), new { id });
