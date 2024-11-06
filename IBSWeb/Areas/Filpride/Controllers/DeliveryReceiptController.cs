@@ -72,7 +72,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.ManualDrNo.ToLower().Contains(searchValue) ||
                         s.CustomerOrderSlip.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
                         s.CustomerOrderSlip.Product.ProductName.ToLower().Contains(searchValue) ||
-                        s.Status.ToLower().Contains(searchValue)
+                        s.Status.ToLower().Contains(searchValue) ||
+                        s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }

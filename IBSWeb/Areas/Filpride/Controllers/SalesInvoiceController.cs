@@ -79,6 +79,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.Amount.ToString().Contains(searchValue) ||
                             s.CreatedBy.ToLower().Contains(searchValue) ||
                             s.Status.ToLower().Contains(searchValue) ||
+                            s.Remarks.ToLower().Contains(searchValue) ||
                             s.DeliveryReceipt?.DeliveryReceiptNo.ToLower().Contains(searchValue) == true
                             )
                         .ToList();

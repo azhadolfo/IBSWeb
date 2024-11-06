@@ -76,7 +76,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.QuantityReceived.ToString().Contains(searchValue) ||
                         s.Amount.ToString().Contains(searchValue) ||
-                        s.CreatedBy.ToLower().Contains(searchValue)
+                        s.CreatedBy.ToLower().Contains(searchValue) ||
+                        s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
