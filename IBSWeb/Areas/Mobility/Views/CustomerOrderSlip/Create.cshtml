@@ -121,20 +121,18 @@
                 $('input[name="Amount"]').val(amount);
             });
 
-            $("#StationCode").change(function () {
-                var stationCode = $(this).val();
+            function handleStationCodeChange() {
+                var stationCode = $("#StationCode").val();
 
                 $.ajax({
                     url: '@Url.Action("GetCustomers", "CustomerOrderSlip", new { area = "Mobility" })',
                     type: "GET",
                     data: { stationCode: stationCode },
                     success: function (data) {
-
                         $("#customers").empty();
 
                         // Check if data is an array and not null
                         if (Array.isArray(data) && data.length > 0) {
-
                             $("#customers").append('<option>');
 
                             // Iterate over the array and append options
@@ -150,7 +148,13 @@
                         }
                     }
                 });
-            });
+            }
+
+            // Call handleStationCodeChange on document ready (startup)
+            handleStationCodeChange();
+
+            // Bind handleStationCodeChange to the change event of #StationCode
+            $("#StationCode").change(handleStationCodeChange);
         });
     </script>
 }
