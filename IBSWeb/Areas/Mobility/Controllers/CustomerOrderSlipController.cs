@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Dtos;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Models.Mobility;
@@ -42,23 +43,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
         }
 
-        private async void GetStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken)
+        
+
+
+        private async Task<string> GetCompanyClaimAsync()
         {
-            if (stationCodeClaims != "ALL")
-            {
-                var station = await _dbContext.MobilityStations
-                .Where(station => station.StationCode == stationCodeClaims)
-                .FirstOrDefaultAsync(cancellationToken);
-
-                string stationName = station?.StationName ?? "Unknown Station";
-                string fullStationName = stationName + " STATION";
-                ViewData["StationName"] = fullStationName;
-
-            }
-            else
-            {
-                ViewData["StationName"] = "ALL STATIONS";
-            }
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         [HttpGet]
@@ -76,7 +68,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
-            GetStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
             List<MobilityCustomerOrderSlip> customerOrderSlip = new List<MobilityCustomerOrderSlip>();
 
@@ -106,14 +98,27 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var stationCodeClaims = await GetStationCodeClaimAsync();
             string stationCodeString = stationCodeClaims.ToString();
             ViewData["StationCode"] = stationCodeClaims;
-            GetStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
-            MobilityCustomerOrderSlip model = new()
+            MobilityCustomerOrderSlip model;
+
+            if (stationCodeClaims != "ALL")
             {
-                Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken),
-                MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken),
-                Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
-            };
+                model = new()
+                {
+                    MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken),
+                    Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
+                };
+            }
+            else
+            {
+                model = new()
+                {
+                    Customers = await _unitOfWork.GetMobilityCustomerListAsyncByIdAll(stationCodeString, cancellationToken),
+                    MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken),
+                    Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
+                };
+            }
 
             return View(model);
         }
@@ -123,7 +128,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
-            GetStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
             string stationCodeString = stationCodeClaims.ToString();
 
             if (ModelState.IsValid)
@@ -131,20 +136,25 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 try
                 {
                     #region -- selected customer --
+
                     var selectedCustomer = await _dbContext.MobilityCustomers
                         .Where(c => c.CustomerId == model.CustomerId)
                         .FirstOrDefaultAsync(cancellationToken);
+
                     #endregion -- selected customer --
 
                     #region -- get mobility station --
+
                     var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
 
                     var getMobilityStation = await _dbContext.MobilityStations
                         .Where(s => s.StationCode == stationCode)
                         .FirstOrDefaultAsync(cancellationToken);
+
                     #endregion -- selected customer --
 
                     #region -- Generate COS No --
+
                     MobilityCustomerOrderSlip? lastCos = await _dbContext
                         .MobilityCustomerOrderSlips
                         .OrderBy(c => c.CustomerOrderSlipNo)
@@ -163,6 +173,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         series = "COS0000000001";
                     }
+
                     #endregion -- Generate COS No --
 
                     model.CustomerOrderSlipNo = series;
@@ -206,13 +217,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
-            GetStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
             string stationCodeString = stationCodeClaims.ToString();
 
             var customerOrderSlip = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
             customerOrderSlip.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             customerOrderSlip.MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken);
-            customerOrderSlip.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
+            customerOrderSlip.Customers = await GetInitialCustomers(customerOrderSlip.StationCode, cancellationToken);
 
             return View(customerOrderSlip);
         }
@@ -222,7 +233,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
-            GetStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
             string stationCodeString = stationCodeClaims.ToString();
 
             if (ModelState.IsValid)
@@ -230,9 +241,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 try
                 {
                     #region -- selected customer --
+
                     var selectedCustomer = await _dbContext.MobilityCustomers
                         .Where(c => c.CustomerId == model.CustomerId)
                         .FirstOrDefaultAsync(cancellationToken);
+
                     #endregion -- selected customer --
 
                     #region -- getMobilityStation --
@@ -242,9 +255,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var getMobilityStation = await _dbContext.MobilityStations
                                                 .Where(s => s.StationCode == stationCode)
                                                 .FirstOrDefaultAsync(cancellationToken);
+
                     #endregion -- getMobilityStation --
 
                     #region -- Assign New Values --
+
                     var existingModel = await _dbContext.MobilityCustomerOrderSlips.FindAsync(model.CustomerOrderSlipId);
                     existingModel.Date = model.Date;
                     existingModel.Quantity = model.Quantity;
@@ -263,6 +278,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTime.Now;
                     existingModel.Status = "Pending";
+
                     #endregion -- Assign New Values --
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -409,14 +425,45 @@ namespace IBSWeb.Areas.Mobility.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Upload(int id)
+        public async Task<IActionResult> GetCustomers(string stationCode, CancellationToken cancellationToken)
         {
-            ViewBag.id = id;
-            var model = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
+            var companyClaims = await GetCompanyClaimAsync();
 
-            return View(model);
+            var invoices = await _dbContext
+                .MobilityCustomers
+                .Where(si => si.StationCode == stationCode)
+                .OrderBy(si => si.CustomerId)
+                .ToListAsync(cancellationToken);
+
+            var invoiceList = invoices.Select(si => new SelectListItem
+            {
+                Value = si.CustomerId.ToString(),   // Replace with your actual ID property
+                Text = si.CustomerName              // Replace with your actual property for display text
+            }).ToList();
+
+            return Json(invoiceList);
         }
 
-        
+        [HttpGet]
+        public async Task<List<SelectListItem>> GetInitialCustomers(string stationCode, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var invoices = await _dbContext
+                .MobilityCustomers
+                .Where(si => si.StationCode == stationCode)
+                .OrderBy(si => si.CustomerId)
+                .ToListAsync(cancellationToken);
+
+            var invoiceList = invoices.Select(si => new SelectListItem
+            {
+                Value = si.CustomerId.ToString(),   // Replace with your actual ID property
+                Text = si.CustomerName              // Replace with your actual property for display text
+            }).ToList();
+
+            return invoiceList;
+        }
+
+
     }
 }

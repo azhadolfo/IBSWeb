@@ -24,7 +24,9 @@ namespace IBS.Models.Mobility.MasterFile
         [Column(TypeName = "varchar(3)")]
         [StringLength(3)]
         public string StationCode { get; set; }
+
         public string CustomerAddress { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         [Display(Name = "Created By")]
@@ -34,10 +36,13 @@ namespace IBS.Models.Mobility.MasterFile
 
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
         public decimal AmountLimit { get; set; }
+
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
         public decimal QuantityLimit { get; set; }
+
         [Display(Name = "Edited By")]
         [Column(TypeName = "varchar(50)")]
         [StringLength(50)]
@@ -50,6 +55,9 @@ namespace IBS.Models.Mobility.MasterFile
         [Display(Name = "Payment Terms")]
         [Column(TypeName = "varchar(10)")]
         public string CustomerTerms { get; set; }
+
+        [Display(Name="Customer TIN")]
+        public string CustomerTin { get; set; }
 
         #region --Select List--
 

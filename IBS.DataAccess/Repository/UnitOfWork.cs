@@ -6,9 +6,11 @@ using IBS.DataAccess.Repository.MasterFile;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.Mobility;
 using IBS.DataAccess.Repository.Mobility.IRepository;
+using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Threading;
 
 namespace IBS.DataAccess.Repository
 {
@@ -237,6 +239,19 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<List<SelectListItem>> GetMobilityCustomerListAsyncByIdAll(string stationCodeClaims, CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityCustomers
+                .OrderBy(c => c.CustomerId)
+                .Where(c => c.IsActive)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CustomerId.ToString(),
+                    Text = c.CustomerName.ToString()
+                })
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(CancellationToken cancellationToken = default)
         {
             return await _db.MobilitySuppliers
@@ -247,6 +262,26 @@ namespace IBS.DataAccess.Repository
                     Text = s.SupplierName
                 })
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task<string> GetMobilityStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken)
+        {
+            string stationString;
+            if (stationCodeClaims != "ALL")
+            {
+                var station = await _db.MobilityStations
+                    .Where(station => station.StationCode == stationCodeClaims)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                string stationName = station?.StationName ?? "Unknown Station";
+                string fullStationName = stationName + " STATION";
+                stationString = fullStationName;
+            }
+            else
+            {
+                stationString = "ALL STATIONS";
+            }
+            return stationString;
         }
 
         #endregion
@@ -329,6 +364,32 @@ namespace IBS.DataAccess.Repository
                 {
                     Value = p.ProductId.ToString(),
                     Text = p.ProductCode + " " + p.ProductName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetCashierListAsyncByUsernameAsync(CancellationToken cancellationToken = default)
+        {
+            return await _db.ApplicationUsers
+                .OrderBy(p => p.Id)
+                .Where(p => p.Department == SD.Department_StationCashier)
+                .Select(p => new SelectListItem
+                {
+                    Value = p.UserName.ToString(),
+                    Text = p.UserName.ToString()
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetCashierListAsyncByStationAsync(CancellationToken cancellationToken = default)
+        {
+            return await _db.ApplicationUsers
+                .OrderBy(p => p.Id)
+                .Where(p => p.Department == SD.Department_StationCashier)
+                .Select(p => new SelectListItem
+                {
+                    Value = p.StationAccess.ToString(),
+                    Text = p.UserName.ToString()
                 })
                 .ToListAsync(cancellationToken);
         }
