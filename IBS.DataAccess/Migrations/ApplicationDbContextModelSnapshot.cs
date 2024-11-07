@@ -5983,6 +5983,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_notification_id");
 
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_archived");
+
                     b.Property<bool>("IsRead")
                         .HasColumnType("boolean")
                         .HasColumnName("is_read");

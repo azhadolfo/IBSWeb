@@ -19,5 +19,7 @@ namespace IBS.Models
         public Notification Notification { get; set; }
 
         public bool IsRead { get; set; }
+
+        public bool IsArchived { get; set; }
     }
 }

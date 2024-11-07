@@ -34,7 +34,7 @@ namespace IBSWeb.Areas.User.Controllers
         public async Task<IActionResult> MarkAsRead(Guid userNotificationId)
         {
             await _unitOfWork.Notifications.MarkAsReadAsync(userNotificationId);
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -42,6 +42,13 @@ namespace IBSWeb.Areas.User.Controllers
         {
             int count = await _unitOfWork.Notifications.GetUnreadNotificationCountAsync(_userManager.GetUserId(User));
             return Json(count);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Archive(Guid userNotificationId)
+        {
+            await _unitOfWork.Notifications.ArchiveAsync(userNotificationId);
+            return RedirectToAction(nameof(Index));
         }
     }
 }

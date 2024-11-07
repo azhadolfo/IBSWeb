@@ -11,5 +11,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task MarkAsReadAsync(Guid userNotificationId);
 
         Task<int> GetUnreadNotificationCountAsync(string userId);
+
+        Task ArchiveAsync(Guid userNotificationId);
     }
 }

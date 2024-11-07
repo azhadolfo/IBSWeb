@@ -36,16 +36,27 @@ namespace IBS.DataAccess.Repository
             await _db.SaveChangesAsync();
         }
 
+        public async Task ArchiveAsync(Guid userNotificationId)
+        {
+            var userNotification = await _db.UserNotifications.FindAsync(userNotificationId);
+
+            if (userNotification != null)
+            {
+                userNotification.IsArchived = true;
+                await _db.SaveChangesAsync();
+            }
+        }
+
         public async Task<int> GetUnreadNotificationCountAsync(string userId)
         {
-            return await _db.UserNotifications.CountAsync(n => n.UserId == userId && !n.IsRead);
+            return await _db.UserNotifications.CountAsync(n => n.UserId == userId && !n.IsRead && !n.IsArchived);
         }
 
         public async Task<List<UserNotification>> GetUserNotificationsAsync(string userId)
         {
             return await _db.UserNotifications
                 .Include(un => un.Notification)
-                .Where(un => un.UserId == userId)
+                .Where(un => un.UserId == userId && !un.IsArchived)
                 .OrderByDescending(un => un.Notification.CreatedDate)
                 .ToListAsync();
         }
