@@ -110,6 +110,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     existingModel.StationCode = model.StationCode;
                     existingModel.CustomerTerms = model.CustomerTerms;
                     existingModel.CustomerAddress = model.CustomerAddress;
+                    existingModel.CustomerTin = model.CustomerTin;
                     existingModel.AmountLimit = model.AmountLimit;
                     existingModel.QuantityLimit = model.QuantityLimit;
                     existingModel.EditedBy = _userManager.GetUserName(User);

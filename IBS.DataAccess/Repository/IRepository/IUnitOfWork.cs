@@ -22,6 +22,8 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<List<SelectListItem>> GetChartOfAccountListAsyncById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetCompanyListAsyncByName(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetCashierListAsyncByUsernameAsync(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetCashierListAsyncByStationAsync(CancellationToken cancellationToken = default);
 
         #region--Mobility
 
@@ -57,10 +59,12 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<List<SelectListItem>> GetMobilityCustomerListAsyncByCodeName(CancellationToken cancellationToken = default);
         Task<List<SelectListItem>> GetMobilityCustomerListAsyncById(string stationCodeClaims, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetMobilityCustomerListAsyncByIdAll(string stationCodeClaims, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMobilityCustomerListAsyncByCode(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(CancellationToken cancellationToken = default);
+        Task<string> GetMobilityStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken = default);
 
         #endregion
 

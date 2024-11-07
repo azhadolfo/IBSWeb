@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241105081245_AddStationAccessForCashierAccount")]
+    partial class AddStationAccessForCashierAccount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3468,11 +3471,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(10)")
                         .HasColumnName("customer_terms");
-
-                    b.Property<string>("CustomerTin")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_tin");
 
                     b.Property<string>("EditedBy")
                         .HasMaxLength(50)

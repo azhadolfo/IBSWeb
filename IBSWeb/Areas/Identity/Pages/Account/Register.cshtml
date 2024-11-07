@@ -23,7 +23,7 @@
                             <input asp-for="Input.Name" class="form-control" autocomplete="off" aria-required="true" placeholder="Enter your full name" />
                             <span asp-validation-for="Input.Name" class="text-danger"></span>
                         </div>
-                        <div class="mb-3">
+                        <div class="form-group py-2 col-12">
                             <label for="department" class="form-label">Department</label>
                             <select id="departmentSelect" asp-for="Input.Department" class="form-select js-select2" style="width:100%">
                                 <option value="@SD.Department_Accounting" selected>@SD.Department_Accounting</option>
@@ -45,11 +45,18 @@
                             <span asp-validation-for="Input.Department" class="text-danger"></span>
                         </div>
                         <div class="form-group py-2 col-12">
-                            <label class="control-label">Role List<span class="required">*</span></label>
+                            <label class="form-label">Role List<span class="required">*</span></label>
                             <select asp-for="Input.Role" asp-items="@Model.Input.RoleList" class="form-select js-select2 border-0 shadow" style="width:100%">
                                 <option value="" selected>Select role</option>
                             </select>
                             <span asp-validation-for="Input.Role" class="text-danger"></span>
+                        </div>
+                        <div class="form-group py-2 col-12">
+                            <label class="form-label">Station<span class="required">*</span></label>
+                            <select asp-for="Input.StationAccess" asp-items="@Model.Input.MobilityStations" class="form-select js-select2 border-0 shadow" style="width:100%">
+                                <option value="" selected disabled>Select Station</option>
+                            </select>
+                            <span asp-validation-for="Input.StationAccess" class="text-danger"></span>
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>

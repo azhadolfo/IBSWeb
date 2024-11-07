@@ -37,8 +37,8 @@
                 <div class="row pt-2">
                     <div class="form-group py-2 col-12" style="display: @(stationCode != "ALL" ? "none" : "") ">
                         <label class="control-label">Station<span class="required">*</span></label>
-                        <select asp-for="StationCode" asp-items="@Model.MobilityStations" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected disabled>Select Station</option>
+                        <select id="StationCode" asp-for="StationCode" asp-items="@Model.MobilityStations" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="">Select Station</option>
                         </select>
                         <span asp-validation-for="StationCode" class="text-danger"></span>
                     </div>
@@ -47,8 +47,8 @@
                 <div class="row pt-2">
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Customer<span class="required">*</span></label>
-                        <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected disabled>Select Customer</option>
+                        <select asp-for="CustomerId" id="customers" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option></option>
                         </select>
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
@@ -119,6 +119,37 @@
                 var pricePerLiter = $('input[name="PricePerLiter"]').val();
                 var amount = quantity * pricePerLiter;
                 $('input[name="Amount"]').val(amount);
+            });
+
+            $("#StationCode").change(function () {
+                var stationCode = $(this).val();
+
+                $.ajax({
+                    url: '@Url.Action("GetCustomers", "CustomerOrderSlip", new { area = "Mobility" })',
+                    type: "GET",
+                    data: { stationCode: stationCode },
+                    success: function (data) {
+
+                        $("#customers").empty();
+
+                        // Check if data is an array and not null
+                        if (Array.isArray(data) && data.length > 0) {
+
+                            $("#customers").append('<option>');
+
+                            // Iterate over the array and append options
+                            $.each(data, function (index, item) {
+                                $("#customers").append($('<option>', {
+                                    value: item.value,   // Use the correct property for value
+                                    text: item.text      // Use the correct property for text
+                                }));
+                            });
+                        } else {
+                            // Handle the case where data is null or empty
+                            console.log("No customers found for the selected station.");
+                        }
+                    }
+                });
             });
         });
     </script>

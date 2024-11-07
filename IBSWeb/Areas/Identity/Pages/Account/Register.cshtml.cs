@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
+using IBS.DataAccess.Data;
 using IBS.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -11,6 +12,8 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Threading;
 
 namespace IBSWeb.Areas.Identity.Pages.Account
 {
@@ -23,6 +26,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ApplicationDbContext _dbContext;
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
@@ -30,7 +34,8 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender,
-            RoleManager<IdentityRole> roleManager)
+            RoleManager<IdentityRole> roleManager,
+            ApplicationDbContext dbContext)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -39,6 +44,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             _logger = logger;
             _emailSender = emailSender;
             _roleManager = roleManager;
+            _dbContext = dbContext;
         }
 
         /// <summary>
@@ -78,12 +84,16 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
             [Required]
             public string Department { get; set; }
+            public string? StationAccess {  get; set; }
 
             [Required]
             public string? Role { get; set; }
 
             [ValidateNever]
             public IEnumerable<SelectListItem> RoleList { get; set; }
+
+            [NotMapped]
+            public IEnumerable<SelectListItem>? MobilityStations { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -118,7 +128,15 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                     Text = i,
                     Value = i
                 }),
-            };
+                MobilityStations = _dbContext.MobilityStations
+                .OrderBy(s => s.StationId)
+                .Where(s => s.IsActive)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.StationCode,
+                    Text = s.StationCode + " " + s.StationName
+                }),
+        };
         }
 
         public async Task OnGetAsync(string returnUrl = null)
@@ -136,6 +154,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
                 user.Name = Input.Name;
                 user.Department = Input.Department;
+                user.StationAccess = Input.StationAccess;
 
                 await _userStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
                 var result = await _userManager.CreateAsync(user, Input.Password);
