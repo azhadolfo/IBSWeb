@@ -185,6 +185,19 @@ namespace IBS.DataAccess.Repository
                 })
                 .ToListAsync(cancellationToken);
         }
+        public async Task<List<SelectListItem>> GetMobilityStationListWithCustomersAsyncByCode(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityStations
+                .OrderBy(s => s.StationId)
+                .Where(s => s.IsActive)
+                .Where(s=> s.HasCustomers)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.StationCode,
+                    Text = s.StationCode + " " + s.StationName
+                })
+                .ToListAsync(cancellationToken);
+        }
 
         public async Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default)
         {

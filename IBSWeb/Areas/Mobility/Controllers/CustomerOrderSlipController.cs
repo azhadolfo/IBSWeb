@@ -5,6 +5,7 @@ using IBS.Dtos;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Models.Mobility;
+using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
@@ -106,7 +107,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 model = new()
                 {
-                    MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken),
+                    MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(cancellationToken),
                     Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
                 };
             }
@@ -115,7 +116,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 model = new()
                 {
                     Customers = await _unitOfWork.GetMobilityCustomerListAsyncByIdAll(stationCodeString, cancellationToken),
-                    MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken),
+                    MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(cancellationToken),
                     Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
                 };
             }
@@ -157,6 +158,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     MobilityCustomerOrderSlip? lastCos = await _dbContext
                         .MobilityCustomerOrderSlips
+                        .Where(c => c.StationCode == stationCode)
                         .OrderBy(c => c.CustomerOrderSlipNo)
                         .LastOrDefaultAsync(cancellationToken);
 
@@ -222,7 +224,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var customerOrderSlip = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
             customerOrderSlip.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            customerOrderSlip.MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken);
+            customerOrderSlip.MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(cancellationToken);
             customerOrderSlip.Customers = await GetInitialCustomers(customerOrderSlip.StationCode, cancellationToken);
 
             return View(customerOrderSlip);
