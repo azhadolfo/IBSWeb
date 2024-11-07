@@ -162,7 +162,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         model.HasCommission = viewModel.HasCommission;
                         model.CommissioneeId = viewModel.CommissioneeId;
-                        model.CommissionRate = viewModel.CommissionerRate;
+                        model.CommissionRate = viewModel.CommissionRate;
                     }
 
                     await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
@@ -224,7 +224,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     HasCommission = exisitingRecord.HasCommission,
                     CommissioneeId = exisitingRecord.CommissioneeId,
                     Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
-                    CommissionerRate = exisitingRecord.CommissionRate,
+                    CommissionRate = exisitingRecord.CommissionRate,
                     CustomerPoNo = exisitingRecord.CustomerPoNo,
                     Quantity = exisitingRecord.Quantity,
                     DeliveredPrice = exisitingRecord.DeliveredPrice,
@@ -260,6 +260,49 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                         .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
                     viewModel.CurrentUser = _userManager.GetUserName(User);
+
+                    var changes = new List<string>();
+                    if (existingRecord.Date != viewModel.Date)
+                    {
+                        changes.Add("Order Date was updated.");
+                    }
+                    if (existingRecord.OldCosNo != viewModel.OtcCosNo)
+                    {
+                        changes.Add("OTC COS# was updated.");
+                    }
+                    if (existingRecord.CustomerId != viewModel.CustomerId)
+                    {
+                        changes.Add("Customer was updated.");
+                    }
+                    if (existingRecord.DeliveredPrice != viewModel.DeliveredPrice)
+                    {
+                        changes.Add("Delivered Price was updated.");
+                    }
+                    if (existingRecord.CustomerPoNo != viewModel.CustomerPoNo)
+                    {
+                        changes.Add("Customer PO# was updated.");
+                    }
+                    if (existingRecord.HasCommission != viewModel.HasCommission)
+                    {
+                        changes.Add("Commission status was updated.");
+                    }
+                    if (existingRecord.CommissioneeId != viewModel.CommissioneeId)
+                    {
+                        changes.Add("Commissionee was updated.");
+                    }
+                    if (existingRecord.CommissionRate != viewModel.CommissionRate)
+                    {
+                        changes.Add("Commission Rate was updated.");
+                    }
+                    if (existingRecord.AccountSpecialist != viewModel.AccountSpecialist)
+                    {
+                        changes.Add("Account Specialist was updated.");
+                    }
+                    if (existingRecord.Remarks != viewModel.Remarks)
+                    {
+                        changes.Add("Remarks were updated.");
+                    }
+
                     await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
 
                     if (existingRecord.AuthorityToLoadNo != null)
@@ -270,7 +313,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         foreach (var user in tnsAndLogisticUsers)
                         {
-                            var message = $"{viewModel.CurrentUser.ToUpper()} has modified the {existingRecord.CustomerOrderSlipNo}. Kindly reappoint the {(user.Department == SD.Department_TradeAndSupply ? "supplier" : "hauler")}, if necessary.";
+                            var message = $"{viewModel.CurrentUser.ToUpper()} has modified {existingRecord.CustomerOrderSlipNo}. Updates include:\n{string.Join("\n", changes)}";
+                            message += $"\nKindly reappoint the {(user.Department == SD.Department_TradeAndSupply ? "supplier" : "hauler")}, if necessary.";
 
                             await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
 

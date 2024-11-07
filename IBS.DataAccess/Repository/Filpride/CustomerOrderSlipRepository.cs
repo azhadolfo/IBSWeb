@@ -83,7 +83,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.HasCommission = viewModel.HasCommission;
             existingRecord.CommissioneeId = viewModel.CommissioneeId;
-            existingRecord.CommissionRate = viewModel.CommissionerRate;
+            existingRecord.CommissionRate = viewModel.CommissionRate;
             existingRecord.ProductId = viewModel.ProductId;
             existingRecord.OldCosNo = viewModel.OtcCosNo;
 

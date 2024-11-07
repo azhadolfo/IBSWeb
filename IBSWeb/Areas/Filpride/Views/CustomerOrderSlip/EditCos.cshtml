@@ -50,7 +50,8 @@
                     </div>
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Product List<span class="required">*</span></label>
-                        <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <input type="hidden" asp-for="ProductId" />
+                        <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%" disabled="@(Model.Status != nameof(CosStatus.Created))">
                             <option value="" selected>Select product</option>
                         </select>
                         <span asp-validation-for="ProductId" class="text-danger"></span>
@@ -99,15 +100,15 @@
                 <div id="commissionInfo" style="display: none;">
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Commissionee List<span class="required">*</span></label>
-                        <select asp-for="CommissioneeId" asp-items="@Model.Commissionee" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <select asp-for="CommissioneeId" asp-items="@Model.Commissionee" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                             <option value="" selected>Select commissionee</option>
                         </select>
                         <span asp-validation-for="CommissioneeId" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-12 py-2">
-                        <input asp-for="CommissionerRate" class="form-control border-0 shadow" placeholder="Enter Commission Rate" />
-                        <label asp-for="CommissionerRate" class="ms-2">Commission Rate<span class="required">*</span></label>
-                        <span asp-validation-for="CommissionerRate" class="text-danger"></span>
+                        <input asp-for="CommissionRate" class="form-control border-0 shadow" placeholder="Enter Commission Rate" min="0.01" />
+                        <label asp-for="CommissionRate" class="ms-2">Commission Rate<span class="required">*</span></label>
+                        <span asp-validation-for="CommissionRate" class="text-danger"></span>
                     </div>
                 </div>
 
@@ -226,11 +227,11 @@
                 if (hasCommission) {
                     $('#commissionInfo').show();
                     $('input[name="CommissionerName"]').prop('required', true);
-                    $('input[name="CommissionerRate"]').prop('required', true);
+                    $('input[name="CommissionRate"]').prop('required', true);
                 } else {
                     $('#commissionInfo').hide();
                     $('input[name="CommissionerName"]').prop('required', false);
-                    $('input[name="CommissionerRate"]').prop('required', false);
+                    $('input[name="CommissionRate"]').prop('required', false);
                 }
             }
 
