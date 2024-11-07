@@ -202,20 +202,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (viewModel.IsECCEdited)
                     {
                         var operationManager = await _dbContext.ApplicationUsers
-                            .FirstOrDefaultAsync(a => a.Position == SD.Position_OperationManager, cancellationToken);
-
-                        var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy.ToUpper()}. Please review and approve.";
-
-                        await _unitOfWork.Notifications.AddNotificationAsync(operationManager.Id, message);
-
-                        var hubConnections = await _dbContext.HubConnections
-                            .Where(h => h.UserName == operationManager.UserName)
+                            .Where(a => a.Position == SD.Position_OperationManager)
                             .ToListAsync(cancellationToken);
 
-                        foreach (var hubConnection in hubConnections)
+                        foreach (var user in operationManager)
                         {
-                            await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy.ToUpper()}. Please review and approve.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                                .Where(h => h.UserName == user.UserName)
+                                .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
                         }
 
                         model.Status = nameof(DRStatus.ForApprovalOfOM);
@@ -346,20 +350,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (viewModel.IsECCEdited)
                     {
                         var operationManager = await _dbContext.ApplicationUsers
-                            .FirstOrDefaultAsync(a => a.Position == SD.Position_OperationManager);
-
-                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser.ToUpper()}. Please review and approve.";
-
-                        await _unitOfWork.Notifications.AddNotificationAsync(operationManager.Id, message);
-
-                        var hubConnections = await _dbContext.HubConnections
-                            .Where(h => h.UserName == operationManager.UserName)
+                            .Where(a => a.Position == SD.Position_OperationManager)
                             .ToListAsync(cancellationToken);
 
-                        foreach (var hubConnection in hubConnections)
+                        foreach (var user in operationManager)
                         {
-                            await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser.ToUpper()}. Please review and approve.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                                .Where(h => h.UserName == user.UserName)
+                                .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
                         }
 
                         existingRecord.Status = nameof(DRStatus.ForApprovalOfOM);
