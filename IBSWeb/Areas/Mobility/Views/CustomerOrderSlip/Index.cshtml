@@ -34,24 +34,39 @@
             }
         </div>
 
-        <div class="text-center" >
+        @if (currentStationCode == "ALL")
+        {
+            <div class="text-center">
+                <label>
+                    <input type="radio" name="stationRadio" value="" class="search-radio ms-2"> All Stations
+                </label>
+                <label>
+                    <input type="radio" name="stationRadio" value="S08" class="search-radio ms-2"> Tarlac
+                </label>
+                <label>
+                    <input type="radio" name="stationRadio" value="S21" class="search-radio ms-2"> Santiago
+                </label>
+            </div>
+        }
+
+        <div class="text-center">
             <label>
-                <input type="radio" name="radioOption" value="" class="search-radio ms-2"> All
+                <input type="radio" name="statusRadio" value="" class="search-radio ms-2"> Show All
             </label>
             <label>
-                <input type="radio" name="radioOption" value="Approved" class="search-radio ms-2"> Approved
+                <input type="radio" name="statusRadio" value="Approved" class="search-radio ms-2"> Approved
             </label>
             @if (userDepartment != SD.Department_StationCashier)
             {
                 <label>
-                    <input type="radio" name="radioOption" value="Disapproved" class="search-radio ms-2"> Disapproved
+                    <input type="radio" name="statusRadio" value="Disapproved" class="search-radio ms-2"> Disapproved
                 </label>
                 <label>
-                    <input type="radio" name="radioOption" value="Pending" class="search-radio ms-2"> Pending
+                    <input type="radio" name="statusRadio" value="Pending" class="search-radio ms-2"> Pending
                 </label>
             }
             <label>
-                <input type="radio" name="radioOption" value="Lifted" class="search-radio ms-2"> Lifted
+                <input type="radio" name="statusRadio" value="Lifted" class="search-radio ms-2"> Lifted
             </label>
         </div>
 
@@ -80,7 +95,7 @@
                 {
                     if ((userDepartment == SD.Department_StationCashier) && (item.Status == "Pending" || item.Status == "Disapproved"))
                     {
-                        
+                        // Will not show cashier the pending and disapproved
                     }
                     else
                     {
@@ -155,7 +170,7 @@
     </div>
 </div>
 
-@section Scripts{
+@section Scripts {
     <script>
         $(document).ready(function () {
             var userDepartment = '@ViewBag.userDepartment';
@@ -167,27 +182,139 @@
             }
         });
     </script>
+
     <script>
         $(document).ready(function () {
+            var userDepartment = '@ViewBag.userDepartment';
+            var currentStationCode = '@ViewData["StationCode"]';
+
+            var statusFilter = "";  // Default is empty (All)
+            var stationFilter = ""; // Default is empty (All)
+
+            $('input[name="statusRadio"]').change(function () {
+                statusFilter = $(this).val();  // Get the selected value of the status group
+            });
+
+            $('input[name="stationRadio"]').change(function () {
+                stationFilter = $(this).val();  // Get the selected value of the station group
+            });
+
             $('.search-radio').change(function () {
-
-                var searchValue = $(this).val();
-
-                table.destroy();
-
-                table = $('#dataTable').DataTable({
-                    stateSave: false,
-                    processing: true
-                });
-
-                table.search(searchValue, true, false).draw();
-                var currentStationCode = '@ViewData["StationCode"]';
-                var columnNumber = currentStationCode == "ALL" ? 9 : 8;
-                if (searchValue != "") {
-                    table.column(columnNumber)
-                        .search('^' + $.fn.dataTable.util.escapeRegex(searchValue) + '$', true, false)
-                        .draw();
+                var selectedFilter = $(this).val();
+                if (stationFilter == "S08"){
+                    if (statusFilter == "Approved") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Approved" && j.StationCode == "S08")));
+                    }
+                    if (statusFilter == "Disapproved") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Disapproved" && j.StationCode == "S08")));
+                    }
+                    if (statusFilter == "") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.StationCode == "S08")));
+                    }
+                    if (statusFilter == "Lifted") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Lifted" && j.StationCode == "S08")));
+                    }
+                    if (statusFilter == "Pending") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Pending" && j.StationCode == "S08")));
+                    }
                 }
+                if (stationFilter == "S21"){
+                    if (statusFilter == "Approved") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Approved" && j.StationCode == "S21")));
+                    }
+                    if (statusFilter == "Disapproved") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Disapproved" && j.StationCode == "S21")));
+                    }
+                    if (statusFilter == "") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.StationCode == "S21")));
+                    }
+                    if (statusFilter == "Lifted") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Lifted" && j.StationCode == "S21")));
+                    }
+                    if (statusFilter == "Pending") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Pending" && j.StationCode == "S21")));
+                    }
+                }
+                if (stationFilter == ""){
+                    if (statusFilter == "Approved") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Approved")));
+                    }
+                    if (statusFilter == "Disapproved") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Disapproved")));
+                    }
+                    if (statusFilter == "") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId)));
+                    }
+                    if (statusFilter == "Lifted") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Lifted")));
+                    }
+                    if (statusFilter == "Pending") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Pending")));
+                    }
+                }
+
+                $('#dataTable tbody').empty();
+                $.each(filteredModel, function (index, value) {
+                    // Skip items based on user department and status
+                    if (userDepartment === "StationCashier" && (value.status === "Pending" || value.status === "Disapproved")) {
+                        return; // continue to the next item
+                    }
+
+                    // Determine badge class for status
+                    let badgeClass = "";
+                    switch (value.status) {
+                        case "Approved":
+                            badgeClass = "bg-info";
+                            break;
+                        case "Disapproved":
+                            badgeClass = "bg-danger";
+                            break;
+                        case "Pending":
+                            badgeClass = "bg-warning";
+                            break;
+                        case "Lifted":
+                            badgeClass = "bg-success";
+                            break;
+                        default:
+                            badgeClass = "bg-secondary";
+                    }
+
+                    // Append a new row to the table body
+                    $('#dataTable tbody').append(`
+                    <tr>
+                        <td class="text-start align-middle">${value.customerOrderSlipNo}</td>
+                        ${currentStationCode === "ALL" ? `<td class="text-start align-middle">${value.mobilityStation?.stationName || ''}</td>` : ''}
+                        <td class="text-start align-middle">${new Date(value.date).toLocaleDateString()}</td>
+                        <td class="text-start align-middle">${value.customer?.customerName || ''}</td>
+                        <td class="text-start align-middle">${value.driver || ''}</td>
+                        <td class="text-start align-middle">${value.plateNo || ''}</td>
+                        <td class="text-start align-middle">${value.product?.productName || ''}</td>
+                        <td class="text-end align-middle">${(value.quantity || 0).toFixed(2)}</td>
+                        <td class="text-end align-middle">${(value.amount || 0).toFixed(2)}</td>
+                        <td class="text-center align-middle">
+                            <span class="badge rounded-pill ${badgeClass}" style="font-size: 14px">
+                                ${value.status}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown${index}"
+                                        data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown${index}">
+                                    ${(userDepartment === "Marketing" || userDepartment === "Admin") &&
+                            (value.status === "Pending" || value.status === "Disapproved")
+                            ? `<li><a class="dropdown-item" href="/Mobility/CustomerOrderSlip/Edit/${value.customerOrderSlipId}">Edit</a></li>`
+                            : ''
+                        }
+                                    <li>
+                                        <a class="dropdown-item" href="/Mobility/CustomerOrderSlip/Print/${value.customerOrderSlipId}">Preview</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                `);
+                });
             });
         });
     </script>
