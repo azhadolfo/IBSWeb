@@ -97,6 +97,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideCOSAppointedSupplier> FilprideCOSAppointedSuppliers { get; set; }
 
+        public DbSet<FilpridePOActualPrice> FilpridePOActualPrices { get; set; }
+
         #region--Master File
 
         public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
@@ -465,6 +467,14 @@ namespace IBS.DataAccess.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
                 a.HasIndex(a => a.CustomerOrderSlipId);
+            });
+
+            builder.Entity<FilpridePOActualPrice>(p =>
+            {
+                p.HasOne(p => p.PurchaseOrder)
+                .WithMany(po => po.ActualPrices)
+                .HasForeignKey(p => p.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
             });
 
             #region-- Master File

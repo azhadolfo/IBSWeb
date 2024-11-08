@@ -110,5 +110,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string Status { get; set; } = nameof(Utility.Status.Pending);
 
         public string? Type { get; set; }
+
+        public bool IsCostUpdated { get; set; }
     }
 }

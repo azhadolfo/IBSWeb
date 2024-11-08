@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241108024220_AddIsCostUpdated")]
+    partial class AddIsCostUpdated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -515,9 +518,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("type");
 
-                    b.Property<decimal>("UnTriggeredQuantity")
+                    b.Property<decimal>("UnTriggeredVolume")
                         .HasColumnType("numeric(18,4)")
-                        .HasColumnName("un_triggered_quantity");
+                        .HasColumnName("un_triggered_volume");
 
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)")
@@ -2773,10 +2776,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("AppliedVolume")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("applied_volume");
 
                     b.Property<string>("ApprovedBy")
                         .HasColumnType("text")
