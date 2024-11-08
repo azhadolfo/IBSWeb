@@ -17,6 +17,18 @@
             <form method="post" enctype="multipart/form-data">
                 <div class="row">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="form-group mb-3">
+                        <label class="control-label">Type<span class="required">*</span></label>
+                        <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                            <option value="" selected disabled>Select PO type</option>
+                            @foreach (DocumentType documentType in Enum.GetValues<DocumentType>())
+                            {
+                                <option value="@documentType">@documentType.ToString()</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Type" class="text-danger"></span>
+                    </div>
                     <div class="form-group mb-3">
                         <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
                         <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
@@ -87,7 +99,7 @@
                                 <tr>
                                     <td>
                                         <input type="hidden" name="AccountTitle" class="defaultExpenseTitle" />
-                                        <select asp-for="AccountNumber" asp-items="@Model.DefaultExpenses" class="form-select js-select-defaultExpense defaultExpenseText" style="width: 100%">
+                                        <select asp-for="AccountNumber" asp-items="@Model.DefaultExpenses" class="form-select js-select-defaultExpense" style="width: 100%">
                                             <option></option>
                                         </select>
                                     </td>
@@ -196,6 +208,7 @@
             $(".supplier").change(function () {
                 var supplierId = $(this).val();
                 computeDefaultEntry(supplierId)
+                getDefaultExpense(supplierId)
             });
             function computeDefaultEntry(supplierId) {
 
@@ -221,15 +234,12 @@
                                 $("#SupplierTinNo").val(data.tinNo);
                                 $(".withholdingTaxNumber").val(data.withholdingTax !== null ? data.withholdingTax.split(' ')[0] : null);
                                 $(".withholdingTaxTitle").val(data.withholdingTax !== null ? data.withholdingTax.replace(/^\s*\S+\s*/, '').trim() : null);
-                                $(".defaultExpenseText").val(data.defaultExpense !== null ? data.defaultExpense.split(' ')[0] : null).trigger('change');
-                                getDefaultExpense(data.defaultExpense)
                             } else {
                                 $("#SupplierName").val("");
                                 $("#SupplierAddress").val("");
                                 $("#SupplierTinNo").val("");
                                 $(".withholdingTaxNumber").val("");
                                 $(".withholdingTaxtitle").val("");
-                                $(".defaultExpenseText").val(null).trigger('change');
                             }
                             $(document).ready(function () {
                                 $(".supplier").change(function () {
@@ -248,40 +258,36 @@
                                     var vatInput = 0;
                                     var netOfVatAmount = 0;
                                     amountInputs.forEach(function (input) {
+                                        var rawValue = input.value;
+                                        var totalValue = parseNumber(rawValue);
+
+                                        // Perform calculations
+                                        var netOfVat = totalValue / 1.12;
+                                        var roundedNetOfVat = Math.round((netOfVat * 10000) / 10000, 4);
+
+                                        var vat = roundedNetOfVat * 0.12;
+                                        var roundedVat = Math.round((vat * 100) / 100, 4);
+
+                                        var ewt = roundedNetOfVat * (data.category === "Trade" ? 0.01 : data.taxPercent / 100);
+                                        var roundedEwt = Math.round((ewt * 10000) / 10000, 4);
+
+                                        var rrAmountNetOfEWT = totalValue - roundedEwt;
+                                        var roundedRrAmountNetOfEWT = Math.round((rrAmountNetOfEWT * 10000) / 10000, 4);
+
                                         if (data.vatType === "Vatable" && data.taxType === "Withholding Tax") {
-                                            var rawValue = input.value;
-                                            var totalValue = parseNumber(rawValue);
-                                            var netOfVat = totalValue / 1.12;
-                                            var vat = netOfVat * 0.12;
-                                            var ewt = netOfVat * (data.category === "Trade" ? 0.01 : data.taxPercent / 100);
-                                            var rrAmountNetOfEWT = totalValue - ewt;
-                                            totalNetOfEWT += rrAmountNetOfEWT;
-                                            totalEWT += ewt;
-                                            vatInput = vat;
-                                            netOfVatAmount = netOfVat;
+                                            totalNetOfEWT += roundedRrAmountNetOfEWT;
+                                            totalEWT += roundedEwt;
+                                            vatInput = roundedVat;
+                                            netOfVatAmount = roundedNetOfVat;
                                         } else if (data.vatType === "Vatable") {
-                                            var rawValue = input.value;
-                                            var totalValue = parseNumber(rawValue);
-                                            var netOfVat = totalValue / 1.12;
-                                            var vat = netOfVat * 0.12;
-                                            var ewt = netOfVat * (data.category === "Trade" ? 0.01 : data.taxPercent / 100);
-                                            var rrAmountNetOfEWT = totalValue - ewt;
-                                            totalNetOfEWT += rrAmountNetOfEWT;
-                                            vatInput = vat;
-                                            netOfVatAmount = netOfVat;
+                                            totalNetOfEWT += roundedRrAmountNetOfEWT;
+                                            vatInput = roundedVat;
+                                            netOfVatAmount = roundedNetOfVat;
                                         } else if (data.taxType === "Withholding Tax") {
-                                            var rawValue = input.value;
-                                            var totalValue = parseNumber(rawValue);
-                                            var netOfVat = totalValue;
-                                            var vat = netOfVat * 0.12;
-                                            var ewt = netOfVat * (data.category === "Trade" ? 0.01 : data.taxPercent / 100);
-                                            var rrAmountNetOfEWT = totalValue - ewt;
-                                            totalNetOfEWT += rrAmountNetOfEWT;
-                                            totalEWT += ewt;
-                                            netOfVatAmount = netOfVat;
+                                            totalNetOfEWT += roundedRrAmountNetOfEWT;
+                                            totalEWT += roundedEwt;
+                                            netOfVatAmount = roundedNetOfVat;
                                         } else {
-                                            var rawValue = input.value;
-                                            var totalValue = parseNumber(rawValue);
                                             totalNetOfEWT += totalValue;
                                             netOfVatAmount += totalValue;
                                         }
@@ -307,25 +313,53 @@
                     $("#SupplierTinNo").val("");
                     $(".withholdingTaxNumber").val("");
                     $(".withholdingTaxtitle").val("");
-                    $(".defaultExpenseText").val(null).trigger('change');
                 }
             };
         </script>
         <script>
-            function getDefaultExpense(defaultExpense) {
-                var defaultExpenseTitle = defaultExpense.replace(/^\S+\s/, '');
-                var defaultExpenseNumber = defaultExpense.split(' ')[0];
-                $(".defaultExpenseTitle").val(defaultExpenseTitle);
-                $(".defaultExpenseText").val(defaultExpenseNumber);
+            function getDefaultExpense(supplierId) {
+                // Make an AJAX request to get the RRs based on the selected POIds and display criteria
+                $.ajax({
+                    url: '@Url.Action("GetDefaultExpense", "CheckVoucher", new { area = "Filpride" })',
+                    method: "GET",
+                    data: { supplierId: supplierId }, // Pass PO numbers to controller
+                    traditional: true, // Ensure jQuery sends the array properly
+                    success: function (data) {
+                        if (data) {
+                            // Clear existing options
+                            $("#AccountNumber").empty();
+                            // Add new options based on the fetched data
+                            $.each(data, function (index, defaultExpense) {
+                                let selected = defaultExpense.isSelected ? 'selected' : '';
+                                $('#AccountNumber').append('<option value="' + defaultExpense.accountNumber + '" ' + selected + '>' + defaultExpense.accountTitle + '</option>');
+                                var accountNumberText = $("#AccountNumber option:selected").text();
+                                $('.defaultExpenseTitle').val(accountNumberText);
+                            });
+
+                            // Handle dropdown change event
+                            $('#AccountNumber').on('change', function () {
+                                let selectedValue = $(this).val();
+                                var accountNumberText = $("#AccountNumber option:selected").text();
+                                $('.defaultExpenseTitle').val(accountNumberText);
+                            });
+                        } else {
+                            // Clear the fields if no RRs are found
+                            $("#AccountNumber").empty();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching:', error);
+                    }
+                });
             }
         </script>
         <script>
-            function saveAccountingEntry() {
+            function saveAccountingEntry(event) {
                 // Get the values from the modal inputs
                 var accountNumber = $("#AccountNo").val();
                 var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
                 var debit = parseNumber($("#debit").val());
-                var credit = accountNumberText($("#credit").val());
+                var credit = parseNumber($("#credit").val());
 
                 if (debit === 0 && credit === 0) {
                     event.preventDefault();
@@ -343,14 +377,14 @@
 
                 // Create a new row with the text only and a hidden input for the value
                 var newRow = `<tr>
-                                                                                <td>
-                                                                                    <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
-                                                                                    <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                                                                </td>
-                                                                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                                                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                                                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                                                         </tr>`;
+                                    <td>
+                                        <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
+                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
+                                    </td>
+                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                </tr>`;
 
                 // Append the new row to the table body
                 $("#accountingEntriesBody").append(newRow);
@@ -361,25 +395,18 @@
                 // Clear the modal inputs
                 $("#AccountNo").val(""); // Reset the select to its default state
                 $("#AccountNo").trigger("change"); // Trigger change event for the select
-                $("#Debit").val("0.0000");
-                $("#Credit").val("0.0000");
+                $("#Debit").val("0.000");
+                $("#Credit").val("0.000");
 
                 updateTotalDebitAndCredit();
             }
 
-            $(document).ready(function () {
-                $("#calculateButton").click(updateTotalDebitAndCredit);
-            });
-
             function updateTotalDebitAndCredit() {
                 var totalDebit = 0;
-                var totalDebitAmount = 0;
                 var totalCredit = 0;
-                var totalCreditAmount = 0;
-                var creditAcctEntries = 0;
 
                 // Loop through each row in the table body and sum up the debit values
-                $("#accountingEntriesBody tr").each(function () {
+                $("#accountingEntriesBody tr, .defaultEntry tr").each(function () {
                     var debitInput = $(this).find("td:eq(1) input").val();
                     var creditInput = $(this).find("td:eq(2) input").val();
                     // Ensure debitInput and creditInput are strings before using replace
@@ -392,11 +419,12 @@
                     totalDebit += debit;
                     totalCredit += credit;
                 });
+
                 // Display the total debit value
                 $(".totalDebit").text(formatNumber(totalDebit));
                 $(".totalCredit").text(formatNumber(totalCredit));
-                $("#debit").val("0.0000");
-                $("#credit").val("0.0000");
+                $("#debit").val("0.000");
+                $("#credit").val("0.000");
             }
 
             // Function to remove the corresponding row

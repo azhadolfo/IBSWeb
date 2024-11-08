@@ -32,6 +32,9 @@
                         OTC COS No
                     </th>
                     <th>
+                        IS PO No
+                    </th>
+                    <th>
                         @Html.DisplayNameFor(m => m.Date)
                     </th>
                     <th>
@@ -75,14 +78,27 @@
                 "columns": [
                     { "data": "customerOrderSlipNo" },
                     { "data": "oldCosNo" },
+                    { "data": "purchaseOrder.oldPoNo" },
                     { "data": "date", "render": function (data) {
                         var date = new Date(data);
                         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
                     }},
                     { "data": "customer.customerName" },
                     { "data": "product.productName" },
-                    { "data": "quantity", "render": $.fn.dataTable.render.number(',', '.', 4) },
-                    { "data": "totalAmount", "render": $.fn.dataTable.render.number(',', '.', 4) },
+                    {
+                        "data": "quantity",
+                        "render": function (data, type, row) {
+                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                            return `<span class="text-end d-block">${amount}</span>`;
+                        }
+                    },
+                    {
+                        "data": "totalAmount",
+                        "render": function (data, type, row) {
+                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                            return `<span class="text-end d-block">${amount}</span>`;
+                        }
+                    },
                     {
                         "data": "status",
                         "render": function (data) {
@@ -94,9 +110,10 @@
                                 case '@CosStatus.SupplierAppointed':
                                     badgeClass = "badge bg-info";
                                     break;
-                                case '@CosStatus.ApprovedByOpsManager':
+                                case '@CosStatus.ApprovedByOM':
                                     badgeClass = "badge bg-warning";
                                     break;
+                                case '@CosStatus.Approved':
                                 case '@CosStatus.Completed':
                                     badgeClass = "badge bg-success";
                                     break;
@@ -113,6 +130,7 @@
                     },
                     {
                         "data": null,
+                        "orderable": false,
                         "render": function (data, type, row) {
                             var status = row.status;
                             var customerOrderSlipId = row.customerOrderSlipId;
@@ -121,18 +139,18 @@
                                              <ul class="dropdown-menu" aria-labelledby="actionsDropdown">`;
 
                             switch (status) {
-                                case 'Created':
+                                case '@CosStatus.Created':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>
                                                 <li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>`;
                                     break;
-                                case 'SupplierAppointed':
-                                    actions += `<li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>
+                                case '@CosStatus.SupplierAppointed':
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>
                                                 <li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                                     break;
-                                case 'ApprovedByOpsManager':
+                                case '@CosStatus.ApprovedByOM':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                                     break;
-                                case 'Completed':
+                                case '@CosStatus.Approved':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Print</a></li>`;
                                     break;
                                 default:

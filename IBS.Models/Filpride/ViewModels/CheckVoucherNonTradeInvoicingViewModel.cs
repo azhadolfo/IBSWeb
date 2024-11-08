@@ -52,5 +52,7 @@ namespace IBS.Models.Filpride.ViewModels
         public int NumberOfYears { get; set; }
 
         #endregion
+
+        public string? Type { get; set; }
     }
 }

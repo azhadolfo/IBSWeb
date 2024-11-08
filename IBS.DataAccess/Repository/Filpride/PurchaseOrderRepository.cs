@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -16,11 +17,23 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
+        {
+            if (type == nameof(DocumentType.Documented))
+            {
+                return await GenerateCodeForDocumented(company, cancellationToken);
+            }
+            else
+            {
+                return await GenerateCodeForUnDocumented(company, cancellationToken);
+            }
+        }
+
+        private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken)
         {
             FilpridePurchaseOrder? lastPo = await _db
                 .FilpridePurchaseOrders
-                .Where(c => c.Company == company && !c.PurchaseOrderNo.StartsWith("POBEG"))
+                .Where(c => c.Company == company && !c.PurchaseOrderNo.StartsWith("POBEG") && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -35,6 +48,28 @@ namespace IBS.DataAccess.Repository.Filpride
             else
             {
                 return "PO0000000001";
+            }
+        }
+
+        private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken)
+        {
+            FilpridePurchaseOrder? lastPo = await _db
+                .FilpridePurchaseOrders
+                .Where(c => c.Company == company && !c.PurchaseOrderNo.StartsWith("POBEG") && c.Type == nameof(DocumentType.Undocumented))
+                .OrderBy(c => c.PurchaseOrderNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastPo != null)
+            {
+                string lastSeries = lastPo.PurchaseOrderNo;
+                string numericPart = lastSeries.Substring(3);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+            }
+            else
+            {
+                return "POU000000001";
             }
         }
 
@@ -64,7 +99,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
-                .Where(p => p.Company == company && !p.IsReceived)
+                .Where(p => p.Company == company && !p.IsReceived && !p.IsSubPo)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderNo,
@@ -76,7 +111,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<List<SelectListItem>> GetPurchaseOrderListAsyncById(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePurchaseOrders
-                .Where(p => p.Company == company && !p.IsReceived)
+                .Where(p => p.Company == company && !p.IsReceived && !p.IsSubPo)
                 .OrderBy(p => p.PurchaseOrderNo)
                 .Select(po => new SelectListItem
                 {
@@ -90,7 +125,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
-                .Where(p => p.SupplierId == supplierId && !p.IsReceived)
+                .Where(p => p.SupplierId == supplierId && !p.IsReceived && !p.IsSubPo)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
@@ -103,7 +138,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
-                .Where(p => p.SupplierId == supplierId && p.ProductId == productId && !p.IsReceived)
+                .Where(p => p.SupplierId == supplierId && p.ProductId == productId && !p.IsReceived && !p.IsSubPo)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),

@@ -100,7 +100,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
         {
-            if (type == nameof(SalesInvoiceType.Documented))
+            if (type == nameof(DocumentType.Documented))
             {
                 return await GenerateCodeForDocumented(company, cancellationToken);
             }
@@ -114,7 +114,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilprideSalesInvoice? lastSi = await _db
                 .FilprideSalesInvoices
-                .Where(c => c.Company == company && c.Type == nameof(SalesInvoiceType.Documented))
+                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.SalesInvoiceNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -136,7 +136,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilprideSalesInvoice? lastSi = await _db
                 .FilprideSalesInvoices
-                .Where(c => c.Company == company && c.Type == nameof(SalesInvoiceType.Undocumented))
+                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.SalesInvoiceNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -146,7 +146,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
             }
             else
             {

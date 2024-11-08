@@ -36,10 +36,10 @@
             </div>
             <div class="row pt-2">
                 <div class="col-6 col-md-3">
-                <button type="submit" class="btn btn-primary form-control"><i class="bi bi-printer"></i> Generate</button>
+                    <button type="submit" class="btn btn-primary form-control"><i class="bi bi-printer"></i> Generate</button>
                 </div>
                 <div class="col-6 col-md-3">
-                <button asp-action="ConsolidatedPO" class="btn btn-primary form-control"><i class="bi bi-printer"></i> Generate as Consolidated PO</button>
+                    <button asp-action="ConsolidatedPO" class="btn btn-primary form-control"><i class="bi bi-printer"></i> Generate as Consolidated PO</button>
                 </div>
             </div>
         </form>
@@ -51,4 +51,26 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
+    <script>
+        $(document).ready(function() {
+            $('#ProductId').change(function() {
+                var productId = $(this).val();
+                $.ajax({
+                    url: '@Url.Action("GetPOsByProduct", "Inventory", new { area = "Filpride" })',
+                    type: 'GET',
+                    data: { productId: productId },
+                    success: function(data) {
+                        var poSelect = $('#POId');
+                        poSelect.empty();
+                        $.each(data, function(index, item) {
+                            poSelect.append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 }

@@ -131,7 +131,13 @@
                         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
                     }
                 },
-                { "data": "amount", "render": $.fn.dataTable.render.number(',', '.', 4) },
+                {
+                    "data": "amount",
+                    "render": function (data, type, row) {
+                        var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                        return `<span class="text-end d-block">${amount}</span>`;
+                    }
+                },
                 { "data": "createdBy" },
                 {
                     "data": "status",
@@ -145,6 +151,7 @@
                 },
                 {
                     "data": "serviceInvoiceId",
+                    "orderable": false,
                     "render": function (data, type, row) {
                         var dropdown = `<div class="dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
                                             <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">

@@ -137,7 +137,7 @@
                     decimal convertToWords = Model.Header.Total;
 
                     int integerPart = Convert.ToInt32(Math.Floor(convertToWords));
-                    decimal decimalPart = Math.Round((convertToWords - integerPart), 2);
+                    decimal decimalPart = Math.Round((convertToWords - integerPart), 4);
 
                     // Convert integer part to words
                     string integerWords = integerPart.ToWords();
@@ -219,7 +219,7 @@
                 <th class="text-end">CREDIT</th>
             </tr>
 
-            @foreach (var cv in Model.Details)
+            @foreach (var cv in Model.Details.OrderBy(model => model.CheckVoucherDetailId))
             {
                 <tr>
                     <td style="width:60%; padding-left:20px;">@Html.DisplayFor(model => cv.AccountNo)&nbsp;@Html.DisplayFor(model => cv.AccountName)</td>
@@ -265,44 +265,47 @@
 </div>
 <br />
 
-<div class="text-center w-100" style="margin-top:20px;">
-    <p>
-        <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br /><br />
-        <span>Acknowledgement Certificate No:</span>
-        <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
-        <span>&nbsp;&nbsp;Date Issued:</span>
-        <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br />
-        Series: CV0000000001 - CV9999999999
-        Date and Time Created:&nbsp; @Model.Header.CreatedDate
-    </p>
-</div>
-<br />
-
-<div class="text-start w-100 footer" style="margin-top:50px;">
-    <p style="line-height: 1;">
-        <em>
-            <strong>Software Name :</strong> @CS.AAS
-            <br />
-            <strong>Version :</strong> @CS.Version
-            <br />
-            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
-            <br />
-            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
-        </em>
-    </p>
-</div>
-
-@if (!Model.Header.IsPrinted)
+@if (Model.Header.Type == nameof(DocumentType.Documented))
 {
-    <div class="text-end">
-        ORIGINAL COPY
+    <div class="text-center w-100" style="margin-top:20px;">
+        <p>
+            <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br /><br />
+            <span>Acknowledgement Certificate No:</span>
+            <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
+            <span>&nbsp;&nbsp;Date Issued:</span>
+            <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br />
+            Series: CV0000000001 - CV9999999999
+            Date and Time Created:&nbsp; @Model.Header.CreatedDate
+        </p>
     </div>
-}
-else
-{
-    <div class="text-end">
-        REPRINT COPY
+    <br />
+
+    <div class="text-start w-100 footer" style="margin-top:50px;">
+        <p style="line-height: 1;">
+            <em>
+                <strong>Software Name :</strong> @CS.AAS
+                <br />
+                <strong>Version :</strong> @CS.Version
+                <br />
+                <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                <br />
+                <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+            </em>
+        </p>
     </div>
+
+    @if (!Model.Header.IsPrinted)
+    {
+        <div class="text-end">
+            ORIGINAL COPY
+        </div>
+    }
+    else
+    {
+        <div class="text-end">
+            REPRINT COPY
+        </div>
+    }
 }
 
 <div class="row pt-2">

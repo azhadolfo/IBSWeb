@@ -74,17 +74,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.SalesInvoiceNo.ToLower().Contains(searchValue) ||
                             s.Customer.CustomerName.ToLower().Contains(searchValue) ||
                             s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
-                            s.Product.ProductCode.ToLower().Contains(searchValue) ||
                             s.Product.ProductName.ToLower().Contains(searchValue) ||
-                            s.OtherRefNo.ToLower().Contains(searchValue) ||
                             s.TransactionDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
-                            s.Quantity.ToString().Contains(searchValue) ||
-                            s.UnitPrice.ToString().Contains(searchValue) ||
                             s.Amount.ToString().Contains(searchValue) ||
-                            s.Remarks.ToLower().Contains(searchValue) ||
                             s.CreatedBy.ToLower().Contains(searchValue) ||
                             s.Status.ToLower().Contains(searchValue) ||
-                            s.PaymentStatus.ToLower().Contains(searchValue)
+                            s.Remarks.ToLower().Contains(searchValue) ||
+                            s.DeliveryReceipt?.DeliveryReceiptNo.ToLower().Contains(searchValue) == true
                             )
                         .ToList();
                 }
@@ -231,12 +227,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return Json(new
                 {
-                    cos.PurchaseOrder.Product.ProductId,
-                    ProductName = $"{cos.PurchaseOrder.Product.ProductCode} {cos.PurchaseOrder.Product.ProductName}",
-                    cos.PurchaseOrder.Product.ProductUnit,
+                    cos.Product.ProductId,
+                    ProductName = $"{cos.Product.ProductCode} {cos.Product.ProductName}",
+                    cos.Product.ProductUnit,
                     cos.DeliveredPrice,
                     DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(cos.CustomerOrderSlipId, cancellationToken)
-
                 });
             }
             return Json(null);
@@ -457,7 +452,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var ledgers = new List<FilprideGeneralLedgerBook>();
 
-                        var arTradeReceivableTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010201") ?? throw new ArgumentException("Account title '1010201' not found.");
+                        var arTradeReceivableTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account title '101020100' not found.");
 
                         ledgers.Add(
                             new FilprideGeneralLedgerBook
@@ -477,7 +472,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (withHoldingTaxAmount > 0)
                         {
-                            var withHoldingTaxTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010202") ?? throw new ArgumentException("Account title '1010202' not found.");
+                            var withHoldingTaxTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
 
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
@@ -497,7 +492,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                         if (withHoldingVatAmount > 0)
                         {
-                            var withHoldingVatTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010203") ?? throw new ArgumentException("Account title '1010203' not found.");
+                            var withHoldingVatTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
 
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
@@ -536,7 +531,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (vatAmount > 0)
                         {
-                            var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010301") ?? throw new ArgumentException("Account title '2010301' not found.");
+                            var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
 
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
@@ -572,9 +567,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region--DR process
 
-                        var existingDr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken) ?? throw new ArgumentNullException($"The DR#{model.DeliveryReceiptId} not found! Contact MIS Enterprise.");
+                        if (model.DeliveryReceiptId != null)
+                        {
+                            var existingDr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken) ?? throw new ArgumentNullException($"The DR#{model.DeliveryReceiptId} not found! Contact MIS Enterprise.");
 
-                        existingDr.HasAlreadyInvoiced = true;
+                            existingDr.HasAlreadyInvoiced = true;
+                        }
 
                         #endregion
 
@@ -614,9 +612,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (model != null && existingInventory != null)
             {
                 var hasAlreadyBeenUsed =
-                    await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.SalesInvoiceId == model.SalesInvoiceId, cancellationToken) ||
-                    await _dbContext.FilprideDebitMemos.AnyAsync(dm => dm.SalesInvoiceId == model.SalesInvoiceId, cancellationToken) ||
-                    await _dbContext.FilprideCreditMemos.AnyAsync(cm => cm.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
+                    await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.SalesInvoiceId == model.SalesInvoiceId && cr.Status != nameof(Status.Voided), cancellationToken) ||
+                    await _dbContext.FilprideDebitMemos.AnyAsync(dm => dm.SalesInvoiceId == model.SalesInvoiceId && dm.Status != nameof(Status.Voided), cancellationToken) ||
+                    await _dbContext.FilprideCreditMemos.AnyAsync(cm => cm.SalesInvoiceId == model.SalesInvoiceId && cm.Status != nameof(Status.Voided), cancellationToken);
 
                 if (hasAlreadyBeenUsed)
                 {
@@ -642,6 +640,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideSalesBook>(sb => sb.SerialNo == model.SalesInvoiceNo, cancellationToken);
                         await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.SalesInvoiceNo, cancellationToken);
                         await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
+
+                        var dr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(d => d.HasAlreadyInvoiced && d.DeliveryReceiptId == model.DeliveryReceiptId);
+
+                        if (dr != null)
+                        {
+                            dr.HasAlreadyInvoiced = false;
+                        }
 
                         #region --Audit Trail Recording
 
@@ -749,7 +754,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     dr.Quantity,
                     automatedRr.ReceivingReportId,
                     automatedRr.PurchaseOrder.PurchaseOrderId,
-                    OtherRefNo = $"Customer PO#{dr.CustomerOrderSlip.CustomerPoNo}, Filpride RR#{automatedRr.ReceivingReportNo}"
+                    OtherRefNo = dr.ManualDrNo,
+                    Remarks = $"Customer PO# {dr.CustomerOrderSlip.CustomerPoNo}"
                 });
             }
 

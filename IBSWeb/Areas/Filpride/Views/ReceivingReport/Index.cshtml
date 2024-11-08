@@ -29,6 +29,12 @@
                         @Html.DisplayNameFor(model => model.PurchaseOrder.PurchaseOrderNo)
                     </th>
                     <th>
+                        DR No
+                    </th>
+                    <th>
+                        Product
+                    </th>
+                    <th>
                         Delivered
                     </th>
                     <th>
@@ -120,8 +126,22 @@
                         }
                     },
                     { "data": "purchaseOrder.purchaseOrderNo" },
-                    { "data": "quantityDelivered", "render": $.fn.dataTable.render.number(',', '.', 4) },
-                    { "data": "quantityReceived", "render": $.fn.dataTable.render.number(',', '.', 4) },
+                    { "data": data => data.deliveryReceipt ? data.deliveryReceipt.deliveryReceiptNo : "" },
+                    { "data": "purchaseOrder.product.productName" },
+                    {
+                        "data": "quantityDelivered",
+                        "render": function (data, type, row) {
+                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                            return `<span class="text-end d-block">${amount}</span>`;
+                        }
+                    },
+                    {
+                        "data": "quantityReceived",
+                        "render": function (data, type, row) {
+                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                            return `<span class="text-end d-block">${amount}</span>`;
+                        }
+                    },
                     { "data": "createdBy" },
                     {
                         "data": "status",
@@ -135,6 +155,7 @@
                     },
                     {
                         "data": "receivingReportId",
+                        "orderable": false,
                         "render": function (data, type, row) {
                             var dropdown = `<div class="dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
                                                 <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">

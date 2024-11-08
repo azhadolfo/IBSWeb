@@ -76,15 +76,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(s =>
                         s.CheckVoucherHeaderNo.ToLower().Contains(searchValue) ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
-                        s.RRNo?.Contains(searchValue) == true ||
-                        s.SINo?.Contains(searchValue) == true ||
-                        s.PONo?.Contains(searchValue) == true ||
                         s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
                         s.Total.ToString().Contains(searchValue) ||
                         s.Amount?.ToString().Contains(searchValue) == true ||
-                        s.Particulars?.ToLower().Contains(searchValue) == true ||
                         s.Category.ToLower().Contains(searchValue) ||
-                        s.Payee?.ToLower().Contains(searchValue) == true ||
                         s.CvType?.ToLower().Contains(searchValue) == true ||
                         s.CreatedBy.ToLower().Contains(searchValue)
                         )
@@ -183,6 +178,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 return Json(null);
             }
+            return Json(null);
+        }
+
+        public async Task<IActionResult> GetDefaultExpense(int? supplierId)
+        {
+            var supplier = await _dbContext.FilprideSuppliers
+                .Where(supp => supp.SupplierId == supplierId)
+                .Select(supp => supp.DefaultExpenseNumber)
+                .FirstOrDefaultAsync();
+
+            var defaultExpense = await _dbContext.FilprideChartOfAccounts
+                .Where(coa => (coa.Level == 4 || coa.Level == 5))
+                .OrderBy(coa => coa.AccountId)
+                .ToListAsync();
+
+            if (defaultExpense != null && defaultExpense.Count > 0)
+            {
+                var defaultExpenseList = defaultExpense.Select(coa => new
+                {
+                    AccountNumber = coa.AccountNumber,
+                    AccountTitle = coa.AccountName,
+                    IsSelected = coa.AccountNumber == supplier?.Split(' ')[0]
+                }).ToList();
+
+                return Json(defaultExpenseList);
+            }
+
             return Json(null);
         }
 
@@ -582,7 +604,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             if (i < existingHeaderModel.Amount.Length)
                             {
-                                var amount = Math.Round(viewModel.Amount[i] - existingHeaderModel.Amount[i], 2);
+                                var amount = Math.Round(viewModel.Amount[i] - existingHeaderModel.Amount[i], 4);
                                 receivingReport.AmountPaid += amount;
                             }
                             else
@@ -867,8 +889,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Retrieve Supplier
 
+                    #region -- Get PO --
+
+                    var getPurchaseOrder = await _dbContext.FilpridePurchaseOrders
+                                                    .Where(po => viewModel.POSeries.Contains(po.PurchaseOrderNo))
+                                                    .FirstOrDefaultAsync();
+
+                    #endregion -- Get PO --
+
                     #region --Saving the default entries
-                    var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, cancellationToken);
+                    var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getPurchaseOrder.Type, cancellationToken);
                     var cashInBank = viewModel.Credit[2]; ;
                     var cvh = new FilprideCheckVoucherHeader
                     {
@@ -886,7 +916,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Total = cashInBank,
                         Amount = viewModel.Amount,
                         CreatedBy = _userManager.GetUserName(this.User),
-                        Company = companyClaims
+                        Company = companyClaims,
+                        Type = getPurchaseOrder.Type,
                     };
 
                     await _dbContext.FilprideCheckVoucherHeaders.AddAsync(cvh, cancellationToken);
@@ -1069,15 +1100,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            viewModel.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountName
-                })
-                .ToListAsync(cancellationToken);
-
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
                 .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
                 .Select(sup => new SelectListItem
@@ -1105,7 +1127,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     FilprideCheckVoucherHeader checkVoucherHeader = new()
                     {
-                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, cancellationToken),
+                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken),
                         Date = viewModel.TransactionDate,
                         Payee = viewModel.SupplierName,
                         PONo = [viewModel.PoNo],
@@ -1116,7 +1138,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CreatedBy = _userManager.GetUserName(this.User),
                         Category = "Non-Trade",
                         CvType = "Invoicing",
-                        Company = companyClaims
+                        Company = companyClaims,
+                        Type = viewModel.Type
                     };
 
                     #endregion -- Saving the default entries --
@@ -1329,7 +1352,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     FilprideCheckVoucherHeader checkVoucherHeader = new()
                     {
-                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, cancellationToken),
+                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, invoicingVoucher.Type, cancellationToken),
                         Date = viewModel.TransactionDate,
                         PONo = invoicingVoucher.PONo,
                         SINo = invoicingVoucher.SINo,
@@ -1345,7 +1368,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CheckNo = viewModel.CheckNo,
                         CheckDate = viewModel.CheckDate,
                         CheckAmount = viewModel.Total,
-                        Company = companyClaims
+                        Company = companyClaims,
+                        Type = invoicingVoucher.Type
                     };
 
                     await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
@@ -1490,6 +1514,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(c => c.Supplier)
                     .FirstOrDefaultAsync(c => c.CheckVoucherHeaderId == cvId);
 
+                var cvd = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.TransactionNo == cv.CheckVoucherHeaderNo && cvd.AccountNo == "2010102").Select(cvd => cvd.Credit).FirstOrDefaultAsync();
+
                 if (cv != null)
                 {
                     return Json(new
@@ -1497,7 +1523,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Payee = cv.Supplier.SupplierName,
                         PayeeAddress = cv.Supplier.SupplierAddress,
                         PayeeTin = cv.Supplier.SupplierTin,
-                        Total = cv.Total
+                        Total = cvd
                     });
                 }
                 return Json(null);
@@ -2148,7 +2174,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 21].Value = item.Total;
                         if (item.Amount != null)
                         {
-                            worksheet.Cells[row, 22].Value = string.Join(" ", item.Amount.Select(amount => amount.ToString("N2")));
+                            worksheet.Cells[row, 22].Value = string.Join(" ", item.Amount.Select(amount => amount.ToString("N4")));
                         }
                         worksheet.Cells[row, 23].Value = item.CheckAmount;
                         worksheet.Cells[row, 24].Value = item.CvType;

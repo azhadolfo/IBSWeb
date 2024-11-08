@@ -60,9 +60,9 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>@Model.CustomerOrderSlip.PurchaseOrder.Product?.ProductName</td>
+                    <td>@Model.CustomerOrderSlip.Product.ProductName</td>
                     <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
-                    <td>@Model.CustomerOrderSlip.PurchaseOrder.Product?.ProductUnit</td>
+                    <td>@Model.CustomerOrderSlip.Product.ProductUnit</td>
                     <td>@Html.DisplayFor(model => model.VatAmount)</td>
                     <td>@Html.DisplayFor(model => model.CustomerOrderSlip.DeliveredPrice)</td>
                     <td>@Html.DisplayFor(model => model.CustomerOrderSlip.TotalAmount)</td>
@@ -114,9 +114,15 @@
 @section Scripts {
     <script>
         document.getElementById('approveButton').addEventListener('click', function () {
-            const grossMarginValue = document.getElementById('grossMarginInput').value;
+            let grossMarginValue = document.getElementById('grossMarginInput').value;
             console.log(grossMarginValue)
-            if (grossMarginValue.includes('(')) {
+
+            // Replace parentheses with a negative sign for backend processing
+            if (grossMarginValue.includes('(') && grossMarginValue.includes(')')) {
+                grossMarginValue = '-' + grossMarginValue.replace(/[()]/g, '');
+            }
+
+            if (grossMarginValue.includes('-')) {
                 Swal.fire({
                     title: 'Negative or Zero Gross Margin',
                     text: 'Please provide a reason for approving a negative or zero gross margin.',

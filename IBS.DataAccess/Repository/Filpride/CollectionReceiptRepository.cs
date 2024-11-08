@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
+using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -35,6 +36,62 @@ namespace IBS.DataAccess.Repository.Filpride
             else
             {
                 return "CR0000000001";
+            }
+        }
+
+        public async Task<string> GenerateCodeForSIAsync(string company, string type, CancellationToken cancellationToken = default)
+        {
+            if (type == nameof(DocumentType.Documented))
+            {
+                return await GenerateCodeForDocumented(company, cancellationToken);
+            }
+            else
+            {
+                return await GenerateCodeForUnDocumented(company, cancellationToken);
+            }
+        }
+
+        private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
+        {
+            FilprideCollectionReceipt? lastCv = await _db
+                .FilprideCollectionReceipts
+                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
+                .OrderBy(c => c.CollectionReceiptNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastCv != null)
+            {
+                string lastSeries = lastCv.CollectionReceiptNo;
+                string numericPart = lastSeries.Substring(2);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+            }
+            else
+            {
+                return "CR0000000001";
+            }
+        }
+
+        private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
+        {
+            FilprideCollectionReceipt? lastCv = await _db
+                .FilprideCollectionReceipts
+                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Undocumented))
+                .OrderBy(c => c.CollectionReceiptNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastCv != null)
+            {
+                string lastSeries = lastCv.CollectionReceiptNo;
+                string numericPart = lastSeries.Substring(3);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+            }
+            else
+            {
+                return "CRU000000001";
             }
         }
 

@@ -6,11 +6,13 @@ namespace IBS.Models.Filpride.ViewModels
     {
         public int CustomerOrderSlipId { get; set; }
 
+        public decimal COSVolume { get; set; } = 0;
+
         public List<SelectListItem>? Suppliers { get; set; }
 
         public int SupplierId { get; set; } = 0;
 
-        public int PurchaseOrderId { get; set; } = 0;
+        public List<int> PurchaseOrderIds { get; set; } = [];
 
         public List<SelectListItem>? PurchaseOrders { get; set; }
 
@@ -27,5 +29,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string? CurrentUser { get; set; }
 
         public int ProductId { get; set; }
+
+        public Dictionary<int, decimal> PurchaseOrderQuantities { get; set; } = new Dictionary<int, decimal>();
     }
 }

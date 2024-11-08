@@ -8,14 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="Areas\Filpride\Views\DeliveryReceipt\Edit.cshtml" />
-    <Content Remove="Areas\Filpride\Views\DeliveryReceipt\Preview.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
-    <None Include="Areas\Filpride\Views\DeliveryReceipt\Edit.cshtml" />
-    <None Include="Areas\Filpride\Views\DeliveryReceipt\Preview.cshtml" />
     <None Include="Areas\Mobility\Views\CashierReport\Edit.cshtml" />
   </ItemGroup>
 
@@ -54,19 +47,6 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Areas\Filpride\Views\DeliveryReceipt\Edit.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <_ContentIncludedByDefault Remove="Areas\Filpride\Views\DeliveryReceipt\Edit.cshtml" />
-    <_ContentIncludedByDefault Remove="Areas\Filpride\Views\DeliveryReceipt\Preview.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <UpToDateCheckInput Remove="Areas\Filpride\Views\DeliveryReceipt\Preview.cshtml" />
   </ItemGroup>
 
 </Project>

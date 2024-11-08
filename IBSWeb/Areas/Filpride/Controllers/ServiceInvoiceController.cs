@@ -560,16 +560,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (model != null)
             {
                 var hasAlreadyBeenUsed =
-                    await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken) ||
-                    await _dbContext.FilprideDebitMemos.AnyAsync(dm => dm.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken) ||
-                    await _dbContext.FilprideCreditMemos.AnyAsync(cm => cm.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+                    await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.ServiceInvoiceId == model.ServiceInvoiceId && cr.Status != nameof(Status.Voided), cancellationToken) ||
+                    await _dbContext.FilprideDebitMemos.AnyAsync(dm => dm.ServiceInvoiceId == model.ServiceInvoiceId && dm.Status != nameof(Status.Voided), cancellationToken) ||
+                    await _dbContext.FilprideCreditMemos.AnyAsync(cm => cm.ServiceInvoiceId == model.ServiceInvoiceId && cm.Status != nameof(Status.Voided), cancellationToken);
 
                 if (hasAlreadyBeenUsed)
                 {
                     TempData["error"] = "Please note that this record has already been utilized in a sales invoice. As a result, voiding it is not permitted.";
                     return RedirectToAction(nameof(Index));
                 }
-
 
                 if (model.VoidedBy == null)
                 {
@@ -697,13 +696,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.EditedBy, $"Edited service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Service invoice updated successfully.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)

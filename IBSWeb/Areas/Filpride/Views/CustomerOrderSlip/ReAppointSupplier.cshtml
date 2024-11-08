@@ -1,0 +1,256 @@
+﻿@model CustomerOrderSlipAppointingSupplierViewModel
+
+@{
+    ViewData["Title"] = "COS - Appoint Supplier";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Reappoint Supplier</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <div class="border-2 p-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <input asp-for="CustomerOrderSlipId" type="hidden" />
+                <input asp-for="ProductId" type="hidden" />
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Supplier List<span class="required">*</span></label>
+                    <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected>Select supplier</option>
+                    </select>
+                    <span asp-validation-for="SupplierId" class="text-danger"></span>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">PO List<span class="required">*</span></label>
+                    <select asp-for="PurchaseOrderIds" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    </select>
+                    <span asp-validation-for="PurchaseOrderIds" class="text-danger"></span>
+                </div>
+                <div id="poQuantitySection" style="display:none;">
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Enter Quantities for Selected POs</label>
+                        <div id="poQuantities"></div>
+                    </div>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Delivery Option<span class="required">*</span></label><br />
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByHauler" id="DeliveryType_ForPickUpByHauler" />
+                        <label class="form-check-label" for="DeliveryType_ForPickUpByHauler">@SD.DeliveryOption_ForPickUpByHauler</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByClient" id="DeliveryType_ForPickUpByClient" />
+                        <label class="form-check-label" for="DeliveryType_ForPickUpByClient">@SD.DeliveryOption_ForPickUpByClient</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_DirectDelivery" id="DeliveryType_DirectDelivery" />
+                        <label class="form-check-label" for="DeliveryType_DirectDelivery">@SD.DeliveryOption_DirectDelivery</label>
+                    </div>
+                    <span asp-validation-for="DeliveryOption" class="text-danger"></span>
+                </div>
+                <!-- Freight and SubPoRemarks fields -->
+                <div id="freightRemarksSection" style="display:none;">
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" required min="0.01" />
+                        <label asp-for="Freight" class="ms-2">Freight<span class="required">*</span></label>
+                        <span asp-validation-for="Freight" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <textarea asp-for="SubPoRemarks" class="form-control border-0 shadow" placeholder="Add description." style="height: 100px" required></textarea>
+                        <label asp-for="SubPoRemarks" class="control-label">Sub PO Remarks<span class="required">*</span></label>
+                        <span asp-validation-for="SubPoRemarks" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Port List<span class="required">*</span></label>
+                    <select asp-for="PickUpPointId" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    </select>
+                    <span asp-validation-for="PickUpPointId" class="text-danger"></span>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control">Appoint</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+
+            // Function to handle freight section visibility
+            function handleFreightSection(deliveryOption) {
+                if (deliveryOption === '@SD.DeliveryOption_DirectDelivery') {
+                    $('#freightRemarksSection').show();
+                } else {
+                    $('#freightRemarksSection').hide();
+                }
+            }
+
+            // Trigger change event when a radio button is selected
+            $('input[name="DeliveryOption"]').change(function () {
+                handleFreightSection($(this).val());
+            });
+
+            // Ensure the freight section visibility on page load based on the selected value
+            handleFreightSection($('input[name="DeliveryOption"]:checked').val());
+
+             $('#SupplierId').change(function() {
+                 var supplierId = $(this).val();
+                 var productId = $('#ProductId').val();
+                 var $poSelect = $('#PurchaseOrderIds');
+                 var $pickUpSelect = $('#PickUpPointId');
+
+                 // Clear existing options
+                 $poSelect.empty();
+
+                 if (supplierId) {
+                     $.ajax({
+                         url: '@Url.Action("GetPurchaseOrders", "CustomerOrderSlip")',
+                         type: 'GET',
+                         data: { supplierId: supplierId, productId : productId },
+                         success: function(data) {
+                             $.each(data, function(index, po) {
+                                 $poSelect.append($('<option></option>')
+                                     .val(po.value)
+                                     .text(po.text)
+                                     .data('available-balance', po.availableBalance));
+                             });
+                         },
+                         error: function() {
+                             alert('Failed to retrieve POs');
+                         }
+                     });
+                 }
+
+                 // Clear existing options
+                 $pickUpSelect.empty();
+
+                  if (supplierId) {
+                      $.ajax({
+                          url: '@Url.Action("GetPickUpPoints", "CustomerOrderSlip")',
+                          type: 'GET',
+                          data: { supplierId: supplierId },
+                          success: function(data) {
+                              $.each(data, function(index, pickUpPoint) {
+                                  $pickUpSelect.append($('<option></option>').val(pickUpPoint.value).text(pickUpPoint.text));
+                              });
+                          },
+                          error: function() {
+                              alert('Failed to retrieve Pick Up Points');
+                          }
+                      });
+                  }
+
+             });
+
+            $('#PurchaseOrderIds').change(function () {
+                var selectedPOs = $(this).val();
+                var purchaseOrderQuantities = @Html.Raw(Json.Serialize(Model.PurchaseOrderQuantities));
+
+                $('#poQuantities').empty();
+
+                if (selectedPOs.length > 0) {
+                    $.each(selectedPOs, function (index, po) {
+                        // Get the selected option's text
+                        var selectedOption = $('#PurchaseOrderIds option[value="' + po + '"]');
+                        var quantity = purchaseOrderQuantities[po] || 0;  // Default to 0 if not found
+                        var selectedText = selectedOption.text();
+                        var availableBalance = selectedOption.data('available-balance');
+                        var cosVolume = @Model.COSVolume;
+
+                        // Set the first PO's balance as default quantity
+                        var defaultQuantity = index === 0 ? availableBalance : '';
+
+                        if (index === 0 && availableBalance >= cosVolume) {
+                            defaultQuantity = cosVolume;
+                        }
+                        else if (index === 0 && availableBalance < cosVolume) {
+                            defaultQuantity = availableBalance;
+                        }
+                        else {
+                            defaultQuantity = '';
+                        }
+
+                        $('#poQuantities').append(
+                            `<div class="form-group py-2">
+                                <label for="quantity_${po}">Enter Quantity for PO ${selectedText}</label>
+                                <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${availableBalance}" placeholder="Quantity (max: ${availableBalance})" value="${defaultQuantity}" required />
+                            </div>`
+                        );
+                    });
+                }
+
+                $('#poQuantitySection').show();
+            });
+
+               $('form').on('submit', function(event) {
+                     var totalQuantity = 0;
+                     var cosVolume = @Model.COSVolume;
+                     var selectedPO = $('#PurchaseOrderIds').val();
+                     var isValid = true;
+                     console.log(cosVolume)
+                     if (selectedPO.length > 0) {
+                         $('#poQuantities input[type="number"]').each(function () {
+                             var enteredQuantity = parseFloat($(this).val()) || 0;
+                             var maxQuantity = parseFloat($(this).attr('max'));
+
+                             if (enteredQuantity > maxQuantity) {
+                                 alert(`Quantity exceeds the available balance for this PO (max: ${maxQuantity}).`);
+                                 isValid = false;
+                                 return false;
+                             }
+
+                             totalQuantity += enteredQuantity;
+                         });
+
+                         // Check if total quantity is equal to COS volume
+                         if (totalQuantity !== cosVolume) {
+                             alert(`Total quantity (${totalQuantity}) must equal the available COS quantity of ${cosVolume}.`);
+                             isValid = false;
+                         }
+                     }
+
+                     // Additional validation for total quantity not exceeding the PO available balance
+                     var totalAvailableBalance = 0;
+                     $('#PurchaseOrderIds option:selected').each(function () {
+                         totalAvailableBalance += parseFloat($(this).data('available-balance')) || 0;
+                     });
+
+                     if (totalQuantity > totalAvailableBalance) {
+                         alert(`Total quantity (${totalQuantity}) exceeds the total available balance of the selected POs (${totalAvailableBalance}).`);
+                         isValid = false;
+                     }
+
+                     if (!isValid) {
+                         event.preventDefault();
+                     }
+                 });
+
+        });
+    </script>
+    <script>
+        // Trigger the change event when the page loads to show the quantities for pre-selected POs
+        $(document).ready(function () {
+            $('#SupplierId').change();
+            // Trigger change event when a radio button is selected
+            $('input[name="DeliveryOption"]').change(function () {
+                handleFreightSection($(this).val());
+            });
+        });
+    </script>
+}

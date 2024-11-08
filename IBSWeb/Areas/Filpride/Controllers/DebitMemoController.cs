@@ -248,9 +248,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                     }
 
-                    model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, cancellationToken);
+                    model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice.Type, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Company = companyClaims;
+                    model.Type = existingSalesInvoice.Type;
 
                     if (model.Source == "Sales Invoice")
                     {

@@ -186,6 +186,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
+        [HttpGet]
+        public async Task<JsonResult> GetPOsByProduct(int? productId, CancellationToken cancellationToken)
+        {
+            if (productId == null)
+            {
+                return Json(null);
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+            var purchaseOrders = await _dbContext.FilpridePurchaseOrders
+                .OrderBy(p => p.PurchaseOrderNo)
+                .Where(p => p.Company == companyClaims && p.ProductId == productId)
+                .Select(p => new SelectListItem
+                {
+                    Value = p.PurchaseOrderId.ToString(),
+                    Text = p.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
+
+            return Json(purchaseOrders);
+        }
+
         public async Task<IActionResult> ConsolidatedPO(InventoryReportViewModel viewModel, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)

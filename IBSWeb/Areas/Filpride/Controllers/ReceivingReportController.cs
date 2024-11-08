@@ -73,18 +73,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(s =>
                         s.ReceivingReportNo.ToLower().Contains(searchValue) ||
                         s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue) ||
-                        s.SupplierInvoiceNumber?.ToLower().Contains(searchValue) == true ||
-                        s.SupplierInvoiceDate?.ToString().Contains(searchValue) == true ||
-                        s.SupplierDrNo?.ToLower().Contains(searchValue) == true ||
-                        s.WithdrawalCertificate?.ToLower().Contains(searchValue) == true ||
-                        s.TruckOrVessels.ToLower().Contains(searchValue) ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.QuantityReceived.ToString().Contains(searchValue) ||
-                        s.QuantityDelivered.ToString().Contains(searchValue) ||
                         s.Amount.ToString().Contains(searchValue) ||
-                        s.AuthorityToLoadNo?.ToLower().Contains(searchValue) == null ||
-                        s.Remarks.ToLower().Contains(searchValue) ||
-                        s.CreatedBy.ToLower().Contains(searchValue)
+                        s.CreatedBy.ToLower().Contains(searchValue) ||
+                        s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -174,13 +167,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return View(model);
                     }
 
-                    model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, cancellationToken);
+                    model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, existingPo.Type, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
                     model.PONo = existingPo.PurchaseOrderNo;
                     model.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
                     model.Amount = model.QuantityReceived * existingPo.Price;
                     model.Company = companyClaims;
+                    model.Type = existingPo.Type;
 
                     #region --Audit Trail Recording
 
@@ -410,14 +404,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (model != null && existingInventory != null)
             {
                 var hasAlreadyBeenUsed = await _dbContext.FilprideSalesInvoices
-                    .AnyAsync(si => si.ReceivingReportId == model.ReceivingReportId, cancellationToken);
+                    .AnyAsync(si => si.ReceivingReportId == model.ReceivingReportId && si.Status != nameof(Status.Voided), cancellationToken);
 
                 if (hasAlreadyBeenUsed)
                 {
                     TempData["error"] = "Please note that this record has already been utilized in a sales invoice. As a result, voiding it is not permitted.";
                     return RedirectToAction(nameof(Index));
                 }
-
 
                 if (model.VoidedBy == null)
                 {

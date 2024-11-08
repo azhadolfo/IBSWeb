@@ -40,7 +40,7 @@
             </tr>
             <tr>
                 <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerOrderSlip.Customer?.CustomerAddress.ToUpper()</td>
-                <td class="w-25 text-end"><b>PO No:</b> &nbsp;@Model.CustomerOrderSlip.PurchaseOrder?.PurchaseOrderNo.ToUpper()</td>
+                <td class="w-25 text-end"><b>PO No:</b> &nbsp;@(Model.PurchaseOrder?.PurchaseOrderNo ?? Model.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo)</td>
             </tr>
             <tr>
                 <td></td>
@@ -61,8 +61,8 @@
         </thead>
         <tbody>
             <tr>
-                <td scope="row">@Model.CustomerOrderSlip.PurchaseOrder.Product?.ProductName.ToUpper()</td>
-                <td>@Model.CustomerOrderSlip.PurchaseOrder.Product?.ProductUnit</td>
+                <td scope="row">@Model.CustomerOrderSlip.Product?.ProductName.ToUpper()</td>
+                <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
                 <td>@Html.DisplayFor(model => model.Quantity)</td>
             </tr>
         </tbody>

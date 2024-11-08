@@ -20,7 +20,7 @@
         Credit
     }
 
-    public enum SalesInvoiceType
+    public enum DocumentType
     {
         Documented,
         Undocumented
@@ -30,7 +30,8 @@
     {
         Created,
         SupplierAppointed,
-        ApprovedByOpsManager,
+        ApprovedByOM,
+        Approved,
         Completed,
         Disapproved,
         Expired

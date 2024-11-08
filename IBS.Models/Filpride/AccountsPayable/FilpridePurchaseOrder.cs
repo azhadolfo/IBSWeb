@@ -109,5 +109,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         #endregion
 
         public string OldPoNo { get; set; }
+
+        public string? Type { get; set; }
     }
 }

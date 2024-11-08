@@ -41,6 +41,12 @@
                         Customer
                     </th>
                     <th>
+                        Product
+                    </th>
+                    <th>
+                        Quantity
+                    </th>
+                    <th>
                         Total Amount
                     </th>
                     <th>
@@ -58,6 +64,7 @@
         $('#paginatedTable').DataTable({
             "processing": true,
             "serverSide": true,
+            "stateSave": true,
             "ajax": {
                 "url": "@Url.Action("GetDeliveryReceipts", "DeliveryReceipt", new { area = "Filpride" })",
                 "type": "POST",
@@ -76,7 +83,21 @@
                 }},
                 { "data": "customerOrderSlip.customerOrderSlipNo" },
                 { "data": "customer.customerName" },
-                { "data": "totalAmount", "render": $.fn.dataTable.render.number(',', '.', 2) },
+                { "data": "customerOrderSlip.product.productName" },
+                {
+                    "data": "quantity",
+                    "render": function (data, type, row) {
+                        var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                        return `<span class="text-end d-block">${amount}</span>`;
+                    }
+                },
+                {
+                    "data": "totalAmount",
+                    "render": function (data, type, row) {
+                        var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                        return `<span class="text-end d-block">${amount}</span>`;
+                    }
+                },
                 {
                     "data": "status",
                     "render": function(data, type, row) {
@@ -84,11 +105,17 @@
                                           row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
                                           row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
 
+                        if (row.hasAlreadyInvoiced) {
+                            row.status = "Invoiced";
+                            statusClass = "bg-success";
+                        }
+
                         return `<span class="badge rounded-pill w-100 ${statusClass}">${row.status}</span>`;
                     }
                 },
                 {
                     "data": "deliveryReceiptId",
+                    "orderable": false,
                     "render": function (data, type, row) {
                         let actions = `<div class="dropdown" style="${row.voidedBy || row.canceledBy ? 'display:none;' : ''}">
                             <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -108,7 +135,7 @@
                             }
                         }
                         else {
-                            actions += `<li><a class="dropdown-item BookATL" href="#" onclick="bookAuthorityToLoad('${row.deliveryReceiptId}', '${row.customerOrderSlip.purchaseOrder.supplier.supplierName}')">Book ATL</a></li>
+                            actions += `<li><a class="dropdown-item BookATL" href="#" onclick="bookAuthorityToLoad('${row.deliveryReceiptId}', '${row.customerOrderSlip.supplier != null ? row.customerOrderSlip.supplier.supplierName : row.customerOrderSlip.purchaseOrder.supplier.supplierName}')">Book ATL</a></li>
                               <li><a class="dropdown-item" href="@Url.Action("Edit", "DeliveryReceipt", new { area = "Filpride" })/${data}">Edit</a></li>`;
                         }
 

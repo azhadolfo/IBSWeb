@@ -18,7 +18,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _timer = new Timer(ExpireUnusedCos, null, TimeSpan.Zero, TimeSpan.FromDays(1));
+            //_timer = new Timer(ExpireUnusedCos, null, TimeSpan.Zero, TimeSpan.FromDays(1));
             return Task.CompletedTask;
         }
 

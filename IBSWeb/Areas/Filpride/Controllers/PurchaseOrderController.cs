@@ -73,12 +73,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseOrders = purchaseOrders
                     .Where(s =>
                         s.PurchaseOrderNo.ToLower().Contains(searchValue) ||
+                        s.OldPoNo.ToLower().Contains(searchValue) ||
                         s.Supplier.SupplierName.ToLower().Contains(searchValue) ||
                         s.Product.ProductName.ToLower().Contains(searchValue) ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
-                        s.Terms.ToLower().Contains(searchValue) ||
                         s.Quantity.ToString().Contains(searchValue) ||
-                        s.Remarks.ToLower().Contains(searchValue) ||
+                        s.Remarks.ToString().Contains(searchValue) ||
                         s.CreatedBy.ToLower().Contains(searchValue)
                         )
                     .ToList();
@@ -150,7 +150,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, cancellationToken);
+                    model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Amount = model.Quantity * model.Price;
 

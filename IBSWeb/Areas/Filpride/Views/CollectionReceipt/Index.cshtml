@@ -142,7 +142,13 @@
                         }
                     },
                     { "data": "customer.customerName" },
-                    { "data": "total", "render": $.fn.dataTable.render.number(',', '.', 4) },
+                    {
+                        "data": "total",
+                        "render": function (data, type, row) {
+                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                            return `<span class="text-end d-block">${amount}</span>`;
+                        }
+                    },
                     { "data": "createdBy" },
                     {
                         "data": "status",

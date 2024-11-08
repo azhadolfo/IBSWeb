@@ -27,10 +27,15 @@
                 </div>
                 <div class="form-group py-2 col-12">
                     <label class="control-label">PO List<span class="required">*</span></label>
-                    <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select po</option>
+                    <select asp-for="PurchaseOrderIds" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
                     </select>
-                    <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
+                    <span asp-validation-for="PurchaseOrderIds" class="text-danger"></span>
+                </div>
+                <div id="poQuantitySection" style="display:none;">
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Enter Quantities for Selected POs</label>
+                        <div id="poQuantities"></div>
+                    </div>
                 </div>
                 <div class="form-group py-2 col-12">
                     <label class="control-label">Delivery Option<span class="required">*</span></label><br />
@@ -51,7 +56,7 @@
                 <!-- Freight and SubPoRemarks fields -->
                 <div id="freightRemarksSection" style="display:none;">
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" required min="0.01"/>
+                        <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" required min="0.01" />
                         <label asp-for="Freight" class="ms-2">Freight<span class="required">*</span></label>
                         <span asp-validation-for="Freight" class="text-danger"></span>
                     </div>
@@ -86,69 +91,147 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 <script>
-        $(document).ready(function () {
+    $(document).ready(function () {
 
-            $('input[name="DeliveryOption"]').change(function() {
-                if ($(this).val() === '@SD.DeliveryOption_DirectDelivery') {
-                    $('#freightRemarksSection').show();
-                } else {
-                    $('#freightRemarksSection').hide();
-                }
-            });
+        $('input[name="DeliveryOption"]').change(function () {
+            if ($(this).val() === '@SD.DeliveryOption_DirectDelivery') {
+                $('#freightRemarksSection').show();
+            } else {
+                $('#freightRemarksSection').hide();
+            }
+        });
 
-            $('#SupplierId').change(function() {
-                var supplierId = $(this).val();
-                var productId = $('#ProductId').val();
-                var $poSelect = $('#PurchaseOrderId');
-                var $pickUpSelect = $('#PurchaseOrderId');
+        $('#SupplierId').change(function () {
+            var supplierId = $(this).val();
+            var productId = $('#ProductId').val();
+            var $poSelect = $('#PurchaseOrderIds');
+            var $pickUpSelect = $('#PickUpPointId');
 
-                // Clear existing options
-                $poSelect.empty();
-                $poSelect.append('<option value="" selected>Select PO</option>');
+            // Clear existing options
+            $poSelect.empty();
 
-                if (supplierId) {
-                    $.ajax({
-                        url: '@Url.Action("GetPurchaseOrders", "CustomerOrderSlip")',
-                        type: 'GET',
-                        data: { supplierId: supplierId, productId : productId },
-                        success: function(data) {
-                            $.each(data, function(index, po) {
-                                $poSelect.append($('<option></option>').val(po.value).text(po.text));
-                            });
-                        },
-                        error: function() {
-                            alert('Failed to retrieve POs');
-                        }
-                    });
-                }
-            });
+            if (supplierId) {
+                $.ajax({
+                    url: '@Url.Action("GetPurchaseOrders", "CustomerOrderSlip")',
+                    type: 'GET',
+                    data: { supplierId: supplierId, productId: productId },
+                    success: function (data) {
+                        $.each(data, function (index, po) {
+                            $poSelect.append($('<option></option>')
+                                .val(po.value)
+                                .text(po.text)
+                                .data('available-balance', po.availableBalance));
+                        });
+                    },
+                    error: function () {
+                        alert('Failed to retrieve POs');
+                    }
+                });
+            }
 
-            $('#PurchaseOrderId').change(function() {
-                var poId = $(this).val();
-                var supplierId = $('#SupplierId').val(); // Get the selected supplier ID
-                var $pickUpSelect = $('#PickUpPointId');
+            // Clear existing options
+            $pickUpSelect.empty();
 
-                // Clear existing options
-                $pickUpSelect.empty();
-                $pickUpSelect.append('<option value="" selected>Select Pick Up Point</option>');
-
-                if (poId && supplierId) {
-                    $.ajax({
-                        url: '@Url.Action("GetPickUpPoints", "CustomerOrderSlip")',
-                        type: 'GET',
-                        data: { purchaseOrderId: poId, supplierId: supplierId },
-                        success: function(data) {
-                            $.each(data, function(index, pickUpPoint) {
-                                $pickUpSelect.append($('<option></option>').val(pickUpPoint.value).text(pickUpPoint.text));
-                            });
-                        },
-                        error: function() {
-                            alert('Failed to retrieve Pick Up Points');
-                        }
-                    });
-                }
-            });
+            if (supplierId) {
+                $.ajax({
+                    url: '@Url.Action("GetPickUpPoints", "CustomerOrderSlip")',
+                    type: 'GET',
+                    data: { supplierId: supplierId },
+                    success: function (data) {
+                        $.each(data, function (index, pickUpPoint) {
+                            $pickUpSelect.append($('<option></option>').val(pickUpPoint.value).text(pickUpPoint.text));
+                        });
+                    },
+                    error: function () {
+                        alert('Failed to retrieve Pick Up Points');
+                    }
+                });
+            }
 
         });
+
+        $('#PurchaseOrderIds').change(function () {
+            var selectedPOs = $(this).val();
+
+            $('#poQuantities').empty();
+
+            if (selectedPOs.length > 0) {
+                $.each(selectedPOs, function (index, po) {
+                    var selectedOption = $('#PurchaseOrderIds option[value="' + po + '"]');
+                    var selectedText = selectedOption.text();
+                    var availableBalance = selectedOption.data('available-balance');
+                    var cosVolume = @Model.COSVolume;
+
+                    // Set the first PO's balance as default quantity
+                    var defaultQuantity = index === 0 ? availableBalance : '';
+
+                    if (index === 0 && availableBalance >= cosVolume) {
+                        defaultQuantity = cosVolume;
+                    }
+                    else if (index === 0 && availableBalance < cosVolume) {
+                        defaultQuantity = availableBalance;
+                    }
+                    else {
+                        defaultQuantity = '';
+                    }
+
+                    $('#poQuantities').append(
+                        `<div class="form-group py-2">
+                            <label for="quantity_${po}">Enter Quantity for ${selectedText}</label>
+                            <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${availableBalance}" placeholder="Quantity (max: ${availableBalance})" value="${defaultQuantity}" required/>
+                        </div>`
+                    );
+                });
+
+                $('#poQuantitySection').show();
+            } else {
+                $('#poQuantitySection').hide();
+            }
+        });
+
+
+        $('form').on('submit', function (event) {
+            var totalQuantity = 0;
+            var cosVolume = @Model.COSVolume;
+            var selectedPO = $('#PurchaseOrderIds').val();
+            var isValid = true;
+
+            if (selectedPO.length > 0) {
+                $('#poQuantities input[type="number"]').each(function () {
+                    var enteredQuantity = parseFloat($(this).val()) || 0;
+                    var maxQuantity = parseFloat($(this).attr('max'));
+
+                    if (enteredQuantity > maxQuantity) {
+                        alert(`Quantity exceeds the available balance for this PO (max: ${maxQuantity}).`);
+                        isValid = false;
+                        return false;
+                    }
+
+                    totalQuantity += enteredQuantity;
+                });
+
+                if (totalQuantity !== cosVolume) {
+                    alert(`Total quantity (${totalQuantity}) must equal the available COS quantity of ${cosVolume}.`);
+                    isValid = false;
+                }
+            }
+
+            var totalAvailableBalance = 0;
+            $('#PurchaseOrderIds option:selected').each(function () {
+                totalAvailableBalance += parseFloat($(this).data('available-balance')) || 0;
+            });
+
+            if (totalQuantity > totalAvailableBalance) {
+                alert(`Total quantity (${totalQuantity}) exceeds the total available balance of the selected POs (${totalAvailableBalance}).`);
+                isValid = false;
+            }
+
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+
+    });
 </script>
+
 }

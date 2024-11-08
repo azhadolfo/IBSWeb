@@ -8,6 +8,7 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 
@@ -66,12 +67,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.DeliveryReceiptNo.ToLower().Contains(searchValue) ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.Customer.CustomerName?.ToLower().Contains(searchValue) == true ||
-                        s.Quantity.ToString().Contains(searchValue) == true ||
-                        s.TotalAmount.ToString().Contains(searchValue) == true ||
-                        s.Remarks?.ToLower().Contains(searchValue) == true
+                        s.Quantity.ToString().Contains(searchValue) ||
+                        s.TotalAmount.ToString().Contains(searchValue) ||
+                        s.ManualDrNo.ToLower().Contains(searchValue) ||
+                        s.CustomerOrderSlip.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
+                        s.CustomerOrderSlip.Product.ProductName.ToLower().Contains(searchValue) ||
+                        s.Status.ToLower().Contains(searchValue) ||
+                        s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
-
                 }
 
                 // Sorting
@@ -135,6 +139,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId);
+
+                    if (customerOrderSlip == null)
+                    {
+                        return BadRequest();
+                    }
+
                     FilprideDeliveryReceipt model = new()
                     {
                         DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(cancellationToken),
@@ -157,6 +168,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Status = "Draft"
                     };
 
+                    if (!customerOrderSlip.HasMultiplePO)
+                    {
+                        model.PurchaseOrderId = customerOrderSlip.PurchaseOrderId;
+                    }
+                    else
+                    {
+                        var selectedPo = await _dbContext.FilprideCOSAppointedSuppliers
+                            .OrderBy(s => s.PurchaseOrderId)
+                            .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == model.CustomerOrderSlipId && !s.IsAssignedToDR);
+
+                        model.PurchaseOrderId = selectedPo.PurchaseOrderId;
+                    }
+
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -172,6 +196,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -215,7 +240,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerTin = existingRecord.Customer.CustomerTin,
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                     CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
-                    Product = existingRecord.CustomerOrderSlip.PurchaseOrder.Product.ProductName,
+                    Product = existingRecord.CustomerOrderSlip.Product.ProductName,
                     CosVolume = existingRecord.CustomerOrderSlip.Quantity,
                     RemainingVolume = existingRecord.CustomerOrderSlip.BalanceQuantity,
                     Price = existingRecord.CustomerOrderSlip.DeliveredPrice,
@@ -229,7 +254,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Driver = existingRecord.Driver,
                     PlateNo = existingRecord.PlateNo,
                     HaulerId = existingRecord.HaulerId,
-                    Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
+                    Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
+                    DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption
                 };
 
                 ViewBag.DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption;
@@ -264,6 +290,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -272,6 +299,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -416,7 +444,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return Json(new
             {
-                Product = cos.PurchaseOrder.Product?.ProductName,
+                Product = cos.Product.ProductName,
                 cos.Quantity,
                 RemainingVolume = cos.BalanceQuantity,
                 Price = cos.DeliveredPrice,
@@ -505,6 +533,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
+                var hasAlreadyBeenUsed = await _dbContext.FilprideReceivingReports
+                   .AnyAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status != nameof(Status.Voided), cancellationToken);
+
+                if (hasAlreadyBeenUsed)
+                {
+                    TempData["error"] = "Please note that this record has already been utilized in a receiving report. As a result, voiding it is not permitted.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 try
@@ -522,6 +559,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
                         await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
+                        ///PENDING : Create the removal of receiving report
 
                         #region --Audit Trail Recording
 
@@ -621,16 +659,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming the template has one sheet
 
                 worksheet.Cells["H2"].Value = deliveryReceipt.AuthorityToLoadNo;
-                worksheet.Cells["H7"].Value = receivingReport.ReceivingReportNo;
-                worksheet.Cells["H9"].Value = deliveryReceipt.DeliveryReceiptNo;
+                worksheet.Cells["H7"].Value = receivingReport?.ReceivingReportNo;
+                worksheet.Cells["H9"].Value = deliveryReceipt.ManualDrNo;
                 worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
-                worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip.CustomerOrderSlipNo;
+                worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip.OldCosNo;
                 worksheet.Cells["B11"].Value = deliveryReceipt.CustomerOrderSlip.PickUpPoint.Depot.ToUpper();
                 worksheet.Cells["C12"].Value = deliveryReceipt.Customer.CustomerName.ToUpper();
                 worksheet.Cells["C13"].Value = deliveryReceipt.Customer.CustomerAddress.ToUpper();
                 worksheet.Cells["B17"].Value = deliveryReceipt.CustomerOrderSlip.Product.ProductName;
                 worksheet.Cells["H17"].Value = deliveryReceipt.Quantity.ToString("N0");
-                worksheet.Cells["H19"].Value = $"{deliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo} {deliveryReceipt.CustomerOrderSlip.DeliveryOption}";
+                worksheet.Cells["H19"].Value = deliveryReceipt.Remarks;
 
                 var stream = new MemoryStream();
                 package.SaveAs(stream);

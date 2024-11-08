@@ -44,6 +44,7 @@ namespace IBS.DataAccess.Repository.Filpride
             IQueryable<FilprideCustomerOrderSlip> query = dbSet
                 .Include(cos => cos.Customer)
                 .Include(cos => cos.Product)
+                .Include(cos => cos.Supplier)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier);
 
@@ -60,6 +61,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return await dbSet.Where(filter)
                 .Include(cos => cos.Customer)
                 .Include(cos => cos.Product)
+                .Include(cos => cos.Supplier)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -99,7 +101,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.Completed) && !cos.IsDelivered)
+                .Where(cos => cos.Status == nameof(CosStatus.Approved))
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -112,7 +114,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.Completed) && cos.CustomerId == customerId && !cos.IsDelivered)
+                .Where(cos => cos.Status == nameof(CosStatus.Approved) && cos.CustomerId == customerId)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -125,7 +127,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.Completed) && cos.CustomerId == customerId)
+                .Where(cos => cos.Status == nameof(CosStatus.Approved) || cos.Status == nameof(CosStatus.Completed) && cos.CustomerId == customerId)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -142,19 +144,41 @@ namespace IBS.DataAccess.Repository.Filpride
 
             customerOrderSlip.TotalAmount = customerOrderSlip.Quantity * customerOrderSlip.DeliveredPrice;
 
-            customerOrderSlip.Status = nameof(CosStatus.ApprovedByOpsManager);
+            customerOrderSlip.Status = nameof(CosStatus.ApprovedByOM);
 
             await _db.SaveChangesAsync(cancellationToken);
         }
 
         private decimal UpdateCosPrice(decimal grossMargin, FilprideCustomerOrderSlip existingRecord)
         {
-            var netOfVatProductCost = existingRecord.PurchaseOrder.Price / 1.12m;
+            decimal netOfVatProductCost = 0;
+
+            if (!existingRecord.HasMultiplePO)
+            {
+                netOfVatProductCost = existingRecord.PurchaseOrder.Price / 1.12m;
+            }
+            else
+            {
+                var appointedSupplier = _db.FilprideCOSAppointedSuppliers
+                        .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                        .ToList();
+
+                decimal totalPoAmount = 0;
+
+                foreach (var item in appointedSupplier)
+                {
+                    var po = _db.FilpridePurchaseOrders.Find(item.PurchaseOrderId);
+                    totalPoAmount += item.Quantity * ComputeNetOfVat(po.Price);
+                }
+
+                netOfVatProductCost = totalPoAmount / appointedSupplier.Sum(a => a.Quantity);
+            }
+
             var netOfVatCosPrice = existingRecord.DeliveredPrice / 1.12m;
             var netOfVatFreightCharge = existingRecord.Freight / 1.12m;
             var existingGrossMargin = netOfVatCosPrice - netOfVatProductCost - netOfVatFreightCharge - existingRecord.CommissionRate;
 
-            if (existingGrossMargin != grossMargin)
+            if (Math.Round((decimal)existingGrossMargin, 4) != grossMargin)
             {
                 decimal newNetOfVatCosPrice = grossMargin + (decimal)(existingRecord.CommissionRate + netOfVatFreightCharge + netOfVatProductCost);
                 return Math.Round((ComputeVatAmount(newNetOfVatCosPrice) + newNetOfVatCosPrice), 4);
@@ -172,7 +196,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .SumAsync(dr => dr.TotalAmount, cancellationToken);
 
             var outstandingCos = await _db.FilprideCustomerOrderSlips
-                .Where(cos => cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.Now) && cos.Status == nameof(CosStatus.Completed))
+                .Where(cos => cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.Now) && cos.Status == nameof(CosStatus.Approved))
                 .SumAsync(cos => cos.TotalAmount, cancellationToken);
 
             var availableCreditLimit = await _db.FilprideCustomers
@@ -185,7 +209,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task FinanceApproved(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default)
         {
-            customerOrderSlip.Status = nameof(CosStatus.Completed);
+            customerOrderSlip.Status = nameof(CosStatus.Approved);
 
             await _db.SaveChangesAsync(cancellationToken);
         }

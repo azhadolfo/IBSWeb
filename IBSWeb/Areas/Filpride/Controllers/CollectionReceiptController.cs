@@ -77,13 +77,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Where(s =>
                             s.CollectionReceiptNo.ToLower().Contains(searchValue) ||
                             s.Customer.CustomerName.ToLower().Contains(searchValue) ||
-                            s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
                             s.SINo?.ToLower().Contains(searchValue) == true ||
                             s.SVNo?.ToLower().Contains(searchValue) == true ||
                             s.MultipleSI?.Contains(searchValue) == true ||
                             s.Customer.CustomerName.ToLower().Contains(searchValue) ||
                             s.TransactionDate.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
-                            s.Remarks?.ToLower().Contains(searchValue) == true ||
                             s.CreatedBy.ToLower().Contains(searchValue)
                             )
                         .ToList();
@@ -188,13 +186,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
                                                    .FirstOrDefaultAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
-                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
+
+                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeForSIAsync(companyClaims, existingSalesInvoice.Type, cancellationToken);
 
                     model.SINo = existingSalesInvoice.SalesInvoiceNo;
                     model.CollectionReceiptNo = generateCRNo;
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Total = computeTotalInModelIfZero;
                     model.Company = companyClaims;
+                    model.Type = existingSalesInvoice.Type;
 
                     try
                     {
@@ -388,10 +388,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             model.MultipleSI[i] = salesInvoice.SalesInvoiceNo;
                             model.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
+                            model.Type = salesInvoice.Type;
                         }
                     }
 
-                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
+                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeForSIAsync(companyClaims, model.Type, cancellationToken);
 
                     model.CollectionReceiptNo = generateCRNo;
                     model.CreatedBy = _userManager.GetUserName(this.User);
@@ -1981,7 +1982,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         worksheet.Cells[row, 24].Value = string.Join(", ", item.MultipleSI.Select(si => si.ToString()));
                         worksheet.Cells[row, 25].Value = string.Join(", ", item.MultipleSIId.Select(siId => siId.ToString()));
-                        worksheet.Cells[row, 26].Value = string.Join(" ", item.SIMultipleAmount.Select(multipleSI => multipleSI.ToString("N2")));
+                        worksheet.Cells[row, 26].Value = string.Join(" ", item.SIMultipleAmount.Select(multipleSI => multipleSI.ToString("N4")));
                         worksheet.Cells[row, 27].Value = string.Join(", ", item.MultipleTransactionDate.Select(multipleTransactionDate => multipleTransactionDate.ToString("yyyy-MM-dd")));
                     }
                     worksheet.Cells[row, 28].Value = item.CustomerId;

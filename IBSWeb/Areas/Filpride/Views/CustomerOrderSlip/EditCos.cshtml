@@ -147,7 +147,6 @@
     }
     <script>
         $(document).ready(function () {
-            // Handle customer change event
             $('select[name="CustomerId"]').on('change', function () {
                 var customerId = $(this).val();
                 if (customerId) {
@@ -159,9 +158,11 @@
                             if (data) {
                                 $('input[name="CustomerAddress"]').val(data.address);
                                 $('input[name="TinNo"]').val(data.tinNo);
+                                $('input[name="Terms"]').val(data.terms);
                             } else {
                                 $('input[name="CustomerAddress"]').val('');
                                 $('input[name="TinNo"]').val('');
+                                $('input[name="Terms"]').val('');
                             }
                         },
                         error: function (xhr, status, error) {
@@ -171,34 +172,91 @@
                 } else {
                     $('input[name="CustomerAddress"]').val('');
                     $('input[name="TinNo"]').val('');
+                    $('input[name="Terms"]').val('');
                 }
             });
 
-            // Calculate VAT and total amount on quantity or price change
             $('input[name="Quantity"], input[name="DeliveredPrice"]').on('input', function () {
-                var quantity = parseFloat($('input[name="Quantity"]').val()) || 0;
-                var price = parseFloat($('input[name="DeliveredPrice"]').val()) || 0;
-                var vat = price * 0.12;
-                $('input[name="Vat"]').val(vat.toFixed(2));
-                $('input[name="TotalAmount"]').val((quantity * (price + vat)).toFixed(2));
-            });
+                var quantity = parseNumber($('input[name="Quantity"]').val());
+                var deliveredPrice = parseNumber($('input[name="DeliveredPrice"]').val());
 
-            // Show/hide commission info based on HasCommission value
-            $('input[name="HasCommission"]').on('change', function () {
-                if ($(this).val() == 'true') {
-                    $('#commissionInfo').show();
-                } else {
-                    $('#commissionInfo').hide();
+                var totalAmount = (quantity * deliveredPrice);
+                var vat = (totalAmount / 1.12) * 0.12;
+
+                $('input[name="Vat"]').val(formatNumber(vat));
+                $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
+
+                if (totalAmount > 0) {
+                    // Call the function to check customer balance
+                    checkCustomerBalance(totalAmount);
                 }
             });
 
-            // Trigger the HasCommission check on page load
-            if ($('input[name="HasCommission"]:checked').val() == 'true') {
-                $('#commissionInfo').show();
-            } else {
-                $('#commissionInfo').hide();
+            function checkCustomerBalance(totalAmount) {
+            var customerId = $('select[name="CustomerId"]').val();
+            if (customerId) {
+                $.ajax({
+                    url: '@Url.Action("CheckCustomerBalance", "CustomerOrderSlip", new { area = "Filpride" })',
+                    type: "GET",
+                    data: { customerId: customerId },
+                    success: function (data) {
+                        if (totalAmount > data) {
+                            if (confirm("Customer balance exceeded! Current balance: " + formatNumber(data) + ". Do you want to proceed with the creation?")) {
+                                // User chose to proceed
+                            } else {
+                                // User chose not to proceed
+                                $('input[name="DeliveredPrice"]').val('0.0000');
+                                $('input[name="TotalAmount"]').val('0.0000');
+                                $('input[name="Vat"]').val('0.0000');
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Error: " + error);
+                    }
+                });
             }
+        }
         });
     </script>
+    <script>
+        $(document).ready(function () {
+            function toggleCommissionFields() {
+                var hasCommission = $('input[name="HasCommission"]:checked').val() === 'true';
+                if (hasCommission) {
+                    $('#commissionInfo').show();
+                    $('input[name="CommissionerName"]').prop('required', true);
+                    $('input[name="CommissionerRate"]').prop('required', true);
+                } else {
+                    $('#commissionInfo').hide();
+                    $('input[name="CommissionerName"]').prop('required', false);
+                    $('input[name="CommissionerRate"]').prop('required', false);
+                }
+            }
+
+            // Initial check
+            toggleCommissionFields();
+
+            // On radio button change
+            $('input[name="HasCommission"]').on('change', function () {
+                toggleCommissionFields();
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('select[name="CustomerId"]').on('change', function () {
+                var selectedCustomer = $('select[name="CustomerId"] option:selected').text();
+
+                if (selectedCustomer.includes("MOBILITY")) {
+                    $('#accountSpecialistDiv').hide();
+                    $('select[name="AccountSpecialist"]').val(''); // Clear selection if hidden
+                } else {
+                    $('#accountSpecialistDiv').show();
+                }
+            });
+        });
+    </script>
+
 }
 

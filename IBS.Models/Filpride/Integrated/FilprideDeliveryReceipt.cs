@@ -1,4 +1,5 @@
-﻿using IBS.Models.Filpride.MasterFile;
+﻿using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.MasterFile;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -71,16 +72,16 @@ namespace IBS.Models.Filpride.Integrated
 
         #region Appointing Hauler
 
-        public int HaulerId { get; set; }
+        public int? HaulerId { get; set; }
 
         [ForeignKey(nameof(HaulerId))]
         public FilprideSupplier? Hauler { get; set; }
 
         [Column(TypeName = "varchar(200)")]
-        public string Driver { get; set; }
+        public string? Driver { get; set; }
 
         [Column(TypeName = "varchar(200)")]
-        public string PlateNo { get; set; }
+        public string? PlateNo { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
@@ -100,5 +101,10 @@ namespace IBS.Models.Filpride.Integrated
         #endregion
 
         public bool HasAlreadyInvoiced { get; set; }
+
+        public int? PurchaseOrderId { get; set; }
+
+        [ForeignKey(nameof(PurchaseOrderId))]
+        public FilpridePurchaseOrder? PurchaseOrder { get; set; }
     }
 }

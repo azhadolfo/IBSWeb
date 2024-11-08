@@ -9,6 +9,7 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -61,15 +62,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cosList = cosList
                     .Where(s =>
                         s.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
+                        s.OldCosNo.ToLower().Contains(searchValue) ||
+                        s.PurchaseOrder?.OldPoNo.ToLower().Contains(searchValue) == true ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.Customer.CustomerName?.ToLower().Contains(searchValue) == true ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.TotalAmount.ToString().Contains(searchValue) ||
-                        s.Remarks?.ToLower().Contains(searchValue) == true ||
-                        s.Status.ToLower().Contains(searchValue)
+                        s.Status.ToLower().Contains(searchValue) ||
+                        s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
-
                 }
 
                 // Sorting
@@ -106,8 +108,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-
-
 
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
@@ -297,12 +297,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CustomerOrderSlipForApprovalViewModel model = new()
                 {
                     CustomerOrderSlip = existingRecord,
-                    NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.PurchaseOrder.Price),
                     NetOfVatCosPrice = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.DeliveredPrice),
                     NetOfVatFreightCharge = (decimal)(existingRecord.Freight != 0 ? _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat((decimal)existingRecord.Freight) : existingRecord.Freight),
                     VatAmount = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount(_unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.TotalAmount)),
                     Status = existingRecord.Status
                 };
+
+                if (!existingRecord.HasMultiplePO)
+                {
+                    model.NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.PurchaseOrder.Price);
+                }
+                else
+                {
+                    var appointedSupplier = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                        .ToListAsync(cancellationToken);
+
+                    decimal totalPoAmount = 0;
+
+                    foreach (var item in appointedSupplier)
+                    {
+                        var po = await _unitOfWork.FilpridePurchaseOrder.GetAsync(p => p.PurchaseOrderId == item.PurchaseOrderId, cancellationToken);
+
+                        totalPoAmount += item.Quantity * _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(po.Price);
+                    }
+
+                    model.NetOfVatProductCost = totalPoAmount / appointedSupplier.Sum(a => a.Quantity);
+                }
 
                 model.GrossMargin = model.NetOfVatCosPrice - model.NetOfVatProductCost - model.NetOfVatFreightCharge - existingRecord.CommissionRate;
 
@@ -354,40 +375,88 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.FirstApprovedDate = DateTime.Now;
                     existingRecord.OperationManagerReason = reason;
 
-                    var existingPo = await _unitOfWork.FilpridePurchaseOrder
-                            .GetAsync(po => po.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken);
-
-                    if (existingPo == null)
-                    {
-                        return BadRequest();
-                    }
-
                     if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery)
                     {
-                        var subPoModel = new FilpridePurchaseOrder
+                        if (!existingRecord.HasMultiplePO)
                         {
-                            PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, cancellationToken),
-                            Date = DateOnly.FromDateTime(DateTime.Now),
-                            SupplierId = existingRecord.PurchaseOrder.SupplierId,
-                            ProductId = existingPo.ProductId,
-                            Terms = existingPo.Terms,
-                            Quantity = existingRecord.Quantity,
-                            Price = (decimal)existingRecord.Freight,
-                            Remarks = $"{existingRecord.SubPORemarks}\n Please note: The values in this purchase order are for the freight charge.",
-                            Company = existingPo.Company,
-                            IsSubPo = true,
-                            CustomerId = existingRecord.CustomerId,
-                            SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
-                            CreatedBy = existingRecord.FirstApprovedBy,
-                            CreatedDate = DateTime.Now,
-                            PostedBy = existingRecord.FirstApprovedBy,
-                            PostedDate = DateTime.Now,
-                            Status = nameof(Status.Posted)
-                        };
+                            var existingPo = await _unitOfWork.FilpridePurchaseOrder
+                           .GetAsync(po => po.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken);
 
-                        subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
-                        await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
-                        message = $"Sub Purchase Order Number: {subPoModel.PurchaseOrderNo} has been successfully generated.";
+                            if (existingPo == null)
+                            {
+                                return BadRequest();
+                            }
+
+                            var subPoModel = new FilpridePurchaseOrder
+                            {
+                                PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo.Type, cancellationToken),
+                                Date = DateOnly.FromDateTime(DateTime.Now),
+                                SupplierId = existingPo.SupplierId,
+                                ProductId = existingPo.ProductId,
+                                Terms = existingPo.Terms,
+                                Quantity = existingRecord.Quantity,
+                                Price = (decimal)existingRecord.Freight,
+                                Remarks = $"{existingRecord.SubPORemarks}\n Please note: The values in this purchase order are for the freight charge.",
+                                Company = existingPo.Company,
+                                IsSubPo = true,
+                                CustomerId = existingRecord.CustomerId,
+                                SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
+                                CreatedBy = "SYSTEM GENERATED",
+                                CreatedDate = DateTime.Now,
+                                PostedBy = existingRecord.FirstApprovedBy,
+                                PostedDate = DateTime.Now,
+                                Status = nameof(Status.Posted),
+                                OldPoNo = existingPo.OldPoNo,
+                                Type = existingPo.Type
+                            };
+
+                            subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
+                            await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
+                            message = $"Sub Purchase Order Number: {subPoModel.PurchaseOrderNo} has been successfully generated.";
+                        }
+                        else
+                        {
+                            var multiplePO = await _dbContext.FilprideCOSAppointedSuppliers
+                                .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                                .ToListAsync(cancellationToken);
+
+                            var poNumbers = new List<string>();
+
+                            foreach (var item in multiplePO)
+                            {
+                                var existingPo = await _unitOfWork.FilpridePurchaseOrder
+                                    .GetAsync(po => po.PurchaseOrderId == item.PurchaseOrderId, cancellationToken);
+
+                                var subPoModel = new FilpridePurchaseOrder
+                                {
+                                    PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo.Type, cancellationToken),
+                                    Date = DateOnly.FromDateTime(DateTime.Now),
+                                    SupplierId = existingPo.SupplierId,
+                                    ProductId = existingRecord.ProductId,
+                                    Terms = existingPo.Terms,
+                                    Quantity = item.Quantity,
+                                    Price = (decimal)existingRecord.Freight,
+                                    Amount = item.Quantity * (decimal)existingRecord.Freight,
+                                    Remarks = $"{existingRecord.SubPORemarks}\n Please note: The values in this purchase order are for the freight charge.",
+                                    Company = existingPo.Company,
+                                    IsSubPo = true,
+                                    CustomerId = existingRecord.CustomerId,
+                                    SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
+                                    CreatedBy = existingRecord.FirstApprovedBy,
+                                    CreatedDate = DateTime.Now,
+                                    PostedBy = existingRecord.FirstApprovedBy,
+                                    PostedDate = DateTime.Now,
+                                    Status = nameof(Status.Posted),
+                                    OldPoNo = existingPo.OldPoNo
+                                };
+
+                                poNumbers.Add(subPoModel.PurchaseOrderNo);
+                                await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
+                                await _unitOfWork.SaveAsync(cancellationToken);
+                            }
+
+                            message = $"Sub Purchase Order Numbers: {string.Join(", ", poNumbers)} have been successfully generated.";
+                        }
                     }
 
                     await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, grossMargin, cancellationToken);
@@ -524,18 +593,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                 ProductId = existingRecord.ProductId,
                 Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
-                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken)
+                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
+                COSVolume = existingRecord.Quantity
             };
 
             if (existingRecord.Status == nameof(CosStatus.SupplierAppointed))
             {
-                viewModel.SupplierId = existingRecord.PurchaseOrder.SupplierId;
-                viewModel.PurchaseOrderId = existingRecord.PurchaseOrder.PurchaseOrderId;
+                viewModel.SupplierId = (int)existingRecord.SupplierId;
                 viewModel.DeliveryOption = existingRecord.DeliveryOption;
                 viewModel.Freight = (decimal)existingRecord.Freight;
                 viewModel.PickUpPointId = (int)existingRecord.PickUpPointId;
                 viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint
                 .GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
+
+                if (!existingRecord.HasMultiplePO)
+                {
+                    viewModel.PurchaseOrderIds.Add((int)existingRecord.PurchaseOrderId);
+                }
+                else
+                {
+                    var appointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var appoint in appointedSuppliers)
+                    {
+                        viewModel.PurchaseOrderIds.Add(appoint.PurchaseOrderId);
+                        viewModel.PurchaseOrderQuantities.Add(appoint.PurchaseOrderId, appoint.Quantity);
+                    }
+                }
             }
 
             return View(viewModel);
@@ -561,11 +647,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return BadRequest();
                     }
 
-                    existingCos.PurchaseOrderId = viewModel.PurchaseOrderId;
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
                     existingCos.Status = nameof(CosStatus.SupplierAppointed);
+                    existingCos.SupplierId = viewModel.SupplierId;
 
-                    if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingCos.DeliveryOption != SD.DeliveryOption_DirectDelivery)
+                    if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery)
                     {
                         existingCos.Freight = viewModel.Freight;
                         existingCos.SubPORemarks = viewModel.SubPoRemarks;
@@ -584,6 +670,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingCos.DeliveryOption = viewModel.DeliveryOption;
 
+                    if (viewModel.PurchaseOrderIds.Count > 1)
+                    {
+                        existingCos.HasMultiplePO = true;
+
+                        var appointedSuppliers = new List<FilprideCOSAppointedSupplier>();
+
+                        foreach (var po in viewModel.PurchaseOrderIds)
+                        {
+                            appointedSuppliers.Add(new FilprideCOSAppointedSupplier
+                            {
+                                CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
+                                PurchaseOrderId = po,
+                                Quantity = viewModel.PurchaseOrderQuantities[po],
+                                UnservedQuantity = viewModel.PurchaseOrderQuantities[po]
+                            });
+                        }
+
+                        await _dbContext.FilprideCOSAppointedSuppliers.AddRangeAsync(appointedSuppliers, cancellationToken);
+                    }
+                    else
+                    {
+                        existingCos.PurchaseOrderId = viewModel.PurchaseOrderIds.FirstOrDefault();
+                    }
+
                     TempData["success"] = "Appointed supplier successfully.";
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -593,7 +703,194 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.SaveAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
+                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
+                    await transaction.RollbackAsync(cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return View(viewModel);
+                }
+            }
+            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
+            TempData["error"] = "The submitted information is invalid.";
+            return View(viewModel);
+        }
 
+        [HttpGet]
+        public async Task<IActionResult> ReAppointSupplier(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
+                {
+                    CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                    ProductId = existingRecord.ProductId,
+                    Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
+                    PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
+                    COSVolume = existingRecord.Quantity,
+                    SupplierId = (int)(existingRecord.Supplier?.SupplierId ?? existingRecord.PurchaseOrder.SupplierId),
+                    DeliveryOption = existingRecord.DeliveryOption,
+                    Freight = (decimal)existingRecord.Freight,
+                    PickUpPointId = (int)existingRecord.PickUpPointId,
+                    PickUpPoints = await _unitOfWork.FilpridePickUpPoint
+                    .GetPickUpPointListBasedOnSupplier((int)(existingRecord.Supplier?.SupplierId ?? existingRecord.PurchaseOrder.SupplierId), cancellationToken),
+                    SubPoRemarks = existingRecord.SubPORemarks
+                };
+
+                if (!existingRecord.HasMultiplePO)
+                {
+                    viewModel.PurchaseOrderIds.Add((int)existingRecord.PurchaseOrderId);
+                }
+                else
+                {
+                    var appointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var appoint in appointedSuppliers)
+                    {
+                        viewModel.PurchaseOrderIds.Add(appoint.PurchaseOrderId);
+                        viewModel.PurchaseOrderQuantities[appoint.PurchaseOrderId] = appoint.Quantity;
+                    }
+                }
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ReAppointSupplier(CustomerOrderSlipAppointingSupplierViewModel viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+            viewModel.CurrentUser = _userManager.GetUserName(User);
+
+            if (ModelState.IsValid)
+            {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+                try
+                {
+                    var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                    if (existingCos == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    existingCos.PickUpPointId = viewModel.PickUpPointId;
+                    existingCos.Status = nameof(CosStatus.SupplierAppointed);
+                    existingCos.SupplierId = viewModel.SupplierId;
+
+                    if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery)
+                    {
+                        existingCos.Freight = viewModel.Freight;
+                        existingCos.SubPORemarks = viewModel.SubPoRemarks;
+                    }
+                    else if (viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                    {
+                        var highestFreight = await _unitOfWork.FilprideFreight
+                            .GetAsync(f => f.ClusterCode == existingCos.Customer.ClusterCode && f.PickUpPointId == existingCos.PickUpPointId, cancellationToken) ?? throw new ArgumentNullException("No freight reference found!");
+
+                        existingCos.Freight = highestFreight.Freight;
+                    }
+                    else
+                    {
+                        existingCos.Freight = 0;
+                    }
+
+                    existingCos.DeliveryOption = viewModel.DeliveryOption;
+
+                    if (viewModel.PurchaseOrderIds.Count > 1)
+                    {
+                        if (!existingCos.HasMultiplePO)
+                        {
+                            existingCos.HasMultiplePO = true;
+
+                            var appointedSuppliers = new List<FilprideCOSAppointedSupplier>();
+
+                            foreach (var po in viewModel.PurchaseOrderIds)
+                            {
+                                appointedSuppliers.Add(new FilprideCOSAppointedSupplier
+                                {
+                                    CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
+                                    PurchaseOrderId = po,
+                                    Quantity = viewModel.PurchaseOrderQuantities[po],
+                                    UnservedQuantity = viewModel.PurchaseOrderQuantities[po]
+                                });
+                            }
+
+                            await _dbContext.FilprideCOSAppointedSuppliers.AddRangeAsync(appointedSuppliers, cancellationToken);
+                        }
+                        else
+                        {
+                            var existingAppointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
+                                .Where(a => a.CustomerOrderSlipId == existingCos.CustomerOrderSlipId)
+                                .ToListAsync(cancellationToken);
+
+                            _dbContext.RemoveRange(existingAppointedSuppliers);
+                            await _dbContext.SaveChangesAsync(cancellationToken);
+
+                            var appointedSuppliers = new List<FilprideCOSAppointedSupplier>();
+
+                            foreach (var po in viewModel.PurchaseOrderIds)
+                            {
+                                appointedSuppliers.Add(new FilprideCOSAppointedSupplier
+                                {
+                                    CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
+                                    PurchaseOrderId = po,
+                                    Quantity = viewModel.PurchaseOrderQuantities[po],
+                                    UnservedQuantity = viewModel.PurchaseOrderQuantities[po]
+                                });
+                            }
+
+                            await _dbContext.FilprideCOSAppointedSuppliers.AddRangeAsync(appointedSuppliers, cancellationToken);
+                        }
+                    }
+                    else
+                    {
+                        if (existingCos.HasMultiplePO)
+                        {
+                            var existingAppointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
+                               .Where(a => a.CustomerOrderSlipId == existingCos.CustomerOrderSlipId)
+                               .ToListAsync(cancellationToken);
+
+                            _dbContext.RemoveRange(existingAppointedSuppliers);
+                            await _dbContext.SaveChangesAsync(cancellationToken);
+                        }
+
+                        existingCos.HasMultiplePO = false;
+                        existingCos.PurchaseOrderId = viewModel.PurchaseOrderIds.FirstOrDefault();
+                    }
+
+                    TempData["success"] = "Appointed supplier successfully.";
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
@@ -618,8 +915,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var purchaseOrderList = await _unitOfWork.FilpridePurchaseOrder
-                .GetPurchaseOrderListAsyncBySupplierAndProduct((int)supplierId, (int)productId, cancellationToken);
+            var purchaseOrderList = await _dbContext.FilpridePurchaseOrders
+                .Where(p => p.SupplierId == supplierId && p.ProductId == productId && !p.IsReceived && !p.IsSubPo)
+                .Select(p => new
+                {
+                    Value = p.PurchaseOrderId,
+                    Text = p.PurchaseOrderNo,
+                    AvailableBalance = p.Quantity - p.QuantityReceived
+                }).ToListAsync(cancellationToken);
 
             return Json(purchaseOrderList);
         }

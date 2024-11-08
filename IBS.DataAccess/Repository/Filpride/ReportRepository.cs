@@ -241,7 +241,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return await _db.FilprideCustomerOrderSlips
                 .Include(a => a.Customer)
                 .Include(a => a.Product)
-                .Where(a => a.Company == company && a.Date >= dateFrom && a.Date <= dateTo && a.Status == nameof(CosStatus.Completed) && a.DeliveredQuantity < a.Quantity)
+                .Where(a => a.Company == company && a.Date >= dateFrom && a.Date <= dateTo && a.Status == nameof(CosStatus.Approved) && a.DeliveredQuantity < a.Quantity)
                 .OrderBy(a => a.Date)
                 .ToListAsync();
         }

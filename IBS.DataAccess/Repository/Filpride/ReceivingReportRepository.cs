@@ -103,11 +103,23 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
+        {
+            if (type == nameof(DocumentType.Documented))
+            {
+                return await GenerateCodeForDocumented(company, cancellationToken);
+            }
+            else
+            {
+                return await GenerateCodeForUnDocumented(company, cancellationToken);
+            }
+        }
+
+        private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
             FilprideReceivingReport? lastRr = await _db
                 .FilprideReceivingReports
-                .Where(rr => rr.Company == company && !rr.ReceivingReportNo.StartsWith("RRBEG"))
+                .Where(rr => rr.Company == company && !rr.ReceivingReportNo.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -122,6 +134,28 @@ namespace IBS.DataAccess.Repository.Filpride
             else
             {
                 return "RR0000000001";
+            }
+        }
+
+        private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
+        {
+            FilprideReceivingReport? lastRr = await _db
+                .FilprideReceivingReports
+                .Where(rr => rr.Company == company && !rr.ReceivingReportNo.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Undocumented))
+                .OrderBy(c => c.ReceivingReportNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastRr != null)
+            {
+                string lastSeries = lastRr.ReceivingReportNo;
+                string numericPart = lastSeries.Substring(3);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+            }
+            else
+            {
+                return "RRU000000001";
             }
         }
 
@@ -227,9 +261,8 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId,
                 Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                POId = deliveryReceipt.CustomerOrderSlip.PurchaseOrderId
-                ?? throw new ArgumentNullException("Purchase Order id is null."),
-                PONo = deliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo,
+                POId = deliveryReceipt.PurchaseOrder.PurchaseOrderId,
+                PONo = deliveryReceipt.PurchaseOrder.PurchaseOrderNo,
                 QuantityDelivered = deliveryReceipt.Quantity,
                 QuantityReceived = deliveryReceipt.Quantity,
                 TruckOrVessels = deliveryReceipt.CustomerOrderSlip.PickUpPoint.Depot,
@@ -240,25 +273,39 @@ namespace IBS.DataAccess.Repository.Filpride
                 CreatedDate = DateTime.Now,
                 PostedBy = "SYSTEM GENERATED",
                 PostedDate = DateTime.Now,
-                Status = nameof(Status.Posted)
+                Status = nameof(Status.Posted),
+                Type = deliveryReceipt.PurchaseOrder.Type
             };
 
-            if (model.QuantityDelivered > (deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Quantity - deliveryReceipt.CustomerOrderSlip.PurchaseOrder.QuantityReceived))
+            if (model.QuantityDelivered > deliveryReceipt.PurchaseOrder.Quantity - deliveryReceipt.PurchaseOrder.QuantityReceived)
             {
                 throw new ArgumentException("Inputted quantity is exceed to remaining quantity delivered");
             }
 
+            if (deliveryReceipt.CustomerOrderSlip.HasMultiplePO)
+            {
+                var appointedSupplier = await _db.FilprideCOSAppointedSuppliers
+                    .OrderBy(a => a.SequenceId)
+                    .FirstOrDefaultAsync(a => a.CustomerOrderSlipId == deliveryReceipt.CustomerOrderSlipId && a.PurchaseOrderId == deliveryReceipt.PurchaseOrderId);
+
+                appointedSupplier.UnservedQuantity -= deliveryReceipt.Quantity;
+
+                if (appointedSupplier.UnservedQuantity <= 0)
+                {
+                    appointedSupplier.IsAssignedToDR = true;
+                }
+            }
+
             model.ReceivedDate = model.Date;
-            model.ReceivingReportNo = await GenerateCodeAsync(model.Company, cancellationToken);
+            model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type, cancellationToken);
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
-            model.Amount = model.QuantityReceived * deliveryReceipt.CustomerOrderSlip.PurchaseOrder.Price;
+            model.Amount = model.QuantityReceived * deliveryReceipt.PurchaseOrder.Price;
 
             await _db.AddAsync(model, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
 
             await PostAsync(model, cancellationToken);
-
         }
 
         public async Task PostAsync(FilprideReceivingReport model, CancellationToken cancellationToken = default)
@@ -294,9 +341,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.PurchaseOrder.Product.ProductCode);
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
-            var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "1010602") ?? throw new ArgumentException("Account title '1010602' not found.");
-            var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010302") ?? throw new ArgumentException("Account title '2010302' not found.");
-            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "2010101") ?? throw new ArgumentException("Account title '2010101' not found.");
+            var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+            var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030200") ?? throw new ArgumentException("Account title '201030200' not found.");
+            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010100") ?? throw new ArgumentException("Account title '201010100' not found.");
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {

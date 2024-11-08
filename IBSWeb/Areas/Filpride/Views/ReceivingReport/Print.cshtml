@@ -88,43 +88,46 @@
     </table>
 </div>
 
-<div class="text-center w-100" style="margin-top:10px;">
-    <p>
-        <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br />
-        <span>Acknowledgement Certificate No:</span>
-        <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
-        <span>&nbsp;&nbsp;Date Issued:</span>
-        <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br />
-        Series: RR0000000001 - RR9999999999
-        Date and Time Created:&nbsp; @Model.CreatedDate
-    </p>
-</div>
-
-<div class="text-start w-100">
-    <p style="line-height: 1;">
-        <em>
-            <strong>Software Name :</strong> @CS.AAS
-            <br />
-            <strong>Version :</strong> @CS.Version
-            <br />
-            <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
-            <br />
-            <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
-        </em>
-    </p>
-</div>
-
-@if (!Model.IsPrinted)
+@if (Model.Type == nameof(DocumentType.Documented))
 {
-    <div class="text-end">
-        ORIGINAL COPY
+    <div class="text-center w-100" style="margin-top:10px;">
+        <p>
+            <em><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong></em><br />
+            <span>Acknowledgement Certificate No:</span>
+            <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
+            <span>&nbsp;&nbsp;Date Issued:</span>
+            <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br />
+            Series: RR0000000001 - RR9999999999
+            Date and Time Created:&nbsp; @Model.CreatedDate
+        </p>
     </div>
-}
-else
-{
-    <div class="text-end">
-        REPRINT COPY
+
+    <div class="text-start w-100">
+        <p style="line-height: 1;">
+            <em>
+                <strong>Software Name :</strong> @CS.AAS
+                <br />
+                <strong>Version :</strong> @CS.Version
+                <br />
+                <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                <br />
+                <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+            </em>
+        </p>
     </div>
+
+    @if (!Model.IsPrinted)
+    {
+        <div class="text-end">
+            ORIGINAL COPY
+        </div>
+    }
+    else
+    {
+        <div class="text-end">
+            REPRINT COPY
+        </div>
+    }
 }
 
 <div class="row pt-2">
