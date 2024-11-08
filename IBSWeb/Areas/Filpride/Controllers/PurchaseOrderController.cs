@@ -705,7 +705,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    return Ok(new { message = "The Purchase Order has been approved. All associated Customer Order Slips (COS), Delivery Receipts (DR), and Receiving Reports (RR) have been updated with the new prices." });
+                    return Ok(new { message = "The Purchase Order has been approved. All associated Customer Order Slips (COS), and Receiving Reports (RR) have been updated with the new prices." });
                 }
                 catch (Exception ex)
                 {
