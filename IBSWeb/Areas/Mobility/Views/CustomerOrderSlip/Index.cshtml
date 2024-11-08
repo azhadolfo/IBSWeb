@@ -258,7 +258,11 @@
                         var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Pending")));
                     }
                 }
+                if ($.fn.DataTable.isDataTable('#dataTable')) {
+                    $('#dataTable').DataTable().destroy();
+                }
 
+                // Clear the table body content
                 $('#dataTable tbody').empty();
                 $.each(filteredModel, function (index, value) {
                     // Skip items based on user department and status
@@ -321,6 +325,10 @@
                         </td>
                     </tr>
                 `);
+                });
+
+                $('#dataTable').DataTable({
+                    "bInfo": true // This will disable the "Showing x to y of z entries" info text
                 });
             });
         });
