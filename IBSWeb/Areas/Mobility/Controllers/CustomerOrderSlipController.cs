@@ -342,7 +342,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         .Include(m => m.Customer)
                         .Include(m => m.Product)
                         .FirstOrDefaultAsync(m => m.CustomerOrderSlipId == id);
-                    string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "Mobility COS", "uploaded by cashier");
+                    string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "Mobility COS", "Uploads");
 
                     #region --check folder, delete old file--
                     if (!Directory.Exists(localPath))
@@ -465,7 +465,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             return invoiceList;
         }
-
 
     }
 }
