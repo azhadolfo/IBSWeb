@@ -309,6 +309,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
         {
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+            ViewData["StationCode"] = stationCodeClaims;
+            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
             #region -- get user department --
 
             var findUser = await _dbContext.ApplicationUsers

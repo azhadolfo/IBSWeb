@@ -16,7 +16,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">CUSTOMER ORDER SLIP: @currentStationName</h2>
+                <h2 class="text-white py-2">CUSTOMER ORDER SLIP: <u>@currentStationName</u></h2>
             </div>
         </div>
     </div>
@@ -24,69 +24,75 @@
     <div class="card-body p-4 table-responsive">
 
         <div class="row pb-3">
+            <div class="col-2"></div>
+            <div class="col-8 text-center">
+                @if (currentStationCode == "ALL")
+                {
+                    <div class="text-center">
+                        <label>
+                            <input type="radio" name="stationRadio" value="" class="search-radio ms-2"> All Stations
+                        </label>
+                        <label>
+                            <input type="radio" name="stationRadio" value="S08" class="search-radio ms-2"> Tarlac
+                        </label>
+                        <label>
+                            <input type="radio" name="stationRadio" value="S21" class="search-radio ms-2"> Santiago
+                        </label>
+                    </div>
+                }
+
+                <div class="text-center">
+                    <label>
+                        <input type="radio" name="statusRadio" value="" class="search-radio ms-2"> Show All
+                    </label>
+                    <label>
+                        <input type="radio" name="statusRadio" value="Approved" class="search-radio ms-2"> Approved
+                    </label>
+                    @if (userDepartment != SD.Department_StationCashier)
+                    {
+                        <label>
+                            <input type="radio" name="statusRadio" value="Disapproved" class="search-radio ms-2"> Disapproved
+                        </label>
+                        <label>
+                            <input type="radio" name="statusRadio" value="Pending" class="search-radio ms-2"> Pending
+                        </label>
+                    }
+                    <label>
+                        <input type="radio" name="statusRadio" value="Lifted" class="search-radio ms-2"> Lifted
+                    </label>
+                </div>
+            </div>
+
             @if (userDepartment == SD.Department_Marketing || User.IsInRole("Admin"))
             {
-                <div class="col-12 text-end">
+                <div class="col-2 text-end">
                     <a asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Create" class="btn btn-primary">
                         <i class="bi bi-plus-circle"></i> Create COS
                     </a>
                 </div>
             }
+
         </div>
 
-        @if (currentStationCode == "ALL")
-        {
-            <div class="text-center">
-                <label>
-                    <input type="radio" name="stationRadio" value="" class="search-radio ms-2"> All Stations
-                </label>
-                <label>
-                    <input type="radio" name="stationRadio" value="S08" class="search-radio ms-2"> Tarlac
-                </label>
-                <label>
-                    <input type="radio" name="stationRadio" value="S21" class="search-radio ms-2"> Santiago
-                </label>
-            </div>
-        }
+        
 
-        <div class="text-center">
-            <label>
-                <input type="radio" name="statusRadio" value="" class="search-radio ms-2"> Show All
-            </label>
-            <label>
-                <input type="radio" name="statusRadio" value="Approved" class="search-radio ms-2"> Approved
-            </label>
-            @if (userDepartment != SD.Department_StationCashier)
-            {
-                <label>
-                    <input type="radio" name="statusRadio" value="Disapproved" class="search-radio ms-2"> Disapproved
-                </label>
-                <label>
-                    <input type="radio" name="statusRadio" value="Pending" class="search-radio ms-2"> Pending
-                </label>
-            }
-            <label>
-                <input type="radio" name="statusRadio" value="Lifted" class="search-radio ms-2"> Lifted
-            </label>
-        </div>
-
-        <table class="table table-bordered table-striped" id="dataTable">
+        <table class="table table-bordered" id="dataTable">
             <thead>
                 <tr>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.CustomerOrderSlipNo)</th>
+                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.CustomerOrderSlipNo)</th>
                     @if (currentStationCode == "ALL")
                     {
-                        <th class="text-start">@Html.DisplayNameFor(model => model.StationCode)</th>
+                        <th class="text-start align-middle">@Html.DisplayNameFor(model => model.StationCode)</th>
                     }
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Date)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Customer)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Driver)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.PlateNo)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Product)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Quantity)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Amount)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Status)</th>
-                    <th class="text-center">Actions</th>
+                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Date)</th>
+                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Customer)</th>
+                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Driver)</th>
+                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.PlateNo)</th>
+                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Product)</th>
+                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Quantity)</th>
+                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Amount)</th>
+                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Status)</th>
+                    <th class="text-center align-middle">Actions</th>
                 </tr>
             </thead>
 
