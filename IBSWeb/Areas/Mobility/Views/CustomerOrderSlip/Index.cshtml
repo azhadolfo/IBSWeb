@@ -74,8 +74,6 @@
 
         </div>
 
-        
-
         <table class="table table-bordered" id="dataTable">
             <thead>
                 <tr>
@@ -207,62 +205,65 @@
 
             $('.search-radio').change(function () {
                 var selectedFilter = $(this).val();
+
+                // Query based on radio buttons
                 if (stationFilter == "S08"){
                     if (statusFilter == "Approved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Approved" && j.StationCode == "S08")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Approved" && j.StationCode == "S08")));
                     }
                     if (statusFilter == "Disapproved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Disapproved" && j.StationCode == "S08")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Disapproved" && j.StationCode == "S08")));
                     }
                     if (statusFilter == "") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.StationCode == "S08")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.StationCode == "S08")));
                     }
                     if (statusFilter == "Lifted") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Lifted" && j.StationCode == "S08")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Lifted" && j.StationCode == "S08")));
                     }
                     if (statusFilter == "Pending") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Pending" && j.StationCode == "S08")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Pending" && j.StationCode == "S08")));
                     }
                 }
                 if (stationFilter == "S21"){
                     if (statusFilter == "Approved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Approved" && j.StationCode == "S21")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Approved" && j.StationCode == "S21")));
                     }
                     if (statusFilter == "Disapproved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Disapproved" && j.StationCode == "S21")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Disapproved" && j.StationCode == "S21")));
                     }
                     if (statusFilter == "") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.StationCode == "S21")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.StationCode == "S21")));
                     }
                     if (statusFilter == "Lifted") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Lifted" && j.StationCode == "S21")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Lifted" && j.StationCode == "S21")));
                     }
                     if (statusFilter == "Pending") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Pending" && j.StationCode == "S21")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Pending" && j.StationCode == "S21")));
                     }
                 }
                 if (stationFilter == ""){
                     if (statusFilter == "Approved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Approved")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Approved")));
                     }
                     if (statusFilter == "Disapproved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Disapproved")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Disapproved")));
                     }
                     if (statusFilter == "") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId)));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo)));
                     }
                     if (statusFilter == "Lifted") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Lifted")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Lifted")));
                     }
                     if (statusFilter == "Pending") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerId).Where(j => j.Status == "Pending")));
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Pending")));
                     }
                 }
 
                 $('#dataTable tbody').empty();
                 $.each(filteredModel, function (index, value) {
                     // Skip items based on user department and status
-                    if (userDepartment === "StationCashier" && (value.status === "Pending" || value.status === "Disapproved")) {
+                    console.log(userDepartment);
+                    if (userDepartment === "Station Cashier" && (value.status === "Pending" || value.status === "Disapproved")) {
                         return; // continue to the next item
                     }
 
