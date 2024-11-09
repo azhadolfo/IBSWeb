@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
@@ -54,8 +55,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             #endregion -- get user department --
 
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            ViewData["StationCode"] = stationCodeClaims;
-            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["currentStationCode"] = stationCodeClaims;
+            ViewData["currentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
             List<MobilityCustomerOrderSlip> customerOrderSlip = new List<MobilityCustomerOrderSlip>();
 
@@ -84,16 +85,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             string stationCodeString = stationCodeClaims.ToString();
-            ViewData["StationCode"] = stationCodeClaims;
+            ViewData["StationCode"] = stationCodeClaims; // get
             ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
             MobilityCustomerOrderSlip model;
+            List<MobilityCustomer> mobilityCustomers = await _dbContext.MobilityCustomers.ToListAsync(cancellationToken);
 
             if (stationCodeClaims != "ALL")
             {
                 model = new()
                 {
-                    MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(cancellationToken),
+                    MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(mobilityCustomers, cancellationToken),
                     Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
                 };
             }
@@ -102,7 +104,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 model = new()
                 {
                     Customers = await _unitOfWork.GetMobilityCustomerListAsyncByIdAll(stationCodeString, cancellationToken),
-                    MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(cancellationToken),
+                    MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(mobilityCustomers, cancellationToken),
                     Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
                 };
             }
@@ -207,10 +209,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             ViewData["StationCode"] = stationCodeClaims;
             ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
             string stationCodeString = stationCodeClaims.ToString();
+            List<MobilityCustomer> mobilityCustomers = await _dbContext.MobilityCustomers.ToListAsync();
 
             var customerOrderSlip = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
             customerOrderSlip.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            customerOrderSlip.MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(cancellationToken);
+            customerOrderSlip.MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(mobilityCustomers, cancellationToken);
             customerOrderSlip.Customers = await GetInitialCustomers(customerOrderSlip.StationCode, cancellationToken);
 
             return View(customerOrderSlip);
@@ -406,7 +409,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var model = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
             model.Status = "Disapproved";
-            model.Remarks = message;
+            model.DisapprovalRemarks = message;
             model.DisapprovedBy = _userManager.GetUserName(User);
             model.DisapprovedDate = DateTime.Now;
 

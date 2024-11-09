@@ -6,6 +6,7 @@ using IBS.DataAccess.Repository.MasterFile;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.Mobility;
 using IBS.DataAccess.Repository.Mobility.IRepository;
+using IBS.Models.Mobility.MasterFile;
 using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -185,18 +186,25 @@ namespace IBS.DataAccess.Repository
                 })
                 .ToListAsync(cancellationToken);
         }
-        public async Task<List<SelectListItem>> GetMobilityStationListWithCustomersAsyncByCode(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMobilityStationListWithCustomersAsyncByCode(List<MobilityCustomer> mobilityCustomers, CancellationToken cancellationToken = default)
         {
-            return await _db.MobilityStations
-                .OrderBy(s => s.StationId)
+            var customerStationCodes = mobilityCustomers
+               .Select(mc => mc.StationCode)
+               .Distinct() // Optional: To ensure no duplicate StationCodes
+               .ToList();
+            
+            List<SelectListItem> selectListItem = await _db.MobilityStations
                 .Where(s => s.IsActive)
-                .Where(s=> s.HasCustomers)
+                .Where(s => customerStationCodes.Contains(s.StationCode)) // Filter based on StationCode
+                .OrderBy(s => s.StationId)
                 .Select(s => new SelectListItem
                 {
                     Value = s.StationCode,
                     Text = s.StationCode + " " + s.StationName
                 })
                 .ToListAsync(cancellationToken);
+
+            return selectListItem;
         }
 
         public async Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default)

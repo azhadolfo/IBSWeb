@@ -20,7 +20,6 @@ namespace IBS.Models.Mobility.ViewModels
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-
         public int CustomerOrderSlipId { get; set; }
 
         [Display(Name = "COS No.")]
@@ -34,22 +33,31 @@ namespace IBS.Models.Mobility.ViewModels
         public decimal Quantity { get; set; }
 
         [Display(Name = "Price")]
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
         public decimal PricePerLiter { get; set; }
 
+        [Display(Name = "Address")]
+        [Column(TypeName = "varchar(100)")]
         public string? Address { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
+        [Column(TypeName = "numeric(18,4)")]
         public decimal Amount { get; set; }
 
         [Display(Name ="Plate Number")]
+        [Column(TypeName = "varchar(10)")]
         public string PlateNo { get; set; }
 
+        [Display(Name = "Driver Name")]
+        [Column(TypeName = "varchar(50)")]
         public string Driver { get; set; }
 
+        [Display(Name = "Status")]
+        [Column(TypeName = "varchar(20)")]
         public string Status { get; set; } = string.Empty;
 
+        [Display(Name = "Upload Name")]
         [Column(TypeName = "varchar(1024)")]
         public string? Upload { get; set; }
 
@@ -57,8 +65,12 @@ namespace IBS.Models.Mobility.ViewModels
         public DateTime? LoadDate { get; set; }
 
         [Display(Name = "Station")]
+        [Column(TypeName = "varchar(3)")]
         public string StationCode { get; set; }
 
+        [Required]
+        [Display(Name = "Payment Terms")]
+        [Column(TypeName = "varchar(10)")]
         public string Terms { get; set; } = string.Empty;
 
         [Column(TypeName = "varchar(100)")]
@@ -85,11 +97,16 @@ namespace IBS.Models.Mobility.ViewModels
         public string? UploadedBy { get; set; }
 
         public DateTime? UploadedDate { get; set; }
+
         [Display(Name = "Trip Ticket")]
+        [Column(TypeName = "varchar(20)")]
         public string? TripTicket {  get; set; }
 
         public bool IsPrinted { get; set; }
-        public string? Remarks { get; set; }
+
+        [Display(Name = "Remarks on Disapprove")]
+        [Column(TypeName = "varchar(200)")]
+        public string? DisapprovalRemarks { get; set; }
 
         #region Product's Properties
 

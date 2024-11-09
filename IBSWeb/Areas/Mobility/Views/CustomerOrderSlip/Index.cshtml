@@ -7,8 +7,8 @@
 @{
     ViewData["Title"] = "Customer Order Slip";
     var userDepartment = ViewBag.userDepartment;
-    var currentStationCode = ViewData["StationCode"] as string;
-    var currentStationName = ViewData["StationName"] as string;
+    var currentStationCode = ViewData["currentStationCode"] as string;
+    var currentStationName = ViewData["currentStationName"] as string;
 }
 
 <div class="card shadow border-0 mt-4">
@@ -178,7 +178,7 @@
     <script>
         $(document).ready(function () {
             var userDepartment = '@ViewBag.userDepartment';
-            var currentStationCode = '@ViewData["StationCode"]';
+            var currentStationCode = '@ViewData["currentStationCode"]';
 
             if (userDepartment === "Cashier" && currentStationCode === "ALL") {
                 // Redirect to the logout page with the return URL
@@ -190,7 +190,7 @@
     <script>
         $(document).ready(function () {
             var userDepartment = '@ViewBag.userDepartment';
-            var currentStationCode = '@ViewData["StationCode"]';
+            var currentStationCode = '@ViewData["currentStationCode"]';
 
             var statusFilter = "";  // Default is empty (All)
             var stationFilter = ""; // Default is empty (All)
