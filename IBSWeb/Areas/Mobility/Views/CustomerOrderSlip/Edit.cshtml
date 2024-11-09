@@ -27,13 +27,13 @@
                     <input type="hidden" asp-for="StationCode" value="@stationCode" />
                 }
 
-                @if (!string.IsNullOrEmpty(Model.Remarks))
+                @if (!string.IsNullOrEmpty(Model.DisapprovalRemarks))
                 {
                     <div class="row pt-2">
                         <div class="form-floating py-2 px-2 col-12">
-                            <input asp-for="Remarks" class="form-control border-0 shadow" placeholder="" readonly />
-                            <label asp-for="Remarks">Reason for disapproval:</label>
-                            <span asp-validation-for="Remarks" class="text-danger"></span>
+                            <input asp-for="DisapprovalRemarks" class="form-control border-0 shadow" placeholder="" readonly />
+                            <label asp-for="DisapprovalRemarks">Reason for disapproval:</label>
+                            <span asp-validation-for="DisapprovalRemarks" class="text-danger"></span>
                         </div>
                     </div>
                 }

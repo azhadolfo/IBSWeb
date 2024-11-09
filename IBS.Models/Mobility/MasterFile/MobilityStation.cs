@@ -41,6 +41,5 @@ namespace IBS.Models.Mobility.MasterFile
 
         [Display(Name = "Edited Date")]
         public DateTime EditedDate { get; set; }
-        public bool HasCustomers {  get; set; }
     }
 }
