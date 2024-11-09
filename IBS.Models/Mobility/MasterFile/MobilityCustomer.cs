@@ -60,6 +60,10 @@ namespace IBS.Models.Mobility.MasterFile
         [Display(Name = "Customer TIN")]
         public string CustomerTin { get; set; }
 
+        [Display(Name = "Customer Type")]
+        [Column(TypeName = "varchar(10)")]
+        public string CustomerType { get; set; }
+
         #region --Select List--
 
         [NotMapped]

@@ -118,6 +118,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     existingModel.QuantityLimit = model.QuantityLimit;
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTime.Now;
+                    existingModel.CustomerType = model.CustomerType;
 
                     #endregion -- Assign New Values --
 

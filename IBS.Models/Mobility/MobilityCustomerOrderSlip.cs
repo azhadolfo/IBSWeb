@@ -68,7 +68,6 @@ namespace IBS.Models.Mobility.ViewModels
         [Column(TypeName = "varchar(3)")]
         public string StationCode { get; set; }
 
-        [Required]
         [Display(Name = "Payment Terms")]
         [Column(TypeName = "varchar(10)")]
         public string Terms { get; set; } = string.Empty;
