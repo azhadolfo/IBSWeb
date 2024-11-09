@@ -1,13 +1,10 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Threading;
-
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -18,18 +15,21 @@ namespace IBSWeb.Areas.Mobility.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<IdentityUser> _userManager;
+
         public CustomerController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
         }
+
         private async Task<string> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
         }
+
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
             var model = await _dbContext.MobilityCustomers.ToListAsync(cancellationToken);
@@ -96,14 +96,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 try
                 {
                     #region -- getMobilityStation --
+
                     var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
 
                     var getMobilityStation = await _dbContext.MobilityStations
                                                 .Where(s => s.StationCode == stationCode)
                                                 .FirstOrDefaultAsync(cancellationToken);
+
                     #endregion -- getMobilityStation --
 
                     #region -- Assign New Values --
+
                     var existingModel = await _dbContext.MobilityCustomers.FindAsync(model.CustomerId);
                     existingModel.CustomerName = model.CustomerName;
                     existingModel.CustomerCodeName = model.CustomerCodeName;
@@ -115,6 +118,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     existingModel.QuantityLimit = model.QuantityLimit;
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTime.Now;
+
                     #endregion -- Assign New Values --
 
                     await _dbContext.SaveChangesAsync(cancellationToken);

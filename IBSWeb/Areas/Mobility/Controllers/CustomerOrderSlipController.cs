@@ -1,23 +1,11 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.Dtos;
-using IBS.Models.Filpride.Integrated;
-using IBS.Models.Filpride.ViewModels;
-using IBS.Models.Mobility;
-using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.EntityFrameworkCore;
-using NuGet.DependencyResolver;
-using System.IO;
-using System.Linq.Expressions;
-using System.Threading;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -29,6 +17,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly UserManager<IdentityUser> _userManager;
+
         public CustomerOrderSlipController(ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
         {
             _dbContext = dbContext;
@@ -43,9 +32,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
         }
-
-        
-
 
         private async Task<string> GetCompanyClaimAsync()
         {
@@ -152,7 +138,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         .Where(s => s.StationCode == stationCode)
                         .FirstOrDefaultAsync(cancellationToken);
 
-                    #endregion -- selected customer --
+                    #endregion -- get mobility station --
 
                     #region -- Generate COS No --
 
@@ -265,7 +251,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var existingModel = await _dbContext.MobilityCustomerOrderSlips.FindAsync(model.CustomerOrderSlipId);
                     existingModel.Date = model.Date;
                     existingModel.Quantity = model.Quantity;
-                    existingModel.PricePerLiter = model.PricePerLiter;  
+                    existingModel.PricePerLiter = model.PricePerLiter;
                     existingModel.Address = model.Address;
                     existingModel.ProductId = model.ProductId;
                     existingModel.Product = model.Product;
@@ -303,7 +289,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 ModelState.AddModelError("", "The information you submitted is not valid!");
                 return View(model);
             }
-
         }
 
         [HttpGet]
@@ -312,6 +297,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
             ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
+
             #region -- get user department --
 
             var findUser = await _dbContext.ApplicationUsers
@@ -348,6 +334,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "Mobility COS", "Uploads");
 
                     #region --check folder, delete old file--
+
                     if (!Directory.Exists(localPath))
                     {
                         Directory.CreateDirectory(localPath);
@@ -369,7 +356,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             }
                         }
                     }
-                    #endregion --operate folder, delete old file--
+
+                    #endregion --check folder, delete old file--
 
                     string newFileExtension = Path.GetExtension(file.FileName);
                     string newFileName = string.Concat(model.Customer.CustomerCodeName, "_", model.Product.ProductName, "_", model.Date.ToString("yyyyMMdd"), DateTime.Now.ToString("HHmmss"), newFileExtension);
@@ -468,6 +456,5 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             return invoiceList;
         }
-
     }
 }

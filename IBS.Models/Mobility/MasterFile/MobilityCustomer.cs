@@ -25,6 +25,7 @@ namespace IBS.Models.Mobility.MasterFile
         [StringLength(3)]
         public string StationCode { get; set; }
 
+        [Column(TypeName = "varchar(200)")]
         public string CustomerAddress { get; set; }
 
         public bool IsActive { get; set; } = true;
@@ -56,7 +57,7 @@ namespace IBS.Models.Mobility.MasterFile
         [Column(TypeName = "varchar(10)")]
         public string CustomerTerms { get; set; }
 
-        [Display(Name="Customer TIN")]
+        [Display(Name = "Customer TIN")]
         public string CustomerTin { get; set; }
 
         #region --Select List--

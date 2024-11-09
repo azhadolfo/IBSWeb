@@ -1,12 +1,10 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Mobility;
-using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Threading;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -14,7 +12,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
     [CompanyAuthorize(nameof(Mobility))]
     public class CustomerPurchaseOrderController : Controller
     {
-
         private readonly IUnitOfWork _unitOfWork;
         private readonly ApplicationDbContext _dbContext;
         private readonly IWebHostEnvironment _webHostEnvironment;
@@ -75,20 +72,25 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 try
                 {
                     #region -- selected customer --
+
                     var selectedCustomer = await _dbContext.MobilityCustomers
                                         .Where(c => c.CustomerId == model.CustomerId)
                                         .FirstOrDefaultAsync(cancellationToken);
+
                     #endregion -- selected customer --
 
                     #region -- get mobility station --
+
                     var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
 
                     var getMobilityStation = await _dbContext.MobilityStations
                                         .Where(s => s.StationCode == stationCode)
                                         .FirstOrDefaultAsync(cancellationToken);
-                    #endregion -- selected customer --
+
+                    #endregion -- get mobility station --
 
                     #region -- Generate COS No --
+
                     MobilityCustomerPurchaseOrder? lastPo = await _dbContext
                         .MobilityCustomerPurchaseOrders
                         .OrderBy(c => c.CustomerPurchaseOrderNo)
@@ -107,6 +109,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         series = "PO0000000001";
                     }
+
                     #endregion -- Generate COS No --
 
                     model.CustomerPurchaseOrderNo = series;
