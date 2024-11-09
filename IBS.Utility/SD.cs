@@ -47,5 +47,7 @@
         public const string Department_TradeAndSupply = "Trade and Supply";
         public const string Department_TrainingAndCompliance = "Training and Compliance";
         public const string Department_StationCashier = "Station Cashier";
+
+        public const string CustomerType_PO = "PO";
     }
 }
