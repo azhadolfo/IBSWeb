@@ -241,6 +241,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.SupplierId = model.SupplierId;
                     existingModel.ProductId = model.ProductId;
                     existingModel.Quantity = model.Quantity;
+                    existingModel.UnTriggeredQuantity = existingModel.Quantity;
                     existingModel.Price = model.Price;
                     existingModel.Amount = model.Quantity * model.Price;
                     existingModel.SupplierSalesOrderNo = model.SupplierSalesOrderNo;
@@ -685,7 +686,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     var actualPrices = await _dbContext.FilpridePOActualPrices
-                        .FirstOrDefaultAsync(a => a.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken);
+                        .FirstOrDefaultAsync(a => a.PurchaseOrderId == existingRecord.PurchaseOrderId && !a.IsApproved, cancellationToken);
 
                     actualPrices.ApprovedBy = _userManager.GetUserName(this.User);
                     actualPrices.ApprovedDate = DateTime.Now;

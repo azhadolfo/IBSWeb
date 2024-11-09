@@ -380,24 +380,73 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!existingRecord.HasMultiplePO)
                 {
-                    model.NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.PurchaseOrder.Price);
+                    var purchaseOrder = await _dbContext.FilpridePurchaseOrders
+                        .Include(p => p.ActualPrices)
+                        .FirstOrDefaultAsync(p => p.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken);
+
+                    if (purchaseOrder.UnTriggeredQuantity != purchaseOrder.Quantity)
+                    {
+                        decimal weightedCostTotal = 0m;
+                        decimal totalCOSVolume = 0m;
+                        decimal requiredQuantity = existingRecord.Quantity;
+
+                        foreach (var price in purchaseOrder.ActualPrices.Where(p => p.IsApproved))
+                        {
+                            var effectiveVolume = Math.Min(price.TriggeredVolume, requiredQuantity - totalCOSVolume);
+
+                            weightedCostTotal += effectiveVolume * price.TriggeredPrice; // Adjust `CostPerUnit` if the field name differs
+                            totalCOSVolume += effectiveVolume;
+
+                            // Stop if we've reached the required quantity
+                            if (totalCOSVolume >= requiredQuantity)
+                                break;
+                        }
+
+                        model.NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(weightedCostTotal / totalCOSVolume);
+                    }
+                    else
+                    {
+                        model.NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.PurchaseOrder.Price);
+                    }
                 }
                 else
                 {
-                    var appointedSupplier = await _dbContext.FilprideCOSAppointedSuppliers
+                    var appointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Include(p => p.PurchaseOrder).ThenInclude(p => p.ActualPrices)
                         .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
                         .ToListAsync(cancellationToken);
 
                     decimal totalPoAmount = 0;
+                    decimal totalCOSVolume = 0;
+                    decimal requiredQuantity = appointedSuppliers.Sum(a => a.Quantity);
 
-                    foreach (var item in appointedSupplier)
+                    foreach (var item in appointedSuppliers)
                     {
-                        var po = await _unitOfWork.FilpridePurchaseOrder.GetAsync(p => p.PurchaseOrderId == item.PurchaseOrderId, cancellationToken);
+                        var po = await _unitOfWork.FilpridePurchaseOrder.GetAsync(
+                            p => p.PurchaseOrderId == item.PurchaseOrderId, cancellationToken);
 
-                        totalPoAmount += item.Quantity * _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(po.Price);
+                        decimal itemRemainingQuantity = item.Quantity;
+
+                        foreach (var price in po.ActualPrices.Where(p => p.IsApproved))
+                        {
+                            // Determine how much of the current price's volume we can use
+                            decimal effectiveVolume = Math.Min(price.TriggeredVolume, itemRemainingQuantity);
+
+                            totalPoAmount += effectiveVolume * _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(price.TriggeredPrice);
+                            totalCOSVolume += effectiveVolume;
+                            itemRemainingQuantity -= effectiveVolume;
+
+                            // Stop if the appointed supplier's quantity requirement is met
+                            if (itemRemainingQuantity <= 0)
+                                break;
+                        }
+
+                        // Stop if we've reached the total required quantity
+                        if (totalCOSVolume >= requiredQuantity)
+                            break;
                     }
 
-                    model.NetOfVatProductCost = totalPoAmount / appointedSupplier.Sum(a => a.Quantity);
+                    model.NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(totalPoAmount / totalCOSVolume);
                 }
 
                 model.GrossMargin = model.NetOfVatCosPrice - model.NetOfVatProductCost - model.NetOfVatFreightCharge - existingRecord.CommissionRate;
