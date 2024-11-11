@@ -437,8 +437,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var invoiceList = invoices.Select(si => new SelectListItem
             {
-                Value = si.CustomerId.ToString(),   // Replace with your actual ID property
-                Text = si.CustomerName              // Replace with your actual property for display text
+                Value = si.CustomerId.ToString(),
+                Text = si.CustomerName
             }).ToList();
 
             return Json(invoiceList);
@@ -457,8 +457,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var invoiceList = invoices.Select(si => new SelectListItem
             {
-                Value = si.CustomerId.ToString(),   // Replace with your actual ID property
-                Text = si.CustomerName              // Replace with your actual property for display text
+                Value = si.CustomerId.ToString(),
+                Text = si.CustomerName
             }).ToList();
 
             return invoiceList;
