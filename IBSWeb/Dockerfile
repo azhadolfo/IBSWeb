@@ -16,7 +16,7 @@ WORKDIR /src
 # Copy the entire project first to ensure all dependencies are available
 COPY . .
 
-COPY ["IBSWeb/IBSWeb.csproj", "IBSWeb/"]
+COPY ["IBSWeb.csproj", "IBSWeb/"]
 COPY ["IBS.DataAccess/IBS.DataAccess.csproj", "IBS.DataAccess/"]
 COPY ["IBS.DTOs/IBS.DTOs.csproj", "IBS.DTOs/"]
 COPY ["IBS.Models/IBS.Models.csproj", "IBS.Models/"]
