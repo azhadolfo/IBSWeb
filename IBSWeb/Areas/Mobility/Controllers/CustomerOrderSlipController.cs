@@ -55,8 +55,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             #endregion -- get user department --
 
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            ViewData["currentStationCode"] = stationCodeClaims;
-            ViewData["currentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["CurrentStationCode"] = stationCodeClaims;
+            ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
             List<MobilityCustomerOrderSlip> customerOrderSlip = new List<MobilityCustomerOrderSlip>();
 
@@ -85,8 +85,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             string stationCodeString = stationCodeClaims.ToString();
-            ViewData["StationCode"] = stationCodeClaims; // get
-            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["CurrentStationCode"] = stationCodeClaims; // get
+            ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
             MobilityCustomerOrderSlip model;
             List<MobilityCustomer> mobilityPOCustomers = await _dbContext.MobilityCustomers
@@ -110,10 +110,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
                 };
             }
-            if (ModelState.IsValid)
-            {
-
-            }
 
             return View(model);
         }
@@ -122,8 +118,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(MobilityCustomerOrderSlip model, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            ViewData["StationCode"] = stationCodeClaims;
-            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["CurrentStationCode"] = stationCodeClaims;
+            ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
             string stationCodeString = stationCodeClaims.ToString();
 
             if (ModelState.IsValid)
@@ -132,7 +128,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 {
                     #region -- selected customer --
 
-                    var selectedCustomer = await _dbContext.MobilityCustomers
+                    var selectedCustomer = await _dbContext.MobilityCustomers 
                         .Where(c => c.CustomerId == model.CustomerId)
                         .FirstOrDefaultAsync(cancellationToken);
 
@@ -212,8 +208,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            ViewData["StationCode"] = stationCodeClaims;
-            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["CurrentStationCode"] = stationCodeClaims;
+            ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
             string stationCodeString = stationCodeClaims.ToString();
             List<MobilityCustomer> mobilityPOCustomers = await _dbContext.MobilityCustomers
                 .Where(a => a.CustomerType == SD.CustomerType_PO)
@@ -231,8 +227,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Edit(MobilityCustomerOrderSlip model, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            ViewData["StationCode"] = stationCodeClaims;
-            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["CurrentStationCode"] = stationCodeClaims;
+            ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
             string stationCodeString = stationCodeClaims.ToString();
 
             if (ModelState.IsValid)
@@ -307,7 +303,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             ViewData["StationCode"] = stationCodeClaims;
-            ViewData["StationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
+            ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
             #region -- get user department --
 
