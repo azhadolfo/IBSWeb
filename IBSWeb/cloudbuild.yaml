@@ -1,27 +1,20 @@
 ﻿steps:
-  # Step 1: Build the Docker image, setting the context to `IBSWeb`
   - name: gcr.io/cloud-builders/docker
-    id: 'Build'
     args:
       - build
       - '--no-cache'
       - '-t'
       - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
       - '-f'
-      - 'IBSWeb/Dockerfile'  # Specify the path to the Dockerfile inside IBSWeb
-      - './IBSWeb'  # Set the build context to the IBSWeb directory
-
-  # Step 2: Push the Docker image to Google Container Registry
+      - IBSWeb/Dockerfile  # Updated to specify the correct path to Dockerfile
+      - .
+    id: Build
   - name: gcr.io/cloud-builders/docker
-    id: 'Push'
     args:
       - push
       - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
-
-  # Step 3: Deploy the image to Cloud Run
+    id: Push
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
-    id: 'Deploy'
-    entrypoint: gcloud
     args:
       - run
       - deploy
@@ -30,12 +23,8 @@
       - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
       - '--region'
       - $_DEPLOY_REGION
-      - '--platform'
-      - managed
-      - '--allow-unauthenticated'  # Remove this line if the service is private
-
+    entrypoint: gcloud
+    id: Deploy
 timeout: 1200s
-
-# Specify the Docker image as the output
 images:
   - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
