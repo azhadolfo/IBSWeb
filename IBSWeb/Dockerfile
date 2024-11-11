@@ -13,10 +13,10 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["IBSWeb.csproj", "IBSWeb/"]
-COPY ["IBS.DataAccess/IBS.DataAccess.csproj", "IBS.DataAccess/"]
-COPY ["IBS.DTOs/IBS.Dtos.csproj", "IBS.DTOs/"]
-COPY ["IBS.Models/IBS.Models.csproj", "IBS.Models/"]
-COPY ["IBS.Utility/IBS.Utility.csproj", "IBS.Utility/"]
+COPY ["IBS.DataAccess.csproj", "IBS.DataAccess/"]
+COPY ["IBS.Dtos.csproj", "IBS.DTOs/"]
+COPY ["IBS.Models.csproj", "IBS.Models/"]
+COPY ["IBS.Utility.csproj", "IBS.Utility/"]
 RUN dotnet restore "./IBSWeb/IBSWeb.csproj"
 COPY . .
 WORKDIR "/src/IBSWeb"
