@@ -1,20 +1,27 @@
-﻿﻿steps:
+﻿steps:
+  # Step 1: Build the Docker image
   - name: gcr.io/cloud-builders/docker
+    id: 'Build'
     args:
       - build
       - '--no-cache'
       - '-t'
       - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
-      - .
       - '-f'
-      - Dockerfile
-    id: Build
+      - 'Dockerfile'
+      - '.'
+
+  # Step 2: Push the Docker image to Google Container Registry
   - name: gcr.io/cloud-builders/docker
+    id: 'Push'
     args:
       - push
       - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
-    id: Push
+
+  # Step 3: Deploy the image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'Deploy'
+    entrypoint: gcloud
     args:
       - run
       - deploy
@@ -23,8 +30,12 @@
       - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
       - '--region'
       - $_DEPLOY_REGION
-    entrypoint: gcloud
-    id: Deploy
+      - '--platform'
+      - managed
+      - '--allow-unauthenticated' # Remove this line if the service is private
+
 timeout: 1200s
+
+# Specify the Docker image as the output
 images:
   - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
