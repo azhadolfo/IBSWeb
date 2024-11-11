@@ -8,6 +8,7 @@
       - '-f'
       - IBSWeb/Dockerfile  # Updated to specify the correct path to Dockerfile
       - .
+    dir: 'IBSWeb'
     id: Build
   - name: gcr.io/cloud-builders/docker
     args:
