@@ -63,7 +63,7 @@
                 </div>
             </div>
 
-            @if (userDepartment == SD.Department_Marketing || User.IsInRole("Admin"))
+            @if (userDepartment == SD.Department_RetailAdmin || User.IsInRole("Admin"))
             {
                 <div class="col-2 text-end">
                     <a asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Create" class="btn btn-primary">
@@ -158,7 +158,7 @@
                                 <div class="dropdown">
                                     <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                     <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                        @if ((userDepartment == SD.Department_Marketing || User.IsInRole("Admin")) && (item.Status == "Pending" || item.Status == "Disapproved"))
+                                        @if ((userDepartment == SD.Department_RetailAdmin || User.IsInRole("Admin")) && (item.Status == "Pending" || item.Status == "Disapproved"))
                                         {
                                             <li><a class="dropdown-item" href="@Url.Action("Edit", "CustomerOrderSlip", new { area = "Mobility" })/@item.CustomerOrderSlipId">Edit</a></li>
                                         }
