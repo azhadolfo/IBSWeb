@@ -36,7 +36,6 @@ builder.Services.AddSingleton<IHostedService, ImportService>();
 builder.Services.AddHostedService<AutomatedEntries>();
 builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
 
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -143,7 +143,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     transaction.Total = transaction.Quantity * averageCost;
                     transaction.TotalBalance = totalBalance != 0 ? totalBalance - transaction.Total : transaction.Total;
                     transaction.InventoryBalance = inventoryBalance != 0 ? inventoryBalance - transaction.Quantity : transaction.Quantity;
-                    transaction.AverageCost = transaction.TotalBalance / transaction.InventoryBalance;
+                    transaction.AverageCost = transaction.TotalBalance == 0 && transaction.InventoryBalance == 0 ? previousInventory.AverageCost : transaction.TotalBalance / transaction.InventoryBalance;
                     costOfGoodsSold = transaction.AverageCost * transaction.Quantity;
 
                     averageCost = transaction.AverageCost;
