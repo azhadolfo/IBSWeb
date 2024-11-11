@@ -1,5 +1,5 @@
 ﻿steps:
-  # Step 1: Build the Docker image
+  # Step 1: Build the Docker image, setting the context to `IBSWeb`
   - name: gcr.io/cloud-builders/docker
     id: 'Build'
     args:
@@ -8,8 +8,8 @@
       - '-t'
       - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
       - '-f'
-      - 'Dockerfile'
-      - '.'
+      - 'IBSWeb/Dockerfile'  # Specify the path to the Dockerfile inside IBSWeb
+      - './IBSWeb'  # Set the build context to the IBSWeb directory
 
   # Step 2: Push the Docker image to Google Container Registry
   - name: gcr.io/cloud-builders/docker
@@ -32,7 +32,7 @@
       - $_DEPLOY_REGION
       - '--platform'
       - managed
-      - '--allow-unauthenticated' # Remove this line if the service is private
+      - '--allow-unauthenticated'  # Remove this line if the service is private
 
 timeout: 1200s
 
