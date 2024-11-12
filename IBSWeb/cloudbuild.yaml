@@ -1,31 +1,27 @@
 ﻿steps:
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - build
-      - '--no-cache'
-      - '-t'
-      - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
-      - '-f'
-      - IBSWeb/Dockerfile  # Updated to specify the correct path to Dockerfile
-      - .
-    dir: 'IBSWeb'
-    id: Build
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - push
-      - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
-    id: Push
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
-    args:
-      - run
-      - deploy
-      - $_SERVICE_NAME
-      - '--image'
-      - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
-      - '--region'
-      - $_DEPLOY_REGION
-    entrypoint: gcloud
-    id: Deploy
-timeout: 1200s
+  # Step 1: Restore dependencies for the entire solution
+  - name: "mcr.microsoft.com/dotnet/sdk:7.0"
+    entrypoint: "dotnet"
+    args: ["restore", "./Integrated Business System.sln"]  # Run restore at the solution level
+
+  # Step 2: Build the solution in Release mode
+  - name: "mcr.microsoft.com/dotnet/sdk:7.0"
+    entrypoint: "dotnet"
+    args: ["build", "./Integrated Business System.sln", "--configuration", "Release", "--no-restore"]
+
+  # Step 3: Publish the IBSWeb project
+  - name: "mcr.microsoft.com/dotnet/sdk:7.0"
+    entrypoint: "dotnet"
+    args: ["publish", "./IBSWEB/IBSWEB.csproj", "--configuration", "Release", "--output", "./IBSWEB/output", "--no-build"]
+
+  # Step 4: Build the Docker image using the published output
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/integrated-business-system/ibs-web:$COMMIT_SHA", "."]
+    dir: "IBSWEB"  # Set the Docker context to IBSWEB
+
+  # Step 5: Push the Docker image to Google Container Registry (GCR)
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/integrated-business-system/ibs-web:$COMMIT_SHA"]
+
 images:
-  - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+  - "gcr.io/integrated-business-system/ibs-web:$COMMIT_SHA"

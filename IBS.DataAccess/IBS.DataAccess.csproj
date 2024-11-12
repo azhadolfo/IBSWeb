@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IBS.Dtos\IBS.Dtos.csproj" />
+    <ProjectReference Include="..\IBS.DTOs\IBS.DTOs.csproj" />
     <ProjectReference Include="..\IBS.Models\IBS.Models.csproj" />
     <ProjectReference Include="..\IBS.Utility\IBS.Utility.csproj" />
   </ItemGroup>
