@@ -28,8 +28,3 @@ README.md
 !.git/config
 !.git/packed-refs
 !.git/refs/heads/**
-!IBSWeb/*
-!IBS.DataAccess/*
-!IBS.DTOs/*
-!IBS.Models/*
-!IBS.Utility/*
