@@ -49,7 +49,7 @@ if (!app.Environment.IsDevelopment())
 //Postgre date and time behaviour
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
