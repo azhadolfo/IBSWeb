@@ -32,9 +32,22 @@ namespace IBS.DataAccess.Services
             try
             {
                 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-                _googleCredential = environment == Environments.Production
-                       ? GoogleCredential.GetApplicationDefault()
-                       : GoogleCredential.FromFile(_options.GCPStorageAuthFile);
+                if (environment == Environments.Production)
+                {
+                    _googleCredential = GoogleCredential.GetApplicationDefault();
+                }
+                else
+                {
+                    // Log for debugging purposes
+                    _logger.LogInformation($"Environment: {environment}, Auth File: {_options.GCPStorageAuthFile}");
+
+                    if (!File.Exists(_options.GCPStorageAuthFile))
+                    {
+                        throw new FileNotFoundException($"Auth file not found: {_options.GCPStorageAuthFile}");
+                    }
+
+                    _googleCredential = GoogleCredential.FromFile(_options.GCPStorageAuthFile);
+                }
 
                 _storageClient = StorageClient.Create(_googleCredential);
             }
