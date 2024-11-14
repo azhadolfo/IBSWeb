@@ -11,7 +11,9 @@ namespace IBS.DataAccess.Services
     public interface ICloudStorageService
     {
         Task<string> GetSignedUrlAsync(string fileNameToRead, int timeOutInMinutes = 30);
+
         Task<string> UploadFileAsync(IFormFile fileToUpload, string fileNameToSave);
+
         Task DeleteFileAsync(string fileNameToDelete);
     }
 
@@ -110,6 +112,28 @@ namespace IBS.DataAccess.Services
             catch (Exception ex)
             {
                 _logger.LogError($"Error occurred while uploading file '{fileNameToSave}': {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<Stream> DownloadFileAsync(string fileNameToDownload)
+        {
+            try
+            {
+                _logger.LogInformation($"Downloading file {fileNameToDownload} from storage {_options.GoogleCloudStorageBucketName}");
+
+                using (var storageClient = StorageClient.Create(_googleCredential))
+                {
+                    var memoryStream = new MemoryStream();
+                    await storageClient.DownloadObjectAsync(_options.GoogleCloudStorageBucketName, fileNameToDownload, memoryStream);
+                    memoryStream.Seek(0, SeekOrigin.Begin); // Reset stream position to the beginning for reading
+                    _logger.LogInformation($"File {fileNameToDownload} downloaded successfully");
+                    return memoryStream;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error occurred while downloading file {fileNameToDownload}: {ex.Message}");
                 throw;
             }
         }
