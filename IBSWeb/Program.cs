@@ -3,16 +3,20 @@ using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.Filpride;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Mobility;
+using IBS.DataAccess.Services;
+using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 //// Load configuration based on the environment
-//builder.Configuration
-//    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-//    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-//    .AddEnvironmentVariables();
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
+Console.WriteLine(builder.Environment.EnvironmentName);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -35,6 +39,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IHostedService, ImportService>();
 builder.Services.AddHostedService<AutomatedEntries>();
 builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
+builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
+builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 
 var app = builder.Build();
 
