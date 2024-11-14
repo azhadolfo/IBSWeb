@@ -19,7 +19,7 @@
 
             <input type="hidden" name="id" value="@id" />
 
-             <div class="row pt-2">
+            <div class="row pt-2">
                 <div class="form-floating py-1 px-1 col-6">
                     <input type="date" id="uploadDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" name="loadDate" class="form-control border-0 shadow" placeholder="" required />
                     <label>Transaction Date<span class="required">*</span></label>
@@ -31,23 +31,21 @@
                     <span asp-validation-for="TripTicket" class="text-danger"></span>
                 </div>
             </div>
-
             </br>
 
             <div class="form-group mb-3">
                 <label for="file" class="form-label">Upload image of driver/vehicle</label>
                 <input class="form-control form-control-sm" id="fileUpload" name="file" type='file' accept="image/png, image/jpg, image/jpeg" onchange="loadFile(event)" required />
-                <span asp-validation-for="Upload" class="text-danger"></span>
+                <span asp-validation-for="SavedFileName" class="text-danger"></span>
             </div>
 
             Note: Please include the timestamp in the image</br>
-            
+
             <div class="w-100 text-center">
                 <a id="documentLink" href="" target="_blank">
                     </br><img id="output" class="img-fluid" style="max-height: 400px; width:auto; cursor: pointer;" />
                 </a>
             </div>
-
             </br>
 
             <div class="row pt-2">
@@ -61,7 +59,6 @@
                 <div class="col-6 col-md-3">
                     <a asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Print" class="btn btn-outline-primary border  form-control " asp-route-id="@id">Back to Preview</a>
                 </div>
-
             </div>
         </form>
     </div>
@@ -87,8 +84,7 @@
             var tripTicket = document.getElementById('tripTicket');
 
             // Check if required fields are filled
-            if (uploadDate.value.trim() === "" || tripTicket.value.trim() === "") 
-            {
+            if (uploadDate.value.trim() === "" || tripTicket.value.trim() === "") {
                 // Show an alert if any required field is empty
                 Swal.fire({
                     title: 'Error',
@@ -97,10 +93,8 @@
                     confirmButtonText: 'OK'
                 });
             }
-            else
-            {
-                if (fileUpload.files.length > 0) 
-                {
+            else {
+                if (fileUpload.files.length > 0) {
                     Swal.fire({
                         title: 'Enter these to the record?',
                         text: "You can't change these later",
@@ -116,7 +110,7 @@
                     });
                 }
             }
-            
+
         });
     </script>
 }

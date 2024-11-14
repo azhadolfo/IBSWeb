@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Services;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
@@ -18,13 +19,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ICloudStorageService _cloudStorageService;
 
-        public CustomerOrderSlipController(ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+        public CustomerOrderSlipController(ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ICloudStorageService cloudStorageService)
         {
             _dbContext = dbContext;
             _webHostEnvironment = webHostEnvironment;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
+            _cloudStorageService = cloudStorageService;
         }
 
         private async Task<string> GetStationCodeClaimAsync()
@@ -128,7 +131,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 {
                     #region -- selected customer --
 
-                    var selectedCustomer = await _dbContext.MobilityCustomers 
+                    var selectedCustomer = await _dbContext.MobilityCustomers
                         .Where(c => c.CustomerId == model.CustomerId)
                         .FirstOrDefaultAsync(cancellationToken);
 
@@ -324,6 +327,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             model.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
 
+            if (!string.IsNullOrEmpty(model.SavedFileName))
+            {
+                await GenerateSignedUrl(model);
+            }
+
             return View(model);
         }
 
@@ -337,52 +345,18 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var model = await _dbContext.MobilityCustomerOrderSlips
                         .Include(m => m.Customer)
                         .Include(m => m.Product)
-                        .FirstOrDefaultAsync(m => m.CustomerOrderSlipId == id);
-                    string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "Mobility COS", "Uploads");
+                        .FirstOrDefaultAsync(m => m.CustomerOrderSlipId == id, cancellationToken);
 
-                    #region --check folder, delete old file--
+                    model.SavedFileName = GenerateFileNameToSave(file.FileName);
+                    model.SavedUrl = await _cloudStorageService.UploadFileAsync(file, model.SavedFileName);
 
-                    if (!Directory.Exists(localPath))
-                    {
-                        Directory.CreateDirectory(localPath);
-                    }
-
-                    //if a file already exists, will delete
-                    if (!string.IsNullOrEmpty(model.Upload))
-                    {
-                        string oldFilePath = Path.Combine(localPath, model.Upload);
-                        if (System.IO.File.Exists(oldFilePath))
-                        {
-                            try
-                            {
-                                System.IO.File.Delete(oldFilePath);
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Error deleting file: {ex.Message}");
-                            }
-                        }
-                    }
-
-                    #endregion --check folder, delete old file--
-
-                    string newFileExtension = Path.GetExtension(file.FileName);
-                    string newFileName = string.Concat(model.Customer.CustomerCodeName, "_", model.Product.ProductName, "_", model.Date.ToString("yyyyMMdd"), DateTime.Now.ToString("HHmmss"), newFileExtension);
-                    string fileSavePath = Path.Combine(localPath, newFileName);
-
-                    await using (FileStream stream = new(fileSavePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream, cancellationToken);
-                    }
-
-                    model.Upload = newFileName;
                     model.LoadDate = loadDate;
                     model.TripTicket = tripTicket;
                     model.Status = "Lifted";
                     model.UploadedBy = _userManager.GetUserName(User);
                     model.UploadedDate = DateTime.Now;
 
-                    await _dbContext.SaveChangesAsync();
+                    await _dbContext.SaveChangesAsync(cancellationToken);
 
                     TempData["success"] = "Record Updated Successfully!";
 
@@ -462,6 +436,22 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }).ToList();
 
             return invoiceList;
+        }
+
+        private string? GenerateFileNameToSave(string incomingFileName)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
+            var extension = Path.GetExtension(incomingFileName);
+            return $"{fileName}-{DateTime.Now:yyyyMMddHHmmss}{extension}";
+        }
+
+        private async Task GenerateSignedUrl(MobilityCustomerOrderSlip model)
+        {
+            // Get Signed URL only when Saved File Name is available.
+            if (!string.IsNullOrWhiteSpace(model.SavedFileName))
+            {
+                model.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.SavedFileName);
+            }
         }
     }
 }

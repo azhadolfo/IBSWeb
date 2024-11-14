@@ -10,6 +10,7 @@
     <PackageReference Include="CsvHelper" Version="32.0.3" />
     <PackageReference Include="EFCore.NamingConventions" Version="8.0.3" />
     <PackageReference Include="EPPlus" Version="7.1.2" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="4.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid.EntityFrameworkAdapter" Version="8.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.5" />

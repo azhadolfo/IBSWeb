@@ -1,18 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using IBS.Models.MasterFile;
+using IBS.Models.Mobility.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Models.Filpride.MasterFile;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
-using System.IO;
-using IBS.Models.MasterFile;
-using IBS.Models.Mobility.MasterFile;
 
 namespace IBS.Models.Mobility.ViewModels
 {
@@ -26,7 +16,7 @@ namespace IBS.Models.Mobility.ViewModels
         [Column(TypeName = "varchar(13)")]
         public string CustomerOrderSlipNo { get; set; } = string.Empty;
 
-        [Display(Name ="Date")]
+        [Display(Name = "Date")]
         public DateOnly Date { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
@@ -45,7 +35,7 @@ namespace IBS.Models.Mobility.ViewModels
         [Column(TypeName = "numeric(18,4)")]
         public decimal Amount { get; set; }
 
-        [Display(Name ="Plate Number")]
+        [Display(Name = "Plate Number")]
         [Column(TypeName = "varchar(10)")]
         public string PlateNo { get; set; }
 
@@ -57,11 +47,7 @@ namespace IBS.Models.Mobility.ViewModels
         [Column(TypeName = "varchar(20)")]
         public string Status { get; set; } = string.Empty;
 
-        [Display(Name = "Upload Name")]
-        [Column(TypeName = "varchar(1024)")]
-        public string? Upload { get; set; }
-
-        [Display(Name ="Date Loaded")]
+        [Display(Name = "Date Loaded")]
         public DateTime? LoadDate { get; set; }
 
         [Display(Name = "Station")]
@@ -99,7 +85,7 @@ namespace IBS.Models.Mobility.ViewModels
 
         [Display(Name = "Trip Ticket")]
         [Column(TypeName = "varchar(20)")]
-        public string? TripTicket {  get; set; }
+        public string? TripTicket { get; set; }
 
         public bool IsPrinted { get; set; }
 
@@ -114,7 +100,7 @@ namespace IBS.Models.Mobility.ViewModels
         [ForeignKey(nameof(ProductId))]
         public Product? Product { get; set; }
 
-        #endregion
+        #endregion Product's Properties
 
         #region Customer properties
 
@@ -123,7 +109,7 @@ namespace IBS.Models.Mobility.ViewModels
         [ForeignKey(nameof(CustomerId))]
         public MobilityCustomer? Customer { get; set; }
 
-        #endregion
+        #endregion Customer properties
 
         #region Stations properties
 
@@ -132,7 +118,7 @@ namespace IBS.Models.Mobility.ViewModels
         [ForeignKey(nameof(StationId))]
         public MobilityStation? MobilityStation { get; set; }
 
-        #endregion
+        #endregion Stations properties
 
         #region-- Select List
 
@@ -164,6 +150,17 @@ namespace IBS.Models.Mobility.ViewModels
         //[Column(TypeName = "numeric(18,4)")]
         //[DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         //public decimal BalanceQuantity { get; set; }
+
+        #endregion
+
+        #region Cloud Storage properties
+
+        [NotMapped]
+        public string? SignedUrl { get; set; }
+
+        public string? SavedUrl { get; set; }
+
+        public string? SavedFileName { get; set; }
 
         #endregion
     }
