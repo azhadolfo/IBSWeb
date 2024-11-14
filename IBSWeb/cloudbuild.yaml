@@ -2,6 +2,7 @@
   - name: gcr.io/cloud-builders/docker
     args:
         - build
+        - '--no-cache'
         - '-t'
         - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
         - '-f'
