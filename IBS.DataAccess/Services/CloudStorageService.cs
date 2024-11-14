@@ -33,8 +33,8 @@ namespace IBS.DataAccess.Services
             {
                 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
                 _googleCredential = environment == Environments.Production
-                    ? GoogleCredential.FromJson(_options.GCPStorageAuthFile)
-                    : GoogleCredential.FromFile(_options.GCPStorageAuthFile);
+                       ? GoogleCredential.GetApplicationDefault()
+                       : GoogleCredential.FromFile(_options.GCPStorageAuthFile);
 
                 _storageClient = StorageClient.Create(_googleCredential);
             }
