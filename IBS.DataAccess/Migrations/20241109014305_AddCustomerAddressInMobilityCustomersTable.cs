@@ -10,25 +10,20 @@ namespace IBS.DataAccess.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
+            migrationBuilder.AddColumn<string>(
                 name: "customer_address",
                 table: "mobility_customers",
                 type: "varchar(200)",
                 nullable: false,
-                oldClrType: typeof(string),
-                oldType: "text");
+                defaultValue: "");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
+            migrationBuilder.DropColumn(
                 name: "customer_address",
-                table: "mobility_customers",
-                type: "text",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "varchar(200)");
+                table: "mobility_customers");
         }
     }
 }
