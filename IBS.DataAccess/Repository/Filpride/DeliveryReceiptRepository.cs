@@ -140,9 +140,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 #region General Ledger Book Recording
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
-                var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductName);
-                var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductName);
-                var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductName);
+                var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
+                var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
+                var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
                 var netOfVatAmount = ComputeNetOfVat(deliveryReceipt.TotalAmount);
                 var vatAmount = ComputeVatAmount(netOfVatAmount);
                 var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
