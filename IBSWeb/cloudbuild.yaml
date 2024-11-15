@@ -1,29 +1,55 @@
 ﻿steps:
+  # Step 1: Route traffic to maintenance page
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Routing traffic to maintenance page..."
+        # Update Load Balancer URL map to route traffic to maintenance page
+        gcloud compute url-maps update bstorage-loadbalancer --default-service backendBuckets/backend-bucket --global
+
+  # Step 2: Build Docker image
   - name: gcr.io/cloud-builders/docker
     args:
-        - build
-        - '--no-cache'
-        - '-t'
-        - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
-        - '-f'
-        - 'IBSWeb/Dockerfile'
-        - .
+      - build
+      - '--no-cache'
+      - '-t'
+      - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+      - '-f'
+      - 'IBSWeb/Dockerfile'
+      - .
+
+  # Step 3: Push Docker image to Google Container Registry
   - name: gcr.io/cloud-builders/docker
     args:
-        - push
-        - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+      - push
+      - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+
+  # Step 4: Deploy Cloud Run Service
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     args:
-        - run
-        - deploy
-        - $_SERVICE_NAME
-        - '--image'
-        - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
-        - '--region'
-        - $_DEPLOY_REGION
-        - '--platform'
-        - $_PLATFORM
+      - run
+      - deploy
+      - $_SERVICE_NAME
+      - '--image'
+      - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+      - '--region'
+      - $_DEPLOY_REGION
+      - '--platform'
+      - $_PLATFORM
     entrypoint: gcloud
+
+  # Step 5: Route traffic back to the Cloud Run service
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Routing traffic back to Cloud Run service..."
+        # Update Load Balancer URL map to point back to Cloud Run service
+        gcloud compute url-maps update bstorage-loadbalancer --default-service backendBuckets/backend-bucket --global
+
 timeout: 1200s
 images:
   - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
