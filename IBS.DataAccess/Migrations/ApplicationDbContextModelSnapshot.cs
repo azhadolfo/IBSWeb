@@ -22,6 +22,27 @@ namespace IBS.DataAccess.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("IBS.Models.AppSetting", b =>
+                {
+                    b.Property<string>("SettingKey")
+                        .HasColumnType("text")
+                        .HasColumnName("setting_key");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("value");
+
+                    b.HasKey("SettingKey")
+                        .HasName("pk_app_settings");
+
+                    b.HasIndex("SettingKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_app_settings_setting_key");
+
+                    b.ToTable("app_settings", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", b =>
                 {
                     b.Property<int>("CheckVoucherHeaderId")

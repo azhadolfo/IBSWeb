@@ -19,7 +19,7 @@ namespace IBSWeb.Areas.User.Controllers
         public HomeController(ILogger<HomeController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _logger = logger;
-            _userManager = userManager; 
+            _userManager = userManager;
             _dbContext = dbContext;
         }
 
@@ -38,6 +38,11 @@ namespace IBSWeb.Areas.User.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        public IActionResult Maintenance()
+        {
+            return View("Maintenance");
         }
     }
 }
