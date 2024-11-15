@@ -128,10 +128,10 @@
                             <td class="text-start align-middle">
                                 @item.Product.ProductName
                             </td>
-                            <td class="text-start align-middle">
+                            <td class="text-end align-middle">
                                 @Html.DisplayFor(model => item.Quantity)
                             </td>
-                            <td class="text-start align-middle">
+                            <td class="text-end align-middle">
                                 @Html.DisplayFor(model => item.Amount)
                             </td>
                             <td class="text-center align-middle">
@@ -295,7 +295,7 @@
                     <tr>
                         <td class="text-start align-middle">${value.customerOrderSlipNo}</td>
                         ${currentStationCode === "ALL" ? `<td class="text-start align-middle">${value.mobilityStation?.stationName || ''}</td>` : ''}
-                        <td class="text-start align-middle">${new Date(value.date).toLocaleDateString()}</td>
+                        <td class="text-start align-middle">${new Date(value.date).toISOString().slice(0, 10).replace(/-/g, '/')}</td>
                         <td class="text-start align-middle">${value.customer?.customerName || ''}</td>
                         <td class="text-start align-middle">${value.driver || ''}</td>
                         <td class="text-start align-middle">${value.plateNo || ''}</td>
