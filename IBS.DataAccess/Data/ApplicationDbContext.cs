@@ -30,6 +30,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<LogMessage> LogMessages { get; set; }
 
+        public DbSet<AppSetting> AppSettings { get; set; }
+
         #region--MOBILITY
 
         #region--Sales Entity
@@ -673,6 +675,15 @@ namespace IBS.DataAccess.Data
             });
 
             #endregion
+
+            #endregion
+
+            #region--AppSettings
+
+            builder.Entity<AppSetting>(a =>
+            {
+                a.HasIndex(a => a.SettingKey).IsUnique();
+            });
 
             #endregion
         }
