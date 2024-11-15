@@ -76,15 +76,11 @@ namespace IBS.DataAccess.Services
         {
             try
             {
-                _logger.LogInformation($"Google Credential:{_googleCredential}");
-                var serviceCredential = _googleCredential.UnderlyingCredential as ServiceAccountCredential;
-                if (serviceCredential == null)
-                {
-                    throw new InvalidOperationException("Service account credentials are required to sign URLs.");
-                }
+                var bucketName = _options.GoogleCloudStorageBucketName;
+                var urlSigner = UrlSigner.FromCredential(_googleCredential);
 
-                var urlSigner = UrlSigner.FromServiceAccountCredential(serviceCredential);
-                var signedUrl = await urlSigner.SignAsync(_options.GoogleCloudStorageBucketName, fileNameToRead, TimeSpan.FromMinutes(timeOutInMinutes));
+                var signedUrl = await urlSigner.SignAsync(bucketName, fileNameToRead, TimeSpan.FromMinutes(timeOutInMinutes));
+
                 _logger.LogInformation($"Signed URL obtained for file '{fileNameToRead}'");
                 return signedUrl.ToString();
             }
