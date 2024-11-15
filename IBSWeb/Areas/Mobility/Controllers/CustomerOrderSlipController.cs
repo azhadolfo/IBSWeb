@@ -375,6 +375,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             model.Status = "Approved";
             model.ApprovedBy = _userManager.GetUserName(User);
             model.ApprovedDate = DateTime.Now;
+            model.DisapprovalRemarks = "";
 
             await _dbContext.SaveChangesAsync();
 
