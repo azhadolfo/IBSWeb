@@ -48,7 +48,7 @@
       - |
         echo "Routing traffic back to Cloud Run service..."
         # Update Load Balancer URL map to point back to Cloud Run service
-        gcloud compute url-maps update bstorage-loadbalancer --default-service backendBuckets/backend-bucket --global
+        gcloud compute url-maps update bstorage-loadbalancer --default-service ibs-web --global
 
 timeout: 1200s
 images:
