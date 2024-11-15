@@ -76,6 +76,7 @@ namespace IBS.DataAccess.Services
         {
             try
             {
+                _logger.LogInformation($"Google Credential:{_googleCredential}");
                 var serviceCredential = _googleCredential.UnderlyingCredential as ServiceAccountCredential;
                 if (serviceCredential == null)
                 {
