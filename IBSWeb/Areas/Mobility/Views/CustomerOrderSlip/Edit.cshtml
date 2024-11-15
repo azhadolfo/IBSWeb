@@ -17,7 +17,7 @@
     </div>
     <div class="card-body p-4">
         <form method="post" class="row">
-            <div class="border-2 p-3">
+            <div class="border-2 px-3 pt-1">
                 <div asp-validation-summary="ModelOnly"></div>
 
                 <input type="hidden" asp-for="CustomerOrderSlipId" />
@@ -27,15 +27,13 @@
                     <input type="hidden" asp-for="StationCode" value="@stationCode" />
                 }
 
-                @if (!string.IsNullOrEmpty(Model.DisapprovalRemarks))
+                @if (!string.IsNullOrEmpty(Model.DisapprovalRemarks) && (Model.Status == "Pending"))
                 {
-                    <div class="row pt-2">
-                        <div class="form-floating py-2 px-2 col-12">
-                            <input asp-for="DisapprovalRemarks" class="form-control border-0 shadow" placeholder="" readonly />
-                            <label asp-for="DisapprovalRemarks">Reason for disapproval:</label>
-                            <span asp-validation-for="DisapprovalRemarks" class="text-danger"></span>
-                        </div>
-                    </div>
+                    <h6 class="px-2 @(Model.Status == "Pending" ? "text-success" : "text-danger")"><b>Reason for previous disapproval:</b> "@Html.DisplayFor(model => model.DisapprovalRemarks)"</h6>
+                }
+                @if (!string.IsNullOrEmpty(Model.DisapprovalRemarks) && (Model.Status == "Disapproved"))
+                {
+                    <h6 class="px-2 @(Model.Status == "Pending" ? "text-success" : "text-danger")"><b>Reason for disapproval:</b> "@Html.DisplayFor(model => model.DisapprovalRemarks)"</h6>
                 }
 
                 <div class="row pt-2">
@@ -107,7 +105,7 @@
                     </div>
                 </div>
                 
-                <div class="row pt-2">
+                <div class="row pt-2 mt-2">
                     <div class="col-6 col-md-3">
                         <button type="submit" class="btn btn-primary form-control">Apply Changes</button>
                     </div>
