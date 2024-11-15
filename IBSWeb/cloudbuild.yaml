@@ -6,8 +6,9 @@
       - '-c'
       - |
         echo "Routing traffic to maintenance page..."
-        # Update Load Balancer URL map to route traffic to maintenance page
-        gcloud compute url-maps update bstorage-loadbalancer --default-service backendBuckets/backend-bucket --global
+        # Update Load Balancer URL map to route traffic to maintenance page (change to patch command)
+        gcloud compute url-maps patch bstorage-loadbalancer \
+          --default-service backendBuckets/backend-bucket --global
 
   # Step 2: Build Docker image
   - name: gcr.io/cloud-builders/docker
@@ -27,7 +28,7 @@
       - '$_GCR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
 
   # Step 4: Deploy Cloud Run Service
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk'
     args:
       - run
       - deploy
@@ -47,8 +48,9 @@
       - '-c'
       - |
         echo "Routing traffic back to Cloud Run service..."
-        # Update Load Balancer URL map to point back to Cloud Run service
-        gcloud compute url-maps update bstorage-loadbalancer --default-service ibs-web --global
+        # Update Load Balancer URL map to point back to Cloud Run service (change to patch command)
+        gcloud compute url-maps patch bstorage-loadbalancer \
+          --default-service ibs-web --global
 
 timeout: 1200s
 images:
