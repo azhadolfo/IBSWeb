@@ -7,7 +7,8 @@
       - |
         echo "Routing traffic to maintenance page..."
         # Update Load Balancer URL map to route traffic to maintenance page
-        gcloud compute url-maps patch bstorage-loadbalancer --default-service backendBuckets/backend-bucket --global
+        gcloud compute url-maps set-default-service bstorage-loadbalancer \
+          --default-service backendBuckets/backend-bucket --global
 
   # Step 2: Build Docker image
   - name: gcr.io/cloud-builders/docker
@@ -48,7 +49,8 @@
       - |
         echo "Routing traffic back to Cloud Run service..."
         # Update Load Balancer URL map to point back to Cloud Run service
-        gcloud compute url-maps patch bstorage-loadbalancer --default-service ibs-web --global
+        gcloud compute url-maps set-default-service bstorage-loadbalancer \
+          --default-service ibs-web --global
 
 timeout: 1200s
 images:
