@@ -12,6 +12,7 @@
         public const string Terms_45d = "45D";
         public const string Terms_60d = "60D";
         public const string Terms_90d = "90D";
+        public const string Terms_7pdc = "7PDC";
         public const string Terms_15pdc = "15PDC";
         public const string Terms_30pdc = "30PDC";
         public const string Terms_45pdc = "45PDC";
