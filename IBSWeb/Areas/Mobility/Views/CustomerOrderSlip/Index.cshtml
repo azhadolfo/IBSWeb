@@ -33,6 +33,9 @@
                             <input type="radio" name="stationRadio" value="" class="search-radio ms-2"> All Stations
                         </label>
                         <label>
+                            <input type="radio" name="stationRadio" value="S06" class="search-radio ms-2"> Batangas
+                        </label>
+                        <label>
                             <input type="radio" name="stationRadio" value="S08" class="search-radio ms-2"> Tarlac
                         </label>
                         <label>
@@ -207,6 +210,23 @@
                 var selectedFilter = $(this).val();
 
                 // Query based on radio buttons
+                if (stationFilter == "S06") {
+                    if (statusFilter == "Approved") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Approved" && j.StationCode == "S06")));
+                    }
+                    if (statusFilter == "Disapproved") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Disapproved" && j.StationCode == "S06")));
+                    }
+                    if (statusFilter == "") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.StationCode == "S06")));
+                    }
+                    if (statusFilter == "Lifted") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Lifted" && j.StationCode == "S06")));
+                    }
+                    if (statusFilter == "Pending") {
+                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Pending" && j.StationCode == "S06")));
+                    }
+                }
                 if (stationFilter == "S08"){
                     if (statusFilter == "Approved") {
                         var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Approved" && j.StationCode == "S08")));
