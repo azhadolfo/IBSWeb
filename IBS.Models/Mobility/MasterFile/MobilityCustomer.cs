@@ -39,9 +39,6 @@ namespace IBS.Models.Mobility.MasterFile
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
-        public decimal AmountLimit { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
         public decimal QuantityLimit { get; set; }
 
         [Display(Name = "Edited By")]
@@ -70,5 +67,7 @@ namespace IBS.Models.Mobility.MasterFile
         public List<SelectListItem>? MobilityStations { get; set; }
 
         #endregion --Select List--
+
+        public bool IsCheckDetailsRequired { get; set; }
     }
 }

@@ -47,11 +47,6 @@
                     <span asp-validation-for="CustomerTin" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="AmountLimit" class="form-control border-0 shadow " placeholder="" />
-                    <label asp-for="AmountLimit" class="ms-2">Credit Limit(Amount)<span class="required">*</span></label>
-                    <span asp-validation-for="AmountLimit" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
                     <input asp-for="QuantityLimit" class="form-control border-0 shadow " placeholder="" />
                     <label asp-for="QuantityLimit" class="ms-2">Credit Limit(Quantity)<span class="required">*</span></label>
                     <span asp-validation-for="QuantityLimit" class="text-danger"></span>
@@ -97,6 +92,12 @@
                         <option value="@SD.CustomerType_PO" selected>@SD.CustomerType_PO</option>
                     </select>
                     <span asp-validation-for="CustomerType" class="text-danger"></span>
+                </div>
+
+                <div class="form-check pb-2">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="IsCheckDetailsRequired" /> Select this option if the customer is required to provide check details.
+                    </label>
                 </div>
 
                 <div class="row pt-2">

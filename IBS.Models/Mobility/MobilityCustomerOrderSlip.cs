@@ -1,5 +1,6 @@
 ﻿using IBS.Models.MasterFile;
 using IBS.Models.Mobility.MasterFile;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -162,6 +163,18 @@ namespace IBS.Models.Mobility.ViewModels
 
         public string? SavedFileName { get; set; }
 
+        [NotMapped]
+        public string? CheckPictureSignedUrl { get; set; }
+
+        [NotMapped]
+        public IFormFile? CheckPicture { get; set; }
+
+        public string? CheckPictureSavedUrl { get; set; }
+
+        public string? CheckPictureSavedFileName { get; set; }
+
         #endregion
+
+        public string? CheckNo { get; set; }
     }
 }

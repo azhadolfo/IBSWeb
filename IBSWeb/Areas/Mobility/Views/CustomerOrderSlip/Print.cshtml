@@ -23,7 +23,6 @@
     </div>
 
     <div class="card-body p-4 table-responsive">
-
         <div class="row mt-2">
             <div class="col-6">
                 <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Customer.CustomerName):</b> @Html.DisplayFor(model => model.Customer.CustomerName)</h6>
@@ -116,8 +115,10 @@
 
         <form method="post" enctype="multipart/form-data" id="uploadForm" style="display: none">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <input type="hidden" name="id" value="@Model.CustomerOrderSlipId" />
+            <input type="hidden" asp-for="StationCode" />
+            <input type="hidden" asp-for="PlateNo" />
+            <input type="hidden" asp-for="Driver" />
+            <input type="hidden" asp-for="CustomerOrderSlipId" />
             <div class="row pt-2">
                 <div class="form-floating py-1 px-1 col-6">
                     <input type="datetime-local" id="uploadDate" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" name="loadDate" class="form-control border-0 shadow" placeholder="" required />
@@ -139,7 +140,24 @@
                 <input class="form-control form-control-sm" id="fileUpload" name="file" type='file' onchange="loadFile(event)" required />
                 <span asp-validation-for="SavedFileName" class="text-danger"></span>
             </div>
-            Note: Please include the timestamp in the image
+            @if (Model.Customer.IsCheckDetailsRequired)
+            {
+                <div class="form-group mb-3">
+                    <label for="file" class="form-label">Upload image of check</label>
+                    <input class="form-control form-control-sm" asp-for="CheckPicture" onchange="loadFile(event)" required />
+                    <span asp-validation-for="SavedFileName" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="CheckNo" class="form-control border-0 shadow " placeholder="Please input the last four digits of the check number." required min="4" />
+                    <label asp-for="CheckNo" class="ms-2">Check#<span class="required">*</span></label>
+                    <span asp-validation-for="CheckNo" class="text-danger"></span>
+                </div>
+            }
+            <pre>
+Note:
+1. Please include the timestamp in the image
+2. Please input the last four digits of the check number.
+</pre>
 
             <br />
 
@@ -165,17 +183,21 @@
         </form>
     </div>
 </div>
-<script>
-    var button = document.getElementById('enterProof');
-    var div1 = document.getElementById('buttons');
-    var uploadForm = document.getElementById('uploadForm');
 
-    button.addEventListener('click', function () {
-        div1.style.display = 'none';
-        uploadForm.style.display = '';
-    });
-</script>
 @section Scripts{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        var button = document.getElementById('enterProof');
+        var div1 = document.getElementById('buttons');
+        var uploadForm = document.getElementById('uploadForm');
+
+        button.addEventListener('click', function () {
+            div1.style.display = 'none';
+            uploadForm.style.display = '';
+        });
+    </script>
     <script>
         document.getElementById('approveButton').addEventListener('click', function () {
             Swal.fire({
