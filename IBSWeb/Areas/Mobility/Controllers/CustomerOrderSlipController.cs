@@ -499,6 +499,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             if (!string.IsNullOrWhiteSpace(model.SavedFileName))
             {
                 model.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.SavedFileName);
+                model.CheckPictureSignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.CheckPictureSavedFileName);
             }
         }
     }

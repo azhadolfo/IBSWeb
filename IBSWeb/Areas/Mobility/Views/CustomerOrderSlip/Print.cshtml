@@ -9,6 +9,7 @@
     var userDepartment = ViewBag.GetUserDepartment;
     var proofIsClicked = false;
     var imageSrc = Model.SignedUrl;
+    var imageSrc2 = Model.CheckPictureSignedUrl;
     var currentStationName = ViewData["CurrentStationName"] as string;
 }
 
@@ -42,6 +43,10 @@
                 @if (Model.LoadDate.HasValue)
                 {
                     <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.LoadDate):</b> @Html.DisplayFor(model => model.LoadDate)</h6>
+                }
+                @if (!string.IsNullOrEmpty(Model.CheckNo))
+                {
+                    <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.CheckNo):</b> @Html.DisplayFor(model => model.CheckNo)</h6>
                 }
             </div>
         </div>
@@ -83,6 +88,15 @@
                 </a>
             </div>
             <br />
+            if (Model.Customer.IsCheckDetailsRequired)
+            {
+                <div class="w-100 text-center">
+                    <a href="@imageSrc2" target="_blank">
+                        <img src="@imageSrc2" class="img-fluid" style="max-height: 300px; width:auto; cursor: pointer;" alt="@Model.CheckPictureSavedFileName">
+                    </a>
+                </div>
+                <br />
+            }
         }
 
         <div class="row pt-2" id="buttons">
@@ -132,40 +146,47 @@
                     <span asp-validation-for="TripTicket" class="text-danger"></span>
                 </div>
             </div>
-
             <br />
 
-            <div class="form-group mb-3">
-                <label for="file" class="form-label">Upload image of driver/vehicle</label>
-                <input class="form-control form-control-sm" id="fileUpload" name="file" type='file' onchange="loadFile(event)" required />
-                <span asp-validation-for="SavedFileName" class="text-danger"></span>
-            </div>
             @if (Model.Customer.IsCheckDetailsRequired)
             {
-                <div class="form-group mb-3">
-                    <label for="file" class="form-label">Upload image of check</label>
-                    <input class="form-control form-control-sm" asp-for="CheckPicture" onchange="loadFile(event)" required />
-                    <span asp-validation-for="SavedFileName" class="text-danger"></span>
+                <div class="form-floating row pb-2">
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="CheckNo" class="form-control border-0 shadow " placeholder="Please input the last four digits of the check number." required min="4" />
+                        <label asp-for="CheckNo" class="ms-2">Check#<span class="required">*</span></label>
+                        <span asp-validation-for="CheckNo" class="text-danger"></span>
+                        <pre>(Note: Only input the last 4 digits of the check)</pre>
+                    </div>
                 </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="CheckNo" class="form-control border-0 shadow " placeholder="Please input the last four digits of the check number." required min="4" />
-                    <label asp-for="CheckNo" class="ms-2">Check#<span class="required">*</span></label>
-                    <span asp-validation-for="CheckNo" class="text-danger"></span>
-                </div>
+                <br />
             }
-            <pre>
-Note:
-1. Please include the timestamp in the image
-2. Please input the last four digits of the check number.
-</pre>
 
+            <div class="row pt-2 col-12 text-center" id="imagesDiv" style="display: none">
+                <div class="text-center">
+                    <img id="output" class="img-fluid col-6" style="max-height: 300px; width:auto; " />
+                </div>
+            </div>
             <br />
-
-            <div class="w-100 text-center">
-                <br /><img id="output" class="img-fluid" style="max-height: 300px; width:auto; " />
+            <div class="form-group">
+                <input class="form-control form-control-sm" id="fileUpload" name="file" type='file' onchange="loadFile(event)" required />
+                <label for="file" class="form-label">Upload image of driver/vehicle. <pre>(Note: Please include the timestamp in the image)</pre></label>
+                <span asp-validation-for="SavedFileName" class="text-danger"></span>
             </div>
 
-            <br />
+            @if (Model.Customer.IsCheckDetailsRequired)
+            {
+                <div class="row pt-2 col-12 text-center" id="imagesDiv2" style="display: none">
+                    <div class="text-center">
+                        <img id="output2" class="img-fluid col-6" style="max-height: 300px; width:auto; " />
+                    </div>
+                </div>
+                <br />
+                <div class="form-group">
+                    <input class="form-control form-control-sm" asp-for="CheckPicture" onchange="loadFile2(event)" required />
+                    <label for="file" class="form-label">Upload image of check <pre>(Note: Last four digits of the check should be visible)</pre></label>
+                    <span asp-validation-for="SavedFileName" class="text-danger"></span>
+                </div>
+            }
 
             <div class="row pt-2">
                 <div class="col-6 col-md-3">
@@ -249,9 +270,20 @@ Note:
     <script>
         var loadFile = function (event) {
             var image = document.getElementById('output');
+            var imagesDiv = $('#imagesDiv');
+            imagesDiv.show();
             image.src = URL.createObjectURL(event.target.files[0]);
             var objectURL = URL.createObjectURL(event.target.files[0]);
             image.src = objectURL;
+        };
+
+        var loadFile2 = function (event) {
+            var image2 = document.getElementById('output2');
+            var imagesDiv2 = $('#imagesDiv2');
+            imagesDiv2.show();
+            image2.src = URL.createObjectURL(event.target.files[0]);
+            var objectURL2 = URL.createObjectURL(event.target.files[0]);
+            image2.src = objectURL2;
         };
 
         (document).getElementById('uploadButton').addEventListener('click', function () {

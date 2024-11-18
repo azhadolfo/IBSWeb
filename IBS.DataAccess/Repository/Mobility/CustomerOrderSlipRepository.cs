@@ -19,7 +19,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 .FirstOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken)
                 ?? throw new ArgumentException("Customer not found!", nameof(customerId));
 
-            if (oldQuantity != 0)
+            if (oldQuantity != default)
             {
                 customer.QuantityLimit += oldQuantity;
             }
