@@ -10,8 +10,6 @@ using IBS.Models.Mobility.MasterFile;
 using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using System.Threading;
 
 namespace IBS.DataAccess.Repository
 {
@@ -38,11 +36,13 @@ namespace IBS.DataAccess.Repository
         public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
         public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
 
+        public Mobility.IRepository.ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; private set; }
+
         #endregion
 
         #region--Filpride
 
-        public ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; private set; }
+        public Filpride.IRepository.ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; private set; }
         public IDeliveryReceiptRepository FilprideDeliveryReceipt { get; private set; }
         public ICustomerRepository FilprideCustomer { get; private set; }
         public ISupplierRepository FilprideSupplier { get; private set; }
@@ -116,12 +116,13 @@ namespace IBS.DataAccess.Repository
             MobilityStation = new StationRepository(_db);
             MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
             MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
+            MobilityCustomerOrderSlip = new Mobility.CustomerOrderSlipRepository(_db);
 
             #endregion
 
             #region--Filpride
 
-            FilprideCustomerOrderSlip = new CustomerOrderSlipRepository(_db);
+            FilprideCustomerOrderSlip = new Filpride.CustomerOrderSlipRepository(_db);
             FilprideDeliveryReceipt = new DeliveryReceiptRepository(_db);
             FilprideCustomer = new CustomerRepository(_db);
             FilprideSupplier = new SupplierRepository(_db);
@@ -186,13 +187,14 @@ namespace IBS.DataAccess.Repository
                 })
                 .ToListAsync(cancellationToken);
         }
+
         public async Task<List<SelectListItem>> GetMobilityStationListWithCustomersAsyncByCode(List<MobilityCustomer> mobilityCustomers, CancellationToken cancellationToken = default)
         {
             var customerStationCodes = mobilityCustomers
                .Select(mc => mc.StationCode)
                .Distinct() // Optional: To ensure no duplicate StationCodes
                .ToList();
-            
+
             List<SelectListItem> selectListItem = await _db.MobilityStations
                 .Where(s => s.IsActive)
                 .Where(s => customerStationCodes.Contains(s.StationCode)) // Filter based on StationCode

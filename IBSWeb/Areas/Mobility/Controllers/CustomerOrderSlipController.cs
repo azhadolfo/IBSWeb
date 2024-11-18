@@ -127,6 +127,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     #region -- selected customer --
@@ -171,6 +173,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #endregion -- Generate COS No --
 
+                    #region-- Deduct the Customer Credit Limit --
+
+                    await _unitOfWork.MobilityCustomerOrderSlip.UpdateCustomerCreditLimitAsync(model.CustomerId, model.Quantity, cancellationToken: cancellationToken);
+
+                    #endregion
+
                     model.CustomerOrderSlipNo = series;
                     model.StationCode = stationCodeClaims;
                     model.Status = "Pending";
@@ -186,12 +194,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     await _dbContext.MobilityCustomerOrderSlips.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
 
                     TempData["success"] = "Creation Succeed!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
                     TempData["error"] = ex.Message;
@@ -236,6 +246,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     #region -- selected customer --
@@ -260,7 +272,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     var existingModel = await _dbContext.MobilityCustomerOrderSlips.FindAsync(model.CustomerOrderSlipId);
                     existingModel.Date = model.Date;
-                    existingModel.Quantity = model.Quantity;
                     existingModel.PricePerLiter = model.PricePerLiter;
                     existingModel.Address = model.Address;
                     existingModel.ProductId = model.ProductId;
@@ -279,13 +290,23 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #endregion -- Assign New Values --
 
+                    #region-- Deduct the Customer Credit Limit --
+
+                    await _unitOfWork.MobilityCustomerOrderSlip.UpdateCustomerCreditLimitAsync(model.CustomerId, model.Quantity, existingModel.Quantity, cancellationToken: cancellationToken);
+                    existingModel.Quantity = model.Quantity;
+
+                    #endregion
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+
                     TempData["success"] = "Edit Complete!";
 
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
                     TempData["error"] = ex.Message;
@@ -336,37 +357,63 @@ namespace IBSWeb.Areas.Mobility.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Print(int id, IFormFile file, DateTime loadDate, string tripTicket, CancellationToken cancellationToken)
+        public async Task<IActionResult> Print(MobilityCustomerOrderSlip model, IFormFile file, DateTime loadDate, string tripTicket, CancellationToken cancellationToken)
         {
-            if (file.ContentType == "image/png" || file.ContentType == "image/jpg" || file.ContentType == "image/jpeg")
+            if (ModelState.IsValid)
             {
-                if (file.Length <= 20000000)
+                try
                 {
-                    var model = await _dbContext.MobilityCustomerOrderSlips
-                        .Include(m => m.Customer)
-                        .Include(m => m.Product)
-                        .FirstOrDefaultAsync(m => m.CustomerOrderSlipId == id, cancellationToken);
+                    if (file.ContentType.StartsWith("image"))
+                    {
+                        if (file.Length <= 20000000)
+                        {
+                            var existingModel = await _dbContext.MobilityCustomerOrderSlips
+                                .Include(m => m.Customer)
+                                .Include(m => m.Product)
+                                .FirstOrDefaultAsync(m => m.CustomerOrderSlipId == model.CustomerOrderSlipId, cancellationToken);
 
-                    model.SavedFileName = GenerateFileNameToSave(file.FileName);
-                    model.SavedUrl = await _cloudStorageService.UploadFileAsync(file, model.SavedFileName);
+                            existingModel.SavedFileName = GenerateFileNameToSave(file.FileName);
+                            existingModel.SavedUrl = await _cloudStorageService.UploadFileAsync(file, existingModel.SavedFileName);
 
-                    model.LoadDate = loadDate;
-                    model.TripTicket = tripTicket;
-                    model.Status = "Lifted";
-                    model.UploadedBy = _userManager.GetUserName(User);
-                    model.UploadedDate = DateTime.Now;
+                            if (model.CheckPicture != null)
+                            {
+                                if (model.CheckPicture.Length > 20000000 || model.CheckPicture.ContentType.StartsWith("image"))
+                                {
+                                    existingModel.CheckPictureSavedFileName = GenerateFileNameToSave(model.CheckPicture.FileName);
+                                    existingModel.CheckPictureSavedUrl = await _cloudStorageService.UploadFileAsync(model.CheckPicture, existingModel.CheckPictureSavedFileName);
+                                    existingModel.CheckNo = model.CheckNo;
+                                }
+                                else
+                                {
+                                    TempData["error"] = "Error on uploading check details";
+                                    return RedirectToAction(nameof(Print), new { model.CustomerOrderSlipId });
+                                }
+                            }
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                            existingModel.LoadDate = loadDate;
+                            existingModel.TripTicket = tripTicket;
+                            existingModel.Status = "Lifted";
+                            existingModel.UploadedBy = _userManager.GetUserName(User);
+                            existingModel.UploadedDate = DateTime.Now;
 
-                    TempData["success"] = "Record Updated Successfully!";
+                            await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    return RedirectToAction(nameof(Index));
+                            TempData["success"] = "Record Updated Successfully!";
+
+                            return RedirectToAction(nameof(Index));
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.ToString();
+                    return RedirectToAction(nameof(Print), new { model.CustomerOrderSlipId });
                 }
             }
 
             TempData["error"] = "Please upload an image file only!";
 
-            return RedirectToAction(nameof(Print), new { id });
+            return RedirectToAction(nameof(Print), new { model.CustomerOrderSlipId });
         }
 
         public async Task<IActionResult> ApproveCOS(int id, CancellationToken cancellationToken)

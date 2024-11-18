@@ -114,11 +114,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     existingModel.CustomerTerms = model.CustomerTerms;
                     existingModel.CustomerAddress = model.CustomerAddress;
                     existingModel.CustomerTin = model.CustomerTin;
-                    existingModel.AmountLimit = model.AmountLimit;
                     existingModel.QuantityLimit = model.QuantityLimit;
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTime.Now;
                     existingModel.CustomerType = model.CustomerType;
+                    existingModel.IsCheckDetailsRequired = model.IsCheckDetailsRequired;
 
                     #endregion -- Assign New Values --
 
