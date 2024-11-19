@@ -485,7 +485,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
-                    var cosSummary = await _unitOfWork.FilprideReport.GetCosUnserveVolume(model.DateFrom, model.DateTo, companyClaims);
+                    var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims);
 
                     using var package = new ExcelPackage();
                     var worksheet = package.Workbook.Worksheets.Add("COS Unserved Volume");
