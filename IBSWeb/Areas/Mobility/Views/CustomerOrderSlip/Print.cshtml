@@ -206,9 +206,6 @@
 </div>
 
 @section Scripts{
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
     <script>
         var button = document.getElementById('enterProof');
         var div1 = document.getElementById('buttons');
@@ -285,46 +282,5 @@
             var objectURL2 = URL.createObjectURL(event.target.files[0]);
             image2.src = objectURL2;
         };
-
-        (document).getElementById('uploadButton').addEventListener('click', function () {
-            event.preventDefault();
-            var fileUpload = document.getElementById('fileUpload');
-            var uploadDate = document.getElementById('uploadDate');
-            var tripTicket = document.getElementById('tripTicket');
-
-            if (uploadDate.value.trim() === "" || tripTicket.value.trim() === "" || fileUpload.value.trim === "") {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Please fill in all required fields.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            }
-            else {
-                if (fileUpload.files.length > 0) {
-                    Swal.fire({
-                        title: 'Enter proof of transaction?',
-                        text: "You can't change these later",
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes',
-                        cancelButtonText: 'No'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            console.log("submit button is clicked");
-                            document.getElementById('submitButton').click();
-                        }
-                    });
-                }
-                else {
-                    Swal.fire({
-                        title: 'Oops!',
-                        text: 'Please put proof of transaction!',
-                        icon: 'warning',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            }
-        });
     </script>
 }
