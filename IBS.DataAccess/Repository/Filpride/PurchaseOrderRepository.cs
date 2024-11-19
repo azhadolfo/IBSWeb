@@ -184,9 +184,13 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     #region Update RR Amount
 
-                    receivingReports[i].Amount = receivingReports[i].QuantityReceived * model.TriggeredPrice;
+                    // Calculate the effective volume
+                    var effectiveVolume = Math.Min(receivingReports[i].QuantityReceived, model.TriggeredVolume - model.AppliedVolume);
+
+                    // Update the RR Amount based on the effective volume
+                    receivingReports[i].Amount = effectiveVolume * model.TriggeredPrice;
                     receivingReports[i].IsCostUpdated = true;
-                    model.AppliedVolume += receivingReports[i].QuantityReceived;
+                    model.AppliedVolume += effectiveVolume;
 
                     #endregion Update RR Amount
 
@@ -250,6 +254,10 @@ namespace IBS.DataAccess.Repository.Filpride
                     }
 
                     #endregion Update RR General Ledger
+
+                    // Break the loop if TriggeredQuantity is met
+                    if (model.AppliedVolume >= model.TriggeredVolume)
+                        break;
                 }
 
                 #region ReCalculate Inventory
