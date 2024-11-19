@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.Mobility.IRepository;
+using IBS.Models.Mobility.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.IRepository
@@ -22,6 +23,10 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<List<SelectListItem>> GetChartOfAccountListAsyncById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetCompanyListAsyncByName(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetCashierListAsyncByUsernameAsync(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetCashierListAsyncByStationAsync(CancellationToken cancellationToken = default);
 
         #region--Mobility
 
@@ -51,22 +56,32 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; }
 
+        Mobility.IRepository.ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; }
+
         Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMobilityStationListAsyncByCode(CancellationToken cancellationToken = default);
 
+        Task<List<SelectListItem>> GetMobilityStationListWithCustomersAsyncByCode(List<MobilityCustomer> mobilityCustomers, CancellationToken cancellationToken = default);
+
         Task<List<SelectListItem>> GetMobilityCustomerListAsyncByCodeName(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetMobilityCustomerListAsyncById(string stationCodeClaims, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetMobilityCustomerListAsyncByIdAll(string stationCodeClaims, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMobilityCustomerListAsyncByCode(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(CancellationToken cancellationToken = default);
+
+        Task<string> GetMobilityStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken = default);
 
         #endregion
 
         #region--Filpride
 
         Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; }
-        ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; }
+        Filpride.IRepository.ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; }
         IDeliveryReceiptRepository FilprideDeliveryReceipt { get; }
         ISupplierRepository FilprideSupplier { get; }
         ICustomerRepository FilprideCustomer { get; }

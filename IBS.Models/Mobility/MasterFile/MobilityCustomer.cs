@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Mobility.MasterFile
@@ -8,11 +9,6 @@ namespace IBS.Models.Mobility.MasterFile
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CustomerId { get; set; }
-
-        [Display(Name = "Customer Code")]
-        [Column(TypeName = "varchar(7)")]
-        [StringLength(7)]
-        public string? CustomerCode { get; set; }
 
         [Display(Name = "Customer Name")]
         [Column(TypeName = "varchar(50)")]
@@ -29,6 +25,9 @@ namespace IBS.Models.Mobility.MasterFile
         [StringLength(3)]
         public string StationCode { get; set; }
 
+        [Column(TypeName = "varchar(200)")]
+        public string CustomerAddress { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         [Display(Name = "Created By")]
@@ -39,6 +38,9 @@ namespace IBS.Models.Mobility.MasterFile
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = true)]
+        public decimal QuantityLimit { get; set; }
+
         [Display(Name = "Edited By")]
         [Column(TypeName = "varchar(50)")]
         [StringLength(50)]
@@ -46,5 +48,26 @@ namespace IBS.Models.Mobility.MasterFile
 
         [Display(Name = "Edited Date")]
         public DateTime? EditedDate { get; set; }
+
+        [Required]
+        [Display(Name = "Payment Terms")]
+        [Column(TypeName = "varchar(10)")]
+        public string CustomerTerms { get; set; }
+
+        [Display(Name = "Customer TIN")]
+        public string CustomerTin { get; set; }
+
+        [Display(Name = "Customer Type")]
+        [Column(TypeName = "varchar(10)")]
+        public string CustomerType { get; set; }
+
+        #region --Select List--
+
+        [NotMapped]
+        public List<SelectListItem>? MobilityStations { get; set; }
+
+        #endregion --Select List--
+
+        public bool IsCheckDetailsRequired { get; set; }
     }
 }

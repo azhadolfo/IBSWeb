@@ -1,0 +1,286 @@
+﻿@model MobilityCustomerOrderSlip
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@using IBS.Utility
+
+@{
+    ViewData["Title"] = "Preview Customer Order Slip";
+    var userDepartment = ViewBag.GetUserDepartment;
+    var proofIsClicked = false;
+    var imageSrc = Model.SignedUrl;
+    var imageSrc2 = Model.CheckPictureSignedUrl;
+    var currentStationName = ViewData["CurrentStationName"] as string;
+}
+
+<div class="card shadow border-0 mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">PREVIEW CUSTOMER ORDER SLIP: <u>@currentStationName</u></h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body p-4 table-responsive">
+        <div class="row mt-2">
+            <div class="col-6">
+                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Customer.CustomerName):</b> @Html.DisplayFor(model => model.Customer.CustomerName)</h6>
+                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Address):</b> @Html.DisplayFor(model => model.Address)</h6>
+                <h6 class="px-2"><b>Plate Number:</b> @Html.DisplayFor(model => model.PlateNo)</h6>
+                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Driver):</b> @Html.DisplayFor(model => model.Driver)</h6>
+                @if (!string.IsNullOrEmpty(Model.TripTicket))
+                {
+                    <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.TripTicket):</b> @Html.DisplayFor(model => model.TripTicket)</h6>
+                }
+            </div>
+
+            <div class="col-6" style="white-space: nowrap;">
+                <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.Date):</b> @Html.DisplayFor(model => model.Date)</h6>
+                <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.MobilityStation.StationName):</b> @Html.DisplayFor(model => model.MobilityStation.StationName)</h6>
+                <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.Terms):</b> @Html.DisplayFor(model => model.Customer.CustomerTerms)</h6>
+                @if (Model.LoadDate.HasValue)
+                {
+                    <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.LoadDate):</b> @Html.DisplayFor(model => model.LoadDate)</h6>
+                }
+                @if (!string.IsNullOrEmpty(Model.CheckNo))
+                {
+                    <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.CheckNo):</b> @Html.DisplayFor(model => model.CheckNo)</h6>
+                }
+            </div>
+        </div>
+
+        <br />
+
+        <table class="table table-bordered table-striped px-4">
+            <thead>
+                <tr>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Quantity)</th>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.PricePerLiter)</th>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Amount)</th>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Product.ProductName)</th>
+                </tr>
+            </thead>
+            <tr>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Quantity)</td>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.PricePerLiter)</td>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Amount)</td>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Product.ProductName)</td>
+            </tr>
+        </table>
+
+        @if (!string.IsNullOrEmpty(Model.DisapprovalRemarks) && (Model.Status == "Pending"))
+        {
+            <h6 class="px-2 m-4 @(Model.Status == "Pending" ? "text-success" : "text-danger")"><b>Reason for previous disapproval:</b> "@Html.DisplayFor(model => model.DisapprovalRemarks)"</h6>
+        }
+        @if (!string.IsNullOrEmpty(Model.DisapprovalRemarks) && (Model.Status == "Disapproved"))
+        {
+            <h6 class="px-2 m-4 @(Model.Status == "Pending" ? "text-success" : "text-danger")"><b>Reason for disapproval:</b> "@Html.DisplayFor(model => model.DisapprovalRemarks)"</h6>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.SavedFileName))
+        {
+            <br />
+            <div class="w-100 text-center">
+                <a href="@imageSrc" target="_blank">
+                    <img src="@imageSrc" class="img-fluid" style="max-height: 300px; width:auto; cursor: pointer;" alt="@Model.SavedFileName">
+                </a>
+            </div>
+            <br />
+            if (Model.Customer.IsCheckDetailsRequired)
+            {
+                <div class="w-100 text-center">
+                    <a href="@imageSrc2" target="_blank">
+                        <img src="@imageSrc2" class="img-fluid" style="max-height: 300px; width:auto; cursor: pointer;" alt="@Model.CheckPictureSavedFileName">
+                    </a>
+                </div>
+                <br />
+            }
+        }
+
+        <div class="row pt-2" id="buttons">
+            @if (userDepartment == SD.Department_Finance && Model.Status == "Pending" || User.IsInRole("Admin") && Model.Status == "Pending")
+            {
+                <div class="col-6 col-md-3">
+                    <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
+                </div>
+            }
+
+            @if (string.IsNullOrEmpty(Model.SavedFileName) && Model.Status == "Approved" && (userDepartment == SD.Department_StationCashier || User.IsInRole("Admin")))
+            {
+                <div class="col-6 col-md-3">
+                    <a id="enterProof" class="btn btn-primary border form-control buttons">
+                        Enter proof of transaction
+                    </a>
+                </div>
+            }
+            <div class="col-6 col-md-3">
+                <a @* asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Printed" asp-route-id="@Model.CustomerOrderSlipId" *@ onclick="window.print()" class="btn btn-primary form-control buttons">
+                    Print
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border form-control buttons">
+                    Back to List
+                </a>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" id="uploadForm" style="display: none">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="StationCode" />
+            <input type="hidden" asp-for="PlateNo" />
+            <input type="hidden" asp-for="Driver" />
+            <input type="hidden" asp-for="CustomerOrderSlipId" />
+            <div class="row pt-2">
+                <div class="form-floating py-1 px-1 col-6">
+                    <input type="datetime-local" id="uploadDate" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" name="loadDate" class="form-control border-0 shadow" placeholder="" required />
+                    <label>Transaction Date<span class="required">*</span></label>
+                    <span asp-validation-for="LoadDate" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating py-1 px-1 col-6">
+                    <input value="" id="tripTicket" name="tripTicket" class="form-control border-0 shadow" placeholder="" required />
+                    <label>Trip Ticket<span class="required">*</span></label>
+                    <span asp-validation-for="TripTicket" class="text-danger"></span>
+                </div>
+            </div>
+            <br />
+
+            @if (Model.Customer.IsCheckDetailsRequired)
+            {
+                <div class="form-floating row pb-2">
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="CheckNo" class="form-control border-0 shadow " placeholder="Please input the last four digits of the check number." required min="4" />
+                        <label asp-for="CheckNo" class="ms-2">Check#<span class="required">*</span></label>
+                        <span asp-validation-for="CheckNo" class="text-danger"></span>
+                        <pre>(Note: Only input the last 4 digits of the check)</pre>
+                    </div>
+                </div>
+                <br />
+            }
+
+            <div class="row pt-2 col-12 text-center" id="imagesDiv" style="display: none">
+                <div class="text-center">
+                    <img id="output" class="img-fluid col-6" style="max-height: 300px; width:auto; " />
+                </div>
+            </div>
+            <br />
+            <div class="form-group">
+                <input class="form-control form-control-sm" id="fileUpload" name="file" type='file' onchange="loadFile(event)" required />
+                <label for="file" class="form-label">Upload image of driver/vehicle. <pre>(Note: Please include the timestamp in the image)</pre></label>
+                <span asp-validation-for="SavedFileName" class="text-danger"></span>
+            </div>
+
+            @if (Model.Customer.IsCheckDetailsRequired)
+            {
+                <div class="row pt-2 col-12 text-center" id="imagesDiv2" style="display: none">
+                    <div class="text-center">
+                        <img id="output2" class="img-fluid col-6" style="max-height: 300px; width:auto; " />
+                    </div>
+                </div>
+                <br />
+                <div class="form-group">
+                    <input class="form-control form-control-sm" asp-for="CheckPicture" onchange="loadFile2(event)" required />
+                    <label for="file" class="form-label">Upload image of check <pre>(Note: Last four digits of the check should be visible)</pre></label>
+                    <span asp-validation-for="SavedFileName" class="text-danger"></span>
+                </div>
+            }
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button id="uploadButton" class="btn btn-primary form-control buttons">Submit</button>
+                </div>
+                <button id="submitButton" type="submit" class="btn btn-primary form-control" style="display: none;">
+                    Submit
+                </button>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border form-control buttons">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        var button = document.getElementById('enterProof');
+        var div1 = document.getElementById('buttons');
+        var uploadForm = document.getElementById('uploadForm');
+
+        button.addEventListener('click', function () {
+            div1.style.display = 'none';
+            uploadForm.style.display = '';
+        });
+    </script>
+    <script>
+        document.getElementById('approveButton').addEventListener('click', function () {
+            Swal.fire({
+                title: 'Choose an action',
+                text: "Approve this COS entry?",
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'Approve',
+                denyButtonText: 'Disapprove',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var url = `@Url.Action("ApproveCOS", "CustomerOrderSlip", new { area = "Mobility" })/${@Model.CustomerOrderSlipId}`;
+                    window.location.href = url;
+                } else if (result.isDenied) {
+                    Swal.fire({
+                        input: "textarea",
+                        inputLabel: "Remarks",
+                        inputPlaceholder: "Please indicate reason for disapproval...",
+                        inputAttributes: {
+                            "aria-label": "Please indicate reason for disapproval..."
+                        },
+                        showCancelButton: true
+                    }).then((inputResult) => {
+                        if (inputResult.value) {
+                            // Encode the message to safely include it in the URL
+                            var encodedMessage = encodeURIComponent(inputResult.value);
+
+                            // Build the URL with the encoded message as a query parameter
+                            var url = `@Url.Action("DisapproveCOS", "CustomerOrderSlip", new { area = "Mobility" })/${@Model.CustomerOrderSlipId}?message=${encodedMessage}`;
+
+                            // Redirect to the URL
+                            window.location.href = url;
+                        }
+                    });
+
+                }
+            });
+        });
+    </script>
+
+    <script>
+        function printPage() {
+            window.print();
+        }
+    </script>
+
+    <script>
+        var loadFile = function (event) {
+            var image = document.getElementById('output');
+            var imagesDiv = $('#imagesDiv');
+            imagesDiv.show();
+            image.src = URL.createObjectURL(event.target.files[0]);
+            var objectURL = URL.createObjectURL(event.target.files[0]);
+            image.src = objectURL;
+        };
+
+        var loadFile2 = function (event) {
+            var image2 = document.getElementById('output2');
+            var imagesDiv2 = $('#imagesDiv2');
+            imagesDiv2.show();
+            image2.src = URL.createObjectURL(event.target.files[0]);
+            var objectURL2 = URL.createObjectURL(event.target.files[0]);
+            image2.src = objectURL2;
+        };
+    </script>
+}

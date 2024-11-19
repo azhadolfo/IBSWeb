@@ -18,12 +18,14 @@ namespace IBSWeb.Areas.Identity.Pages.Account
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger, IUnitOfWork unitOfWork)
+        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
         {
             _signInManager = signInManager;
             _logger = logger;
             _unitOfWork = unitOfWork;
+            _userManager = userManager;
         }
 
         /// <summary>
@@ -55,6 +57,9 @@ namespace IBSWeb.Areas.Identity.Pages.Account
         public List<SelectListItem> Stations { get; set; }
 
         public List<SelectListItem> Companies { get; set; }
+
+        public List<SelectListItem> Users { get; set; }
+        public List<SelectListItem> StationAccess { get; set; }
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -183,6 +188,8 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             Stations = await _unitOfWork.GetMobilityStationListAsyncByCode();
             Companies = await _unitOfWork.GetCompanyListAsyncByName();
+            Users = await _unitOfWork.GetCashierListAsyncByUsernameAsync();
+            StationAccess = await _unitOfWork.GetCashierListAsyncByStationAsync();
             ReturnUrl = returnUrl;
         }
 

@@ -73,18 +73,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(s =>
                         s.ReceivingReportNo.ToLower().Contains(searchValue) ||
                         s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue) ||
-                        s.SupplierInvoiceNumber?.ToLower().Contains(searchValue) == true ||
-                        s.SupplierInvoiceDate?.ToString().Contains(searchValue) == true ||
-                        s.SupplierDrNo?.ToLower().Contains(searchValue) == true ||
-                        s.WithdrawalCertificate?.ToLower().Contains(searchValue) == true ||
-                        s.TruckOrVessels.ToLower().Contains(searchValue) ||
+                        s.DeliveryReceipt?.DeliveryReceiptNo.ToLower().Contains(searchValue) == true ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.QuantityReceived.ToString().Contains(searchValue) ||
-                        s.QuantityDelivered.ToString().Contains(searchValue) ||
                         s.Amount.ToString().Contains(searchValue) ||
-                        s.AuthorityToLoadNo?.ToLower().Contains(searchValue) == null ||
-                        s.Remarks.ToLower().Contains(searchValue) ||
-                        s.CreatedBy.ToLower().Contains(searchValue)
+                        s.CreatedBy.ToLower().Contains(searchValue) ||
+                        s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }

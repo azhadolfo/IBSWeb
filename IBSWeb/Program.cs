@@ -3,13 +3,15 @@ using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.Filpride;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Mobility;
+using IBS.DataAccess.Services;
+using IBS.Utility;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load configuration based on the environment
+//// Load configuration based on the environment
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
@@ -36,6 +38,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IHostedService, ImportService>();
 builder.Services.AddHostedService<AutomatedEntries>();
 builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
+builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
+builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 builder.Services.AddSignalR();
 
 var app = builder.Build();
@@ -43,7 +47,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/User/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
@@ -51,9 +55,10 @@ if (!app.Environment.IsDevelopment())
 //Postgre date and time behaviour
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseMiddleware<MaintenanceMiddleware>();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

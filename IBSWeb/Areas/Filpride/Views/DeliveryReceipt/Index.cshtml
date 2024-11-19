@@ -38,6 +38,9 @@
                         COS No
                     </th>
                     <th>
+                        PO No
+                    </th>
+                    <th>
                         Customer
                     </th>
                     <th>
@@ -82,6 +85,7 @@
                     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
                 }},
                 { "data": "customerOrderSlip.customerOrderSlipNo" },
+                { "data": "purchaseOrder.purchaseOrderNo" },
                 { "data": "customer.customerName" },
                 { "data": "customerOrderSlip.product.productName" },
                 {

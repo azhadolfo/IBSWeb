@@ -1,0 +1,189 @@
+﻿@model MobilityCustomer
+@using IBS.Utility
+
+@{
+    ViewData["Title"] = "Create Customer";
+    var stationCode = ViewData["StationCode"] as string;
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Customer</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <div class="border p-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                @if (stationCode != "ALL")
+                {
+                    <input type="hidden" asp-for="StationCode" value="@stationCode" />
+                }
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="CustomerName" class="form-control border-0 shadow " placeholder="" />
+                    <label asp-for="CustomerName" class="ms-2">Customer Name<span class="required">*</span></label>
+                    <span asp-validation-for="CustomerName" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="CustomerCodeName" class="form-control border-0 shadow " placeholder="" />
+                    <label asp-for="CustomerCodeName" class="ms-2">Customer Code Name<span class="required">*</span></label>
+                    <span asp-validation-for="CustomerCodeName" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="CustomerAddress" class="form-control border-0 shadow " placeholder="" />
+                    <label asp-for="CustomerAddress" class="ms-2">Customer Address<span class="required">*</span></label>
+                    <span asp-validation-for="CustomerAddress" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="CustomerTin" class="form-control border-0 shadow " placeholder="" />
+                    <label asp-for="CustomerTin" class="ms-2">Customer TIN<span class="required">*</span></label>
+                    <span asp-validation-for="CustomerTin" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="QuantityLimit" class="form-control border-0 shadow " placeholder="" />
+                    <label asp-for="QuantityLimit" class="ms-2">Credit Limit(Quantity)<span class="required">*</span></label>
+                    <span asp-validation-for="QuantityLimit" class="text-danger"></span>
+                </div>
+
+                @* <div class="form-floating py-2 col-12">
+                        <input asp-for="CustomerTin" class="form-control border-0 shadow " placeholder="" />
+                        <label asp-for="CustomerTin" class="ms-2">Customer Tin<span class="required">*</span></label>
+                        <span asp-validation-for="CustomerTin" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="CreditLimit" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="CreditLimit" class="ms-2">Credit Limit<span class="required">*</span></label>
+                        <span asp-validation-for="CreditLimit" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="CreditLimitAsOfToday" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="CreditLimitAsOfToday" class="ms-2">Available Credit Limit As of Today<span class="required">*</span></label>
+                        <span asp-validation-for="CreditLimitAsOfToday" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="BusinessStyle" class="form-control border-0 shadow " placeholder="" />
+                        <label asp-for="BusinessStyle" class="ms-2">Business Style</label>
+                        <span asp-validation-for="BusinessStyle" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Customer Type<span class="required">*</span></label>
+                        <select asp-for="CustomerType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" id="customerTypeSelect">
+                            <option value="" selected disabled>Select customer type</option>
+                            @foreach (CustomerType customerType in Enum.GetValues<CustomerType>())
+                            {
+                                <option value="@customerType">@customerType.ToString()</option>
+                            }
+                        </select>
+                        <span asp-validation-for="CustomerType" class="text-danger"></span>
+                    </div> *@
+
+                <!-- Station Code input (initially hidden) -->
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Station<span class="required">*</span></label>
+                    <select asp-for="StationCode" asp-items="@Model.MobilityStations" class="form-select js-select2 border-0 shadow" style="width:100%">
+                        <option value="" selected disabled>Select Station</option>
+                    </select>
+                    <span asp-validation-for="StationCode" class="text-danger"></span>
+                </div>
+
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Customer Terms<span class="required">*</span></label>
+                    <select asp-for="CustomerTerms" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                        <option value="" selected disabled>Select payment terms</option>
+                        <option value="@SD.Terms_Cod">@SD.Terms_Cod</option>
+                        <option value="@SD.Terms_Prepaid">@SD.Terms_Prepaid</option>
+                        <option value="@SD.Terms_7d">@SD.Terms_7d</option>
+                        <option value="@SD.Terms_10d">@SD.Terms_10d</option>
+                        <option value="@SD.Terms_15d">@SD.Terms_15d</option>
+                        <option value="@SD.Terms_20d">@SD.Terms_20d</option>
+                        <option value="@SD.Terms_30d">@SD.Terms_30d</option>
+                        <option value="@SD.Terms_45d">@SD.Terms_45d</option>
+                        <option value="@SD.Terms_60d">@SD.Terms_60d</option>
+                        <option value="@SD.Terms_90d">@SD.Terms_90d</option>
+                        <option value="@SD.Terms_7pdc">@SD.Terms_7pdc</option>
+                        <option value="@SD.Terms_15pdc">@SD.Terms_15pdc</option>
+                        <option value="@SD.Terms_30pdc">@SD.Terms_30pdc</option>
+                        <option value="@SD.Terms_45pdc">@SD.Terms_45pdc</option>
+                        <option value="@SD.Terms_60pdc">@SD.Terms_60pdc</option>
+                        <option value="@SD.Terms_M15">@SD.Terms_M15</option>
+                        <option value="@SD.Terms_M29">@SD.Terms_M29</option>
+                        <option value="@SD.Terms_M30">@SD.Terms_M30</option>
+                    </select>
+                    <span asp-validation-for="CustomerTerms" class="text-danger"></span>
+                </div>
+
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Customer Terms<span class="required">*</span></label>
+                    <select asp-for="CustomerType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                        <option value="@SD.CustomerType_PO" selected>@SD.CustomerType_PO</option>
+                    </select>
+                    <span asp-validation-for="CustomerType" class="text-danger"></span>
+                </div>
+
+                @* <div class="form-group py-2 col-12">
+                        <label class="control-label">Vat Type<span class="required">*</span></label>
+                        <select asp-for="VatType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                            <option value="" selected disabled>Select vat type</option>
+                            <option value="@SD.VatType_Vatable">@SD.VatType_Vatable</option>
+                            <option value="@SD.VatType_ZeroRated">@SD.VatType_ZeroRated</option>
+                            <option value="@SD.VatType_Exempt">@SD.VatType_Exempt</option>
+                        </select>
+                        <span asp-validation-for="VatType" class="text-danger"></span>
+                    </div>
+                    <div class="form-check pt-2">
+                        <label class="form-check-label">
+                            <input class="form-check-input" asp-for="WithHoldingVat" /> @Html.DisplayNameFor(model => model.WithHoldingVat)
+                        </label>
+                    </div>
+                    <div class="form-check pb-2">
+                        <label class="form-check-label">
+                            <input class="form-check-input" asp-for="WithHoldingTax" /> @Html.DisplayNameFor(model => model.WithHoldingTax)
+                        </label>
+                    </div> *@
+                <div class="form-check py-2">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="IsCheckDetailsRequired" /> Check Details Required
+                    </label>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control">Create</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Mobility" asp-controller="Customer" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            function toggleStationDiv() {
+                var selectedCompany = $('select[name="CustomerType"]').val();
+                var stationDiv = $('#station-div');
+
+                if (selectedCompany === 'Retail') {
+                    stationDiv.show();
+                } else {
+                    stationDiv.hide();
+                }
+            }
+
+            // Attach the change event listener
+            $('select[name="CustomerType"]').on('change', toggleStationDiv);
+
+            // Initial check on page load
+            toggleStationDiv();
+        });
+    </script>
+}

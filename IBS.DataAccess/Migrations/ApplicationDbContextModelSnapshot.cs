@@ -22,6 +22,27 @@ namespace IBS.DataAccess.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("IBS.Models.AppSetting", b =>
+                {
+                    b.Property<string>("SettingKey")
+                        .HasColumnType("text")
+                        .HasColumnName("setting_key");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("value");
+
+                    b.HasKey("SettingKey")
+                        .HasName("pk_app_settings");
+
+                    b.HasIndex("SettingKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_app_settings_setting_key");
+
+                    b.ToTable("app_settings", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", b =>
                 {
                     b.Property<int>("CheckVoucherHeaderId")
@@ -3635,10 +3656,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<string>("CustomerCode")
-                        .HasMaxLength(7)
-                        .HasColumnType("varchar(7)")
-                        .HasColumnName("customer_code");
+                    b.Property<string>("CustomerAddress")
+                        .IsRequired()
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("customer_address");
 
                     b.Property<string>("CustomerCodeName")
                         .IsRequired()
@@ -3651,6 +3672,21 @@ namespace IBS.DataAccess.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)")
                         .HasColumnName("customer_name");
+
+                    b.Property<string>("CustomerTerms")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("customer_terms");
+
+                    b.Property<string>("CustomerTin")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("customer_tin");
+
+                    b.Property<string>("CustomerType")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("customer_type");
 
                     b.Property<string>("EditedBy")
                         .HasMaxLength(50)
@@ -3665,6 +3701,14 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
+                    b.Property<bool>("IsCheckDetailsRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_check_details_required");
+
+                    b.Property<decimal>("QuantityLimit")
+                        .HasColumnType("numeric")
+                        .HasColumnName("quantity_limit");
+
                     b.Property<string>("StationCode")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -3674,9 +3718,9 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("CustomerId")
                         .HasName("pk_mobility_customers");
 
-                    b.HasIndex("CustomerCode")
+                    b.HasIndex("CustomerId")
                         .IsUnique()
-                        .HasDatabaseName("ix_mobility_customers_customer_code");
+                        .HasDatabaseName("ix_mobility_customers_customer_id");
 
                     b.ToTable("mobility_customers", (string)null);
                 });
@@ -3776,6 +3820,73 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_mobility_suppliers");
 
                     b.ToTable("mobility_suppliers", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerPurchaseOrder", b =>
+                {
+                    b.Property<int>("CustomerPurchaseOrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_purchase_order_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerPurchaseOrderId"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("address");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("CustomerPurchaseOrderNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("customer_purchase_order_no");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric")
+                        .HasColumnName("price");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer")
+                        .HasColumnName("product_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("station_code");
+
+                    b.Property<int>("StationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("station_id");
+
+                    b.HasKey("CustomerPurchaseOrderId")
+                        .HasName("pk_mobility_customer_purchase_orders");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mobility_customer_purchase_orders_customer_id");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("ix_mobility_customer_purchase_orders_product_id");
+
+                    b.HasIndex("StationId")
+                        .HasDatabaseName("ix_mobility_customer_purchase_orders_station_id");
+
+                    b.ToTable("mobility_customer_purchase_orders", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityFuel", b =>
@@ -6070,6 +6181,168 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("user_notifications", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.Mobility.ViewModels.MobilityCustomerOrderSlip", b =>
+                {
+                    b.Property<int>("CustomerOrderSlipId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_order_slip_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerOrderSlipId"));
+
+                    b.Property<string>("Address")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("address");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("approved_by");
+
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_date");
+
+                    b.Property<string>("CheckNo")
+                        .HasColumnType("text")
+                        .HasColumnName("check_no");
+
+                    b.Property<string>("CheckPictureSavedFileName")
+                        .HasColumnType("text")
+                        .HasColumnName("check_picture_saved_file_name");
+
+                    b.Property<string>("CheckPictureSavedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("check_picture_saved_url");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("CustomerOrderSlipNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(13)")
+                        .HasColumnName("customer_order_slip_no");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<string>("DisapprovalRemarks")
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("disapproval_remarks");
+
+                    b.Property<string>("DisapprovedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("disapproved_by");
+
+                    b.Property<DateTime?>("DisapprovedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("disapproved_date");
+
+                    b.Property<string>("Driver")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("driver");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<bool>("IsPrinted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_printed");
+
+                    b.Property<DateTime?>("LoadDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("load_date");
+
+                    b.Property<string>("PlateNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("plate_no");
+
+                    b.Property<decimal>("PricePerLiter")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("price_per_liter");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer")
+                        .HasColumnName("product_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("SavedFileName")
+                        .HasColumnType("text")
+                        .HasColumnName("saved_file_name");
+
+                    b.Property<string>("SavedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("saved_url");
+
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("station_code");
+
+                    b.Property<int>("StationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("station_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Terms")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("terms");
+
+                    b.Property<string>("TripTicket")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("trip_ticket");
+
+                    b.Property<string>("UploadedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("uploaded_by");
+
+                    b.Property<DateTime?>("UploadedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("uploaded_date");
+
+                    b.HasKey("CustomerOrderSlipId")
+                        .HasName("pk_mobility_customer_order_slips");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mobility_customer_order_slips_customer_id");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("ix_mobility_customer_order_slips_product_id");
+
+                    b.HasIndex("StationId")
+                        .HasDatabaseName("ix_mobility_customer_order_slips_station_id");
+
+                    b.ToTable("mobility_customer_order_slips", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -6341,6 +6614,10 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
+
+                    b.Property<string>("StationAccess")
+                        .HasColumnType("text")
+                        .HasColumnName("station_access");
 
                     b.Property<string>("Position")
                         .IsRequired()
@@ -6789,6 +7066,36 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerPurchaseOrder", b =>
+                {
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_customer_purchase_orders_mobility_customers_custom");
+
+                    b.HasOne("IBS.Models.MasterFile.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_customer_purchase_orders_products_product_id");
+
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityStation", "MobilityStation")
+                        .WithMany()
+                        .HasForeignKey("StationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_customer_purchase_orders_mobility_stations_station");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("MobilityStation");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseDetail", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityLubePurchaseHeader", "LubePurchaseHeader")
@@ -6865,6 +7172,36 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Notification");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.ViewModels.MobilityCustomerOrderSlip", b =>
+                {
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_customer_order_slips_mobility_customers_customer_id");
+
+                    b.HasOne("IBS.Models.MasterFile.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_customer_order_slips_products_product_id");
+
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityStation", "MobilityStation")
+                        .WithMany()
+                        .HasForeignKey("StationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_customer_order_slips_mobility_stations_station_id");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("MobilityStation");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

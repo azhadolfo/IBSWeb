@@ -1,0 +1,127 @@
+﻿@model MobilityCustomerPurchaseOrder
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@using IBS.Utility
+
+@{
+    ViewData["Title"] = "Customer Order Slip";
+    var userDepartment = ViewBag.GetUserDepartment;
+    var proofIsClicked = false;
+}
+
+<div class="card shadow border-0 mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">CUSTOMER ORDER SLIP</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body p-4 table-responsive">
+        
+        <div class="row mt-2">
+            <div class="col-6">
+                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Customer.CustomerName):</b> @Html.DisplayFor(model => model.Customer.CustomerName)</h6>
+                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Address):</b> @Html.DisplayFor(model => model.Address)</h6>
+            </div>
+
+            <div class="col-6" style="white-space: nowrap;">
+                <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.Date):</b> @Html.DisplayFor(model => model.Date)</h6>
+                <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.MobilityStation.StationName):</b> @Html.DisplayFor(model => model.MobilityStation.StationName)</h6>
+            </div>
+        </div>
+
+        </br>
+
+        <table class="table table-bordered table-striped px-4">
+            <thead>
+                <tr>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Quantity)</th>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Price)</th>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Amount)</th>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Product.ProductName)</th>
+                </tr>
+            </thead>
+            <tr>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Quantity)</td>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Price)</td>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Amount)</td>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Product.ProductName)</td>
+            </tr>
+        </table>
+
+        </br>
+        <div class="row pt-2" id="buttons">
+            <div class="col-6 col-md-3">
+                <a asp-area="Mobility" asp-controller="CustomerPurchaseOrder" asp-action="Index" class="btn btn-outline-primary border form-control buttons">
+                    Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var button = document.getElementById('enterProof');
+    var div1 = document.getElementById('buttons');
+    var uploadForm = document.getElementById('uploadForm');
+
+    button.addEventListener('click', function () {
+        div1.style.display = 'none';
+        uploadForm.style.display = '';
+    });
+</script>
+@section Scripts {
+
+    <script>
+        function printPage() {
+            window.print();
+        }
+    </script>
+
+    <script>
+        var loadFile = function (event) {
+            var image = document.getElementById('output');
+            image.src = URL.createObjectURL(event.target.files[0]);
+            var objectURL = URL.createObjectURL(event.target.files[0]);
+            image.src = objectURL;
+            var documentLink = document.getElementById('documentLink');
+        };
+
+        (document).getElementById('uploadButton').addEventListener('click', function () {
+            event.preventDefault();
+            var fileUpload = document.getElementById('fileUpload');
+            var uploadDate = document.getElementById('uploadDate');
+            var tripTicket = document.getElementById('tripTicket');
+
+            if (uploadDate.value.trim() === "" || tripTicket.value.trim() === "" || fileUpload.value.trim === "") {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Please fill in all required fields.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+            else {
+                if (fileUpload.files.length > 0) {
+                    Swal.fire({
+                        title: 'Enter these to the record?',
+                        text: "You can't change these later",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes',
+                        cancelButtonText: 'No'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            console.log("submit button is clicked");
+                            document.getElementById('submitButton').click();
+                        }
+                    });
+                }
+            }
+
+        });
+    </script>
+}

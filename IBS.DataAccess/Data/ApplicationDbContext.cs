@@ -30,6 +30,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<LogMessage> LogMessages { get; set; }
 
+        public DbSet<AppSetting> AppSettings { get; set; }
+
         public DbSet<Notification> Notifications { get; set; }
 
         public DbSet<UserNotification> UserNotifications { get; set; }
@@ -47,6 +49,8 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityPoSalesRaw> MobilityPoSalesRaw { get; set; }
         public DbSet<MobilityPOSales> MobilityPOSales { get; set; }
         public DbSet<MobilityOffline> MobilityOfflines { get; set; }
+        public DbSet<MobilityCustomerOrderSlip> MobilityCustomerOrderSlips { get; set; }
+        public DbSet<MobilityCustomerPurchaseOrder> MobilityCustomerPurchaseOrders { get; set; }
         #endregion
 
         #region--Purchase Entity
@@ -396,10 +400,10 @@ namespace IBS.DataAccess.Data
                 s.HasIndex(s => s.StationName).IsUnique();
             });
 
-            //FilprideCustomer
+            //MobilityCustomer
             builder.Entity<MobilityCustomer>(c =>
             {
-                c.HasIndex(c => c.CustomerCode).IsUnique();
+                c.HasIndex(c => c.CustomerId).IsUnique();
             });
 
             #endregion
@@ -687,6 +691,15 @@ namespace IBS.DataAccess.Data
             });
 
             #endregion
+
+            #endregion
+
+            #region--AppSettings
+
+            builder.Entity<AppSetting>(a =>
+            {
+                a.HasIndex(a => a.SettingKey).IsUnique();
+            });
 
             #endregion
         }

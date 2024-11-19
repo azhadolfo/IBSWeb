@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 	<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+	<UserSecretsId>fa520c26-6d9a-4ef0-895a-5e270c16793c</UserSecretsId>
+	<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +28,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.4" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.3" />
@@ -33,7 +36,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\IBS.DataAccess\IBS.DataAccess.csproj" />
-    <ProjectReference Include="..\IBS.Dtos\IBS.Dtos.csproj" />
+    <ProjectReference Include="..\IBS.DTOs\IBS.DTOs.csproj" />
     <ProjectReference Include="..\IBS.Models\IBS.Models.csproj" />
     <ProjectReference Include="..\IBS.Utility\IBS.Utility.csproj" />
   </ItemGroup>

@@ -9,10 +9,12 @@
         public const string Terms_7d = "7D";
         public const string Terms_10d = "10D";
         public const string Terms_15d = "15D";
+        public const string Terms_20d = "20D";
         public const string Terms_30d = "30D";
         public const string Terms_45d = "45D";
         public const string Terms_60d = "60D";
         public const string Terms_90d = "90D";
+        public const string Terms_7pdc = "7PDC";
         public const string Terms_15pdc = "15PDC";
         public const string Terms_30pdc = "30PDC";
         public const string Terms_45pdc = "45PDC";
@@ -60,9 +62,13 @@
         public const string Department_MIS = "MIS";
         public const string Department_Operation = "Operation";
         public const string Department_RCD = "RCD";
+        public const string Department_RetailAdmin = "Retail Admin";
         public const string Department_SiteDevAndSiteAcquisition = "Site Dev and Acquisition";
+        public const string Department_StationCashier = "Station Cashier";
         public const string Department_TradeAndSupply = "Trade and Supply";
         public const string Department_TrainingAndCompliance = "Training and Compliance";
+
+        public const string CustomerType_PO = "PO";
 
         #endregion Department
 

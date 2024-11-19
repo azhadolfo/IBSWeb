@@ -32,7 +32,7 @@
                         <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateCOSUnservedVolume')"><i class="bi bi-printer"></i> Generate</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-primary form-control" disabled onclick="submitForm('GenerateCOSUnservedVolumeCsv')"><i class="bi bi-file-text"></i> Generate as Excel</button>
+                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateCOSUnservedVolumeToExcel')"><i class="bi bi-file-text"></i> Generate as Excel</button>
                     </div>
                 </div>
             </div>
@@ -41,12 +41,12 @@
 </div>
 
 @section Scripts {
-<partial name="_ValidationScriptsPartial" />
-<script>
-    function submitForm(action) {
-        var form = document.getElementById('dynamicForm');
-        form.action = action;
-        form.submit();
-    }
-</script>
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function submitForm(action) {
+            var form = document.getElementById('dynamicForm');
+            form.action = action;
+            form.submit();
+        }
+    </script>
 }

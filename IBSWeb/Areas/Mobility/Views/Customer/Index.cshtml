@@ -1,0 +1,84 @@
+﻿@model IEnumerable<MobilityCustomer>
+
+@{
+    ViewData["Title"] = "Customer";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">CUSTOMER</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+            <div class="col-6 text-end">
+                <a asp-area="Mobility" asp-controller="Customer" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create New Customer
+                </a>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-striped" id="dataTable">
+            <thead>
+                <tr class="text-nowrap">
+                    <th>
+                        @Html.DisplayNameFor(model => model.CustomerName)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.CustomerCodeName)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.StationCode)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.CustomerTerms)
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var obj in Model)
+                {
+                    <tr>
+                        <td>
+                            @obj.CustomerName
+                        </td>
+                        <td>
+                            @obj.CustomerCodeName
+                        </td>
+                        <td>
+                            @obj.StationCode
+                        </td>
+                        <td>
+                            @obj.CustomerTerms
+                        </td>
+                        <td>
+                            <div class="w-100 btn-group" role="group">
+                                <a asp-area="Mobility" asp-controller="Customer" asp-action="Edit" asp-route-id="@obj.CustomerId" class="btn btn-primary mx-2">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                @if (obj.IsActive)
+                                {
+                                    <a asp-area="Filpride" asp-controller="Customer" asp-action="Deactivate" asp-route-id="@obj.CustomerId" class="btn btn-danger mx-2">
+                                        <i class="bi bi-person-fill-slash"></i> Deactivate
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a asp-area="Filpride" asp-controller="Customer" asp-action="Activate" asp-route-id="@obj.CustomerId" class="btn btn-success mx-2">
+                                        <i class="bi bi-person-fill-check"></i> Activate
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

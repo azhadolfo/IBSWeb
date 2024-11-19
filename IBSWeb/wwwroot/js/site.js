@@ -24,8 +24,10 @@ $(document).on('select2:open', () => {
     document.querySelector('.select2-search__field').focus();
 });
 
+var table;
+
 $(document).ready(function () {
-    $('#dataTable').DataTable({
+    table = $('#dataTable').DataTable({
         stateSave: true,
         processing: true, // Enable the processing indicator
     });

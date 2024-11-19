@@ -76,15 +76,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(s =>
                         s.CheckVoucherHeaderNo.ToLower().Contains(searchValue) ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
-                        s.RRNo?.Contains(searchValue) == true ||
-                        s.SINo?.Contains(searchValue) == true ||
-                        s.PONo?.Contains(searchValue) == true ||
                         s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
                         s.Total.ToString().Contains(searchValue) ||
                         s.Amount?.ToString().Contains(searchValue) == true ||
-                        s.Particulars?.ToLower().Contains(searchValue) == true ||
                         s.Category.ToLower().Contains(searchValue) ||
-                        s.Payee?.ToLower().Contains(searchValue) == true ||
                         s.CvType?.ToLower().Contains(searchValue) == true ||
                         s.CreatedBy.ToLower().Contains(searchValue)
                         )
@@ -209,7 +204,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 return Json(defaultExpenseList);
             }
-
 
             return Json(null);
         }
