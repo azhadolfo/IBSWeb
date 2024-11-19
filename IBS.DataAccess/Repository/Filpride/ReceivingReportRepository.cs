@@ -286,7 +286,39 @@ namespace IBS.DataAccess.Repository.Filpride
             model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type, cancellationToken);
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
-            model.Amount = model.QuantityReceived * deliveryReceipt.PurchaseOrder.Price;
+
+            if (deliveryReceipt.PurchaseOrder.UnTriggeredQuantity != deliveryReceipt.PurchaseOrder.Quantity)
+            {
+                var poActualPrice = await _db.FilpridePOActualPrices
+                    .FirstOrDefaultAsync(a => a.PurchaseOrderId == deliveryReceipt.PurchaseOrderId
+                                             && a.IsApproved
+                                             && a.AppliedVolume != a.TriggeredVolume, cancellationToken);
+
+                var remainingQuantity = model.QuantityReceived;
+                decimal totalAmount = 0;
+
+                if (poActualPrice != null)
+                {
+                    var availableQuantity = poActualPrice.TriggeredVolume - poActualPrice.AppliedVolume;
+
+                    // Compute using poActualPrice.Price for the available quantity
+                    if (availableQuantity > 0)
+                    {
+                        var applicableQuantity = Math.Min(remainingQuantity, availableQuantity);
+                        totalAmount += applicableQuantity * poActualPrice.TriggeredPrice;
+                        poActualPrice.AppliedVolume += applicableQuantity;
+                        remainingQuantity -= applicableQuantity;
+                    }
+                }
+
+                // Compute the remaining using the default price
+                totalAmount += remainingQuantity * deliveryReceipt.PurchaseOrder.Price;
+                model.Amount = totalAmount;
+            }
+            else
+            {
+                model.Amount = model.QuantityReceived * deliveryReceipt.PurchaseOrder.Price;
+            }
 
             await _db.AddAsync(model, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);

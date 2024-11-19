@@ -112,7 +112,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var previousInventory = sortedInventory.FirstOrDefault();
 
-            decimal total = receivingReport.QuantityReceived * Math.Round(receivingReport.PurchaseOrder.Price / 1.12m, 4);
+            decimal total = ComputeNetOfVat(receivingReport.Amount);
             decimal inventoryBalance = lastIndex >= 0 ? previousInventory.InventoryBalance + receivingReport.QuantityReceived : receivingReport.QuantityReceived;
             decimal totalBalance = lastIndex >= 0 ? previousInventory.TotalBalance + total : total;
             decimal averageCost = totalBalance / inventoryBalance;
@@ -125,7 +125,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 Particular = "Purchases",
                 Reference = receivingReport.ReceivingReportNo,
                 Quantity = receivingReport.QuantityReceived,
-                Cost = receivingReport.PurchaseOrder.Price / 1.12m, //unit cost
+                Cost = total / receivingReport.QuantityReceived, //unit cost
                 IsValidated = true,
                 Total = total,
                 InventoryBalance = inventoryBalance,
