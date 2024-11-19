@@ -926,5 +926,75 @@ namespace IBS.DataAccess.Repository.Filpride
 
             await _db.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task ReCalculateInventoryAsync(List<FilprideInventory> inventories, CancellationToken cancellationToken = default)
+        {
+            var previousInventory = inventories.FirstOrDefault();
+
+            decimal total = previousInventory.Total;
+            decimal inventoryBalance = previousInventory.InventoryBalance;
+            decimal totalBalance = previousInventory.TotalBalance;
+            decimal averageCost = inventoryBalance == 0 && totalBalance == 0 ? previousInventory.AverageCost : totalBalance / inventoryBalance;
+
+            foreach (var transaction in inventories.Skip(1))
+            {
+                var costOfGoodsSold = 0m;
+                if (transaction.Particular == "Sales")
+                {
+                    transaction.Cost = averageCost;
+                    transaction.Total = transaction.Quantity * averageCost;
+                    transaction.TotalBalance = totalBalance != 0 ? totalBalance - transaction.Total : transaction.Total;
+                    transaction.InventoryBalance = inventoryBalance != 0 ? inventoryBalance - transaction.Quantity : transaction.Quantity;
+                    transaction.AverageCost = transaction.TotalBalance == 0 && transaction.InventoryBalance == 0 ? previousInventory.AverageCost : transaction.TotalBalance / transaction.InventoryBalance;
+                    costOfGoodsSold = transaction.AverageCost * transaction.Quantity;
+
+                    averageCost = transaction.AverageCost;
+                    totalBalance = transaction.TotalBalance;
+                    inventoryBalance = transaction.InventoryBalance;
+
+                    var journalEntries = await _db.FilprideGeneralLedgerBooks
+                        .Where(j => j.Reference == transaction.Reference &&
+                                    (j.AccountNo.StartsWith("50101") || j.AccountNo.StartsWith("10104")))
+                        .ToListAsync(cancellationToken);
+
+                    if (journalEntries.Count != 0)
+                    {
+                        foreach (var journal in journalEntries)
+                        {
+                            if (journal.Debit != 0)
+                            {
+                                if (journal.Debit != costOfGoodsSold)
+                                {
+                                    journal.Debit = costOfGoodsSold;
+                                    journal.Credit = 0;
+                                }
+                            }
+                            else
+                            {
+                                if (journal.Credit != costOfGoodsSold)
+                                {
+                                    journal.Credit = costOfGoodsSold;
+                                    journal.Debit = 0;
+                                }
+                            }
+                        }
+                    }
+
+                    _db.FilprideGeneralLedgerBooks.UpdateRange(journalEntries);
+                }
+                else if (transaction.Particular == "Purchases")
+                {
+                    transaction.TotalBalance = totalBalance + transaction.Total;
+                    transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
+                    transaction.AverageCost = transaction.TotalBalance / transaction.InventoryBalance;
+
+                    averageCost = transaction.AverageCost;
+                    totalBalance = transaction.TotalBalance;
+                    inventoryBalance = transaction.InventoryBalance;
+                }
+            }
+
+            await _db.SaveChangesAsync(cancellationToken);
+        }
     }
 }

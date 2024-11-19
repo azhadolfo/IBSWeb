@@ -12,7 +12,12 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "varchar(20)")]
         public string AuthorityToLoadNo { get; set; } = string.Empty;
 
-        public int DeliveryReceiptId { get; set; }
+        public int? CustomerOrderSlipId { get; set; }
+
+        [ForeignKey(nameof(CustomerOrderSlipId))]
+        public FilprideCustomerOrderSlip? CustomerOrderSlip { get; set; }
+
+        public int? DeliveryReceiptId { get; set; }
 
         [ForeignKey(nameof(DeliveryReceiptId))]
         public FilprideDeliveryReceipt? DeliveryReceipt { get; set; }

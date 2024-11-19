@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Print ATL";
+    var purchaseOrders = ViewData["PurchaseOrders"] as List<FilprideCOSAppointedSupplier>;
 }
 
 <div class="container mt-4">
@@ -21,19 +22,19 @@
         <table class="table table-borderless">
             <tbody>
                 <tr>
-                    <td><b>Supplier:</b> @(Model.DeliveryReceipt.CustomerOrderSlip.Supplier?.SupplierName ?? Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.Supplier.SupplierName)</td>
-                    <td class="text-end"><b>Customer PO Ref#:</b> @Html.DisplayFor(model => model.DeliveryReceipt.CustomerOrderSlip.CustomerPoNo)</td>
+                    <td><b>Supplier:</b> @(Model.CustomerOrderSlip.Supplier?.SupplierName ?? Model.CustomerOrderSlip.PurchaseOrder.Supplier.SupplierName)</td>
+                    <td class="text-end"><b>Customer PO Ref#:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.CustomerPoNo)</td>
                 </tr>
                 <tr>
                     <td><b>Date Booked:</b> @Html.DisplayFor(model => model.DateBooked)</td>
-                    <td class="text-end"><b>Freight:</b> @Html.DisplayFor(model => model.DeliveryReceipt.Freight)</td>
+                    <td class="text-end"><b>Freight:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.Freight)</td>
                 </tr>
                 <tr>
                     <td><b>Valid Until:</b> @Html.DisplayFor(model => model.ValidUntil)</td>
                     <td></td>
                 </tr>
                 <tr>
-                    <td><b>Load Port:</b> @Model.DeliveryReceipt?.CustomerOrderSlip.PickUpPoint.Depot</td>
+                    <td><b>Load Port:</b> @Model.CustomerOrderSlip.PickUpPoint.Depot</td>
                     <td></td>
                 </tr>
             </tbody>
@@ -47,9 +48,9 @@
                 </tr>
                 @if (Model.UppiAtlNo != null)
                 {
-                <tr>
-                    <th colspan="5" class="text-center table-secondary">Supplier's ATL#: @Model.UppiAtlNo</th>
-                </tr>
+                    <tr>
+                        <th colspan="5" class="text-center table-secondary">Supplier's ATL#: @Model.UppiAtlNo</th>
+                    </tr>
                 }
                 <tr>
                     <th>Customer</th>
@@ -58,29 +59,50 @@
                     <th>Supplier SO#</th>
                     <th>Filpride PO#</th>
                 </tr>
-                </thead>
-                <tbody>
+            </thead>
+            <tbody>
+                @if (purchaseOrders.Count > 0)
+                {
+                    var isFirstRow = true;
+                    foreach (var po in purchaseOrders)
+                    {
+                        <tr>
+                            @if (isFirstRow)
+                            {
+                                <td rowspan="@purchaseOrders.Count" class="align-content-center">@Model.CustomerOrderSlip.Customer.CustomerName</td>
+                                <td rowspan="@purchaseOrders.Count" class="align-content-center">@Model.CustomerOrderSlip.Product.ProductName</td>
+                                <td rowspan="@purchaseOrders.Count" class="align-content-center">@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
+                                isFirstRow = false;
+                            }
+                            <td>@po.PurchaseOrder.SupplierSalesOrderNo</td>
+                            <td>@po.PurchaseOrder.PurchaseOrderNo</td>
+                        </tr>
+                    }
+                }
+                else
+                {
                     <tr>
-                        <td>@Model.DeliveryReceipt.Customer.CustomerName</td>
-                        <td>@Model.DeliveryReceipt.CustomerOrderSlip.Product.ProductName</td>
-                        <td>@Html.DisplayFor(model => model.DeliveryReceipt.Quantity)</td>
-                        <td>@(Model.DeliveryReceipt.PurchaseOrder?.SupplierSalesOrderNo ?? Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo)</td>
-                        <td>@(Model.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo ?? Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo)</td>
+                        <td>@Model.CustomerOrderSlip.Customer.CustomerName</td>
+                        <td>@Model.CustomerOrderSlip.Product.ProductName</td>
+                        <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
+                        <td>@(Model.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo)</td>
+                        <td>@(Model.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo)</td>
                     </tr>
-                </tbody>
-            </table>
+                }
+            </tbody>
+        </table>
     </div>
     <div class="table-responsive">
         <table class="table table-borderless">
             <tbody>
                 <tr>
-                    <td><b>Hauler:</b> @Model.DeliveryReceipt?.Hauler?.SupplierName</td>
+                    <td><b>Hauler:</b> @Model.CustomerOrderSlip?.Hauler?.SupplierName</td>
                 </tr>
                 <tr>
-                    <td><b>Driver:</b> @Model.DeliveryReceipt?.Driver</td>
+                    <td><b>Driver:</b> @Model.CustomerOrderSlip?.Driver</td>
                 </tr>
                 <tr>
-                    <td><b>Plate #:</b> @Model.DeliveryReceipt.PlateNo</td>
+                    <td><b>Plate #:</b> @Model.CustomerOrderSlip.PlateNo</td>
                 </tr>
                 <tr>
                     <td class="mt-5"><b>Remarks:</b><pre>@Model.Remarks</pre></td>

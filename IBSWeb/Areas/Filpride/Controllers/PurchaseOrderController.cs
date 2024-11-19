@@ -4,11 +4,14 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
@@ -26,11 +29,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        public PurchaseOrderController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+        private readonly IHubContext<NotificationHub> _hubContext;
+
+        public PurchaseOrderController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, IHubContext<NotificationHub> hubContext)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
+            _hubContext = hubContext;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -153,7 +159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Amount = model.Quantity * model.Price;
-
+                    model.UnTriggeredQuantity = model.Quantity;
                     await _dbContext.AddAsync(model, cancellationToken);
 
                     #region --Audit Trail Recording
@@ -234,6 +240,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.SupplierId = model.SupplierId;
                     existingModel.ProductId = model.ProductId;
                     existingModel.Quantity = model.Quantity;
+                    existingModel.UnTriggeredQuantity = existingModel.Quantity;
                     existingModel.Price = model.Price;
                     existingModel.Amount = model.Quantity * model.Price;
                     existingModel.SupplierSalesOrderNo = model.SupplierSalesOrderNo;
@@ -242,6 +249,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTime.Now;
                     existingModel.OldPoNo = model.OldPoNo;
+                    existingModel.TriggerDate = model.TriggerDate;
 
                     #region --Audit Trail Recording
 
@@ -587,6 +595,125 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                      .ToList();
 
             return Json(poIds);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdatePrice(int purchaseOrderId, decimal volume, decimal price, CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var existingRecord = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(p => p.PurchaseOrderId == purchaseOrderId, cancellationToken);
+
+                var currentUser = _userManager.GetUserName(User).ToUpper();
+
+                if (existingRecord == null)
+                {
+                    return Json(new { success = false, message = "Record not found." });
+                }
+
+                existingRecord.UnTriggeredQuantity -= volume;
+
+                var actualPrice = new FilpridePOActualPrice
+                {
+                    PurchaseOrderId = existingRecord.PurchaseOrderId,
+                    TriggeredVolume = volume,
+                    TriggeredPrice = price
+                };
+
+                #region Notification
+                var operationManager = await _dbContext.ApplicationUsers
+                                    .Where(a => a.Position == SD.Position_OperationManager)
+                                    .ToListAsync(cancellationToken);
+
+                foreach (var user in operationManager)
+                {
+                    var message = $"The price for {existingRecord.PurchaseOrderNo} has been updated by {currentUser}, affecting a volume of {volume}L. This change will impact the related COS. Please review and approve.";
+
+                    await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                    var hubConnections = await _dbContext.HubConnections
+                        .Where(h => h.UserName == user.UserName)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var hubConnection in hubConnections)
+                    {
+                        await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                            .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                    }
+                }
+
+                existingRecord.Status = nameof(DRStatus.ForApprovalOfOM);
+
+                await _dbContext.FilpridePOActualPrices.AddAsync(actualPrice, cancellationToken);
+                #endregion
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(currentUser, $"Update actual price for {volume}L purchase order# {existingRecord.PurchaseOrderNo}", "Purchase Order", ipAddress, existingRecord.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+
+                TempData["success"] = $"The price for {existingRecord.PurchaseOrderNo} has been updated, affecting a volume of {volume}L.";
+
+                return Json(new { success = true, message = TempData["success"] });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return Json(new { success = false, message = TempData["error"] });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Approve(int id, CancellationToken cancellationToken)
+        {
+            var existingRecord = await _unitOfWork.FilpridePurchaseOrder
+                .GetAsync(p => p.PurchaseOrderId == id, cancellationToken);
+
+            if (existingRecord != null)
+            {
+                try
+                {
+                    var actualPrices = await _dbContext.FilpridePOActualPrices
+                        .FirstOrDefaultAsync(a => a.PurchaseOrderId == existingRecord.PurchaseOrderId && !a.IsApproved, cancellationToken);
+
+                    actualPrices.ApprovedBy = _userManager.GetUserName(this.User);
+                    actualPrices.ApprovedDate = DateTime.Now;
+                    actualPrices.IsApproved = true;
+
+                    await _unitOfWork.FilpridePurchaseOrder.UpdateActualCostOnSalesAndReceiptsAsync(actualPrices, cancellationToken);
+
+                    existingRecord.Status = nameof(Status.Posted);
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Approved the actual price of purchase order# {existingRecord.PurchaseOrderNo}", "Purchase Order", ipAddress, existingRecord.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    return Ok(new { message = "The Purchase Order has been approved. All associated Customer Order Slips (COS), and Receiving Reports (RR) have been updated with the new prices." });
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { error = ex.Message });
+                }
+            }
+
+            return NotFound();
         }
     }
 }

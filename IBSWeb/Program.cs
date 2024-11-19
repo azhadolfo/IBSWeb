@@ -5,6 +5,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Mobility;
 using IBS.DataAccess.Services;
 using IBS.Utility;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,6 +40,7 @@ builder.Services.AddHostedService<AutomatedEntries>();
 builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
 builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -64,5 +66,8 @@ app.MapRazorPages();
 app.MapControllerRoute(
     name: "default",
     pattern: "{area=User}/{controller=Home}/{action=Index}/{id?}");
+
+// Map SignalR Hub endpoint
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();

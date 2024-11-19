@@ -18,5 +18,9 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task PostAsync(FilprideDeliveryReceipt deliveryReceipt, CancellationToken cancellationToken = default);
 
         Task DeductTheVolumeToCos(int cosId, decimal drVolume, CancellationToken cancellationToken = default);
+
+        Task UpdatePreviousAppointedSupplierAsync(FilprideDeliveryReceipt model);
+
+        Task AssignNewPurchaseOrderAsync(DeliveryReceiptViewModel viewModel, FilprideDeliveryReceipt model);
     }
 }

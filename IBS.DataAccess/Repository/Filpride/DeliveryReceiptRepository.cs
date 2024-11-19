@@ -74,6 +74,25 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var existingRecord = await GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
 
+            #region--Update COS
+
+            await UpdateCosRemainingVolumeAsync(existingRecord.CustomerOrderSlipId, (viewModel.Volume - existingRecord.Quantity), cancellationToken);
+
+            #endregion
+
+            #region--Update Multiple PO
+
+            if (existingRecord.CustomerOrderSlip.HasMultiplePO)
+            {
+                if (viewModel.Volume != existingRecord.Quantity)
+                {
+                    await UpdatePreviousAppointedSupplierAsync(existingRecord);
+                    await AssignNewPurchaseOrderAsync(viewModel, existingRecord);
+                }
+            }
+
+            #endregion
+
             existingRecord.Date = viewModel.Date;
             existingRecord.EstimatedTimeOfArrival = viewModel.ETA;
             existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
@@ -82,12 +101,9 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Quantity = viewModel.Volume;
             existingRecord.TotalAmount = viewModel.TotalAmount;
             existingRecord.ManualDrNo = viewModel.ManualDrNo;
-            existingRecord.Freight = viewModel.Freight;
-            existingRecord.Demuragge = viewModel.Demuragge;
-            existingRecord.ECC = viewModel.ECC;
             existingRecord.Driver = viewModel.Driver;
             existingRecord.PlateNo = viewModel.PlateNo;
-            existingRecord.HaulerId = viewModel.HaulerId;
+            existingRecord.ECC = viewModel.ECC;
 
             if (_db.ChangeTracker.HasChanges())
             {
@@ -131,12 +147,6 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             try
             {
-                #region--Update COS
-
-                await UpdateCosRemainingVolumeAsync(deliveryReceipt.CustomerOrderSlipId, deliveryReceipt.Quantity, cancellationToken);
-
-                #endregion
-
                 #region General Ledger Book Recording
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
@@ -301,37 +311,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     });
                 }
 
-                if (deliveryReceipt.Demuragge > 0)
-                {
-                    ledgers.Add(new FilprideGeneralLedgerBook
-                    {
-                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                        Reference = deliveryReceipt.DeliveryReceiptNo,
-                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Demurrage",
-                        AccountNo = freightOutTitle.AccountNumber,
-                        AccountTitle = freightOutTitle.AccountName,
-                        Debit = ComputeNetOfVat(deliveryReceipt.Demuragge),
-                        Credit = 0,
-                        Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
-                    });
-
-                    ledgers.Add(new FilprideGeneralLedgerBook
-                    {
-                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                        Reference = deliveryReceipt.DeliveryReceiptNo,
-                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Demurrage",
-                        AccountNo = vatInputTitle.AccountNumber,
-                        AccountTitle = vatInputTitle.AccountName,
-                        Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.Demuragge)),
-                        Credit = 0,
-                        Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
-                    });
-                }
-
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
                     Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -340,7 +319,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountNo = apTradeTitle.AccountNumber,
                     AccountTitle = apTradeTitle.AccountName,
                     Debit = 0,
-                    Credit = ((deliveryReceipt.Freight + deliveryReceipt.ECC) * deliveryReceipt.Quantity) + deliveryReceipt.Demuragge,
+                    Credit = (deliveryReceipt.Freight + deliveryReceipt.ECC) * deliveryReceipt.Quantity,
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.CreatedBy,
                     CreatedDate = deliveryReceipt.CreatedDate,
@@ -354,7 +333,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
 
-                #endregion
+                #endregion General Ledger Book Recording
 
                 await _db.SaveChangesAsync(cancellationToken);
             }
@@ -371,8 +350,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (cos != null)
             {
-                cos.DeliveredQuantity = drVolume;
-                cos.BalanceQuantity -= cos.DeliveredQuantity;
+                cos.DeliveredQuantity += drVolume;
+                cos.BalanceQuantity -= drVolume;
 
                 if (cos.BalanceQuantity <= 0)
                 {
@@ -398,6 +377,34 @@ namespace IBS.DataAccess.Repository.Filpride
                 cos.BalanceQuantity += drVolume;
                 cos.IsDelivered = false;
             }
+        }
+
+        public async Task UpdatePreviousAppointedSupplierAsync(FilprideDeliveryReceipt model)
+        {
+            var previousAppointedSupplier = await _db.FilprideCOSAppointedSuppliers
+                .FirstOrDefaultAsync(a => a.CustomerOrderSlipId == model.CustomerOrderSlipId && a.PurchaseOrderId == model.PurchaseOrderId);
+
+            if (previousAppointedSupplier == null)
+                throw new InvalidOperationException("Previous appointed supplier not found.");
+
+            previousAppointedSupplier.UnservedQuantity += model.Quantity;
+            previousAppointedSupplier.IsAssignedToDR = false;
+        }
+
+        public async Task AssignNewPurchaseOrderAsync(DeliveryReceiptViewModel viewModel, FilprideDeliveryReceipt model)
+        {
+            var newAppointedSupplier = await _db.FilprideCOSAppointedSuppliers
+                .OrderBy(s => s.PurchaseOrderId)
+                .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == viewModel.CustomerOrderSlipId &&
+                                           !s.IsAssignedToDR &&
+                                           s.Quantity == viewModel.Volume)
+                ?? throw new InvalidOperationException($"Purchase Order not found for this volume ({viewModel.Volume:N2}), contact the TNS.");
+
+            model.PurchaseOrderId = newAppointedSupplier.PurchaseOrderId;
+            model.Quantity = viewModel.Volume;
+
+            newAppointedSupplier.UnservedQuantity -= model.Quantity;
+            newAppointedSupplier.IsAssignedToDR = true;
         }
     }
 }
