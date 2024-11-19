@@ -200,13 +200,16 @@
 
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
                                     $('input[name="Freight"]').parent().show();
-                                    $('#haulerList').show();
+                                    $('input[name="Hauler"]').parent().show();
+                                    $('input[name="Freight"]').val(data.freight);
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
                                     $('input[name="Freight"]').parent().hide();
+                                    $('input[name="Freight"]').val(data.freight);
+                                    $('input[name="Hauler"]').parent().show();
                                 } else {
                                     // hide the hauler list
-                                    $('#Hauler').hide();
                                     $('input[name="Freight"]').parent().hide();
+                                    $('input[name="Hauler"]').parent().hide();
                                 }
 
                                 $('input[name="ATLNo"]').val(data.atlNo);
@@ -220,6 +223,7 @@
                                 $('input[name="Volume"]').val(data.remainingVolume);
                                 $('input[name="DeliveryOption"]').val(data.deliveryOption);
                                 $('input[name="Price"]').val(formatNumber(data.price));
+                                $('input[name="TotalAmount"]').val(formatNumber(data.quantity * data.price))
                             } else {
                                 $('input[name="Product"]').val('');
                                 $('input[name="CosVolume"]').val('');

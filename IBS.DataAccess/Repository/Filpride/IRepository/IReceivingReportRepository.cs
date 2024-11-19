@@ -20,5 +20,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, CancellationToken cancellationToken = default);
 
         Task PostAsync(FilprideReceivingReport model, CancellationToken cancellationToken = default);
+
+        Task VoidReceivingReportAsync(int receivingReportId, string currentUser, string ipAddress, CancellationToken cancellationToken = default);
     }
 }

@@ -282,20 +282,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new ArgumentException("Inputted quantity is exceed to remaining quantity delivered");
             }
 
-            if (deliveryReceipt.CustomerOrderSlip.HasMultiplePO)
-            {
-                var appointedSupplier = await _db.FilprideCOSAppointedSuppliers
-                    .OrderBy(a => a.SequenceId)
-                    .FirstOrDefaultAsync(a => a.CustomerOrderSlipId == deliveryReceipt.CustomerOrderSlipId && a.PurchaseOrderId == deliveryReceipt.PurchaseOrderId);
-
-                appointedSupplier.UnservedQuantity -= deliveryReceipt.Quantity;
-
-                if (appointedSupplier.UnservedQuantity <= 0)
-                {
-                    appointedSupplier.IsAssignedToDR = true;
-                }
-            }
-
             model.ReceivedDate = model.Date;
             model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type, cancellationToken);
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
@@ -450,6 +436,66 @@ namespace IBS.DataAccess.Repository.Filpride
             #endregion --Purchase Book Recording
 
             await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task VoidReceivingReportAsync(int receivingReportId, string currentUser, string ipAddress, CancellationToken cancellationToken = default)
+        {
+            var model = await GetAsync(r => r.ReceivingReportId == receivingReportId, cancellationToken);
+
+            var existingInventory = await _db.FilprideInventories
+                .Include(i => i.Product)
+                .FirstOrDefaultAsync(i => i.Reference == model.ReceivingReportNo && i.Company == model.Company, cancellationToken);
+
+            if (model == null || existingInventory == null)
+            {
+                throw new Exception("Receiving Report or Inventory not found.");
+            }
+
+            var hasAlreadyBeenUsed = await _db.FilprideSalesInvoices
+                .AnyAsync(si => si.ReceivingReportId == model.ReceivingReportId && si.Status != nameof(Status.Voided), cancellationToken);
+
+            if (hasAlreadyBeenUsed)
+            {
+                throw new InvalidOperationException("This record has already been utilized in a sales invoice. Voiding is not permitted.");
+            }
+
+            if (model.VoidedBy != null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (model.PostedBy != null)
+                {
+                    model.PostedBy = null;
+                }
+
+                model.VoidedBy = currentUser;
+                model.VoidedDate = DateTime.Now;
+                model.Status = nameof(Status.Voided);
+
+                await RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
+                await RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
+                var unitOfWork = new UnitOfWork(_db);
+                await unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
+                await RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
+
+                model.QuantityReceived = 0;
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(currentUser, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+                await _db.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            catch
+            {
+                throw;
+            }
         }
     }
 }

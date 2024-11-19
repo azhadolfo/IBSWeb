@@ -186,11 +186,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     else
                     {
-                        var selectedPo = await _dbContext.FilprideCOSAppointedSuppliers
-                            .OrderBy(s => s.PurchaseOrderId)
-                            .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == model.CustomerOrderSlipId && !s.IsAssignedToDR);
-
-                        model.PurchaseOrderId = selectedPo.PurchaseOrderId;
+                        await _unitOfWork.FilprideDeliveryReceipt.AssignNewPurchaseOrderAsync(viewModel, model);
                     }
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
@@ -314,7 +310,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Freight = existingRecord.Freight,
                     ECC = existingRecord.ECC,
                     DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption,
-                    Hauler = existingRecord.Hauler.SupplierName,
+                    Hauler = existingRecord.Hauler?.SupplierName,
                     Driver = existingRecord.Driver,
                     PlateNo = existingRecord.PlateNo,
                     ATLNo = existingRecord.AuthorityToLoadNo
@@ -651,15 +647,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
-                var hasAlreadyBeenUsed = await _dbContext.FilprideReceivingReports
-                   .AnyAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status != nameof(Status.Voided), cancellationToken);
-
-                if (hasAlreadyBeenUsed)
-                {
-                    TempData["error"] = "Please note that this record has already been utilized in a receiving report. As a result, voiding it is not permitted.";
-                    return RedirectToAction(nameof(Index));
-                }
-
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 try
@@ -674,14 +661,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.VoidedBy = _userManager.GetUserName(this.User);
                         model.VoidedDate = DateTime.Now;
                         model.Status = nameof(DRStatus.Voided);
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                        var connectedReceivingReport = await _dbContext.FilprideReceivingReports
+                            .FirstOrDefaultAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken);
 
                         await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
                         await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
-                        ///PENDING : Create the removal of receiving report
+                        await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(connectedReceivingReport.ReceivingReportId, model.VoidedBy, ipAddress, cancellationToken);
+
+                        if (model.CustomerOrderSlip.HasMultiplePO)
+                        {
+                            await _unitOfWork.FilprideDeliveryReceipt.UpdatePreviousAppointedSupplierAsync(model);
+                        }
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                         FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, model.Company);
                         await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 

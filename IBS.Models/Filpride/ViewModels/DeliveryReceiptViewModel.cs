@@ -66,7 +66,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string ATLNo { get; set; }
 
-        public string Hauler { get; set; }
+        public string? Hauler { get; set; }
 
         public string Driver { get; set; }
 

@@ -80,10 +80,18 @@ namespace IBS.DataAccess.Repository.Filpride
 
             #endregion
 
-            if (existingRecord.ECC != viewModel.ECC)
+            #region--Update Multiple PO
+
+            if (existingRecord.CustomerOrderSlip.HasMultiplePO)
             {
-                // promp the hub context
+                if (viewModel.Volume != existingRecord.Quantity)
+                {
+                    await UpdatePreviousAppointedSupplierAsync(existingRecord);
+                    await AssignNewPurchaseOrderAsync(viewModel, existingRecord);
+                }
             }
+
+            #endregion
 
             existingRecord.Date = viewModel.Date;
             existingRecord.EstimatedTimeOfArrival = viewModel.ETA;
@@ -364,6 +372,34 @@ namespace IBS.DataAccess.Repository.Filpride
                 cos.BalanceQuantity += drVolume;
                 cos.IsDelivered = false;
             }
+        }
+
+        public async Task UpdatePreviousAppointedSupplierAsync(FilprideDeliveryReceipt model)
+        {
+            var previousAppointedSupplier = await _db.FilprideCOSAppointedSuppliers
+                .FirstOrDefaultAsync(a => a.CustomerOrderSlipId == model.CustomerOrderSlipId && a.PurchaseOrderId == model.PurchaseOrderId);
+
+            if (previousAppointedSupplier == null)
+                throw new InvalidOperationException("Previous appointed supplier not found.");
+
+            previousAppointedSupplier.UnservedQuantity += model.Quantity;
+            previousAppointedSupplier.IsAssignedToDR = false;
+        }
+
+        public async Task AssignNewPurchaseOrderAsync(DeliveryReceiptViewModel viewModel, FilprideDeliveryReceipt model)
+        {
+            var newAppointedSupplier = await _db.FilprideCOSAppointedSuppliers
+                .OrderBy(s => s.PurchaseOrderId)
+                .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == viewModel.CustomerOrderSlipId &&
+                                           !s.IsAssignedToDR &&
+                                           s.Quantity == viewModel.Volume)
+                ?? throw new InvalidOperationException($"Purchase Order not found for this volume ({viewModel.Volume:N2}), contact the TNS.");
+
+            model.PurchaseOrderId = newAppointedSupplier.PurchaseOrderId;
+            model.Quantity = viewModel.Volume;
+
+            newAppointedSupplier.UnservedQuantity -= model.Quantity;
+            newAppointedSupplier.IsAssignedToDR = true;
         }
     }
 }
