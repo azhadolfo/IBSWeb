@@ -209,7 +209,7 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th class="w-50">Account No.</th>
+                                <th class="w-50" colspan="2">Account No.</th>
                                 <th class="w-25">
                                     Debit
                                 </th>
@@ -221,21 +221,21 @@
                         </thead>
                         <tbody id="accountingEntriesBody">
                             <tr>
-                                <input type="hidden" name="AccountNumber" value="2010101" />
+                                <td><input type="text" name="AccountNumber" value="2010101" class="w-100" style='border:none' readonly /></td>
                                 <td><input type='text' name="AccountTitle" value='AP-Trade Payable' class="w-100" style='border:none' readonly /></td>
                                 <td><input type='text' name="Debit" value='0.000' class="w-100 apTradePayable" style='border:none' readonly /></td>
                                 <td><input type='text' name="Credit" value='0.000' class="w-100" style='border:none' readonly /></td>
                                 <td></td>
                             </tr>
                             <tr class="EWTCredit">
-                                <input type="hidden" name="AccountNumber" value="2010302" />
+                                <td><input type="text" name="AccountNumber" value="2010302" class="w-100" style='border:none' readonly /></td>
                                 <td><input type='text' name="AccountTitle" value='Expanded Witholding Tax 1%' class="w-100" style='border:none' readonly /></td>
                                 <td><input type='text' name="Debit" value='0.000' class="w-100" style='border:none' readonly /></td>
                                 <td><input type='text' name="Credit" value='0.000' class="w-100 totalEWT" style='border:none' readonly /></td>
                                 <td></td>
                             </tr>
                             <tr>
-                                <input type="hidden" name="AccountNumber" value="1010101" />
+                                <td><input type="text" name="AccountNumber" value="1010101" class="w-100" style='border:none' readonly /></td>
                                 <td><input type='text' name="AccountTitle" value="Cash in Bank" class="w-100 accountTitle" style='border:none' readonly /></td>
                                 <td><input type='text' name="Debit" value='0.000' class="w-100" style='border:none' readonly /></td>
                                 <td><input type='text' name="Credit" value="0.000" class="w-100 totalNetOfEWT" style='border:none' readonly /></td>
@@ -244,7 +244,7 @@
                         </tbody>
                         <tbody>
                             <tr>
-                                <td class="text-end">TOTAL:</td>
+                                <td class="text-end" colspan="2">TOTAL:</td>
                                 <td class="totalDebit">0.000</td>
                                 <td class="totalCredit">0.000</td>
                                 <td></td>
@@ -337,14 +337,12 @@
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
-                                                                                                <td>
-                                                                                                    <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
-                                                                                                    <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                                                                                </td>
-                                                                                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                                                                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                                                                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                                                                         </tr>`;
+                                <td><input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly /></td>
+                                <td><input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly /></td>
+                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                            </tr>`;
 
             // Append the new row to the table body
             $("#accountingEntriesBody").append(newRow);
@@ -367,8 +365,8 @@
 
             // Loop through each row in the table body and sum up the debit values
             $("#accountingEntriesBody tr, .defaultEntry tr").each(function () {
-                var debitInput = $(this).find("td:eq(1) input").val();
-                var creditInput = $(this).find("td:eq(2) input").val();
+                var debitInput = $(this).find("td:eq(2) input").val();
+                var creditInput = $(this).find("td:eq(3) input").val();
                 // Ensure debitInput and creditInput are strings before using replace
                 debitInput = debitInput ? String(debitInput) : ""; // convert to string if not null/undefined
                 creditInput = creditInput ? String(creditInput) : "";

@@ -19,6 +19,11 @@
         <div class="row pb-3">
             <div class="col-6">
             </div>
+            <div class="col-6 text-end">
+                <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Trade" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create Trade
+                </a>
+            </div>
         </div>
         <table class="table table-bordered table-hover" id="paginatedTable">
             <thead>
@@ -167,8 +172,10 @@
                                                         <li><a class="dropdown-item" href="@Url.Action("EditTrade", "CheckVoucher", new { area = "Filpride" })/${data}">Edit</a></li>
                                                     ` : row.category == 'Non-Trade' && row.cvType == 'Invoicing' ? `
                                                         <li><a class="dropdown-item" href="@Url.Action("EditNonTradeInvoicing", "CheckVoucher", new { area = "Filpride" })/${data}">Edit</a></li>
-                                                    ` : `
+                                                    ` : row.category == 'Non-Trade' && row.cvType == 'Payment' ? `
                                                         <li><a class="dropdown-item" href="@Url.Action("EditNonTradePayment", "CheckVoucher", new { area = "Filpride" })/${data}">Edit</a></li>
+                                                    ` : `
+                                                    <li></li>
                                                     `}
                                                     <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucher", new { area = "Filpride" })/${data}">Preview</a></li>
                                                     <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${data})">Cancel</a></li>
