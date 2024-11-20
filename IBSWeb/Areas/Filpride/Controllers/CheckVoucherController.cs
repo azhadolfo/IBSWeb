@@ -513,7 +513,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Credit = details.Credit,
                                         Company = modelHeader.Company,
                                         CreatedBy = modelHeader.CreatedBy,
-                                        CreatedDate = modelHeader.CreatedDate
+                                        CreatedDate = modelHeader.CreatedDate,
+                                        BankAccountId = modelHeader.BankId
                                     }
                                 );
                         }
