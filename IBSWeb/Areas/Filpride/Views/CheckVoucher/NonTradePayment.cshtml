@@ -22,13 +22,29 @@
                     <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
-                <div class="form-group mb-3">
-                    <label class="control-label">CV #<span class="required">*</span></label>
-                    <select asp-for="CvId" asp-items="@Model.CheckVouchers" class="form-select js-select2" required>
-                        <option></option>
-                    </select>
-                    <span asp-validation-for="CvId" class="text-danger"></span>
-                </div>
+                @if (Model.CvId == 0)
+                {
+                    <div class="form-group mb-3">
+                        <label class="control-label">CV #<span class="required">*</span></label>
+                        <select asp-for="CvId" asp-items="@Model.CheckVouchers" class="form-select js-select2" required>
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="CvId" class="text-danger"></span>
+                    </div>
+                }
+                @if (Model.CvId != 0)
+                {
+                    <div class="form-group mb-3">
+                        <label class="control-label">CV #<span class="required">*</span></label>
+                        <select asp-for="CvId" asp-items="@Model.CheckVouchers" class="form-select js-select2" disabled>
+                            <option></option>
+                        </select>
+                        <span asp-validation-for="CvId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="CvId" type="hidden" />
+                    </div>
+                }
                 <div class="form-floating mb-3">
                     <input asp-for="Payee" type="text" class="form-control" placeholder="Optional" readonly />
                     <label asp-for="Payee" class="control-label ms-2"></label>
@@ -46,7 +62,7 @@
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="Total" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="Total" class="form-control money" value="" placeholder="0.000" />
+                    <input asp-for="Total" class="form-control money" value="" placeholder="0.000" readonly />
                     <span asp-validation-for="Total" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -82,7 +98,7 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th class="w-50">Account No.</th>
+                                <th class="w-50" colspan="2">Account No.</th>
                                 <th class="w-25">
                                     Debit
                                 </th>
@@ -94,19 +110,15 @@
                         </thead>
                         <tbody id="accountingEntriesBody">
                             <tr>
-                                <td>
-                                    <input type="hidden" name="AccountNumber" value="2010102" />
-                                    <input name='AccountTitle' value='AP-Non Trade Payable' class="w-100" style='border:none' readonly />
-                                </td>
+                                <td><input type="text" name="AccountNumber" value="202010200" class="w-100" style='border:none' readonly /></td>
+                                <td><input name='AccountTitle' value='AP-Non Trade Payable' class="w-100" style='border:none' readonly /></td>
                                 <td><input asp-for="Debit" value='' placeholder="0.0000" class="w-100 money" style='border:none' required /></td>
                                 <td><input name="Credit" value='0.0000' class="w-100" style='border:none' readonly /></td>
                                 <td></td>
                             </tr>
                             <tr>
-                                <td>
-                                    <input type="hidden" name="AccountNumber" value="1010101" />
-                                    <input name='AccountTitle' value='Cash in Bank' class="w-100" style='border:none' readonly />
-                                </td>
+                                <td><input type="text" name="AccountNumber" value="101010100" class="w-100" style='border:none' readonly /></td>
+                                <td><input name='AccountTitle' value='Cash in Bank' class="w-100" style='border:none' readonly /></td>
                                 <td><input name="Debit" value='0.0000' class="w-100" style='border:none' readonly /></td>
                                 <td><input name="Credit" value='0.0000' class="w-100 cib-credit" style='border:none' readonly /></td>
                                 <td></td>
@@ -114,7 +126,7 @@
                         </tbody>
                         <tbody>
                             <tr>
-                                <td class="text-end">TOTAL:</td>
+                                <td class="text-end" colspan="2">TOTAL:</td>
                                 <td class="totalDebit">0.0000</td>
                                 <td class="totalCredit">0.0000</td>
                                 <td></td>
@@ -128,7 +140,7 @@
                         <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Create</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="PaymentIndex" class="btn btn-outline-primary border  form-control ">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -183,8 +195,18 @@
             dropdownParent: $('#AddAccEntry')
         });
 
+        var cvId = @Html.Raw(Json.Serialize(Model.CvId))
+
         $("#CvId").change(function () {
-            var cvId = $(this).val();
+            cvId = $(this).val();
+            getSuplierDetails(cvId)
+        });
+
+        $(document).ready(function () {
+            getSuplierDetails(cvId)
+        });
+
+        function getSuplierDetails(cvId) {
             if (cvId !== "") {
                 $.ajax({
                     url: '@Url.Action("GetCheckVoucherDetails", "CheckVoucher", new { area = "Filpride" })', // Replace with the actual controller and action names
@@ -209,7 +231,7 @@
                 $("#PayeeTin").val("");
                 $("#Total").val("");
             }
-        });
+        }
     </script>
     <script>
         function saveAccountingEntry() {
@@ -235,14 +257,12 @@
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
-                                                                                <td>
-                                                                                    <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
-                                                                                    <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                                                                </td>
-                                                                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                                                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                                                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                                                         </tr>`;
+                                <td><input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly /></td>
+                                <td><input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly /></td>
+                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                            </tr>`;
 
             // Append the new row to the table body
             $("#accountingEntriesBody").append(newRow);
@@ -272,8 +292,8 @@
 
             // Loop through each row in the table body and sum up the debit values
             $("#accountingEntriesBody tr").each(function () {
-                var debitInput = $(this).find("td:eq(1) input").val();
-                var creditInput = $(this).find("td:eq(2) input").val();
+                var debitInput = $(this).find("td:eq(2) input").val();
+                var creditInput = $(this).find("td:eq(3) input").val();
                 // Ensure debitInput and creditInput are strings before using replace
                 debitInput = debitInput ? String(debitInput) : ""; // convert to string if not null/undefined
                 creditInput = creditInput ? String(creditInput) : "";
