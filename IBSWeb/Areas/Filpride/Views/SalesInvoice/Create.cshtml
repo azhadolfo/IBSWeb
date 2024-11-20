@@ -182,6 +182,7 @@
                                 // Populate COS dropdown
                                 var cosSelect = $("#CustomerOrderSlipId");
                                 cosSelect.empty();
+
                                 $.each(data.cosList, function (index, cos) {
                                     cosSelect.append($('<option>', {
                                         value: cos.value,
