@@ -125,15 +125,17 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<List<SelectListItem>> GetCosListPerCustomerAsync(int customerId, CancellationToken cancellationToken = default)
         {
-            return await _db.FilprideCustomerOrderSlips
+            var test = await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.Approved) || cos.Status == nameof(CosStatus.Completed) && cos.CustomerId == customerId)
+                .Where(cos => (cos.Status == nameof(CosStatus.Approved) || cos.Status == nameof(CosStatus.Completed)) && cos.CustomerId == customerId)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
                     Text = cos.CustomerOrderSlipNo
                 })
                 .ToListAsync(cancellationToken);
+
+            return test;
         }
 
         public async Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, decimal grossMargin, CancellationToken cancellationToken = default)
