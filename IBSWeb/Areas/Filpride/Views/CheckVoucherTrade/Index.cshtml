@@ -3,7 +3,7 @@
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @{
-    ViewData["Title"] = "Check Voucher";
+    ViewData["Title"] = "Check Voucher Trade";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -11,7 +11,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">CHECK VOUCHER</h2>
+                <h2 class="text-white py-2">CHECK VOUCHER TRADE</h2>
             </div>
         </div>
     </div>
@@ -20,8 +20,8 @@
             <div class="col-6">
             </div>
             <div class="col-6 text-end">
-                <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Trade" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create Trade
+                <a asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create
                 </a>
             </div>
         </div>
@@ -70,7 +70,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Void", "CheckVoucher", new { area = "Filpride" })/${id}`;
+                    var url = `@Url.Action("Void", "CheckVoucherTrade", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
@@ -96,7 +96,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `@Url.Action("Cancel", "CheckVoucher", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `@Url.Action("Cancel", "CheckVoucherTrade", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
                     window.location.href = url;
                 }
             })
@@ -109,7 +109,7 @@
             "serverSide": true, // Enable server-side processing
             "stateSave" : true,
             "ajax": {
-                "url": "@Url.Action("GetCheckVouchers", "CheckVoucher", new { area = "Filpride" })",
+                "url": "@Url.Action("GetCheckVouchers", "CheckVoucherTrade", new { area = "Filpride" })",
                 "type": "POST",
                 "data": function (d) {
                     return $.extend({}, d, {
@@ -168,19 +168,11 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                                 ${row.postedBy == null ? `
-                                                    ${row.category == 'Trade' ? `
-                                                        <li><a class="dropdown-item" href="@Url.Action("EditTrade", "CheckVoucher", new { area = "Filpride" })/${data}">Edit</a></li>
-                                                    ` : row.category == 'Non-Trade' && row.cvType == 'Invoicing' ? `
-                                                        <li><a class="dropdown-item" href="@Url.Action("EditNonTradeInvoicing", "CheckVoucher", new { area = "Filpride" })/${data}">Edit</a></li>
-                                                    ` : row.category == 'Non-Trade' && row.cvType == 'Payment' ? `
-                                                        <li><a class="dropdown-item" href="@Url.Action("EditNonTradePayment", "CheckVoucher", new { area = "Filpride" })/${data}">Edit</a></li>
-                                                    ` : `
-                                                    <li></li>
-                                                    `}
-                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucher", new { area = "Filpride" })/${data}">Preview</a></li>
+                                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherTrade", new { area = "Filpride" })/${data}">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherTrade", new { area = "Filpride" })/${data}">Preview</a></li>
                                                     <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${data})">Cancel</a></li>
                                                 ` : `
-                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucher", new { area = "Filpride" })/${data}">Print</a></li>
+                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherTrade", new { area = "Filpride" })/${data}">Print</a></li>
                                                     ${row.amountPaid == 0 ? `
                                                         <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${data})">Void</a></li>
                                                     ` : `

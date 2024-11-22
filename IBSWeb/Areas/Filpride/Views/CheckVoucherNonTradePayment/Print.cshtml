@@ -21,20 +21,11 @@
         VAT Reg. TIN: 000-216-589-00000
     </p>
 
-    <h3><span style="display: inline-block;">
-            @if (Model.Header.CheckVoucherHeaderNo.Contains("PYT") && Model.Header.CvType == nameof(CVType.Payment))
-            {
-                <b>PAYMENT</b>
-            }
-            else if (Model.Header.CheckVoucherHeaderNo.Contains("INV") && Model.Header.CvType == nameof(CVType.Invoicing))
-            {
-                <b>INVOICING</b>
-            }
-            else
-            {
-                <b>DISBURSEMENT VOUCHER</b>
-            }
-        </span></h3>
+    <h3>
+        <span style="display: inline-block;">
+            <b>PAYMENT</b>
+        </span>
+    </h3>
     <div class="text-end" style="margin-top:-60px;">
         <h6><b>No.&nbsp;@Html.DisplayFor(model => model.Header.CheckVoucherHeaderNo)</b></h6>
     </div>
@@ -102,37 +93,15 @@
                 }
                 <td>SI # :</td>
                 <td>
-                    @if (Model.Header.Category == "Non-Trade")
+                    @for (int i = 0; i < Model.Header.SINo.Length; i++)
                     {
-                        @for (int i = 0; i < Model.Header.SINo.Length; i++)
+                        if (i != Model.Header.SINo.Length - 1)
                         {
-                            if (i != Model.Header.SINo.Length - 1)
-                            {
-                                <span>@Model.Header.SINo[i],</span>
-                            }
-                            else
-                            {
-                                <span>@Model.Header.SINo[i]</span>
-                            }
+                            <span>@Model.Header.SINo[i],</span>
                         }
-                    }
-                    else if (Model.Header.Category == "Trade")
-                    {
-                        @if (ViewBag.SINoArray != null)
+                        else
                         {
-                            bool isFirst = true;
-                            foreach (var item in ViewBag.SINoArray)
-                            {
-                                if (isFirst)
-                                {
-                                    isFirst = false;
-                                }
-                                else
-                                {
-                                    <span>,</span>
-                                }
-                                <span>@item</span>
-                            }
+                            <span>@Model.Header.SINo[i]</span>
                         }
                     }
                 </td>
@@ -361,24 +330,13 @@
         else
         {
             <div class="col-6 col-md-3">
-                <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Printed" asp-route-id="@Model.Header.CheckVoucherHeaderId" asp-route-supplierId="@supplierId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Printed" asp-route-id="@Model.Header.CheckVoucherHeaderId" asp-route-supplierId="@supplierId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
             </div>
         }
     }
 
     <div class="col-6 col-md-3">
-        @if (Model.Header.CheckVoucherHeaderNo.Contains("CV"))
-        {
-            <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
-        }
-        else if (Model.Header.CheckVoucherHeaderNo.Contains("INV"))
-        {
-            <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="InvoiceIndex" class="btn btn-outline-primary border form-control buttons">Back to List</a>
-        }
-        else
-        {
-            <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="PaymentIndex" class="btn btn-outline-primary border form-control buttons">Back to List</a>
-        }
+        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
     </div>
 </div>
 
@@ -458,7 +416,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Properly encode the parameters to prevent any issues with special characters
-                    var url = `@Url.Action("Post", "CheckVoucher", new { area = "Filpride" })?id=${encodeURIComponent(id)}&supplierId=${encodeURIComponent(@supplierId)}`;
+                    var url = `@Url.Action("Post", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${encodeURIComponent(id)}&supplierId=${encodeURIComponent(@supplierId)}`;
                     window.location.href = url;
                 }
             })

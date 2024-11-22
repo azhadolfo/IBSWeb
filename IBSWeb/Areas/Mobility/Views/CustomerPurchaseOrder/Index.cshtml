@@ -28,61 +28,62 @@
 
         <table class="table table-bordered table-striped" id="dataTable">
             <thead>
-                <tr>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.CustomerPurchaseOrderNo)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Date)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Quantity)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Price)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Amount)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Address)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.MobilityStation)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Product)</th>
-                    <th class="text-start">@Html.DisplayNameFor(model => model.Customer)</th>
-                    <th></th>
-                </tr>
+            <tr>
+                <th class="text-start">@Html.DisplayNameFor(model => model.CustomerPurchaseOrderNo)</th>
+                <th class="text-start">@Html.DisplayNameFor(model => model.Date)</th>
+                <th class="text-start">@Html.DisplayNameFor(model => model.Quantity)</th>
+                <th class="text-start">@Html.DisplayNameFor(model => model.Price)</th>
+                <th class="text-start">@Html.DisplayNameFor(model => model.Amount)</th>
+                <th class="text-start">@Html.DisplayNameFor(model => model.Address)</th>
+                <th class="text-start">@Html.DisplayNameFor(model => model.MobilityStation)</th>
+                <th class="text-start">@Html.DisplayNameFor(model => model.Product)</th>
+                <th class="text-start">@Html.DisplayNameFor(model => model.Customer)</th>
+                <th></th>
+            </tr>
             </thead>
 
             <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td class="text-start align-middle">
-                            @item.CustomerPurchaseOrderNo
-                        </td>
-                        <td class="text-start align-middle">
-                            @item.Date
-                        </td>
-                        <td class="text-start align-middle">
-                            @item.Quantity
-                        </td>
-                        <td class="text-start align-middle">
-                            @item.Price
-                        </td>
-                        <td class="text-start align-middle">
-                            @item.Amount
-                        </td>
-                        <td class="text-start align-middle">
-                            @item.Address
-                        </td>
-                        <td class="text-start align-middle">
-                            @item.MobilityStation.StationName
-                        </td>
-                        <td class="text-start align-middle">
-                            @item.Product.ProductName
-                        </td>
-                        <td class="text-start align-middle">
-                            @item.Customer.CustomerName
-                        </td>
-                        <td>
-                            <div class="dropdown">
-                                <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "CustomerPurchaseOrder", new { area = "Mobility" })/@item.CustomerPurchaseOrderId">Edit</a></li>
-                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CustomerPurchaseOrder", new { area = "Mobility" })/@item.CustomerPurchaseOrderId">Preview</a></li>
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
-                }
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="text-start align-middle">
+                        @item.CustomerPurchaseOrderNo
+                    </td>
+                    <td class="text-start align-middle">
+                        @item.Date
+                    </td>
+                    <td class="text-start align-middle">
+                        @item.Quantity
+                    </td>
+                    <td class="text-start align-middle">
+                        @item.Price
+                    </td>
+                    <td class="text-start align-middle">
+                        @item.Amount
+                    </td>
+                    <td class="text-start align-middle">
+                        @item.Address
+                    </td>
+                    <td class="text-start align-middle">
+                        @item.MobilityStation.StationName
+                    </td>
+                    <td class="text-start align-middle">
+                        @item.Product.ProductName
+                    </td>
+                    <td class="text-start align-middle">
+                        @item.Customer.CustomerName
+                    </td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "CustomerPurchaseOrder", new { area = "Mobility" })/@item.CustomerPurchaseOrderId">Edit</a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Print", "CustomerPurchaseOrder", new { area = "Mobility" })/@item.CustomerPurchaseOrderId">Preview</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            }
         </table>
+    </div>
 </div>
