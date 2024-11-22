@@ -253,12 +253,12 @@
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li class="nav-item dropend">
-                                            <a class="nav-link dropdown-toggle text-dark" asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Index">
+                                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                 Check Voucher
                                             </a>
                                             <ul class="dropdown-menu">
                                                 <li class="nav-item">
-                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Trade">Trade</a>
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Index">Trade</a>
                                                 </li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li class="nav-item dropend">
@@ -266,12 +266,12 @@
                                                         Non-Trade
                                                     </a>
                                                     <ul class="dropdown-menu">
-                                                        <li class="nav-item">
-                                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucher" asp-action="NonTradeInvoicing">Invoicing</a>
+                                                        <li class="nav-item dropend">
+                                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucher" asp-action="InvoiceIndex">Invoicing</a>
                                                         </li>
                                                         <li><hr class="dropdown-divider"></li>
-                                                        <li class="nav-item">
-                                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucher" asp-action="NonTradePayment">Payment</a>
+                                                        <li class="nav-item dropend">
+                                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucher" asp-action="PaymentIndex">Payment</a>
                                                         </li>
                                                     </ul>
                                                 </li>
@@ -283,7 +283,7 @@
                                         </li>
                                     </ul>
                                 </li>
-                                <li class="nav-item dropdown-layout">
+                                @* <li class="nav-item dropdown-layout">
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
                                         Inventory
                                     </a>
@@ -296,7 +296,7 @@
                                             <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Inventory" asp-action="ActualInventory">Actual</a>
                                         </li>
                                     </ul>
-                                </li>
+                                </li> *@
                                 @if (User.IsInRole("Admin"))
                                 {
                                     <li class="nav-item dropdown-layout">

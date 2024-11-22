@@ -6,6 +6,7 @@
 
 @{
     ViewData["Title"] = "Print Check Voucher";
+    int supplierId = Model.Header.SupplierId == null ? Model.Supplier.SupplierId : 0;
 }
 
 <br />
@@ -20,7 +21,11 @@
         VAT Reg. TIN: 000-216-589-00000
     </p>
 
-    <h3><span style="display: inline-block;"><b>DISBURSEMENT VOUCHER</b></span></h3>
+    <h3>
+        <span style="display: inline-block;">
+            <b>PAYMENT</b>
+        </span>
+    </h3>
     <div class="text-end" style="margin-top:-60px;">
         <h6><b>No.&nbsp;@Html.DisplayFor(model => model.Header.CheckVoucherHeaderNo)</b></h6>
     </div>
@@ -37,12 +42,26 @@
         <tbody>
             <tr>
                 <td style="width:10%; padding-left:20px;">Name :</td>
-                <td>@Html.DisplayFor(model => model.Header.Supplier.SupplierName)</td>
+                @if (Model.Header.SupplierId != null)
+                {
+                    <td>@Html.DisplayFor(model => model.Header.Supplier.SupplierName)</td>
+                }
+                else
+                {
+                    <td>@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
+                }
                 <td style="width:50%;" colspan="2" class="text-nowrap">Other References</td>
             </tr>
             <tr>
                 <td style="padding-left:20px;">Address :</td>
-                <td>@Html.DisplayFor(model => model.Header.Supplier.SupplierAddress)</td>
+                @if (Model.Header.SupplierId != null)
+                {
+                    <td>@Html.DisplayFor(model => model.Header.Supplier.SupplierAddress)</td>
+                }
+                else
+                {
+                    <td>@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
+                }
                 <td style="width:5%;">PO # :</td>
 
                 <td>
@@ -64,40 +83,25 @@
             </tr>
             <tr>
                 <td style="padding-left:20px;">TIN # :</td>
-                <td>@Html.DisplayFor(model => model.Header.Supplier.SupplierTin)</td>
+                @if (Model.Header.SupplierId != null)
+                {
+                    <td>@Html.DisplayFor(model => model.Header.Supplier.SupplierTin)</td>
+                }
+                else
+                {
+                    <td>@Html.DisplayFor(model => model.Supplier.SupplierTin)</td>
+                }
                 <td>SI # :</td>
                 <td>
-                    @if (Model.Header.Category == "Non-Trade")
+                    @for (int i = 0; i < Model.Header.SINo.Length; i++)
                     {
-                        @for (int i = 0; i < Model.Header.SINo.Length; i++)
+                        if (i != Model.Header.SINo.Length - 1)
                         {
-                            if (i != Model.Header.SINo.Length - 1)
-                            {
-                                <span>@Model.Header.SINo[i],</span>
-                            }
-                            else
-                            {
-                                <span>@Model.Header.SINo[i]</span>
-                            }
+                            <span>@Model.Header.SINo[i],</span>
                         }
-                    }
-                    else if (Model.Header.Category == "Trade")
-                    {
-                        @if (ViewBag.SINoArray != null)
+                        else
                         {
-                            bool isFirst = true;
-                            foreach (var item in ViewBag.SINoArray)
-                            {
-                                if (isFirst)
-                                {
-                                    isFirst = false;
-                                }
-                                else
-                                {
-                                    <span>,</span>
-                                }
-                                <span>@item</span>
-                            }
+                            <span>@Model.Header.SINo[i]</span>
                         }
                     }
                 </td>
@@ -121,7 +125,14 @@
         <tbody>
             <tr>
                 <td style="width:20%; padding-left:20px;">Payee :</td>
-                <td style="width:65%;">@Html.DisplayFor(model => model.Header.Payee)</td>
+                @if (Model.Header.SupplierId != null)
+                {
+                    <td>@Html.DisplayFor(model => model.Header.Payee)</td>
+                }
+                else
+                {
+                    <td>@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
+                }
                 @if (Model.Header.Total != 0)
                 {
                     <td class="text-end">@Model.Header.Total.ToString("N4")</td>
@@ -319,13 +330,13 @@
         else
         {
             <div class="col-6 col-md-3">
-                <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Printed" asp-route-id="@Model.Header.CheckVoucherHeaderId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Printed" asp-route-id="@Model.Header.CheckVoucherHeaderId" asp-route-supplierId="@supplierId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
             </div>
         }
     }
 
     <div class="col-6 col-md-3">
-        <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
     </div>
 </div>
 
@@ -404,11 +415,12 @@
                 confirmButtonText: 'Post'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Post", "CheckVoucher", new { area = "Filpride" })/${id}`;
+                    // Properly encode the parameters to prevent any issues with special characters
+                    var url = `@Url.Action("Post", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${encodeURIComponent(id)}&supplierId=${encodeURIComponent(@supplierId)}`;
                     window.location.href = url;
                 }
             })
         }
     </script>
+
 }

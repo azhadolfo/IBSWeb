@@ -70,4 +70,10 @@
         Service,
         BankAccount
     }
+
+    public enum CVType
+    {
+        Invoicing,
+        Payment
+    }
 }
