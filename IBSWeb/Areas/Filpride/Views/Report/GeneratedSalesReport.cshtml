@@ -1,0 +1,137 @@
+﻿@model IEnumerable<FilprideSalesInvoice>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Sales Report";
+
+    string currencyFormat = "N4";
+    var quantity = 0m;
+    var frieght = 0m;
+    var total = 0m;
+}
+<style>
+    .container {
+        max-width: none;
+    }
+
+    .table-responsive {
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+
+    table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .print-header, .table-responsive, .table-responsive * {
+            visibility: visible;
+        }
+
+        .print-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .table-responsive {
+            position: absolute;
+            top: 0; /* Adjust this value based on your header's height */
+            left: 0;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+    }
+</style>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <h5>SALES REPORT</h5>
+        <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
+        <table id="ledgerTable" class="table">
+            <thead>
+                <tr class="table-primary">
+                    <th>Date</th>
+                    <th>@Html.DisplayNameFor(model => model.Customer.CustomerName)</th>
+                    <th>@Html.DisplayNameFor(model => model.CustomerOrderSlip.CustomerOrderSlipNo)</th>
+                    <th>OTC COS No.</th>
+                    <th>@Html.DisplayNameFor(model => model.DeliveryReceipt.DeliveryReceiptNo)
+                    <th>OTC DR No.</th>
+                    <th>Items</th>
+                    <th class="text-end">@Html.DisplayNameFor(model => model.Quantity)</th>
+                    <th class="text-end">@Html.DisplayNameFor(model => model.CustomerOrderSlip.Freight)</th>
+                    <th class="text-end">Total</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                @foreach (var invoice in Model)
+                {
+                    <tr class="align-text-bottom">
+                        <td>@Html.DisplayFor(model => invoice.TransactionDate)</td>
+                        <td>@Html.DisplayFor(model => invoice.Customer.CustomerName)</td>
+                        <td>@Html.DisplayFor(model => invoice.CustomerOrderSlip.CustomerOrderSlipNo)</td>
+                        <td>@Html.DisplayFor(model => invoice.CustomerOrderSlip.OldCosNo)</td>
+                        <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.DeliveryReceiptNo)</td>
+                        <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.ManualDrNo)</td>
+                        <td>@Html.DisplayFor(model => invoice.Product.ProductName)</td>
+                        <td class="text-end">@Html.DisplayFor(model => invoice.Quantity)</td>
+                        <td class="text-end">@Html.DisplayFor(model => invoice.DeliveryReceipt.Freight)</td>
+                        <td class="text-end">@Html.DisplayFor(model => invoice.Amount)</td>
+                        <td>@Html.DisplayFor(model => invoice.Remarks)</td>
+
+                    </tr>
+
+                    quantity += invoice?.Quantity ?? 0m;
+                    frieght += invoice?.DeliveryReceipt?.Freight ?? 0m;
+                    total += invoice?.Amount ?? 0m;
+                }
+                <tr class="table-primary" style="border-top: double">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-center"><b>TOTAL:</b></td>
+                    <td class="text-end">@quantity.ToString(currencyFormat)</td>
+                    <td class="text-end">@frieght.ToString(currencyFormat)</td>
+                    <td class="text-end">@total.ToString(currencyFormat)</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p><i>No data available in report.</i></p>
+}
+
+<div class="row mt-5">
+    <div class="col-6 col-md-3">
+        <a onclick="printTable()" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="Report" asp-action="SalesReport" class="btn btn-outline-primary border form-control buttons">Back</a>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function printTable() {
+            window.print();
+        }
+    </script>
+}

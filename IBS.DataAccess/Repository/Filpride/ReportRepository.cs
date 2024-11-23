@@ -1,8 +1,10 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
+using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 
@@ -244,6 +246,25 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(a => a.Company == company && a.Date >= dateFrom && a.Date <= dateTo && a.Status == nameof(CosStatus.Approved) && a.DeliveredQuantity < a.Quantity)
                 .OrderBy(a => a.Date)
                 .ToListAsync();
+        }
+
+        public List<FilprideSalesInvoice> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var salesInvoice = _db.FilprideSalesInvoices
+            .Where(s => s.Company == company && s.TransactionDate >= dateFrom && s.TransactionDate <= dateTo) // Filter by date and company
+            .Include (s => s.Product)
+            .Include (s => s.Customer)
+            .Include (s => s.CustomerOrderSlip)
+            .Include (s => s.DeliveryReceipt)
+            .OrderBy(s => s.TransactionDate) // Order by SalesBookId
+            .ToList();
+
+            return salesInvoice;
         }
     }
 }
