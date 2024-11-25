@@ -338,7 +338,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     .FirstOrDefaultAsync(cm => cm.CreditMemoId == model.CreditMemoId);
 
                     model.EditedBy = _userManager.GetUserName(this.User);
-                    model.EditedDate = DateTime.Now;
+                    model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     if (model.Source == "Sales Invoice")
                     {
@@ -431,7 +431,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTime.Now;
+                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Posted);
 
                         if (model.SalesInvoiceId != null)
@@ -951,7 +951,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
                         await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.CreditMemoNo, cancellationToken);
@@ -991,7 +991,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 

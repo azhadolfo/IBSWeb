@@ -116,7 +116,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     existingModel.CustomerTin = model.CustomerTin;
                     existingModel.QuantityLimit = model.QuantityLimit;
                     existingModel.EditedBy = _userManager.GetUserName(User);
-                    existingModel.EditedDate = DateTime.Now;
+                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingModel.CustomerType = model.CustomerType;
                     existingModel.IsCheckDetailsRequired = model.IsCheckDetailsRequired;
 

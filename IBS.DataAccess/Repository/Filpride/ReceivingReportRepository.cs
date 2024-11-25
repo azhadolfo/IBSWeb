@@ -216,7 +216,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 if (po.QuantityReceived == po.Quantity)
                 {
                     po.IsReceived = true;
-                    po.ReceivedDate = DateTime.Now;
+                    po.ReceivedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     await _db.SaveChangesAsync(cancellationToken);
                 }
@@ -270,9 +270,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 Remarks = "PENDING",
                 Company = deliveryReceipt.Company,
                 CreatedBy = "SYSTEM GENERATED",
-                CreatedDate = DateTime.Now,
+                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 PostedBy = "SYSTEM GENERATED",
-                PostedDate = DateTime.Now,
+                PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 Status = nameof(Status.Posted),
                 Type = deliveryReceipt.PurchaseOrder.Type
             };

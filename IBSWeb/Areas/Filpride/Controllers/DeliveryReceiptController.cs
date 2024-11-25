@@ -382,7 +382,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (existingRecord.PostedBy == null)
                 {
                     existingRecord.PostedBy = _userManager.GetUserName(User);
-                    existingRecord.PostedDate = DateTime.Now;
+                    existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.Status = nameof(Status.Posted);
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -506,7 +506,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
@@ -554,7 +554,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
                         await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
@@ -614,7 +614,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     UppiAtlNo = supplierAtlNo,
                     Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
                     CreatedBy = _userManager.GetUserName(User),
-                    CreatedDate = DateTime.Now,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
                 };
 
                 await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);

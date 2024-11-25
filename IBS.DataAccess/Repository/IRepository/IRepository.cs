@@ -48,5 +48,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<CustomerDto> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default);
 
         Task<List<AccountTitleDto>> GetListOfAccountTitleDto(CancellationToken cancellationToken = default);
+
+        DateTime GetPhilippineTime(DateTime utcDateTime);
     }
 }

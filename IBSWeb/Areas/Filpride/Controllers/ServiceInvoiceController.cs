@@ -284,7 +284,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTime.Now;
+                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Posted);
 
                         #region --Retrieval of Services
@@ -532,7 +532,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
@@ -582,7 +582,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
                         await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
@@ -685,7 +685,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.DueDate = model.DueDate;
                     existingModel.Instructions = model.Instructions;
                     existingModel.EditedBy = _userManager.GetUserName(User);
-                    existingModel.EditedDate = DateTime.Now;
+                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     decimal total = 0;
                     total += model.Amount;

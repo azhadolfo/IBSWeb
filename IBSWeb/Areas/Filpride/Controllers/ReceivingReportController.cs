@@ -301,7 +301,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.Amount = model.QuantityReceived * po.Price;
 
                     existingModel.EditedBy = _userManager.GetUserName(User);
-                    existingModel.EditedDate = DateTime.Now;
+                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     #region --Audit Trail Recording
 
@@ -362,7 +362,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTime.Now;
+                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Posted);
 
                         #region --Audit Trail Recording
@@ -425,7 +425,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     try
                     {
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
                         await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
@@ -468,7 +468,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.CanceledQuantity = model.QuantityDelivered < model.QuantityReceived ? model.QuantityDelivered : model.QuantityReceived;
                     model.QuantityDelivered = 0;
                     model.QuantityReceived = 0;

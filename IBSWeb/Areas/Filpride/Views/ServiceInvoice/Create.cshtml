@@ -59,7 +59,7 @@
             <div id="period-amount-fields" class="row g-2 mb-3">
                 <div class="col-sm mb-3">
                     <label asp-for="Period" class="control-label">Period<span class="required">*</span></label>
-                    <input asp-for="Period" type="month" value="@DateTime.Now.ToString("yyyy-MM")" class="form-control" />
+                    <input asp-for="Period" type="month" value="@DateTime.UtcNow.ToString("yyyy-MM")" class="form-control" />
                     <span asp-validation-for="Period" class="text-danger"></span>
                 </div>
                 <div class="col-sm mb-3">

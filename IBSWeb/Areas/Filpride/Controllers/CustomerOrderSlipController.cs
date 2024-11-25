@@ -372,7 +372,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (existingRecord.FirstApprovedBy == null)
                 {
                     existingRecord.FirstApprovedBy = _userManager.GetUserName(User);
-                    existingRecord.FirstApprovedDate = DateTime.Now;
+                    existingRecord.FirstApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.OperationManagerReason = reason;
 
                     if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery)
@@ -390,7 +390,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             var subPoModel = new FilpridePurchaseOrder
                             {
                                 PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo.Type, cancellationToken),
-                                Date = DateOnly.FromDateTime(DateTime.Now),
+                                Date = DateOnly.FromDateTime(DateTime.UtcNow),
                                 SupplierId = existingPo.SupplierId,
                                 ProductId = existingPo.ProductId,
                                 Terms = existingPo.Terms,
@@ -402,9 +402,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 CustomerId = existingRecord.CustomerId,
                                 SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
                                 CreatedBy = "SYSTEM GENERATED",
-                                CreatedDate = DateTime.Now,
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 PostedBy = existingRecord.FirstApprovedBy,
-                                PostedDate = DateTime.Now,
+                                PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 Status = nameof(Status.Posted),
                                 OldPoNo = existingPo.OldPoNo,
                                 Type = existingPo.Type
@@ -430,7 +430,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 var subPoModel = new FilpridePurchaseOrder
                                 {
                                     PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo.Type, cancellationToken),
-                                    Date = DateOnly.FromDateTime(DateTime.Now),
+                                    Date = DateOnly.FromDateTime(DateTime.UtcNow),
                                     SupplierId = existingPo.SupplierId,
                                     ProductId = existingRecord.ProductId,
                                     Terms = existingPo.Terms,
@@ -443,9 +443,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CustomerId = existingRecord.CustomerId,
                                     SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
                                     CreatedBy = existingRecord.FirstApprovedBy,
-                                    CreatedDate = DateTime.Now,
+                                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                     PostedBy = existingRecord.FirstApprovedBy,
-                                    PostedDate = DateTime.Now,
+                                    PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                     Status = nameof(Status.Posted),
                                     OldPoNo = existingPo.OldPoNo
                                 };
@@ -496,7 +496,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (existingRecord.SecondApprovedBy == null)
                 {
                     existingRecord.SecondApprovedBy = _userManager.GetUserName(User);
-                    existingRecord.SecondApprovedDate = DateTime.Now;
+                    existingRecord.SecondApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.Terms = terms;
                     existingRecord.FinanceInstruction = instructions;
                     await _unitOfWork.FilprideCustomerOrderSlip.FinanceApproved(existingRecord, cancellationToken);
@@ -538,7 +538,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (existingRecord.DisapprovedBy == null)
                 {
                     existingRecord.DisapprovedBy = _userManager.GetUserName(User);
-                    existingRecord.DisapprovedDate = DateTime.Now;
+                    existingRecord.DisapprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.Status = nameof(CosStatus.Disapproved);
                     await _unitOfWork.SaveAsync(cancellationToken);
                 }

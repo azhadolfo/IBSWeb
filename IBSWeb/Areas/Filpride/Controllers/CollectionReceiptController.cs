@@ -717,7 +717,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
                             offsetting.Amount = currentAccountAmount;
                             offsetting.CreatedBy = _userManager.GetUserName(this.User);
-                            offsetting.CreatedDate = DateTime.Now;
+                            offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                             if (ids.Count == 0)
                             {
@@ -735,7 +735,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
                                 Amount = currentAccountAmount,
                                 CreatedBy = _userManager.GetUserName(this.User),
-                                CreatedDate = DateTime.Now
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
                             };
                             _dbContext.FilprideOffsettings.Add(newOffsetting);
                         }
@@ -1165,7 +1165,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.WVAT = model.WVAT;
                     existingModel.Total = computeTotalInModelIfZero;
                     existingModel.EditedBy = _userManager.GetUserName(User);
-                    existingModel.EditedDate = DateTime.Now;
+                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     try
                     {
@@ -1267,7 +1267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
                             offsetting.Amount = currentAccountAmount;
                             offsetting.CreatedBy = _userManager.GetUserName(this.User);
-                            offsetting.CreatedDate = DateTime.Now;
+                            offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                             if (ids.Count == 0)
                             {
@@ -1285,7 +1285,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
                                 Amount = currentAccountAmount,
                                 CreatedBy = _userManager.GetUserName(this.User),
-                                CreatedDate = DateTime.Now
+                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
                             };
                             _dbContext.FilprideOffsettings.Add(newOffsetting);
                         }
@@ -1343,7 +1343,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTime.Now;
+                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Posted);
 
                         List<FilprideOffsettings>? offset = new List<FilprideOffsettings>();
@@ -1719,7 +1719,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
                         var series = model.SINo != null ? model.SINo : model.SVNo;
 
@@ -1783,7 +1783,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 

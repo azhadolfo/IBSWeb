@@ -318,7 +318,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingRecord.Amount >= model.Discount)
                     {
                         existingRecord.EditedBy = _userManager.GetUserName(User);
-                        existingRecord.EditedDate = DateTime.Now;
+                        existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                         #region --Audit Trail Recording
 
@@ -369,7 +369,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTime.Now;
+                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Posted);
 
                         var accountTitlesDto = await _unitOfWork.FilprideChartOfAccount.GetListOfAccountTitleDto(cancellationToken);
@@ -630,7 +630,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
                         await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideSalesBook>(sb => sb.SerialNo == model.SalesInvoiceNo, cancellationToken);
@@ -678,7 +678,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.PaymentStatus = nameof(Status.Canceled);
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
@@ -744,6 +744,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var automatedRr = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == dr.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
 
+                var test = await _dbContext.FilprideSalesInvoices.Where(s => s.SalesInvoiceNo == "test").Select(s => s.SalesInvoiceNo).FirstOrDefaultAsync() ?? throw new ArgumentNullException();
+                
                 return Json(new
                 {
                     TransactionDate = dr.DeliveredDate,

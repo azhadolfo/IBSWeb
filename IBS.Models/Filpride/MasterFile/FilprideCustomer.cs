@@ -63,7 +63,7 @@ namespace IBS.Models.Filpride.MasterFile
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Display(Name = "Edited By")]
         [Column(TypeName = "varchar(50)")]

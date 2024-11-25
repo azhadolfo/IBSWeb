@@ -547,7 +547,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var stream = new MemoryStream();
                     package.SaveAs(stream);
                     stream.Position = 0;
-                    var fileName = $"COS_Unserved_Volume_{DateTime.Now:yyyyMMdd}.xlsx";
+                    var fileName = $"COS_Unserved_Volume_{DateTime.UtcNow:yyyyMMdd}.xlsx";
                     return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
                 }
                 catch (Exception ex)
@@ -577,7 +577,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
             var currentUser = _userManager.GetUserName(User);
-            var today = DateTime.Now;
+            var today = DateTimeHelper.GetCurrentPhilippineTime();
             var firstDayOfMonth = new DateOnly(today.Year, today.Month, 1);
             var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
@@ -800,7 +800,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"Software Name: Accounting Administration System (AAS)");
                     fileContent.AppendLine($"Version: v1.1");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
-                    fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
+                    fileContent.AppendLine($"Date & Time Extracted: {DateTimeHelper.GetCurrentPhilippineTimeFormatted()}");
 
                     // Convert the content to a byte array
                     var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());
@@ -894,7 +894,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"Software Name: {CS.AAS}");
                     fileContent.AppendLine($"Version: {CS.Version}");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
-                    fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
+                    fileContent.AppendLine($"Date & Time Extracted: {DateTimeHelper.GetCurrentPhilippineTimeFormatted()}");
 
                     // Convert the content to a byte array
                     var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());
@@ -987,7 +987,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"Software Name: {CS.AAS}");
                     fileContent.AppendLine($"Version: {CS.Version}");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
-                    fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
+                    fileContent.AppendLine($"Date & Time Extracted: {DateTimeHelper.GetCurrentPhilippineTimeFormatted()}");
 
                     // Convert the content to a byte array
                     var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());
@@ -1077,7 +1077,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"Software Name: {CS.AAS}");
                     fileContent.AppendLine($"Version: {CS.Version}");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
-                    fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
+                    fileContent.AppendLine($"Date & Time Extracted: {DateTimeHelper.GetCurrentPhilippineTimeFormatted()}");
 
                     // Convert the content to a byte array
                     var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());
@@ -1178,7 +1178,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"Software Name: {CS.AAS}");
                     fileContent.AppendLine($"Version: {CS.Version}");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
-                    fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
+                    fileContent.AppendLine($"Date & Time Extracted: {DateTimeHelper.GetCurrentPhilippineTimeFormatted()}");
 
                     // Convert the content to a byte array
                     var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());
@@ -1382,7 +1382,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"Software Name: {CS.AAS}");
                     fileContent.AppendLine($"Version: {CS.Version}");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
-                    fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
+                    fileContent.AppendLine($"Date & Time Extracted: {DateTimeHelper.GetCurrentPhilippineTimeFormatted()}");
 
                     // Convert the content to a byte array
                     var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());
@@ -1490,7 +1490,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"Software Name: {CS.AAS}");
                     fileContent.AppendLine($"Version: {CS.Version}");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
-                    fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
+                    fileContent.AppendLine($"Date & Time Extracted: {DateTimeHelper.GetCurrentPhilippineTimeFormatted()}");
 
                     // Convert the content to a byte array
                     var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());

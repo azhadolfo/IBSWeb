@@ -18,7 +18,7 @@
                 <div asp-validation-summary="ModelOnly"></div>
                 <input asp-for="InventoryId" type="hidden" />
                 <div class="form-floating py-2 col-12">
-                    <input type="date" asp-for="Date" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control border-0 shadow" placeholder="" required />
+                    <input type="date" asp-for="Date" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" class="form-control border-0 shadow" placeholder="" required />
                     <label asp-for="Date">Date<span class="required">*</span></label>
                     <span asp-validation-for="Date" class="text-danger"></span>
                 </div>

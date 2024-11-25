@@ -184,7 +184,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     model.Status = "Pending";
                     model.Terms = selectedCustomer.CustomerTerms;
                     model.CreatedBy = _userManager.GetUserName(User);
-                    model.CreatedDate = DateTime.Now;
+                    model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.StationId = getMobilityStation.StationId;
                     model.Address = selectedCustomer.CustomerAddress;
                     if (stationCodeClaims == "ALL")
@@ -285,7 +285,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     existingModel.StationId = getMobilityStation.StationId;
                     existingModel.Address = selectedCustomer.CustomerAddress;
                     existingModel.EditedBy = _userManager.GetUserName(User);
-                    existingModel.EditedDate = DateTime.Now;
+                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingModel.Status = "Pending";
 
                     #endregion -- Assign New Values --
@@ -394,7 +394,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             existingModel.TripTicket = tripTicket;
                             existingModel.Status = "Lifted";
                             existingModel.UploadedBy = _userManager.GetUserName(User);
-                            existingModel.UploadedDate = DateTime.Now;
+                            existingModel.UploadedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                             await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -421,7 +421,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var model = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
             model.Status = "Approved";
             model.ApprovedBy = _userManager.GetUserName(User);
-            model.ApprovedDate = DateTime.Now;
+            model.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
             model.DisapprovalRemarks = "";
 
             await _dbContext.SaveChangesAsync();
@@ -437,7 +437,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             model.Status = "Disapproved";
             model.DisapprovalRemarks = message;
             model.DisapprovedBy = _userManager.GetUserName(User);
-            model.DisapprovedDate = DateTime.Now;
+            model.DisapprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
             await _dbContext.SaveChangesAsync();
 
@@ -490,7 +490,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
-            return $"{fileName}-{DateTime.Now:yyyyMMddHHmmss}{extension}";
+            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
         }
 
         private async Task GenerateSignedUrl(MobilityCustomerOrderSlip model)

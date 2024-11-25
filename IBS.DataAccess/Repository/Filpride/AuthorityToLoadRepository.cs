@@ -23,7 +23,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenBy(c => c.AuthorityToLoadNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            var yearToday = DateTime.Now.Year;
+            var yearToday = DateTime.UtcNow.Year;
 
             if (lastAtl != null)
             {

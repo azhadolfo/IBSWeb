@@ -311,7 +311,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (modelHeader.PostedBy == null)
                     {
                         modelHeader.PostedBy = _userManager.GetUserName(this.User);
-                        modelHeader.PostedDate = DateTime.Now;
+                        modelHeader.PostedDate = _unitOfWork.FilprideCheckVoucher.GetPhilippineTime(DateTime.UtcNow);
                         modelHeader.Status = nameof(Status.Posted);
 
                         #region -- Partial payment of RR's
@@ -329,7 +329,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 if (receivingReport.Amount <= receivingReport.AmountPaid)
                                 {
                                     receivingReport.IsPaid = true;
-                                    receivingReport.PaidDate = DateTime.Now;
+                                    receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
                                 }
                             }
                         }
@@ -615,7 +615,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             if (receivingReport.Amount <= receivingReport.AmountPaid)
                             {
                                 receivingReport.IsPaid = true;
-                                receivingReport.PaidDate = DateTime.Now;
+                                receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
                             }
                             else
                             {
@@ -643,7 +643,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.Total = cashInBank;
                     existingHeaderModel.Amount = viewModel.Amount;
                     existingHeaderModel.EditedBy = _userManager.GetUserName(User);
-                    existingHeaderModel.EditedDate = DateTime.Now;
+                    existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     #endregion --Saving the default entries
 
@@ -714,7 +714,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
                         await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo);
@@ -754,7 +754,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
@@ -1615,7 +1615,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingModel != null)
                     {
                         existingModel.EditedBy = _userManager.GetUserName(User);
-                        existingModel.EditedDate = DateTime.Now;
+                        existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         existingModel.Date = viewModel.TransactionDate;
                         existingModel.SupplierId = viewModel.SupplierId;
                         existingModel.PONo = [viewModel.PoNo];
@@ -1975,7 +1975,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.CheckDate = viewModel.CheckDate;
                     existingHeaderModel.Total = cashInBank;
                     existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
-                    existingHeaderModel.EditedDate = DateTime.Now;
+                    existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     #endregion --Saving the default entries
 

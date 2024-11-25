@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Dtos;
 using IBS.Models.Filpride.MasterFile;
+using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -109,7 +110,7 @@ namespace IBS.DataAccess.Repository.Filpride
             if (_db.ChangeTracker.HasChanges())
             {
                 existingAccount.EditedBy = model.EditedBy;
-                existingAccount.EditedDate = DateTime.Now;
+                existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

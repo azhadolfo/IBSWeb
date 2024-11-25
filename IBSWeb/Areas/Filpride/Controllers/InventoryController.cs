@@ -384,9 +384,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Particulars = inventory.Particular,
                         Date = inventory.Date,
                         CreatedBy = _userManager.GetUserName(this.User),
-                        CreatedDate = DateTime.Now,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         PostedBy = _userManager.GetUserName(this.User),
-                        PostedDate = DateTime.Now,
+                        PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         Company = inventory.Company
                     };
 
@@ -413,7 +413,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     inventory.IsValidated = true;
                     inventory.ValidatedBy = _userManager.GetUserName(this.User);
-                    inventory.ValidatedDate = DateTime.Now;
+                    inventory.ValidatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     await _dbContext.FilprideJournalVoucherDetails.AddRangeAsync(details, cancellationToken);
 
@@ -434,7 +434,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = Math.Abs(entry.Debit),
                             Credit = Math.Abs(entry.Credit),
                             CreatedBy = _userManager.GetUserName(this.User),
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = entry.Company,
                         });
                     }

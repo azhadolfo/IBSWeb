@@ -22,7 +22,7 @@
 
                     <div class="form-group mb-3">
                         <label asp-for="Header.Date" class="control-label"></label><span class="required">*</span>
-                        <input asp-for="Header.Date" type="Date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        <input asp-for="Header.Date" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
                         <span asp-validation-for="Header.Date" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">

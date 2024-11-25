@@ -308,7 +308,7 @@ else if (Model.Source == "Service Invoice")
                 <br />
                 <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
                 <br />
-                <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+                <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
             </em>
         </p>
     </div>

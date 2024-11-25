@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,7 +23,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            DateTime now = DateTime.Now;
+            DateTime now = DateTimeHelper.GetCurrentPhilippineTime();
             DateTime nextRuntime = new DateTime(now.Year, now.Month, now.Day, 08, 00, 00); // It will automatically run every 8:00 AM
             TimeSpan dueTime;
 
@@ -116,7 +117,7 @@ namespace IBS.DataAccess.Repository.Mobility
                                             f.Contains("fuels", StringComparison.CurrentCultureIgnoreCase) ||
                                             f.Contains("lubes", StringComparison.CurrentCultureIgnoreCase) ||
                                             f.Contains("safedrops", StringComparison.CurrentCultureIgnoreCase) &&
-                                            Path.GetFileNameWithoutExtension(f).EndsWith(DateTime.Now.ToString("yyyy")));
+                                            Path.GetFileNameWithoutExtension(f).EndsWith(DateTime.UtcNow.ToString("yyyy")));
 
                     if (!files.Any())
                     {
@@ -253,7 +254,7 @@ namespace IBS.DataAccess.Repository.Mobility
                                      f.Contains("FUEL_DELIVERY", StringComparison.CurrentCulture) ||
                                      f.Contains("LUBE_DELIVERY", StringComparison.CurrentCulture) ||
                                      f.Contains("PO_SALES", StringComparison.CurrentCulture) &&
-                                     Path.GetFileNameWithoutExtension(f).EndsWith(DateTime.Now.ToString("yyyy")));
+                                     Path.GetFileNameWithoutExtension(f).EndsWith(DateTime.UtcNow.ToString("yyyy")));
 
                     if (!files.Any())
                     {
