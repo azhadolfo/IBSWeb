@@ -30,7 +30,7 @@
                     </select>
                     <span asp-validation-for="CvId" class="text-danger"></span>
                 </div>
-                @if(Model.CvId == 0 && Model.MultipleSupplierId == 0)
+                @if (Model.CvId == 0 && Model.MultipleSupplierId == 0)
                 {
                     <div class="form-group mb-3">
                         <label class="control-label">Supplier<span class="required">*</span></label>
@@ -120,7 +120,8 @@
                                         <td><input type="text" name="AccountTitle" value="@Model.AccountTitle[i]" class="w-100" style="border:none" readonly /></td>
                                         <td><input type="text" name="Debit" value="@Model.Debit[i]" class="w-100" style="border:none" readonly /></td>
                                         <td><input type="text" name="Credit" value="@Model.Credit[i]" class="w-100" style="border:none" readonly /></td>
-                                        @if(i > 1){
+                                        @if (i > 1)
+                                        {
                                             <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
                                         }
                                     </tr>
@@ -143,7 +144,7 @@
                         <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="PaymentIndex" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -226,7 +227,7 @@
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
                                 <td>
-                                    <input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly/>
+                                    <input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly />
                                 </td>
                                 <td>
                                     <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
@@ -311,7 +312,7 @@
         function getSuplierDetails(cvId, suppId) {
             if (suppId !== 0 && cvId !== "") {
                 $.ajax({
-                    url: '@Url.Action("GetMultipleSupplierDetails", "CheckVoucher", new { area = "Filpride" })',
+                    url: '@Url.Action("GetMultipleSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
                     method: "GET",
                     data: { cvId: cvId, suppId: suppId },
                     success: function (data) {
@@ -361,7 +362,7 @@
         function getSupliers(cvId) {
             if (cvId !== "") {
                 $.ajax({
-                    url: '@Url.Action("GetMultipleSupplier", "CheckVoucher", new { area = "Filpride" })',
+                    url: '@Url.Action("GetMultipleSupplier", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
                     method: "GET",
                     data: { cvId: cvId },
                     success: function (data) {
@@ -392,7 +393,7 @@
         function suplierDetails(suppId, cvId) {
             if (suppId !== "") {
                 $.ajax({
-                    url: '@Url.Action("MultipleSupplierDetails", "CheckVoucher", new { area = "Filpride" })',
+                    url: '@Url.Action("MultipleSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
                     method: "GET",
                     data: { suppId: suppId, cvId: cvId },
                     success: function (data) {

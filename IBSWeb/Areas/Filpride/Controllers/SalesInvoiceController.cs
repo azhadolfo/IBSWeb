@@ -320,7 +320,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edited sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edited sales invoice# {existingRecord.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -746,7 +746,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var dr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(d => d.DeliveryReceiptId == drId, cancellationToken);
             if (dr != null)
             {
-                var automatedRr = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == dr.DeliveryReceiptId, cancellationToken);
+                var automatedRr = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == dr.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
 
                 return Json(new
                 {

@@ -140,7 +140,7 @@
                         <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Create</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="PaymentIndex" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -257,12 +257,12 @@
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
-                                <td><input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly /></td>
-                                <td><input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly /></td>
-                                <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                            </tr>`;
+                                            <td><input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly /></td>
+                                            <td><input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly /></td>
+                                            <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                            <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                            <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                        </tr>`;
 
             // Append the new row to the table body
             $("#accountingEntriesBody").append(newRow);
@@ -363,4 +363,3 @@
         });
     </script>
 }
-

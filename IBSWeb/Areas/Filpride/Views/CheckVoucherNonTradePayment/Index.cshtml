@@ -20,11 +20,11 @@
             <div class="col-6">
             </div>
             <div class="col-6 text-end">
-                <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="NonTradePayment" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create Single
+                <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create Payment
                 </a>
-                <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="MultipleNonTradePayment" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create Multiple
+                <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="CreatePayrollPayment" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create Payroll Payment
                 </a>
             </div>
         </div>
@@ -85,7 +85,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Void", "CheckVoucher", new { area = "Filpride" })/${id}`;
+                    var url = `@Url.Action("Void", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
@@ -111,7 +111,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `@Url.Action("Cancel", "CheckVoucher", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `@Url.Action("Cancel", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
                     window.location.href = url;
                 }
             })
@@ -124,7 +124,7 @@
                 "serverSide": true,
                 "stateSave": true,
                 "ajax": {
-                    "url": "@Url.Action("GetPaymentCheckVouchers", "CheckVoucher", new { area = "Filpride" })",
+                    "url": "@Url.Action("GetPaymentCheckVouchers", "CheckVoucherNonTradePayment", new { area = "Filpride" })",
                     "type": "POST",
                     "data": function (d) {
                         return $.extend({}, d, {
@@ -188,14 +188,14 @@
                                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                                 ${row.checkVoucherHeader.postedBy == null ? `
                                                     ${row.checkVoucherHeader?.supplier?.supplierId != null ? `
-                                                    <li><a class="dropdown-item" href="@Url.Action("EditNonTradePayment", "CheckVoucher", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
                                                     ` : `
-                                                    <li><a class="dropdown-item" href="@Url.Action("EditMultipleNonTradePayment", "CheckVoucher", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="@Url.Action("EditPayrollPayment", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
                                                     `}
-                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucher", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Preview</a></li>
+                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Preview</a></li>
                                                     <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
                                                 ` : `
-                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucher", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Print</a></li>
+                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Print</a></li>
                                                     <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a></li>
                                                 `}
                                             </ul>
