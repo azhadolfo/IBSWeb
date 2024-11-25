@@ -8,7 +8,6 @@ using System.Diagnostics;
 
 namespace IBSWeb.Areas.User.Controllers
 {
-    [Area("User")]
     [Authorize]
     public class HomeController : Controller
     {
