@@ -29,6 +29,8 @@ namespace IBSWeb.Areas.User.Controllers
                 .Where(user => user.Id == _userManager.GetUserId(this.User))
                 .FirstOrDefaultAsync();
 
+            var test = DateTime.UtcNow;
+
             ViewBag.GetUserDepartment = findUser?.Department;
 
             return View();

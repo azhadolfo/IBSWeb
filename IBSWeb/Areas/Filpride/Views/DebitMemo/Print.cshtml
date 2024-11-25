@@ -11,7 +11,7 @@
 
 <br />
 <div class="text-end">
-    <img src="~/img/Filpride.jpg" height="" width="130px" />
+    <img src="~/img/Filpride.jpg" height="" width="130px" alt="Filpride Logo" />
 </div>
 <div class="text-center">
     <h2><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
@@ -98,9 +98,9 @@
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Vatable Sales: </b></p></td>
                                         <td class="text-end">
-                                            @if (Model.SalesInvoice.Customer.CustomerType == "Vatable")
+                                            @if (Model.SalesInvoice.Customer.VatType == "Vatable")
                                             {
-                                                <p style="height: 9px;">@Html.DisplayFor(model => netOfVatAmount)</p>
+                                                <p style="height: 9px;">@netOfVatAmount.ToString("N4")</p>
                                             }
                                         </td>
                                     </tr>
@@ -108,7 +108,7 @@
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
 
                                         <td class="text-end">
-                                            @if (Model.SalesInvoice.Customer.CustomerType == "Zero Rated")
+                                            @if (Model.SalesInvoice.Customer.VatType == "Zero Rated")
                                             {
                                                 <p style="height: 9px;">@Html.DisplayFor(model => model.DebitAmount)</p>
                                             }
@@ -118,7 +118,7 @@
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT-Exempt Sales: </b></p></td>
 
                                         <td class="text-end">
-                                            @if (Model.SalesInvoice.Customer.CustomerType == "Exempt")
+                                            @if (Model.SalesInvoice.Customer.VatType == "Exempt")
                                             {
                                                 <p style="height: 9px;">@Html.DisplayFor(model => model.DebitAmount)</p>
                                             }
@@ -128,9 +128,9 @@
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT Amount: </b></p></td>
 
                                         <td class="text-end">
-                                            @if (Model.SalesInvoice.Customer.CustomerType == "Vatable")
+                                            @if (Model.SalesInvoice.Customer.VatType == "Vatable")
                                             {
-                                                <p style="height: 9px;">@Html.DisplayFor(model => vatAmount)</p>
+                                                <p style="height: 9px;">@vatAmount.ToString("N4")</p>
                                             }
                                         </td>
                                     </tr>
@@ -221,7 +221,7 @@ else if (Model.Source == "Service Invoice")
                                         <td class="w-50"><p style="height: 9px; margin-left:8%;"><b>Vatable Sales: </b></p></td>
                                         @if (netOfVatAmount != 0)
                                         {
-                                            <td class="text-end">@Html.DisplayFor(model => netOfVatAmount)</td>
+                                            <td class="text-end">@netOfVatAmount.ToString("N4")</td>
                                         }
                                         else
                                         {
@@ -230,7 +230,7 @@ else if (Model.Source == "Service Invoice")
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
-                                        @if (Model.ServiceInvoice.Customer.CustomerType == "Zero Rated")
+                                        @if (Model.ServiceInvoice.Customer.VatType == "Zero Rated")
                                         {
                                             <td class="text-end">@Html.DisplayFor(model => model.DebitAmount)</td>
                                         }
@@ -242,7 +242,7 @@ else if (Model.Source == "Service Invoice")
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT-Exempt Sales: </b></p></td>
 
-                                        @if (Model.ServiceInvoice.Customer.CustomerType == "Exempt")
+                                        @if (Model.ServiceInvoice.Customer.VatType == "Exempt")
                                         {
                                             <td class="text-end">@Html.DisplayFor(model => model.DebitAmount)</td>
                                         }
@@ -256,7 +256,7 @@ else if (Model.Source == "Service Invoice")
 
                                         @if (vatAmount != 0)
                                         {
-                                            <td class="text-end">@Html.DisplayFor(model => vatAmount)</td>
+                                            <td class="text-end">@vatAmount.ToString("N4")</td>
                                         }
                                         else
                                         {
@@ -367,7 +367,7 @@ else if (Model.Source == "Service Invoice")
             }
 
             // Get all paragraph elements
-            var paragraphs = document.querySelectorAll("p");
+            let paragraphs = document.querySelectorAll("p");
 
             // Store the original font sizes
             for (var i = 0; i < paragraphs.length; i++) {

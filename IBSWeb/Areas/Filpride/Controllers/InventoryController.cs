@@ -183,7 +183,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(inventories);
             }
 
-            return View(viewModel);
+            return RedirectToAction(nameof(InventoryReport));
         }
 
         [HttpGet]
@@ -244,7 +244,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(inventories);
             }
 
-            return View(viewModel);
+            return RedirectToAction(nameof(InventoryReport));
         }
 
         [HttpGet]
