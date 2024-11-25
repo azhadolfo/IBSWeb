@@ -182,8 +182,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 return View(inventories);
             }
-
-            return View(viewModel);
+            
+            TempData["error"] = "The information you submitted is not valid!";
+            return RedirectToAction(nameof(InventoryReport));
         }
 
         [HttpGet]
@@ -244,7 +245,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(inventories);
             }
 
-            return View(viewModel);
+            TempData["error"] = "The information you submitted is not valid!";
+            return RedirectToAction(nameof(InventoryReport));
         }
 
         [HttpGet]

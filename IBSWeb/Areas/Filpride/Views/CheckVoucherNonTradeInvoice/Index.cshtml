@@ -3,7 +3,7 @@
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @{
-    ViewData["Title"] = "Check Voucher";
+    ViewData["Title"] = "Check Voucher Non Trade Invoice";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -11,7 +11,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">CHECK VOUCHER INVOICING</h2>
+                <h2 class="text-white py-2">CHECK VOUCHER INVOICE</h2>
             </div>
         </div>
     </div>
@@ -20,10 +20,10 @@
             <div class="col-6">
             </div>
             <div class="col-6 text-end">
-                <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="NonTradeInvoicing" class="btn btn-primary">
+                <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Create" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Create Single
                 </a>
-                <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="MultipleNonTradeInvoicing" class="btn btn-primary">
+                <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="CreatePayrollInvoice" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Create Multiple
                 </a>
             </div>
@@ -85,7 +85,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Replace with the actual URL that you want to redirect to
-                    var url = `@Url.Action("Void", "CheckVoucher", new { area = "Filpride" })/${id}`;
+                    var url = `@Url.Action("Void", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })/${id}`;
                     window.location.href = url;
                 }
             })
@@ -111,7 +111,7 @@
                     // Encode the cancellationRemarks to make it URL safe
                     var encodedRemarks = encodeURIComponent(cancellationRemarks);
                     // Append the encoded remarks as a parameter in the URL
-                    var url = `@Url.Action("Cancel", "CheckVoucher", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
+                    var url = `@Url.Action("Cancel", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${id}&cancellationRemarks=${encodedRemarks}`;
                     window.location.href = url;
                 }
             })
@@ -124,7 +124,7 @@
                 "serverSide": true,
                 "stateSave": true,
                 "ajax": {
-                    "url": "@Url.Action("GetInvoiceCheckVouchers", "CheckVoucher", new { area = "Filpride" })",
+                    "url": "@Url.Action("GetInvoiceCheckVouchers", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })",
                     "type": "POST",
                     "data": function (d) {
                         return $.extend({}, d, {
@@ -160,7 +160,12 @@
                     {
                         "data": null,
                         "render": function (data, type, row) {
-                            return formatNumber(row.amount - row.amountPaid); // Calculate and format the balance
+                            if (row.checkVoucherHeader?.supplier?.supplierId == null) {
+                                return formatNumber(row.amount - row.amountPaid);
+                            }
+                            else {
+                                return formatNumber(row.checkVoucherHeader.total - row.checkVoucherHeader.amountPaid);
+                            } // Calculate and format the balance
                         }
                     },
                     {
@@ -193,23 +198,23 @@
                                     <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                         ${row.checkVoucherHeader.postedBy == null ? `
                                             ${row.checkVoucherHeader?.supplier?.supplierId != null ? `
-                                                <li><a class="dropdown-item" href="@Url.Action("EditNonTradeInvoicing", "CheckVoucher", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
+                                                <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
                                             ` : `
-                                            <li><a class="dropdown-item" href="@Url.Action("EditMultipleNonTradeInvoicing", "CheckVoucher", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
+                                            <li><a class="dropdown-item" href="@Url.Action("EditPayrollInvoice", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
                                             `}
-                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucher", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Preview</a></li>
+                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Preview</a></li>
                                             <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
                                         ` : `
-                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucher", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Print</a></li>
+                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Print</a></li>
                                             ${row.checkVoucherHeader.amountPaid == 0 ? `
                                                 <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a></li>
                                             ` : `
                                                 <li><button class="dropdown-item" disabled readonly>Void</button></li>
                                             `}
                                             ${row.amountPaid == 0 && row.checkVoucherHeader?.supplier?.supplierId == null ? `
-                                                <li><a class="dropdown-item" href="@Url.Action("MultipleNonTradePayment", "CheckVoucher", new { area = "Filpride" })?cvId=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Create Payment</a></li>
+                                                <li><a class="dropdown-item" href="@Url.Action("CreatePayrollPayment", "CheckVoucherNonTradePayment", new { area = "Filpride" })?cvId=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Create Payroll Payment</a></li>
                                             ` : row.amountPaid == 0 && row.checkVoucherHeader?.supplier?.supplierId != null ? `
-                                            <li><a class="dropdown-item" href="@Url.Action("NonTradePayment", "CheckVoucher", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Create Payment</a></li>
+                                            <li><a class="dropdown-item" href="@Url.Action("Create", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Create Payment</a></li>
                                             ` : ''}
                                         `}
                                     </ul>
