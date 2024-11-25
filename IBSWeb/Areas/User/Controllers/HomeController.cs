@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace IBSWeb.Areas.User.Controllers
 {
-    [Authorize]
+    [Area("User")]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
