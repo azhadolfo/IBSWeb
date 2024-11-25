@@ -763,6 +763,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(SalesReport)); 
         }
 
+        [HttpGet]
+        public IActionResult PurchaseOrderReport()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GeneratedPurchaseOrderReport(ViewModelBook model)
+        {
+            ViewData["DateFrom"] = model.DateFrom;
+            ViewData["DateTo"] = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var purchaseOrder = _unitOfWork.FilprideReport.GetPurchaseOrderReport(model.DateFrom, model.DateTo, companyClaims);
+
+                    return View(purchaseOrder);
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(PurchaseOrderReport));
+                }
+            }
+
+            TempData["error"] = "Please input date from";
+            return RedirectToAction(nameof(PurchaseOrderReport));
+        }
+
         //Generate as .txt file
 
         #region -- Generate Audit Trail .Txt File --
@@ -2409,9 +2440,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion -- Generate SalesBook .Csv File --
 
         //reports
-        #region -- Generate DisbursmentBook .Csv File --
+        #region -- Generate Sales Report Excel File --
 
-        public async Task<IActionResult> GenerateSalesReportExelFile(ViewModelBook model, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateSalesReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
@@ -2436,7 +2467,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Set the column headers
             var mergedCells = worksheet.Cells["A1:C1"];
             mergedCells.Merge = true;
-            mergedCells.Value = "SALES BOOK REPORT";
+            mergedCells.Value = "SALES REPORT";
             mergedCells.Style.Font.Size = 13;
 
             worksheet.Cells["A2"].Value = "Date Range:";
@@ -2475,19 +2506,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
             int row = 8;
             string currencyFormat = "#,##0.0000";
 
-            foreach (var cv in salesReport)
+            foreach (var si in salesReport)
             {
-                worksheet.Cells[row, 1].Value = cv.TransactionDate;
-                worksheet.Cells[row, 2].Value = cv.Customer?.CustomerName;
-                worksheet.Cells[row, 3].Value = cv.CustomerOrderSlip?.CustomerOrderSlipNo;
-                worksheet.Cells[row, 4].Value = cv.CustomerOrderSlip?.OldCosNo;
-                worksheet.Cells[row, 5].Value = cv.DeliveryReceipt?.DeliveryReceiptNo;
-                worksheet.Cells[row, 6].Value = cv.DeliveryReceipt?.ManualDrNo;
-                worksheet.Cells[row, 7].Value = cv.Product?.ProductName;
-                worksheet.Cells[row, 8].Value = cv.Quantity;
-                worksheet.Cells[row, 9].Value = cv.DeliveryReceipt?.Freight;
-                worksheet.Cells[row, 10].Value = cv.Amount;
-                worksheet.Cells[row, 11].Value = cv.Remarks;
+                worksheet.Cells[row, 1].Value = si.TransactionDate;
+                worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
+                worksheet.Cells[row, 3].Value = si.CustomerOrderSlip?.CustomerOrderSlipNo;
+                worksheet.Cells[row, 4].Value = si.CustomerOrderSlip?.OldCosNo;
+                worksheet.Cells[row, 5].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
+                worksheet.Cells[row, 6].Value = si.DeliveryReceipt?.ManualDrNo;
+                worksheet.Cells[row, 7].Value = si.Product?.ProductName;
+                worksheet.Cells[row, 8].Value = si.Quantity;
+                worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.Freight;
+                worksheet.Cells[row, 10].Value = si.Amount;
+                worksheet.Cells[row, 11].Value = si.Remarks;
 
                 worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
@@ -2530,6 +2561,100 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SalesReport.xlsx");
         }
 
-        #endregion -- Generate DisbursmentBook .Csv File --
+        #endregion
+
+        #region -- Generate Purchase Order Report Excel File --
+
+        public async Task<IActionResult> GeneratePurchaseOrderReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var PurchaseOrderReport = _unitOfWork.FilprideReport.GetPurchaseOrderReport(model.DateFrom, model.DateTo, companyClaims);
+            if (PurchaseOrderReport.Count == 0)
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(PurchaseOrderReport));
+            }
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("PurchaseOrderReport");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "PURCHASE ORDER REPORT";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Extracted By:";
+            worksheet.Cells["A4"].Value = "Company:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{extractedBy}";
+            worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+            worksheet.Cells["A7"].Value = "Inventory PO No.";
+            worksheet.Cells["B7"].Value = "PO No.";
+            worksheet.Cells["C7"].Value = "Date";
+            worksheet.Cells["D7"].Value = "Supplier";
+            worksheet.Cells["E7"].Value = "Product";
+            worksheet.Cells["F7"].Value = "Quantity";
+            worksheet.Cells["G7"].Value = "Unit";
+            worksheet.Cells["H7"].Value = "Price";
+            worksheet.Cells["I7"].Value = "Amount";
+            worksheet.Cells["J7"].Value = "Remarks";
+
+            // Apply styling to the header row
+            using (var range = worksheet.Cells["A7:J7"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Populate the data rows
+            int row = 8;
+            string currencyFormat = "#,##0.0000";
+
+            foreach (var po in PurchaseOrderReport)
+            {
+                worksheet.Cells[row, 1].Value = po.OldPoNo;
+                worksheet.Cells[row, 2].Value = po.PurchaseOrderNo;
+                worksheet.Cells[row, 3].Value = po.Date;
+                worksheet.Cells[row, 4].Value = po.Supplier?.SupplierName;
+                worksheet.Cells[row, 5].Value = po.Product?.ProductName;
+                worksheet.Cells[row, 6].Value = po.Quantity;
+                worksheet.Cells[row, 7].Value = po.Product?.ProductUnit;
+                worksheet.Cells[row, 8].Value = po.Price;
+                worksheet.Cells[row, 9].Value = po.Amount;
+                worksheet.Cells[row, 10].Value = po.Remarks;
+
+                worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+
+                row++;
+            }
+
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PurchaseOrderReport.xlsx");
+        }
+
+        #endregion
     }
 }
