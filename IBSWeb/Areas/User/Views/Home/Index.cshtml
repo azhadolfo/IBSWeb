@@ -7,7 +7,10 @@
         <div class="col-md-8 text-center">
             <h1 class="display-3 text-primary">Welcome to Our Integrated Business System</h1>
             <p class="lead">Explore the capabilities of our IBS platforms</p>
-            <a class="btn btn-primary btn-lg" href="#">Get Started</a>
+            @if (!User.Identity.IsAuthenticated)
+            {
+                <a class="btn btn-primary btn-lg" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="">Login</a>
+            }
         </div>
     </div>
 </div>
