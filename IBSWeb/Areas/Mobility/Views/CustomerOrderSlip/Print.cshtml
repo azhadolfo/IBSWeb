@@ -13,42 +13,35 @@
     var currentStationName = ViewData["CurrentStationName"] as string;
 }
 
-<div class="card shadow border-0 mt-4">
-
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2">PREVIEW CUSTOMER ORDER SLIP: <u>@currentStationName</u></h2>
-            </div>
-        </div>
+<div class="container mt-4">
+    <div class="text-end">
+        <img src="~/img/usa88-logo.png" width="190px" />
     </div>
-
     <div class="card-body p-4 table-responsive">
-        <div class="row mt-2">
-            <div class="col-6">
-                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Customer.CustomerName):</b> @Html.DisplayFor(model => model.Customer.CustomerName)</h6>
-                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Address):</b> @Html.DisplayFor(model => model.Address)</h6>
-                <h6 class="px-2"><b>Plate Number:</b> @Html.DisplayFor(model => model.PlateNo)</h6>
-                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Driver):</b> @Html.DisplayFor(model => model.Driver)</h6>
-                @if (!string.IsNullOrEmpty(Model.TripTicket))
-                {
-                    <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.TripTicket):</b> @Html.DisplayFor(model => model.TripTicket)</h6>
-                }
-            </div>
+        <div class="row mt-2 align-content-center text-center">
+            <h2><u><b>MOBILITY USA88</b></u></h2>
+            <br /><br /><br />
+            <h2><b>CUSTOMER ORDER SLIP</b></h2>
+            <br /><br /><br /><br /><br />
+        </div>
 
-            <div class="col-6" style="white-space: nowrap;">
-                <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.Date):</b> @Html.DisplayFor(model => model.Date)</h6>
-                <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.MobilityStation.StationName):</b> @Html.DisplayFor(model => model.MobilityStation.StationName)</h6>
-                <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.Terms):</b> @Html.DisplayFor(model => model.Customer.CustomerTerms)</h6>
-                @if (Model.LoadDate.HasValue)
-                {
-                    <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.LoadDate):</b> @Html.DisplayFor(model => model.LoadDate)</h6>
-                }
-                @if (!string.IsNullOrEmpty(Model.CheckNo))
-                {
-                    <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.CheckNo):</b> @Html.DisplayFor(model => model.CheckNo)</h6>
-                }
-            </div>
+        <div class="table-responsive">
+            <table class="table table-borderless">
+                <tbody>
+                    <tr>
+                        <td><b>Customer Name:</b> @Model.Customer.CustomerName</td>
+                        <td class="text-end"><b>COS No.</b>&nbsp;@Html.DisplayFor(model => model.CustomerOrderSlipNo)</td>
+                    </tr>
+                    <tr>
+                        <td><b>Customer Address:</b> @Model.Customer.CustomerAddress</td>
+                        <td class="text-end"><b>Date:</b> @Html.DisplayFor(model => model.Date)</td>
+                    </tr>
+                    <tr>
+                        <td><b>Terms:</b> @Html.DisplayFor(model => model.Terms)</td>
+                        <td class="text-end"><b>Station Name:</b> @Html.DisplayFor(model => model.MobilityStation.StationName)</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <br />
@@ -68,6 +61,35 @@
                 <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Amount)</td>
                 <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Product.ProductName)</td>
             </tr>
+        </table>
+
+        <br />
+
+        <table class="table table-borderless">
+            <tbody>
+                <tr>
+
+                    <td><b>Driver:</b> @Model.Driver</td>
+                    <td class="text-end"><b>Plate#:</b> @Model.PlateNo</td>
+                </tr>
+                <tr>
+                    <td><b>Trip Ticket:</b> @Html.DisplayFor(model => model.TripTicket)</td>
+                    @if (Model.LoadDate.HasValue)
+                    {
+                        <td class="text-end"><b>Date Loaded:</b> @Html.DisplayFor(model => model.LoadDate)</td>
+                    }
+                </tr>
+                @if (Model.LoadDate.HasValue)
+                {
+                    <tr>
+                        <td></td>
+                        @if (Model.Customer.IsCheckDetailsRequired)
+                        {
+                            <td class="text-end"><b>Last 4 check digits:</b> @Html.DisplayFor(model => model.CheckNo)</td>
+                        }
+                    </tr>
+                }
+            </tbody>
         </table>
 
         @if (!string.IsNullOrEmpty(Model.DisapprovalRemarks) && (Model.Status == "Pending"))
