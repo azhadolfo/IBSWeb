@@ -32,7 +32,7 @@
             </fieldset>
             <div class="form-group mb-3">
                 <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                <input asp-for="TransactionDate" type="Date" class="form-control" />
+                <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
                 <span asp-validation-for="TransactionDate" class="text-danger"></span>
             </div>
             <div class="form-group" id="siList">
@@ -103,12 +103,12 @@
     }
     <script>
         // Get the current date in the format "YYYY-MM-DD" (required for the date input)
-        var currentDate = new Date().toISOString().slice(0, 10);
+        let currentDate = new Date().toISOString().slice(0, 10);
     </script>
     <script>
         window.onload = function () {
-            var inlineRadio1 = document.getElementById('inlineRadio1');
-            var inlineRadio2 = document.getElementById('inlineRadio2');
+            let inlineRadio1 = document.getElementById('inlineRadio1');
+            let inlineRadio2 = document.getElementById('inlineRadio2');
 
             // Check the default radio button on page load
             if (inlineRadio1.checked) {
@@ -121,10 +121,10 @@
         };
 
         function toggleSelect(id) {
-            var siList = document.getElementById('siList');
-            var svList = document.getElementById('svList');
-            var inlineRadio1 = document.getElementById('inlineRadio1');
-            var inlineRadio2 = document.getElementById('inlineRadio2');
+            let siList = document.getElementById('siList');
+            let svList = document.getElementById('svList');
+            let inlineRadio1 = document.getElementById('inlineRadio1');
+            let inlineRadio2 = document.getElementById('inlineRadio2');
 
             if (id === 'siList') {
                 siList.style.display = 'block';
@@ -149,7 +149,7 @@
     </script>
     <script>
         $("#ServiceInvoiceId").change(function () {
-            var svId = $(this).val();
+            let svId = $(this).val();
             if (svId !== "") {
                 // Make an AJAX request to get the customer details based on the selected CustomerId
                 $.ajax({
@@ -158,8 +158,8 @@
                     data: { svId: svId },
                     success: function (data) {
                         if (data) {
-                            var forrmattedDate = formatDateToMonth(data.period);
-                            $("#Period").val(forrmattedDate);
+                            let formattedDate = formatDateToMonth(data.period);
+                            $("#Period").val(formattedDate);
                         } else {
                             $("#Period").empty();
                             $("#Amount").empty();
@@ -184,8 +184,5 @@
             // Return the formatted date string in yyyy-MM format
             return `${year}-${month}`;
         }
-    </script>
-    <script>
-        setTransactionDate();
     </script>
 }

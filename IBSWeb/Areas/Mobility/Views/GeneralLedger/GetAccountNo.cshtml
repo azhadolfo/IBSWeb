@@ -16,11 +16,11 @@
         <div class="border p-3">
             <form asp-area="Mobility" asp-controller="GeneralLedger" asp-action="DisplayByAccountNumber" target="_blank" onsubmit="return validateDate()">
                 <div class="form-floating py-2 col-12">
-                    <input type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" name="dateFrom" class="form-control border-0 shadow" placeholder="" required />
+                    <input type="date" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" name="dateFrom" class="form-control border-0 shadow" placeholder="" required />
                     <label class="ms-2">Date From<span class="required">*</span></label>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" name="dateTo" class="form-control border-0 shadow" placeholder="" required />
+                    <input type="date" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" name="dateTo" class="form-control border-0 shadow" placeholder="" required />
                     <label class="ms-2">Date To<span class="required">*</span></label>
                 </div>
                 <div class="form-group py-2 col-12">

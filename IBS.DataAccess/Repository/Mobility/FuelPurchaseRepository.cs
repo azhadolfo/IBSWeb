@@ -82,7 +82,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 var previousInventory = sortedInventory.FirstOrDefault();
 
                 fuelPurchase.PostedBy = postedBy;
-                fuelPurchase.PostedDate = DateTime.Now;
+                fuelPurchase.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 var grossAmount = fuelPurchase.Quantity * fuelPurchase.PurchasePrice;
                 var netOfVatPrice = ComputeNetOfVat(fuelPurchase.PurchasePrice);
                 var netOfVatAmount = ComputeNetOfVat(grossAmount);
@@ -316,7 +316,7 @@ namespace IBS.DataAccess.Repository.Mobility
             if (_db.ChangeTracker.HasChanges())
             {
                 existingFuelPurchase.EditedBy = model.EditedBy;
-                existingFuelPurchase.EditedDate = DateTime.Now;
+                existingFuelPurchase.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

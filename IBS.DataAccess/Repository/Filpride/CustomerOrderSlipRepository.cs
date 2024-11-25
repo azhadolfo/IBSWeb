@@ -88,7 +88,7 @@ namespace IBS.DataAccess.Repository.Filpride
             if (_db.ChangeTracker.HasChanges())
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;
-                existingRecord.EditedDate = DateTime.Now;
+                existingRecord.EditedDate = GetPhilippineTime(DateTime.UtcNow);;
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else
@@ -140,7 +140,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, decimal grossMargin, CancellationToken cancellationToken = default)
         {
-            customerOrderSlip.ExpirationDate = DateOnly.FromDateTime(DateTime.Now.AddDays(7));
+            customerOrderSlip.ExpirationDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
 
             customerOrderSlip.DeliveredPrice = UpdateCosPrice(grossMargin, customerOrderSlip);
 
@@ -194,11 +194,11 @@ namespace IBS.DataAccess.Repository.Filpride
             //Beginning Balance to be discussed
 
             var drForTheMonth = await _db.FilprideDeliveryReceipts
-                .Where(dr => dr.CustomerId == customerId && dr.Date.Month == DateTime.Now.Month && dr.Date.Year == DateTime.Now.Year)
+                .Where(dr => dr.CustomerId == customerId && dr.Date.Month == DateTime.UtcNow.Month && dr.Date.Year == DateTime.UtcNow.Year)
                 .SumAsync(dr => dr.TotalAmount, cancellationToken);
 
             var outstandingCos = await _db.FilprideCustomerOrderSlips
-                .Where(cos => cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.Now) && cos.Status == nameof(CosStatus.Approved))
+                .Where(cos => cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.UtcNow) && cos.Status == nameof(CosStatus.Approved))
                 .SumAsync(cos => cos.TotalAmount, cancellationToken);
 
             var availableCreditLimit = await _db.FilprideCustomers

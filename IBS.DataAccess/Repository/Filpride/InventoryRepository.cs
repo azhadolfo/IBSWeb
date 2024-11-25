@@ -4,6 +4,7 @@ using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
+using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -61,7 +62,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = Math.Abs(viewModel.Debit[i]),
                         Credit = Math.Abs(viewModel.Credit[i]),
                         CreatedBy = viewModel.CurrentUser,
-                        CreatedDate = DateTime.Now,
+                        CreatedDate = GetPhilippineTime(DateTime.UtcNow),
                         IsPosted = false
                     });
             }
@@ -88,7 +89,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 TotalBalance = viewModel.Quantity * viewModel.Cost,
                 IsValidated = true,
                 ValidatedBy = viewModel.CurrentUser,
-                ValidatedDate = DateTime.Now,
+                ValidatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 Company = company
             };
 
@@ -241,7 +242,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     POId = salesInvoice.PurchaseOrderId,
                     IsValidated = true,
                     ValidatedBy = salesInvoice.CreatedBy,
-                    ValidatedDate = DateTime.Now,
+                    ValidatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     Total = total,
                     InventoryBalance = inventoryBalance,
                     TotalBalance = totalBalance,
@@ -390,7 +391,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     var generateJVNo = await _journalVoucherRepo.GenerateCodeAsync(previousInventory.Company, cancellationToken);
                     FilprideInventory inventory = new()
                     {
-                        Date = DateOnly.FromDateTime(DateTime.Now),
+                        Date = DateOnly.FromDateTime(DateTime.UtcNow),
                         ProductId = existingPO.ProductId,
                         POId = viewModel.POId,
                         Particular = "Change Price",
@@ -399,7 +400,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Cost = 0,
                         IsValidated = true,
                         ValidatedBy = viewModel.CurrentUser,
-                        ValidatedDate = DateTime.Now,
+                        ValidatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         Company = existingPO.Company
                     };
 
@@ -423,7 +424,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
                     var journalVoucherHeader = new FilprideJournalVoucherHeader
                     {
-                        Date = DateOnly.FromDateTime(DateTime.Now),
+                        Date = DateOnly.FromDateTime(DateTime.UtcNow),
                         JournalVoucherHeaderNo = generateJVNo,
                         References = "",
                         Particulars = $"Change price of {existingPO.PurchaseOrderNo} from {existingPO.Price} to {existingPO.FinalPrice}",
@@ -431,7 +432,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         JVReason = "Change Price",
                         CreatedBy = viewModel.CurrentUser,
                         PostedBy = viewModel.CurrentUser,
-                        PostedDate = DateTime.Now,
+                        PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         Company = existingPO.Company
                     };
 
@@ -558,7 +559,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(productAmount),
                             Credit = 0,
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company,
                         },
                         new FilprideJournalBook
@@ -570,7 +571,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(vatInput),
                             Credit = 0,
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company,
                         },
                         new FilprideJournalBook
@@ -582,7 +583,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(wht),
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         },
                         new FilprideJournalBook
@@ -594,7 +595,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(apTradePayable),
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company,
                         }
                     };
@@ -617,7 +618,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(productAmount),
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         },
                         new FilprideJournalBook
@@ -629,7 +630,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(vatInput),
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         },
                         new FilprideJournalBook
@@ -641,7 +642,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(wht),
                             Credit = 0,
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         },
                         new FilprideJournalBook
@@ -653,7 +654,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(apTradePayable),
                             Credit = 0,
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         }
                     };
@@ -684,7 +685,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             PONo = existingPO.PurchaseOrderNo,
                             DueDate = DateOnly.FromDateTime(DateTime.MinValue),
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         }
                     };
@@ -709,7 +710,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(productAmount),
                             Credit = 0,
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
@@ -722,7 +723,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(vatInput),
                             Credit = 0,
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
@@ -735,7 +736,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(wht),
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
@@ -748,7 +749,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(apTradePayable),
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         }
                     };
@@ -772,7 +773,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(productAmount),
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
@@ -785,7 +786,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = Math.Abs(vatInput),
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
@@ -798,7 +799,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(wht),
                             Credit = 0,
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         },
                         new FilprideGeneralLedgerBook
@@ -811,7 +812,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = Math.Abs(apTradePayable),
                             Credit = 0,
                             CreatedBy = viewModel.CurrentUser,
-                            CreatedDate = DateTime.Now,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                             Company = inventory.Company
                         }
                     };

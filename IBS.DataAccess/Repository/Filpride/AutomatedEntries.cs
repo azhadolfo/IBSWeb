@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,7 +32,7 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 if (_cancellationTokenSource.Token.IsCancellationRequested)
                     return;
-                if (DateTime.Now.Day == DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month))
+                if (DateTime.UtcNow.Day == DateTime.DaysInMonth(DateTime.UtcNow.Year, DateTime.UtcNow.Month))
                 {
                     using (var scope = _serviceProvider.CreateScope())
                     {
@@ -39,7 +40,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
                         var cvList = await _dbContext.FilprideCheckVoucherHeaders
-                                .Where(cv => cv.StartDate <= DateOnly.FromDateTime(DateTime.Now) && (cv.LastCreatedDate < DateTime.Now || cv.LastCreatedDate == null) && !cv.IsComplete && cv.PostedBy != null)
+                                .Where(cv => cv.StartDate <= DateOnly.FromDateTime(DateTime.UtcNow) && (cv.LastCreatedDate < DateTime.UtcNow || cv.LastCreatedDate == null) && !cv.IsComplete && cv.PostedBy != null)
                                 .ToListAsync(_cancellationTokenSource.Token);
 
                         if (cvList.Count != 0)
@@ -55,7 +56,7 @@ namespace IBS.DataAccess.Repository.Filpride
                                     if (accountEntry.AccountNo.StartsWith("10201"))
                                     {
                                         cv.NumberOfMonthsCreated++;
-                                        cv.LastCreatedDate = DateTime.Now;
+                                        cv.LastCreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                                         if (cv.NumberOfMonths == cv.NumberOfMonthsCreated)
                                         {
@@ -67,11 +68,11 @@ namespace IBS.DataAccess.Repository.Filpride
                                             JournalVoucherHeaderNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(cv.Company, _cancellationTokenSource.Token),
                                             CVId = cv.CheckVoucherHeaderId,
                                             JVReason = "Depreciation",
-                                            Particulars = $"Depreciation of : CV Particulars {cv.Particulars} for the month of {DateTime.Now:MMMM yyyy}.",
-                                            Date = DateOnly.FromDateTime(DateTime.Now),
+                                            Particulars = $"Depreciation of : CV Particulars {cv.Particulars} for the month of {DateTime.UtcNow:MMMM yyyy}.",
+                                            Date = DateOnly.FromDateTime(DateTime.UtcNow),
                                             Company = cv.Company,
                                             CreatedBy = cv.CreatedBy,
-                                            CreatedDate = DateTime.Now
+                                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
                                         };
 
                                         await _dbContext.AddAsync(header);
@@ -105,7 +106,7 @@ namespace IBS.DataAccess.Repository.Filpride
                                     {
                                         //Prepaid
                                         cv.NumberOfMonthsCreated++;
-                                        cv.LastCreatedDate = DateTime.Now;
+                                        cv.LastCreatedDate = _unitOfWork.FilprideJournalVoucher.GetPhilippineTime(DateTime.UtcNow);
 
                                         if (cv.NumberOfMonths == cv.NumberOfMonthsCreated)
                                         {
@@ -117,10 +118,10 @@ namespace IBS.DataAccess.Repository.Filpride
                                             JournalVoucherHeaderNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(cv.Company, _cancellationTokenSource.Token),
                                             CVId = cv.CheckVoucherHeaderId,
                                             JVReason = "Prepaid",
-                                            Particulars = $"Prepaid: CV Particulars {cv.Particulars} for the month of {DateTime.Now:MMMM yyyy}.",
-                                            Date = DateOnly.FromDateTime(DateTime.Now),
+                                            Particulars = $"Prepaid: CV Particulars {cv.Particulars} for the month of {DateTime.UtcNow:MMMM yyyy}.",
+                                            Date = DateOnly.FromDateTime(DateTime.UtcNow),
                                             CreatedBy = cv.CreatedBy,
-                                            CreatedDate = DateTime.Now
+                                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
                                         };
 
                                         await _dbContext.AddAsync(header);

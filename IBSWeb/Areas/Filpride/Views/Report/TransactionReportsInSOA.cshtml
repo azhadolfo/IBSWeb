@@ -8,7 +8,7 @@
     var dateTo = ViewBag.DateTo;
     var lastRecord = ViewBag.LastRecord;
 
-    DateTime now = DateTime.Now;
+    DateTime now = DateTimeHelper.GetCurrentPhilippineTime();
     decimal total = 0;
 }
 <style>
@@ -91,7 +91,7 @@ Date Issued: @* @CS.DateIssued *@
             <br />
             <b>Printed By :</b> @UserManager.GetUserName(User).ToUpper()
             <br />
-            <b>Date & Time Printed :</b> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+            <b>Date & Time Printed :</b> @now.ToString("MM/dd/yyyy hh:mm tt")
         </em>
     </p>
 

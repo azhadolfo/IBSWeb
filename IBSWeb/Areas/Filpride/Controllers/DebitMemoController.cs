@@ -178,24 +178,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var existingSv = await _dbContext.FilprideServiceInvoices
                         .Include(sv => sv.Customer)
                         .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-            if (model.SalesInvoiceId != null)
-            {
-                if (model.AdjustedPrice < existingSalesInvoice.UnitPrice)
-                {
-                    ModelState.AddModelError("AdjustedPrice", "Cannot input less than the existing SI unit price!");
-                }
-                if (model.Quantity < existingSalesInvoice.Quantity)
-                {
-                    ModelState.AddModelError("Quantity", "Cannot input more than the existing SI quantity!");
-                }
-            }
-            else
-            {
-                if (model.Amount < existingSv.Amount)
-                {
-                    ModelState.AddModelError("Amount", "Cannot input less than the existing SV amount!");
-                }
-            }
 
             if (ModelState.IsValid)
             {
@@ -203,6 +185,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    #region -- checking for unposted DM or CM
+
                     if (model.SalesInvoiceId != null)
                     {
                         var existingSIDMs = _dbContext.FilprideDebitMemos
@@ -248,31 +232,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                     }
 
-                    model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice.Type, cancellationToken);
+                    #endregion -- checking for unposted DM or CM
+
+                    
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Company = companyClaims;
-                    model.Type = existingSalesInvoice.Type;
 
                     if (model.Source == "Sales Invoice")
                     {
                         model.ServiceInvoiceId = null;
-
+                        model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice.Type, cancellationToken);
+                        model.Type = existingSalesInvoice.Type;
                         model.DebitAmount = (decimal)(model.Quantity * model.AdjustedPrice);
                     }
                     else if (model.Source == "Service Invoice")
                     {
                         model.SalesInvoiceId = null;
-
-                        #region --Retrieval of Services
-
-                        model.ServicesId = existingSv.ServiceId;
-
-                        var services = await _dbContext
-                        .FilprideServices
-                        .FirstOrDefaultAsync(s => s.ServiceId == model.ServicesId, cancellationToken);
-
-                        #endregion --Retrieval of Services
-
+                        model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSv.Type, cancellationToken);
+                        model.Type = existingSv.Type;
                         model.DebitAmount = model.Amount ?? 0;
                     }
 
@@ -334,7 +311,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTime.Now;
+                        model.PostedDate = DateTime.UtcNow;
 
                         if (model.SalesInvoiceId != null)
                         {
@@ -580,13 +557,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             var existingSv = await _dbContext.FilprideServiceInvoices
                                 .Include(sv => sv.Customer)
+                                .Include(sv => sv.Service)
                                 .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-
-                            #region --Retrieval of Services
-
-                            var services = await _dbContext.FilprideServices.FindAsync(model.ServicesId, cancellationToken);
-
-                            #endregion --Retrieval of Services
 
                             #region --SV Computation--
 
@@ -597,7 +569,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 viewModelDMCM.Total = model.Amount ?? 0 - existingSv.Discount;
                                 viewModelDMCM.NetAmount = _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(viewModelDMCM.Total);
                                 viewModelDMCM.VatAmount = _unitOfWork.FilprideServiceInvoice.ComputeVatAmount(viewModelDMCM.NetAmount);
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? services.Percent / 100m : 0);
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service.Percent / 100m : 0);
                                 if (existingSv.Customer.WithHoldingVat)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
@@ -606,7 +578,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             else
                             {
                                 viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? services.Percent / 100m : 0);
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service.Percent / 100m : 0);
                                 if (existingSv.Customer.WithHoldingVat)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
@@ -823,7 +795,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTime.UtcNow;
 
                         await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.DebitMemoNo);
                         await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo);
@@ -862,7 +834,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTime.UtcNow;
                     model.CancellationRemarks = cancellationRemarks;
 
                     #region --Audit Trail Recording
@@ -954,24 +926,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(sv => sv.Customer)
                         .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
 
-            if (model.SalesInvoiceId != null)
-            {
-                if (model.AdjustedPrice < existingSalesInvoice.UnitPrice)
-                {
-                    ModelState.AddModelError("AdjustedPrice", "Cannot input less than the existing SI unit price!");
-                }
-                if (model.Quantity < existingSalesInvoice.Quantity)
-                {
-                    ModelState.AddModelError("Quantity", "Cannot input less than the existing SI quantity!");
-                }
-            }
-            else
-            {
-                if (model.Amount < existingSv.Amount)
-                {
-                    ModelState.AddModelError("Amount", "Cannot input less than the existing SV amount!");
-                }
-            }
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -1005,16 +959,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         model.SalesInvoiceId = null;
 
-                        #region --Retrieval of Services
-
-                        existingDM.ServicesId = existingSv.ServiceId;
-
-                        var services = await _dbContext
-                        .FilprideServices
-                        .FirstOrDefaultAsync(s => s.ServiceId == existingDM.ServicesId, cancellationToken);
-
-                        #endregion --Retrieval of Services
-
                         #region -- Saving Default Enries --
 
                         existingDM.TransactionDate = model.TransactionDate;
@@ -1030,7 +974,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     model.EditedBy = _userManager.GetUserName(User);
-                    model.EditedDate = DateTime.Now;
+                    model.EditedDate = DateTime.UtcNow;
 
                     #region --Audit Trail Recording
 
@@ -1095,6 +1039,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideDebitMemos
                 .Where(dm => recordIds.Contains(dm.DebitMemoId))
+                .Include(dm => dm.ServiceInvoice)
+                .ThenInclude(sv => sv.Service)
                 .OrderBy(dm => dm.DebitMemoNo)
                 .ToListAsync();
 
@@ -1138,7 +1084,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 9].Value = item.Amount;
                 worksheet.Cells[row, 10].Value = item.CurrentAndPreviousAmount;
                 worksheet.Cells[row, 11].Value = item.UnearnedAmount;
-                worksheet.Cells[row, 12].Value = item.ServicesId;
+                worksheet.Cells[row, 12].Value = item.ServiceInvoice.ServiceId;
                 worksheet.Cells[row, 13].Value = item.CreatedBy;
                 worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
                 worksheet.Cells[row, 15].Value = item.CancellationRemarks;

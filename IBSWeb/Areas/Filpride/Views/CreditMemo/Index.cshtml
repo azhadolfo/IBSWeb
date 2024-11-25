@@ -143,7 +143,7 @@
                     {
                         "data": "creditAmount",
                         "render": function (data, type, row) {
-                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(Math.abs(data));
                             return `<span class="text-end d-block">${amount}</span>`;
                         }
                     },

@@ -73,8 +73,6 @@ namespace IBS.Models.Filpride
         [Column(TypeName = "numeric(18,4)")]
         public decimal UnearnedAmount { get; set; }
 
-        public int ServicesId { get; set; }
-
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }

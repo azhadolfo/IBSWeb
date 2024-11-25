@@ -9,7 +9,6 @@ using System.Diagnostics;
 namespace IBSWeb.Areas.User.Controllers
 {
     [Area("User")]
-    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -28,6 +27,8 @@ namespace IBSWeb.Areas.User.Controllers
             var findUser = await _dbContext.ApplicationUsers
                 .Where(user => user.Id == _userManager.GetUserId(this.User))
                 .FirstOrDefaultAsync();
+
+            var test = DateTime.UtcNow;
 
             ViewBag.GetUserDepartment = findUser?.Department;
 

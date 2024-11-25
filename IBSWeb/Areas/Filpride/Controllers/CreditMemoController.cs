@@ -171,30 +171,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .FilprideSalesInvoices
                         .Include(c => c.Customer)
                         .Include(s => s.Product)
-                        .FirstOrDefaultAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId);
+                        .FirstOrDefaultAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
             var existingSv = await _dbContext.FilprideServiceInvoices
                         .Include(sv => sv.Customer)
                         .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-
-            if (model.SalesInvoiceId != null)
-            {
-                if (model.AdjustedPrice > existingSalesInvoice.UnitPrice)
-                {
-                    ModelState.AddModelError("AdjustedPrice", "Cannot input more than the existing SI unit price!");
-                }
-                if (model.Quantity > existingSalesInvoice.Quantity)
-                {
-                    ModelState.AddModelError("Quantity", "Cannot input more than the existing SI quantity!");
-                }
-            }
-            else
-            {
-                if (model.Amount > existingSv.Amount)
-                {
-                    ModelState.AddModelError("Amount", "Cannot input more than the existing SV amount!");
-                }
-            }
 
             if (ModelState.IsValid)
             {
@@ -202,6 +183,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    #region -- check for unposted DM or CM
+
                     if (model.SalesInvoiceId != null)
                     {
                         var existingSIDMs = _dbContext.FilprideDebitMemos
@@ -247,31 +230,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                     }
 
-                    model.CreditMemoNo = await _unitOfWork.FilprideCreditMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice.Type, cancellationToken);
+                    #endregion -- check for unposted DM or CM
+                    
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Company = companyClaims;
-                    model.Type = existingSalesInvoice?.Type;
 
                     if (model.Source == "Sales Invoice")
                     {
                         model.ServiceInvoiceId = null;
-
+                        model.CreditMemoNo = await _unitOfWork.FilprideCreditMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice.Type, cancellationToken);
+                        model.Type = existingSalesInvoice.Type;
                         model.CreditAmount = (decimal)(model.Quantity * -model.AdjustedPrice);
                     }
                     else if (model.Source == "Service Invoice")
                     {
                         model.SalesInvoiceId = null;
-
-                        #region --Retrieval of Services
-
-                        model.ServicesId = existingSv.ServiceId;
-
-                        var services = await _dbContext
-                        .FilprideServices
-                        .FirstOrDefaultAsync(s => s.ServiceId == model.ServicesId, cancellationToken);
-
-                        #endregion --Retrieval of Services
-
+                        
+                        model.CreditMemoNo = await _unitOfWork.FilprideCreditMemo.GenerateCodeAsync(companyClaims, existingSv.Type, cancellationToken);
+                        model.Type = existingSv.Type;
                         model.CreditAmount = -model.Amount ?? 0;
                     }
 
@@ -331,7 +307,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(sv => sv.Company == companyClaims && sv.PostedBy != null)
                 .Select(sv => new SelectListItem
                 {
-                    Value = sv.ServiceId.ToString(),
+                    Value = sv.ServiceInvoiceId.ToString(),
                     Text = sv.ServiceInvoiceNo
                 })
                 .ToListAsync(cancellationToken);
@@ -351,25 +327,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(sv => sv.Customer)
                         .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
 
-            if (model.SalesInvoiceId != null)
-            {
-                if (model.AdjustedPrice > existingSalesInvoice.UnitPrice)
-                {
-                    ModelState.AddModelError("AdjustedPrice", "Cannot input more than the existing SI unit price!");
-                }
-                if (model.Quantity > existingSalesInvoice.Quantity)
-                {
-                    ModelState.AddModelError("Quantity", "Cannot input more than the existing SI quantity!");
-                }
-            }
-            else
-            {
-                if (model.Amount > existingSv.Amount)
-                {
-                    ModelState.AddModelError("Amount", "Cannot input more than the existing SV amount!");
-                }
-            }
-
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -381,7 +338,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     .FirstOrDefaultAsync(cm => cm.CreditMemoId == model.CreditMemoId);
 
                     model.EditedBy = _userManager.GetUserName(this.User);
-                    model.EditedDate = DateTime.Now;
+                    model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     if (model.Source == "Sales Invoice")
                     {
@@ -403,16 +360,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     else if (model.Source == "Service Invoice")
                     {
                         model.SalesInvoiceId = null;
-
-                        #region --Retrieval of Services
-
-                        existingCM.ServicesId = existingSv.ServiceId;
-
-                        var services = await _dbContext
-                        .FilprideServices
-                        .FirstOrDefaultAsync(s => s.ServiceId == existingCM.ServicesId, cancellationToken);
-
-                        #endregion --Retrieval of Services
 
                         #region -- Saving Default Enries --
 
@@ -484,7 +431,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTime.Now;
+                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Posted);
 
                         if (model.SalesInvoiceId != null)
@@ -571,7 +518,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             if (model.SalesInvoice.Customer.VatType == SD.VatType_Vatable)
                             {
                                 netOfVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(model.CreditAmount))) * -1;
-                                vatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(netOfVatAmount))) * -1;
+                                vatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(netOfVatAmount))) * -1;
                             }
                             else
                             {
@@ -652,7 +599,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "401010100",
                                         AccountTitle = "Sales - Biodiesel",
-                                        Debit = netOfVatAmount,
+                                        Debit = Math.Abs(netOfVatAmount),
                                         CreatedBy = model.CreatedBy,
                                         Credit = 0,
                                         Company = model.Company,
@@ -670,7 +617,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "401010200",
                                         AccountTitle = "Sales - Econogas",
-                                        Debit = netOfVatAmount,
+                                        Debit = Math.Abs(netOfVatAmount),
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
@@ -688,7 +635,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountNo = "401010300",
                                         AccountTitle = "Sales - Envirogas",
-                                        Debit = netOfVatAmount,
+                                        Debit = Math.Abs(netOfVatAmount),
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
@@ -730,13 +677,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             var existingSv = await _dbContext.FilprideServiceInvoices
                                                     .Include(sv => sv.Customer)
-                                                    .FirstOrDefaultAsync(si => si.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-
-                            #region --Retrieval of Services
-
-                            var services = await _dbContext.FilprideServices.FindAsync(model.ServicesId, cancellationToken);
-
-                            #endregion --Retrieval of Services
+                                                    .Include(sv => sv.Service)
+                                                    .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
 
                             #region --SV Computation--
 
@@ -747,7 +689,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 viewModelDMCM.Total = -model.Amount ?? 0;
                                 viewModelDMCM.NetAmount = (model.Amount ?? 0 - existingSv.Discount) / 1.12m;
                                 viewModelDMCM.VatAmount = (model.Amount ?? 0 - existingSv.Discount) - viewModelDMCM.NetAmount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (services.Percent / 100m);
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Service.Percent / 100m);
                                 if (existingSv.Customer.WithHoldingVat)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
@@ -756,7 +698,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             else
                             {
                                 viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (services.Percent / 100m);
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Service.Percent / 100m);
                                 if (existingSv.Customer.WithHoldingVat)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
@@ -792,8 +734,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
                                 sales.Description = model.ServiceInvoice.Service.Name;
                                 sales.Amount = viewModelDMCM.Total;
-                                sales.VatAmount = viewModelDMCM.VatAmount;
-                                sales.VatableSales = viewModelDMCM.Total / 1.12m;
+                                sales.VatableSales = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.Amount))) * -1;
+                                sales.VatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.VatableSales))) * -1;
                                 //sales.Discount = model.Discount;
                                 sales.NetSales = viewModelDMCM.NetAmount;
                                 sales.CreatedBy = model.CreatedBy;
@@ -852,7 +794,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             if (model.ServiceInvoice.Customer.VatType == SD.VatType_Vatable)
                             {
                                 netOfVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(model.CreditAmount))) * -1;
-                                vatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(netOfVatAmount))) * -1;
+                                vatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(netOfVatAmount))) * -1;
                             }
                             else
                             {
@@ -930,7 +872,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Description = model.ServiceInvoice.Service.Name,
                                 AccountNo = model.ServiceInvoice.Service.CurrentAndPreviousNo,
                                 AccountTitle = model.ServiceInvoice.Service.CurrentAndPreviousTitle,
-                                Debit = Math.Round(viewModelDMCM.NetAmount),
+                                Debit = viewModelDMCM.NetAmount,
                                 Credit = 0,
                                 Company = model.Company,
                                 CreatedBy = model.CreatedBy,
@@ -1009,7 +951,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
                         await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.CreditMemoNo, cancellationToken);
@@ -1049,7 +991,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
@@ -1069,12 +1011,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return NotFound();
         }
-
-        public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
-        {
-            var cm = await _unitOfWork.FilprideCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
-            return PartialView("_PreviewCredit", cm);
-        }
+        
 
         [HttpGet]
         public async Task<JsonResult> GetSVDetails(int svId, CancellationToken cancellationToken)
@@ -1130,6 +1067,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideCreditMemos
                 .Where(cm => recordIds.Contains(cm.CreditMemoId))
+                .Include(cm => cm.ServiceInvoice)
+                .ThenInclude(sv => sv.Service)
                 .OrderBy(cm => cm.CreditMemoNo)
                 .ToListAsync();
 
@@ -1173,7 +1112,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 9].Value = item.Amount;
                 worksheet.Cells[row, 10].Value = item.CurrentAndPreviousAmount;
                 worksheet.Cells[row, 11].Value = item.UnearnedAmount;
-                worksheet.Cells[row, 12].Value = item.ServicesId;
+                worksheet.Cells[row, 12].Value = item.ServiceInvoice.ServiceId;
                 worksheet.Cells[row, 13].Value = item.CreatedBy;
                 worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
                 worksheet.Cells[row, 15].Value = item.CancellationRemarks;

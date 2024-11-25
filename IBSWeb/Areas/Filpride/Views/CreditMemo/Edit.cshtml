@@ -16,6 +16,7 @@
     <div class="card-body p-4">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="CreditMemoId">
             <fieldset class="form-group mb-3">
                 <legend>Select Source</legend>
 
