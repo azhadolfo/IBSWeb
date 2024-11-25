@@ -152,7 +152,7 @@
             {
                 <div class="form-floating row pb-2">
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="CheckNo" class="form-control border-0 shadow " placeholder="Please input the last four digits of the check number." required min="4" />
+                        <input asp-for="CheckNo" class="form-control border-0 shadow " placeholder="Please input the last four digits of the check number." required minlenght="4" maxlength="4"/>
                         <label asp-for="CheckNo" class="ms-2">Check#<span class="required">*</span></label>
                         <span asp-validation-for="CheckNo" class="text-danger"></span>
                         <pre>(Note: Only input the last 4 digits of the check)</pre>
