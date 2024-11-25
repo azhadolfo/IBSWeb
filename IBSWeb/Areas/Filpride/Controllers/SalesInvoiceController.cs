@@ -291,6 +291,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     var existingRecord = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
+                    
+                    var customer = await _unitOfWork.FilprideCustomer
+                        .GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken) ?? throw new NullReferenceException();
 
                     if (existingRecord == null)
                     {
@@ -310,7 +313,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.ReceivingReportId = model.ReceivingReportId;
                     existingRecord.CustomerOrderSlipId = model.CustomerOrderSlipId;
                     existingRecord.DeliveryReceiptId = model.DeliveryReceiptId;
-                    existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Customer.CustomerTerms, model.TransactionDate);
+                    existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(customer.CustomerTerms, model.TransactionDate);
 
                     if (existingRecord.Amount >= model.Discount)
                     {
@@ -351,13 +354,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var sales = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
             return View(sales);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
-        {
-            var invoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(s => s.SalesInvoiceId == id, cancellationToken);
-            return PartialView("_PreviewPartialView", invoice);
         }
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
