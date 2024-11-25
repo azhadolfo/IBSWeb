@@ -30,5 +30,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task<List<FilprideCustomerOrderSlip>> GetCosUnserveVolume(DateOnly dateFrom, DateOnly dateTo, string company);
 
         public List<FilprideSalesInvoice> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, string company);
+
+        public List<FilpridePurchaseOrder> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string company);
     }
 }
