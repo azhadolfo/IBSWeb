@@ -72,22 +72,19 @@
                     <td><b>Driver:</b> @Model.Driver</td>
                     <td class="text-end"><b>Plate#:</b> @Model.PlateNo</td>
                 </tr>
-                <tr>
-                    <td><b>Trip Ticket:</b> @Html.DisplayFor(model => model.TripTicket)</td>
-                    @if (Model.LoadDate.HasValue)
-                    {
-                        <td class="text-end"><b>Date Loaded:</b> @Html.DisplayFor(model => model.LoadDate)</td>
-                    }
-                </tr>
                 @if (Model.LoadDate.HasValue)
                 {
                     <tr>
-                        <td></td>
-                        @if (Model.Customer.IsCheckDetailsRequired)
-                        {
-                            <td class="text-end"><b>Last 4 check digits:</b> @Html.DisplayFor(model => model.CheckNo)</td>
-                        }
+                        <td><b>Trip Ticket:</b> @Html.DisplayFor(model => model.TripTicket)</td>
+                        <td class="text-end"><b>Date Loaded:</b> @Html.DisplayFor(model => model.LoadDate)</td>
                     </tr>
+                    @if (Model.Customer.IsCheckDetailsRequired)
+                    {
+                        <tr>
+                            <td></td>
+                            <td class="text-end"><b>Last 4 check digits:</b> @Html.DisplayFor(model => model.CheckNo)</td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -104,21 +101,28 @@
         @if (!string.IsNullOrEmpty(Model.SavedFileName))
         {
             <br />
-            <div class="w-100 text-center">
-                <a href="@imageSrc" target="_blank">
-                    <img src="@imageSrc" class="img-fluid" style="max-height: 300px; width:auto; cursor: pointer;" alt="@Model.SavedFileName">
-                </a>
-            </div>
-            <br />
-            if (Model.Customer.IsCheckDetailsRequired)
-            {
-                <div class="w-100 text-center">
-                    <a href="@imageSrc2" target="_blank">
+            <div class="row text-center">
+                @if (Model.Customer.IsCheckDetailsRequired)
+                {
+                    <div class="col-1"> </div>
+                    <a class="col-5 text-center" href="@imageSrc" target="_blank">
+                        <img src="@imageSrc" class="img-fluid" style="max-height: 300px; width:auto; cursor: pointer;" alt="@Model.SavedFileName">
+                    </a>
+                    <a class="col-5 text-center" href="@imageSrc2" target="_blank">
                         <img src="@imageSrc2" class="img-fluid" style="max-height: 300px; width:auto; cursor: pointer;" alt="@Model.CheckPictureSavedFileName">
                     </a>
-                </div>
-                <br />
-            }
+                    <div class="col-1"> </div>
+                }
+                else
+                {
+                    <div class="col-12 text-center">
+                        <a href="@imageSrc" target="_blank">
+                            <img src="@imageSrc" class="img-fluid" style="max-height: 300px; width:auto; cursor: pointer;" alt="@Model.SavedFileName">
+                        </a>
+                    </div>
+                }
+            </div>
+            <br />
         }
 
         <div class="row pt-2" id="buttons">
