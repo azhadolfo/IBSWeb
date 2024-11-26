@@ -1,4 +1,5 @@
 ﻿using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -32,6 +33,16 @@ namespace IBS.Models.Filpride
         [ForeignKey(nameof(CheckVoucherHeaderId))]
         public FilprideCheckVoucherHeader? CheckVoucherHeader { get; set; }
 
+        public int? SupplierId { get; set; }
+
+        [ForeignKey("SupplierId")]
+        public FilprideSupplier? Supplier { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal Amount { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal AmountPaid { get; set; }
 
     }
 }

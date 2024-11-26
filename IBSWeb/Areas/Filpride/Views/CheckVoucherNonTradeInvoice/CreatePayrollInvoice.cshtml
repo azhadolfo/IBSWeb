@@ -1,0 +1,333 @@
+@model CheckVoucherNonTradeInvoicingViewModel
+
+@{
+    ViewBag.Title = "Check Voucher Non-Trade Invoice";
+    Layout = "_Layout";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Multiple Non Trade Invoicing</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data">
+            <div class="row">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-group mb-3">
+                    <label class="control-label">Type<span class="required">*</span></label>
+                    <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                        <option value="" selected disabled>Select PO type</option>
+                        @foreach (DocumentType documentType in Enum.GetValues<DocumentType>())
+                        {
+                            <option value="@documentType">@documentType.ToString()</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Type" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
+                    <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="TransactionDate" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea asp-for="PoNo" class="form-control" placeholder="Input si no" style="height: 100px"></textarea>
+                    <label asp-for="PoNo" class="control-label ms-2">PO No</label>
+                    <span asp-validation-for="PoNo" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea asp-for="SiNo" class="form-control" placeholder="Input po no" style="height: 100px"></textarea>
+                    <label asp-for="SiNo" class="control-label ms-2">SI No</label>
+                    <span asp-validation-for="SiNo" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Total" class="control-label"></label><span class="required">*</span>
+                    <input asp-for="Total" class="form-control money inputAmount" value="" placeholder="0.000" />
+                    <span asp-validation-for="Total" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Upload File (Optional)</label>
+                    <input name="file" type="file" class="form-control" />
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea asp-for="Particulars" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
+                    <label asp-for="Particulars" class="control-label ms-2">Particulars<span class="required">*</span></label>
+                    <span asp-validation-for="Particulars" class="text-danger"></span>
+                </div>
+                <input type="hidden" id="StartDate" name="StartDate" />
+                <input type="hidden" id="NumberOfYears" name="NumberOfYears" value="0" />
+                <div class="form-group">
+                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
+                        Add Entry
+                    </button>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th colspan="2">Account No.</th>
+                            <th>
+                                Debit
+                            </th>
+                            <th>
+                                Credit
+                            </th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody id="accountingEntriesBody">
+                        <tbody>
+                        <tr>
+                            <td class="text-end" colspan="2">TOTAL:</td>
+                            <td class="totalDebit">0.0000</td>
+                            <td class="totalCredit">0.0000</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <br />
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Create</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="AddAccEntry" data-bs-backdrop="static" tabindex="-1" aria-labelledby="AddAccEntryLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="AddAccEntryLabel">Add Accounting Entry</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <label class="control-label">Account No.</label>
+                        <select id="AccountNo" asp-items="@Model.ChartOfAccounts" class="form-select" style="width: 100%">
+                            <option></option>
+                        </select>
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group pt-4">
+                        <label class="control-label">Debit</label>
+                        <input id="debit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group pt-4">
+                        <label class="control-label">Credit</label>
+                        <input id="credit" value="0.0000" class="form-control moneyInput" placeholder="0.0000" />
+                        <span class="text-danger"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="calculateButton" onclick="saveAccountingEntry()">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $('#AccountNo').select2({
+            dropdownParent: $('#AddAccEntry')
+        });
+    </script>
+    <script>
+        var suppliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Suppliers));
+
+        function saveAccountingEntry(event) {
+            // Get the values from the modal inputs
+            var accountNumber = $("#AccountNo").val();
+            var accountNumberText = $("#AccountNo option:selected").text().replace(/^\S+\s/, '');
+            var debit = parseNumber($("#debit").val());
+            var credit = parseNumber($("#credit").val());
+
+            if (debit === 0 && credit === 0) {
+                event.preventDefault();
+                alert('Please input amount');
+                return;
+            } else if (accountNumberText === "") {
+                event.preventDefault();
+                alert('Please select Account No.!');
+                return;
+            }
+
+            // Format debit and credit values with commas and two decimal places
+            var formattedDebit = formatNumber(debit);
+            var formattedCredit = formatNumber(credit);
+
+            // Create a new row with the text only and a hidden input for the value
+            var newRow = `<tr>
+                                    <td>
+                                        <input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly/>
+                                    </td>
+                                    <td>
+                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
+                                    </td>
+                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                    <td>
+                                        ${credit !== 0
+                ? `<select name='MultipleSupplierId' class='form-select js-select2 w-100'>
+                                                ${suppliers.map(s => `<option value="${s.Value}">${s.Text}</option>`).join('')}
+                                            </select>`
+                : `<input name='MultipleSupplierId' type='hidden' value='0' class='w-100' />`}
+                                    </td>
+                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                </tr>`;
+
+            // Append the new row to the table body
+            $("#accountingEntriesBody").append(newRow);
+            $('#accountingEntriesBody').find('.js-select2').select2({
+                placeholder: 'Select an option',  // Optional: add a placeholder
+                allowClear: true
+            }).on('change', function () {
+                var selectedValue = $(this).val();
+
+                // If the selection is cleared, remove the <select> element and replace it with a hidden input
+                if (!selectedValue) {
+                    $(this).select2('destroy');  // Destroy select2 on this element
+                    $(this).replaceWith(`<input name='MultipleSupplierId' type='hidden' value='0' class='w-100' />`);
+                }
+            });
+
+            // Close the modal
+            $("#AddAccEntry").modal("hide");
+
+            // Clear the modal inputs
+            $("#AccountNo").val(""); // Reset the select to its default state
+            $("#AccountNo").trigger("change"); // Trigger change event for the select
+            $("#Debit").val("0.000");
+            $("#Credit").val("0.000");
+
+            updateTotalDebitAndCredit();
+        }
+
+        function updateTotalDebitAndCredit() {
+            var totalDebit = 0;
+            var totalCredit = 0;
+
+            // Loop through each row in the table body and sum up the debit values
+            $("#accountingEntriesBody tr, .defaultEntry tr").each(function () {
+                var debitInput = $(this).find("td:eq(2) input").val();
+                var creditInput = $(this).find("td:eq(3) input").val();
+                // Ensure debitInput and creditInput are strings before using replace
+                debitInput = debitInput ? String(debitInput) : ""; // convert to string if not null/undefined
+                creditInput = creditInput ? String(creditInput) : "";
+
+                var debit = parseNumber(debitInput);
+                var credit = parseNumber(creditInput);
+
+                totalDebit += debit;
+                totalCredit += credit;
+            });
+
+            // Display the total debit value
+            $(".totalDebit").text(formatNumber(totalDebit));
+            $(".totalCredit").text(formatNumber(totalCredit));
+            $("#debit").val("0.000");
+            $("#credit").val("0.000");
+        }
+
+        // Function to remove the corresponding row
+        function removeRow(button) {
+            // Get the reference to the button's parent row and remove it
+            $(button).closest("tr").remove();
+            updateTotalDebitAndCredit();
+        }
+    </script>
+    <script>
+        $("#AccountNo").change(function () {
+            var accountNumber = $(this).val();
+            if (accountNumber.startsWith("10201") || accountNumber.startsWith("10105")) {
+                // Close the modal
+                $("#AddAccEntry").modal("hide");
+                Swal.fire({
+                    title: "Create Automatic Journal Entry",
+                    text: "Do you want to create an automatic journal entry?",
+                    icon: "question",
+                    showCancelButton: true,
+                    allowEscapeKey: false,
+                    allowOutsideClick: false,
+                    confirmButtonText: "Yes",
+                    cancelButtonText: "No",
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        return new Promise((resolve) => {
+                            Swal.fire({
+                                title: "Input Start Date and Number of Years",
+                                html:
+                                    "<input id='start-date' type='date' class='swal2-input' placeholder='Start Date'>" +
+                                    "<input id='num-years' type='number' class='swal2-input' placeholder='Number of Years'>",
+                                focusConfirm: false,
+                                allowEscapeKey: false,
+                                allowOutsideClick: false,
+                                preConfirm: () => {
+                                    return [
+                                        $("#start-date").val(),
+                                        $("#num-years").val()
+                                    ];
+                                }
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    resolve(result.value);
+                                }
+                            });
+                        });
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Result contains an array with the start date and number of years
+                        var startDate = result.value[0];
+                        var numYears = result.value[1];
+                        // Assign the values to hidden inputs in your form
+                        $("#StartDate").val(startDate);
+                        $("#NumberOfYears").val(numYears);
+                        // Close the modal
+                        $("#AddAccEntry").modal("show");
+                    }
+                });
+            }
+        });
+    </script>
+    <script>
+        function validateDebitAndCredit(event) {
+            var totalDebit = parseNumber($(".totalDebit").text());
+            var totalCredit = parseNumber($(".totalCredit").text());
+
+            if (totalDebit !== totalCredit) {
+                alert("Debit and Credit totals must be equal.");
+                event.preventDefault(); // Prevent form submission
+                return false;
+            }
+
+            if (totalDebit === 0 && totalCredit === 0) {
+                alert("Debit and Credit cannot both be zero.");
+                event.preventDefault(); // Prevent form submission
+                return false;
+            }
+
+            return true; // Allow form submission
+        }
+    </script>
+}
+

@@ -1,7 +1,9 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
+using IBS.Models.Filpride.ViewModels;
 
 namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
@@ -26,5 +28,9 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task<List<FilprideAuditTrail>> GetAuditTrails(DateOnly dateFrom, DateOnly dateTo, string company);
 
         Task<List<FilprideCustomerOrderSlip>> GetCosUnserveVolume(DateOnly dateFrom, DateOnly dateTo, string company);
+
+        public List<FilprideSalesInvoice> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, string company);
+
+        public List<FilpridePurchaseOrder> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string company);
     }
 }

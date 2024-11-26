@@ -14,7 +14,7 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form asp-action="EditTrade" method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data">
             <div class="row">
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -223,7 +223,7 @@
                         </tbody>
                         <tbody>
                             <tr>
-                                <td class="text-end">TOTAL:</td>
+                                <td class="text-end" colspan="2">TOTAL:</td>
                                 <td class="totalDebit">0.0000</td>
                                 <td class="totalCredit">0.0000</td>
                                 <td></td>
@@ -252,7 +252,7 @@
                         <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CheckVoucher" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -331,14 +331,12 @@
 
             // Create a new row with the text only and a hidden input for the value
             var newRow = `<tr>
-                                                                                    <td>
-                                                                                        <input type='hidden' name='AccountNumber' value='${accountNumber}'/>
-                                                                                        <input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly />
-                                                                                    </td>
-                                                                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
-                                                                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
-                                                                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                                                             </tr>`;
+                                                    <td><input type='text' name='AccountNumber' value='${accountNumber}' style='border:none' class='w-100' readonly /></td>
+                                                    <td><input type='text' name='AccountTitle' value='${accountNumberText}' style='border:none' class='w-100' readonly /></td>
+                                                    <td><input name='Debit' id='debit_${accountNumber}' value='${formattedDebit}' style='border:none' class='w-100' readonly /></td>
+                                                    <td><input name='Credit' id='credit_${accountNumber}' value='${formattedCredit}' style='border:none' class='w-100' readonly /></td>
+                                                    <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                                                </tr>`;
 
             // Append the new row to the table body
             $("#accountingEntriesBody").append(newRow);
@@ -361,8 +359,8 @@
 
             // Loop through each row in the table body and sum up the debit values
             $("#accountingEntriesBody tr, .defaultEntry tr").each(function () {
-                var debitInput = $(this).find("td:eq(1) input").val();
-                var creditInput = $(this).find("td:eq(2) input").val();
+                var debitInput = $(this).find("td:eq(2) input").val();
+                var creditInput = $(this).find("td:eq(3) input").val();
                 // Ensure debitInput and creditInput are strings before using replace
                 debitInput = debitInput ? String(debitInput) : ""; // convert to string if not null/undefined
                 creditInput = creditInput ? String(creditInput) : "";
@@ -403,7 +401,7 @@
                 if (suppId !== "") {
                     // Make an AJAX request to get the TaxType based on the selected SupplierId
                     $.ajax({
-                        url: '@Url.Action("GetSupplierDetails", "CheckVoucher", new { area = "Filpride" })',
+                        url: '@Url.Action("GetSupplierDetails", "CheckVoucherTrade", new { area = "Filpride" })',
                         method: "GET",
                         data: { supplierId: suppId },
                         success: function (data) {
@@ -481,7 +479,7 @@
                 if (suppId !== "") {
                     // Make an AJAX request to get the POs based on the selected SupplierId
                     $.ajax({
-                        url: '@Url.Action("GetPOs", "CheckVoucher", new { area = "Filpride" })',
+                        url: '@Url.Action("GetPOs", "CheckVoucherTrade", new { area = "Filpride" })',
                         method: "GET",
                         data: { supplierId: suppId }, // Corrected parameter name
                         success: function (data) {
@@ -544,7 +542,6 @@
                                 }
                             } else {
                                 criteria();
-                                console.log('User canceled');
                             }
                         });
                     } else {
@@ -564,7 +561,7 @@
         function displayRecords(poNumber, criteria) {
             // Make an AJAX request to get the RRs based on the selected POIds and display criteria
             $.ajax({
-                url: '@Url.Action("GetRRs", "CheckVoucher", new { area = "Filpride" })',
+                url: '@Url.Action("GetRRs", "CheckVoucherTrade", new { area = "Filpride" })',
                 method: "GET",
                 data: { poNumber: poNumber, criteria: criteria }, // Pass PO numbers to controller
                 traditional: true, // Ensure jQuery sends the array properly
@@ -615,7 +612,7 @@
                                                                                                     <input type='hidden' name='rrNo' value='${rrNo}' />
                                                                                                     <input type='text' name='rrNoText' value='${rrSelectText}' style='border:none' readonly />
                                                                                                 </td>
-                                                                                                <td><input type='text' name='Amount' class='inputAmount money' id='paymentAmount_${rrNo}' value='${amount}'/></td>
+                                                                                                <td><input type='text' name='Amount' class='inputAmount money' id='paymentAmount_${rrNo}' value='${amount}' /></td>
                                                                                             </tr>`;
                     var rrAmount = `<tr id='row_${rrNo}'>
                                                                                                                 <td style='padding-left:20px;'>
@@ -682,7 +679,7 @@
                     if (rrNo !== "") {
                         // Make an AJAX request to get the balance based on the selected RRNo
                         $.ajax({
-                            url: '@Url.Action("RRBalance", "CheckVoucher", new { area = "Filpride" })',
+                            url: '@Url.Action("RRBalance", "CheckVoucherTrade", new { area = "Filpride" })',
                             method: "GET",
                             data: { rrNo: rrNo },
                             success: function (data) {
@@ -739,7 +736,6 @@
                 calculateGrandTotal()
                 calculateGrandTotalRRAmount()
             });
-
 
             //Compute Grand Total Balance
             function calculateGrandTotal() {
@@ -859,7 +855,7 @@
             $('#bankAccounts').change(function () {
                 var bankId = $(this).val();
                 $.ajax({
-                    url: '@Url.Action("GetBankAccount", "CheckVoucher", new { area = "Filpride" })',
+                    url: '@Url.Action("GetBankAccount", "CheckVoucherTrade", new { area = "Filpride" })',
                     method: "GET",
                     data: { bankId: bankId },
                     success: function (data) {
@@ -901,8 +897,6 @@
             var debits = @Html.Raw(Json.Serialize(Model.Debit));
             var credits = @Html.Raw(Json.Serialize(Model.Credit));
 
-
-
             for (var i = 0; i < accountNumbers.length; i++) {
                 var debitClass = ''; // Initialize the debit class
                 var creditClass = ''; // Initialize the credit class
@@ -919,7 +913,6 @@
                         creditClass = 'totalEWT';
                         trClass = 'EWTCredit';
                     }
-
                 }
                 if (accountTitles[i].includes('Cash in Bank')) {
                     creditClass = 'totalNetOfEWT';
@@ -928,11 +921,11 @@
 
                 // Construct the row HTML with the determined row class
                 var row = '<tr class="' + trClass + '">' +
-                    '<input type="hidden" name="AccountNumber" value="' + accountNumbers[i] + '" />' +
+                    '<td><input type="text" name="AccountNumber" value="' + accountNumbers[i] + '" class="w-100" style="border:none" readonly /></td>' +
                     '<td><input type="text" name="AccountTitle" value="' + accountTitles[i] + '" class="w-100 ' + accountTitleClass + ' " style="border:none" readonly /></td>' +
                     '<td><input type="text" name="Debit" value="' + formatNumber(debits[i]) + '" class="' + debitClass + '" style="border:none" readonly /></td>' +
                     '<td><input type="text" name="Credit" value="' + formatNumber(credits[i]) + '" class="' + creditClass + '" style="border:none" readonly /></td>' +
-                    (i < 4 ? '<td></td>' : '<td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>') +
+                    (i < 3 ? '<td></td>' : '<td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button></td>') +
                     '</tr>';
 
                 $('.defaultEntry').append(row);

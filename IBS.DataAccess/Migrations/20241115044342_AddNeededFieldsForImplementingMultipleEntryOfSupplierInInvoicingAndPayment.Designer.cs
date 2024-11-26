@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241115044342_AddNeededFieldsForImplementingMultipleEntryOfSupplierInInvoicingAndPayment")]
+    partial class AddNeededFieldsForImplementingMultipleEntryOfSupplierInInvoicingAndPayment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,27 +24,6 @@ namespace IBS.DataAccess.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("IBS.Models.AppSetting", b =>
-                {
-                    b.Property<string>("SettingKey")
-                        .HasColumnType("text")
-                        .HasColumnName("setting_key");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("value");
-
-                    b.HasKey("SettingKey")
-                        .HasName("pk_app_settings");
-
-                    b.HasIndex("SettingKey")
-                        .IsUnique()
-                        .HasDatabaseName("ix_app_settings_setting_key");
-
-                    b.ToTable("app_settings", (string)null);
-                });
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", b =>
                 {
@@ -1037,6 +1019,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("ServiceInvoiceId")
                         .HasColumnType("integer")
                         .HasColumnName("service_invoice_id");
+
+                    b.Property<int>("ServicesId")
+                        .HasColumnType("integer")
+                        .HasColumnName("services_id");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -2155,6 +2141,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("ServiceInvoiceId")
                         .HasColumnType("integer")
                         .HasColumnName("service_invoice_id");
+
+                    b.Property<int>("ServicesId")
+                        .HasColumnType("integer")
+                        .HasColumnName("services_id");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -3551,6 +3541,10 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerId"));
 
+                    b.Property<decimal>("AmountLimit")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount_limit");
+
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)")
@@ -3604,10 +3598,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
-
-                    b.Property<bool>("IsCheckDetailsRequired")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_check_details_required");
 
                     b.Property<decimal>("QuantityLimit")
                         .HasColumnType("numeric")
@@ -6051,18 +6041,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("ApprovedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("approved_date");
-
-                    b.Property<string>("CheckNo")
-                        .HasColumnType("text")
-                        .HasColumnName("check_no");
-
-                    b.Property<string>("CheckPictureSavedFileName")
-                        .HasColumnType("text")
-                        .HasColumnName("check_picture_saved_file_name");
-
-                    b.Property<string>("CheckPictureSavedUrl")
-                        .HasColumnType("text")
-                        .HasColumnName("check_picture_saved_url");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(100)")
