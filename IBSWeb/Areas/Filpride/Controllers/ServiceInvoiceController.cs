@@ -284,7 +284,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTime.Now;
+                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Posted);
 
                         #region --Retrieval of Services
@@ -404,7 +404,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
-                                    AccountNo = "1010204",
+                                    AccountNo = "101020500",
                                     AccountTitle = "AR-Non Trade Receivable",
                                     Debit = Math.Round(model.Total - (withHoldingTaxAmount + withHoldingVatAmount), 4),
                                     Credit = 0,
@@ -421,8 +421,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
-                                    AccountNo = "1010202",
-                                    AccountTitle = "Deferred Creditable Withholding Tax",
+                                    AccountNo = "101060500",
+                                    AccountTitle = "Deferred Withholding Tax",
                                     Debit = withHoldingTaxAmount,
                                     Credit = 0,
                                     Company = model.Company,
@@ -439,8 +439,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
-                                    AccountNo = "1010203",
-                                    AccountTitle = "Deferred Creditable Withholding Vat",
+                                    AccountNo = "101060700",
+                                    AccountTitle = "Deferred Withholding Vat Input",
                                     Debit = withHoldingVatAmount,
                                     Credit = 0,
                                     Company = model.Company,
@@ -474,7 +474,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
-                                    AccountNo = "2010301",
+                                    AccountNo = "201030100",
                                     AccountTitle = "Vat Output",
                                     Debit = 0,
                                     Credit = Math.Round((vatAmount), 4),
@@ -520,7 +520,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            return null;
+            return NotFound();
         }
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
@@ -532,7 +532,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
@@ -582,7 +582,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
                         await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
@@ -685,7 +685,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.DueDate = model.DueDate;
                     existingModel.Instructions = model.Instructions;
                     existingModel.EditedBy = _userManager.GetUserName(User);
-                    existingModel.EditedDate = DateTime.Now;
+                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     decimal total = 0;
                     total += model.Amount;

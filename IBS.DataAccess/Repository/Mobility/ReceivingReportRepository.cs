@@ -4,6 +4,7 @@ using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Utility;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
@@ -84,7 +85,7 @@ namespace IBS.DataAccess.Repository.Mobility
             if (_db.ChangeTracker.HasChanges())
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;
-                existingRecord.EditedDate = DateTime.Now;
+                existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

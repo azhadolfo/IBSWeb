@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility.MasterFile;
+using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Mobility
@@ -51,7 +52,7 @@ namespace IBS.DataAccess.Repository.Mobility
             if (_db.ChangeTracker.HasChanges())
             {
                 existingStation.EditedBy = model.EditedBy;
-                existingStation.EditedDate = DateTime.Now;
+                existingStation.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

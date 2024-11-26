@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Utility;
 
 namespace IBS.Models.Mobility.ViewModels
 {
@@ -62,7 +63,7 @@ namespace IBS.Models.Mobility.ViewModels
         [Column(TypeName = "varchar(100)")]
         public string? CreatedBy { get; set; }
 
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Column(TypeName = "varchar(100)")]
         public string? EditedBy { get; set; }

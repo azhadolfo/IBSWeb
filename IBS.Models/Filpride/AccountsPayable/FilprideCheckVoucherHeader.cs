@@ -46,7 +46,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public List<SelectListItem>? Suppliers { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
         public decimal Total { get; set; }
 
         public decimal[]? Amount { get; set; }

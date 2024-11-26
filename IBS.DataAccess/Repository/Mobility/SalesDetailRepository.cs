@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
+using IBS.Utility;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
@@ -26,7 +27,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     Module = "Cashier Report",
                     OriginalValue = change.Value.OriginalValue,
                     AdjustedValue = change.Value.NewValue,
-                    TimeStamp = DateTime.Now,
+                    TimeStamp = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModifiedBy = modifiedBy
                 };
                 await _db.MobilityLogReports.AddAsync(logReport, cancellationToken);

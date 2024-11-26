@@ -157,7 +157,7 @@
             <input type="hidden" asp-for="CustomerOrderSlipId" />
             <div class="row pt-2">
                 <div class="form-floating py-1 px-1 col-6">
-                    <input type="datetime-local" id="uploadDate" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" name="loadDate" class="form-control border-0 shadow" placeholder="" required />
+                    <input type="datetime-local" id="uploadDate" value="@DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm")" name="loadDate" class="form-control border-0 shadow" placeholder="" required />
                     <label>Transaction Date<span class="required">*</span></label>
                     <span asp-validation-for="LoadDate" class="text-danger"></span>
                 </div>
@@ -174,7 +174,7 @@
             {
                 <div class="form-floating row pb-2">
                     <div class="form-floating py-2 col-12">
-                        <input asp-for="CheckNo" class="form-control border-0 shadow " placeholder="Please input the last four digits of the check number." required min="4" />
+                        <input asp-for="CheckNo" class="form-control border-0 shadow " placeholder="Please input the last four digits of the check number." required minlenght="4" maxlength="4"/>
                         <label asp-for="CheckNo" class="ms-2">Check#<span class="required">*</span></label>
                         <span asp-validation-for="CheckNo" class="text-danger"></span>
                         <pre>(Note: Only input the last 4 digits of the check)</pre>

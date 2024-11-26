@@ -204,7 +204,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 if (existingRecord.PostedBy == null)
                 {
                     existingRecord.PostedBy = _userManager.GetUserName(User);
-                    existingRecord.PostedDate = DateTime.Now;
+                    existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     await _unitOfWork.MobilityPurchaseOrder.PostAsync(existingRecord, cancellationToken);
                 }
 

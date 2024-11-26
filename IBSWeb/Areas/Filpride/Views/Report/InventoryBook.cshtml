@@ -19,7 +19,7 @@
             <div class="row">
                 <div class="mb-3">
                     <label class="control-label">As Of</label>
-                    <input type="date" asp-for="DateTo" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <input type="date" asp-for="DateTo" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="DateTo" class="text-danger"></span>
                 </div>
                 <div class="row pt-2">

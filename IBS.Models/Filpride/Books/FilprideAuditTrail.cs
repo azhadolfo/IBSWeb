@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net;
+using IBS.Utility;
 
 namespace IBS.Models.Filpride.Books
 {
@@ -28,7 +29,7 @@ namespace IBS.Models.Filpride.Books
         public FilprideAuditTrail(string username, string activity, string documentType, string ipAddress, string company)
         {
             Username = username;
-            Date = DateTime.Now;
+            Date = DateTimeHelper.GetCurrentPhilippineTime();
 
             // Attempt to resolve IP to hostname, fallback to IP if resolution fails
             try
