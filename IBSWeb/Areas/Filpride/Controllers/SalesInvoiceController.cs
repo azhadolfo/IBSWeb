@@ -743,8 +743,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (dr != null)
             {
                 var automatedRr = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == dr.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
-
-                var test = await _dbContext.FilprideSalesInvoices.Where(s => s.SalesInvoiceNo == "test").Select(s => s.SalesInvoiceNo).FirstOrDefaultAsync() ?? throw new ArgumentNullException();
                 
                 return Json(new
                 {
