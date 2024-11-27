@@ -151,7 +151,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.AccountNumber,
+                    Value = s.AccountNumber + " " + s.AccountName,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
@@ -192,9 +192,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Particulars = viewModel.Particulars,
                         CreatedBy = _userManager.GetUserName(this.User),
                         Category = "Non-Trade",
-                        CvType = "Invoicing",
+                        CvType = nameof(CVType.Invoicing),
                         Company = companyClaims,
-                        Type = viewModel.Type
+                        Type = viewModel.Type,
+                        Total = viewModel.Total
                     };
 
                     #endregion -- Saving the default entries --
@@ -263,6 +264,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = viewModel.Credit[i]
                             });
                         }
+                    }
+
+                    foreach (var accountEntry in viewModel.AccountingEntries)
+                    {
+                        var parts = accountEntry.AccountTitle.Split(' ', 2); // Split into at most two parts
+                        var accountNo = parts[0];
+                        var accountName = parts[1];
+
+                        if (accountNo == "202010200")
+                        {
+                            checkVoucherHeader.InvoiceAmount = accountEntry.Amount;
+                        }
+                        
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = accountNo,
+                            AccountName = accountName,
+                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                            Debit = accountEntry.Type == NormalBalance.Debit ? accountEntry.Amount : 0,
+                            Credit = accountEntry.Type == NormalBalance.Credit ? accountEntry.Amount : 0,
+                        });
                     }
 
                     await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
@@ -1352,6 +1375,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             TempData["error"] = "The information provided was invalid.";
             return View(viewModel);
+        }
+        
+        public async Task<IActionResult> GetSupplierDetails(int? supplierId)
+        {
+            if (supplierId != null)
+            {
+                var supplier = await _dbContext.FilprideSuppliers
+                    .FindAsync(supplierId);
+
+                if (supplier != null)
+                {
+                    return Json(new
+                    {
+                        Name = supplier.SupplierName,
+                        Address = supplier.SupplierAddress,
+                        TinNo = supplier.SupplierTin,
+                        supplier.TaxType,
+                        supplier.Category,
+                        TaxPercent = supplier.WithholdingTaxPercent,
+                        supplier.VatType,
+                        DefaultExpense = supplier.DefaultExpenseNumber,
+                        WithholdingTax = supplier.WithholdingTaxtitle
+                    });
+                }
+                return Json(null);
+            }
+            return Json(null);
         }
     }
 }
