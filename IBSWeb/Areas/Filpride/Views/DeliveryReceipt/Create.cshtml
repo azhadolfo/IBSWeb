@@ -19,7 +19,7 @@
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="row py-2">
                     <div class="form-floating col-6">
-                        <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
                         <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>

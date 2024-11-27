@@ -102,7 +102,7 @@
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
-                                        @if (Model.SalesInvoice.Customer.CustomerType == "Zero Rated")
+                                        @if (Model.SalesInvoice.Customer.VatType == "Zero Rated")
                                         {
                                             <td class="text-end">@Math.Abs(Model.CreditAmount).ToString("N4")</td>
                                         }
@@ -114,7 +114,7 @@
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT-Exempt Sales: </b></p></td>
 
-                                        @if (Model.SalesInvoice.Customer.CustomerType == "Exempt")
+                                        @if (Model.SalesInvoice.Customer.VatType == "Exempt")
                                         {
                                             <td class="text-end">@Math.Abs(Model.CreditAmount)</td>
                                         }
@@ -222,7 +222,7 @@ else if (Model.Source == "Service Invoice")
                                         <td class="w-50"><p style="height: 9px; margin-left:8%;"><b>Vatable Sales: </b></p></td>
                                         @if (netOfVatAmount != 0)
                                         {
-                                            <td class="text-end">@Html.DisplayFor(model => netOfVatAmount)</td>
+                                            <td class="text-end">@Math.Abs(netOfVatAmount).ToString("N4")</td>
                                         }
                                         else
                                         {
@@ -231,7 +231,7 @@ else if (Model.Source == "Service Invoice")
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
-                                        @if (Model.ServiceInvoice.Customer.CustomerType == "Zero Rated")
+                                        @if (Model.ServiceInvoice.Customer.VatType == "Zero Rated")
                                         {
                                             <td class="text-end">@Math.Abs(Model.CreditAmount)</td>
                                         }
@@ -243,7 +243,7 @@ else if (Model.Source == "Service Invoice")
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT-Exempt Sales: </b></p></td>
 
-                                        @if (Model.ServiceInvoice.Customer.CustomerType == "Exempt")
+                                        @if (Model.ServiceInvoice.Customer.VatType == "Exempt")
                                         {
                                             <td class="text-end">@Math.Abs(Model.CreditAmount)</td>
                                         }
@@ -257,7 +257,7 @@ else if (Model.Source == "Service Invoice")
 
                                         @if (vatAmount != 0)
                                         {
-                                            <td class="text-end">@Html.DisplayFor(model => vatAmount)</td>
+                                            <td class="text-end">@Math.Abs(vatAmount).ToString("N4")</td>
                                         }
                                         else
                                         {
@@ -295,7 +295,7 @@ else if (Model.Source == "Service Invoice")
             <span>&nbsp;&nbsp;Date Issued:</span>
             <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br />
             Series: CM0000000001 - CM9999999999
-            Date and Time Created:&nbsp;@Model.CreatedDate
+            Date and Time Created:&nbsp;@DateTimeHelper.GetCurrentPhilippineTimeFormatted(Model.CreatedDate)
         </p>
     </div>
     <br />
@@ -309,7 +309,7 @@ else if (Model.Source == "Service Invoice")
                 <br />
                 <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
                 <br />
-                <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+                <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
             </em>
         </p>
     </div>

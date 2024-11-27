@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
+using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -72,7 +73,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             selectedOffline.NewClosing = model.SecondDsrClosingAfter;
             selectedOffline.LastUpdatedBy = "System"; // Change to a more descriptive value
-            selectedOffline.LastUpdatedDate = DateTime.Now;
+            selectedOffline.LastUpdatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
             if (selectedOffline.Balance <= 0)
             {

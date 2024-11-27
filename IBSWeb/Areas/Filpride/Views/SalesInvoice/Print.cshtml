@@ -287,7 +287,7 @@
         <span>&nbsp;&nbsp;Date Issued:</span>
         <span style="display: inline-block; width:50px;">@CS.DateIssued</span><br />
         Series: SI0000000001 - SI9999999999
-        Date and Time Created:&nbsp;@Model.CreatedDate
+        Date and Time Created:&nbsp;@DateTimeHelper.GetCurrentPhilippineTimeFormatted(Model.CreatedDate)
     </p>
 
     @if (!Model.IsPrinted)

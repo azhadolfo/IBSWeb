@@ -275,7 +275,7 @@
             <span>&nbsp;&nbsp;Date Issued:</span>
             <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br />
             Series: CV0000000001 - CV9999999999
-            Date and Time Created:&nbsp; @Model.Header.CreatedDate
+            Date and Time Created:&nbsp; @DateTimeHelper.GetCurrentPhilippineTimeFormatted(Model.Header.CreatedDate)
         </p>
     </div>
     <br />
@@ -289,7 +289,7 @@
                 <br />
                 <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
                 <br />
-                <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+                <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
             </em>
         </p>
     </div>

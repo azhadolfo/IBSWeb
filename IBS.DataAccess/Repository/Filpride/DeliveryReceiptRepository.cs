@@ -108,7 +108,7 @@ namespace IBS.DataAccess.Repository.Filpride
             if (_db.ChangeTracker.HasChanges())
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;
-                existingRecord.EditedDate = DateTime.Now;
+                existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

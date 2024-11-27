@@ -143,7 +143,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
 
                 inventory.ValidatedBy = _userManager.GetUserName(User);
-                inventory.ValidatedDate = DateTime.Now;
+                inventory.ValidatedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _unitOfWork.SaveAsync(cancellationToken);
 
                 return Ok();

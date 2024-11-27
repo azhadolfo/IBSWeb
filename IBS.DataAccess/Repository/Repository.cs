@@ -262,5 +262,11 @@ namespace IBS.DataAccess.Repository
                })
                .ToListAsync(cancellationToken);
         }
+
+        public DateTime GetPhilippineTime(DateTime utcDateTime)
+        {
+            var philippineTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
+            return TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, philippineTimeZone);
+        }
     }
 }

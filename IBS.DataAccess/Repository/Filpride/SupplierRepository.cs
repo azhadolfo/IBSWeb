@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.Filpride.MasterFile;
+using IBS.Utility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
@@ -104,7 +105,7 @@ namespace IBS.DataAccess.Repository.Filpride
             if (_db.ChangeTracker.HasChanges())
             {
                 existingSupplier.EditedBy = model.EditedBy;
-                existingSupplier.EditedDate = DateTime.Now;
+                existingSupplier.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

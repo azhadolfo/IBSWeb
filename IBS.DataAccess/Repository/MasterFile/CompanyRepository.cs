@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.MasterFile;
+using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MasterFile
@@ -63,7 +64,7 @@ namespace IBS.DataAccess.Repository.MasterFile
             if (_db.ChangeTracker.HasChanges())
             {
                 existingCompany.EditedBy = model.EditedBy;
-                existingCompany.EditedDate = DateTime.Now;
+                existingCompany.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

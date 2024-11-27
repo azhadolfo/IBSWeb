@@ -291,6 +291,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     var existingRecord = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
+                    
+                    var customer = await _unitOfWork.FilprideCustomer
+                        .GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken) ?? throw new NullReferenceException();
 
                     if (existingRecord == null)
                     {
@@ -310,12 +313,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.ReceivingReportId = model.ReceivingReportId;
                     existingRecord.CustomerOrderSlipId = model.CustomerOrderSlipId;
                     existingRecord.DeliveryReceiptId = model.DeliveryReceiptId;
-                    existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Customer.CustomerTerms, model.TransactionDate);
+                    existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(customer.CustomerTerms, model.TransactionDate);
 
                     if (existingRecord.Amount >= model.Discount)
                     {
                         existingRecord.EditedBy = _userManager.GetUserName(User);
-                        existingRecord.EditedDate = DateTime.Now;
+                        existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                         #region --Audit Trail Recording
 
@@ -353,13 +356,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(sales);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
-        {
-            var invoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(s => s.SalesInvoiceId == id, cancellationToken);
-            return PartialView("_PreviewPartialView", invoice);
-        }
-
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(s => s.SalesInvoiceId == id, cancellationToken);
@@ -373,7 +369,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTime.Now;
+                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Posted);
 
                         var accountTitlesDto = await _unitOfWork.FilprideChartOfAccount.GetListOfAccountTitleDto(cancellationToken);
@@ -635,7 +631,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
                         await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideSalesBook>(sb => sb.SerialNo == model.SalesInvoiceNo, cancellationToken);
@@ -684,7 +680,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.PaymentStatus = nameof(Status.Canceled);
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
@@ -749,7 +745,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (dr != null)
             {
                 var automatedRr = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == dr.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
-
+                
                 return Json(new
                 {
                     TransactionDate = dr.DeliveredDate,

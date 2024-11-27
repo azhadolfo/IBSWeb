@@ -247,7 +247,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.Remarks = model.Remarks;
                     existingModel.Terms = model.Terms;
                     existingModel.EditedBy = _userManager.GetUserName(User);
-                    existingModel.EditedDate = DateTime.Now;
+                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingModel.OldPoNo = model.OldPoNo;
                     existingModel.TriggerDate = model.TriggerDate;
 
@@ -302,7 +302,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.PostedBy == null)
                 {
                     model.PostedBy = _userManager.GetUserName(this.User);
-                    model.PostedDate = DateTime.Now;
+                    model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(Status.Posted);
 
                     #region --Audit Trail Recording
@@ -336,7 +336,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     model.VoidedBy = _userManager.GetUserName(this.User);
-                    model.VoidedDate = DateTime.Now;
+                    model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(Status.Voided);
 
                     #region --Audit Trail Recording
@@ -365,7 +365,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 

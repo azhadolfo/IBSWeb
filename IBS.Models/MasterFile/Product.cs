@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Utility;
 
 namespace IBS.Models.MasterFile
 {
@@ -28,7 +29,7 @@ namespace IBS.Models.MasterFile
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Display(Name = "Edited By")]
         [Column(TypeName = "varchar(50)")]

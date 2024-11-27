@@ -276,7 +276,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 StationDto station = await MapStationToDTO(salesVM.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Station with code {salesVM.Header.StationCode} not found.");
 
                 salesVM.Header.PostedBy = postedBy;
-                salesVM.Header.PostedDate = DateTime.Now;
+                salesVM.Header.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 var journals = new List<MobilityGeneralLedger>();
                 var inventories = new List<MobilityInventory>();
@@ -630,7 +630,7 @@ namespace IBS.DataAccess.Repository.Mobility
             if (_db.ChangeTracker.HasChanges())
             {
                 existingSalesHeader.EditedBy = model.EditedBy;
-                existingSalesHeader.EditedDate = DateTime.Now;
+                existingSalesHeader.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else
@@ -839,7 +839,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 {
                     hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
 
-                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
+                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.UtcNow)
                         ? record.INV_DATE.AddDays(-1)
                         : record.INV_DATE;
 
@@ -887,7 +887,7 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 if (!existingNozdownSet.Contains(record.xSTAMP))
                 {
-                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.Now)
+                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.UtcNow)
                         ? record.INV_DATE.AddDays(-1)
                         : record.INV_DATE;
 
@@ -939,7 +939,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     Module = "Cashier Report",
                     OriginalValue = change.Value.OriginalValue,
                     AdjustedValue = change.Value.NewValue,
-                    TimeStamp = DateTime.Now,
+                    TimeStamp = DateTimeHelper.GetCurrentPhilippineTime(),
                     ModifiedBy = modifiedBy
                 };
                 await _db.MobilityLogReports.AddAsync(logReport, cancellationToken);

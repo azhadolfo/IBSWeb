@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Utility;
 
 namespace IBS.Models.Mobility.MasterFile
 {
@@ -39,7 +40,7 @@ namespace IBS.Models.Mobility.MasterFile
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Display(Name = "Edited By")]
         [Column(TypeName = "varchar(50)")]

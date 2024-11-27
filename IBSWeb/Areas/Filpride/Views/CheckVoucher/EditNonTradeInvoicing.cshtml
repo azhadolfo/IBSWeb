@@ -4,7 +4,7 @@
     ViewData["Title"] = "Edit Non Trade Invoicing";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<partial name="_Notification">
+<partial name="_Notification"/>
     <div class="card shadow border-0 mt-4">
         <div class="card-header bg-secondary bg-gradient ml-0 py-3">
             <div class="row">
@@ -73,26 +73,26 @@
                         </button>
                         <table class="table">
                             <thead>
-                                <tr>
-                                    <th class="w-50">Account No.</th>
-                                    <th class="w-25">
-                                        Debit
-                                    </th>
-                                    <th class="w-25">
-                                        Credit
-                                    </th>
-                                    <th></th>
-                                </tr>
+                            <tr>
+                                <th class="w-50">Account No.</th>
+                                <th class="w-25">
+                                    Debit
+                                </th>
+                                <th class="w-25">
+                                    Credit
+                                </th>
+                                <th></th>
+                            </tr>
                             </thead>
                             <tbody id="accountingEntriesBody" class="defaultEntry">
                             </tbody>
                             <tbody>
-                                <tr>
-                                    <td class="text-end">TOTAL:</td>
-                                    <td class="totalDebit">0.0000</td>
-                                    <td class="totalCredit">0.0000</td>
-                                    <td></td>
-                                </tr>
+                            <tr>
+                                <td class="text-end">TOTAL:</td>
+                                <td class="totalDebit">0.0000</td>
+                                <td class="totalCredit">0.0000</td>
+                                <td></td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
@@ -109,7 +109,6 @@
             </form>
         </div>
     </div>
-
     <!-- Modal -->
     <div class="modal fade" id="AddAccEntry" data-bs-backdrop="static" tabindex="-1" aria-labelledby="AddAccEntryLabel" aria-hidden="true">
         <div class="modal-dialog">

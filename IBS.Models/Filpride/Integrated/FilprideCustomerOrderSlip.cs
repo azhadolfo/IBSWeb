@@ -4,6 +4,7 @@ using IBS.Models.MasterFile;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Utility;
 
 namespace IBS.Models.Filpride.Integrated
 {
@@ -166,7 +167,7 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "varchar(100)")]
         public string? CreatedBy { get; set; }
 
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Column(TypeName = "varchar(100)")]
         public string? EditedBy { get; set; }

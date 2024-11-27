@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using IBS.Utility;
 
 namespace IBS.Models
 {
@@ -22,7 +23,7 @@ namespace IBS.Models
 
         public LogMessage(string logLevel, string loggerName, string message)
         {
-            TimeStamp = DateTime.Now;
+            TimeStamp = DateTimeHelper.GetCurrentPhilippineTime();
             LogLevel = logLevel;
             LoggerName = loggerName;
             Message = message;
