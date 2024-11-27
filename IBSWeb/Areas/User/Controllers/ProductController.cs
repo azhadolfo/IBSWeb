@@ -1,8 +1,14 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MasterFile;
+using IBS.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using OfficeOpenXml;
+using System.Threading;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -16,18 +22,31 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        public ProductController(IUnitOfWork unitOfWork, ILogger<ProductController> logger, UserManager<IdentityUser> userManager)
+        private readonly ApplicationDbContext _dbContext;
+
+        public ProductController(IUnitOfWork unitOfWork, ILogger<ProductController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _userManager = userManager;
+            _dbContext = dbContext;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? view)
         {
             IEnumerable<Product> products = await _unitOfWork
                 .Product
                 .GetAllAsync();
+
+            if (view == nameof(DynamicView.Product))
+            {
+                IEnumerable<Product> exportProducts = await _unitOfWork
+                .Product
+                .GetAllAsync();
+
+                return View("ExportIndex", exportProducts);
+            }
+
             return View(products);
         }
 
@@ -189,5 +208,66 @@ namespace IBSWeb.Areas.User.Controllers
 
             return NotFound();
         }
+
+        [HttpGet]
+        public IActionResult GetAllProductIds()
+        {
+            var productIds = _dbContext.Products
+                                     .Select(p => p.ProductId) // Assuming Id is the primary key
+                                     .ToList();
+
+            return Json(productIds);
+        }
+
+        //Download as .xlsx file.(Export)
+        #region -- export xlsx record --
+
+        [HttpPost]
+        public async Task<IActionResult> Export(string selectedRecord)
+        {
+            if (string.IsNullOrEmpty(selectedRecord))
+            {
+                // Handle the case where no invoices are selected
+                return RedirectToAction(nameof(Index));
+            }
+
+            var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
+
+            var selectedList = await _unitOfWork.Product
+                .GetAllAsync(p => recordIds.Contains(p.ProductId));
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("Product");
+
+            worksheet.Cells["A1"].Value = "ProductCode";
+            worksheet.Cells["B1"].Value = "ProductName";
+            worksheet.Cells["C1"].Value = "ProductUnit";
+            worksheet.Cells["D1"].Value = "CreatedBy";
+            worksheet.Cells["E1"].Value = "CreatedDate";
+            worksheet.Cells["F1"].Value = "OriginalProductId";
+
+            int row = 2;
+
+            foreach (var item in selectedList)
+            {
+                worksheet.Cells[row, 1].Value = item.ProductCode;
+                worksheet.Cells[row, 2].Value = item.ProductName;
+                worksheet.Cells[row, 3].Value = item.ProductUnit;
+                worksheet.Cells[row, 4].Value = item.CreatedBy;
+                worksheet.Cells[row, 5].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 6].Value = item.ProductId;
+
+                row++;
+            }
+
+            // Convert the Excel package to a byte array
+            var excelBytes = await package.GetAsByteArrayAsync();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ProductList.xlsx");
+        }
+
+        #endregion -- export xlsx record --
     }
 }
