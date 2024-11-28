@@ -171,7 +171,7 @@
                                         <input type="checkbox" asp-for="AccountingEntries[1].Vatable" class="form-check-input vatable" />
                                     </td>
                                     <td>
-                                        <select asp-for="AccountingEntries[1].TaxPercentage" class="form-select form-select-sm taxable">
+                                        <select asp-for="AccountingEntries[1].TaxPercentage" class="form-select form-select-sm taxable default-tax-percentage">
                                             <option value="" selected disabled>%</option>
                                             <option value="0">0%</option>
                                             <option value="0.01">1%</option>
@@ -307,8 +307,6 @@
             const taxAmountField = row.querySelector(".tax-amount");
             const vatAmountField = row.querySelector(".vat-amount");
             const netOfVatField = row.querySelector(".net-of-vat");
-            
-            console.log(vatAmountField.value);
 
             const amount = parseFloat(amountField.value) || 0;
             const taxPercentage = parseFloat(row.querySelector(".taxable").value) || 0;  // Get tax percentage from dropdown
@@ -416,6 +414,15 @@
 
                     // Set the default expense account in the dropdown
                     $(".default-expense").val(data.defaultExpense).change(); // Set the selected account
+                    
+                    // Set the tax percentage dropdown
+                    const taxDropdown = $(".default-tax-percentage");
+                    taxDropdown.val(data.taxPercent).change();
+
+                    // Recalculate tax and VAT
+                    const row = taxDropdown.closest("tr")[0]; // Find the relevant row
+                    console.log(row);
+                    calculateTaxAndVat(row); // Call the calculation function
                     
                 });
             });
