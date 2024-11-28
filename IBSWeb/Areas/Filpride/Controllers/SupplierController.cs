@@ -98,11 +98,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(model);
                 }
 
-                if (model.WithholdingTaxtitle != null && model.WithholdingTaxPercent != 0)
-                {
-                    model.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
-                }
-
                 try
                 {
                     if (registration != null && registration.Length > 0)
@@ -198,11 +193,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "documents", companyClaims, "Proof of Exemption", model.SupplierName);
 
                         model.ProofOfExemptionFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(document, localPath, cancellationToken);
-                    }
-
-                    if (model.WithholdingTaxtitle != null && model.WithholdingTaxPercent != 0)
-                    {
-                        model.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
                     }
 
                     model.EditedBy = _userManager.GetUserName(User);

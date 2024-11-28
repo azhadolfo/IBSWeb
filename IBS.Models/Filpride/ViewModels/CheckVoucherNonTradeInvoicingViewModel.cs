@@ -1,6 +1,7 @@
 ﻿using IBS.Models.Filpride.AccountsPayable;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace IBS.Models.Filpride.ViewModels
 {
@@ -35,13 +36,13 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem>? ChartOfAccounts { get; set; }
 
-        public string[] AccountNumber { get; set; }
+        public string[] AccountNumber { get; set; } = [];
 
-        public string[] AccountTitle { get; set; }
+        public string[] AccountTitle { get; set; } = [];
 
-        public decimal[] Debit { get; set; }
+        public decimal[] Debit { get; set; } = [];
 
-        public decimal[] Credit { get; set; }
+        public decimal[] Credit { get; set; } = [];
 
         public List<SelectListItem>? DefaultExpenses { get; set; }
 
@@ -62,5 +63,8 @@ namespace IBS.Models.Filpride.ViewModels
         public Dictionary<int, string> AccountNumberDictionary { get; set; } = new Dictionary<int, string>();
 
         public FilprideCheckVoucherHeader? Headers { get; set; }
+
+        public List<AccountingEntryViewModel> AccountingEntries { get; set; }
+        
     }
 }
