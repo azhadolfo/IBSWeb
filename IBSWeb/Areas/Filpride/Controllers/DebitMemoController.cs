@@ -1084,7 +1084,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 9].Value = item.Amount;
                 worksheet.Cells[row, 10].Value = item.CurrentAndPreviousAmount;
                 worksheet.Cells[row, 11].Value = item.UnearnedAmount;
-                worksheet.Cells[row, 12].Value = item.ServiceInvoice.ServiceId;
+                worksheet.Cells[row, 12].Value = item.ServiceInvoice?.ServiceId;
                 worksheet.Cells[row, 13].Value = item.CreatedBy;
                 worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
                 worksheet.Cells[row, 15].Value = item.CancellationRemarks;
