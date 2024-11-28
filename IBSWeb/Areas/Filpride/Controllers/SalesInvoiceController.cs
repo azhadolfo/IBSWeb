@@ -775,7 +775,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
             var selectedList = await _unitOfWork.FilprideSalesInvoice
-                .GetAllAsync(invoice => recordIds.Contains(invoice.SalesInvoiceId));
+                .GetAllAsync(invoice => recordIds.Contains(invoice.SalesInvoiceId) && invoice.Type == nameof(DocumentType.Documented));
 
             // Create the Excel package
             using var package = new ExcelPackage();

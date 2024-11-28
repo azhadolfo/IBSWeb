@@ -572,7 +572,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected records from the database
             var selectedList = await _dbContext.FilprideReceivingReports
-                .Where(rr => recordIds.Contains(rr.ReceivingReportId))
+                .Where(rr => recordIds.Contains(rr.ReceivingReportId) && rr.Type == nameof(DocumentType.Documented))
                 .OrderBy(rr => rr.ReceivingReportNo)
                 .ToListAsync();
 

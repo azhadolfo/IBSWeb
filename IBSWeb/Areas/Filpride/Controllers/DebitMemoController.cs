@@ -1038,7 +1038,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideDebitMemos
-                .Where(dm => recordIds.Contains(dm.DebitMemoId))
+                .Where(dm => recordIds.Contains(dm.DebitMemoId) && dm.Type == nameof(DocumentType.Documented))
                 .Include(dm => dm.ServiceInvoice)
                 .ThenInclude(sv => sv.Service)
                 .OrderBy(dm => dm.DebitMemoNo)
@@ -1088,7 +1088,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 13].Value = item.CreatedBy;
                 worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
                 worksheet.Cells[row, 15].Value = item.CancellationRemarks;
-                worksheet.Cells[row, 161].Value = item.SalesInvoiceId;
+                worksheet.Cells[row, 16].Value = item.SalesInvoiceId;
                 worksheet.Cells[row, 17].Value = item.DebitMemoNo;
                 worksheet.Cells[row, 18].Value = item.ServiceInvoiceId;
                 worksheet.Cells[row, 19].Value = item.DebitMemoId;
