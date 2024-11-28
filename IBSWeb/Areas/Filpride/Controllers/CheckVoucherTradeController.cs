@@ -1100,7 +1100,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Retrieve the selected invoices from the database
                 var selectedList = await _unitOfWork.FilprideCheckVoucher
-                    .GetAllAsync(cvh => recordIds.Contains(cvh.CheckVoucherHeaderId));
+                    .GetAllAsync(cvh => recordIds.Contains(cvh.CheckVoucherHeaderId) && cvh.Type == nameof(DocumentType.Documented));
 
                 // Create the Excel package
                 using (var package = new ExcelPackage())
