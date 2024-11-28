@@ -49,7 +49,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher
-                    .GetAllAsync(cv => cv.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(cv => cv.Company == companyClaims && && cv.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 return View("ExportIndex", checkVoucherHeaders);
             }
