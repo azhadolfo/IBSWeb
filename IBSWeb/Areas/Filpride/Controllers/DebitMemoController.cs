@@ -47,7 +47,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var debitMemos = await _unitOfWork.FilprideDebitMemo
-                    .GetAllAsync(dm => dm.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(dm => dm.Company == companyClaims && dm.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 return View("ExportIndex", debitMemos);
             }

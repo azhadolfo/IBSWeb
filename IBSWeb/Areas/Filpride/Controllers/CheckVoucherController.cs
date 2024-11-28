@@ -49,7 +49,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher
-                    .GetAllAsync(cv => cv.Company == companyClaims && && cv.Type == nameof(DocumentType.Documented), cancellationToken);
+                    .GetAllAsync(cv => cv.Company == companyClaims && cv.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 return View("ExportIndex", checkVoucherHeaders);
             }
@@ -2134,6 +2134,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells["C1"].Value = "TransactionNo";
                     worksheet2.Cells["D1"].Value = "Debit";
                     worksheet2.Cells["E1"].Value = "Credit";
+                    worksheet2.Cells["F1"].Value = "CVHeaderId";
+                    worksheet2.Cells["G1"].Value = "OriginalDocumentId";
 
                     int row = 2;
 
@@ -2205,6 +2207,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet2.Cells[cvdRow, 3].Value = item.TransactionNo;
                         worksheet2.Cells[cvdRow, 4].Value = item.Debit;
                         worksheet2.Cells[cvdRow, 5].Value = item.Credit;
+                        worksheet2.Cells[cvdRow, 6].Value = item.CheckVoucherHeaderId;
+                        worksheet2.Cells[cvdRow, 7].Value = item.CheckVoucherDetailId;
 
                         cvdRow++;
                     }

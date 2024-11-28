@@ -63,7 +63,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var creditMemos = await _unitOfWork.FilprideCreditMemo
-                    .GetAllAsync(cm => cm.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(cm => cm.Company == companyClaims && cm.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))

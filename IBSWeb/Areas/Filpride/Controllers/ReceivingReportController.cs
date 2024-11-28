@@ -46,7 +46,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var receivingReports = await _unitOfWork.FilprideReceivingReport
-                    .GetAllAsync(rr => rr.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(rr => rr.Company == companyClaims && rr.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 return View("ExportIndex", receivingReports);
             }
