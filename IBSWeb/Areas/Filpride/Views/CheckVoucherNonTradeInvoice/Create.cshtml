@@ -119,7 +119,7 @@
                                         <input type="number" asp-for="AccountingEntries[0].Amount" class="form-control form-control-sm text-end amount" value="0" />
                                     </td>
                                     <td class="text-center">
-                                        <input type="checkbox" asp-for="AccountingEntries[0].Vatable" class="form-check-input vatable" />
+                                        <input type="checkbox" asp-for="AccountingEntries[0].Vatable" class="form-check-input vatable default-vatable" />
                                     </td>
                                     <td>
                                         <select asp-for="AccountingEntries[0].TaxPercentage" class="form-select form-select-sm taxable">
@@ -148,7 +148,7 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <select class="form-select form-select-sm chart-of-accounts">
+                                        <select class="form-select form-select-sm chart-of-accounts" disabled>
                                             <option value="">-- Select Account --</option>
                                             @foreach (var account in Model.ChartOfAccounts)
                                             {
@@ -361,7 +361,7 @@
                     <td class="px-2">
                         <select name="AccountingEntries[${rowCount}].TaxPercentage" class="form-select form-select-sm taxable" required>
                             <option value="" selected disabled>%</option>
-                            <option value="0">0% (No Tax)</option>
+                            <option value="0">0%</option>
                             <option value="0.01">1%</option>
                             <option value="0.02">2%</option>
                             <option value="0.05">5%</option>
@@ -421,8 +421,16 @@
 
                     // Recalculate tax and VAT
                     const row = taxDropdown.closest("tr")[0]; // Find the relevant row
-                    console.log(row);
                     calculateTaxAndVat(row); // Call the calculation function
+                    
+                    
+                    // Handle the "Vatable" checkbox
+                    const vatableCheckbox = $(".default-vatable");
+                    vatableCheckbox.prop("checked", data.vatable); // Check or uncheck based on the supplier
+                    if (data.vatable) {
+                        const row = vatableCheckbox.closest("tr")[0]; // Find the relevant row
+                        calculateTaxAndVat(row); // Call the calculation function
+                    }
                     
                 });
             });
@@ -504,8 +512,5 @@
         // Initial calculation on page load
         $(document).ready(calculateTotals);
     </script>
-
-
-
 }
 
