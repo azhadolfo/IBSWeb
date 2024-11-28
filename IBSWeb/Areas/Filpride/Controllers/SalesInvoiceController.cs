@@ -46,7 +46,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var salesInvoices = await _unitOfWork.FilprideSalesInvoice
-                    .GetAllAsync(si => si.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(si => si.Company == companyClaims && si.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 return View("ExportIndex", salesInvoices);
             }
@@ -176,7 +176,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                         model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                        await transaction.RollbackAsync(cancellationToken);
                         TempData["error"] = "Please input below or exact amount based on the Sales Invoice";
                         return View(model);
                     }
@@ -185,6 +184,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
