@@ -772,7 +772,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideJournalVoucherHeaders
-                .Where(jv => recordIds.Contains(jv.JournalVoucherHeaderId))
+                .Where(jv => recordIds.Contains(jv.JournalVoucherHeaderId) && jv.Type == nameof(DocumentType.Documented))
                 .OrderBy(jv => jv.JournalVoucherHeaderNo)
                 .ToListAsync();
 

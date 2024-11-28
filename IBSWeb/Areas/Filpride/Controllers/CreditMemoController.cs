@@ -1066,7 +1066,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideCreditMemos
-                .Where(cm => recordIds.Contains(cm.CreditMemoId))
+                .Where(cm => recordIds.Contains(cm.CreditMemoId) && cm.Type == nameof(DocumentType.Documented))
                 .Include(cm => cm.ServiceInvoice)
                 .ThenInclude(sv => sv.Service)
                 .OrderBy(cm => cm.CreditMemoNo)
