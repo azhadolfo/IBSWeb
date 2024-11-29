@@ -264,7 +264,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 3].Value = item.CustomerTin;
                 worksheet.Cells[row, 4].Value = item.BusinessStyle;
                 worksheet.Cells[row, 5].Value = item.CustomerTerms;
-                worksheet.Cells[row, 6].Value = item.CustomerType;
+                worksheet.Cells[row, 6].Value = item.VatType;
                 worksheet.Cells[row, 7].Value = item.WithHoldingVat;
                 worksheet.Cells[row, 8].Value = item.WithHoldingTax;
                 worksheet.Cells[row, 9].Value = item.CreatedBy;
