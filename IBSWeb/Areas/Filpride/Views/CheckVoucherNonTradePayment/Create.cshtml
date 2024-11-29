@@ -9,7 +9,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Create Non Trade Payment</h2>
+                <h2 class="text-white py-2">Create Non-Trade Payment</h2>
             </div>
         </div>
     </div>
@@ -199,24 +199,25 @@
 
         $("#CvId").change(function () {
             cvId = $(this).val();
-            getSuplierDetails(cvId)
+            getSupplierDetails(cvId)
         });
 
         $(document).ready(function () {
-            getSuplierDetails(cvId)
+            getSupplierDetails(cvId)
         });
 
-        function getSuplierDetails(cvId) {
+        function getSupplierDetails(cvId) {
             if (cvId !== "") {
                 $.ajax({
-                    url: '@Url.Action("GetCheckVoucherDetails", "CheckVoucher", new { area = "Filpride" })', // Replace with the actual controller and action names
+                    url: '@Url.Action("GetCheckVoucherInvoiceDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })', // Replace with the actual controller and action names
                     method: "GET",
-                    data: { cvId: cvId },
+                    data: { invoiceId: cvId },
                     success: function (data) {
                         if (data) {
                             $("#Payee").val(data.payee);
                             $("#PayeeAddress").val(data.payeeAddress);
                             $("#PayeeTin").val(data.payeeTin);
+                            $("#Particulars").val(data.particulars);
                             $("#Total").val(data.total);
                             $(".cib-credit").val(data.total);
                         }
@@ -229,6 +230,7 @@
                 $("#Payee").val("");
                 $("#PayeeAddress").val("");
                 $("#PayeeTin").val("");
+                $("#Particulars").val("");
                 $("#Total").val("");
             }
         }

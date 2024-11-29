@@ -11,12 +11,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    public class CheckVoucherNonTradePayment : Controller
+    public class CheckVoucherNonTradePaymentController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
 
@@ -26,7 +27,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public CheckVoucherNonTradePayment(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment)
+        public CheckVoucherNonTradePaymentController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
@@ -1349,13 +1350,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .FindAsync(suppId, cancellationToken);
 
             var credit = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(cvd => cvd.SupplierId == suppId && cvd.CheckVoucherHeaderId == cvId)
-                    .Include(cvd => cvd.CheckVoucherHeader)
-                    .Select(cvd => cvd.Credit - cvd.AmountPaid)
-                    .FirstOrDefaultAsync(cancellationToken);
+                .Where(cvd => cvd.SupplierId == suppId && cvd.CheckVoucherHeaderId == cvId)
+                .Include(cvd => cvd.CheckVoucherHeader)
+                .Select(cvd => new 
+                { 
+                    RemainingCredit = cvd.Credit - cvd.AmountPaid, 
+                    cvd.CheckVoucherHeader!.Particulars 
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
 
             // Ensure that cv is not null before proceeding
-            if (supplier == null || credit == 0)
+            if (supplier == null || credit == null)
             {
                 return Json(null);
             }
@@ -1365,7 +1371,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Payee = supplier.SupplierName,
                 PayeeAddress = supplier.SupplierAddress,
                 PayeeTin = supplier.SupplierTin,
-                Total = credit
+                credit.Particulars,
+                Total = credit.RemainingCredit,
             });
         }
 
@@ -1412,13 +1419,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .FindAsync(suppId, cancellationToken);
 
             var credit = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(cvd => cvd.SupplierId == suppId && cvd.CheckVoucherHeaderId == cvId)
-                    .Include(cvd => cvd.CheckVoucherHeader)
-                    .Select(cvd => cvd.Credit - cvd.AmountPaid)
-                    .FirstOrDefaultAsync(cancellationToken);
+                .Where(cvd => cvd.SupplierId == suppId && cvd.CheckVoucherHeaderId == cvId)
+                .Include(cvd => cvd.CheckVoucherHeader)
+                .Select(cvd => new 
+                { 
+                    RemainingCredit = cvd.Credit - cvd.AmountPaid, 
+                    Particulars = cvd.CheckVoucherHeader.Particulars 
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
 
             // Ensure that cv is not null before proceeding
-            if (supplier == null || credit == 0)
+            if (supplier == null || credit == null)
             {
                 return Json(null);
             }
@@ -1428,8 +1440,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Payee = supplier.SupplierName,
                 PayeeAddress = supplier.SupplierAddress,
                 PayeeTin = supplier.SupplierTin,
-                Total = credit
+                credit.Particulars,
+                Total = credit.RemainingCredit
             });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCheckVoucherInvoiceDetails(int? invoiceId, CancellationToken cancellationToken)
+        {
+            if (invoiceId == null)
+            {
+                return Json(null);
+            }
+
+            var invoice = await _dbContext.FilprideCheckVoucherHeaders
+                .Include(i => i.Supplier)
+                .FirstOrDefaultAsync(i => i.CheckVoucherHeaderId == invoiceId, cancellationToken);
+
+            if (invoice != null)
+            {
+                return Json(new
+                {
+                    Payee = invoice.Supplier.SupplierName,
+                    PayeeAddress = invoice.Supplier.SupplierAddress,
+                    PayeeTin = invoice.Supplier.SupplierTin,
+                    invoice.Particulars,
+                    Total = invoice.InvoiceAmount
+                });
+            }
+
+            return Json(null);
         }
     }
 }
