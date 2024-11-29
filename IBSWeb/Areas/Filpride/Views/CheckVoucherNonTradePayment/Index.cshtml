@@ -181,7 +181,7 @@
                         "data": "checkVoucherHeaderId",
                         "orderable": false,
                         "render": function (data, type, row) {
-                            var dropdown = `<div class="dropdown" style="${row.checkVoucherHeader.voidedBy != null || row.checkVoucherHeader.canceledBy != null ? 'display:none;' : ''}">
+                            return `<div class="dropdown" style="${row.checkVoucherHeader.voidedBy != null || row.checkVoucherHeader.canceledBy != null ? 'display:none;' : ''}">
                                             <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                                 Actions
                                             </button>
@@ -200,7 +200,6 @@
                                                 `}
                                             </ul>
                                         </div>`;
-                            return dropdown;
                         }
                     }
                 ],

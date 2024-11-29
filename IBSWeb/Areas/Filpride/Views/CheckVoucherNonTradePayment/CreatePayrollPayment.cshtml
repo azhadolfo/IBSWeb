@@ -9,7 +9,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Create Non Trade Payment</h2>
+                <h2 class="text-white py-2">Create Non-Trade Payment</h2>
             </div>
         </div>
     </div>
@@ -311,10 +311,10 @@
         $(document).ready(function () {
             var cvId = @Html.Raw(Json.Serialize(Model.CvId))
             var suppId = @Html.Raw(Json.Serialize(Model.MultipleSupplierId))
-            getSuplierDetails(cvId, suppId)
+            getSupplierDetails(cvId, suppId)
         });
 
-        function getSuplierDetails(cvId, suppId) {
+        function getSupplierDetails(cvId, suppId) {
             if (suppId !== 0 && cvId !== "") {
                 $.ajax({
                     url: '@Url.Action("GetMultipleSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
@@ -326,6 +326,7 @@
                             $("#Payee").val(data.payee);
                             $("#PayeeAddress").val(data.payeeAddress);
                             $("#PayeeTin").val(data.payeeTin);
+                            $("#Particulars").val(data.particulars);
                             $("#Total").val(data.total);
                             $(".cib-credit").val(data.total);
 
@@ -361,10 +362,10 @@
         // When CV is selected
         $("#CvId").change(function () {
             cvId = $(this).val();
-            getSupliers(cvId)
+            getSuppliers(cvId)
         });
 
-        function getSupliers(cvId) {
+        function getSuppliers(cvId) {
             if (cvId !== "") {
                 $.ajax({
                     url: '@Url.Action("GetMultipleSupplier", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
@@ -392,10 +393,10 @@
 
         $("#MultipleSupplierId").change(function () {
             var suppId = $(this).val();
-            suplierDetails(suppId, cvId)
+            supplierDetails(suppId, cvId)
         });
 
-        function suplierDetails(suppId, cvId) {
+        function supplierDetails(suppId, cvId) {
             if (suppId !== "") {
                 $.ajax({
                     url: '@Url.Action("MultipleSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
@@ -407,6 +408,7 @@
                             $("#Payee").val(data.payee);
                             $("#PayeeAddress").val(data.payeeAddress);
                             $("#PayeeTin").val(data.payeeTin);
+                            $("#Particulars").val(data.particulars);
                             $("#Total").val(data.total);
                             $(".cib-credit").val(data.total);
 
