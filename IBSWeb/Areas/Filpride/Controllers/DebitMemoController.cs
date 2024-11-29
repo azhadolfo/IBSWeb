@@ -311,7 +311,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTime.UtcNow;
+                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        model.Status = nameof(Status.Posted);
 
                         if (model.SalesInvoiceId != null)
                         {
@@ -795,7 +796,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.UtcNow;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        model.Status = nameof(Status.Voided);
 
                         await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.DebitMemoNo);
                         await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo);
@@ -834,8 +836,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.UtcNow;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.CancellationRemarks = cancellationRemarks;
+                    model.Status = nameof(Status.Canceled);
 
                     #region --Audit Trail Recording
 
@@ -936,8 +939,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     .FilprideDebitMemos
                                     .FirstOrDefaultAsync(dm => dm.DebitMemoId == model.DebitMemoId);
 
-                    model.CreatedBy = _userManager.GetUserName(this.User);
-
                     if (model.Source == "Sales Invoice")
                     {
                         model.ServiceInvoiceId = null;
@@ -974,7 +975,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     model.EditedBy = _userManager.GetUserName(User);
-                    model.EditedDate = DateTime.UtcNow;
+                    model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     #region --Audit Trail Recording
 
