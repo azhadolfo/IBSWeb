@@ -1,10 +1,8 @@
 ﻿@model IEnumerable<FilprideCheckVoucherDetail>
-@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
 @{
     ViewData["Title"] = "Check Voucher Non Trade Invoice";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var department = ViewData["Department"].ToString();
 }
 
 <div class="card shadow border-0 mt-4">
@@ -23,9 +21,12 @@
                 <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Create" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Create
                 </a>
-                <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="CreatePayrollInvoice" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create Payroll Invoice
-                </a>
+                @if (department == SD.Department_HRAndAdminOrLegal)
+                {
+                    <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="CreatePayrollInvoice" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create Payroll Invoice
+                    </a>
+                }
             </div>
         </div>
         <table class="table table-bordered table-hover" id="paginatedTable">
