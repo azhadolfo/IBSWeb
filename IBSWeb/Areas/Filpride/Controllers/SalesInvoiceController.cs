@@ -46,7 +46,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var salesInvoices = await _unitOfWork.FilprideSalesInvoice
-                    .GetAllAsync(si => si.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(si => si.Company == companyClaims && si.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 return View("ExportIndex", salesInvoices);
             }
@@ -614,7 +614,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (hasAlreadyBeenUsed)
                 {
-                    TempData["error"] = "Please note that this record has already been utilized in a sales invoice. As a result, voiding it is not permitted.";
+                    TempData["error"] = "Please note that this record has already been utilized in collection receipts, debit or credit memo. As a result, voiding it is not permitted.";
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -773,7 +773,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
             var selectedList = await _unitOfWork.FilprideSalesInvoice
-                .GetAllAsync(invoice => recordIds.Contains(invoice.SalesInvoiceId));
+                .GetAllAsync(invoice => recordIds.Contains(invoice.SalesInvoiceId) && invoice.Type == nameof(DocumentType.Documented));
 
             // Create the Excel package
             using var package = new ExcelPackage();

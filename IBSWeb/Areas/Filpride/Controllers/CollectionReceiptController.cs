@@ -50,7 +50,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
-                    .GetAllAsync(sv => sv.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 return View("ExportIndex", collectionReceipts);
             }
@@ -1898,7 +1898,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideCollectionReceipts
-                .Where(cr => recordIds.Contains(cr.CollectionReceiptId))
+                .Where(cr => recordIds.Contains(cr.CollectionReceiptId) && cr.Type == nameof(DocumentType.Documented))
                 .OrderBy(cr => cr.CollectionReceiptNo)
                 .ToListAsync();
 

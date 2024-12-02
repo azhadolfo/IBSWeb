@@ -2524,7 +2524,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(SalesReport));
             }
             var totalQuantity = salesReport.Sum(s => s.Quantity);
-            var totalFreight = salesReport.Sum(s => s.DeliveryReceipt?.Freight);
             var totalAmount = salesReport.Sum(s => s.Amount);
 
             // Create the Excel package
@@ -2548,18 +2547,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             worksheet.Cells["A7"].Value = "Date";
             worksheet.Cells["B7"].Value = "Customer Name";
-            worksheet.Cells["C7"].Value = "COS No.";
-            worksheet.Cells["D7"].Value = "OTC COS No.";
-            worksheet.Cells["E7"].Value = "DR No.";
-            worksheet.Cells["F7"].Value = "OTC DR No.";
-            worksheet.Cells["G7"].Value = "Items";
-            worksheet.Cells["H7"].Value = "Quantity";
-            worksheet.Cells["I7"].Value = "Freight";
-            worksheet.Cells["J7"].Value = "Total";
-            worksheet.Cells["K7"].Value = "Remarks";
+            worksheet.Cells["C7"].Value = "COS #";
+            worksheet.Cells["D7"].Value = "OTC COS #";
+            worksheet.Cells["E7"].Value = "DR #";
+            worksheet.Cells["F7"].Value = "OTC DR #";
+            worksheet.Cells["G7"].Value = "PO #";
+            worksheet.Cells["H7"].Value = "IS PO #";
+            worksheet.Cells["I7"].Value = "Delivery Option";
+            worksheet.Cells["J7"].Value = "Items";
+            worksheet.Cells["K7"].Value = "Quantity";
+            worksheet.Cells["L7"].Value = "Freight";
+            worksheet.Cells["M7"].Value = "Total";
+            worksheet.Cells["N7"].Value = "Remarks";
 
             // Apply styling to the header row
-            using (var range = worksheet.Cells["A7:K7"])
+            using (var range = worksheet.Cells["A7:N7"])
             {
                 range.Style.Font.Bold = true;
                 range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -2574,45 +2576,54 @@ namespace IBSWeb.Areas.Filpride.Controllers
             int row = 8;
             string currencyFormat = "#,##0.0000";
 
+            var totalFreight = 0m;
             foreach (var si in salesReport)
             {
+                var quantity = si.Quantity;
+                var freight = (si.DeliveryReceipt?.Freight ?? 0m) * quantity;
+                
                 worksheet.Cells[row, 1].Value = si.TransactionDate;
                 worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
                 worksheet.Cells[row, 3].Value = si.CustomerOrderSlip?.CustomerOrderSlipNo;
                 worksheet.Cells[row, 4].Value = si.CustomerOrderSlip?.OldCosNo;
                 worksheet.Cells[row, 5].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
                 worksheet.Cells[row, 6].Value = si.DeliveryReceipt?.ManualDrNo;
-                worksheet.Cells[row, 7].Value = si.Product?.ProductName;
-                worksheet.Cells[row, 8].Value = si.Quantity;
-                worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.Freight;
-                worksheet.Cells[row, 10].Value = si.Amount;
-                worksheet.Cells[row, 11].Value = si.Remarks;
+                worksheet.Cells[row, 7].Value = si.DeliveryReceipt?.PurchaseOrder?.PurchaseOrderNo;
+                worksheet.Cells[row, 8].Value = si.DeliveryReceipt?.PurchaseOrder?.OldPoNo;
+                worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
+                worksheet.Cells[row, 10].Value = si.Product?.ProductName;
+                worksheet.Cells[row, 11].Value = si.Quantity;
+                worksheet.Cells[row, 12].Value = freight;
+                worksheet.Cells[row, 13].Value = si.Amount;
+                worksheet.Cells[row, 14].Value = si.Remarks;
 
-                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
 
                 row++;
+                
+                totalFreight += freight;
             }
 
-            worksheet.Cells[row, 7].Value = "Total ";
-            worksheet.Cells[row, 8].Value = totalQuantity;
-            worksheet.Cells[row, 9].Value = totalFreight;
-            worksheet.Cells[row, 10].Value = totalAmount;
+            worksheet.Cells[row, 10].Value = "Total ";
+            worksheet.Cells[row, 11].Value = totalQuantity;
+            worksheet.Cells[row, 12].Value = totalFreight;
+            worksheet.Cells[row, 13].Value = totalAmount;
 
-            worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
 
             // Apply style to subtotal row
-            using (var range = worksheet.Cells[row, 1, row, 11])
+            using (var range = worksheet.Cells[row, 1, row, 14])
             {
                 range.Style.Font.Bold = true;
                 range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                 range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
             }
 
-            using (var range = worksheet.Cells[row, 7, row, 10])
+            using (var range = worksheet.Cells[row, 10, row, 14])
             {
                 range.Style.Font.Bold = true;
                 range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
@@ -2666,8 +2677,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["B3"].Value = $"{extractedBy}";
             worksheet.Cells["B4"].Value = $"{companyClaims}";
 
-            worksheet.Cells["A7"].Value = "Inventory PO No.";
-            worksheet.Cells["B7"].Value = "PO No.";
+            worksheet.Cells["A7"].Value = "PO #";
+            worksheet.Cells["B7"].Value = "IS PO #";
             worksheet.Cells["C7"].Value = "Date";
             worksheet.Cells["D7"].Value = "Supplier";
             worksheet.Cells["E7"].Value = "Product";
@@ -2695,8 +2706,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var po in PurchaseOrderReport)
             {
-                worksheet.Cells[row, 1].Value = po.OldPoNo;
-                worksheet.Cells[row, 2].Value = po.PurchaseOrderNo;
+                worksheet.Cells[row, 1].Value = po.PurchaseOrderNo;
+                worksheet.Cells[row, 2].Value = po.OldPoNo;
                 worksheet.Cells[row, 3].Value = po.Date;
                 worksheet.Cells[row, 4].Value = po.Supplier?.SupplierName;
                 worksheet.Cells[row, 5].Value = po.Product?.ProductName;

@@ -47,7 +47,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var journalVoucherHeader = await _unitOfWork.FilprideJournalVoucher
-                    .GetAllAsync(jv => jv.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(jv => jv.Company == companyClaims && jv.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 return View("ExportIndex", journalVoucherHeader);
             }
@@ -772,7 +772,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideJournalVoucherHeaders
-                .Where(jv => recordIds.Contains(jv.JournalVoucherHeaderId))
+                .Where(jv => recordIds.Contains(jv.JournalVoucherHeaderId) && jv.Type == nameof(DocumentType.Documented))
                 .OrderBy(jv => jv.JournalVoucherHeaderNo)
                 .ToListAsync();
 

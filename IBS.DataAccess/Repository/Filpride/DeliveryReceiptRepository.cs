@@ -73,7 +73,10 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task UpdateAsync(DeliveryReceiptViewModel viewModel, CancellationToken cancellationToken = default)
         {
             var existingRecord = await GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
-
+            
+            var customerOrderSlip = await _db.FilprideCustomerOrderSlips
+                .FirstOrDefaultAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+            
             existingRecord.Date = viewModel.Date;
             existingRecord.EstimatedTimeOfArrival = viewModel.ETA;
             existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
@@ -88,6 +91,20 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Driver = viewModel.Driver;
             existingRecord.PlateNo = viewModel.PlateNo;
             existingRecord.HaulerId = viewModel.HaulerId;
+            
+            if (!customerOrderSlip.HasMultiplePO)
+            {
+                existingRecord.PurchaseOrderId = customerOrderSlip.PurchaseOrderId;
+            }
+            else
+            {
+                var selectedPo = await _db.FilprideCOSAppointedSuppliers
+                    .OrderBy(s => s.PurchaseOrderId)
+                    .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId && !s.IsAssignedToDR);
+
+                existingRecord.PurchaseOrderId = selectedPo.PurchaseOrderId;
+            }
+            
 
             if (_db.ChangeTracker.HasChanges())
             {

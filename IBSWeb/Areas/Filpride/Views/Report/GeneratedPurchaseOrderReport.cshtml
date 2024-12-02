@@ -57,8 +57,8 @@
         <table id="ledgerTable" class="table">
             <thead>
                 <tr class="table-primary">
-                    <th>Inventory PO No.</th>
-                    <th>PO No.</th>
+                    <th>PO #</th>
+                    <th>IS PO #</th>
                     <th>@Html.DisplayNameFor(model => model.Date)</th>
                     <th>Supplier</th>
                     <th>Product</th>
@@ -74,8 +74,8 @@
                 @foreach (var purchase in Model)
                 {
                     <tr class="align-text-bottom">
-                        <td>@Html.DisplayFor(model => purchase.OldPoNo)</td>
                         <td>@Html.DisplayFor(model => purchase.PurchaseOrderNo)</td>
+                        <td>@Html.DisplayFor(model => purchase.OldPoNo)</td>
                         <td>@Html.DisplayFor(model => purchase.Date)</td>
                         <td>@Html.DisplayFor(model => purchase.Supplier.SupplierName)</td>
                         <td>@Html.DisplayFor(model => purchase.Product.ProductName)</td>
