@@ -6,9 +6,9 @@
     ViewData["Title"] = "Sales Report";
 
     string currencyFormat = "N4";
-    var quantity = 0m;
-    var frieght = 0m;
-    var total = 0m;
+    var totalQuantity = 0m;
+    var totalFreight = 0m;
+    var totalAmount = 0m;
 }
 <style>
     .container {
@@ -64,10 +64,13 @@
                 <tr class="table-primary">
                     <th>Date</th>
                     <th>@Html.DisplayNameFor(model => model.Customer.CustomerName)</th>
-                    <th>@Html.DisplayNameFor(model => model.CustomerOrderSlip.CustomerOrderSlipNo)</th>
-                    <th>OTC COS No.</th>
-                    <th>@Html.DisplayNameFor(model => model.DeliveryReceipt.DeliveryReceiptNo)
-                    <th>OTC DR No.</th>
+                    <th>COS #</th>
+                    <th>OTC COS #</th>
+                    <th>DR # </th>
+                    <th>OTC DR #</th>
+                    <th>PO #</th>
+                    <th>IS PO #</th>
+                    <th>Delivery Option</th>
                     <th>Items</th>
                     <th class="text-end">@Html.DisplayNameFor(model => model.Quantity)</th>
                     <th class="text-end">@Html.DisplayNameFor(model => model.CustomerOrderSlip.Freight)</th>
@@ -79,6 +82,9 @@
 
                 @foreach (var invoice in Model)
                 {
+                    var quantity = invoice.Quantity;
+                    var freight = invoice.DeliveryReceipt?.Freight * quantity;
+                    
                     <tr class="align-text-bottom">
                         <td>@Html.DisplayFor(model => invoice.TransactionDate)</td>
                         <td>@Html.DisplayFor(model => invoice.Customer.CustomerName)</td>
@@ -86,17 +92,20 @@
                         <td>@Html.DisplayFor(model => invoice.CustomerOrderSlip.OldCosNo)</td>
                         <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.DeliveryReceiptNo)</td>
                         <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.ManualDrNo)</td>
+                        <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.PurchaseOrder.PurchaseOrderNo)</td>
+                        <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.PurchaseOrder.OldPoNo)</td>
+                        <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.CustomerOrderSlip.DeliveryOption)</td>
                         <td>@Html.DisplayFor(model => invoice.Product.ProductName)</td>
-                        <td class="text-end">@Html.DisplayFor(model => invoice.Quantity)</td>
-                        <td class="text-end">@Html.DisplayFor(model => invoice.DeliveryReceipt.Freight)</td>
+                        <td class="text-end">@quantity.ToString(currencyFormat)</td>
+                        <td class="text-end">@freight?.ToString(currencyFormat)</td>
                         <td class="text-end">@Html.DisplayFor(model => invoice.Amount)</td>
                         <td>@Html.DisplayFor(model => invoice.Remarks)</td>
 
                     </tr>
 
-                    quantity += invoice?.Quantity ?? 0m;
-                    frieght += invoice?.DeliveryReceipt?.Freight ?? 0m;
-                    total += invoice?.Amount ?? 0m;
+                    totalQuantity += invoice.Quantity;
+                    totalFreight += freight ?? 0;
+                    totalAmount += invoice.Amount;
                 }
                 <tr class="table-primary" style="border-top: double">
                     <td></td>
@@ -105,10 +114,13 @@
                     <td></td>
                     <td></td>
                     <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                     <td class="text-center"><b>TOTAL:</b></td>
-                    <td class="text-end">@quantity.ToString(currencyFormat)</td>
-                    <td class="text-end">@frieght.ToString(currencyFormat)</td>
-                    <td class="text-end">@total.ToString(currencyFormat)</td>
+                    <td class="text-end">@totalQuantity.ToString(currencyFormat)</td>
+                    <td class="text-end">@totalFreight.ToString(currencyFormat)</td>
+                    <td class="text-end">@totalAmount.ToString(currencyFormat)</td>
                     <td></td>
                 </tr>
             </tbody>
