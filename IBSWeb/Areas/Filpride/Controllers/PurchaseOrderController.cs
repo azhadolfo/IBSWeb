@@ -47,7 +47,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
-                    .GetAllAsync(po => po.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(po => po.Company == companyClaims && po.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 return View("ExportIndex", purchaseOrders);
             }
@@ -317,6 +317,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var model = await _dbContext.FilpridePurchaseOrders.FindAsync(id, cancellationToken);
+            
+            var hasAlreadyBeenUsed =
+                await _dbContext.FilprideReceivingReports.AnyAsync(
+                    rr => rr.POId == model.PurchaseOrderId && rr.Status != nameof(Status.Voided),
+                    cancellationToken) ||
+                await _dbContext.FilprideCheckVoucherHeaders.AnyAsync(cv =>
+                    cv.CvType == "Trade" && cv.PONo.Contains(model.PurchaseOrderNo) && cv.Status != nameof(Status.Voided), cancellationToken);
+            
+            if (hasAlreadyBeenUsed)
+            {
+                TempData["error"] = "Please note that this record has already been utilized in a receiving report or check voucher. As a result, voiding it is not permitted.";
+                return RedirectToAction(nameof(Index));
+            }
 
             if (model != null)
             {
@@ -517,7 +530,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilpridePurchaseOrders
-                .Where(po => recordIds.Contains(po.PurchaseOrderId))
+                .Where(po => recordIds.Contains(po.PurchaseOrderId) && po.Type == nameof(DocumentType.Documented))
                 .OrderBy(po => po.PurchaseOrderNo)
                 .ToListAsync();
 

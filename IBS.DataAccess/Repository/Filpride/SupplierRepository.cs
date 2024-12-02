@@ -85,7 +85,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingSupplier.VatType = model.VatType;
             existingSupplier.TaxType = model.TaxType;
             existingSupplier.DefaultExpenseNumber = model.DefaultExpenseNumber;
-            existingSupplier.WithholdingTaxtitle = model.WithholdingTaxtitle;
+            existingSupplier.WithholdingTaxPercent = model.WithholdingTaxPercent;
 
             if (model.ProofOfRegistrationFilePath != null && existingSupplier.ProofOfRegistrationFilePath != model.ProofOfRegistrationFilePath)
             {
@@ -95,11 +95,6 @@ namespace IBS.DataAccess.Repository.Filpride
             if (model.ProofOfExemptionFilePath != null && existingSupplier.ProofOfExemptionFilePath != model.ProofOfExemptionFilePath)
             {
                 existingSupplier.ProofOfExemptionFilePath = model.ProofOfExemptionFilePath;
-            }
-
-            if (model.WithholdingTaxtitle != null && model.WithholdingTaxPercent != null)
-            {
-                existingSupplier.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
             }
 
             if (_db.ChangeTracker.HasChanges())

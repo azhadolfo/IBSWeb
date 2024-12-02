@@ -47,7 +47,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var debitMemos = await _unitOfWork.FilprideDebitMemo
-                    .GetAllAsync(dm => dm.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(dm => dm.Company == companyClaims && dm.Type == nameof(DocumentType.Documented), cancellationToken);
 
                 return View("ExportIndex", debitMemos);
             }
@@ -311,7 +311,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.PostedBy == null)
                     {
                         model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTime.UtcNow;
+                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        model.Status = nameof(Status.Posted);
 
                         if (model.SalesInvoiceId != null)
                         {
@@ -795,7 +796,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.UtcNow;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        model.Status = nameof(Status.Voided);
 
                         await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.DebitMemoNo);
                         await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo);
@@ -834,8 +836,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.UtcNow;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.CancellationRemarks = cancellationRemarks;
+                    model.Status = nameof(Status.Canceled);
 
                     #region --Audit Trail Recording
 
@@ -936,8 +939,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     .FilprideDebitMemos
                                     .FirstOrDefaultAsync(dm => dm.DebitMemoId == model.DebitMemoId);
 
-                    model.CreatedBy = _userManager.GetUserName(this.User);
-
                     if (model.Source == "Sales Invoice")
                     {
                         model.ServiceInvoiceId = null;
@@ -974,7 +975,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     model.EditedBy = _userManager.GetUserName(User);
-                    model.EditedDate = DateTime.UtcNow;
+                    model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     #region --Audit Trail Recording
 
@@ -1038,7 +1039,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideDebitMemos
-                .Where(dm => recordIds.Contains(dm.DebitMemoId))
+                .Where(dm => recordIds.Contains(dm.DebitMemoId) && dm.Type == nameof(DocumentType.Documented))
                 .Include(dm => dm.ServiceInvoice)
                 .ThenInclude(sv => sv.Service)
                 .OrderBy(dm => dm.DebitMemoNo)
@@ -1084,11 +1085,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 9].Value = item.Amount;
                 worksheet.Cells[row, 10].Value = item.CurrentAndPreviousAmount;
                 worksheet.Cells[row, 11].Value = item.UnearnedAmount;
-                worksheet.Cells[row, 12].Value = item.ServiceInvoice.ServiceId;
+                worksheet.Cells[row, 12].Value = item.ServiceInvoice?.ServiceId;
                 worksheet.Cells[row, 13].Value = item.CreatedBy;
                 worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
                 worksheet.Cells[row, 15].Value = item.CancellationRemarks;
-                worksheet.Cells[row, 161].Value = item.SalesInvoiceId;
+                worksheet.Cells[row, 16].Value = item.SalesInvoiceId;
                 worksheet.Cells[row, 17].Value = item.DebitMemoNo;
                 worksheet.Cells[row, 18].Value = item.ServiceInvoiceId;
                 worksheet.Cells[row, 19].Value = item.DebitMemoId;

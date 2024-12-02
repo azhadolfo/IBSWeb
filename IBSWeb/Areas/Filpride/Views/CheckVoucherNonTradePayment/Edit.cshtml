@@ -195,7 +195,7 @@
             var cvId = $(this).val();
             if (cvId !== "") {
                 $.ajax({
-                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })', // Replace with the actual controller and action names
+                    url: '@Url.Action("GetCheckVoucherInvoiceDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })', // Replace with the actual controller and action names
                     method: "GET",
                     data: { cvId: cvId },
                     success: function (data) {
@@ -203,6 +203,9 @@
                             $("#Payee").val(data.payee);
                             $("#PayeeAddress").val(data.payeeAddress);
                             $("#PayeeTin").val(data.payeeTin);
+                            $("#Particulars").val(data.particulars);
+                            $("#Total").val(data.total);
+                            $(".cib-credit").val(data.total);
                         }
                     },
                     error: function (xhr, status, error) {
@@ -213,34 +216,9 @@
                 $("#Payee").val("");
                 $("#PayeeAddress").val("");
                 $("#PayeeTin").val("");
+                $("#Particulars").val("");
+                $("#Total").val("");
             }
-        });
-
-        $(document).ready(function () {
-            // Add event listener for the Bank Account select dropdown
-            $("#BankId").change(function () {
-                var bankId = $(this).val();
-
-                // Check if a valid bank is selected
-                if (bankId !== "") {
-                    $.ajax({
-                        url: '@Url.Action("GetBankAccount", "CheckVoucherNonTradePayment", new { area = "Filpride" })', // Replace with your controller and action method
-                        type: 'GET',
-                        data: { bankId: bankId },
-                        success: function (data) {
-                            if (data) {
-                                var accountNoInput = $(".cib-acct-no");
-                                var accountTitleInput = $("input[value*='Cash in Bank']");
-                                accountNoInput.val(`${data.accountNoCOA}`)
-                                accountTitleInput.val(`Cash in Bank - ${data.accountNo} ${data.accountName}`);
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error("Error occurred:", status, error);
-                        }
-                    });
-                }
-            });
         });
     </script>
     <script>

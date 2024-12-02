@@ -261,6 +261,7 @@ namespace IBS.DataAccess.Repository.Filpride
             .Include (s => s.Customer)
             .Include (s => s.CustomerOrderSlip)
             .Include (s => s.DeliveryReceipt)
+            .Include (s => s.PurchaseOrder)
             .OrderBy(s => s.TransactionDate) // Order by TransactionDate
             .ToList();
 
