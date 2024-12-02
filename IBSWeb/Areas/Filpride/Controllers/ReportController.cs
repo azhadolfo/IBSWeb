@@ -794,6 +794,74 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(PurchaseOrderReport));
         }
 
+        public async Task<IActionResult> PurchaseReport()
+        {
+            return View();
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> GeneratedPurchaseReport(ViewModelBook model)
+        {
+            ViewData["DateFrom"] = model.DateFrom;
+            ViewData["DateTo"] = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
+            
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var purchaseReport = _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims);
+
+                    var purchasesVm = purchaseReport.Select(rr => new PurchaseReportViewModel
+                    {
+                        Date = rr.Date,
+                        SupplierName = rr.PurchaseOrder?.Supplier?.SupplierName,
+                        SupplierTin = rr.PurchaseOrder?.Supplier?.SupplierTin,
+                        SupplierAddress = rr.PurchaseOrder?.Supplier?.SupplierAddress,
+                        PurchaseOrderNo = rr.PurchaseOrder?.PurchaseOrderNo,
+                        FilprideRR = rr.ReceivingReportNo,
+                        FilprideDR = rr.DeliveryReceipt?.DeliveryReceiptNo,
+                        ATLNo = rr.DeliveryReceipt?.AuthorityToLoadNo,
+                        CustomerName = rr.DeliveryReceipt?.Customer?.CustomerName,
+                        Product = rr.PurchaseOrder?.Product?.ProductName,
+                        Volume = rr.QuantityReceived,
+                        CostPerLiter = rr.PurchaseOrder?.Price,
+                        CostAmount = rr.QuantityReceived * rr.PurchaseOrder?.Price,
+                        VATAmount = ((rr.QuantityReceived * rr.PurchaseOrder?.Price) / 1.12m) * 0.12m,
+                        WHTAmount = ((rr.QuantityReceived * rr.PurchaseOrder?.Price) / 1.12m) * 0.01m,
+                        NetPurchases = (rr.QuantityReceived * rr.PurchaseOrder?.Price) / 1.12m,
+                        AccountSpecialist = rr.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist,
+                        COSPrice = rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice,
+                        COSAmount = rr.QuantityReceived * rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice,
+                        COSPerLiter = rr.PurchaseOrder?.Price,
+                        GMPerLiter = rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price,
+                        GMAmount = rr.QuantityReceived * (rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price),
+                        HaulerName = rr.DeliveryReceipt?.Hauler?.SupplierName,
+                        FreightCharge = rr.DeliveryReceipt?.Freight,
+                        FCAmount = rr.QuantityReceived * rr.DeliveryReceipt?.Freight,
+                        CommissionPerLiter = rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate,
+                        CommissionAmount = rr.QuantityReceived * rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate,
+                        NetMarginPerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price) - rr.DeliveryReceipt.Freight,
+                        NetMarginAmount = rr.QuantityReceived * ((rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price) - rr.DeliveryReceipt.Freight),
+                        SupplierSalesInvoice = rr.SupplierInvoiceNumber,
+                        SupplierDR = rr.SupplierDrNo,
+                        SupplierWC = rr.WithdrawalCertificate
+
+                    }).ToList();
+                    
+                    return View(purchasesVm);
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(PurchaseReport));
+                }
+            }
+
+            TempData["error"] = "Please input date from";
+            return RedirectToAction(nameof(PurchaseReport)); 
+        }
+
         //Generate as .txt file
 
         #region -- Generate Audit Trail .Txt File --
@@ -1570,7 +1638,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- Generate Sales Book .Txt File --
-
+        
         //Generate as .csv file
 
         #region -- Generate DisbursmentBook .Csv File --
@@ -2664,6 +2732,307 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var excelBytes = package.GetAsByteArray();
 
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PurchaseOrderReport.xlsx");
+        }
+
+        #endregion
+        
+        #region -- Generate Purchase Report Excel File --
+
+        public async Task<IActionResult> GeneratePurchaseReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(this.User);
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var purchaseReport = _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims);
+                // check if there is no record
+                if (purchaseReport.Count == 0)
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(PurchaseReport));
+                }
+
+                #region -- Initialize Total Variables --
+                var totalVolume = purchaseReport.Sum(pr => pr.QuantityReceived);
+                decimal? totalCostPerLiter = 0;
+                decimal? totalCostAmount = 0;
+                decimal? totalVatAmount = 0;
+                decimal? totalWHTAmount = 0;
+                decimal? totalNetPurchases = 0;
+                var totalCOSPrice = purchaseReport.Sum(pr => pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice);
+                decimal? totalCOSAmount = 0;
+                decimal? totalGMPerLiter = 0;
+                decimal? totalGMAmount = 0;
+                var totalFreightCharge = purchaseReport.Sum(pr => pr.DeliveryReceipt?.Freight);
+                decimal? totalFCAmount = 0;
+                var totalCommissionPerLiter =  purchaseReport.Sum(pr => pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate);
+                decimal? totalCommisionAmount = 0;
+                decimal? totalNetMarginPerLiter = 0;
+                decimal? totalNetMarginAmount = 0;
+                #endregion
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("PurchaseReport");
+
+                #region -- Set the column header  --
+
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "PURCHASE REPORT";
+                mergedCells.Style.Font.Size = 13;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                worksheet.Cells["A7"].Value = "Date";
+                worksheet.Cells["B7"].Value = "Supplier Name";
+                worksheet.Cells["C7"].Value = "Supplier Tin";
+                worksheet.Cells["D7"].Value = "Supplier Address";
+                worksheet.Cells["E7"].Value = "PO No.";
+                worksheet.Cells["F7"].Value = "Filpride RR";
+                worksheet.Cells["G7"].Value = "Filpride DR";
+                worksheet.Cells["H7"].Value = "ATL #";
+                worksheet.Cells["I7"].Value = "Customer Name";
+                worksheet.Cells["J7"].Value = "Product";
+                worksheet.Cells["K7"].Value = "Volume";
+                worksheet.Cells["L7"].Value = "Cost/liter";
+                worksheet.Cells["M7"].Value = "Cost Amount";
+                worksheet.Cells["N7"].Value = "Vat Amount";
+                worksheet.Cells["O7"].Value = "Def Vat Amount";
+                worksheet.Cells["P7"].Value = "WHT Amount";
+                worksheet.Cells["Q7"].Value = "Net Purchases";
+                worksheet.Cells["R7"].Value = "Account Specialist";
+                worksheet.Cells["S7"].Value = "COS Price";
+                worksheet.Cells["T7"].Value = "COS Amount";
+                worksheet.Cells["U7"].Value = "COS/liter";
+                worksheet.Cells["V7"].Value = "Cost Amount";
+                worksheet.Cells["W7"].Value = "GM/liter";
+                worksheet.Cells["X7"].Value = "GM Amount";
+                worksheet.Cells["Y7"].Value = "Hauler's Name";
+                worksheet.Cells["Z7"].Value = "Freight Charge";
+                worksheet.Cells["AA7"].Value = "FC Amount";
+                worksheet.Cells["AB7"].Value = "Commission/liter";
+                worksheet.Cells["AC7"].Value = "Commission Amount";
+                worksheet.Cells["AD7"].Value = "Net Margin/liter";
+                worksheet.Cells["AE7"].Value = "Net Margin Amount";
+                worksheet.Cells["AF7"].Value = "Supplier's Sales Invoice";
+                worksheet.Cells["AG7"].Value = "Supplier's DR";
+                worksheet.Cells["AH7"].Value = "Supplier's WC";
+
+                #endregion
+
+                #region -- Apply styling to the header row --
+
+                using (var range = worksheet.Cells["A7:AH7"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                #endregion
+
+                // Populate the data rows
+                int row = 8;
+                string currencyFormat = "#,##0.0000";
+
+                foreach (var pr in purchaseReport)
+                {
+                    #region -- Variables and Formulas --
+
+                    var volume = pr.QuantityReceived;
+                    var costAmount = pr.QuantityReceived * pr.PurchaseOrder?.Price;
+                    var netPurchases = costAmount / 1.12m;
+                    var vatAmount = netPurchases * 0.12m;
+                    var whtAmount = netPurchases * 0.01m;
+                    var cosAmount = pr.QuantityReceived * pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice;
+                    var gmPerLiter = pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - pr.PurchaseOrder?.Price;
+                    var gmAmount = pr.QuantityReceived * gmPerLiter;
+                    var freightCharge = pr.DeliveryReceipt?.Freight;
+                    var commisionPerLiter = pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate;
+                    var netMarginPerLiter = gmPerLiter - freightCharge;
+                    var costPerLiter = pr.PurchaseOrder?.Price;
+                    var cosPrice = pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice;
+                    var freightChargeAmount = volume * freightCharge;
+                    var comissionAmount = volume * commisionPerLiter;
+                    var netMarginAmount = volume * netMarginPerLiter;
+
+                    #endregion
+
+                    #region -- Assign Values to Cells --
+
+                    worksheet.Cells[row, 1].Value = pr.Date; // Date
+                    worksheet.Cells[row, 2].Value = pr.PurchaseOrder?.Supplier?.SupplierName; // Supplier Name
+                    worksheet.Cells[row, 3].Value = pr.PurchaseOrder?.Supplier?.SupplierTin; // Supplier Tin
+                    worksheet.Cells[row, 4].Value = pr.PurchaseOrder?.Supplier?.SupplierAddress; // Supplier Address
+                    worksheet.Cells[row, 5].Value = pr.PurchaseOrder?.PurchaseOrderNo; // PO No.
+                    worksheet.Cells[row, 6].Value = pr.ReceivingReportNo; // Filpride RR
+                    worksheet.Cells[row, 7].Value = pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride DR
+                    worksheet.Cells[row, 8].Value = pr.DeliveryReceipt?.AuthorityToLoadNo; // ATL #
+                    worksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.Customer?.CustomerName; // Customer Name
+                    worksheet.Cells[row, 10].Value = pr.PurchaseOrder?.Product?.ProductName; // Product
+                    worksheet.Cells[row, 11].Value = volume; // Volume
+                    worksheet.Cells[row, 12].Value = pr.PurchaseOrder?.Price; // Cost/Itr
+                    worksheet.Cells[row, 13].Value = costAmount; // Cost Amount
+                    worksheet.Cells[row, 14].Value = vatAmount; // Vat Amount
+                    // worksheet.Cells[row, 15].Value = pr.DefaultVatAmount; // Def Vat Amount
+                    worksheet.Cells[row, 16].Value = whtAmount; // WHT Amount
+                    worksheet.Cells[row, 17].Value = netPurchases; // Net Purchases
+                    worksheet.Cells[row, 18].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist; // Account Specialist
+                    worksheet.Cells[row, 19].Value = cosPrice; // COS Price
+                    worksheet.Cells[row, 20].Value = cosAmount; // COS Amount
+                    worksheet.Cells[row, 21].Value = pr.PurchaseOrder?.Price; // COS/Itr
+                    worksheet.Cells[row, 22].Value = costAmount; // Cost Amount (duplicate - clarify)
+                    worksheet.Cells[row, 23].Value = gmPerLiter; // GM/Itr
+                    worksheet.Cells[row, 24].Value = gmAmount; // GM Amount
+                    worksheet.Cells[row, 25].Value = pr.DeliveryReceipt?.Hauler?.SupplierName; // Hauler's Name
+                    worksheet.Cells[row, 26].Value = freightCharge; // Freight Charge
+                    worksheet.Cells[row, 27].Value = freightChargeAmount; // FC Amount
+                    worksheet.Cells[row, 28].Value = commisionPerLiter; // Commission/Itr
+                    worksheet.Cells[row, 29].Value = comissionAmount; // Comm'n Amount
+                    worksheet.Cells[row, 30].Value = netMarginPerLiter; // Net Margin/Itr
+                    worksheet.Cells[row, 31].Value = netMarginAmount; // Net Margin Amount
+                    worksheet.Cells[row, 32].Value = pr.SupplierInvoiceNumber; // Supplier's Sales Invoice
+                    worksheet.Cells[row, 33].Value = pr.SupplierDrNo; // Supplier's DR
+                    worksheet.Cells[row, 34].Value = pr.WithdrawalCertificate; // Supplier's WC
+
+                    #endregion
+
+                    #region -- Increment values and format for formulated total --
+
+                    totalCostAmount += costAmount;
+                    totalVatAmount += vatAmount;
+                    totalWHTAmount += whtAmount;
+                    totalNetPurchases += netPurchases;
+                    totalCOSAmount += cosAmount;
+                    totalGMPerLiter += gmPerLiter;
+                    totalGMAmount += gmAmount;
+                    totalFCAmount += freightChargeAmount;
+                    totalCommisionAmount += comissionAmount;
+                    totalNetMarginPerLiter += netMarginPerLiter;
+                    totalNetMarginAmount += netMarginAmount;
+
+                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 28].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 30].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 31].Style.Numberformat.Format = currencyFormat;
+
+                    #endregion
+
+                    row++;
+                }
+                
+                #region -- Assign values of totals and formattings --
+
+                totalCostPerLiter = totalCostAmount / totalVolume;
+                totalCOSPrice = totalCOSAmount / totalVolume;
+                totalGMPerLiter = totalGMAmount / totalVolume;
+                totalFreightCharge = totalFCAmount / totalVolume;
+                totalCommissionPerLiter = totalCommisionAmount / totalVolume;
+                totalNetMarginPerLiter = totalNetMarginAmount / totalVolume;
+
+                worksheet.Cells[row, 10].Value = "Total ";
+                worksheet.Cells[row, 11].Value = totalVolume;
+                worksheet.Cells[row, 12].Value = totalCostPerLiter;
+                worksheet.Cells[row, 13].Value = totalCostAmount;
+                worksheet.Cells[row, 14].Value = totalVatAmount;
+                worksheet.Cells[row, 16].Value = totalWHTAmount;
+                worksheet.Cells[row, 17].Value = totalNetPurchases;
+                worksheet.Cells[row, 19].Value = totalCOSPrice;
+                worksheet.Cells[row, 20].Value = totalCOSAmount;
+                worksheet.Cells[row, 21].Value = totalCostPerLiter;
+                worksheet.Cells[row, 22].Value = totalCostAmount;
+                worksheet.Cells[row, 23].Value = totalGMPerLiter;
+                worksheet.Cells[row, 24].Value = totalGMAmount;
+                worksheet.Cells[row, 26].Value = totalFreightCharge;
+                worksheet.Cells[row, 27].Value = totalFCAmount;
+                worksheet.Cells[row, 28].Value = totalCommissionPerLiter;
+                worksheet.Cells[row, 29].Value = totalCommisionAmount;
+                worksheet.Cells[row, 30].Value = totalNetMarginPerLiter;
+                worksheet.Cells[row, 31].Value = totalNetMarginAmount;
+
+                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 28].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 30].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 31].Style.Numberformat.Format = currencyFormat;
+
+                #endregion
+
+                // Apply style to subtotal row
+                using (var range = worksheet.Cells[row, 1, row, 34])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                }
+
+                using (var range = worksheet.Cells[row, 10, row, 31])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
+
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(8, 1);
+
+                // Convert the Excel package to a byte array
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "PurchaseReport.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(PurchaseReport));
+            }
+            
         }
 
         #endregion

@@ -1,0 +1,229 @@
+@model IEnumerable<PurchaseReportViewModel>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Purchase Report";
+
+    string currencyFormat = "N4";
+    var totalVolume = 0m;
+    decimal? totalCostPerLiter = 0m;
+    decimal? totalCostAmount = 0m;
+    decimal? totalVatAmount = 0m;
+    decimal? totalWHTAmount = 0m;
+    decimal? totalNetPurchases = 0m;
+    decimal? totalCOSPrice = 0m;
+    decimal? totalCOSAmount = 0m;
+    decimal? totalCOSPerLiter = 0m;
+    decimal? totalGMPerLiter = 0m;
+    decimal? totalGMAmount = 0m;
+    decimal? totalFreightCharge = 0m;
+    decimal? totalFCAmount = 0m;
+    decimal? totalCommissionPerLiter = 0m;
+    decimal? totalCommissionAmount = 0m;
+    decimal? totalNetMarginPerLiter = 0m;
+    decimal? totalNetMarginAmount = 0m;
+}
+<style>
+    .container {
+        max-width: none;
+    }
+
+    .table-responsive {
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+
+    table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .print-header, .table-responsive, .table-responsive * {
+            visibility: visible;
+        }
+
+        .print-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .table-responsive {
+            position: absolute;
+            top: 0; /* Adjust this value based on your header's height */
+            left: 0;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+    }
+</style>
+
+<div class="table-responsive">
+    <h5>PURCHASE REPORT</h5>
+    <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
+    <table id="ledgerTable"  class="table">
+        <thead>
+            <tr class="table-primary text-nowrap">
+                <th class="p-3">@Html.DisplayNameFor(model => model.Date)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.SupplierName)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.SupplierTin)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.SupplierAddress)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.PurchaseOrderNo)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.FilprideRR)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.FilprideDR)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.ATLNo)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.CustomerName)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.Product)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.Volume)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.CostPerLiter)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.CostAmount)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.VATAmount)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.DefVatAmount)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.WHTAmount)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.NetPurchases)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.AccountSpecialist)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.COSPrice)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.COSAmount)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.CostPerLiter)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.CostAmount)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.GMPerLiter)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.GMAmount)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.HaulerName)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.FreightCharge)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.FCAmount)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.CommissionPerLiter)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.CommissionAmount)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.NetMarginPerLiter)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.NetMarginAmount)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.SupplierSalesInvoice)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.SupplierDR)</th>
+                <th class="p-3">@Html.DisplayNameFor(model => model.SupplierWC)</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            @foreach (var rr in Model)
+            {
+                <tr class="align-text-bottom text-nowrap">
+                    <td class="p-3">@Html.DisplayFor(model => rr.Date)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.SupplierName)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.SupplierTin)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.SupplierAddress)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.PurchaseOrderNo)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.FilprideRR)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.FilprideDR)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.ATLNo)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.CustomerName)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.Product)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.Volume)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.CostPerLiter)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.CostAmount)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.VATAmount)</td>
+                    <td class="p-3"></td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.WHTAmount)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.NetPurchases)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.AccountSpecialist)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.COSPrice)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.COSAmount)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.COSPerLiter)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.CostAmount)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.GMPerLiter)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.GMAmount)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.HaulerName)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.FreightCharge)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.FCAmount)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.CommissionPerLiter)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.CommissionAmount)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.NetMarginPerLiter)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.NetMarginAmount)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.SupplierSalesInvoice)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.SupplierDR)</td>
+                    <td class="p-3">@Html.DisplayFor(model => rr.SupplierWC)</td>
+                </tr>
+                
+                totalVolume += rr?.Volume ?? 0m;
+                totalCostAmount += rr?.CostAmount ?? 0m;
+                totalVatAmount += rr?.VATAmount ?? 0m;
+                totalWHTAmount += rr?.WHTAmount ?? 0m;
+                totalNetPurchases += rr?.NetPurchases ?? 0m;
+                totalCOSAmount += rr?.COSAmount ?? 0m;
+                totalGMAmount += rr?.GMAmount ?? 0m;
+                totalFCAmount += rr?.FCAmount ?? 0m;
+                totalCommissionAmount += rr?.CommissionAmount ?? 0m;
+                totalNetMarginAmount += rr?.NetMarginAmount ?? 0m;
+            }
+            @{
+                totalCostPerLiter = totalCostAmount / totalVolume;
+                totalCOSPrice = totalCOSAmount / totalVolume;
+                totalCOSPerLiter = totalCostAmount / totalVolume;
+                totalGMPerLiter = totalGMAmount / totalVolume;
+                totalFreightCharge = totalFCAmount / totalVolume;
+                totalCommissionPerLiter = totalCommissionAmount / totalVolume;
+                totalNetMarginPerLiter = totalNetMarginAmount / totalVolume;
+            }
+            <tr class="table-primary" style="border-top: double">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="text-center p-3"><b>TOTAL:</b></td>
+                <td class="text-end p-3">@totalVolume.ToString("N4")</td>
+                <td class="text-end p-3">@totalCostPerLiter?.ToString("N4")</td>
+                <td class="text-end p-3">@totalCostAmount?.ToString("N4")</td>
+                <td class="text-end p-3">@totalVatAmount?.ToString("N4")</td>
+                <td class="text-end p-3"></td>
+                <td class="text-end p-3">@totalWHTAmount?.ToString("N4")</td>
+                <td class="text-end p-3">@totalNetPurchases?.ToString("N4")</td>
+                <td class="text-end p-3"></td>
+                <td class="text-end p-3">@totalCOSPrice?.ToString("N4")</td>
+                <td class="text-end p-3">@totalCOSAmount?.ToString("N4")</td>
+                <td class="text-end p-3">@totalCOSPerLiter?.ToString("N4")</td>
+                <td class="text-end p-3">@totalCostAmount?.ToString("N4")</td>
+                <td class="text-end p-3">@totalGMPerLiter?.ToString("N4")</td>
+                <td class="text-end p-3">@totalGMAmount?.ToString("N4")</td>
+                <td class="text-end p-3"></td>
+                <td class="text-end p-3">@totalFreightCharge?.ToString("N4")</td>
+                <td class="text-end p-3">@totalFCAmount?.ToString("N4")</td>
+                <td class="text-end p-3">@totalCommissionPerLiter?.ToString("N4")</td>
+                <td class="text-end p-3">@totalCommissionAmount?.ToString("N4")</td>
+                <td class="text-end p-3">@totalNetMarginPerLiter?.ToString("N4")</td>
+                <td class="text-end p-3">@totalNetMarginAmount?.ToString("N4")</td>
+                <td class="text-end p-3"></td>
+                <td class="text-end p-3"></td>
+                <td class="text-end p-3"></td>
+            </tr>
+        </tbody>
+        
+    </table>
+</div>
+
+<div class="row mt-5">
+    <div class="col-6 col-md-3">
+        <a onclick="printTable()" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="Report" asp-action="SalesReport" class="btn btn-outline-primary border form-control buttons">Back</a>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function printTable() {
+            window.print();
+        }
+    </script>
+}
