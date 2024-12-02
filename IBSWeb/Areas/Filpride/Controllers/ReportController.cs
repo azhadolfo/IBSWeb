@@ -2598,8 +2598,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["B3"].Value = $"{extractedBy}";
             worksheet.Cells["B4"].Value = $"{companyClaims}";
 
-            worksheet.Cells["A7"].Value = "Inventory PO No.";
-            worksheet.Cells["B7"].Value = "PO No.";
+            worksheet.Cells["A7"].Value = "PO No.";
+            worksheet.Cells["B7"].Value = "Inventory PO No.";
             worksheet.Cells["C7"].Value = "Date";
             worksheet.Cells["D7"].Value = "Supplier";
             worksheet.Cells["E7"].Value = "Product";
@@ -2627,8 +2627,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var po in PurchaseOrderReport)
             {
-                worksheet.Cells[row, 1].Value = po.OldPoNo;
-                worksheet.Cells[row, 2].Value = po.PurchaseOrderNo;
+                worksheet.Cells[row, 1].Value = po.PurchaseOrderNo;
+                worksheet.Cells[row, 2].Value = po.OldPoNo;
                 worksheet.Cells[row, 3].Value = po.Date;
                 worksheet.Cells[row, 4].Value = po.Supplier?.SupplierName;
                 worksheet.Cells[row, 5].Value = po.Product?.ProductName;
