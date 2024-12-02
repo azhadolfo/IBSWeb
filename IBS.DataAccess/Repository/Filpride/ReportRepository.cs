@@ -283,5 +283,25 @@ namespace IBS.DataAccess.Repository.Filpride
 
             return purchaseOrder;
         }
+        
+        public List<FilprideReceivingReport> GetPurchaseReport (DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var receivingReports = _db.FilprideReceivingReports
+                .Where(rr => rr.Company == company && rr.Date >= dateFrom && rr.Date <= dateTo && rr.DeliveryReceipt != null) // Filter by date and company
+                .Include (rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include (rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include (rr => rr.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Customer)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Hauler)
+                .OrderBy(rr => rr.Date) // Order by TransactionDate
+                .ToList();
+            
+            return receivingReports;
+        }
     }
 }
