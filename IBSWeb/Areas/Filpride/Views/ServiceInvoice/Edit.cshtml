@@ -16,35 +16,29 @@
     <div class="card-body p-4">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ServiceInvoiceId" />
             <div class="form-group mb-3">
-                <label class="control-label">Type<span class="required">*</span></label>
-                <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
-                    <option value="" selected disabled>Select SI type</option>
-                    @foreach (var documentType in Enum.GetValues<DocumentType>())
-                    {
-                        <option value="@documentType">@documentType.ToString()</option>
-                    }
+                <label asp-for="CustomerId" class="control-label">Customer<span class="required">*</span></label>
+                <select asp-for="CustomerId" class="form-control js-select2" asp-items="@Model.Customers" required style="width:100%">
+                    <option></option>
                 </select>
-                <span asp-validation-for="Type" class="text-danger"></span>
+                <span asp-validation-for="CustomerId" class="text-danger"></span>
             </div>
             <div class="form-group mb-3">
-                <label asp-for="CustomerId" class="control-label"></label>
-                <input asp-for="CustomerId" class="form-control" hidden />
-                <input value="@Model.Customer.CustomerName" class="form-control" disabled readonly />
+                <label asp-for="ServiceId" class="control-label">Particulars<span class="required">*</span></label>
+                <select asp-for="ServiceId" class="form-control js-select2" asp-items="@Model.Services" style="width:100%">
+                    <option></option>
+                </select>
+                <span asp-validation-for="ServiceId" class="text-danger"></span>
             </div>
             <div class="form-group mb-3">
-                <label asp-for="ServiceInvoiceId" class="control-label"></label>
-                <input asp-for="ServiceInvoiceId" class="form-control" hidden />
-                <input value="@Model.Service.Name" class="form-control" disabled readonly />
-            </div>
-            <div class="form-group mb-3">
-                <label asp-for="DueDate" class="control-label">Due Date</label>
+                <label asp-for="DueDate" class="control-label">Due Date<span class="required">*</span></label>
                 <input asp-for="DueDate" type="date" class="form-control" />
                 <span asp-validation-for="DueDate" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Discount" id="floatingInput" type="text" class="form-control moneyInput" placeholder="Optional" />
-                <label for="floatingInput" class="control-label">Discount</label>
+                <input asp-for="Discount" class="form-control moneyInput" placeholder="0.000" />
+                <label for="discount" class="control-label">Discount</label>
                 <span asp-validation-for="Discount" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
@@ -52,15 +46,14 @@
                 <label for="instructions" class="control-label">Instructions</label>
                 <span asp-validation-for="Instructions" class="text-danger"></span>
             </div>
-            <div id="period-amount-fields" class="row g-2">
+            <div id="period-amount-fields" class="row g-2 mb-3">
                 <div class="col-sm mb-3">
-                    <label asp-for="Period" class="control-label">Period</label>
+                    <label asp-for="Period" class="control-label">Period<span class="required">*</span></label>
                     <input asp-for="Period" type="month" class="form-control" />
                     <span asp-validation-for="Period" class="text-danger"></span>
                 </div>
-
                 <div class="col-sm mb-3">
-                    <label asp-for="Amount" class="control-label">Amount</label>
+                    <label asp-for="Amount" class="control-label">Amount<span class="required">*</span></label>
                     <input asp-for="Amount" class="form-control money" placeholder="0.000" />
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
