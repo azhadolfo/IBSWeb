@@ -841,8 +841,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         FCAmount = rr.QuantityReceived * rr.DeliveryReceipt?.Freight,
                         CommissionPerLiter = rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate,
                         CommissionAmount = rr.QuantityReceived * rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate,
-                        NetMarginPerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price) - rr.DeliveryReceipt.Freight,
-                        NetMarginAmount = rr.QuantityReceived * ((rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price) - rr.DeliveryReceipt.Freight),
+                        NetMarginPerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price) - rr.DeliveryReceipt?.Freight,
+                        NetMarginAmount = rr.QuantityReceived * ((rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price) - rr.DeliveryReceipt?.Freight),
                         SupplierSalesInvoice = rr.SupplierInvoiceNumber,
                         SupplierDR = rr.SupplierDrNo,
                         SupplierWC = rr.WithdrawalCertificate

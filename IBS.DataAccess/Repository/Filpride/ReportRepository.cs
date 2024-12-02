@@ -292,7 +292,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var receivingReports = _db.FilprideReceivingReports
-                .Where(rr => rr.Company == company && rr.Date >= dateFrom && rr.Date <= dateTo && rr.DeliveryReceipt != null) // Filter by date and company
+                .Where(rr => rr.Company == company && rr.Date >= dateFrom && rr.Date <= dateTo) // Filter by date and company
                 .Include (rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .Include (rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include (rr => rr.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip)
