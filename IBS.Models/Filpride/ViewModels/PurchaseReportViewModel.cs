@@ -119,10 +119,10 @@ namespace IBS.Models.Filpride.ViewModels
         public string SupplierSalesInvoice { get; set; }
         
         [Display(Name = "Supplier DR")]
-        public string? SupplierDR { get; set; }
+        public string SupplierDR { get; set; }
         
         [Display(Name = "Supplier WC")]
-        public string? SupplierWC  { get; set; } 
+        public string SupplierWC  { get; set; } 
     }
 
 }
