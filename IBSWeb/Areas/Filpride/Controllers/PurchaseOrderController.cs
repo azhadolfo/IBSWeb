@@ -325,6 +325,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var model = await _dbContext.FilpridePurchaseOrders.FindAsync(id, cancellationToken);
+            
+            var hasAlreadyBeenUsed =
+                await _dbContext.FilprideReceivingReports.AnyAsync(
+                    rr => rr.POId == model.PurchaseOrderId && rr.Status != nameof(Status.Voided),
+                    cancellationToken) ||
+                await _dbContext.FilprideCheckVoucherHeaders.AnyAsync(cv =>
+                    cv.CvType == "Trade" && cv.PONo.Contains(model.PurchaseOrderNo) && cv.Status != nameof(Status.Voided), cancellationToken);
+            
+            if (hasAlreadyBeenUsed)
+            {
+                TempData["error"] = "Please note that this record has already been utilized in a receiving report or check voucher. As a result, voiding it is not permitted.";
+                return RedirectToAction(nameof(Index));
+            }
 
             if (model != null)
             {

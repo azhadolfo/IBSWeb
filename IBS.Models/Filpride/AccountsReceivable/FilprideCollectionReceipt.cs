@@ -70,7 +70,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [Display(Name = "Reference No")]
         [Required]
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(50)")]
         public string ReferenceNo { get; set; }
 
         [Column(TypeName = "varchar(100)")]
@@ -84,13 +84,13 @@ namespace IBS.Models.Filpride.AccountsReceivable
         //Check
         public string? CheckDate { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(50)")]
         public string? CheckNo { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(50)")]
         public string? CheckBank { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(50)")]
         public string? CheckBranch { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
@@ -101,13 +101,13 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "date")]
         public DateOnly? ManagerCheckDate { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(50)")]
         public string? ManagerCheckNo { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(50)")]
         public string? ManagerCheckBank { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [Column(TypeName = "varchar(50)")]
         public string? ManagerCheckBranch { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]

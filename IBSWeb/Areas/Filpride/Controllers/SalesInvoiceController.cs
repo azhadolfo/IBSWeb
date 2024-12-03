@@ -615,7 +615,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (hasAlreadyBeenUsed)
                 {
-                    TempData["error"] = "Please note that this record has already been utilized in a sales invoice. As a result, voiding it is not permitted.";
+                    TempData["error"] = "Please note that this record has already been utilized in collection receipts, debit or credit memo. As a result, voiding it is not permitted.";
                     return RedirectToAction(nameof(Index));
                 }
 

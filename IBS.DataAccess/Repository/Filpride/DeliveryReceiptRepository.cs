@@ -73,6 +73,10 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task UpdateAsync(DeliveryReceiptViewModel viewModel, CancellationToken cancellationToken = default)
         {
             var existingRecord = await GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
+            
+            var customerOrderSlip = await _db.FilprideCustomerOrderSlips
+                .FirstOrDefaultAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+            
 
             #region--Update COS
 
@@ -103,8 +107,24 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.ManualDrNo = viewModel.ManualDrNo;
             existingRecord.Driver = viewModel.Driver;
             existingRecord.PlateNo = viewModel.PlateNo;
+            existingRecord.HaulerId = customerOrderSlip.HaulerId;
             existingRecord.ECC = viewModel.ECC;
+            existingRecord.Freight = viewModel.Freight;
+            existingRecord.AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo;
+            
+            if (!customerOrderSlip.HasMultiplePO)
+            {
+                existingRecord.PurchaseOrderId = customerOrderSlip.PurchaseOrderId;
+            }
+            else
+            {
+                var selectedPo = await _db.FilprideCOSAppointedSuppliers
+                    .OrderBy(s => s.PurchaseOrderId)
+                    .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId && !s.IsAssignedToDR);
 
+                existingRecord.PurchaseOrderId = selectedPo.PurchaseOrderId;
+            }
+            
             if (_db.ChangeTracker.HasChanges())
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;

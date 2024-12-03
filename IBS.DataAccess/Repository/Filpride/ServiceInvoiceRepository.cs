@@ -3,6 +3,7 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsReceivable;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Utility;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -14,12 +15,25 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             _db = db;
         }
-
-        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
+        
+        public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
+        {
+            if (type == nameof(DocumentType.Documented))
+            {
+                return await GenerateCodeForDocumented(company, cancellationToken);
+            }
+            else
+            {
+                return await GenerateCodeForUnDocumented(company, cancellationToken);
+            }
+        }
+        
+        
+        private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken)
         {
             FilprideServiceInvoice? lastSv = await _db
                 .FilprideServiceInvoices
-                .Where(c => c.Company == company)
+                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.ServiceInvoiceNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -34,6 +48,28 @@ namespace IBS.DataAccess.Repository.Filpride
             else
             {
                 return "SV0000000001";
+            }
+        }
+
+        private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken)
+        {
+            FilprideServiceInvoice? lastSv = await _db
+                .FilprideServiceInvoices
+                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Undocumented))
+                .OrderBy(c => c.ServiceInvoiceNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastSv != null)
+            {
+                string lastSeries = lastSv.ServiceInvoiceNo;
+                string numericPart = lastSeries.Substring(3);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+            }
+            else
+            {
+                return "SVU000000001";
             }
         }
 
