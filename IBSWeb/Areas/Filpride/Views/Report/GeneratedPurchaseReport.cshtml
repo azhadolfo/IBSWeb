@@ -112,6 +112,8 @@
         </thead>
         
         <tbody>
+        
+            @* Populate rows *@
             @foreach (var rr in Model)
             {
                 <tr class="align-text-bottom text-nowrap">
@@ -150,7 +152,8 @@
                     <td class="p-3">@Html.DisplayFor(model => rr.SupplierDR)</td>
                     <td class="p-3">@Html.DisplayFor(model => rr.SupplierWC)</td>
                 </tr>
-                
+
+                @* Add values to total variables *@
                 totalVolume += rr?.Volume ?? 0m;
                 totalCostAmount += rr?.CostAmount ?? 0m;
                 totalVatAmount += rr?.VATAmount ?? 0m;
@@ -162,6 +165,8 @@
                 totalCommissionAmount += rr?.CommissionAmount ?? 0m;
                 totalNetMarginAmount += rr?.NetMarginAmount ?? 0m;
             }
+            
+            @* After getting all totals, compute for other totals *@
             @{
                 totalCostPerLiter = totalCostAmount / totalVolume;
                 totalCOSPrice = totalCOSAmount / totalVolume;
@@ -171,6 +176,8 @@
                 totalCommissionPerLiter = totalCommissionAmount / totalVolume;
                 totalNetMarginPerLiter = totalNetMarginAmount / totalVolume;
             }
+
+            @* Populate subtotal rows *@
             <tr class="table-primary" style="border-top: double">
                 <td></td>
                 <td></td>
@@ -208,7 +215,6 @@
                 <td class="text-end p-3"></td>
             </tr>
         </tbody>
-        
     </table>
 </div>
 
@@ -216,10 +222,12 @@
     <div class="col-6 col-md-3">
         <a onclick="printTable()" class="btn btn-primary form-control buttons">Print</a>
     </div>
+
     <div class="col-6 col-md-3">
-        <a asp-area="Filpride" asp-controller="Report" asp-action="SalesReport" class="btn btn-outline-primary border form-control buttons">Back</a>
+        <a asp-area="Filpride" asp-controller="Report" asp-action="PurchaseReport" class="btn btn-outline-primary border form-control buttons">Back</a>
     </div>
 </div>
+
 @section Scripts {
     <script>
         function printTable() {

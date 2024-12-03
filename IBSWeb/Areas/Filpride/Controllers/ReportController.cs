@@ -810,9 +810,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 try
                 {
+                    // get data by chosen date
                     var purchaseReport = _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims);
 
-                    var purchasesVm = purchaseReport.Select(rr => new PurchaseReportViewModel
+                    #region -- Assign collected data to purchaseReportVM --
+                    
+                    //assign data to vm model
+                    var purchaseReportVm = purchaseReport.Select(rr => new PurchaseReportViewModel
                     {
                         Date = rr.Date,
                         SupplierName = rr.PurchaseOrder?.Supplier?.SupplierName,
@@ -849,7 +853,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     }).ToList();
                     
-                    return View(purchasesVm);
+                    #endregion -- Assign collected data to purchaseReportVM --
+                    
+                    return View(purchaseReportVm);
                 }
                 catch (Exception ex)
                 {
@@ -2746,8 +2752,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var dateTo = model.DateTo;
                 var extractedBy = _userManager.GetUserName(this.User);
                 var companyClaims = await GetCompanyClaimAsync();
-
+                
+                // get rr data from chosen date
                 var purchaseReport = _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims);
+                
                 // check if there is no record
                 if (purchaseReport.Count == 0)
                 {
@@ -2755,7 +2763,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return RedirectToAction(nameof(PurchaseReport));
                 }
 
-                #region -- Initialize Total Variables --
+                #region -- Initialize "total" Variables for operations --
+                
                 var totalVolume = purchaseReport.Sum(pr => pr.QuantityReceived);
                 decimal? totalCostPerLiter = 0;
                 decimal? totalCostAmount = 0;
@@ -2772,6 +2781,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 decimal? totalCommisionAmount = 0;
                 decimal? totalNetMarginPerLiter = 0;
                 decimal? totalNetMarginAmount = 0;
+                
                 #endregion
 
                 // Create the Excel package
@@ -2851,6 +2861,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 int row = 8;
                 string currencyFormat = "#,##0.0000";
 
+                #region -- Populate data rows --
+                
                 foreach (var pr in purchaseReport)
                 {
                     #region -- Variables and Formulas --
@@ -2887,33 +2899,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.Customer?.CustomerName; // Customer Name
                     worksheet.Cells[row, 10].Value = pr.PurchaseOrder?.Product?.ProductName; // Product
                     worksheet.Cells[row, 11].Value = volume; // Volume
-                    worksheet.Cells[row, 12].Value = pr.PurchaseOrder?.Price; // Cost/Itr
+                    worksheet.Cells[row, 12].Value = pr.PurchaseOrder?.Price; // Cost/liter
                     worksheet.Cells[row, 13].Value = costAmount; // Cost Amount
                     worksheet.Cells[row, 14].Value = vatAmount; // Vat Amount
-                    // worksheet.Cells[row, 15].Value = pr.DefaultVatAmount; // Def Vat Amount
                     worksheet.Cells[row, 16].Value = whtAmount; // WHT Amount
                     worksheet.Cells[row, 17].Value = netPurchases; // Net Purchases
                     worksheet.Cells[row, 18].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist; // Account Specialist
                     worksheet.Cells[row, 19].Value = cosPrice; // COS Price
                     worksheet.Cells[row, 20].Value = cosAmount; // COS Amount
-                    worksheet.Cells[row, 21].Value = pr.PurchaseOrder?.Price; // COS/Itr
-                    worksheet.Cells[row, 22].Value = costAmount; // Cost Amount (duplicate - clarify)
-                    worksheet.Cells[row, 23].Value = gmPerLiter; // GM/Itr
+                    worksheet.Cells[row, 21].Value = pr.PurchaseOrder?.Price; // COS/liter
+                    worksheet.Cells[row, 22].Value = costAmount; // Cost Amount(2)
+                    worksheet.Cells[row, 23].Value = gmPerLiter; // GM/liter
                     worksheet.Cells[row, 24].Value = gmAmount; // GM Amount
                     worksheet.Cells[row, 25].Value = pr.DeliveryReceipt?.Hauler?.SupplierName; // Hauler's Name
                     worksheet.Cells[row, 26].Value = freightCharge; // Freight Charge
                     worksheet.Cells[row, 27].Value = freightChargeAmount; // FC Amount
-                    worksheet.Cells[row, 28].Value = commisionPerLiter; // Commission/Itr
-                    worksheet.Cells[row, 29].Value = comissionAmount; // Comm'n Amount
-                    worksheet.Cells[row, 30].Value = netMarginPerLiter; // Net Margin/Itr
+                    worksheet.Cells[row, 28].Value = commisionPerLiter; // Commission/liter
+                    worksheet.Cells[row, 29].Value = comissionAmount; // Commission Amount
+                    worksheet.Cells[row, 30].Value = netMarginPerLiter; // Net Margin/liter
                     worksheet.Cells[row, 31].Value = netMarginAmount; // Net Margin Amount
                     worksheet.Cells[row, 32].Value = pr.SupplierInvoiceNumber; // Supplier's Sales Invoice
                     worksheet.Cells[row, 33].Value = pr.SupplierDrNo; // Supplier's DR
                     worksheet.Cells[row, 34].Value = pr.WithdrawalCertificate; // Supplier's WC
 
-                    #endregion
+                    #endregion -- Assign Values to Cells --
 
-                    #region -- Increment values and format for formulated total --
+                    #region -- Add the values to total and format number cells --
 
                     totalCostAmount += costAmount;
                     totalVatAmount += vatAmount;
@@ -2946,12 +2957,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 30].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 31].Style.Numberformat.Format = currencyFormat;
 
-                    #endregion
+                    #endregion -- Add the values to total and format number cells --
 
                     row++;
                 }
                 
-                #region -- Assign values of totals and formattings --
+                #endregion -- Populate data rows --
+                
+                #region -- Assign values of other totals and formatting of total cells --
 
                 totalCostPerLiter = totalCostAmount / totalVolume;
                 totalCOSPrice = totalCOSAmount / totalVolume;
@@ -3000,16 +3013,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 30].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 31].Style.Numberformat.Format = currencyFormat;
 
-                #endregion
+                #endregion -- Assign values of other totals and formatting of total cells --
 
-                // Apply style to subtotal row
+                // Apply style to subtotal rows
                 using (var range = worksheet.Cells[row, 1, row, 34])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                 }
-
+                
                 using (var range = worksheet.Cells[row, 10, row, 31])
                 {
                     range.Style.Font.Bold = true;
@@ -3032,7 +3045,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(PurchaseReport));
             }
-            
         }
 
         #endregion
