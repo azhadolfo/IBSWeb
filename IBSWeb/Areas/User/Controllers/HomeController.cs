@@ -28,8 +28,6 @@ namespace IBSWeb.Areas.User.Controllers
                 .Where(user => user.Id == _userManager.GetUserId(this.User))
                 .FirstOrDefaultAsync();
 
-            var test = DateTime.UtcNow;
-
             ViewBag.GetUserDepartment = findUser?.Department;
 
             return View();
@@ -41,9 +39,17 @@ namespace IBSWeb.Areas.User.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public IActionResult Maintenance()
+        public async Task<IActionResult> Maintenance()
         {
-            return View("Maintenance");
+            if (await _dbContext.AppSettings
+                    .Where(s => s.SettingKey == "MaintenanceMode")
+                    .Select(s => s.Value == "true")
+                    .FirstOrDefaultAsync())
+            {
+                return View("Maintenance");
+            }
+            
+            return RedirectToAction(nameof(Index));
         }
     }
 }
