@@ -100,7 +100,7 @@
             <tbody>
                 @foreach (var item in Model)
                 {
-                    if ((userDepartment == SD.Department_StationCashier) && (item.Status == "Pending" || item.Status == "Disapproved"))
+                    if ((userDepartment == SD.Department_StationCashier || userDepartment == SD.Department_RetailAudit) && (item.Status == "Pending" || item.Status == "Disapproved"))
                     {
                         // Will not show cashier the pending and disapproved
                     }
@@ -287,7 +287,7 @@
                 $.each(filteredModel, function (index, value) {
                     // Skip items based on user department and status
                     console.log(userDepartment);
-                    if (userDepartment === "Station Cashier" && (value.status === "Pending" || value.status === "Disapproved")) {
+                    if ((userDepartment === "Station Cashier" || userDepartment === "Retail Audit") && (value.status === "Pending" || value.status === "Disapproved")) {
                         return; // continue to the next item
                     }
 
