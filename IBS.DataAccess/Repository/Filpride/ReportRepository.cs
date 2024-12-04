@@ -256,7 +256,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var salesInvoice = _db.FilprideSalesInvoices
-            .Where(s => s.Company == company && s.TransactionDate >= dateFrom && s.TransactionDate <= dateTo) // Filter by date and company
+            .Where(s => s.Company == company && s.TransactionDate >= dateFrom && s.TransactionDate <= dateTo && s.Status == nameof(Status.Posted)) // Filter by date and company
             .Include (s => s.Product)
             .Include (s => s.Customer)
             .Include (s => s.CustomerOrderSlip)
@@ -276,7 +276,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var purchaseOrder = _db.FilpridePurchaseOrders
-            .Where(p => p.Company == company && p.Date >= dateFrom && p.Date <= dateTo) // Filter by date and company
+            .Where(p => p.Company == company && p.Date >= dateFrom && p.Date <= dateTo && p.Status == nameof(Status.Posted)) // Filter by date and company
             .Include(p => p.Supplier)
             .Include(p => p.Product)
             .OrderBy(p => p.Date) // Order by TransactionDate
@@ -293,7 +293,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var receivingReports = _db.FilprideReceivingReports
-                .Where(rr => rr.Company == company && rr.Date >= dateFrom && rr.Date <= dateTo) // Filter by date and company
+                .Where(rr => rr.Company == company && rr.Date >= dateFrom && rr.Date <= dateTo && rr.Status == nameof(Status.Posted)) // Filter by date and company
                 .Include (rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .Include (rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include (rr => rr.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip)

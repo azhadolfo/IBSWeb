@@ -2766,21 +2766,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Initialize "total" Variables for operations --
                 
                 var totalVolume = purchaseReport.Sum(pr => pr.QuantityReceived);
-                decimal? totalCostPerLiter = 0;
-                decimal? totalCostAmount = 0;
-                decimal? totalVatAmount = 0;
-                decimal? totalWHTAmount = 0;
-                decimal? totalNetPurchases = 0;
+                decimal totalCostPerLiter = 0;
+                decimal totalCostAmount = 0;
+                decimal totalVatAmount = 0;
+                decimal totalWHTAmount = 0;
+                decimal totalNetPurchases = 0;
                 var totalCOSPrice = purchaseReport.Sum(pr => pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice);
-                decimal? totalCOSAmount = 0;
-                decimal? totalGMPerLiter = 0;
-                decimal? totalGMAmount = 0;
+                decimal totalCOSAmount = 0;
+                decimal totalGMPerLiter = 0;
+                decimal totalGMAmount = 0;
                 var totalFreightCharge = purchaseReport.Sum(pr => pr.DeliveryReceipt?.Freight);
-                decimal? totalFCAmount = 0;
+                decimal totalFCAmount = 0;
                 var totalCommissionPerLiter =  purchaseReport.Sum(pr => pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate);
-                decimal? totalCommisionAmount = 0;
-                decimal? totalNetMarginPerLiter = 0;
-                decimal? totalNetMarginAmount = 0;
+                decimal totalCommisionAmount = 0;
+                decimal totalNetMarginPerLiter = 0;
+                decimal totalNetMarginAmount = 0;
                 
                 #endregion
 
@@ -2868,18 +2868,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region -- Variables and Formulas --
 
                     var volume = pr.QuantityReceived;
-                    var costAmount = pr.QuantityReceived * pr.PurchaseOrder?.Price;
+                    var costAmount = pr.QuantityReceived * pr.PurchaseOrder.Price;
                     var netPurchases = costAmount / 1.12m;
                     var vatAmount = netPurchases * 0.12m;
                     var whtAmount = netPurchases * 0.01m;
-                    var cosAmount = pr.QuantityReceived * pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice;
-                    var gmPerLiter = pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - pr.PurchaseOrder?.Price;
+                    var cosAmount = pr.QuantityReceived * (pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m);
+                    var gmPerLiter = (pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m) - pr.PurchaseOrder.Price;
                     var gmAmount = pr.QuantityReceived * gmPerLiter;
-                    var freightCharge = pr.DeliveryReceipt?.Freight;
-                    var commisionPerLiter = pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate;
+                    var freightCharge = pr.DeliveryReceipt?.Freight ?? 0m;
+                    var commisionPerLiter = pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m;
                     var netMarginPerLiter = gmPerLiter - freightCharge;
-                    var costPerLiter = pr.PurchaseOrder?.Price;
-                    var cosPrice = pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice;
+                    var costPerLiter = pr.PurchaseOrder.Price;
+                    var cosPrice = pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m;
                     var freightChargeAmount = volume * freightCharge;
                     var comissionAmount = volume * commisionPerLiter;
                     var netMarginAmount = volume * netMarginPerLiter;
