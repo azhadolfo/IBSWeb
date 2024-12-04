@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
@@ -76,6 +77,10 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 existingCustomer.EditedBy = model.EditedBy;
                 existingCustomer.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                
+                FilprideAuditTrail auditTrailBook = new(existingCustomer.CreatedBy, $"Edited customer {existingCustomer.CustomerCode}", "Customer", "", existingCustomer.Company);
+                await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

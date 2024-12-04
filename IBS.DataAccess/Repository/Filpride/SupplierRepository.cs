@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Utility;
 using Microsoft.AspNetCore.Http;
@@ -106,6 +107,10 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 existingSupplier.EditedBy = model.EditedBy;
                 existingSupplier.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                
+                FilprideAuditTrail auditTrailBook = new(existingSupplier.CreatedBy, $"Edited supplier {existingSupplier.SupplierCode}", "Supplier", "", existingSupplier.Company);
+                await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else
