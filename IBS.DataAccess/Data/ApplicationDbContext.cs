@@ -32,6 +32,12 @@ namespace IBS.DataAccess.Data
 
         public DbSet<AppSetting> AppSettings { get; set; }
 
+        public DbSet<Notification> Notifications { get; set; }
+
+        public DbSet<UserNotification> UserNotifications { get; set; }
+
+        public DbSet<HubConnection> HubConnections { get; set; }
+
         #region--MOBILITY
 
         #region--Sales Entity
@@ -94,6 +100,8 @@ namespace IBS.DataAccess.Data
         public DbSet<FilprideAuthorityToLoad> FilprideAuthorityToLoads { get; set; }
 
         public DbSet<FilprideCOSAppointedSupplier> FilprideCOSAppointedSuppliers { get; set; }
+
+        public DbSet<FilpridePOActualPrice> FilpridePOActualPrices { get; set; }
 
         #region--Master File
 
@@ -463,6 +471,14 @@ namespace IBS.DataAccess.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
                 a.HasIndex(a => a.CustomerOrderSlipId);
+            });
+
+            builder.Entity<FilpridePOActualPrice>(p =>
+            {
+                p.HasOne(p => p.PurchaseOrder)
+                .WithMany(po => po.ActualPrices)
+                .HasForeignKey(p => p.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
             });
 
             #region-- Master File

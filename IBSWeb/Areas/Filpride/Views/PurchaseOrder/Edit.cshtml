@@ -22,6 +22,11 @@
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
             <div class="form-floating py-2 col-12">
+                <input asp-for="TriggerDate" type="date" class="form-control border-0 shadow" placeholder="" value="yyyy-MM-dd" />
+                <label asp-for="TriggerDate">Trigger Date<span class="required">*</span></label>
+                <span asp-validation-for="TriggerDate" class="text-danger"></span>
+            </div>
+            <div class="form-floating py-2 col-12">
                 <input asp-for="OldPoNo" class="form-control border-0 shadow price" placeholder="" />
                 <label asp-for="OldPoNo">IS PO#<span class="required">*</span></label>
                 <span asp-validation-for="OldPoNo" class="text-danger"></span>

@@ -6,8 +6,10 @@ using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
@@ -27,12 +29,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment)
+        private readonly IHubContext<NotificationHub> _hubContext;
+
+        public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment, IHubContext<NotificationHub> hubContext)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
             _webHostEnvironment = webHostEnvironment;
+            _hubContext = hubContext;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -122,7 +127,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                 CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
-                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
             };
 
             return View(viewModel);
@@ -139,7 +143,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId);
+                    var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
 
                     if (customerOrderSlip == null)
                     {
@@ -160,13 +164,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CreatedBy = _userManager.GetUserName(User),
                         ManualDrNo = viewModel.ManualDrNo,
                         Freight = viewModel.Freight,
-                        Demuragge = viewModel.Demuragge,
                         ECC = viewModel.ECC,
                         Driver = viewModel.Driver,
                         PlateNo = viewModel.PlateNo,
-                        HaulerId = viewModel.HaulerId,
-                        Status = "Draft"
+                        HaulerId = customerOrderSlip.HaulerId,
+                        AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo
                     };
+
+                    customerOrderSlip.DeliveredQuantity += model.Quantity;
+                    customerOrderSlip.BalanceQuantity -= model.Quantity;
+
+                    if (customerOrderSlip.BalanceQuantity <= 0)
+                    {
+                        customerOrderSlip.IsDelivered = true;
+                        customerOrderSlip.Status = nameof(CosStatus.Completed);
+                    }
 
                     if (!customerOrderSlip.HasMultiplePO)
                     {
@@ -174,11 +186,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     else
                     {
-                        var selectedPo = await _dbContext.FilprideCOSAppointedSuppliers
-                            .OrderBy(s => s.PurchaseOrderId)
-                            .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == model.CustomerOrderSlipId && !s.IsAssignedToDR);
-
-                        model.PurchaseOrderId = selectedPo.PurchaseOrderId;
+                        await _unitOfWork.FilprideDeliveryReceipt.AssignNewPurchaseOrderAsync(viewModel, model);
                     }
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
@@ -187,8 +195,60 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, model.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
+                    if (viewModel.IsECCEdited)
+                    {
+                        var operationManager = await _dbContext.ApplicationUsers
+                            .Where(a => a.Position == SD.Position_OperationManager)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var user in operationManager)
+                        {
+                            var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy.ToUpper()}. Please review and approve.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                                .Where(h => h.UserName == user.UserName)
+                                .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
+
+                        model.Status = nameof(DRStatus.ForApprovalOfOM);
+                    }
+
+                    if (viewModel.Driver != customerOrderSlip.Driver || viewModel.PlateNo != customerOrderSlip.PlateNo)
+                    {
+                        var tnsUser = await _dbContext.ApplicationUsers
+                            .Where(a => a.Department == SD.Department_TradeAndSupply)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var user in tnsUser)
+                        {
+                            var message = $"Please be informed that {model.CreatedBy.ToUpper()} has updated the 'Driver' and 'Plate#' for {model.DeliveryReceiptNo}.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                           .Where(h => h.UserName == user.UserName)
+                           .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
+                    }
+
                     await _unitOfWork.SaveAsync(cancellationToken);
+
                     await transaction.CommitAsync(cancellationToken);
+
                     TempData["success"] = "Delivery receipt created successfully.";
                     return RedirectToAction(nameof(Index));
                 }
@@ -196,7 +256,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
-                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -249,13 +308,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Remarks = existingRecord.Remarks,
                     ManualDrNo = existingRecord.ManualDrNo,
                     Freight = existingRecord.Freight,
-                    Demuragge = existingRecord.Demuragge,
                     ECC = existingRecord.ECC,
+                    DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption,
+                    Hauler = existingRecord.Hauler?.SupplierName,
                     Driver = existingRecord.Driver,
                     PlateNo = existingRecord.PlateNo,
-                    HaulerId = existingRecord.HaulerId,
-                    Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
-                    DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption
+                    ATLNo = existingRecord.AuthorityToLoadNo
                 };
 
                 ViewBag.DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption;
@@ -281,8 +339,64 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
+
+                    var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
+                            .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
+
+                    if (viewModel.IsECCEdited)
+                    {
+                        var operationManager = await _dbContext.ApplicationUsers
+                            .Where(a => a.Position == SD.Position_OperationManager)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var user in operationManager)
+                        {
+                            var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser.ToUpper()}. Please review and approve.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                                .Where(h => h.UserName == user.UserName)
+                                .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
+
+                        existingRecord.Status = nameof(DRStatus.ForApprovalOfOM);
+                    }
+
+                    if (viewModel.Driver != existingRecord.Driver || viewModel.PlateNo != existingRecord.PlateNo)
+                    {
+                        var tnsUser = await _dbContext.ApplicationUsers
+                            .Where(a => a.Department == SD.Department_TradeAndSupply)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var user in tnsUser)
+                        {
+                            var message = $"Please be informed that {viewModel.CurrentUser.ToUpper()} has updated the 'Driver' and 'Plate#' for {existingRecord.DeliveryReceiptNo}.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                           .Where(h => h.UserName == user.UserName)
+                           .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
+                    }
+
                     await _unitOfWork.FilprideDeliveryReceipt.UpdateAsync(viewModel, cancellationToken);
+
                     await transaction.CommitAsync(cancellationToken);
+
                     TempData["success"] = "Delivery receipt updated successfully.";
                     return RedirectToAction(nameof(Index));
                 }
@@ -290,7 +404,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
-                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -299,7 +412,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
-            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -379,16 +491,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                if (existingRecord.PostedBy == null)
-                {
-                    existingRecord.PostedBy = _userManager.GetUserName(User);
-                    existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingRecord.Status = nameof(Status.Posted);
+                existingRecord.PostedBy = _userManager.GetUserName(User);
+                existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingRecord.Status = nameof(DRStatus.Pending);
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Posted delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-                }
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Approved delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Delivery receipt approved successfully.";
                 return RedirectToAction(nameof(Preview), new { id });
@@ -449,6 +558,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 RemainingVolume = cos.BalanceQuantity,
                 Price = cos.DeliveredPrice,
                 cos.DeliveryOption,
+                ATLNo = cos.AuthorityToLoadNo,
+                Hauler = cos.Hauler?.SupplierName,
+                cos.Driver,
+                cos.PlateNo,
                 cos.Freight
             });
         }
@@ -473,7 +586,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
-                existingRecord.Status = "Delivered";
+                existingRecord.Status = nameof(DRStatus.Delivered);
 
                 await _unitOfWork.FilprideReceivingReport.AutoGenerateReceivingReport(existingRecord, cancellationToken);
                 await _unitOfWork.FilprideDeliveryReceipt.PostAsync(existingRecord, cancellationToken);
@@ -507,8 +620,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = nameof(Status.Canceled);
+                    model.Status = nameof(DRStatus.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
+                    await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
 
                     #region --Audit Trail Recording
 
@@ -533,15 +647,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (model != null)
             {
-                var hasAlreadyBeenUsed = await _dbContext.FilprideReceivingReports
-                   .AnyAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status != nameof(Status.Voided), cancellationToken);
-
-                if (hasAlreadyBeenUsed)
-                {
-                    TempData["error"] = "Please note that this record has already been utilized in a receiving report. As a result, voiding it is not permitted.";
-                    return RedirectToAction(nameof(Index));
-                }
-
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 try
@@ -555,15 +660,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
                         model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Voided);
+                        model.Status = nameof(DRStatus.Voided);
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                        var connectedReceivingReport = await _dbContext.FilprideReceivingReports
+                            .FirstOrDefaultAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken);
 
                         await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
                         await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
-                        ///PENDING : Create the removal of receiving report
+                        await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(connectedReceivingReport.ReceivingReportId, model.VoidedBy, ipAddress, cancellationToken);
+
+                        if (model.CustomerOrderSlip.HasMultiplePO)
+                        {
+                            await _unitOfWork.FilprideDeliveryReceipt.UpdatePreviousAppointedSupplierAsync(model);
+                        }
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                         FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, model.Company);
                         await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 

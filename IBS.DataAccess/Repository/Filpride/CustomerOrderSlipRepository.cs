@@ -44,6 +44,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideCustomerOrderSlip> query = dbSet
                 .Include(cos => cos.Customer)
+                .Include(cos => cos.Hauler)
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
@@ -61,6 +62,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await dbSet.Where(filter)
                 .Include(cos => cos.Customer)
+                .Include(cos => cos.Hauler)
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
@@ -82,7 +84,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.HasCommission = viewModel.HasCommission;
             existingRecord.CommissioneeId = viewModel.CommissioneeId;
-            existingRecord.CommissionRate = viewModel.CommissionerRate;
+            existingRecord.CommissionRate = viewModel.CommissionRate;
             existingRecord.ProductId = viewModel.ProductId;
             existingRecord.OldCosNo = viewModel.OtcCosNo;
 
@@ -151,7 +153,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             customerOrderSlip.TotalAmount = customerOrderSlip.Quantity * customerOrderSlip.DeliveredPrice;
 
-            customerOrderSlip.Status = nameof(CosStatus.ApprovedByOM);
+            customerOrderSlip.Status = nameof(CosStatus.ForApprovalOfFM);
 
             await _db.SaveChangesAsync(cancellationToken);
         }

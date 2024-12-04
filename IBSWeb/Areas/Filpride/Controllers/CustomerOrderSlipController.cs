@@ -7,8 +7,10 @@ using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 
@@ -25,11 +27,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        public CustomerOrderSlipController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        private readonly IHubContext<NotificationHub> _hubContext;
+
+        public CustomerOrderSlipController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IHubContext<NotificationHub> hubContext)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
+            _hubContext = hubContext;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -158,7 +163,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         model.HasCommission = viewModel.HasCommission;
                         model.CommissioneeId = viewModel.CommissioneeId;
-                        model.CommissionRate = viewModel.CommissionerRate;
+                        model.CommissionRate = viewModel.CommissionRate;
                     }
 
                     await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
@@ -220,7 +225,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     HasCommission = exisitingRecord.HasCommission,
                     CommissioneeId = exisitingRecord.CommissioneeId,
                     Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
-                    CommissionerRate = exisitingRecord.CommissionRate,
+                    CommissionRate = exisitingRecord.CommissionRate,
                     CustomerPoNo = exisitingRecord.CustomerPoNo,
                     Quantity = exisitingRecord.Quantity,
                     DeliveredPrice = exisitingRecord.DeliveredPrice,
@@ -230,7 +235,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
                     AccountSpecialist = exisitingRecord.AccountSpecialist,
                     Remarks = exisitingRecord.Remarks,
-                    OtcCosNo = exisitingRecord.OldCosNo
+                    OtcCosNo = exisitingRecord.OldCosNo,
+                    Status = exisitingRecord.Status,
                 };
 
                 return View(viewModel);
@@ -252,8 +258,79 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
                     viewModel.CurrentUser = _userManager.GetUserName(User);
+
+                    var changes = new List<string>();
+                    if (existingRecord.Date != viewModel.Date)
+                    {
+                        changes.Add("Order Date was updated.");
+                    }
+                    if (existingRecord.OldCosNo != viewModel.OtcCosNo)
+                    {
+                        changes.Add("OTC COS# was updated.");
+                    }
+                    if (existingRecord.CustomerId != viewModel.CustomerId)
+                    {
+                        changes.Add("Customer was updated.");
+                    }
+                    if (existingRecord.DeliveredPrice != viewModel.DeliveredPrice)
+                    {
+                        changes.Add("Delivered Price was updated.");
+                    }
+                    if (existingRecord.CustomerPoNo != viewModel.CustomerPoNo)
+                    {
+                        changes.Add("Customer PO# was updated.");
+                    }
+                    if (existingRecord.HasCommission != viewModel.HasCommission)
+                    {
+                        changes.Add("Commission status was updated.");
+                    }
+                    if (existingRecord.CommissioneeId != viewModel.CommissioneeId)
+                    {
+                        changes.Add("Commissionee was updated.");
+                    }
+                    if (existingRecord.CommissionRate != viewModel.CommissionRate)
+                    {
+                        changes.Add("Commission Rate was updated.");
+                    }
+                    if (existingRecord.AccountSpecialist != viewModel.AccountSpecialist)
+                    {
+                        changes.Add("Account Specialist was updated.");
+                    }
+                    if (existingRecord.Remarks != viewModel.Remarks)
+                    {
+                        changes.Add("Remarks were updated.");
+                    }
+
                     await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
+
+                    if (existingRecord.AuthorityToLoadNo != null)
+                    {
+                        var tnsAndLogisticUsers = await _dbContext.ApplicationUsers
+                            .Where(a => a.Department == SD.Department_TradeAndSupply || a.Department == SD.Department_Logistics)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var user in tnsAndLogisticUsers)
+                        {
+                            var message = $"{viewModel.CurrentUser.ToUpper()} has modified {existingRecord.CustomerOrderSlipNo}. Updates include:\n{string.Join("\n", changes)}";
+                            message += $"\nKindly reappoint the {(user.Department == SD.Department_TradeAndSupply ? "supplier" : "hauler")}, if necessary.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                            .Where(h => h.UserName == user.UserName)
+                            .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
+                    }
+
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Customer order slip updated successfully.";
                     return RedirectToAction(nameof(Index));
@@ -304,11 +381,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!existingRecord.HasMultiplePO)
                 {
-                    model.NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.PurchaseOrder.Price);
+                    var purchaseOrder = await _dbContext.FilpridePurchaseOrders
+                        .Include(p => p.ActualPrices)
+                        .FirstOrDefaultAsync(p => p.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken);
+
+                    if (purchaseOrder.UnTriggeredQuantity != purchaseOrder.Quantity)
+                    {
+                        decimal weightedCostTotal = 0m;
+                        decimal totalCOSVolume = 0m;
+                        decimal requiredQuantity = existingRecord.Quantity;
+
+                        foreach (var price in purchaseOrder.ActualPrices.Where(p => p.IsApproved))
+                        {
+                            var effectiveVolume = Math.Min(price.TriggeredVolume, requiredQuantity - totalCOSVolume);
+
+                            weightedCostTotal += effectiveVolume * price.TriggeredPrice; // Adjust `CostPerUnit` if the field name differs
+                            totalCOSVolume += effectiveVolume;
+
+                            // Stop if we've reached the required quantity
+                            if (totalCOSVolume >= requiredQuantity)
+                                break;
+                        }
+
+                        model.NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(weightedCostTotal / totalCOSVolume);
+                    }
+                    else
+                    {
+                        model.NetOfVatProductCost = _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(existingRecord.PurchaseOrder.Price);
+                    }
                 }
                 else
                 {
                     var appointedSupplier = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Include(p => p.PurchaseOrder).ThenInclude(p => p.ActualPrices)
                         .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
                         .ToListAsync(cancellationToken);
 
@@ -647,7 +752,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
-                    existingCos.Status = nameof(CosStatus.SupplierAppointed);
+
+                    if (existingCos.HaulerId != null)
+                    {
+                        existingCos.Status = nameof(CosStatus.ForAtlBooking);
+                    }
+                    else
+                    {
+                        existingCos.Status = nameof(CosStatus.SupplierAppointed);
+                    }
+
                     existingCos.SupplierId = viewModel.SupplierId;
 
                     if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery)
@@ -655,12 +769,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingCos.Freight = viewModel.Freight;
                         existingCos.SubPORemarks = viewModel.SubPoRemarks;
                     }
-                    else if (viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                    else if (existingCos.HaulerId != null && viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
                     {
-                        var highestFreight = await _unitOfWork.FilprideFreight
-                            .GetAsync(f => f.ClusterCode == existingCos.Customer.ClusterCode && f.PickUpPointId == existingCos.PickUpPointId, cancellationToken) ?? throw new ArgumentNullException("No freight reference found!");
-
-                        existingCos.Freight = highestFreight.Freight;
+                        //Do nothing because it means the logistics already assigned the freight
                     }
                     else
                     {
@@ -796,8 +907,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return BadRequest();
                     }
 
+                    if (existingCos.DeliveryOption != viewModel.DeliveryOption)
+                    {
+                        var logisticUser = await _dbContext.ApplicationUsers
+                            .Where(u => u.Department == SD.Department_Logistics.ToString())
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var user in logisticUser)
+                        {
+                            var message = $"{viewModel.CurrentUser.ToUpper()} has updated the delivery option of {existingCos.CustomerOrderSlipNo} from {existingCos.DeliveryOption} to {viewModel.DeliveryOption}. Please reappoint your hauler if necessary.";
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                            .Where(h => h.UserName == user.UserName)
+                            .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
+                    }
+
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
-                    existingCos.Status = nameof(CosStatus.SupplierAppointed);
                     existingCos.SupplierId = viewModel.SupplierId;
 
                     if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery)
@@ -805,12 +938,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingCos.Freight = viewModel.Freight;
                         existingCos.SubPORemarks = viewModel.SubPoRemarks;
                     }
-                    else if (viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                    else if (existingCos.HaulerId != null && viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
                     {
-                        var highestFreight = await _unitOfWork.FilprideFreight
-                            .GetAsync(f => f.ClusterCode == existingCos.Customer.ClusterCode && f.PickUpPointId == existingCos.PickUpPointId, cancellationToken) ?? throw new ArgumentNullException("No freight reference found!");
-
-                        existingCos.Freight = highestFreight.Freight;
+                        //Do nothing because it means the logistics already assigned the freight
                     }
                     else
                     {
@@ -881,10 +1011,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingCos.PurchaseOrderId = viewModel.PurchaseOrderIds.FirstOrDefault();
                     }
 
-                    TempData["success"] = "Appointed supplier successfully.";
+                    TempData["success"] = "Reappointed supplier successfully.";
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Reappoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -950,6 +1080,202 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .GetCustomerCreditBalance((int)customerId, cancellationToken);
 
             return Json(balance);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AppointHauler(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var companyClaims = await GetCompanyClaimAsync();
+            var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+            var viewModel = new CustomerOrderSlipAppointingHauler
+            {
+                CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                DeliveryOption = existingRecord.DeliveryOption,
+                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
+            };
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AppointHauler(CustomerOrderSlipAppointingHauler viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    viewModel.CurrentUser = _userManager.GetUserName(User);
+
+                    var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                    if (existingCos == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    existingCos.HaulerId = viewModel.HaulerId;
+
+                    if (existingCos.SupplierId != null)
+                    {
+                        if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                        {
+                            existingCos.Freight = viewModel.Freight;
+                        }
+
+                        existingCos.Status = nameof(CosStatus.ForAtlBooking);
+                    }
+                    else
+                    {
+                        existingCos.Freight = viewModel.Freight;
+                        existingCos.Status = nameof(CosStatus.HaulerAppointed);
+                    }
+
+                    existingCos.Driver = viewModel.Driver;
+                    existingCos.PlateNo = viewModel.PlateNo;
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint hauler customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    TempData["success"] = "Appointed hauler successfully.";
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return View(viewModel);
+                }
+            }
+            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
+            TempData["error"] = "The submitted information is invalid.";
+            return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ReAppointHauler(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var companyClaims = await GetCompanyClaimAsync();
+            var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+            var viewModel = new CustomerOrderSlipAppointingHauler
+            {
+                CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                DeliveryOption = existingRecord.DeliveryOption,
+                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
+                HaulerId = (int)existingRecord.HaulerId,
+                Freight = (decimal)existingRecord.Freight,
+                Driver = existingRecord.Driver,
+                PlateNo = existingRecord.PlateNo
+            };
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ReAppointHauler(CustomerOrderSlipAppointingHauler viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    viewModel.CurrentUser = _userManager.GetUserName(User);
+
+                    var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                    if (existingCos == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    existingCos.HaulerId = viewModel.HaulerId;
+
+                    if (existingCos.SupplierId != null)
+                    {
+                        if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                        {
+                            existingCos.Freight = viewModel.Freight;
+                        }
+                    }
+                    else
+                    {
+                        existingCos.Freight = viewModel.Freight;
+                    }
+
+                    existingCos.Driver = viewModel.Driver;
+                    existingCos.PlateNo = viewModel.PlateNo;
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Reappoint hauler customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    TempData["success"] = "Reappointed hauler successfully.";
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return View(viewModel);
+                }
+            }
+
+            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
+            TempData["error"] = "The submitted information is invalid.";
+            return View(viewModel);
+        }
+
+        public async Task<IActionResult> BookAuthorityToLoad(int id, string? supplierAtlNo, DateOnly bookedDate, CancellationToken cancellationToken)
+        {
+            if (id == 0)
+            {
+                return NotFound();
+            }
+            var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+            if (existingCos == null)
+            {
+                return NotFound();
+            }
+            try
+            {
+                FilprideAuthorityToLoad model = new()
+                {
+                    AuthorityToLoadNo = await _unitOfWork.FilprideAuthorityToLoad.GenerateAtlNo(cancellationToken),
+                    CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
+                    DateBooked = bookedDate,
+                    ValidUntil = bookedDate.AddDays(5),
+                    UppiAtlNo = supplierAtlNo,
+                    Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
+                    CreatedBy = _userManager.GetUserName(User),
+                    CreatedDate = DateTime.Now,
+                };
+                await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
+                existingCos.AuthorityToLoadNo = model.AuthorityToLoadNo;
+                existingCos.Status = nameof(CosStatus.ForApprovalOfOM);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                TempData["success"] = "ATL booked successfully";
+                await _unitOfWork.SaveAsync(cancellationToken);
+                return RedirectToAction(nameof(AuthorityToLoadController.Print), "AuthorityToLoad", new { area = nameof(Filpride), id = model.AuthorityToLoadId });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
     }
 }
