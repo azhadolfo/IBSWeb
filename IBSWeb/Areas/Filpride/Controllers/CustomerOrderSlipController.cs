@@ -254,7 +254,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
-
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Customer order slip updated successfully.";
                     return RedirectToAction(nameof(Index));
