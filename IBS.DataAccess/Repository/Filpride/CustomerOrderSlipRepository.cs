@@ -6,6 +6,7 @@ using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Models.Filpride.Books;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -91,6 +92,10 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = GetPhilippineTime(DateTime.UtcNow);;
+                
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", "", existingRecord.Company);
+                await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

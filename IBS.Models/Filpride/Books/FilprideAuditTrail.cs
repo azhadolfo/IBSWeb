@@ -30,18 +30,7 @@ namespace IBS.Models.Filpride.Books
         {
             Username = username;
             Date = DateTimeHelper.GetCurrentPhilippineTime();
-
-            // Attempt to resolve IP to hostname, fallback to IP if resolution fails
-            try
-            {
-                var hostEntry = Dns.GetHostEntry(ipAddress);
-                MachineName = hostEntry.HostName;
-            }
-            catch (Exception)
-            {
-                MachineName = ipAddress; // Fallback to IP address
-            }
-
+            MachineName = Environment.MachineName;
             Activity = activity;
             DocumentType = documentType;
             Company = company;

@@ -306,7 +306,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited receiving report# {existingModel.ReceivingReportNo}", "Receiving Report", ipAddress, existingModel.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording

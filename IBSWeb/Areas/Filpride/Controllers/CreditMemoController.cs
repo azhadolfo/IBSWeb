@@ -374,11 +374,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         existingCM.CreditAmount = -model.Amount ?? 0;
                     }
+                    
+                    existingCM.EditedBy = _userManager.GetUserName(User);
+                    existingCM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
 
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.EditedBy, $"Edited credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingCM.EditedBy, $"Edited credit memo# {existingCM.CreditMemoNo}", "Credit Memo", ipAddress, existingCM.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
