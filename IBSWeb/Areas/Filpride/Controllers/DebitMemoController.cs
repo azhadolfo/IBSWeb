@@ -974,13 +974,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingDM.DebitAmount = model.Amount ?? 0;
                     }
 
-                    model.EditedBy = _userManager.GetUserName(User);
-                    model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingDM.EditedBy = _userManager.GetUserName(User);
+                    existingDM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.EditedBy, $"Edited debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", ipAddress, existingSv.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording

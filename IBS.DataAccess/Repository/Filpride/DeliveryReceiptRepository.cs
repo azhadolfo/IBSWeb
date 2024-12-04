@@ -110,6 +110,10 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edit delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", "", existingRecord.Company);
+                await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

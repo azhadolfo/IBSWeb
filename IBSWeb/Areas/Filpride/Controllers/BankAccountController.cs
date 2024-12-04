@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
@@ -67,6 +68,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                
                 try
                 {
                     if (await _unitOfWork.FilprideBankAccount.IsBankAccountNoExist(model.AccountNo, cancellationToken))
@@ -87,11 +90,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
+                    
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", "", model.Company);
+                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                    
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Bank created successfully.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -115,12 +124,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Edit(FilprideBankAccount model, CancellationToken cancellationToken)
         {
             var existingModel = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankAccountId, cancellationToken);
-            if (existingModel == null)
-            {
-                return NotFound();
-            }
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                
                 try
                 {
                     existingModel.AccountNo = model.AccountNo;
@@ -130,19 +137,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     TempData["success"] = "Bank edited successfully.";
                     await _dbContext.SaveChangesAsync(cancellationToken);
+                    
+                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo}", "Bank Account", "", existingModel.Company);
+                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                    
+                    await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(existingModel);
                 }
             }
-            else
-            {
-                ModelState.AddModelError("", "The information you submitted is not valid!");
-                return View(existingModel);
-            }
+            ModelState.AddModelError("", "The information you submitted is not valid!");
+            return View(existingModel);
         }
 
         //Download as .xlsx file.(Export)

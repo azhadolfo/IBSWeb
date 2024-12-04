@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
@@ -84,6 +85,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                
                 var companyClaims = await GetCompanyClaimAsync();
 
                 if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, model.Category, companyClaims, cancellationToken))
@@ -119,12 +122,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CreatedBy = _userManager.GetUserName(User);
                     model.Company = companyClaims;
                     await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
+                    
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new supplier {model.SupplierCode}", "Supplier", "", model.Company);
+                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                    
                     await _unitOfWork.SaveAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Supplier created successfully";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     _logger.LogError(ex, "Error on creating supplier.");
                     TempData["error"] = $"Error: '{ex.Message}'";
                     return View(model);
@@ -177,6 +186,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                
                 try
                 {
                     var companyClaims = await GetCompanyClaimAsync();
@@ -197,12 +208,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     model.EditedBy = _userManager.GetUserName(User);
                     await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
-
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Supplier updated successfully";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     _logger.LogError(ex, "Error in updating supplier.");
                     TempData["error"] = $"Error: '{ex.Message}'";
                     return View(model);
