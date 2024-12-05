@@ -737,9 +737,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(Print), new { id });
         }
 
-        public async Task<IActionResult> GetDrDetails(int drId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetDrDetails(int? drId, CancellationToken cancellationToken)
         {
+            if (drId == null)
+            {
+                return BadRequest();
+            }
+            
             var dr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(d => d.DeliveryReceiptId == drId, cancellationToken);
+            
             if (dr != null)
             {
                 var automatedRr = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == dr.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
