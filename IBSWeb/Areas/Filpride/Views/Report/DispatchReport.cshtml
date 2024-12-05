@@ -1,4 +1,6 @@
-﻿@{
+﻿@model DispatchReportViewModel
+
+@{
     ViewData["Title"] = "Dispatch Report";
 }
 
@@ -12,14 +14,22 @@
     </div>
     <div class="card-body p-4">
         <form method="post">
+            
             <div class="form-group row">
-                <label for="reportType" class="col-sm-4 col-form-label text-right">Select Report Type</label>
+                <label asp-for="ReportType" class="col-sm-4 col-form-label text-right">Select Report Type</label>
                 <div class="col-sm-6">
-                    <select class="form-control" id="reportType" name="reportType" required>
+                    <select class="form-control js-select2" asp-for="ReportType" required style="width: 100%;">
                         <option value="" disabled selected>Select an option</option>
                         <option value="InTransit">In-Transit Deliveries</option>
                         <option value="AllDeliveries">All Deliveries</option>
                     </select>
+                </div>
+            </div>
+
+            <div class="form-group row mt-4">
+                <label asp-for="AsOf" class="col-sm-4 col-form-label text-right">As Of (Month and Year)</label>
+                <div class="col-sm-6">
+                    <input type="month" class="form-control" asp-for="AsOf" value="@DateTime.UtcNow.ToString("yyyy-MM")" required>
                 </div>
             </div>
 
