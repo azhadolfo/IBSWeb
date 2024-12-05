@@ -64,8 +64,8 @@
                         <td>@Model.DeliveryReceipt.Customer.CustomerName</td>
                         <td>@Model.DeliveryReceipt.CustomerOrderSlip.Product.ProductName</td>
                         <td>@Html.DisplayFor(model => model.DeliveryReceipt.Quantity)</td>
-                        <td>@(Model.DeliveryReceipt.PurchaseOrder?.SupplierSalesOrderNo ?? Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo)</td>
-                        <td>@(Model.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo ?? Model.DeliveryReceipt.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo)</td>
+                        <td>@(Model.DeliveryReceipt.PurchaseOrder?.SupplierSalesOrderNo ?? Model.DeliveryReceipt.CustomerOrderSlip?.PurchaseOrder?.SupplierSalesOrderNo)</td>
+                        <td>@(Model.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo ?? Model.DeliveryReceipt.CustomerOrderSlip?.PurchaseOrder?.PurchaseOrderNo)</td>
                     </tr>
                 </tbody>
             </table>
