@@ -643,7 +643,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var user in operationManager)
                 {
-                    var message = $"The price for {existingRecord.PurchaseOrderNo} has been updated by {currentUser}, affecting a volume of {volume}L. This change will impact the related COS. Please review and approve.";
+                    var message = $"The cost for Purchase Order {existingRecord.PurchaseOrderNo} has been updated by {currentUser}, affecting a volume of {volume:N4}L from {existingRecord.Price:N4} to {price:N4} (gross of VAT). Please review and approve.";
 
                     await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
 
@@ -718,7 +718,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    return Ok(new { message = "The Purchase Order has been approved. All associated Customer Order Slips (COS), and Receiving Reports (RR) have been updated with the new prices." });
+                    return Ok(new { message = "The Purchase Order has been approved. All associated Receiving Reports (RR) have been updated with the new cost." });
                 }
                 catch (Exception ex)
                 {
