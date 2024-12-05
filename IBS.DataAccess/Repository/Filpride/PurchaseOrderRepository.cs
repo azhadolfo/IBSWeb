@@ -100,7 +100,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
-                .Where(p => p.Company == company && !p.IsReceived && !p.IsSubPo)
+                .Where(p => p.Company == company && !p.IsReceived && !p.IsSubPo && p.Status == nameof(Status.Posted))
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderNo,
@@ -112,7 +112,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<List<SelectListItem>> GetPurchaseOrderListAsyncById(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePurchaseOrders
-                .Where(p => p.Company == company && !p.IsReceived && !p.IsSubPo)
+                .Where(p => p.Company == company && !p.IsReceived && !p.IsSubPo && p.Status == nameof(Status.Posted))
                 .OrderBy(p => p.PurchaseOrderNo)
                 .Select(po => new SelectListItem
                 {
@@ -126,7 +126,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
-                .Where(p => p.SupplierId == supplierId && !p.IsReceived && !p.IsSubPo)
+                .Where(p => p.SupplierId == supplierId && !p.IsReceived && !p.IsSubPo && p.Status == nameof(Status.Posted))
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
@@ -139,7 +139,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
-                .Where(p => p.SupplierId == supplierId && p.ProductId == productId && !p.IsReceived && !p.IsSubPo)
+                .Where(p => p.SupplierId == supplierId && p.ProductId == productId && !p.IsReceived && !p.IsSubPo && p.Status == nameof(Status.Posted))
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
