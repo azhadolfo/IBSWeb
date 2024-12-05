@@ -1,6 +1,7 @@
 ﻿using IBS.Models.Filpride.AccountsPayable;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Utility;
 
 namespace IBS.Models.Filpride.Integrated
 {
@@ -29,5 +30,7 @@ namespace IBS.Models.Filpride.Integrated
         public string? ApprovedBy { get; set; }
 
         public DateTime? ApprovedDate { get; set; }
+
+        public DateTime TriggeredDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
     }
 }

@@ -283,8 +283,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder
-                .GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            var purchaseOrder = await _dbContext.FilpridePurchaseOrders
+                .Include(po => po.Supplier)
+                .Include(po => po.Product)
+                .Include(po => po.ActualPrices)
+                .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            
             if (purchaseOrder == null)
             {
                 return NotFound();
