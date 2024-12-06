@@ -10,7 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
+using IBS.Models.Filpride.AccountsReceivable;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -866,6 +868,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             TempData["error"] = "Please input date from";
             return RedirectToAction(nameof(PurchaseReport)); 
+        }
+        
+        public async Task<IActionResult> OtcFuelSalesReport()
+        {
+            return View();
         }
 
         //Generate as .txt file
@@ -3048,5 +3055,234 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion
+        
+        #region -- Generate Fuel Sales Report Excel File --
+
+        public async Task<IActionResult> GenerateOtcFuelSalesReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(this.User);
+                var companyClaims = await GetCompanyClaimAsync();
+                
+                // get  data from chosen date
+                var bioSalesReport = _unitOfWork.FilprideReport.GetOtcFuelSalesReport(model.DateFrom, model.DateTo, companyClaims, "BIODIESEL");
+                var econoSalesReport = _unitOfWork.FilprideReport.GetOtcFuelSalesReport(model.DateFrom, model.DateTo, companyClaims, "ECONOGAS");
+                var enviroSalesReport = _unitOfWork.FilprideReport.GetOtcFuelSalesReport(model.DateFrom, model.DateTo, companyClaims, "ENVIROGAS");
+                var allSalesReport = _unitOfWork.FilprideReport.GetAllOtcFuelSalesReport(model.DateFrom, model.DateTo, companyClaims);
+                
+                // check if there is no record
+                if (bioSalesReport.Count == 0 && econoSalesReport.Count == 0 && enviroSalesReport.Count == 0 && allSalesReport.Count == 0)
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(OtcFuelSalesReport));
+                }
+                
+                // Create the Excel package
+                using var package = new ExcelPackage();
+
+                // Add a new worksheet to the Excel package
+                var bioWorksheet = package.Workbook.Worksheets.Add("Biodiesel");
+                bioWorksheet = SetSheet(bioWorksheet, "Biodiesel", dateFrom, dateTo, bioSalesReport, "customer");
+                var econoWorksheet = package.Workbook.Worksheets.Add("Econogas");
+                econoWorksheet = SetSheet(econoWorksheet, "Econogas", dateFrom, dateTo , econoSalesReport, "customer");
+                var enviroWorksheet = package.Workbook.Worksheets.Add("Envirogas");
+                enviroWorksheet = SetSheet(enviroWorksheet, "Envirogas", dateFrom, dateTo, enviroSalesReport, "customer");
+                var comparisonWorksheet = package.Workbook.Worksheets.Add("Comparison");
+                comparisonWorksheet = SetSheet(comparisonWorksheet, "Comparison", dateFrom, dateTo, enviroSalesReport, "product");
+                
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "OtcFuelSalesReport.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(OtcFuelSalesReport));
+            }
+        }
+
+        #endregion
+
+        public ExcelWorksheet SetSheet(ExcelWorksheet worksheet, string title, DateOnly dateFrom, DateOnly dateTo, List<FilprideSalesInvoice> fuelSalesReport, string groupBy)
+        {
+            var mergedCells = worksheet.Cells["A1:B1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = title;
+            mergedCells.Style.Font.Bold = true;
+            mergedCells.Style.Font.Size = 15;
+            mergedCells.Style.Font.Name = "Tahoma";
+            mergedCells.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+            worksheet.Row(1).Height = 20;
+
+            worksheet.Cells["A2"].Value = "Sales Report Per Total";
+            worksheet.Cells["A3"].Value = "Period Covered";
+            worksheet.Cells["A4"].Value = "Date From:";
+            worksheet.Cells["A5"].Value = "Date To:";
+
+            worksheet.Cells["B4"].Value = $"{dateFrom}";
+            worksheet.Cells["B5"].Value = $"{dateTo}";
+
+            worksheet.Cells["A1:B5"].Style.Font.Name = "Tahoma";
+            worksheet.Cells["A2:B5"].Style.Font.Size = 11;
+            
+            worksheet.Cells["A8"].Value = "DATE";
+            worksheet.Cells["B8"].Value = "ACCOUNT NAME";
+            worksheet.Cells["C8"].Value = "ACCT TYPE";
+            worksheet.Cells["D8"].Value = "COS #";
+            worksheet.Cells["E8"].Value = "OTC COS #";
+            worksheet.Cells["F8"].Value = "DR #";;
+            worksheet.Cells["G8"].Value = "OTC DR #";
+            worksheet.Cells["H8"].Value = "ITEMS";
+            worksheet.Cells["I8"].Value = "VOLUME";
+            worksheet.Cells["J8"].Value = "TOTAL";
+            worksheet.Cells["K8"].Value = "REMARKS";
+            
+            // Populate the data rows
+            int row = 9;
+            string currencyFormat = "#,##0.0000";
+            var totalVolume = 0m;
+            var totalAmount = 0m;
+            var previousCLassifier = "";
+            var currentCLassifier = "";
+        
+            foreach (var si in fuelSalesReport)
+            {
+                if (groupBy == "customer")
+                {
+                    currentCLassifier = si.Customer?.CustomerName;
+                }
+                else if (groupBy == "product")
+                {
+                    currentCLassifier = si.Product?.ProductName;
+                }
+                
+                if (!string.IsNullOrEmpty(previousCLassifier) && previousCLassifier != currentCLassifier)
+                {
+                    worksheet.Cells[row, 9].Value = totalVolume;
+                    worksheet.Cells[row, 10].Value = totalAmount;
+                    
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                    
+                    totalVolume = 0m;
+                    totalAmount = 0m;
+                    
+                    // Apply style to subtotal rows
+                    using (var range = worksheet.Cells[row, 9, row, 10])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Font.Size = 13;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+                    }
+                    
+                    row++;
+                }
+                
+                #region -- Populate data rows --
+                
+                    #region -- Assign Values to Cells --
+
+                    worksheet.Cells[row, 1].Value = si.TransactionDate; // Date
+                    worksheet.Cells[row, 2].Value = si.Customer?.CustomerName; // Account Name
+                    worksheet.Cells[row, 3].Value = si.Customer?.CustomerType; // Account Type
+                    worksheet.Cells[row, 4].Value = si.CustomerOrderSlip?.OldCosNo; // Old COS #
+                    worksheet.Cells[row, 5].Value = si.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
+                    worksheet.Cells[row, 6].Value = si.DeliveryReceipt?.ManualDrNo; // Old DR #
+                    worksheet.Cells[row, 7].Value = si.DeliveryReceipt?.DeliveryReceiptNo; // New DR #
+                    worksheet.Cells[row, 8].Value = si.Product?.ProductName; // Items
+                    worksheet.Cells[row, 9].Value = si.Quantity; // Volume
+                    worksheet.Cells[row, 10].Value = si.Amount; // Total
+                    worksheet.Cells[row, 11].Value = si.Remarks; // Remarks
+
+                    #endregion -- Assign Values to Cells --
+
+                    totalVolume += si.Quantity;
+                    totalAmount += si.Amount;
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+
+                    if (groupBy == "customer")
+                    {
+                        previousCLassifier = si.Customer?.CustomerName;
+                    }
+                    else if (groupBy == "product")
+                    {
+                        previousCLassifier = si.Product?.ProductName;
+                    }
+                    
+                    row++;
+
+                    using (var range = worksheet.Cells[$"A8:K{row}"])
+                    {
+                        range.Style.Font.Name = "Tahoma";
+                        range.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+                    }
+
+                    using (var range = worksheet.Cells[$"A8:K{row}"])
+                    {
+                        // Loop through all rows in the range and set their height
+                        for (int rowIndex = 8; rowIndex <= row; rowIndex++)
+                        {
+                            worksheet.Row(rowIndex).Height = 16; // Set desired row height
+                        }
+                        range.Style.Font.Size = 10;
+                    }
+
+
+                    #endregion -- Populate data rows --
+            }
+            
+            // subtotal for bottom-most part
+            worksheet.Cells[row, 9].Value = totalVolume;
+            worksheet.Cells[row, 10].Value = totalAmount;
+                    
+            worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+            
+            using (var range = worksheet.Cells[row, 9, row, 10])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Font.Size = 10;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+            }
+
+            using (var range = worksheet.Cells[$"A9:H{row}"])
+            {
+                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            }
+            using (var range = worksheet.Cells[$"A9:K{row}"])
+            {
+                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            }
+
+            // table header
+            using (var range = worksheet.Cells["A7:K7"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thick;
+            }
+            using (var range = worksheet.Cells["A8:K8"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thick;
+                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            }
+            
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(9, 1);
+            
+            return worksheet;
+        }
     }
 }
