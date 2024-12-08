@@ -64,9 +64,11 @@ namespace IBS.Models.Filpride.ViewModels
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal ECC { get; set; } = 0;
 
-        public string ATLNo { get; set; }
+        public string? ATLNo { get; set; }
 
-        public string? Hauler { get; set; }
+        public int? HaulerId { get; set; }
+        
+        public List<SelectListItem>? Haulers { get; set; }
 
         public string Driver { get; set; }
 

@@ -127,6 +127,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                 CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
+                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
             };
 
             return View(viewModel);
@@ -167,7 +168,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ECC = viewModel.ECC,
                         Driver = viewModel.Driver,
                         PlateNo = viewModel.PlateNo,
-                        HaulerId = customerOrderSlip.HaulerId,
+                        HaulerId = viewModel.HaulerId ?? customerOrderSlip.HaulerId,
                         AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo
                     };
 
@@ -176,7 +177,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (customerOrderSlip.BalanceQuantity <= 0)
                     {
-                        customerOrderSlip.IsDelivered = true;
                         customerOrderSlip.Status = nameof(CosStatus.Completed);
                     }
 
@@ -188,6 +188,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         await _unitOfWork.FilprideDeliveryReceipt.AssignNewPurchaseOrderAsync(viewModel, model);
                     }
+
+                    #region Remove this in the future
+
+                    if (string.IsNullOrEmpty(viewModel.ATLNo))
+                    {
+                        model.Status = "Draft";
+                    }
+
+                    #endregion
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
 
@@ -310,7 +319,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Freight = existingRecord.Freight,
                     ECC = existingRecord.ECC,
                     DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption,
-                    Hauler = existingRecord.Hauler?.SupplierName,
+                    HaulerId = existingRecord.HaulerId,
+                    Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
                     Driver = existingRecord.Driver,
                     PlateNo = existingRecord.PlateNo,
                     ATLNo = existingRecord.AuthorityToLoadNo
@@ -559,7 +569,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Price = cos.DeliveredPrice,
                 cos.DeliveryOption,
                 ATLNo = cos.AuthorityToLoadNo,
-                Hauler = cos.Hauler?.SupplierName,
+                cos.HaulerId,
                 cos.Driver,
                 cos.PlateNo,
                 cos.Freight
@@ -587,6 +597,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
                 existingRecord.Status = nameof(DRStatus.Delivered);
+                
+                #region Mark the COS delivered
+
+                var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId, cancellationToken);
+
+                if (existingCos.Status == nameof(CosStatus.Completed))
+                {
+                    existingCos.IsDelivered = true;
+                }
+
+                #endregion
 
                 await _unitOfWork.FilprideReceivingReport.AutoGenerateReceivingReport(existingRecord, cancellationToken);
                 await _unitOfWork.FilprideDeliveryReceipt.PostAsync(existingRecord, cancellationToken);

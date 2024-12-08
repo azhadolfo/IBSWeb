@@ -1244,6 +1244,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
                 .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+            
             if (existingCos == null)
             {
                 return NotFound();
@@ -1263,7 +1264,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 };
                 await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
                 existingCos.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                existingCos.Status = nameof(CosStatus.ForApprovalOfOM);
+                //existingCos.Status = nameof(CosStatus.ForApprovalOfOM); --should be the code for status
+
+                if (existingCos.Status != nameof(CosStatus.Approved) && existingCos.Status != nameof(CosStatus.Completed))
+                {
+                    existingCos.Status = nameof(CosStatus.ForApprovalOfOM);
+                }
+                
+                ///PENDING
+                #region Remove this in the future
+
+                var existingDr = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAllAsync(dr => dr.CustomerOrderSlipId == id, cancellationToken);
+
+                foreach (var dr in existingDr)
+                {
+                    dr.AuthorityToLoadNo = model.AuthorityToLoadNo;
+                    dr.Status = nameof(Status.Pending);
+                }
+
+                #endregion
+                
+                
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);

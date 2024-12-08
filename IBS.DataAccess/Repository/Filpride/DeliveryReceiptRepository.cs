@@ -80,7 +80,14 @@ namespace IBS.DataAccess.Repository.Filpride
 
             #region--Update COS
 
-            await UpdateCosRemainingVolumeAsync(existingRecord.CustomerOrderSlipId, (viewModel.Volume - existingRecord.Quantity), cancellationToken);
+            if (viewModel.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+            {
+                await UpdateCosRemainingVolumeAsync(existingRecord.CustomerOrderSlipId, (viewModel.Volume - existingRecord.Quantity), cancellationToken);
+            }
+            else
+            {
+                await DeductTheVolumeToCos(existingRecord.CustomerOrderSlipId, existingRecord.Quantity, cancellationToken);
+            }
 
             #endregion
 
@@ -107,7 +114,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.ManualDrNo = viewModel.ManualDrNo;
             existingRecord.Driver = viewModel.Driver;
             existingRecord.PlateNo = viewModel.PlateNo;
-            existingRecord.HaulerId = customerOrderSlip.HaulerId;
+            existingRecord.HaulerId = viewModel.HaulerId ?? customerOrderSlip.HaulerId;
             existingRecord.ECC = viewModel.ECC;
             existingRecord.Freight = viewModel.Freight;
             existingRecord.AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo;
@@ -171,6 +178,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             try
             {
+                
                 #region General Ledger Book Recording
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
@@ -367,7 +375,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        private async Task UpdateCosRemainingVolumeAsync(int cosId, decimal drVolume, CancellationToken cancellationToken)
+        private async Task  UpdateCosRemainingVolumeAsync(int cosId, decimal drVolume, CancellationToken cancellationToken)
         {
             var cos = await _db.FilprideCustomerOrderSlips
                 .FirstOrDefaultAsync(po => po.CustomerOrderSlipId == cosId, cancellationToken) ?? throw new InvalidOperationException("No record found.");
@@ -377,7 +385,6 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (cos.BalanceQuantity <= 0)
             {
-                cos.IsDelivered = true;
                 cos.Status = nameof(CosStatus.Completed);
             }
         }
@@ -392,12 +399,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 cos.Status = nameof(CosStatus.Approved);
             }
 
-            if (cos != null)
-            {
-                cos.DeliveredQuantity -= drVolume;
-                cos.BalanceQuantity += drVolume;
-                cos.IsDelivered = false;
-            }
+            cos.DeliveredQuantity -= drVolume;
+            cos.BalanceQuantity += drVolume;
+            cos.IsDelivered = false;
         }
 
         public async Task UpdatePreviousAppointedSupplierAsync(FilprideDeliveryReceipt model)
