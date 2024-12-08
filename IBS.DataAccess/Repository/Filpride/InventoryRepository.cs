@@ -62,7 +62,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = Math.Abs(viewModel.Debit[i]),
                         Credit = Math.Abs(viewModel.Credit[i]),
                         CreatedBy = viewModel.CurrentUser,
-                        CreatedDate = GetPhilippineTime(DateTime.UtcNow),
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         IsPosted = false
                     });
             }

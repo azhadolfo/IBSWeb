@@ -91,7 +91,7 @@ namespace IBS.DataAccess.Repository.Filpride
             if (_db.ChangeTracker.HasChanges())
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;
-                existingRecord.EditedDate = GetPhilippineTime(DateTime.UtcNow);;
+                existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 
                 FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", "", existingRecord.Company);
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);

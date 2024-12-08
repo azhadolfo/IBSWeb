@@ -311,7 +311,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (modelHeader.PostedBy == null)
                     {
                         modelHeader.PostedBy = _userManager.GetUserName(this.User);
-                        modelHeader.PostedDate = _unitOfWork.FilprideCheckVoucher.GetPhilippineTime(DateTime.UtcNow);
+                        modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         modelHeader.Status = nameof(Status.Posted);
 
                         #region -- Partial payment of RR's

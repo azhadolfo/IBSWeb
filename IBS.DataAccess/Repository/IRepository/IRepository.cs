@@ -28,6 +28,10 @@ namespace IBS.DataAccess.Repository.IRepository
         (string AccountNo, string AccountTitle) GetCogsAccountTitle(string productCode);
 
         (string AccountNo, string AccountTitle) GetInventoryAccountTitle(string productCode);
+        
+        (string AccountNo, string AccountTitle) GetFreightAccount(string productCode);
+        
+        (string AccountNo, string AccountTitle) GetCommissionAccount(string productCode);
 
         decimal ComputeNetOfVat(decimal grossAmount);
 
@@ -48,7 +52,5 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<CustomerDto> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default);
 
         Task<List<AccountTitleDto>> GetListOfAccountTitleDto(CancellationToken cancellationToken = default);
-
-        DateTime GetPhilippineTime(DateTime utcDateTime);
     }
 }

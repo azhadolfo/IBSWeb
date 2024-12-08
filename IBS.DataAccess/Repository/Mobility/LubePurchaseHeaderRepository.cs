@@ -63,7 +63,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 SupplierDto supplier = await MapSupplierToDTO(lubes.SupplierCode, cancellationToken) ?? throw new InvalidOperationException($"Supplier with code '{lubes.SupplierCode}' not found.");
 
                 lubes.PostedBy = postedBy;
-                lubes.PostedDate = GetPhilippineTime(DateTime.UtcNow);
+                lubes.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 List<MobilityGeneralLedger> journals = new();
                 List<MobilityInventory> inventories = new();

@@ -161,6 +161,28 @@ namespace IBS.DataAccess.Repository
             };
         }
 
+        public (string AccountNo, string AccountTitle) GetFreightAccount(string productCode)
+        {
+            return productCode switch
+            {
+                "PET001" => ("502010100", "COGS - Biodiesel"),
+                "PET002" => ("502010200", "COGS - Econogas"),
+                "PET003" => ("502010300", "COGS - Envirogas"),
+                _ => throw new ArgumentException($"Invalid product code: {productCode}"),
+            };
+        }
+        
+        public (string AccountNo, string AccountTitle) GetCommissionAccount(string productCode)
+        {
+            return productCode switch
+            {
+                "PET001" => ("503010100", "COGS - Biodiesel"),
+                "PET002" => ("503010200", "COGS - Econogas"),
+                "PET003" => ("503010300", "COGS - Envirogas"),
+                _ => throw new ArgumentException($"Invalid product code: {productCode}"),
+            };
+        }
+
         public decimal ComputeNetOfVat(decimal grossAmount)
         {
             if (grossAmount <= 0)
@@ -254,19 +276,13 @@ namespace IBS.DataAccess.Repository
         public async Task<List<AccountTitleDto>> GetListOfAccountTitleDto(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideChartOfAccounts
-               .Where(coa => coa.Level == 4)
+               .Where(coa => coa.Level == 4 || coa.Level == 5)
                .Select(coa => new AccountTitleDto
                {
                    AccountNumber = coa.AccountNumber,
                    AccountName = coa.AccountName
                })
                .ToListAsync(cancellationToken);
-        }
-
-        public DateTime GetPhilippineTime(DateTime utcDateTime)
-        {
-            var philippineTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
-            return TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, philippineTimeZone);
         }
     }
 }
