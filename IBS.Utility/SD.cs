@@ -56,8 +56,8 @@
         public const string Department_Engineering = "Engineering";
         public const string Department_Finance = "Finance";
         public const string Department_HRAndAdminOrLegal = "HR and Admin/Legal";
-        public const string Department_Logistics = " Logistics";
-        public const string Department_Marketing = " Marketing";
+        public const string Department_Logistics = "Logistics";
+        public const string Department_Marketing = "Marketing";
         public const string Department_ManagementAccounting = " Management Accounting";
         public const string Department_MIS = "MIS";
         public const string Department_Operation = "Operation";
