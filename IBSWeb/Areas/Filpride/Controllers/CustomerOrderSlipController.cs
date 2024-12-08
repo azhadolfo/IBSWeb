@@ -1107,6 +1107,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                
                 try
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
@@ -1143,12 +1145,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
                     TempData["success"] = "Appointed hauler successfully.";
                     await _unitOfWork.SaveAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
                     viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     TempData["error"] = ex.Message;
+                    await transaction.RollbackAsync(cancellationToken);
                     return View(viewModel);
                 }
             }
@@ -1187,6 +1191,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                
                 try
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
@@ -1221,12 +1227,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
                     TempData["success"] = "Reappointed hauler successfully.";
                     await _unitOfWork.SaveAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
                     viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     TempData["error"] = ex.Message;
+                    await transaction.RollbackAsync(cancellationToken);
                     return View(viewModel);
                 }
             }
@@ -1249,6 +1257,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return NotFound();
             }
+            
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            
             try
             {
                 FilprideAuthorityToLoad model = new()
@@ -1291,11 +1302,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
                 TempData["success"] = "ATL booked successfully";
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 return RedirectToAction(nameof(AuthorityToLoadController.Print), "AuthorityToLoad", new { area = nameof(Filpride), id = model.AuthorityToLoadId });
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                await transaction.RollbackAsync(cancellationToken);
                 return RedirectToAction(nameof(Index));
             }
         }
