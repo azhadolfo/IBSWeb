@@ -372,16 +372,13 @@ namespace IBS.DataAccess.Repository.Filpride
             var cos = await _db.FilprideCustomerOrderSlips
                 .FirstOrDefaultAsync(po => po.CustomerOrderSlipId == cosId, cancellationToken) ?? throw new InvalidOperationException("No record found.");
 
-            if (cos != null)
-            {
-                cos.DeliveredQuantity += drVolume;
-                cos.BalanceQuantity -= drVolume;
+            cos.DeliveredQuantity += drVolume;
+            cos.BalanceQuantity -= drVolume;
 
-                if (cos.BalanceQuantity <= 0)
-                {
-                    cos.IsDelivered = true;
-                    cos.Status = nameof(CosStatus.Completed);
-                }
+            if (cos.BalanceQuantity <= 0)
+            {
+                cos.IsDelivered = true;
+                cos.Status = nameof(CosStatus.Completed);
             }
         }
 
