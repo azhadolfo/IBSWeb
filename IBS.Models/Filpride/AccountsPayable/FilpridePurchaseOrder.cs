@@ -1,4 +1,5 @@
-﻿using IBS.Models.Filpride.MasterFile;
+﻿using IBS.Models.Filpride.Integrated;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
@@ -111,5 +112,12 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string OldPoNo { get; set; }
 
         public string? Type { get; set; }
+
+        public DateOnly TriggerDate { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal UnTriggeredQuantity { get; set; }
+
+        public ICollection<FilpridePOActualPrice>? ActualPrices { get; set; }
     }
 }

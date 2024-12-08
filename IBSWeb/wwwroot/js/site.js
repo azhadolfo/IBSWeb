@@ -33,7 +33,6 @@ $(document).ready(function () {
     });
 });
 
-
 function validateDate() {
     let dateFrom = document.getElementById("dateFrom").value;
     let dateTo = document.getElementById("dateTo").value;
@@ -63,3 +62,4 @@ document.addEventListener('DOMContentLoaded', function () {
         dateToInput.value = dateFromInput.value;
     });
 });
+

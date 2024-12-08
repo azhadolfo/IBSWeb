@@ -231,7 +231,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return auditTrailBooks;
         }
 
-        public async Task<List<FilprideCustomerOrderSlip>> GetCosUnserveVolume(DateOnly dateFrom, DateOnly dateTo, string company)
+        public async Task<List<FilprideCustomerOrderSlip>> GetCosUnservedVolume(DateOnly dateFrom, DateOnly dateTo, string company)
         {
             if (dateFrom > dateTo)
             {
@@ -241,7 +241,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return await _db.FilprideCustomerOrderSlips
                 .Include(a => a.Customer)
                 .Include(a => a.Product)
-                .Where(a => a.Company == company && a.Date >= dateFrom && a.Date <= dateTo && a.Status == nameof(CosStatus.Approved) && a.DeliveredQuantity < a.Quantity)
+                .Where(a => a.Company == company && a.Date >= dateFrom && a.Date <= dateTo && a.Status == nameof(CosStatus.Approved))
                 .OrderBy(a => a.Date)
                 .ToListAsync();
         }
