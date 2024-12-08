@@ -319,6 +319,24 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 model.Amount = model.QuantityReceived * deliveryReceipt.PurchaseOrder.Price;
             }
+            
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrailCreate = new(model.PostedBy, 
+                $"Created new receiving report# {model.ReceivingReportNo}", 
+                "Receiving Report", "", 
+                model.Company);
+
+            FilprideAuditTrail auditTrailPost = new(model.PostedBy, 
+                $"Posted receiving report# {model.ReceivingReportNo}", 
+                "Receiving Report", "", 
+                model.Company);
+
+            await _db.AddAsync(auditTrailCreate, cancellationToken);
+            await _db.AddAsync(auditTrailPost, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
 
             await _db.AddAsync(model, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
