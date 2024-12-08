@@ -194,6 +194,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
                 var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
                 var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
+                var apHaulingPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010300") ?? throw new ArgumentException("Account title '201010300' not found.");
+                var apCommissionPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010200") ?? throw new ArgumentException("Account title '201010200' not found.");
                 var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
                 var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
                 var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
@@ -380,8 +382,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
-                        AccountNo = apTradeTitle.AccountNumber,
-                        AccountTitle = apTradeTitle.AccountName,
+                        AccountNo = apHaulingPayableTitle.AccountNumber,
+                        AccountTitle = apHaulingPayableTitle.AccountName,
                         Debit = 0,
                         Credit = totalFreightNetOfEwt,
                         Company = deliveryReceipt.Company,
@@ -410,6 +412,36 @@ namespace IBS.DataAccess.Repository.Filpride
                     var commissionGrossAmount = deliveryReceipt.CustomerOrderSlip.CommissionRate * deliveryReceipt.Quantity;
                     var commissionEwtAmount = ComputeEwtAmount(commissionGrossAmount, 0.05m);
                     var commissionNetOfEwt = ComputeNetOfEwt(commissionGrossAmount, commissionEwtAmount);
+                    
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                        Reference = deliveryReceipt.DeliveryReceiptNo,
+                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
+                        AccountNo = commissionAcctNo,
+                        AccountTitle = commissionAcctTitle,
+                        Debit = commissionGrossAmount,
+                        Credit = 0,
+                        Company = deliveryReceipt.Company,
+                        CreatedBy = deliveryReceipt.CreatedBy,
+                        CreatedDate = deliveryReceipt.CreatedDate,
+                        SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
+                    });
+                    
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                        Reference = deliveryReceipt.DeliveryReceiptNo,
+                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
+                        AccountNo = apCommissionPayableTitle.AccountNumber,
+                        AccountTitle = apCommissionPayableTitle.AccountName,
+                        Debit = 0,
+                        Credit = commissionNetOfEwt,
+                        Company = deliveryReceipt.Company,
+                        CreatedBy = deliveryReceipt.CreatedBy,
+                        CreatedDate = deliveryReceipt.CreatedDate,
+                        SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
+                    });
                     
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
