@@ -597,6 +597,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
                 existingRecord.Status = nameof(DRStatus.Delivered);
+                existingRecord.PostedBy = _userManager.GetUserName(User);
+                existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 
                 #region Mark the COS delivered
 

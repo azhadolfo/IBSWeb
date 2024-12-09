@@ -513,6 +513,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 OldPoNo = existingPo.OldPoNo,
                                 Type = existingPo.Type
                             };
+                            
+                            #region --Audit Trail Recording
+
+                            FilprideAuditTrail auditTrailCreate = new(subPoModel.PostedBy, 
+                                $"Created new purchase order# {subPoModel.PurchaseOrderNo}", 
+                                "Purchase Order", "", 
+                                subPoModel.Company);
+
+                            FilprideAuditTrail auditTrailPost = new(subPoModel.PostedBy, 
+                                $"Posted purchase order# {subPoModel.PurchaseOrderNo}", 
+                                "Purchase Order", "", 
+                                subPoModel.Company);
+
+                            await _dbContext.AddAsync(auditTrailCreate, cancellationToken);
+                            await _dbContext.AddAsync(auditTrailPost, cancellationToken);
+
+                            #endregion --Audit Trail Recording
 
                             subPoModel.Amount = subPoModel.Quantity * subPoModel.Price;
                             await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
@@ -555,6 +572,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 };
 
                                 poNumbers.Add(subPoModel.PurchaseOrderNo);
+                                
+                                #region --Audit Trail Recording
+
+                                FilprideAuditTrail auditTrailCreate = new(subPoModel.PostedBy, 
+                                    $"Created new purchase order# {subPoModel.PurchaseOrderNo}", 
+                                    "Purchase Order", "", 
+                                    subPoModel.Company);
+
+                                FilprideAuditTrail auditTrailPost = new(subPoModel.PostedBy, 
+                                    $"Posted purchase order# {subPoModel.PurchaseOrderNo}", 
+                                    "Purchase Order", "", 
+                                    subPoModel.Company);
+
+                                await _dbContext.AddAsync(auditTrailCreate, cancellationToken);
+                                await _dbContext.AddAsync(auditTrailPost, cancellationToken);
+
+                                #endregion --Audit Trail Recording
+                                
                                 await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
                                 await _unitOfWork.SaveAsync(cancellationToken);
                             }
@@ -907,7 +942,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return BadRequest();
                     }
 
-                    if (existingCos.DeliveryOption != viewModel.DeliveryOption)
+                    if (existingCos.DeliveryOption != viewModel.DeliveryOption && existingCos.Status != nameof(CosStatus.SupplierAppointed))
                     {
                         var logisticUser = await _dbContext.ApplicationUsers
                             .Where(u => u.Department == SD.Department_Logistics.ToString())
