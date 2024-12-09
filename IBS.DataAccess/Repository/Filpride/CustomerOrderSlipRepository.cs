@@ -44,6 +44,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideCustomerOrderSlip> query = dbSet
                 .Include(cos => cos.Customer)
+                .Include(cos => cos.Hauler)
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
@@ -61,6 +62,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await dbSet.Where(filter)
                 .Include(cos => cos.Customer)
+                .Include(cos => cos.Hauler)
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
@@ -82,14 +84,14 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.HasCommission = viewModel.HasCommission;
             existingRecord.CommissioneeId = viewModel.CommissioneeId;
-            existingRecord.CommissionRate = viewModel.CommissionerRate;
+            existingRecord.CommissionRate = viewModel.CommissionRate;
             existingRecord.ProductId = viewModel.ProductId;
             existingRecord.OldCosNo = viewModel.OtcCosNo;
 
             if (_db.ChangeTracker.HasChanges())
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;
-                existingRecord.EditedDate = GetPhilippineTime(DateTime.UtcNow);;
+                existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 
                 FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", "", existingRecord.Company);
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
@@ -106,7 +108,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.Approved))
+                .Where(cos => (!cos.IsDelivered && cos.Status == nameof(CosStatus.Completed)) || cos.Status == nameof(CosStatus.Approved))
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -119,7 +121,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => cos.Status == nameof(CosStatus.Approved) && cos.CustomerId == customerId)
+                .Where(cos => ((!cos.IsDelivered && cos.Status == nameof(CosStatus.Completed)) || cos.Status == nameof(CosStatus.Approved)) && cos.CustomerId == customerId)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -151,7 +153,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             customerOrderSlip.TotalAmount = customerOrderSlip.Quantity * customerOrderSlip.DeliveredPrice;
 
-            customerOrderSlip.Status = nameof(CosStatus.ApprovedByOM);
+            customerOrderSlip.Status = nameof(CosStatus.ForApprovalOfFM);
 
             await _db.SaveChangesAsync(cancellationToken);
         }

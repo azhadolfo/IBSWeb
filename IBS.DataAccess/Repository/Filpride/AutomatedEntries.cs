@@ -106,7 +106,7 @@ namespace IBS.DataAccess.Repository.Filpride
                                     {
                                         //Prepaid
                                         cv.NumberOfMonthsCreated++;
-                                        cv.LastCreatedDate = _unitOfWork.FilprideJournalVoucher.GetPhilippineTime(DateTime.UtcNow);
+                                        cv.LastCreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                                         if (cv.NumberOfMonths == cv.NumberOfMonthsCreated)
                                         {

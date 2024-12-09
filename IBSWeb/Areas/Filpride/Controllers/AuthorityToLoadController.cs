@@ -1,9 +1,12 @@
-﻿using IBS.DataAccess.Repository;
+﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Integrated;
 using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -17,10 +20,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        public AuthorityToLoadController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
+        private readonly ApplicationDbContext _dbContext;
+
+        public AuthorityToLoadController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _dbContext = dbContext;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -60,7 +66,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.DeliveryReceipt?.DeliveryReceiptNo?.ToLower().Contains(searchValue) == true
                         )
                     .ToList();
-
                 }
 
                 // Sorting
@@ -114,6 +119,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (existingRecord == null)
                 {
                     return BadRequest();
+                }
+
+                ViewData["PurchaseOrders"] = new List<FilprideCOSAppointedSupplier>();
+
+                if (existingRecord.CustomerOrderSlip.HasMultiplePO)
+                {
+                    ViewData["PurchaseOrders"] = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Include(a => a.PurchaseOrder)
+                        .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                        .ToListAsync(cancellationToken);
                 }
 
                 return View(existingRecord);

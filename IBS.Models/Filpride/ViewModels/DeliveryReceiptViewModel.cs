@@ -58,24 +58,22 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string ManualDrNo { get; set; }
 
-        public decimal Demuragge { get; set; } = 0;
-
-        #region Appointing Hauler
-
-        public int? HaulerId { get; set; }
-
-        public List<SelectListItem>? Haulers { get; set; }
-
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Freight { get; set; } = 0;
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal ECC { get; set; } = 0;
 
-        public string? Driver { get; set; }
+        public string? ATLNo { get; set; }
 
-        public string? PlateNo { get; set; }
+        public int? HaulerId { get; set; }
+        
+        public List<SelectListItem>? Haulers { get; set; }
 
-        #endregion
+        public string Driver { get; set; }
+
+        public string PlateNo { get; set; }
+
+        public bool IsECCEdited => ECC > 0; // True if ECC is greater than zero
     }
 }

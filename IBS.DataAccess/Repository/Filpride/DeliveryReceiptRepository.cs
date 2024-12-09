@@ -77,6 +77,33 @@ namespace IBS.DataAccess.Repository.Filpride
             var customerOrderSlip = await _db.FilprideCustomerOrderSlips
                 .FirstOrDefaultAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
             
+
+            #region--Update COS
+
+            if (viewModel.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+            {
+                await UpdateCosRemainingVolumeAsync(existingRecord.CustomerOrderSlipId, (viewModel.Volume - existingRecord.Quantity), cancellationToken);
+            }
+            else
+            {
+                await DeductTheVolumeToCos(existingRecord.CustomerOrderSlipId, existingRecord.Quantity, cancellationToken);
+            }
+
+            #endregion
+
+            #region--Update Multiple PO
+
+            if (existingRecord.CustomerOrderSlip.HasMultiplePO)
+            {
+                if (viewModel.Volume != existingRecord.Quantity)
+                {
+                    await UpdatePreviousAppointedSupplierAsync(existingRecord);
+                    await AssignNewPurchaseOrderAsync(viewModel, existingRecord);
+                }
+            }
+
+            #endregion
+
             existingRecord.Date = viewModel.Date;
             existingRecord.EstimatedTimeOfArrival = viewModel.ETA;
             existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
@@ -85,12 +112,12 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Quantity = viewModel.Volume;
             existingRecord.TotalAmount = viewModel.TotalAmount;
             existingRecord.ManualDrNo = viewModel.ManualDrNo;
-            existingRecord.Freight = viewModel.Freight;
-            existingRecord.Demuragge = viewModel.Demuragge;
-            existingRecord.ECC = viewModel.ECC;
             existingRecord.Driver = viewModel.Driver;
             existingRecord.PlateNo = viewModel.PlateNo;
-            existingRecord.HaulerId = viewModel.HaulerId;
+            existingRecord.HaulerId = viewModel.HaulerId ?? customerOrderSlip.HaulerId;
+            existingRecord.ECC = viewModel.ECC;
+            existingRecord.Freight = viewModel.Freight;
+            existingRecord.AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo;
             
             if (!customerOrderSlip.HasMultiplePO)
             {
@@ -105,7 +132,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 existingRecord.PurchaseOrderId = selectedPo.PurchaseOrderId;
             }
             
-
             if (_db.ChangeTracker.HasChanges())
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;
@@ -152,18 +178,14 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             try
             {
-                #region--Update COS
-
-                await UpdateCosRemainingVolumeAsync(deliveryReceipt.CustomerOrderSlipId, deliveryReceipt.Quantity, cancellationToken);
-
-                #endregion
-
+                
                 #region General Ledger Book Recording
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
                 var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
                 var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
-                var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
+                var (freightAcctNo, freightAcctTitle) = GetFreightAccount(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
+                var (commissionAcctNo, commissionAcctTitle) = GetCommissionAccount(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
                 var netOfVatAmount = ComputeNetOfVat(deliveryReceipt.TotalAmount);
                 var vatAmount = ComputeVatAmount(netOfVatAmount);
                 var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
@@ -172,8 +194,12 @@ namespace IBS.DataAccess.Repository.Filpride
                 var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
                 var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
                 var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
-                var freightOutTitle = accountTitlesDto.Find(c => c.AccountNumber == "551010200") ?? throw new ArgumentException("Account title '551010200' not found.");
-
+                var apHaulingPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010300") ?? throw new ArgumentException("Account title '201010300' not found.");
+                var apCommissionPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010200") ?? throw new ArgumentException("Account title '201010200' not found.");
+                var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
+                var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
+                
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
                     Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -217,6 +243,12 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedDate = deliveryReceipt.CreatedDate
                 });
 
+                var cogsGrossAmount = deliveryReceipt.PurchaseOrder.Price * deliveryReceipt.Quantity;
+                var cogsNetOfVat = ComputeNetOfVat(cogsGrossAmount);
+                var cogsVatAmount = ComputeVatAmount(cogsNetOfVat);
+                var cogsEwtAmount = ComputeEwtAmount(cogsVatAmount, 0.01m);
+                var cogsNetOfEwt = ComputeNetOfEwt(cogsGrossAmount, cogsEwtAmount);
+
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
                     Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -224,7 +256,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
                     AccountNo = cogsAcctNo,
                     AccountTitle = cogsAcctTitle,
-                    Debit = ComputeNetOfVat(deliveryReceipt.PurchaseOrder.Price * deliveryReceipt.Quantity),
+                    Debit = cogsNetOfVat,
                     Credit = 0,
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.CreatedBy,
@@ -238,8 +270,22 @@ namespace IBS.DataAccess.Repository.Filpride
                     Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
                     AccountNo = vatInputTitle.AccountNumber,
                     AccountTitle = vatInputTitle.AccountName,
-                    Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.PurchaseOrder.Price * deliveryReceipt.Quantity)),
+                    Debit = cogsVatAmount,
                     Credit = 0,
+                    Company = deliveryReceipt.Company,
+                    CreatedBy = deliveryReceipt.CreatedBy,
+                    CreatedDate = deliveryReceipt.CreatedDate
+                });
+                
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                    Reference = deliveryReceipt.DeliveryReceiptNo,
+                    Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
+                    AccountNo = ewtOnePercent.AccountNumber,
+                    AccountTitle = ewtOnePercent.AccountName,
+                    Debit = 0,
+                    Credit = cogsEwtAmount,
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.CreatedBy,
                     CreatedDate = deliveryReceipt.CreatedDate
@@ -253,120 +299,180 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountNo = arTradeTitle.AccountNumber,
                     AccountTitle = arTradeTitle.AccountName,
                     Debit = 0,
-                    Credit = deliveryReceipt.PurchaseOrder.Price * deliveryReceipt.Quantity,
+                    Credit = cogsNetOfEwt,
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.CreatedBy,
                     CreatedDate = deliveryReceipt.CreatedDate,
                     SupplierId = deliveryReceipt.PurchaseOrder.Supplier.SupplierId
                 });
 
-                if (deliveryReceipt.Freight > 0)
+
+                if (deliveryReceipt.Freight > 0 || deliveryReceipt.ECC > 0)
                 {
+                    if (deliveryReceipt.Freight > 0)
+                    {
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                            Reference = deliveryReceipt.DeliveryReceiptNo,
+                            Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
+                            AccountNo = freightAcctNo,
+                            AccountTitle = freightAcctTitle,
+                            Debit = ComputeNetOfVat(deliveryReceipt.Freight * deliveryReceipt.Quantity),
+                            Credit = 0,
+                            Company = deliveryReceipt.Company,
+                            CreatedBy = deliveryReceipt.CreatedBy,
+                            CreatedDate = deliveryReceipt.CreatedDate
+                        });
+
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                            Reference = deliveryReceipt.DeliveryReceiptNo,
+                            Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
+                            AccountNo = vatInputTitle.AccountNumber,
+                            AccountTitle = vatInputTitle.AccountName,
+                            Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.Freight * deliveryReceipt.Quantity)),
+                            Credit = 0,
+                            Company = deliveryReceipt.Company,
+                            CreatedBy = deliveryReceipt.CreatedBy,
+                            CreatedDate = deliveryReceipt.CreatedDate
+                        });
+                    }
+
+                    if (deliveryReceipt.ECC > 0)
+                    {
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                            Reference = deliveryReceipt.DeliveryReceiptNo,
+                            Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for ECC",
+                            AccountNo = freightAcctNo,
+                            AccountTitle = freightAcctTitle,
+                            Debit = ComputeNetOfVat(deliveryReceipt.ECC * deliveryReceipt.Quantity),
+                            Credit = 0,
+                            Company = deliveryReceipt.Company,
+                            CreatedBy = deliveryReceipt.CreatedBy,
+                            CreatedDate = deliveryReceipt.CreatedDate
+                        });
+
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                            Reference = deliveryReceipt.DeliveryReceiptNo,
+                            Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for ECC",
+                            AccountNo = vatInputTitle.AccountNumber,
+                            AccountTitle = vatInputTitle.AccountName,
+                            Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.ECC * deliveryReceipt.Quantity)),
+                            Credit = 0,
+                            Company = deliveryReceipt.Company,
+                            CreatedBy = deliveryReceipt.CreatedBy,
+                            CreatedDate = deliveryReceipt.CreatedDate
+                        });
+                    }
+                    
+                    var totalFreightGrossAmount = (deliveryReceipt.Freight + deliveryReceipt.ECC) * deliveryReceipt.Quantity;
+                    var totalFreightNetOfVat = ComputeNetOfVat(totalFreightGrossAmount);
+                    var totalFreightEwtAmount = ComputeEwtAmount(totalFreightNetOfVat, 0.02m);
+                    var totalFreightNetOfEwt = ComputeNetOfEwt(totalFreightGrossAmount, totalFreightEwtAmount);
+                    
+                    
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                        Reference = deliveryReceipt.DeliveryReceiptNo,
+                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
+                        AccountNo = apHaulingPayableTitle.AccountNumber,
+                        AccountTitle = apHaulingPayableTitle.AccountName,
+                        Debit = 0,
+                        Credit = totalFreightNetOfEwt,
+                        Company = deliveryReceipt.Company,
+                        CreatedBy = deliveryReceipt.CreatedBy,
+                        CreatedDate = deliveryReceipt.CreatedDate,
+                        SupplierId = deliveryReceipt.HaulerId
+                    });
+                    
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                        Reference = deliveryReceipt.DeliveryReceiptNo,
+                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
+                        AccountNo = ewtTwoPercent.AccountNumber,
+                        AccountTitle = ewtTwoPercent.AccountName,
+                        Debit = 0,
+                        Credit = totalFreightEwtAmount,
+                        Company = deliveryReceipt.Company,
+                        CreatedBy = deliveryReceipt.CreatedBy,
+                        CreatedDate = deliveryReceipt.CreatedDate
+                    });
+                }
+
+                if (deliveryReceipt.CustomerOrderSlip.CommissionRate > 0)
+                {
+                    var commissionGrossAmount = deliveryReceipt.CustomerOrderSlip.CommissionRate * deliveryReceipt.Quantity;
+                    var commissionEwtAmount = ComputeEwtAmount(commissionGrossAmount, 0.05m);
+                    var commissionNetOfEwt = ComputeNetOfEwt(commissionGrossAmount, commissionEwtAmount);
+                    
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
-                        AccountNo = freightOutTitle.AccountNumber,
-                        AccountTitle = freightOutTitle.AccountName,
-                        Debit = ComputeNetOfVat(deliveryReceipt.Freight * deliveryReceipt.Quantity),
+                        AccountNo = commissionAcctNo,
+                        AccountTitle = commissionAcctTitle,
+                        Debit = commissionGrossAmount,
                         Credit = 0,
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
+                        CreatedDate = deliveryReceipt.CreatedDate,
+                        SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
                     });
-
+                    
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
-                        AccountNo = vatInputTitle.AccountNumber,
-                        AccountTitle = vatInputTitle.AccountName,
-                        Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.Freight * deliveryReceipt.Quantity)),
-                        Credit = 0,
+                        AccountNo = apCommissionPayableTitle.AccountNumber,
+                        AccountTitle = apCommissionPayableTitle.AccountName,
+                        Debit = 0,
+                        Credit = commissionNetOfEwt,
+                        Company = deliveryReceipt.Company,
+                        CreatedBy = deliveryReceipt.CreatedBy,
+                        CreatedDate = deliveryReceipt.CreatedDate,
+                        SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
+                    });
+                    
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                        Reference = deliveryReceipt.DeliveryReceiptNo,
+                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
+                        AccountNo = commissionAcctNo,
+                        AccountTitle = commissionAcctTitle,
+                        Debit = 0,
+                        Credit = commissionNetOfEwt,
+                        Company = deliveryReceipt.Company,
+                        CreatedBy = deliveryReceipt.CreatedBy,
+                        CreatedDate = deliveryReceipt.CreatedDate,
+                        SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
+                    });
+                    
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                        Reference = deliveryReceipt.DeliveryReceiptNo,
+                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
+                        AccountNo = ewtFivePercent.AccountNumber,
+                        AccountTitle = ewtFivePercent.AccountName,
+                        Debit = 0,
+                        Credit = commissionNetOfEwt,
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.CreatedBy,
                         CreatedDate = deliveryReceipt.CreatedDate
                     });
+                    
                 }
-
-                if (deliveryReceipt.ECC > 0)
-                {
-                    ledgers.Add(new FilprideGeneralLedgerBook
-                    {
-                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                        Reference = deliveryReceipt.DeliveryReceiptNo,
-                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for ECC",
-                        AccountNo = freightOutTitle.AccountNumber,
-                        AccountTitle = freightOutTitle.AccountName,
-                        Debit = ComputeNetOfVat(deliveryReceipt.ECC * deliveryReceipt.Quantity),
-                        Credit = 0,
-                        Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
-                    });
-
-                    ledgers.Add(new FilprideGeneralLedgerBook
-                    {
-                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                        Reference = deliveryReceipt.DeliveryReceiptNo,
-                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for ECC",
-                        AccountNo = vatInputTitle.AccountNumber,
-                        AccountTitle = vatInputTitle.AccountName,
-                        Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.ECC * deliveryReceipt.Quantity)),
-                        Credit = 0,
-                        Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
-                    });
-                }
-
-                if (deliveryReceipt.Demuragge > 0)
-                {
-                    ledgers.Add(new FilprideGeneralLedgerBook
-                    {
-                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                        Reference = deliveryReceipt.DeliveryReceiptNo,
-                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Demurrage",
-                        AccountNo = freightOutTitle.AccountNumber,
-                        AccountTitle = freightOutTitle.AccountName,
-                        Debit = ComputeNetOfVat(deliveryReceipt.Demuragge),
-                        Credit = 0,
-                        Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
-                    });
-
-                    ledgers.Add(new FilprideGeneralLedgerBook
-                    {
-                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                        Reference = deliveryReceipt.DeliveryReceiptNo,
-                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Demurrage",
-                        AccountNo = vatInputTitle.AccountNumber,
-                        AccountTitle = vatInputTitle.AccountName,
-                        Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.Demuragge)),
-                        Credit = 0,
-                        Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
-                    });
-                }
-
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                    Reference = deliveryReceipt.DeliveryReceiptNo,
-                    Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
-                    AccountNo = apTradeTitle.AccountNumber,
-                    AccountTitle = apTradeTitle.AccountName,
-                    Debit = 0,
-                    Credit = ((deliveryReceipt.Freight + deliveryReceipt.ECC) * deliveryReceipt.Quantity) + deliveryReceipt.Demuragge,
-                    Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.CreatedBy,
-                    CreatedDate = deliveryReceipt.CreatedDate,
-                    SupplierId = deliveryReceipt.HaulerId
-                });
 
                 if (!IsJournalEntriesBalanced(ledgers))
                 {
@@ -375,7 +481,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
 
-                #endregion
+                #endregion General Ledger Book Recording
 
                 await _db.SaveChangesAsync(cancellationToken);
             }
@@ -385,21 +491,17 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        private async Task UpdateCosRemainingVolumeAsync(int cosId, decimal drVolume, CancellationToken cancellationToken)
+        private async Task  UpdateCosRemainingVolumeAsync(int cosId, decimal drVolume, CancellationToken cancellationToken)
         {
             var cos = await _db.FilprideCustomerOrderSlips
                 .FirstOrDefaultAsync(po => po.CustomerOrderSlipId == cosId, cancellationToken) ?? throw new InvalidOperationException("No record found.");
 
-            if (cos != null)
-            {
-                cos.DeliveredQuantity = drVolume;
-                cos.BalanceQuantity -= cos.DeliveredQuantity;
+            cos.DeliveredQuantity += drVolume;
+            cos.BalanceQuantity -= drVolume;
 
-                if (cos.BalanceQuantity <= 0)
-                {
-                    cos.IsDelivered = true;
-                    cos.Status = nameof(CosStatus.Completed);
-                }
+            if (cos.BalanceQuantity <= 0)
+            {
+                cos.Status = nameof(CosStatus.Completed);
             }
         }
 
@@ -413,12 +515,37 @@ namespace IBS.DataAccess.Repository.Filpride
                 cos.Status = nameof(CosStatus.Approved);
             }
 
-            if (cos != null)
-            {
-                cos.DeliveredQuantity -= drVolume;
-                cos.BalanceQuantity += drVolume;
-                cos.IsDelivered = false;
-            }
+            cos.DeliveredQuantity -= drVolume;
+            cos.BalanceQuantity += drVolume;
+            cos.IsDelivered = false;
+        }
+
+        public async Task UpdatePreviousAppointedSupplierAsync(FilprideDeliveryReceipt model)
+        {
+            var previousAppointedSupplier = await _db.FilprideCOSAppointedSuppliers
+                .FirstOrDefaultAsync(a => a.CustomerOrderSlipId == model.CustomerOrderSlipId && a.PurchaseOrderId == model.PurchaseOrderId);
+
+            if (previousAppointedSupplier == null)
+                throw new InvalidOperationException("Previous appointed supplier not found.");
+
+            previousAppointedSupplier.UnservedQuantity += model.Quantity;
+            previousAppointedSupplier.IsAssignedToDR = false;
+        }
+
+        public async Task AssignNewPurchaseOrderAsync(DeliveryReceiptViewModel viewModel, FilprideDeliveryReceipt model)
+        {
+            var newAppointedSupplier = await _db.FilprideCOSAppointedSuppliers
+                .OrderBy(s => s.PurchaseOrderId)
+                .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == viewModel.CustomerOrderSlipId &&
+                                           !s.IsAssignedToDR &&
+                                           s.Quantity == viewModel.Volume)
+                ?? throw new InvalidOperationException($"Purchase Order not found for this volume ({viewModel.Volume:N2}), contact the TNS.");
+
+            model.PurchaseOrderId = newAppointedSupplier.PurchaseOrderId;
+            model.Quantity = viewModel.Volume;
+
+            newAppointedSupplier.UnservedQuantity -= model.Quantity;
+            newAppointedSupplier.IsAssignedToDR = true;
         }
     }
 }

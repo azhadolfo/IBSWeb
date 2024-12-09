@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.Integrated;
 using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -162,6 +163,113 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             return $"{purchaseOrderNo}{nextLetter}";
+        }
+
+        public async Task UpdateActualCostOnSalesAndReceiptsAsync(FilpridePOActualPrice model, CancellationToken cancellationToken = default)
+        {
+            var receivingReports = await _db.FilprideReceivingReports
+                .Where(r => r.POId == model.PurchaseOrderId && r.Status == nameof(Status.Posted) && !r.IsCostUpdated)
+                .OrderBy(r => r.ReceivingReportId)
+                .ToListAsync(cancellationToken);
+
+            var inventories = await _db.FilprideInventories
+                .Where(i => i.POId == model.PurchaseOrderId)
+                .OrderBy(i => i.Date)
+                .ThenBy(i => i.InventoryId)
+                .ToListAsync(cancellationToken);
+
+            if (receivingReports.Count > 0)
+            {
+                for (int i = 0; i < receivingReports.Count; i++)
+                {
+                    #region Update RR Amount
+
+                    // Calculate the effective volume
+                    var effectiveVolume = Math.Min(receivingReports[i].QuantityReceived, model.TriggeredVolume - model.AppliedVolume);
+
+                    // Update the RR Amount based on the effective volume
+                    receivingReports[i].Amount = effectiveVolume * model.TriggeredPrice;
+                    receivingReports[i].IsCostUpdated = true;
+                    model.AppliedVolume += effectiveVolume;
+
+                    #endregion Update RR Amount
+
+                    #region Update RR Inventory
+
+                    var inventory = inventories.FirstOrDefault(inv => inv.Reference == receivingReports[i].ReceivingReportNo);
+
+                    inventory.Cost = ComputeNetOfVat(model.TriggeredPrice);
+                    inventory.Total = inventory.Quantity * inventory.Cost;
+
+                    if (inventories[0].InventoryId == inventory.InventoryId)
+                    {
+                        inventory.AverageCost = inventory.Cost;
+                        inventory.TotalBalance = inventory.Total;
+                    }
+
+                    #endregion Update RR Inventory
+
+                    #region Update Purchase Book
+
+                    var purchaseBook = await _db.FilpridePurchaseBooks
+                        .FirstOrDefaultAsync(p => p.Company == receivingReports[i].Company && p.DocumentNo == receivingReports[i].ReceivingReportNo, cancellationToken);
+
+                    purchaseBook.Amount = receivingReports[i].Amount;
+                    purchaseBook.NetPurchases = ComputeNetOfVat(receivingReports[i].Amount);
+                    purchaseBook.VatAmount = ComputeVatAmount(purchaseBook.NetPurchases);
+                    purchaseBook.WhtAmount = ComputeEwtAmount(purchaseBook.NetPurchases, 0.01m);
+
+                    #endregion Update Purchase Book
+
+                    #region Update RR General Ledger
+
+                    var journalEntries = await _db.FilprideGeneralLedgerBooks
+                        .Where(g => g.Company == receivingReports[i].Company && g.Reference == receivingReports[i].ReceivingReportNo)
+                        .OrderBy(g => g.GeneralLedgerBookId)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var journalEntry in journalEntries)
+                    {
+                        if (journalEntry.AccountNo.StartsWith("10104"))
+                        {
+                            journalEntry.Debit = purchaseBook.NetPurchases;
+                        }
+                        else if (journalEntry.AccountNo.StartsWith("1010602"))
+                        {
+                            journalEntry.Debit = purchaseBook.VatAmount;
+                        }
+                        else if (journalEntry.AccountNo.StartsWith("2010302"))
+                        {
+                            journalEntry.Credit = purchaseBook.WhtAmount;
+                        }
+                        else
+                        {
+                            journalEntry.Credit = ComputeNetOfEwt(receivingReports[i].Amount, purchaseBook.WhtAmount);
+                        }
+                    }
+
+                    if (!IsJournalEntriesBalanced(journalEntries))
+                    {
+                        throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                    }
+
+                    #endregion Update RR General Ledger
+
+                    // Break the loop if TriggeredQuantity is met
+                    if (model.AppliedVolume >= model.TriggeredVolume)
+                        break;
+                }
+
+                #region ReCalculate Inventory
+
+                var unitOfWork = new UnitOfWork(_db);
+
+                await unitOfWork.FilprideInventory.ReCalculateInventoryAsync(inventories, cancellationToken);
+
+                #endregion ReCalculate Inventory
+
+                await _db.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 }

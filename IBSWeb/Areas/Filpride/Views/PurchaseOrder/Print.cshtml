@@ -7,6 +7,65 @@
     ViewData["Title"] = "Print Purchase Order";
 }
 
+<style>
+    .page {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+        padding: 20px;
+        margin: 20px auto;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+    }
+
+    .table {
+        width: 100%;
+        margin: 0 auto;
+        border-collapse: collapse;
+    }
+
+    .table th, .table td {
+        padding: 12px 15px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .table thead {
+        background-color: #007bff;
+        color: #fff;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    h3 {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+
+    @@media (max-width: 768px) {
+        
+        .table th, .table td {
+            font-size: 0.9rem;
+            padding: 8px 10px;
+        }
+    
+        h3 {
+            font-size: 1.5rem;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+    }
+</style>
+
 <br />
 <div class="text-end">
     <img src="~/img/Filpride.jpg" height="" width="130px" />
@@ -134,12 +193,53 @@
     }
 }
 
+@if (Model.ActualPrices.Any())
+{
+    <div class="page-break"></div>
+
+
+    <div class="page mb-3">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold">Updated Prices</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover text-center">
+                <thead class="bg-primary text-white">
+                <tr>
+                    <th>Triggered Volume</th>
+                    <th>Triggered Price</th>
+                    <th>Triggered Date</th>
+                    <th>Approved Date</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var updatedPrice in Model.ActualPrices)
+                {
+                    <tr>
+                        <td class="text-end">@updatedPrice.TriggeredVolume.ToString("N4")</td>
+                        <td class="text-end">@updatedPrice.TriggeredPrice.ToString("N4")</td>
+                        <td>@DateTimeHelper.GetCurrentPhilippineTimeFormatted(updatedPrice.TriggeredDate)</td>
+                        <td>@DateTimeHelper.GetCurrentPhilippineTimeFormatted((DateTime)updatedPrice.ApprovedDate)</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
 <div class="row pt-2">
     @{
         if (Model.PostedBy == null)
         {
             <div class="col-6 col-md-3">
-                <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.PurchaseOrderId)">Post</a>
+                <a class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.PurchaseOrderId)">Post</a>
+            </div>
+        }
+        else if (Model.PostedBy != null && Model.Status == nameof(DRStatus.ForApprovalOfOM))
+        {
+            <div class="col-6 col-md-3">
+                <a class="btn btn-primary form-control buttons" onclick="confirmApprove(@Model.PurchaseOrderId)">Approve</a>
             </div>
         }
         else
@@ -236,4 +336,35 @@
             })
         }
     </script>
+    <script>
+        function confirmApprove(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `@Url.Action("Approve", "PurchaseOrder", new { area = "Filpride" })`,
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (response) {
+                            Swal.fire('Approved!', response.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        },
+                        error: function(xhr) {
+                            const errorMessage = xhr.responseJSON?.error || 'Something went wrong. Please try again.';
+                            Swal.fire('Error!', errorMessage, 'error');
+                        }
+                    });
+                }
+            })
+        }
+    </script>
+
 }

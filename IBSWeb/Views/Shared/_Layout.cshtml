@@ -10,6 +10,8 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
     var userDepartment = ViewBag.GetUserDepartment;
+
+    var userName = UserManager.GetUserName(this.User);
 }
 
 <!DOCTYPE html>
@@ -31,7 +33,7 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-primary border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-primary border-bottom box-shadow mb-3 fixed-top">
             <div class="container">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index"><img src="~/img/ibs.png" alt="IBSWeb" width="45" height="45" /></a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
@@ -427,15 +429,23 @@
                                 </li>
                             }
                         </ul>
+                        <!-- Notification Icon and Dropdown -->
+                        <div class="nav-item dropdown ms-auto">
+                            <a href="@Url.Action("Index", "Notification", new { area = "User" })" class="nav-link text-light position-relative">
+                                <i class="bi bi-bell-fill"></i>
+                                <span id="notificationCount" class="badge bg-danger position-absolute top-0 start-100 translate-middle">0</span>
+                            </a>
+                        </div>
                         <partial name="_LoginPartial" />
                     </div>
                 }
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container" style="padding-top:5rem">
         <partial name="_Notification" />
         <main role="main">
+            <input type="hidden" id="hfUsername" value="@userName" />
             @RenderBody()
         </main>
     </div>
@@ -452,7 +462,31 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script><!--select 2 scripts-->
     <script src="https://cdn.datatables.net/2.0.1/js/dataTables.js"></script><!--data tables scripts-->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><!--sweet alert scripts-->
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script src="~/js/notification.js"></script>
+    <script>
+    $(document).ready(function () {
+        // Function to fetch and update notification count
+        function updateNotificationCount() {
+            $.ajax({
+                url: '@Url.Action("GetNotificationCount", "Notification", new { area = "User" })',
+                type: 'GET',
+                success: function (count) {
+                    $('#notificationCount').text(count);
+                },
+                error: function () {
+                    console.error("Error fetching notification count");
+                }
+            });
+        }
 
+        // Initial load
+        updateNotificationCount();
+
+        // Optional: Poll every 30 seconds to update count
+        setInterval(updateNotificationCount, 30000); // 30,000 ms = 30 seconds
+    });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

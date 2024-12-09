@@ -11,6 +11,7 @@ namespace IBS.Models.Filpride.Integrated
     public class FilprideCustomerOrderSlip
     {
         #region Preparation of COS
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CustomerOrderSlipId { get; set; }
@@ -30,7 +31,7 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
-        #endregion
+        #endregion Preparation of COS
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
@@ -70,7 +71,8 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal CommissionRate { get; set; }
-        #endregion
+
+        #endregion Commissionee's Properties
 
         [Column(TypeName = "varchar(100)")]
         public string AccountSpecialist { get; set; }
@@ -82,7 +84,7 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(ProductId))]
         public Product? Product { get; set; }
 
-        #endregion
+        #endregion Product's Properties
 
         #endregion
 
@@ -141,6 +143,22 @@ namespace IBS.Models.Filpride.Integrated
         public string? Terms { get; set; }
 
         public string? FinanceInstruction { get; set; }
+
+        #endregion
+
+        #region Appointing Hauler
+
+        public int? HaulerId { get; set; }
+        public FilprideSupplier? Hauler { get; set; }
+        public string? Driver { get; set; }
+        public string? PlateNo { get; set; }
+
+        #endregion
+
+        #region Booking of ATL
+
+        [Column(TypeName = "varchar(20)")]
+        public string? AuthorityToLoadNo { get; set; }
 
         #endregion
 

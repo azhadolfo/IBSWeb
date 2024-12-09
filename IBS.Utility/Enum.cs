@@ -30,7 +30,10 @@
     {
         Created,
         SupplierAppointed,
-        ApprovedByOM,
+        HaulerAppointed,
+        ForAtlBooking,
+        ForApprovalOfOM,
+        ForApprovalOfFM,
         Approved,
         Completed,
         Disapproved,
@@ -43,6 +46,16 @@
         Posted,
         Voided,
         Canceled
+    }
+
+    public enum DRStatus
+    {
+        Pending,
+        Delivered,
+        Invoiced,
+        ForApprovalOfOM,
+        Canceled,
+        Voided
     }
 
     public enum ClusterArea

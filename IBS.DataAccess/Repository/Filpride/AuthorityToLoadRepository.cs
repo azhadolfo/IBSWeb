@@ -42,14 +42,14 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<IEnumerable<FilprideAuthorityToLoad>> GetAllAsync(Expression<Func<FilprideAuthorityToLoad, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<FilprideAuthorityToLoad> query = dbSet
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Supplier)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(po => po.Product)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(po => po.PurchaseOrder)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.Hauler)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.Customer)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier);
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.Supplier)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(po => po.Product)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(po => po.PurchaseOrder)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr.Hauler)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr.Customer)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier);
 
             if (filter != null)
             {
@@ -62,14 +62,14 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<FilprideAuthorityToLoad> GetAsync(Expression<Func<FilprideAuthorityToLoad, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(po => po.Supplier)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(po => po.Product)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(po => po.PurchaseOrder)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.Hauler)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.Customer)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
-                .Include(atl => atl.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.Supplier)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(po => po.Product)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(po => po.PurchaseOrder)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr.Hauler)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr.Customer)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
         }
     }

@@ -91,41 +91,41 @@
                     </div>
                 </fieldset>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" />
+                    <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" required min="0.01" />
                     <label asp-for="Volume">Volume<span class="required">*</span></label>
                     <span asp-validation-for="Volume" class="text-danger"></span>
                 </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="ATLNo" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
+                    <label asp-for="ATLNo" class="ms-2">ATL#</label>
+                    <span asp-validation-for="ATLNo" class="text-danger"></span>
+                </div>
                 <div class="form-group py-2 col-12" id="haulerList">
                     <label class="control-label">Hauler List<span class="required">*</span></label>
-                    <select asp-for="HaulerId" asp-items="@Model.Haulers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <select asp-for="HaulerId" asp-items="@Model.Haulers" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                         <option value="" selected>Select hauler</option>
                     </select>
                     <span asp-validation-for="HaulerId" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" required min="0.01" />
-                    <label asp-for="Freight">Freight<span class="required">*</span></label>
+                    <input asp-for="Driver" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="Driver" class="ms-2">Driver<span class="required">*</span></label>
+                    <span asp-validation-for="Driver" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="PlateNo" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="PlateNo" class="ms-2">Plate #<span class="required">*</span></label>
+                    <span asp-validation-for="PlateNo" class="text-danger"></span>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="Freight" class="form-control border-0 shadow" min="0.01" placeholder="" readonly tabindex="-1" />
+                    <label asp-for="Freight">Freight</label>
                     <span asp-validation-for="Freight" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="ECC" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="ECC">ECC</label>
                     <span asp-validation-for="ECC" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Demuragge" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="Demuragge">Demuragge</label>
-                    <span asp-validation-for="Demuragge" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Driver" class="form-control border-0 shadow" placeholder="" required />
-                    <label asp-for="Driver">Driver</label>
-                    <span asp-validation-for="Driver" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="PlateNo" class="form-control border-0 shadow" placeholder="" required />
-                    <label asp-for="PlateNo">Plate #</label>
-                    <span asp-validation-for="PlateNo" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="TotalAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
@@ -155,7 +155,7 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
-<script>
+    <script>
         $(document).ready(function () {
             //Get customer
             $('select[name="CustomerId"]').on('change', function () {
@@ -198,28 +198,54 @@
                         data: { id: cosId },
                         success: function (data) {
                             if (data) {
+
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
-                                    $('input[name="Freight"]').parent().show();
-                                    // make the plate no and driver required
-                                    $('input[name="Driver"]').prop('required', true);
-                                    $('input[name="PlateNo"]').prop('required', true);
+                                    //Remove the else condition in the future
+                                    $('#haulerList').show();
+                                    if (parseInt(cosId) > 748) {
+                                        $('input[name="Freight"]').parent().show();
+                                        $('input[name="Freight"]').prop('readonly', true).val(data.freight);
+                                        $('select[name="HaulerId"]').prop('disabled', true);
+                                        $('select[name="HaulerId"]').val(data.haulerId).change();
+                                    }
+                                    else{
+                                        $('select[name="HaulerId"]').prop('disabled', false);
+                                        $('select[name="HaulerId"]').val("").change();
+                                        $('input[name="Freight"]').parent().show();
+                                        $('input[name="Freight"]').prop('readonly', false).val("");
+                                    }
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
+
+                                    $('#haulerList').show();
                                     $('input[name="Freight"]').parent().hide();
                                     $('input[name="Freight"]').val(data.freight);
-                                    // make the plate no and driver optional
-                                    $('input[name="Driver"]').prop('required', false);
-                                    $('input[name="PlateNo"]').prop('required', false);
+                                    
+                                    //Remove the else condition in the future
+                                    if (parseInt(cosId) > 748) {
+                                        $('select[name="HaulerId"]').prop('disabled', true);
+                                        $('select[name="HaulerId"]').val(data.haulerId).change();
+                                    }
+                                    else{
+                                        $('select[name="HaulerId"]').prop('disabled', false);
+                                        $('select[name="HaulerId"]').val("").change();
+                                    }
                                 } else {
                                     // hide the hauler list
-                                    $('#haulerList').hide();
                                     $('input[name="Freight"]').parent().hide();
+                                    $('#haulerList').hide();
                                 }
+
+                                $('input[name="ATLNo"]').val(data.atlNo);
+                                $('input[name="Driver"]').val(data.driver);
+                                $('input[name="PlateNo"]').val(data.plateNo);
 
                                 $('input[name="Product"]').val(data.product);
                                 $('input[name="CosVolume"]').val(formatNumber(data.quantity));
                                 $('input[name="RemainingVolume"]').val(formatNumber(data.remainingVolume));
+                                $('input[name="Volume"]').val(data.remainingVolume);                           
                                 $('input[name="DeliveryOption"]').val(data.deliveryOption);
                                 $('input[name="Price"]').val(formatNumber(data.price));
+                                $('input[name="TotalAmount"]').val(formatNumber(data.quantity * data.price))
                             } else {
                                 $('input[name="Product"]').val('');
                                 $('input[name="CosVolume"]').val('');
@@ -283,6 +309,7 @@
                 var price = parseNumber($('input[name="Price"]').val());
                 var totalAmount = volume * price;
                 $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
+                console.log('Working');
             }
 
             function validateVolume() {
@@ -294,5 +321,5 @@
                 }
             }
         });
-</script>
+    </script>
 }

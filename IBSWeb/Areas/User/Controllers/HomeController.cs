@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.Models;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
