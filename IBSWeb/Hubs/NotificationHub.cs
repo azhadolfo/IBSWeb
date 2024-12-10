@@ -6,17 +6,17 @@ namespace IBSWeb.Hubs
 {
     public class NotificationHub : Hub
     {
-        private readonly ApplicationDbContext _dbContext;
+        private readonly IServiceProvider _serviceProvider;
 
-        public NotificationHub(ApplicationDbContext dbContext)
+        public NotificationHub(IServiceProvider serviceProvider)
         {
-            _dbContext = dbContext;
+            _serviceProvider = serviceProvider;
         }
 
-        public override Task OnConnectedAsync()
+        public override async Task OnConnectedAsync()
         {
-            Clients.Caller.SendAsync("OnConnected");
-            return base.OnConnectedAsync();
+            await Clients.Caller.SendAsync("OnConnected");
+            await base.OnConnectedAsync();
         }
 
         public async Task SaveUserConnection(string username)
@@ -24,27 +24,39 @@ namespace IBSWeb.Hubs
             if (!string.IsNullOrEmpty(username))
             {
                 var connectionId = Context.ConnectionId;
-                HubConnection hubConnection = new HubConnection
-                {
-                    ConnectionId = connectionId,
-                    UserName = username
-                };
 
-                _dbContext.HubConnections.Add(hubConnection);
-                await _dbContext.SaveChangesAsync();
+                // Create a new DbContext instance scoped to this method
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var hubConnection = new HubConnection
+                    {
+                        ConnectionId = connectionId,
+                        UserName = username
+                    };
+
+                    dbContext.HubConnections.Add(hubConnection);
+                    await dbContext.SaveChangesAsync();
+                }
             }
         }
 
-        public override Task OnDisconnectedAsync(Exception? exception)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            var hubConnection = _dbContext.HubConnections.FirstOrDefault(con => con.ConnectionId == Context.ConnectionId);
-            if (hubConnection != null)
+            // Create a new DbContext instance scoped to this method
+            using (var scope = _serviceProvider.CreateScope())
             {
-                _dbContext.HubConnections.Remove(hubConnection);
-                _dbContext.SaveChangesAsync();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var hubConnection =
+                    dbContext.HubConnections.FirstOrDefault(con => con.ConnectionId == Context.ConnectionId);
+                if (hubConnection != null)
+                {
+                    dbContext.HubConnections.Remove(hubConnection);
+                    await dbContext.SaveChangesAsync();
+                }
             }
 
-            return base.OnDisconnectedAsync(exception);
+            await base.OnDisconnectedAsync(exception);
         }
     }
 }

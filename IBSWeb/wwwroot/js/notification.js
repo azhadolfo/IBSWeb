@@ -1,10 +1,15 @@
-﻿var connection = new signalR.HubConnectionBuilder().withUrl("/notificationHub").build();
+﻿var connection = new signalR.HubConnectionBuilder()
+    .withUrl("/notificationHub")
+    .configureLogging(signalR.LogLevel.None) // Suppress SignalR logs
+    .build();
 
-connection.start().then(function () {
-    console.log('connected to hub');
-}).catch(function (err) {
-    return console.error(err.toString());
-});
+connection.start()
+    .then(function () {
+        console.log('Connected to hub'); // Optional custom log
+    })
+    .catch(function (err) {
+        return console.error(err.toString());
+    });
 
 connection.on("OnConnected", function () {
     OnConnected();
@@ -13,9 +18,10 @@ connection.on("OnConnected", function () {
 function OnConnected() {
     var username = $('#hfUsername').val();
     if (username != "") {
-        connection.invoke("SaveUserConnection", username).catch(function (err) {
-            return console.error(err.toString());
-        })
+        connection.invoke("SaveUserConnection", username)
+            .catch(function (err) {
+                return console.error(err.toString());
+            });
     }
 }
 
