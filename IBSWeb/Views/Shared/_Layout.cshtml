@@ -466,25 +466,28 @@
     <script src="~/js/notification.js"></script>
     <script>
     $(document).ready(function () {
-        // Function to fetch and update notification count
-        function updateNotificationCount() {
-            $.ajax({
-                url: '@Url.Action("GetNotificationCount", "Notification", new { area = "User" })',
-                type: 'GET',
-                success: function (count) {
-                    $('#notificationCount').text(count);
-                },
-                error: function () {
-                    console.error("Error fetching notification count");
-                }
-            });
+        // Check if the user is logged in
+        if ($('#hfUsername').length && $('#hfUsername').val() !== "") {
+            // Function to fetch and update notification count
+            function updateNotificationCount() {
+                $.ajax({
+                    url: '@Url.Action("GetNotificationCount", "Notification", new { area = "User" })',
+                    type: 'GET',
+                    success: function (count) {
+                        $('#notificationCount').text(count);
+                    },
+                    error: function () {
+                        console.error("Error fetching notification count");
+                    }
+                });
+            }
+
+            // Initial load
+            updateNotificationCount();
+
+            // Optional: Poll every 30 seconds to update count
+            setInterval(updateNotificationCount, 30000); // 30,000 ms = 30 seconds
         }
-
-        // Initial load
-        updateNotificationCount();
-
-        // Optional: Poll every 30 seconds to update count
-        setInterval(updateNotificationCount, 30000); // 30,000 ms = 30 seconds
     });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
