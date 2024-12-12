@@ -599,7 +599,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.Status = nameof(DRStatus.Delivered);
                 existingRecord.PostedBy = _userManager.GetUserName(User);
                 existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                
+
                 #region Mark the COS delivered
 
                 var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
@@ -688,7 +688,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
                         var connectedReceivingReport = await _dbContext.FilprideReceivingReports
-                            .FirstOrDefaultAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken);
+                            .FirstOrDefaultAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
 
                         await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
                         await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
