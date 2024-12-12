@@ -73,10 +73,10 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task UpdateAsync(DeliveryReceiptViewModel viewModel, CancellationToken cancellationToken = default)
         {
             var existingRecord = await GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
-            
+
             var customerOrderSlip = await _db.FilprideCustomerOrderSlips
                 .FirstOrDefaultAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
-            
+
 
             #region--Update COS
 
@@ -118,7 +118,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.ECC = viewModel.ECC;
             existingRecord.Freight = viewModel.Freight;
             existingRecord.AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo;
-            
+
             if (!customerOrderSlip.HasMultiplePO)
             {
                 existingRecord.PurchaseOrderId = customerOrderSlip.PurchaseOrderId;
@@ -131,15 +131,15 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 existingRecord.PurchaseOrderId = selectedPo.PurchaseOrderId;
             }
-            
+
             if (_db.ChangeTracker.HasChanges())
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                
+
                 FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edit delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", "", existingRecord.Company);
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-                
+
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else
@@ -165,7 +165,11 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideDeliveryReceipts
                     .OrderBy(dr => dr.DeliveryReceiptId)
-                    .Where(dr => dr.CustomerOrderSlipId == cosId && dr.DeliveredDate != null && !dr.HasAlreadyInvoiced)
+                    .Where(dr =>
+                        dr.CustomerOrderSlipId == cosId &&
+                        dr.DeliveredDate != null &&
+                        !dr.HasAlreadyInvoiced &&
+                        dr.Status == nameof(DRStatus.Delivered))
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.DeliveryReceiptId.ToString(),
@@ -178,7 +182,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             try
             {
-                
+
                 #region General Ledger Book Recording
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
@@ -199,7 +203,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
                 var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
                 var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
-                
+
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
                     Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -276,7 +280,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedBy = deliveryReceipt.CreatedBy,
                     CreatedDate = deliveryReceipt.CreatedDate
                 });
-                
+
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
                     Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -370,13 +374,13 @@ namespace IBS.DataAccess.Repository.Filpride
                             CreatedDate = deliveryReceipt.CreatedDate
                         });
                     }
-                    
+
                     var totalFreightGrossAmount = (deliveryReceipt.Freight + deliveryReceipt.ECC) * deliveryReceipt.Quantity;
                     var totalFreightNetOfVat = ComputeNetOfVat(totalFreightGrossAmount);
                     var totalFreightEwtAmount = ComputeEwtAmount(totalFreightNetOfVat, 0.02m);
                     var totalFreightNetOfEwt = ComputeNetOfEwt(totalFreightGrossAmount, totalFreightEwtAmount);
-                    
-                    
+
+
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -391,7 +395,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedDate = deliveryReceipt.CreatedDate,
                         SupplierId = deliveryReceipt.HaulerId
                     });
-                    
+
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -412,7 +416,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     var commissionGrossAmount = deliveryReceipt.CustomerOrderSlip.CommissionRate * deliveryReceipt.Quantity;
                     var commissionEwtAmount = ComputeEwtAmount(commissionGrossAmount, 0.05m);
                     var commissionNetOfEwt = ComputeNetOfEwt(commissionGrossAmount, commissionEwtAmount);
-                    
+
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -427,7 +431,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedDate = deliveryReceipt.CreatedDate,
                         SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
                     });
-                    
+
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -442,7 +446,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedDate = deliveryReceipt.CreatedDate,
                         SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
                     });
-                    
+
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -457,7 +461,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedDate = deliveryReceipt.CreatedDate,
                         SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
                     });
-                    
+
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -471,7 +475,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = deliveryReceipt.CreatedBy,
                         CreatedDate = deliveryReceipt.CreatedDate
                     });
-                    
+
                 }
 
                 if (!IsJournalEntriesBalanced(ledgers))
