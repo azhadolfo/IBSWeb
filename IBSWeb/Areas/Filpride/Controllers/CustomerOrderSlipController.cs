@@ -513,17 +513,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 OldPoNo = existingPo.OldPoNo,
                                 Type = existingPo.Type
                             };
-                            
+
                             #region --Audit Trail Recording
 
-                            FilprideAuditTrail auditTrailCreate = new(subPoModel.PostedBy, 
-                                $"Created new purchase order# {subPoModel.PurchaseOrderNo}", 
-                                "Purchase Order", "", 
+                            FilprideAuditTrail auditTrailCreate = new(subPoModel.PostedBy,
+                                $"Created new purchase order# {subPoModel.PurchaseOrderNo}",
+                                "Purchase Order", "",
                                 subPoModel.Company);
 
-                            FilprideAuditTrail auditTrailPost = new(subPoModel.PostedBy, 
-                                $"Posted purchase order# {subPoModel.PurchaseOrderNo}", 
-                                "Purchase Order", "", 
+                            FilprideAuditTrail auditTrailPost = new(subPoModel.PostedBy,
+                                $"Posted purchase order# {subPoModel.PurchaseOrderNo}",
+                                "Purchase Order", "",
                                 subPoModel.Company);
 
                             await _dbContext.AddAsync(auditTrailCreate, cancellationToken);
@@ -572,24 +572,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 };
 
                                 poNumbers.Add(subPoModel.PurchaseOrderNo);
-                                
+
                                 #region --Audit Trail Recording
 
-                                FilprideAuditTrail auditTrailCreate = new(subPoModel.PostedBy, 
-                                    $"Created new purchase order# {subPoModel.PurchaseOrderNo}", 
-                                    "Purchase Order", "", 
+                                FilprideAuditTrail auditTrailCreate = new(subPoModel.PostedBy,
+                                    $"Created new purchase order# {subPoModel.PurchaseOrderNo}",
+                                    "Purchase Order", "",
                                     subPoModel.Company);
 
-                                FilprideAuditTrail auditTrailPost = new(subPoModel.PostedBy, 
-                                    $"Posted purchase order# {subPoModel.PurchaseOrderNo}", 
-                                    "Purchase Order", "", 
+                                FilprideAuditTrail auditTrailPost = new(subPoModel.PostedBy,
+                                    $"Posted purchase order# {subPoModel.PurchaseOrderNo}",
+                                    "Purchase Order", "",
                                     subPoModel.Company);
 
                                 await _dbContext.AddAsync(auditTrailCreate, cancellationToken);
                                 await _dbContext.AddAsync(auditTrailPost, cancellationToken);
 
                                 #endregion --Audit Trail Recording
-                                
+
                                 await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
                                 await _unitOfWork.SaveAsync(cancellationToken);
                             }
@@ -1080,7 +1080,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var purchaseOrderList = await _dbContext.FilpridePurchaseOrders
-                .Where(p => p.SupplierId == supplierId && p.ProductId == productId && !p.IsReceived && !p.IsSubPo)
+                .Where(p =>
+                    p.SupplierId == supplierId &&
+                    p.ProductId == productId &&
+                    !p.IsReceived && !p.IsSubPo &&
+                    p.Status == nameof(Status.Posted))
                 .Select(p => new
                 {
                     Value = p.PurchaseOrderId,
@@ -1143,7 +1147,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                
+
                 try
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
@@ -1227,7 +1231,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                
+
                 try
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
@@ -1287,14 +1291,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
                 .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
-            
+
             if (existingCos == null)
             {
                 return NotFound();
             }
-            
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            
+
             try
             {
                 FilprideAuthorityToLoad model = new()
@@ -1316,7 +1320,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     existingCos.Status = nameof(CosStatus.ForApprovalOfOM);
                 }
-                
+
                 ///PENDING
                 #region Remove this in the future
 
@@ -1330,8 +1334,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 #endregion
-                
-                
+
+
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
