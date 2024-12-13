@@ -310,7 +310,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
                     Product = existingRecord.CustomerOrderSlip.Product.ProductName,
                     CosVolume = existingRecord.CustomerOrderSlip.Quantity,
-                    RemainingVolume = existingRecord.CustomerOrderSlip.BalanceQuantity,
+                    RemainingVolume = existingRecord.CustomerOrderSlip.BalanceQuantity + existingRecord.Quantity,
                     Price = existingRecord.CustomerOrderSlip.DeliveredPrice,
                     Volume = existingRecord.Quantity,
                     TotalAmount = existingRecord.TotalAmount,
