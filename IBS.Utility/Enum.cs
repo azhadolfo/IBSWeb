@@ -4,7 +4,8 @@
     {
         Retail,
         Industrial,
-        Government
+        Government,
+        Reseller
     }
 
     public enum JournalType
