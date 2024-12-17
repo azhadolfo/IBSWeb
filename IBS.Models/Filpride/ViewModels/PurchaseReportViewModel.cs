@@ -93,7 +93,7 @@ namespace IBS.Models.Filpride.ViewModels
         
         [Display(Name = "Freight Charge")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
-        public decimal? FreightCharge { get; set; }
+        public decimal FreightCharge { get; set; }
         
         [Display(Name = "FC Amount")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]

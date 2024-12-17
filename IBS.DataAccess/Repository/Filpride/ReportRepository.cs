@@ -299,7 +299,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include (rr => rr.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip)
                 .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Customer)
                 .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Hauler)
-                .OrderBy(rr => rr.Date) // Order by TransactionDate
+                .OrderBy(rr => rr.Date).ThenBy(rr => rr.PurchaseOrder.PurchaseOrderNo) // Order by TransactionDate
                 .ToList();
             
             return receivingReports;
