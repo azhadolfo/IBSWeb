@@ -40,7 +40,23 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> GetNotificationCount()
         {
-            int count = await _unitOfWork.Notifications.GetUnreadNotificationCountAsync(_userManager.GetUserId(User));
+            var count = await _unitOfWork.Notifications.GetUnreadNotificationCountAsync(_userManager.GetUserId(User));
+
+            if (count <= 0)
+            {
+                return Json(count);
+            }
+
+            var hubConnections = await _dbContext.HubConnections
+                .Where(h => h.UserName == _userManager.GetUserName(User))
+                .ToListAsync();
+
+            foreach (var hubConnection in hubConnections)
+            {
+                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                    .SendAsync("ReceivedNotification", $"You have {count} unread message.");
+            }
+
             return Json(count);
         }
 
