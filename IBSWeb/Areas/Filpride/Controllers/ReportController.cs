@@ -493,16 +493,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Setting header
                     worksheet.Cells["A1"].Value = "SUMMARY OF BOOKED SALES";
                     worksheet.Cells["A2"].Value = $"{ViewBag.DateFrom} - {ViewBag.DateTo}";
-                    worksheet.Cells["A1:J1"].Merge = true;
-                    worksheet.Cells["A1:J1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                    worksheet.Cells["A1:J1"].Style.Font.Bold = true;
+                    worksheet.Cells["A1:L1"].Merge = true;
+                    worksheet.Cells["A1:L1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells["A1:L1"].Style.Font.Bold = true;
 
                     // Define table headers
                     var headers = new[]
                     {
-                "COS Date", "Date of Del", "Customer", "Product", "P.O. No.",
-                "COS No.", "Price", "Unserved Volume", "Amount", "COS Status", "Exp of COS"
-            };
+                        "COS Date", "Date of Del", "Customer", "Product", "P.O. No.",
+                        "COS No.", "Price", "Unserved Volume", "Amount", "COS Status", "Exp of COS", "OTC COS No."
+                    };
 
                     for (int i = 0; i < headers.Length; i++)
                     {
@@ -528,6 +528,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 9].Value = item.TotalAmount;
                         worksheet.Cells[row, 10].Value = "APPROVED";
                         worksheet.Cells[row, 11].Value = item.ExpirationDate;
+                        worksheet.Cells[row, 12].Value = item.OldCosNo;
 
                         worksheet.Cells[row, 7, row, 9].Style.Numberformat.Format = "#,##0.0000";
                         row++;
@@ -608,7 +609,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     "DR DATE", "CUSTOMER NAME", "TYPE", "DR NO.", "PRODUCTS", "QTY.", "AMOUNT", "PICK-UP POINT",
                     "PO #", "ATL#/SO#", "COS NO.", "HAULER NAME", "SUPPLIER", "COST", "FREIGHT", "ECC", "TOTAL FREIGHT"
                 };
-                
+
                 if (viewModel.ReportType == "AllDeliveries")
                 {
                     headers = headers.Concat(new[] { "DELIVERY DATE", "STATUS" }).ToArray();
