@@ -291,7 +291,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     var existingRecord = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
-                    
+
                     var customer = await _unitOfWork.FilprideCustomer
                         .GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken) ?? throw new NullReferenceException();
 
@@ -741,17 +741,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetDrDetails(int? drId, CancellationToken cancellationToken)
         {
-            if (drId == null)
-            {
-                return BadRequest();
-            }
-            
             var dr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(d => d.DeliveryReceiptId == drId, cancellationToken);
-            
+
             if (dr != null)
             {
                 var automatedRr = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == dr.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
-                
+
                 return Json(new
                 {
                     TransactionDate = dr.DeliveredDate,
