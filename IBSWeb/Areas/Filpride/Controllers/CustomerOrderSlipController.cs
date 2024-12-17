@@ -267,6 +267,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         changes.Add("Order Date was updated.");
                     }
+
+                    if (existingRecord.ProductId != viewModel.ProductId)
+                    {
+                        changes.Add("Product was updated.");
+                    }
                     if (existingRecord.OldCosNo != viewModel.OtcCosNo)
                     {
                         changes.Add("OTC COS# was updated.");
