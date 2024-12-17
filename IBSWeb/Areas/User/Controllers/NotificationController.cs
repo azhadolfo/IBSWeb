@@ -1,9 +1,11 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -17,11 +19,15 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly IHubContext<NotificationHub> _hubContext;
 
-        public NotificationController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, IHubContext<NotificationHub> hubContext)
+        private readonly ApplicationDbContext _dbContext;
+
+        public NotificationController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager,
+            IHubContext<NotificationHub> hubContext, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _hubContext = hubContext;
+            _dbContext = dbContext;
         }
 
         public async Task<IActionResult> Index()
@@ -40,7 +46,23 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> GetNotificationCount()
         {
-            int count = await _unitOfWork.Notifications.GetUnreadNotificationCountAsync(_userManager.GetUserId(User));
+            var count = await _unitOfWork.Notifications.GetUnreadNotificationCountAsync(_userManager.GetUserId(User));
+
+            if (count <= 0)
+            {
+                return Json(count);
+            }
+
+            var hubConnections = await _dbContext.HubConnections
+                .Where(h => h.UserName == _userManager.GetUserName(User))
+                .ToListAsync();
+
+            foreach (var hubConnection in hubConnections)
+            {
+                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                    .SendAsync("ReceivedNotification", $"You have {count} unread message.");
+            }
+
             return Json(count);
         }
 
