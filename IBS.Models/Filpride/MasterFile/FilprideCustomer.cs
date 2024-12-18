@@ -76,9 +76,12 @@ namespace IBS.Models.Filpride.MasterFile
 
         public ClusterArea? ClusterCode { get; set; }
 
-        //If Retail only
+        #region For Retail
+
         [Column(TypeName = "varchar(3)")]
         public string? StationCode { get; set; }
+
+        #endregion
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
@@ -87,5 +90,10 @@ namespace IBS.Models.Filpride.MasterFile
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal CreditLimitAsOfToday { get; set; }
+
+        public bool HasBranch { get; set; }
+
+        public ICollection<FilprideCustomerBranch>? Branches { get; set; }
+
     }
 }
