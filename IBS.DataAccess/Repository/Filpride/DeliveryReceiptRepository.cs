@@ -48,6 +48,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.Hauler)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
                 .Include(dr => dr.Customer)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Commissionee)
                 .Include(dr => dr.PurchaseOrder);
 
             if (filter != null)
@@ -67,6 +68,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.PurchaseOrder)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Commissionee)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -414,7 +416,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 if (deliveryReceipt.CustomerOrderSlip.CommissionRate > 0)
                 {
                     var commissionGrossAmount = deliveryReceipt.CustomerOrderSlip.CommissionRate * deliveryReceipt.Quantity;
-                    var commissionEwtAmount = ComputeEwtAmount(commissionGrossAmount, 0.05m);
+                    var commissionEwtAmount = deliveryReceipt.CustomerOrderSlip.Commissionee.TaxType == SD.TaxType_WithTax ?
+                        ComputeEwtAmount(commissionGrossAmount, 0.05m) : 0;
                     var commissionNetOfEwt = ComputeNetOfEwt(commissionGrossAmount, commissionEwtAmount);
 
                     ledgers.Add(new FilprideGeneralLedgerBook
@@ -462,19 +465,22 @@ namespace IBS.DataAccess.Repository.Filpride
                         SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
                     });
 
-                    ledgers.Add(new FilprideGeneralLedgerBook
+                    if (commissionEwtAmount > 0)
                     {
-                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                        Reference = deliveryReceipt.DeliveryReceiptNo,
-                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
-                        AccountNo = ewtFivePercent.AccountNumber,
-                        AccountTitle = ewtFivePercent.AccountName,
-                        Debit = 0,
-                        Credit = commissionNetOfEwt,
-                        Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
-                    });
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                            Reference = deliveryReceipt.DeliveryReceiptNo,
+                            Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
+                            AccountNo = ewtFivePercent.AccountNumber,
+                            AccountTitle = ewtFivePercent.AccountName,
+                            Debit = 0,
+                            Credit = commissionNetOfEwt,
+                            Company = deliveryReceipt.Company,
+                            CreatedBy = deliveryReceipt.CreatedBy,
+                            CreatedDate = deliveryReceipt.CreatedDate
+                        });
+                    }
 
                 }
 
