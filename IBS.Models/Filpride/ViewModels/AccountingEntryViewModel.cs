@@ -1,4 +1,5 @@
 using IBS.Utility;
+using IBS.Utility.Enums;
 
 namespace IBS.Models.Filpride.ViewModels
 {

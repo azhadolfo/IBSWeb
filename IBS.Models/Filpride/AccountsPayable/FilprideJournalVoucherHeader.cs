@@ -43,7 +43,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsPrinted { get; set; }
 
-        public string Status { get; set; } = nameof(Utility.Status.Pending);
+        public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
         public string? Type { get; set; }
     }

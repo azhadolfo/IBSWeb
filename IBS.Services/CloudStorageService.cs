@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace IBS.DataAccess.Services
+namespace IBS.Services
 {
     public interface ICloudStorageService
     {

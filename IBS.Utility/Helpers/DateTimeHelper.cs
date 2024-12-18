@@ -1,4 +1,4 @@
-namespace IBS.Utility
+namespace IBS.Utility.Helpers
 {
     public static class DateTimeHelper
     {

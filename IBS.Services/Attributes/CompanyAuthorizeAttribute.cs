@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace IBS.Utility
+namespace IBS.Services.Attributes
 {
     public class CompanyAuthorizeAttribute : AuthorizeAttribute
     {

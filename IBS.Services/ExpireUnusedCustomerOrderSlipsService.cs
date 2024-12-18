@@ -1,10 +1,11 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.Utility;
+using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace IBS.DataAccess.Repository.Filpride
+namespace IBS.Services
 {
     public class ExpireUnusedCustomerOrderSlipsService : IHostedService, IDisposable
     {

@@ -3,6 +3,7 @@ using IBS.Models.Filpride.MasterFile;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Utility.Enums;
 
 namespace IBS.Models.Filpride.Integrated
 {
@@ -64,7 +65,7 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "varchar(50)")]
         public string ManualDrNo { get; set; }
 
-        public string Status { get; set; } = nameof(Utility.DRStatus.Pending);
+        public string Status { get; set; } = nameof(DRStatus.Pending);
 
         #region Appointing Hauler
 

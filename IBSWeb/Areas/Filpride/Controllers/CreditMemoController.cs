@@ -1,17 +1,19 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -231,7 +233,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     #endregion -- check for unposted DM or CM
-                    
+
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Company = companyClaims;
 
@@ -245,7 +247,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     else if (model.Source == "Service Invoice")
                     {
                         model.SalesInvoiceId = null;
-                        
+
                         model.CreditMemoNo = await _unitOfWork.FilprideCreditMemo.GenerateCodeAsync(companyClaims, existingSv.Type, cancellationToken);
                         model.Type = existingSv.Type;
                         model.CreditAmount = -model.Amount ?? 0;
@@ -374,7 +376,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         existingCM.CreditAmount = -model.Amount ?? 0;
                     }
-                    
+
                     existingCM.EditedBy = _userManager.GetUserName(User);
                     existingCM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
@@ -1015,7 +1017,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return NotFound();
         }
-        
+
 
         [HttpGet]
         public async Task<JsonResult> GetSVDetails(int svId, CancellationToken cancellationToken)

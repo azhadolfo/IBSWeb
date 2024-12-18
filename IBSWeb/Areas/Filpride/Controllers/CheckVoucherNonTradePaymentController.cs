@@ -5,13 +5,13 @@ using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
+using IBS.Services.Attributes;
+using IBS.Utility.Enums;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -1352,10 +1352,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var credit = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.SupplierId == suppId && cvd.CheckVoucherHeaderId == cvId)
                 .Include(cvd => cvd.CheckVoucherHeader)
-                .Select(cvd => new 
-                { 
-                    RemainingCredit = cvd.Credit - cvd.AmountPaid, 
-                    cvd.CheckVoucherHeader!.Particulars 
+                .Select(cvd => new
+                {
+                    RemainingCredit = cvd.Credit - cvd.AmountPaid,
+                    cvd.CheckVoucherHeader!.Particulars
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -1421,10 +1421,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var credit = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.SupplierId == suppId && cvd.CheckVoucherHeaderId == cvId)
                 .Include(cvd => cvd.CheckVoucherHeader)
-                .Select(cvd => new 
-                { 
-                    RemainingCredit = cvd.Credit - cvd.AmountPaid, 
-                    Particulars = cvd.CheckVoucherHeader.Particulars 
+                .Select(cvd => new
+                {
+                    RemainingCredit = cvd.Credit - cvd.AmountPaid,
+                    Particulars = cvd.CheckVoucherHeader.Particulars
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 

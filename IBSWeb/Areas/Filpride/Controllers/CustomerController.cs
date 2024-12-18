@@ -2,7 +2,8 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility;
+using IBS.Services.Attributes;
+using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
@@ -63,7 +64,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                
+
                 try
                 {
                     var companyClaims = await GetCompanyClaimAsync();
@@ -77,10 +78,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.CreatedBy = _userManager.GetUserName(User);
                         await _unitOfWork.FilprideCustomer.AddAsync(model, cancellationToken);
                         await _unitOfWork.SaveAsync(cancellationToken);
-                        
+
                         FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new customer {model.CustomerCode}", "Customer", "", model.Company);
                         await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-                        
+
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Customer created successfully";
                         return RedirectToAction(nameof(Index));
@@ -124,7 +125,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                
+
                 try
                 {
                     model.EditedBy = _userManager.GetUserName(User);

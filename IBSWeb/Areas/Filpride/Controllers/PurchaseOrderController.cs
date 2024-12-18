@@ -1,12 +1,10 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +13,10 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -288,7 +290,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(po => po.Product)
                 .Include(po => po.ActualPrices)
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
-            
+
             if (purchaseOrder == null)
             {
                 return NotFound();
@@ -329,14 +331,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var model = await _dbContext.FilpridePurchaseOrders.FindAsync(id, cancellationToken);
-            
+
             var hasAlreadyBeenUsed =
                 await _dbContext.FilprideReceivingReports.AnyAsync(
                     rr => rr.POId == model.PurchaseOrderId && rr.Status != nameof(Status.Voided),
                     cancellationToken) ||
                 await _dbContext.FilprideCheckVoucherHeaders.AnyAsync(cv =>
                     cv.CvType == "Trade" && cv.PONo.Contains(model.PurchaseOrderNo) && cv.Status != nameof(Status.Voided), cancellationToken);
-            
+
             if (hasAlreadyBeenUsed)
             {
                 TempData["error"] = "Please note that this record has already been utilized in a receiving report or check voucher. As a result, voiding it is not permitted.";

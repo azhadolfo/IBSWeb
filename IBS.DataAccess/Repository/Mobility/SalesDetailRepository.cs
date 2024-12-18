@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 using IBS.Utility;
+using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Mobility
 {

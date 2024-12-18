@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace IBS.DataAccess.Services
+namespace IBS.Services
 {
     public class MaintenanceMiddleware
     {

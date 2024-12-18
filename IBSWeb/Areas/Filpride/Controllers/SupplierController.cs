@@ -2,7 +2,8 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility;
+using IBS.Services.Attributes;
+using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -86,7 +87,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                
+
                 var companyClaims = await GetCompanyClaimAsync();
 
                 if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, model.Category, companyClaims, cancellationToken))
@@ -122,10 +123,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CreatedBy = _userManager.GetUserName(User);
                     model.Company = companyClaims;
                     await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
-                    
+
                     FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new supplier {model.SupplierCode}", "Supplier", "", model.Company);
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-                    
+
                     await _unitOfWork.SaveAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Supplier created successfully";
@@ -187,7 +188,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                
+
                 try
                 {
                     var companyClaims = await GetCompanyClaimAsync();

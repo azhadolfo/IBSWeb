@@ -6,6 +6,7 @@ using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Utility.Enums;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
