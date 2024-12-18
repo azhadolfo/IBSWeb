@@ -7,7 +7,7 @@ namespace IBS.Models.Filpride.MasterFile
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
         public int CustomerId { get; set; }
 

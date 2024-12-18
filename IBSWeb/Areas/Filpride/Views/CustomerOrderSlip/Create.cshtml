@@ -47,10 +47,35 @@
                         <label asp-for="TinNo"></label>
                         <span asp-validation-for="TinNo" class="text-danger"></span>
                     </div>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="Terms" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                        <label asp-for="Terms"></label>
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Customer Terms<span class="required">*</span></label>
+                        <select asp-for="Terms" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                            <option value="" selected disabled>Select payment terms</option>
+                            <option value="@SD.Terms_Cod">@SD.Terms_Cod</option>
+                            <option value="@SD.Terms_Prepaid">@SD.Terms_Prepaid</option>
+                            <option value="@SD.Terms_7d">@SD.Terms_7d</option>
+                            <option value="@SD.Terms_10d">@SD.Terms_10d</option>
+                            <option value="@SD.Terms_15d">@SD.Terms_15d</option>
+                            <option value="@SD.Terms_30d">@SD.Terms_30d</option>
+                            <option value="@SD.Terms_45d">@SD.Terms_45d</option>
+                            <option value="@SD.Terms_60d">@SD.Terms_60d</option>
+                            <option value="@SD.Terms_90d">@SD.Terms_90d</option>
+                            <option value="@SD.Terms_15pdc">@SD.Terms_15pdc</option>
+                            <option value="@SD.Terms_30pdc">@SD.Terms_30pdc</option>
+                            <option value="@SD.Terms_45pdc">@SD.Terms_45pdc</option>
+                            <option value="@SD.Terms_60pdc">@SD.Terms_60pdc</option>
+                            <option value="@SD.Terms_M15">@SD.Terms_M15</option>
+                            <option value="@SD.Terms_M29">@SD.Terms_M29</option>
+                            <option value="@SD.Terms_M30">@SD.Terms_M30</option>
+                        </select>
                         <span asp-validation-for="Terms" class="text-danger"></span>
+                    </div>
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Branch<span class="required">*</span></label>
+                        <select asp-for="SelectedBranch" asp-items="@Model.Branches" class="form-select js-select2 border-0 shadow" style="width:100%" required>
+                            <option value="" selected>Select branch</option>
+                        </select>
+                        <span asp-validation-for="SelectedBranch" class="text-danger"></span>
                     </div>
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Product List<span class="required">*</span></label>
@@ -159,14 +184,20 @@
                         type: "GET",
                         data: { id: customerId },
                         success: function (data) {
+                            console.log(data)
                             if (data) {
                                 $('input[name="CustomerAddress"]').val(data.address);
                                 $('input[name="TinNo"]').val(data.tinNo);
-                                $('input[name="Terms"]').val(data.terms);
+                                $('select[name="Terms"]').val(data.terms).change();
+                                
+                                // Populate Branches dropdown using fetched data
+                                populateBranches(data.branches);
+                                
                             } else {
                                 $('input[name="CustomerAddress"]').val('');
                                 $('input[name="TinNo"]').val('');
-                                $('input[name="Terms"]').val('');
+                                $('select[name="Terms"]').val('');
+                                clearBranches();
                             }
                         },
                         error: function (xhr, status, error) {
@@ -176,7 +207,8 @@
                 } else {
                     $('input[name="CustomerAddress"]').val('');
                     $('input[name="TinNo"]').val('');
-                    $('input[name="Terms"]').val('');
+                    $('select[name="Terms"]').val('');
+                    clearBranches();
                 }
             });
 
@@ -195,6 +227,31 @@
                     checkCustomerBalance(totalAmount);
                 }
             });
+
+            // Function to populate branches dropdown
+            function populateBranches(branches) {
+                var branchDropdown = $('select[name="SelectedBranch"]');
+                branchDropdown.empty();
+                branchDropdown.append('<option value="" selected>Select branch</option>');
+                if (branches && branches.length > 0) {
+                    $.each(branches, function (index, item) {
+                        branchDropdown.append('<option value="' + item.value + '">' + item.text + '</option>');
+                    });
+                    // Show the Branch dropdown
+                    branchDropdown.closest('.form-group').show();
+                }
+                else{
+                    clearBranches();
+                }
+            }
+
+            // Function to clear branches dropdown
+            function clearBranches() {
+                var branchDropdown = $('select[name="SelectedBranch"]');
+                branchDropdown.closest('.form-group').hide();
+                branchDropdown.empty();
+                branchDropdown.append('<option value="" selected>Select branch</option>');
+            }
 
             function checkCustomerBalance(totalAmount) {
             var customerId = $('select[name="CustomerId"]').val();

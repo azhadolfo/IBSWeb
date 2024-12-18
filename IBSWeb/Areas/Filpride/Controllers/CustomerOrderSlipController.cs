@@ -156,7 +156,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CreatedBy = _userManager.GetUserName(User),
                         ProductId = viewModel.ProductId,
                         Status = nameof(CosStatus.Created),
-                        OldCosNo = viewModel.OtcCosNo
+                        OldCosNo = viewModel.OtcCosNo,
+                        Terms = viewModel.Terms,
+                        Branch = viewModel.SelectedBranch
                     };
 
                     if (viewModel.HasCommission)
@@ -237,6 +239,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Remarks = exisitingRecord.Remarks,
                     OtcCosNo = exisitingRecord.OldCosNo,
                     Status = exisitingRecord.Status,
+                    Terms = exisitingRecord.Terms,
+                    Branches = await _unitOfWork.FilprideCustomer
+                        .GetCustomerBranchesSelectListAsync(exisitingRecord.CustomerId, cancellationToken),
+                    SelectedBranch = exisitingRecord.Branch
                 };
 
                 return View(viewModel);
@@ -307,6 +313,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingRecord.Remarks != viewModel.Remarks)
                     {
                         changes.Add("Remarks were updated.");
+                    }
+
+                    if (existingRecord.Branch != viewModel.SelectedBranch)
+                    {
+                        changes.Add("Branch was updated.");
+                    }
+
+                    if (existingRecord.Terms != viewModel.Terms)
+                    {
+                        changes.Add("Terms was updated.");
                     }
 
                     await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
@@ -641,7 +657,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     existingRecord.SecondApprovedBy = _userManager.GetUserName(User);
                     existingRecord.SecondApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingRecord.Terms = terms;
+                    existingRecord.Terms = terms ?? existingRecord.Terms;
                     existingRecord.FinanceInstruction = instructions;
                     await _unitOfWork.FilprideCustomerOrderSlip.FinanceApproved(existingRecord, cancellationToken);
                 }
@@ -704,18 +720,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
-            var customerDto = await _unitOfWork.FilprideCustomerOrderSlip.MapCustomerToDTO(id, null);
+            var customer = await _dbContext.FilprideCustomers
+                .FirstOrDefaultAsync(c => c.CustomerId == id);
 
-            if (customerDto == null)
+            if (customer == null)
             {
                 return Json(null);
             }
 
             return Json(new
             {
-                Address = customerDto.CustomerAddress,
-                TinNo = customerDto.CustomerTin,
-                Terms = customerDto.CustomerTerms
+                Address = customer.CustomerAddress,
+                TinNo = customer.CustomerTin,
+                Terms = customer.CustomerTerms,
+                Branches = !customer.HasBranch ? null : await _unitOfWork.FilprideCustomer
+                    .GetCustomerBranchesSelectListAsync(customer.CustomerId)
             });
         }
 

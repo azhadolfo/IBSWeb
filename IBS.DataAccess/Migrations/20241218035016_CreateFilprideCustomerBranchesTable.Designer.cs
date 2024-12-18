@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241218024134_CreateFilprideCustomerBranchesTable")]
+    [Migration("20241218035016_CreateFilprideCustomerBranchesTable")]
     partial class CreateFilprideCustomerBranchesTable
     {
         /// <inheritdoc />
@@ -3060,10 +3060,12 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideCustomerBranch", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BranchName")
                         .IsRequired()

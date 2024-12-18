@@ -87,15 +87,17 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CommissionRate = viewModel.CommissionRate;
             existingRecord.ProductId = viewModel.ProductId;
             existingRecord.OldCosNo = viewModel.OtcCosNo;
+            existingRecord.Branch = viewModel.SelectedBranch;
+            existingRecord.Terms = viewModel.Terms;
 
             if (_db.ChangeTracker.HasChanges())
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                
+
                 FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", "", existingRecord.Company);
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-                
+
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

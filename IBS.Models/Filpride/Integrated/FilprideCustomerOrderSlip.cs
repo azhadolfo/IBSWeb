@@ -86,6 +86,8 @@ namespace IBS.Models.Filpride.Integrated
 
         #endregion Product's Properties
 
+        public string? Branch { get; set; }
+
         #endregion
 
         #region Appointing Supplier

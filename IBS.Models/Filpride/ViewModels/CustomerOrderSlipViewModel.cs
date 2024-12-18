@@ -63,5 +63,9 @@ namespace IBS.Models.Filpride.ViewModels
         public string OtcCosNo { get; set; }
 
         public string? Status { get; set; }
+
+        public string? SelectedBranch { get; set; }
+
+        public List<SelectListItem>? Branches { get; set; }
     }
 }

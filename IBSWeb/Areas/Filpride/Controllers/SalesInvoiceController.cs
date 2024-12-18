@@ -153,7 +153,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.SalesInvoiceNo = await _unitOfWork.FilprideSalesInvoice.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
                     model.Amount = model.Quantity * model.UnitPrice;
-                    model.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingCustomer.CustomerTerms, model.TransactionDate);
+                    model.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(model.Terms, model.TransactionDate);
                     model.Company = companyClaims;
 
                     if (model.Amount >= model.Discount)
@@ -210,7 +210,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Address = customer.CustomerAddress,
                     TinNo = customer.CustomerTin,
                     customer.BusinessStyle,
-                    Terms = customer.CustomerTerms,
                     customer.CustomerType,
                     customer.WithHoldingTax,
                     CosList = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListPerCustomerAsync(customerId, cancellationToken)
@@ -231,6 +230,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ProductName = $"{cos.Product.ProductCode} {cos.Product.ProductName}",
                     cos.Product.ProductUnit,
                     cos.DeliveredPrice,
+                    cos.Terms,
                     DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(cos.CustomerOrderSlipId, cancellationToken)
                 });
             }
@@ -313,26 +313,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.ReceivingReportId = model.ReceivingReportId;
                     existingRecord.CustomerOrderSlipId = model.CustomerOrderSlipId;
                     existingRecord.DeliveryReceiptId = model.DeliveryReceiptId;
-                    existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(customer.CustomerTerms, model.TransactionDate);
+                    existingRecord.Terms = model.Terms;
+                    existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, model.TransactionDate);
 
-                    if (existingRecord.Amount >= model.Discount)
-                    {
-                        existingRecord.EditedBy = _userManager.GetUserName(User);
-                        existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingRecord.EditedBy = _userManager.GetUserName(User);
+                    existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                        #region --Audit Trail Recording
+                    #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edited sales invoice# {existingRecord.SalesInvoiceNo}", "Sales Invoice", ipAddress, existingRecord.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edited sales invoice# {existingRecord.SalesInvoiceNo}", "Sales Invoice", ipAddress, existingRecord.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
-                        #endregion --Audit Trail Recording
+                    #endregion --Audit Trail Recording
 
-                        await _unitOfWork.SaveAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Sales invoice updated successfully";
-                        return RedirectToAction(nameof(Index));
-                    }
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Sales invoice updated successfully";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
@@ -754,7 +752,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     automatedRr.ReceivingReportId,
                     automatedRr.PurchaseOrder.PurchaseOrderId,
                     OtherRefNo = dr.ManualDrNo,
-                    Remarks = $"Customer PO# {dr.CustomerOrderSlip.CustomerPoNo}"
+                    Remarks = $"Customer PO# {dr.CustomerOrderSlip.CustomerPoNo}" +
+                              (!dr.Customer.HasBranch ? "" : $"\nBranch: {dr.CustomerOrderSlip.Branch}")
                 });
             }
 

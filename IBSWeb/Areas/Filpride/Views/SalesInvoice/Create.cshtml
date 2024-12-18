@@ -68,7 +68,7 @@
 
                         <div class="form-group mb-3">
                             <label class="control-label">Terms</label>
-                            <input id="terms" class="form-control" readonly />
+                            <input asp-for="Terms" class="form-control" readonly />
                         </div>
                     </div>
 
@@ -176,7 +176,6 @@
                                 $("#address").val(data.address);
                                 $("#tinNo").val(data.tinNo);
                                 $("#businessStyle").val(data.businessStyle);
-                                $("#terms").val(data.terms);
                                 $("#customerType").val(data.customerType);
 
                                 // Populate COS dropdown
@@ -192,6 +191,16 @@
 
                                 // Trigger product selection
                                 cosSelect.trigger("change");
+                            }
+                            else{
+                                $("#soldTo").val('');
+                                $("#address").val('');
+                                $("#tinNo").val('');
+                                $("#businessStyle").val('');
+                                $("#customerType").val('');
+
+                                var cosSelect = $("#CustomerOrderSlipId");
+                                cosSelect.empty();
                             }
                         }
                     });
@@ -213,6 +222,7 @@
                                 $("#productName").val(data.productName);
                                 $("#productUnit").val(data.productUnit);
                                 $("#UnitPrice").val(data.deliveredPrice);
+                                $("#Terms").val(data.terms);
                                 // Populate DR dropdown
                                 var drSelect = $("#DeliveryReceiptId");
                                 drSelect.empty();
@@ -225,6 +235,16 @@
 
                                 // Trigger DR selection
                                 drSelect.trigger("change");
+                            }
+                            else{
+                                $("#ProductId").val('');
+                                $("#productName").val('');
+                                $("#productUnit").val('');
+                                $("#UnitPrice").val('');
+                                $("#Terms").val('');
+
+                                var drSelect = $("#DeliveryReceiptId");
+                                drSelect.empty();
                             }
                         }
                     });
@@ -248,6 +268,14 @@
                                 $("#PurchaseOrderId").val(data.purchaseOrderId);
                                 $("#OtherRefNo").val(data.otherRefNo);
                                 $("#Remarks").val(data.remarks);
+                            }
+                            else{
+                                $("#TransactionDate").val('');
+                                $("#Quantity").val('');
+                                $("#ReceivingReportId").val('');
+                                $("#PurchaseOrderId").val('');
+                                $("#OtherRefNo").val('');
+                                $("#Remarks").val('');
                             }
                         }
                     });
