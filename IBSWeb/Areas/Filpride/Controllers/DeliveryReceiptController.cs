@@ -78,7 +78,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CustomerOrderSlip.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
                         s.CustomerOrderSlip.Product.ProductName.ToLower().Contains(searchValue) ||
                         s.Status.ToLower().Contains(searchValue) ||
-                        s.Remarks.ToLower().Contains(searchValue)
+                        s.Remarks.ToLower().Contains(searchValue) ||
+                        s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -690,9 +691,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var connectedReceivingReport = await _dbContext.FilprideReceivingReports
                             .FirstOrDefaultAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
 
+                        if (connectedReceivingReport != null)
+                        {
+                            await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(connectedReceivingReport.ReceivingReportId, model.VoidedBy, ipAddress, cancellationToken);
+                        }
+
                         await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
                         await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
-                        await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(connectedReceivingReport.ReceivingReportId, model.VoidedBy, ipAddress, cancellationToken);
 
                         if (model.CustomerOrderSlip.HasMultiplePO)
                         {
