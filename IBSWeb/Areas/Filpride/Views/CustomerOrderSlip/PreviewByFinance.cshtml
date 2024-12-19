@@ -7,14 +7,21 @@
 }
 
 <div class="container mt-4">
+    @if (Model.Status == nameof(CosStatus.Disapproved))
+    {
+        <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+            <b>DISAPPROVED</b>
+        </div>
+    }
+    
     <div class="text-end">
-        <img src="~/img/Filpride.jpg" width="130px" />
+        <img src="~/img/Filpride.jpg" width="130px"/>
     </div>
     <div class="text-center mb-4">
         <h2><u><b>FILPRIDE RESOURCES INC.</b></u></h2>
         <p>
-            57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan,<br />
-            Olongapo City, 2200 Zambales, Philippines<br />
+            57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan,<br/>
+            Olongapo City, 2200 Zambales, Philippines<br/>
             VAT Reg. TIN: 000-216-589-00000
         </p>
         <h3><b>CUSTOMER ORDER SLIP</b></h3>
@@ -24,25 +31,25 @@
     <div class="table-responsive">
         <table class="table table-borderless">
             <tbody>
-                <tr>
-                    <td><b>Customer No:</b> @Model.CustomerOrderSlip.Customer?.CustomerCode</td>
-                    <td class="text-end"><b>Date:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.Date)</td>
-                </tr>
-                <tr>
-                    <td><b>Customer Name:</b> @Model.CustomerOrderSlip.Customer?.CustomerName</td>
-                    <td class="text-end"><b>Exp Date:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.ExpirationDate)</td>
-                </tr>
-                <tr>
-                    <td><b>Terms:</b> @(Model.CustomerOrderSlip.Terms ?? Model.CustomerOrderSlip.Customer?.CustomerTerms)</td>
-                    <td class="text-end"><b>Customer PO#:</b> @Model.CustomerOrderSlip.CustomerPoNo</td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td class="text-end">
-                        <b>IS PO#:</b>
-                        @Model.CustomerOrderSlip.PurchaseOrder?.OldPoNo
-                    </td>
-                </tr>
+            <tr>
+                <td><b>Customer No:</b> @Model.CustomerOrderSlip.Customer?.CustomerCode</td>
+                <td class="text-end"><b>Date:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.Date)</td>
+            </tr>
+            <tr>
+                <td><b>Customer Name:</b> @Model.CustomerOrderSlip.Customer?.CustomerName</td>
+                <td class="text-end"><b>Exp Date:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.ExpirationDate)</td>
+            </tr>
+            <tr>
+                <td><b>Terms:</b> @(Model.CustomerOrderSlip.Terms ?? Model.CustomerOrderSlip.Customer?.CustomerTerms)</td>
+                <td class="text-end"><b>Customer PO#:</b> @Model.CustomerOrderSlip.CustomerPoNo</td>
+            </tr>
+            <tr>
+                <td><b>Branch:</b> @Model.CustomerOrderSlip.Branch</td>
+                <td class="text-end">
+                    <b>IS PO#:</b>
+                    @Model.CustomerOrderSlip.PurchaseOrder?.OldPoNo
+                </td>
+            </tr>
             </tbody>
         </table>
     </div>
@@ -50,24 +57,24 @@
     <div class="table-responsive">
         <table class="table table-bordered">
             <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Quantity</th>
-                    <th>Unit</th>
-                    <th>Vat</th>
-                    <th>Del Price</th>
-                    <th>Total Amount</th>
-                </tr>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+                <th>Vat</th>
+                <th>Del Price</th>
+                <th>Total Amount</th>
+            </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>@Model.CustomerOrderSlip.Product?.ProductName</td>
-                    <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
-                    <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
-                    <td>@Html.DisplayFor(model => model.VatAmount)</td>
-                    <td>@Html.DisplayFor(model => model.CustomerOrderSlip.DeliveredPrice)</td>
-                    <td>@Html.DisplayFor(model => model.CustomerOrderSlip.TotalAmount)</td>
-                </tr>
+            <tr>
+                <td>@Model.CustomerOrderSlip.Product?.ProductName</td>
+                <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
+                <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
+                <td>@Html.DisplayFor(model => model.VatAmount)</td>
+                <td>@Html.DisplayFor(model => model.CustomerOrderSlip.DeliveredPrice)</td>
+                <td>@Html.DisplayFor(model => model.CustomerOrderSlip.TotalAmount)</td>
+            </tr>
             </tbody>
         </table>
     </div>
@@ -83,16 +90,16 @@
     <div class="table-responsive">
         <table class="table table-bordered">
             <thead>
-                <tr>
-                    <th class="text-center table-primary" colspan="2">Net Delivered Price <i class="bi bi-info-circle" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="All figures are exclusive of VAT."></i></th>
-                </tr>
+            <tr>
+                <th class="text-center table-primary" colspan="2">Net Delivered Price <i class="bi bi-info-circle" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="All figures are exclusive of VAT."></i></th>
+            </tr>
             </thead>
             <tbody>
-                <tr><td class="text-center col-6">COS Price</td><td class="col-6">@Html.DisplayFor(model => model.NetOfVatCosPrice)</td></tr>
-                <tr><td class="text-center">Product Cost</td><td>@Html.DisplayFor(model => model.NetOfVatProductCost)</td></tr>
-                <tr><td class="text-center">Freight Charge</td><td>@Html.DisplayFor(model => model.NetOfVatFreightCharge)</td></tr>
-                <tr><td class="text-center">Commission</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip.CommissionRate)</td></tr>
-                <tr><td class="text-center">Gross Margin</td><td>@Html.DisplayFor(model => model.GrossMargin)</td></tr>
+            <tr><td class="text-center col-6">COS Price</td><td class="col-6">@Html.DisplayFor(model => model.NetOfVatCosPrice)</td></tr>
+            <tr><td class="text-center">Product Cost</td><td>@Html.DisplayFor(model => model.NetOfVatProductCost)</td></tr>
+            <tr><td class="text-center">Freight Charge</td><td>@Html.DisplayFor(model => model.NetOfVatFreightCharge)</td></tr>
+            <tr><td class="text-center">Commission</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip.CommissionRate)</td></tr>
+            <tr><td class="text-center">Gross Margin</td><td>@Html.DisplayFor(model => model.GrossMargin)</td></tr>
             </tbody>
         </table>
     </div>
@@ -100,14 +107,14 @@
     <div class="table-responsive mb-3">
         <table class="table table-bordered">
             <thead>
-                <tr>
-                    <th class="text-center table-secondary" colspan="2">Customer Credit Details</th>
-                </tr>
+            <tr>
+                <th class="text-center table-secondary" colspan="2">Customer Credit Details</th>
+            </tr>
             </thead>
             <tbody>
-                <tr><td class="text-center col-6">Available Credit Limit</td><td class="col-6">@Html.DisplayFor(model => model.CreditBalance)</td></tr>
-                <tr><td class="text-center">COS Amount</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip.TotalAmount)</td></tr>
-                <tr><td class="text-center">Credit Balance</td><td>@Html.DisplayFor(model => model.Total)</td></tr>
+            <tr><td class="text-center col-6">Available Credit Limit</td><td class="col-6">@Html.DisplayFor(model => model.CreditBalance)</td></tr>
+            <tr><td class="text-center">COS Amount</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip.TotalAmount)</td></tr>
+            <tr><td class="text-center">Credit Balance</td><td>@Html.DisplayFor(model => model.Total)</td></tr>
             </tbody>
         </table>
     </div>

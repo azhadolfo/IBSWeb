@@ -103,6 +103,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilpridePOActualPrice> FilpridePOActualPrices { get; set; }
 
+        public DbSet<FilprideCustomerBranch> FilprideCustomerBranches { get; set; }
+
         #region--Master File
 
         public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
@@ -427,19 +429,19 @@ namespace IBS.DataAccess.Data
                 cos.HasIndex(cos => cos.Date);
 
                 cos.HasOne(cos => cos.PurchaseOrder)
-                .WithMany()
-                .HasForeignKey(cos => cos.PurchaseOrderId)
-                .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(cos => cos.PurchaseOrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 cos.HasOne(cos => cos.Customer)
-                .WithMany()
-                .HasForeignKey(cos => cos.CustomerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(cos => cos.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 cos.HasOne(cos => cos.Commissionee)
-                .WithMany()
-                .HasForeignKey(cos => cos.CommissioneeId)
-                .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(cos => cos.CommissioneeId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<FilprideDeliveryReceipt>(dr =>
@@ -448,27 +450,27 @@ namespace IBS.DataAccess.Data
                 dr.HasIndex(dr => dr.Date);
 
                 dr.HasOne(dr => dr.CustomerOrderSlip)
-                .WithMany()
-                .HasForeignKey(dr => dr.CustomerOrderSlipId)
-                .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(dr => dr.CustomerOrderSlipId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 dr.HasOne(dr => dr.Customer)
-                .WithMany()
-                .HasForeignKey(dr => dr.CustomerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(dr => dr.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 dr.HasOne(dr => dr.Hauler)
-                .WithMany()
-                .HasForeignKey(dr => dr.HaulerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(dr => dr.HaulerId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<FilprideCOSAppointedSupplier>(a =>
             {
                 a.HasOne(a => a.PurchaseOrder)
-                .WithMany()
-                .HasForeignKey(a => a.PurchaseOrderId)
-                .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany()
+                    .HasForeignKey(a => a.PurchaseOrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 a.HasIndex(a => a.CustomerOrderSlipId);
             });
@@ -476,9 +478,17 @@ namespace IBS.DataAccess.Data
             builder.Entity<FilpridePOActualPrice>(p =>
             {
                 p.HasOne(p => p.PurchaseOrder)
-                .WithMany(po => po.ActualPrices)
-                .HasForeignKey(p => p.PurchaseOrderId)
-                .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany(po => po.ActualPrices)
+                    .HasForeignKey(p => p.PurchaseOrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideCustomerBranch>(b =>
+            {
+                b.HasOne(b => b.Customer)
+                    .WithMany(c => c.Branches)
+                    .HasForeignKey(b => b.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             #region-- Master File

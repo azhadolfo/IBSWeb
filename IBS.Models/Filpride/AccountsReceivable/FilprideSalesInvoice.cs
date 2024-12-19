@@ -138,6 +138,8 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [NotMapped]
         public List<SelectListItem>? COS { get; set; }
 
+        public string Terms { get; set; }
+
         #endregion
     }
 }

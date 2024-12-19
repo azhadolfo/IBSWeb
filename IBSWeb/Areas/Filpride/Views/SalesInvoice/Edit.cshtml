@@ -57,7 +57,7 @@
 
                         <div class="form-group mb-3">
                             <label class="control-label">Terms</label>
-                            <input id="terms" class="form-control" value="@Model.Customer.CustomerTerms" readonly tabindex="-1" />
+                            <input asp-for="Terms" class="form-control" readonly tabindex="-1" />
                         </div>
                     </div>
                     <div class="col">
@@ -160,7 +160,6 @@
                             $("#address").val(data.address);
                             $("#tinNo").val(data.tinNo);
                             $("#businessStyle").val(data.businessStyle);
-                            $("#terms").val(data.terms);
                             $("#customerType").val(data.customerType);
 
                             // Populate COS dropdown
@@ -175,6 +174,17 @@
 
                             // Trigger COS selection
                             cosSelect.val('@Model.CustomerOrderSlipId').trigger("change");
+                        }
+                        else{
+                            $("#soldTo").val('');
+                            $("#address").val('');
+                            $("#tinNo").val('');
+                            $("#businessStyle").val('');
+                            $("#customerType").val('');
+
+                            // Populate COS dropdown
+                            var cosSelect = $("#CustomerOrderSlipId");
+                            cosSelect.empty();
                         }
                     }
                 });
@@ -196,6 +206,7 @@
                             $("#productName").val(data.productName);
                             $("#productUnit").val(data.productUnit);
                             $("#UnitPrice").val(data.deliveredPrice);
+                            $("#Terms").val(data.terms);
 
                             // Populate DR dropdown
                             var drSelect = $("#DeliveryReceiptId");
@@ -217,6 +228,7 @@
                             $("#productName").val("");
                             $("#productUnit").val("");
                             $("#UnitPrice").val("");
+                            $("#Terms").val("");
                         }
                     }
                 });
