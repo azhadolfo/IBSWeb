@@ -223,7 +223,8 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 if (previousInventory.InventoryBalance < salesInvoice.Quantity)
                 {
-                    throw new InvalidOperationException($"The quantity exceeds the available inventory of '{salesInvoice.Product.ProductName}'.");
+                    throw new InvalidOperationException($"The requested quantity exceeds the available inventory for '{salesInvoice.Product.ProductName}'. " +
+                                                        $"Please contact the Logistics department to verify the delivery date if it aligns with your transaction date.");
                 }
 
                 decimal total = salesInvoice.Quantity * previousInventory.AverageCost;
