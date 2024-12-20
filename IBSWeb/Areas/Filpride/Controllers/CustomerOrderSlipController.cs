@@ -1204,7 +1204,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingCos.Driver = viewModel.Driver;
                     existingCos.PlateNo = viewModel.PlateNo;
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint hauler customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint hauler in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
                     TempData["success"] = "Appointed hauler successfully.";
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -1286,7 +1286,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingCos.PlateNo = viewModel.PlateNo;
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Reappoint hauler customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Reappoint hauler in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
                     TempData["success"] = "Reappointed hauler successfully.";
                     await _unitOfWork.SaveAsync(cancellationToken);
