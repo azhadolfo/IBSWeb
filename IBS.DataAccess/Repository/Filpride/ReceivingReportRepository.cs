@@ -279,7 +279,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (model.QuantityDelivered > deliveryReceipt.PurchaseOrder.Quantity - deliveryReceipt.PurchaseOrder.QuantityReceived)
             {
-                throw new ArgumentException("Inputted quantity is exceed to remaining quantity delivered");
+                throw new ArgumentException($"The inputted quantity exceeds the remaining delivered quantity for Purchase Order: " +
+                                            $"{deliveryReceipt.PurchaseOrder.PurchaseOrderNo}. " +
+                                            "Please contact the TNS department to verify the appointed supplier.");
             }
 
             model.ReceivedDate = model.Date;
@@ -319,17 +321,17 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 model.Amount = model.QuantityReceived * deliveryReceipt.PurchaseOrder.Price;
             }
-            
+
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailCreate = new(model.PostedBy, 
-                $"Created new receiving report# {model.ReceivingReportNo}", 
-                "Receiving Report", "", 
+            FilprideAuditTrail auditTrailCreate = new(model.PostedBy,
+                $"Created new receiving report# {model.ReceivingReportNo}",
+                "Receiving Report", "",
                 model.Company);
 
-            FilprideAuditTrail auditTrailPost = new(model.PostedBy, 
-                $"Posted receiving report# {model.ReceivingReportNo}", 
-                "Receiving Report", "", 
+            FilprideAuditTrail auditTrailPost = new(model.PostedBy,
+                $"Posted receiving report# {model.ReceivingReportNo}",
+                "Receiving Report", "",
                 model.Company);
 
             await _db.AddAsync(auditTrailCreate, cancellationToken);
