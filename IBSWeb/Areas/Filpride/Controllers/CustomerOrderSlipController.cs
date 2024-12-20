@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -469,6 +470,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [Authorize(Roles = "OperationManager")]
         public async Task<IActionResult> ApproveByOperationManager(int? id, decimal grossMargin, string reason, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -636,6 +638,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [Authorize(Roles = "FinanceManager")]
         public async Task<IActionResult> ApproveByFinance(int? id, string? terms, string? instructions, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -676,6 +679,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [Authorize(Roles = "OperationManager, FinanceManager")]
         public async Task<IActionResult> Disapprove(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
