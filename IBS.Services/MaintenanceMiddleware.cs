@@ -1,4 +1,5 @@
 ﻿using IBS.DataAccess.Data;
+using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +24,7 @@ namespace IBS.Services
 
                 // Check Maintenance Mode (update table/field as necessary)
                 var isMaintenanceMode = await dbContext.AppSettings
-                    .Where(s => s.SettingKey == "MaintenanceMode")
+                    .Where(s => s.SettingKey == AppSettingKey.MaintenanceMode)
                     .Select(s => s.Value == "true")
                     .FirstOrDefaultAsync();
 

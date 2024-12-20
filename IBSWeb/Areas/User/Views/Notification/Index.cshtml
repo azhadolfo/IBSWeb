@@ -6,27 +6,33 @@
     @foreach (var item in Model)
     {
         <div class="notification-item d-flex justify-content-between align-items-center border rounded p-3 mb-2"
-             data-message="@item.Notification.Message" data-date="@item.Notification.CreatedDate">
+             data-message="@item.Notification.Message"
+             data-date="@item.Notification.CreatedDate"
+             data-requires-response="@item.RequiresResponse.ToString().ToLower()"
+             data-notification-id="@item.UserNotificationId">
             <div style="flex: 1; min-width: 0;">
                 <p class="mb-1 font-weight-bold text-truncate" style="max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    @item.Notification.Message
+                    @Html.Raw(item.Notification.Message)
                 </p>
                 <small class="text-muted">@item.Notification.CreatedDate.ToString("g")</small>
             </div>
             <div class="button-group d-flex" style="width: 150px; justify-content: space-between;">
-                @if (!item.IsRead)
+                @if (!item.RequiresResponse)
                 {
-                    <form asp-action="MarkAsRead" method="post" class="d-inline">
-                        <input type="hidden" name="userNotificationId" value="@item.UserNotificationId" />
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Mark as Read</button>
-                    </form>
-                }
-                @if (!item.IsArchived)
-                {
-                    <form asp-action="Archive" method="post" class="d-inline">
-                        <input type="hidden" name="userNotificationId" value="@item.UserNotificationId" />
-                        <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-trash-fill"></i></button>
-                    </form>
+                    @if (!item.IsRead)
+                    {
+                        <form asp-action="MarkAsRead" method="post" class="d-inline">
+                            <input type="hidden" name="userNotificationId" value="@item.UserNotificationId" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Mark as Read</button>
+                        </form>
+                    }
+                    @if (!item.IsArchived)
+                    {
+                        <form asp-action="Archive" method="post" class="d-inline">
+                            <input type="hidden" name="userNotificationId" value="@item.UserNotificationId" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-trash-fill"></i></button>
+                        </form>
+                    }
                 }
             </div>
         </div>
@@ -44,6 +50,13 @@
             <div class="modal-body">
                 <p id="modalMessage" class="font-weight-bold"></p>
                 <small id="modalDate" class="text-muted"></small>
+            </div>
+            <div id="responseButtons" class="modal-footer" style="display: none;">
+                <form asp-action="RespondToNotification" method="post" class="d-inline">
+                    <input type="hidden" id="modalNotificationId" name="userNotificationId" />
+                    <button type="submit" name="response" value="yes" class="btn btn-success">Yes</button>
+                    <button type="submit" name="response" value="no" class="btn btn-danger">No</button>
+                </form>
             </div>
         </div>
     </div>
@@ -103,9 +116,21 @@
         item.addEventListener('click', function () {
             const message = this.getAttribute('data-message');
             const date = this.getAttribute('data-date');
+            const requiresResponse = this.getAttribute('data-requires-response') === 'true'; // New property
+            const notificationId = this.getAttribute('data-notification-id');
 
-            document.getElementById('modalMessage').textContent = message;
+            console.log(notificationId);
+            
+            document.getElementById('modalMessage').innerHTML = message;
             document.getElementById('modalDate').textContent = new Date(date).toLocaleString();
+            document.getElementById('modalNotificationId').value = notificationId;
+
+            // Show or hide response buttons based on RequiresResponse
+            if (requiresResponse) {
+                document.getElementById('responseButtons').style.display = 'block';
+            } else {
+                document.getElementById('responseButtons').style.display = 'none';
+            }
 
             document.getElementById('notificationModal').style.display = 'block';
         });
@@ -113,11 +138,11 @@
 
     document.querySelector('.close').onclick = function () {
         document.getElementById('notificationModal').style.display = 'none';
-    }
+    };
 
     window.onclick = function (event) {
         if (event.target == document.getElementById('notificationModal')) {
             document.getElementById('notificationModal').style.display = 'none';
         }
-    }
+    };
 </script>

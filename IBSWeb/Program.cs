@@ -5,6 +5,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Mobility;
 using IBS.Services;
 using IBS.Utility;
+using IBS.Utility.Constants;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
@@ -67,7 +68,7 @@ builder.Services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(jobKey)
         .WithIdentity("TestTrigger") // Trigger 2
-        .WithCronSchedule("0 25 09 18 * ?")); // Run today at 11:34 AM format (sec, min, hour, day, month, year)
+        .WithCronSchedule("0 45 09 20 * ?")); // Run today at 11:34 AM format (sec, min, hour, day, month, year)
 });
 
 

@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
@@ -53,29 +54,64 @@ namespace IBS.Services
                     dr.Date.Year == previousMonth.Year &&
                     dr.Status == nameof(DRStatus.Pending));
 
-            if (hadInTransit)
+            if (!hadInTransit)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                return;
+            }
 
-                try
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                var logisticUsers = await _dbContext.ApplicationUsers
+                    .Where(u => u.Department == SD.Department_Logistics)
+                    .ToListAsync();
+
+                var managementAccountingUsers = await _dbContext.ApplicationUsers
+                    .Where(u => u.Department == SD.Department_ManagementAccounting)
+                    .ToListAsync();
+
+                var link = "<a href='/Filpride/Report/DispatchReport' target='_blank'>Dispatch Report</a>";
+                var message = $"Is the in-transit report final? Kindly generate the {link}.";
+                var ccMessage = "CC: Management Accounting";
+
+                // Send notifications to Logistics
+                foreach (var user in logisticUsers)
                 {
-                    var logisticUser = await _dbContext.ApplicationUsers
-                        .Where(u => u.Department == SD.Department_Logistics.ToString())
-                        .ToListAsync();
+                    await _unitOfWork.Notifications.AddNotificationAsync(user.Id, $"{message} {ccMessage}", true);
+                }
 
-                    foreach (var user in logisticUser)
+                // Send notifications to Management Accounting
+                foreach (var user in managementAccountingUsers)
+                {
+                    await _unitOfWork.Notifications.AddNotificationAsync(user.Id, $"{message} {ccMessage}", true);
+                }
+
+                var lockCreationAppSetting = await _dbContext.AppSettings
+                    .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfDr);
+
+                if (lockCreationAppSetting == null)
+                {
+                    lockCreationAppSetting = new AppSetting
                     {
-                        var message = "Is the in-transit report final?";
-                        await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
-                    }
+                        SettingKey = AppSettingKey.LockTheCreationOfDr,
+                        Value = "true"
+                    };
 
-                    await transaction.CommitAsync();
+                    await _dbContext.AppSettings.AddAsync(lockCreationAppSetting);
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger.LogError(ex, "An error occurred while processing in-transit notifications.");
-                    await transaction.RollbackAsync();
+                    lockCreationAppSetting.Value = "true";
                 }
+
+                await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing in-transit notifications.");
+                await transaction.RollbackAsync();
             }
         }
     }

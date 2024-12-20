@@ -125,6 +125,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+            var isDrLock = await _dbContext.AppSettings
+                .Where(s => s.SettingKey == AppSettingKey.LockTheCreationOfDr)
+                .Select(s => s.Value == "true")
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (isDrLock)
+            {
+                TempData["denied"] = "The creation of DR is locked.";
+                return RedirectToAction(nameof(Index));
+            }
 
             DeliveryReceiptViewModel viewModel = new()
             {
