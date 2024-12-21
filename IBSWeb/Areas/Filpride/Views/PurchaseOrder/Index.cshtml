@@ -231,17 +231,22 @@
                                 `;
                             } else {
                                 // Show Update Price, Preview, and Void options if posted
-                                dropdownContent = `
-                                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="showUpdatePriceModal(${data}, ${row.unTriggeredQuantity})">Update Price</a></li>
-                                    <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Print</a></li>
-                                `;
+                                dropdownContent = '';
+
+                                // Validate unTriggeredQuantity before showing Update Price
+                                if (row.unTriggeredQuantity > 0) {
+                                    dropdownContent += `
+                                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="showUpdatePriceModal(${data}, ${row.unTriggeredQuantity})">Update Price</a></li>
+                                    `;
+                                }
+                                
+                                dropdownContent += `
+                                <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Print</a></li>
+                                 `;
+                                
                                 if (row.quantityReceived == 0) {
                                     dropdownContent += `
                                         <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${data})">Void</a></li>
-                                    `;
-                                } else {
-                                    dropdownContent += `
-                                        <li><button class="dropdown-item" disabled readonly>Void</button></li>
                                     `;
                                 }
                             }

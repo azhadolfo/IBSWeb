@@ -625,7 +625,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var existingRecord = await _unitOfWork.FilpridePurchaseOrder
                     .GetAsync(p => p.PurchaseOrderId == purchaseOrderId, cancellationToken);
 
-                var currentUser = _userManager.GetUserName(User).ToUpper();
+                var currentUser = _userManager.GetUserName(User);
 
                 if (existingRecord == null)
                 {
@@ -717,7 +717,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Approved the actual price of purchase order# {existingRecord.PurchaseOrderNo}", "Purchase Order", ipAddress, existingRecord.Company);
+                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User),
+                        $"Approved the actual price of purchase order# {existingRecord.PurchaseOrderNo}",
+                        "Purchase Order",
+                        ipAddress,
+                        existingRecord.Company);
+
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
