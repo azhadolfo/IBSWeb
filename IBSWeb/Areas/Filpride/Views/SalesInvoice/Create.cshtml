@@ -274,7 +274,7 @@
                                 transactionDate.val(data.transactionDate);
 
                                 // Add validation event listener
-                                transactionDate.off('change').on('change', function() {
+                                transactionDate.off('blur').on('blur', function() {
                                     var selectedDate = new Date($(this).val());
                                     if (selectedDate < minDate) {
                                         alert("Transaction date cannot be earlier than delivery date of " + minDate.toLocaleDateString());
