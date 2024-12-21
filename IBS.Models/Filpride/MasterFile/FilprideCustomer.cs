@@ -26,6 +26,7 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Required]
         [Display(Name = "TIN No")]
+        [RegularExpression(@"\d{3}-\d{3}-\d{3}-\d{5}", ErrorMessage = "Invalid TIN number format.")]
         [Column(TypeName = "varchar(20)")]
         public string CustomerTin { get; set; }
 
@@ -95,5 +96,9 @@ namespace IBS.Models.Filpride.MasterFile
 
         public ICollection<FilprideCustomerBranch>? Branches { get; set; }
 
+        [Required]
+        [Display(Name = "Zip Code")]
+        [Column(TypeName = "varchar(10)")]
+        public string? ZipCode { get; set; }
     }
 }
