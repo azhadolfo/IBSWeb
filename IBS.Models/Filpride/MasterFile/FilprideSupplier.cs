@@ -16,7 +16,7 @@ namespace IBS.Models.Filpride.MasterFile
         public string? SupplierCode { get; set; }
 
         [Display(Name = "Supplier Name")]
-        [Column(TypeName = "varchar(50)")]
+        [Column(TypeName = "varchar(200)")]
         public string SupplierName { get; set; }
 
         [Display(Name = "Supplier Address")]
@@ -24,6 +24,7 @@ namespace IBS.Models.Filpride.MasterFile
         public string SupplierAddress { get; set; }
 
         [Column(TypeName = "varchar(20)")]
+        [RegularExpression(@"\d{3}-\d{3}-\d{3}-\d{5}", ErrorMessage = "Invalid TIN number format.")]
         [Display(Name = "Tin No")]
         public string SupplierTin { get; set; }
 
@@ -100,5 +101,10 @@ namespace IBS.Models.Filpride.MasterFile
         public DateTime? ValidityDate { get; set; }
 
         public string Company { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "Zip Code")]
+        [Column(TypeName = "varchar(10)")]
+        public string? ZipCode { get; set; }
     }
 }
