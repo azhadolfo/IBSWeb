@@ -2094,8 +2094,63 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var package = new ExcelPackage())
                 {
                     // Add a new worksheet to the Excel package
+                    #region -- Purchase Order Table Header --
+
+                    var worksheet3 = package.Workbook.Worksheets.Add("PurchaseOrder");
+
+                    worksheet3.Cells["A1"].Value = "Date";
+                    worksheet3.Cells["B1"].Value = "Terms";
+                    worksheet3.Cells["C1"].Value = "Quantity";
+                    worksheet3.Cells["D1"].Value = "Price";
+                    worksheet3.Cells["E1"].Value = "Amount";
+                    worksheet3.Cells["F1"].Value = "FinalPrice";
+                    worksheet3.Cells["G1"].Value = "QuantityReceived";
+                    worksheet3.Cells["H1"].Value = "IsReceived";
+                    worksheet3.Cells["I1"].Value = "ReceivedDate";
+                    worksheet3.Cells["J1"].Value = "Remarks";
+                    worksheet3.Cells["K1"].Value = "CreatedBy";
+                    worksheet3.Cells["L1"].Value = "CreatedDate";
+                    worksheet3.Cells["M1"].Value = "IsClosed";
+                    worksheet3.Cells["N1"].Value = "CancellationRemarks";
+                    worksheet3.Cells["O1"].Value = "OriginalProductId";
+                    worksheet3.Cells["P1"].Value = "OriginalSeriesNumber";
+                    worksheet3.Cells["Q1"].Value = "OriginalSupplierId";
+                    worksheet3.Cells["R1"].Value = "OriginalDocumentId";
+
+                    #endregion -- Purchase Order Table Header --
+
+                    #region -- Receving Report Table Header --
+
+                    var worksheet4 = package.Workbook.Worksheets.Add("ReceivingReport");
+
+                    worksheet4.Cells["A1"].Value = "Date";
+                    worksheet4.Cells["B1"].Value = "DueDate";
+                    worksheet4.Cells["C1"].Value = "SupplierInvoiceNumber";
+                    worksheet4.Cells["D1"].Value = "SupplierInvoiceDate";
+                    worksheet4.Cells["E1"].Value = "TruckOrVessels";
+                    worksheet4.Cells["F1"].Value = "QuantityDelivered";
+                    worksheet4.Cells["G1"].Value = "QuantityReceived";
+                    worksheet4.Cells["H1"].Value = "GainOrLoss";
+                    worksheet4.Cells["I1"].Value = "Amount";
+                    worksheet4.Cells["J1"].Value = "OtherRef";
+                    worksheet4.Cells["K1"].Value = "Remarks";
+                    worksheet4.Cells["L1"].Value = "AmountPaid";
+                    worksheet4.Cells["M1"].Value = "IsPaid";
+                    worksheet4.Cells["N1"].Value = "PaidDate";
+                    worksheet4.Cells["O1"].Value = "CanceledQuantity";
+                    worksheet4.Cells["P1"].Value = "CreatedBy";
+                    worksheet4.Cells["Q1"].Value = "CreatedDate";
+                    worksheet4.Cells["R1"].Value = "CancellationRemarks";
+                    worksheet4.Cells["S1"].Value = "ReceivedDate";
+                    worksheet4.Cells["T1"].Value = "OriginalPOId";
+                    worksheet4.Cells["U1"].Value = "OriginalSeriesNumber";
+                    worksheet4.Cells["V1"].Value = "OriginalDocumentId";
+
+                    #endregion -- Receving Report Table Header --
+
+                    #region -- Check Voucher Header Table Header --
+
                     var worksheet = package.Workbook.Worksheets.Add("CheckVoucherHeader");
-                    var worksheet2 = package.Workbook.Worksheets.Add("CheckVoucherDetails");
 
                     worksheet.Cells["A1"].Value = "TransactionDate";
                     worksheet.Cells["B1"].Value = "ReceivingReportNo";
@@ -2129,6 +2184,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells["AD1"].Value = "OriginalSupplierId";
                     worksheet.Cells["AE1"].Value = "OriginalDocumentId";
 
+                    #endregion -- Check Voucher Header Table Header --
+
+                    #region -- Check Voucher Details Table Header --
+
+                    var worksheet2 = package.Workbook.Worksheets.Add("CheckVoucherDetails");
+
                     worksheet2.Cells["A1"].Value = "AccountNo";
                     worksheet2.Cells["B1"].Value = "AccountName";
                     worksheet2.Cells["C1"].Value = "TransactionNo";
@@ -2137,9 +2198,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells["F1"].Value = "CVHeaderId";
                     worksheet2.Cells["G1"].Value = "OriginalDocumentId";
 
-                    int row = 2;
+                    #endregion -- Check Voucher Details Table Header --
 
-                    List<FilprideCheckVoucherDetail> getCVDetails = new();
+                    #region -- Check Voucher Header Export (Trade and Invoicing)--
+
+                    int row = 2;
 
                     foreach (var item in selectedList)
                     {
@@ -2191,7 +2254,71 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         row++;
                     }
 
+                    #endregion -- Check Voucher Header Export (Trade and Invoicing) --
+
+                    #region -- Check Voucher Header Export (Payment) --
+
                     var cvNos = selectedList.Select(item => item.CheckVoucherHeaderNo).ToList();
+
+                    var checkVoucherPayment = await _dbContext.FilprideCheckVoucherHeaders
+                        .Where(cvh => cvh.Reference != null && cvNos.Contains(cvh.Reference))
+                        .ToListAsync();
+
+                    foreach (var item in checkVoucherPayment)
+                    {
+                        worksheet.Cells[row, 1].Value = item.Date.ToString("yyyy-MM-dd");
+                        if (item.RRNo != null && !item.RRNo.Contains(null))
+                        {
+                            worksheet.Cells[row, 2].Value = string.Join(", ", item.RRNo.Select(rrNo => rrNo.ToString()));
+                        }
+                        if (item.SINo != null && !item.SINo.Contains(null))
+                        {
+                            worksheet.Cells[row, 3].Value = string.Join(", ", item.SINo.Select(siNo => siNo.ToString()));
+                        }
+                        if (item.PONo != null && !item.PONo.Contains(null))
+                        {
+                            worksheet.Cells[row, 4].Value = string.Join(", ", item.PONo.Select(poNo => poNo.ToString()));
+                        }
+
+                        worksheet.Cells[row, 5].Value = item.Particulars;
+                        worksheet.Cells[row, 6].Value = item.CheckNo;
+                        worksheet.Cells[row, 7].Value = item.Category;
+                        worksheet.Cells[row, 8].Value = item.Payee;
+                        worksheet.Cells[row, 9].Value = item.CheckDate?.ToString("yyyy-MM-dd");
+                        worksheet.Cells[row, 10].Value = item.StartDate?.ToString("yyyy-MM-dd");
+                        worksheet.Cells[row, 11].Value = item.EndDate?.ToString("yyyy-MM-dd");
+                        worksheet.Cells[row, 12].Value = item.NumberOfMonths;
+                        worksheet.Cells[row, 13].Value = item.NumberOfMonthsCreated;
+                        worksheet.Cells[row, 14].Value = item.LastCreatedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                        worksheet.Cells[row, 15].Value = item.AmountPerMonth;
+                        worksheet.Cells[row, 16].Value = item.IsComplete;
+                        worksheet.Cells[row, 17].Value = item.AccruedType;
+                        worksheet.Cells[row, 18].Value = item.Reference;
+                        worksheet.Cells[row, 19].Value = item.CreatedBy;
+                        worksheet.Cells[row, 20].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                        worksheet.Cells[row, 21].Value = item.Total;
+                        if (item.Amount != null)
+                        {
+                            worksheet.Cells[row, 22].Value = string.Join(" ", item.Amount.Select(amount => amount.ToString("N4")));
+                        }
+                        worksheet.Cells[row, 23].Value = item.CheckAmount;
+                        worksheet.Cells[row, 24].Value = item.CvType;
+                        worksheet.Cells[row, 25].Value = item.AmountPaid;
+                        worksheet.Cells[row, 26].Value = item.IsPaid;
+                        worksheet.Cells[row, 27].Value = item.CancellationRemarks;
+                        worksheet.Cells[row, 28].Value = item.BankId;
+                        worksheet.Cells[row, 29].Value = item.CheckVoucherHeaderNo;
+                        worksheet.Cells[row, 30].Value = item.SupplierId;
+                        worksheet.Cells[row, 31].Value = item.CheckVoucherHeaderId;
+
+                        row++;
+                    }
+
+                    #endregion -- Check Voucher Header Export (Payment) --
+
+                    #region -- Check Voucher Details Export (Trade and Invoicing) --
+
+                    List<FilprideCheckVoucherDetail> getCVDetails = new();
 
                     getCVDetails = await _dbContext.FilprideCheckVoucherDetails
                         .Where(cvd => cvNos.Contains(cvd.TransactionNo))
@@ -2212,6 +2339,133 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         cvdRow++;
                     }
+
+                    #endregion -- Check Voucher Details Export (Trade and Invoicing) --
+
+                    #region -- Check Voucher Details Export (Payment) --
+
+                    List<FilprideCheckVoucherDetail> getCvPaymentDetails = new();
+
+                    getCvPaymentDetails = await _dbContext.FilprideCheckVoucherDetails
+                        .Where(cvd => checkVoucherPayment.Select(cvh => cvh.CheckVoucherHeaderNo).Contains(cvd.TransactionNo))
+                        .OrderBy(cvd => cvd.CheckVoucherHeaderId)
+                        .ToListAsync();
+
+                    foreach (var item in getCvPaymentDetails)
+                    {
+                        worksheet2.Cells[cvdRow, 1].Value = item.AccountNo;
+                        worksheet2.Cells[cvdRow, 2].Value = item.AccountName;
+                        worksheet2.Cells[cvdRow, 3].Value = item.TransactionNo;
+                        worksheet2.Cells[cvdRow, 4].Value = item.Debit;
+                        worksheet2.Cells[cvdRow, 5].Value = item.Credit;
+                        worksheet2.Cells[cvdRow, 6].Value = item.CheckVoucherHeaderId;
+                        worksheet2.Cells[cvdRow, 7].Value = item.CheckVoucherDetailId;
+
+                        cvdRow++;
+                    }
+
+                    #endregion -- Check Voucher Details Export (Payment) --
+
+                    #region -- Receiving Report Export --
+
+                    List<FilprideReceivingReport> getReceivingReport = new List<FilprideReceivingReport>();
+
+                    getReceivingReport = _dbContext.FilprideReceivingReports
+                        .AsEnumerable()
+                        .Where(rr => selectedList?.Select(item => item?.RRNo).Any(rrs => rrs?.Contains(rr.ReceivingReportNo) == true) == true)
+                        .OrderBy(rr => rr.ReceivingReportNo)
+                        .ToList();
+
+                    int rrRow = 2;
+                    var currentRR = "";
+
+                    foreach (var item in getReceivingReport)
+                    {
+                        if (item.ReceivingReportNo == currentRR)
+                        {
+                            continue;
+                        }
+
+                        currentRR = item.ReceivingReportNo;
+                        worksheet4.Cells[rrRow, 1].Value = item.Date.ToString("yyyy-MM-dd");
+                        worksheet4.Cells[rrRow, 2].Value = item.DueDate.ToString("yyyy-MM-dd");
+                        worksheet4.Cells[rrRow, 3].Value = item.SupplierInvoiceNumber;
+                        worksheet4.Cells[rrRow, 4].Value = item.SupplierInvoiceDate;
+                        worksheet4.Cells[rrRow, 5].Value = item.TruckOrVessels;
+                        worksheet4.Cells[rrRow, 6].Value = item.QuantityDelivered;
+                        worksheet4.Cells[rrRow, 7].Value = item.QuantityReceived;
+                        worksheet4.Cells[rrRow, 8].Value = item.GainOrLoss;
+                        worksheet4.Cells[rrRow, 9].Value = item.Amount;
+                        worksheet4.Cells[rrRow, 10].Value = item.AuthorityToLoadNo;
+                        worksheet4.Cells[rrRow, 11].Value = item.Remarks;
+                        worksheet4.Cells[rrRow, 12].Value = item.AmountPaid;
+                        worksheet4.Cells[rrRow, 13].Value = item.IsPaid;
+                        worksheet4.Cells[rrRow, 14].Value = item.PaidDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                        worksheet4.Cells[rrRow, 15].Value = item.CanceledQuantity;
+                        worksheet4.Cells[rrRow, 16].Value = item.CreatedBy;
+                        worksheet4.Cells[rrRow, 17].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                        worksheet4.Cells[rrRow, 18].Value = item.CancellationRemarks;
+                        worksheet4.Cells[rrRow, 19].Value = item.ReceivedDate?.ToString("yyyy-MM-dd");
+                        worksheet4.Cells[rrRow, 20].Value = item.POId;
+                        worksheet4.Cells[rrRow, 21].Value = item.ReceivingReportNo;
+                        worksheet4.Cells[rrRow, 22].Value = item.ReceivingReportId;
+
+                        rrRow++;
+                    }
+
+                    #endregion -- Receiving Report Export --
+
+                    #region -- Purchase Order Export --
+
+                    List<FilpridePurchaseOrder> getPurchaseOrder = new List<FilpridePurchaseOrder>();
+
+                    getPurchaseOrder = await _dbContext.FilpridePurchaseOrders
+                        .Where(po => getReceivingReport.Select(item => item.POId).Contains(po.PurchaseOrderId))
+                        .OrderBy(po => po.PurchaseOrderNo)
+                        .ToListAsync();
+
+                    int poRow = 2;
+                    var currentPO = "";
+
+                    foreach (var item in getPurchaseOrder)
+                    {
+                        if (item.PurchaseOrderNo == currentPO)
+                        {
+                            continue;
+                        }
+
+                        currentPO = item.PurchaseOrderNo;
+                        worksheet3.Cells[poRow, 1].Value = item.Date.ToString("yyyy-MM-dd");
+                        worksheet3.Cells[poRow, 2].Value = item.Terms;
+                        worksheet3.Cells[poRow, 3].Value = item.Quantity;
+                        worksheet3.Cells[poRow, 4].Value = item.Price;
+                        worksheet3.Cells[poRow, 5].Value = item.Amount;
+                        worksheet3.Cells[poRow, 6].Value = item.FinalPrice;
+                        worksheet3.Cells[poRow, 7].Value = item.QuantityReceived;
+                        worksheet3.Cells[poRow, 8].Value = item.IsReceived;
+                        worksheet3.Cells[poRow, 9].Value = item.ReceivedDate != default ? item.ReceivedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz") : default;
+                        worksheet3.Cells[poRow, 10].Value = item.Remarks;
+                        worksheet3.Cells[poRow, 11].Value = item.CreatedBy;
+                        worksheet3.Cells[poRow, 12].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                        worksheet3.Cells[poRow, 13].Value = item.IsClosed;
+                        worksheet3.Cells[poRow, 14].Value = item.CancellationRemarks;
+                        worksheet3.Cells[poRow, 15].Value = item.ProductId;
+                        worksheet3.Cells[poRow, 16].Value = item.PurchaseOrderNo;
+                        worksheet3.Cells[poRow, 17].Value = item.SupplierId;
+                        worksheet3.Cells[poRow, 18].Value = item.PurchaseOrderId;
+
+                        poRow++;
+                    }
+
+                    #endregion -- Purchase Order Export --
+
+                    //Set password in Excel
+                    foreach (var excelWorkSheet in package.Workbook.Worksheets)
+                    {
+                        excelWorkSheet.Protection.SetPassword("mis123");
+                    }
+
+                    package.Workbook.Protection.SetPassword("mis123");
 
                     // Convert the Excel package to a byte array
                     var excelBytes = await package.GetAsByteArrayAsync();
