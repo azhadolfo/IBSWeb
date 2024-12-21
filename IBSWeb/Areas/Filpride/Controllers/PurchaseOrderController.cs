@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -288,7 +289,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(po => po.Product)
                 .Include(po => po.ActualPrices)
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
-            
+
             if (purchaseOrder == null)
             {
                 return NotFound();
@@ -329,14 +330,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var model = await _dbContext.FilpridePurchaseOrders.FindAsync(id, cancellationToken);
-            
+
             var hasAlreadyBeenUsed =
                 await _dbContext.FilprideReceivingReports.AnyAsync(
                     rr => rr.POId == model.PurchaseOrderId && rr.Status != nameof(Status.Voided),
                     cancellationToken) ||
                 await _dbContext.FilprideCheckVoucherHeaders.AnyAsync(cv =>
                     cv.CvType == "Trade" && cv.PONo.Contains(model.PurchaseOrderNo) && cv.Status != nameof(Status.Voided), cancellationToken);
-            
+
             if (hasAlreadyBeenUsed)
             {
                 TempData["error"] = "Please note that this record has already been utilized in a receiving report or check voucher. As a result, voiding it is not permitted.";
@@ -692,6 +693,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "OperationManager")]
         public async Task<IActionResult> Approve(int id, CancellationToken cancellationToken)
         {
             var existingRecord = await _unitOfWork.FilpridePurchaseOrder

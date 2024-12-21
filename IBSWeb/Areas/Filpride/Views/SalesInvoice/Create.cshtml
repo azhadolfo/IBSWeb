@@ -261,8 +261,27 @@
                         data: { drId: drId },
                         success: function (data) {
                             if (data) {
+                                // Cache the TransactionDate selector
+                                var transactionDate = $("#TransactionDate");
+
+                                // Convert the transaction date to a Date object
+                                var minDate = new Date(data.transactionDate);
+
+                                // Set the minimum date attribute on the TransactionDate input
+                                transactionDate.attr('min', minDate.toISOString().split('T')[0]);
+
                                 // Set the Transaction Date
-                                $("#TransactionDate").val(data.transactionDate);
+                                transactionDate.val(data.transactionDate);
+
+                                // Add validation event listener
+                                transactionDate.off('change').on('change', function() {
+                                    var selectedDate = new Date($(this).val());
+                                    if (selectedDate < minDate) {
+                                        alert("Transaction date cannot be earlier than delivery date of " + minDate.toLocaleDateString());
+                                        $(this).val(data.transactionDate); // Reset to DR transaction date
+                                    }
+                                });
+                                
                                 $("#Quantity").val(data.quantity);
                                 $("#ReceivingReportId").val(data.receivingReportId);
                                 $("#PurchaseOrderId").val(data.purchaseOrderId);

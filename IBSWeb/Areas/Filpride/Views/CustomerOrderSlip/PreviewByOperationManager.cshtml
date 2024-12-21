@@ -107,9 +107,12 @@
 
         @if (Model.Status != nameof(CosStatus.Disapproved))
         {
-            <div class="col-6 col-md-3">
-                <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
-            </div>
+            if (User.IsInRole("OperationManager"))
+            {
+                <div class="col-6 col-md-3">
+                    <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
+                </div>
+            }
         }
 
         <div class="col-6 col-md-3">

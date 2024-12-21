@@ -238,9 +238,12 @@
         }
         else if (Model.PostedBy != null && Model.Status == nameof(DRStatus.ForApprovalOfOM))
         {
-            <div class="col-6 col-md-3">
-                <a class="btn btn-primary form-control buttons" onclick="confirmApprove(@Model.PurchaseOrderId)">Approve</a>
-            </div>
+            if (User.IsInRole("OperationManager"))
+            {
+                <div class="col-6 col-md-3">
+                    <a class="btn btn-primary form-control buttons" onclick="confirmApprove(@Model.PurchaseOrderId)">Approve</a>
+                </div>
+            }
         }
         else
         {

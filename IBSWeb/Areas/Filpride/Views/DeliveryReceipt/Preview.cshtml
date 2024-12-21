@@ -115,9 +115,12 @@ else
     }
     else
     {
-        <div class="col-6 col-md-3">
-            <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Post" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Approve</a>
-        </div>
+        if (User.IsInRole("OperationManager"))
+        {
+            <div class="col-6 col-md-3">
+                <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Post" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Approve</a>
+            </div>
+        }
     }
 
     <div class="col-6 col-md-3">
