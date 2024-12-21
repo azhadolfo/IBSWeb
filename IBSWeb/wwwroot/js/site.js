@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// start code for formatting of input type for tin number
+// Format the tin number
 document.addEventListener('DOMContentLoaded', () => {
     const inputFields = document.querySelectorAll('.formattedTinNumberInput');
 
@@ -99,4 +99,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-// end of code for formatting of input type for tin number
