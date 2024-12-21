@@ -132,7 +132,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (isDrLock)
             {
-                TempData["denied"] = "The creation of DR is locked.";
+                TempData["denied"] = "Creation of the DR is locked due to incomplete in-transit deliveries.";
                 return RedirectToAction(nameof(Index));
             }
 

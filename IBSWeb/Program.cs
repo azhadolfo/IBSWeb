@@ -68,7 +68,7 @@ builder.Services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(jobKey)
         .WithIdentity("TestTrigger") // Trigger 2
-        .WithCronSchedule("0 45 09 20 * ?")); // Run today at 11:34 AM format (sec, min, hour, day, month, year)
+        .WithCronSchedule("0 24 09 21 * ?")); // Run today at 11:34 AM format (sec, min, hour, day, month, year)
 });
 
 

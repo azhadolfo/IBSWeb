@@ -34,8 +34,9 @@ namespace IBS.Services
         {
             try
             {
-                await InTransit();
-
+                var previousMonth = DateTime.UtcNow.AddMonths(-1);
+                await InTransit(previousMonth);
+                await CheckTheUntriggeredPurchaseOrders(previousMonth);
                 _logger.LogInformation(
                     $"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
             }
@@ -45,9 +46,8 @@ namespace IBS.Services
             }
         }
 
-        private async Task InTransit()
+        private async Task InTransit(DateTime previousMonth)
         {
-            var previousMonth = DateTime.Now.AddMonths(-1);
             var hadInTransit = await _dbContext.FilprideDeliveryReceipts
                 .AnyAsync(dr =>
                     dr.Date.Month == previousMonth.Month &&
@@ -64,7 +64,8 @@ namespace IBS.Services
             try
             {
                 var logisticUsers = await _dbContext.ApplicationUsers
-                    .Where(u => u.Department == SD.Department_Logistics)
+                    //.Where(u => u.Department == SD.Department_Logistics)
+                    .Where(u => u.UserName == "azh")
                     .ToListAsync();
 
                 var managementAccountingUsers = await _dbContext.ApplicationUsers
@@ -72,7 +73,9 @@ namespace IBS.Services
                     .ToListAsync();
 
                 var link = "<a href='/Filpride/Report/DispatchReport' target='_blank'>Dispatch Report</a>";
-                var message = $"Is the in-transit report final? Kindly generate the {link}.";
+                var message = $"Is the in-transit report final? Kindly generate the {link} and " +
+                              $"answer this question to enable the creation of DR for the month of " +
+                              $"{DateTime.UtcNow:MMM yyyy}.";
                 var ccMessage = "CC: Management Accounting";
 
                 // Send notifications to Logistics
@@ -87,22 +90,22 @@ namespace IBS.Services
                     await _unitOfWork.Notifications.AddNotificationAsync(user.Id, $"{message} {ccMessage}", true);
                 }
 
-                var lockCreationAppSetting = await _dbContext.AppSettings
+                var lockCreationOfDr = await _dbContext.AppSettings
                     .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfDr);
 
-                if (lockCreationAppSetting == null)
+                if (lockCreationOfDr == null)
                 {
-                    lockCreationAppSetting = new AppSetting
+                    lockCreationOfDr = new AppSetting
                     {
                         SettingKey = AppSettingKey.LockTheCreationOfDr,
                         Value = "true"
                     };
 
-                    await _dbContext.AppSettings.AddAsync(lockCreationAppSetting);
+                    await _dbContext.AppSettings.AddAsync(lockCreationOfDr);
                 }
                 else
                 {
-                    lockCreationAppSetting.Value = "true";
+                    lockCreationOfDr.Value = "true";
                 }
 
                 await _dbContext.SaveChangesAsync();
@@ -113,6 +116,78 @@ namespace IBS.Services
                 _logger.LogError(ex, "An error occurred while processing in-transit notifications.");
                 await transaction.RollbackAsync();
             }
+        }
+
+        private async Task CheckTheUntriggeredPurchaseOrders(DateTime previousMonth)
+        {
+
+            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
+                .GetUntriggeredPurchaseOrderNumbersAsync();
+
+            if (!purchaseOrders.Any())
+            {
+                return;
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                var tnsUsers = await _dbContext.ApplicationUsers
+                    //.Where(u => u.Department == SD.Department_TradeAndSupply)
+                    .Where(u => u.UserName == "azh")
+                    .ToListAsync();
+
+                var managementAccountingUsers = await _dbContext.ApplicationUsers
+                    .Where(u => u.Department == SD.Department_ManagementAccounting)
+                    .ToListAsync();
+
+                var purchaseOrderNosList = string.Join(", ", purchaseOrders);
+                var message = $"Kindly trigger the following purchase orders: {purchaseOrderNosList}. " +
+                              $"To enable the creation of purchase order for the month of " +
+                              $"{DateTime.UtcNow:MMM yyyy}.";
+                var ccMessage = "CC: Management Accounting";
+
+                // Send notifications to Logistics
+                foreach (var user in tnsUsers)
+                {
+                    await _unitOfWork.Notifications.AddNotificationAsync(user.Id, $"{message} {ccMessage}");
+                }
+
+                // Send notifications to Management Accounting
+                foreach (var user in managementAccountingUsers)
+                {
+                    await _unitOfWork.Notifications.AddNotificationAsync(user.Id, $"{message} {ccMessage}");
+                }
+
+                var lockCreationOfPo = await _dbContext.AppSettings
+                    .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfPo);
+
+                if (lockCreationOfPo == null)
+                {
+                    lockCreationOfPo = new AppSetting
+                    {
+                        SettingKey = AppSettingKey.LockTheCreationOfPo,
+                        Value = "true"
+                    };
+
+                    await _dbContext.AppSettings.AddAsync(lockCreationOfPo);
+                }
+                else
+                {
+                    lockCreationOfPo.Value = "true";
+                }
+
+                await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing un-triggered purchase orders notifications.");
+                await transaction.RollbackAsync();
+            }
+
         }
     }
 }

@@ -130,6 +130,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+
+            var isPoLock = await _dbContext.AppSettings
+                .Where(s => s.SettingKey == AppSettingKey.LockTheCreationOfPo)
+                .Select(s => s.Value == "true")
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (isPoLock)
+            {
+                TempData["denied"] = "Creation is locked due to untriggered purchase orders.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var viewModel = new FilpridePurchaseOrder();
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -701,18 +713,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (existingRecord != null)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     var actualPrices = await _dbContext.FilpridePOActualPrices
                         .FirstOrDefaultAsync(a => a.PurchaseOrderId == existingRecord.PurchaseOrderId && !a.IsApproved, cancellationToken);
 
-                    actualPrices.ApprovedBy = _userManager.GetUserName(this.User);
-                    actualPrices.ApprovedDate = DateTime.Now;
-                    actualPrices.IsApproved = true;
+                    if (actualPrices != null)
+                    {
+                        actualPrices.ApprovedBy = _userManager.GetUserName(this.User);
+                        actualPrices.ApprovedDate = DateTime.UtcNow;
+                        actualPrices.IsApproved = true;
 
-                    await _unitOfWork.FilpridePurchaseOrder.UpdateActualCostOnSalesAndReceiptsAsync(actualPrices, cancellationToken);
+                        await _unitOfWork.FilpridePurchaseOrder.UpdateActualCostOnSalesAndReceiptsAsync(actualPrices, cancellationToken);
+                    }
 
                     existingRecord.Status = nameof(Status.Posted);
+
+                    var isCreationOfPoLocked = await _dbContext.AppSettings
+                        .Where(s => s.SettingKey == AppSettingKey.LockTheCreationOfPo)
+                        .Select(s => s.Value == "true")
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    var untriggeredPoNumbers = await _unitOfWork.FilpridePurchaseOrder
+                        .GetUntriggeredPurchaseOrderNumbersAsync(cancellationToken);
+
+                    if (isCreationOfPoLocked)
+                    {
+                        await _unitOfWork.FilpridePurchaseOrder
+                            .UnlockTheCreationOfPurchaseOrderAsync(cancellationToken);
+                    }
 
                     #region --Audit Trail Recording
 
@@ -723,11 +754,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion --Audit Trail Recording
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
 
                     return Ok(new { message = "The Purchase Order has been approved. All associated Receiving Reports (RR) have been updated with the new cost." });
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     return BadRequest(new { error = ex.Message });
                 }
             }

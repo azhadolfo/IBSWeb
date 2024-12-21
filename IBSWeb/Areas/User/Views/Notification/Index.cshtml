@@ -2,21 +2,27 @@
 
 <h2 class="text-center mt-3">Notifications</h2>
 
-<div id="notificationList" class="container mt-4">
+<div id="notificationList" class="notification-list container mt-4">
     @foreach (var item in Model)
     {
-        <div class="notification-item d-flex justify-content-between align-items-center border rounded p-3 mb-2"
+        <div class="notification-item d-flex align-items-center p-3 @(!item.IsRead ? "unread" : "")"
              data-message="@item.Notification.Message"
              data-date="@item.Notification.CreatedDate"
              data-requires-response="@item.RequiresResponse.ToString().ToLower()"
              data-notification-id="@item.UserNotificationId">
-            <div style="flex: 1; min-width: 0;">
-                <p class="mb-1 font-weight-bold text-truncate" style="max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+        
+            <div class="notification-content">
+                <p class="notification-message mb-1">
+                    @if (!item.IsRead)
+                    {
+                        <span class="unread-indicator" title="Unread"></span>
+                    }
                     @Html.Raw(item.Notification.Message)
                 </p>
                 <small class="text-muted">@item.Notification.CreatedDate.ToString("g")</small>
             </div>
-            <div class="button-group d-flex" style="width: 150px; justify-content: space-between;">
+
+            <div class="button-group">
                 @if (!item.RequiresResponse)
                 {
                     @if (!item.IsRead)
@@ -26,11 +32,13 @@
                             <button type="submit" class="btn btn-sm btn-outline-primary">Mark as Read</button>
                         </form>
                     }
-                    @if (!item.IsArchived)
+                    @if (item is { IsArchived: false, IsRead: true })
                     {
                         <form asp-action="Archive" method="post" class="d-inline">
                             <input type="hidden" name="userNotificationId" value="@item.UserNotificationId" />
-                            <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-trash-fill"></i></button>
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
                         </form>
                     }
                 }
@@ -47,12 +55,14 @@
                 <h5 class="modal-title">Notification Details</h5>
                 <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
+
             <div class="modal-body">
                 <p id="modalMessage" class="font-weight-bold"></p>
                 <small id="modalDate" class="text-muted"></small>
             </div>
-            <div id="responseButtons" class="modal-footer" style="display: none;">
-                <form asp-action="RespondToNotification" method="post" class="d-inline">
+
+            <div id="responseButtons" class="modal-footer">
+                <form asp-action="RespondToNotification" method="post">
                     <input type="hidden" id="modalNotificationId" name="userNotificationId" />
                     <button type="submit" name="response" value="yes" class="btn btn-success">Yes</button>
                     <button type="submit" name="response" value="no" class="btn btn-danger">No</button>
@@ -108,41 +118,134 @@
         .close:hover {
             color: #333;
         }
+
+    /* Notification List Styles */
+    .notification-list {
+        max-height: 80vh;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+    .notification-item {
+        background-color: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .notification-content {
+        flex: 1;
+        min-width: 0;
+        padding-right: 1rem;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 1050;
+    }
+
+    .modal-dialog {
+        margin: 2rem auto;
+        max-width: 600px;
+        width: 95%;
+    }
+
+    .modal-content {
+        max-height: 80vh;
+        overflow-y: auto;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    /* Responsive Styles */
+    @@media (max-width: 768px) {
+    .button-group {
+        flex-direction: column;
+    }
+
+    .modal-dialog {
+        margin: 1rem;
+        width: calc(100% - 2rem);
+    }
+    }
+
+    /* Unread notification styling */
+    .notification-item.unread {
+        background-color: #f3f5f4;  /* Light green-gray background */
+        border-left: 4px solid #1c3833;  /* Your theme's dark green */
+    }
+
+    .unread-indicator {
+        width: 8px;
+        height: 8px;
+        background-color: #1c3833;  /* Your theme's dark green */
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+
+    /* Badge for unread count if you're using it */
+    .badge.bg-primary {
+        background-color: #1c3833 !important;  /* Your theme's dark green */
+    }
 </style>
 
 <!-- JavaScript for Modal Functionality -->
 <script>
-    document.querySelectorAll('.notification-item').forEach(item => {
-        item.addEventListener('click', function () {
-            const message = this.getAttribute('data-message');
-            const date = this.getAttribute('data-date');
-            const requiresResponse = this.getAttribute('data-requires-response') === 'true'; // New property
-            const notificationId = this.getAttribute('data-notification-id');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Open modal when clicking notification
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const message = this.getAttribute('data-message');
+                const date = this.getAttribute('data-date');
+                const requiresResponse = this.getAttribute('data-requires-response') === 'true';
+                const notificationId = this.getAttribute('data-notification-id');
 
-            console.log(notificationId);
-            
-            document.getElementById('modalMessage').innerHTML = message;
-            document.getElementById('modalDate').textContent = new Date(date).toLocaleString();
-            document.getElementById('modalNotificationId').value = notificationId;
+                document.getElementById('modalMessage').innerHTML = message;
+                document.getElementById('modalDate').textContent = new Date(date).toLocaleString();
+                document.getElementById('modalNotificationId').value = notificationId;
 
-            // Show or hide response buttons based on RequiresResponse
-            if (requiresResponse) {
-                document.getElementById('responseButtons').style.display = 'block';
-            } else {
-                document.getElementById('responseButtons').style.display = 'none';
-            }
+                // Toggle response buttons
+                document.getElementById('responseButtons').style.display =
+                    requiresResponse ? 'block' : 'none';
 
-            document.getElementById('notificationModal').style.display = 'block';
+                document.getElementById('notificationModal').style.display = 'block';
+            });
         });
-    });
 
-    document.querySelector('.close').onclick = function () {
-        document.getElementById('notificationModal').style.display = 'none';
-    };
-
-    window.onclick = function (event) {
-        if (event.target == document.getElementById('notificationModal')) {
+        // Close modal functionality
+        const closeModal = () => {
             document.getElementById('notificationModal').style.display = 'none';
-        }
-    };
+        };
+
+        document.querySelector('.close').onclick = closeModal;
+
+        // Close on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('notificationModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+    });
 </script>
