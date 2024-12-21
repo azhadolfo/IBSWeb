@@ -219,7 +219,7 @@
                         <td class="text-end">@updatedPrice.TriggeredVolume.ToString("N4")</td>
                         <td class="text-end">@updatedPrice.TriggeredPrice.ToString("N4")</td>
                         <td>@DateTimeHelper.GetCurrentPhilippineTimeFormatted(updatedPrice.TriggeredDate)</td>
-                        <td>@DateTimeHelper.GetCurrentPhilippineTimeFormatted((DateTime)updatedPrice.ApprovedDate)</td>
+                        <td>@(updatedPrice.ApprovedDate != null ? DateTimeHelper.GetCurrentPhilippineTimeFormatted((DateTime)updatedPrice.ApprovedDate) : "")</td>
                     </tr>
                 }
                 </tbody>
