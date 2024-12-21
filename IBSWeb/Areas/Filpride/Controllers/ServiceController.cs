@@ -254,6 +254,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 row++;
             }
 
+            //Set password in Excel
+            worksheet.Protection.IsProtected = true;
+            worksheet.Protection.SetPassword("mis123");
+
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 

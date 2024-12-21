@@ -73,6 +73,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.ClusterCode = model.ClusterCode;
             existingCustomer.CreditLimit = model.CreditLimit;
             existingCustomer.CreditLimitAsOfToday = model.CreditLimitAsOfToday;
+            existingCustomer.ZipCode = model.ZipCode;
 
             if (_db.ChangeTracker.HasChanges())
             {

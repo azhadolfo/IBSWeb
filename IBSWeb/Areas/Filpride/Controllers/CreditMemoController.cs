@@ -231,7 +231,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     #endregion -- check for unposted DM or CM
-                    
+
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Company = companyClaims;
 
@@ -245,7 +245,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     else if (model.Source == "Service Invoice")
                     {
                         model.SalesInvoiceId = null;
-                        
+
                         model.CreditMemoNo = await _unitOfWork.FilprideCreditMemo.GenerateCodeAsync(companyClaims, existingSv.Type, cancellationToken);
                         model.Type = existingSv.Type;
                         model.CreditAmount = -model.Amount ?? 0;
@@ -374,7 +374,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         existingCM.CreditAmount = -model.Amount ?? 0;
                     }
-                    
+
                     existingCM.EditedBy = _userManager.GetUserName(User);
                     existingCM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
@@ -1015,7 +1015,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return NotFound();
         }
-        
+
 
         [HttpGet]
         public async Task<JsonResult> GetSVDetails(int svId, CancellationToken cancellationToken)
@@ -1071,67 +1071,230 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideCreditMemos
                 .Where(cm => recordIds.Contains(cm.CreditMemoId) && cm.Type == nameof(DocumentType.Documented))
+                .Include(cm => cm.SalesInvoice)
                 .Include(cm => cm.ServiceInvoice)
                 .ThenInclude(sv => sv.Service)
                 .OrderBy(cm => cm.CreditMemoNo)
                 .ToListAsync();
 
             // Create the Excel package
-            using var package = new ExcelPackage();
-            // Add a new worksheet to the Excel package
-            var worksheet = package.Workbook.Worksheets.Add("CreditMemo");
-
-            worksheet.Cells["A1"].Value = "TransactionDate";
-            worksheet.Cells["B1"].Value = "DebitAmount";
-            worksheet.Cells["C1"].Value = "Description";
-            worksheet.Cells["D1"].Value = "AdjustedPrice";
-            worksheet.Cells["E1"].Value = "Quantity";
-            worksheet.Cells["F1"].Value = "Source";
-            worksheet.Cells["G1"].Value = "Remarks";
-            worksheet.Cells["H1"].Value = "Period";
-            worksheet.Cells["I1"].Value = "Amount";
-            worksheet.Cells["J1"].Value = "CurrentAndPreviousAmount";
-            worksheet.Cells["K1"].Value = "UnearnedAmount";
-            worksheet.Cells["L1"].Value = "ServicesId";
-            worksheet.Cells["M1"].Value = "CreatedBy";
-            worksheet.Cells["N1"].Value = "CreatedDate";
-            worksheet.Cells["O1"].Value = "CancellationRemarks";
-            worksheet.Cells["P1"].Value = "OriginalSalesInvoiceId";
-            worksheet.Cells["Q1"].Value = "OriginalSeriesNumber";
-            worksheet.Cells["R1"].Value = "OriginalServiceInvoiceId";
-            worksheet.Cells["S1"].Value = "OriginalDocumentId";
-
-            int row = 2;
-
-            foreach (var item in selectedList)
+            using (var package = new ExcelPackage())
             {
-                worksheet.Cells[row, 1].Value = item.TransactionDate.ToString("yyyy-MM-dd");
-                worksheet.Cells[row, 2].Value = item.CreditAmount;
-                worksheet.Cells[row, 3].Value = item.Description;
-                worksheet.Cells[row, 4].Value = item.AdjustedPrice;
-                worksheet.Cells[row, 5].Value = item.Quantity;
-                worksheet.Cells[row, 6].Value = item.Source;
-                worksheet.Cells[row, 7].Value = item.Remarks;
-                worksheet.Cells[row, 8].Value = item.Period;
-                worksheet.Cells[row, 9].Value = item.Amount;
-                worksheet.Cells[row, 10].Value = item.CurrentAndPreviousAmount;
-                worksheet.Cells[row, 11].Value = item.UnearnedAmount;
-                worksheet.Cells[row, 12].Value = item.ServiceInvoice?.ServiceId;
-                worksheet.Cells[row, 13].Value = item.CreatedBy;
-                worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
-                worksheet.Cells[row, 15].Value = item.CancellationRemarks;
-                worksheet.Cells[row, 16].Value = item.SalesInvoiceId;
-                worksheet.Cells[row, 17].Value = item.CreditMemoNo;
-                worksheet.Cells[row, 18].Value = item.ServiceInvoiceId;
-                worksheet.Cells[row, 19].Value = item.CreditMemoId;
+                // Add a new worksheet to the Excel package
 
-                row++;
+                #region -- Sales Invoice Table Header --
+
+                var worksheet2 = package.Workbook.Worksheets.Add("SalesInvoice");
+
+                worksheet2.Cells["A1"].Value = "OtherRefNo";
+                worksheet2.Cells["B1"].Value = "Quantity";
+                worksheet2.Cells["C1"].Value = "UnitPrice";
+                worksheet2.Cells["D1"].Value = "Amount";
+                worksheet2.Cells["E1"].Value = "Remarks";
+                worksheet2.Cells["F1"].Value = "Status";
+                worksheet2.Cells["G1"].Value = "TransactionDate";
+                worksheet2.Cells["H1"].Value = "Discount";
+                worksheet2.Cells["I1"].Value = "AmountPaid";
+                worksheet2.Cells["J1"].Value = "Balance";
+                worksheet2.Cells["K1"].Value = "IsPaid";
+                worksheet2.Cells["L1"].Value = "IsTaxAndVatPaid";
+                worksheet2.Cells["M1"].Value = "DueDate";
+                worksheet2.Cells["N1"].Value = "CreatedBy";
+                worksheet2.Cells["O1"].Value = "CreatedDate";
+                worksheet2.Cells["P1"].Value = "CancellationRemarks";
+                worksheet2.Cells["Q1"].Value = "OriginalReceivingReportId";
+                worksheet2.Cells["R1"].Value = "OriginalCustomerId";
+                worksheet2.Cells["S1"].Value = "OriginalPOId";
+                worksheet2.Cells["T1"].Value = "OriginalProductId";
+                worksheet2.Cells["U1"].Value = "OriginalSeriesNumber";
+                worksheet2.Cells["V1"].Value = "OriginalDocumentId";
+
+                #endregion -- Sales Invoice Table Header --
+
+                #region -- Service Invoice Table Header --
+
+                var worksheet3 = package.Workbook.Worksheets.Add("ServiceInvoice");
+
+                worksheet3.Cells["A1"].Value = "DueDate";
+                worksheet3.Cells["B1"].Value = "Period";
+                worksheet3.Cells["C1"].Value = "Amount";
+                worksheet3.Cells["D1"].Value = "Total";
+                worksheet3.Cells["E1"].Value = "Discount";
+                worksheet3.Cells["F1"].Value = "CurrentAndPreviousMonth";
+                worksheet3.Cells["G1"].Value = "UnearnedAmount";
+                worksheet3.Cells["H1"].Value = "Status";
+                worksheet3.Cells["I1"].Value = "AmountPaid";
+                worksheet3.Cells["J1"].Value = "Balance";
+                worksheet3.Cells["K1"].Value = "Instructions";
+                worksheet3.Cells["L1"].Value = "IsPaid";
+                worksheet3.Cells["M1"].Value = "CreatedBy";
+                worksheet3.Cells["N1"].Value = "CreatedDate";
+                worksheet3.Cells["O1"].Value = "CancellationRemarks";
+                worksheet3.Cells["P1"].Value = "OriginalCustomerId";
+                worksheet3.Cells["Q1"].Value = "OriginalSeriesNumber";
+                worksheet3.Cells["R1"].Value = "OriginalServicesId";
+                worksheet3.Cells["S1"].Value = "OriginalDocumentId";
+
+                #endregion -- Service Invoice Table Header --
+
+                #region -- Credit Memo Table Header --
+
+                var worksheet = package.Workbook.Worksheets.Add("CreditMemo");
+
+                worksheet.Cells["A1"].Value = "TransactionDate";
+                worksheet.Cells["B1"].Value = "DebitAmount";
+                worksheet.Cells["C1"].Value = "Description";
+                worksheet.Cells["D1"].Value = "AdjustedPrice";
+                worksheet.Cells["E1"].Value = "Quantity";
+                worksheet.Cells["F1"].Value = "Source";
+                worksheet.Cells["G1"].Value = "Remarks";
+                worksheet.Cells["H1"].Value = "Period";
+                worksheet.Cells["I1"].Value = "Amount";
+                worksheet.Cells["J1"].Value = "CurrentAndPreviousAmount";
+                worksheet.Cells["K1"].Value = "UnearnedAmount";
+                worksheet.Cells["L1"].Value = "ServicesId";
+                worksheet.Cells["M1"].Value = "CreatedBy";
+                worksheet.Cells["N1"].Value = "CreatedDate";
+                worksheet.Cells["O1"].Value = "CancellationRemarks";
+                worksheet.Cells["P1"].Value = "OriginalSalesInvoiceId";
+                worksheet.Cells["Q1"].Value = "OriginalSeriesNumber";
+                worksheet.Cells["R1"].Value = "OriginalServiceInvoiceId";
+                worksheet.Cells["S1"].Value = "OriginalDocumentId";
+
+                #endregion -- Credit Memo Table Header --
+
+                #region -- Credit Memo Export --
+
+                int row = 2;
+
+                foreach (var item in selectedList)
+                {
+                    worksheet.Cells[row, 1].Value = item.TransactionDate.ToString("yyyy-MM-dd");
+                    worksheet.Cells[row, 2].Value = item.CreditAmount;
+                    worksheet.Cells[row, 3].Value = item.Description;
+                    worksheet.Cells[row, 4].Value = item.AdjustedPrice;
+                    worksheet.Cells[row, 5].Value = item.Quantity;
+                    worksheet.Cells[row, 6].Value = item.Source;
+                    worksheet.Cells[row, 7].Value = item.Remarks;
+                    worksheet.Cells[row, 8].Value = item.Period;
+                    worksheet.Cells[row, 9].Value = item.Amount;
+                    worksheet.Cells[row, 10].Value = item.CurrentAndPreviousAmount;
+                    worksheet.Cells[row, 11].Value = item.UnearnedAmount;
+                    worksheet.Cells[row, 12].Value = item.ServiceInvoice?.ServiceId;
+                    worksheet.Cells[row, 13].Value = item.CreatedBy;
+                    worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet.Cells[row, 15].Value = item.CancellationRemarks;
+                    worksheet.Cells[row, 16].Value = item.SalesInvoiceId;
+                    worksheet.Cells[row, 17].Value = item.CreditMemoNo;
+                    worksheet.Cells[row, 18].Value = item.ServiceInvoiceId;
+                    worksheet.Cells[row, 19].Value = item.CreditMemoId;
+
+                    row++;
+                }
+
+                #endregion -- Credit Memo Export --
+
+                #region -- Sales Invoice Export --
+
+                int siRow = 2;
+                var currentSI = "";
+
+                foreach (var item in selectedList)
+                {
+                    if (item.SalesInvoice == null)
+                    {
+                        continue;
+                    }
+                    if (item.SalesInvoice.SalesInvoiceNo == currentSI)
+                    {
+                        continue;
+                    }
+
+                    currentSI = item.SalesInvoice.SalesInvoiceNo;
+                    worksheet2.Cells[siRow, 1].Value = item.SalesInvoice.OtherRefNo;
+                    worksheet2.Cells[siRow, 2].Value = item.SalesInvoice.Quantity;
+                    worksheet2.Cells[siRow, 3].Value = item.SalesInvoice.UnitPrice;
+                    worksheet2.Cells[siRow, 4].Value = item.SalesInvoice.Amount;
+                    worksheet2.Cells[siRow, 5].Value = item.SalesInvoice.Remarks;
+                    worksheet2.Cells[siRow, 6].Value = item.SalesInvoice.Status;
+                    worksheet2.Cells[siRow, 7].Value = item.SalesInvoice.TransactionDate.ToString("yyyy-MM-dd");
+                    worksheet2.Cells[siRow, 8].Value = item.SalesInvoice.Discount;
+                    worksheet2.Cells[siRow, 9].Value = item.SalesInvoice.AmountPaid;
+                    worksheet2.Cells[siRow, 10].Value = item.SalesInvoice.Balance;
+                    worksheet2.Cells[siRow, 11].Value = item.SalesInvoice.IsPaid;
+                    worksheet2.Cells[siRow, 12].Value = item.SalesInvoice.IsTaxAndVatPaid;
+                    worksheet2.Cells[siRow, 13].Value = item.SalesInvoice.DueDate.ToString("yyyy-MM-dd");
+                    worksheet2.Cells[siRow, 14].Value = item.SalesInvoice.CreatedBy;
+                    worksheet2.Cells[siRow, 15].Value = item.SalesInvoice.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet2.Cells[siRow, 16].Value = item.SalesInvoice.CancellationRemarks;
+                    worksheet2.Cells[siRow, 17].Value = item.SalesInvoice.ReceivingReportId;
+                    worksheet2.Cells[siRow, 18].Value = item.SalesInvoice.CustomerId;
+                    worksheet2.Cells[siRow, 19].Value = item.SalesInvoice.PurchaseOrderId;
+                    worksheet2.Cells[siRow, 20].Value = item.SalesInvoice.ProductId;
+                    worksheet2.Cells[siRow, 21].Value = item.SalesInvoice.SalesInvoiceNo;
+                    worksheet2.Cells[siRow, 22].Value = item.SalesInvoice.SalesInvoiceId;
+
+                    siRow++;
+                }
+
+                #endregion -- Sales Invoice Export --
+
+                #region -- Service Invoice Export --
+
+                int svRow = 2;
+                var currentSV = "";
+
+                foreach (var item in selectedList)
+                {
+                    if (item.ServiceInvoice == null)
+                    {
+                        continue;
+                    }
+                    if (item.ServiceInvoice.ServiceInvoiceNo == currentSV)
+                    {
+                        continue;
+                    }
+
+                    currentSV = item.ServiceInvoice.ServiceInvoiceNo;
+                    worksheet3.Cells[svRow, 1].Value = item.ServiceInvoice.DueDate.ToString("yyyy-MM-dd");
+                    worksheet3.Cells[svRow, 2].Value = item.ServiceInvoice.Period.ToString("yyyy-MM-dd");
+                    worksheet3.Cells[svRow, 3].Value = item.ServiceInvoice.Amount;
+                    worksheet3.Cells[svRow, 4].Value = item.ServiceInvoice.Total;
+                    worksheet3.Cells[svRow, 5].Value = item.ServiceInvoice.Discount;
+                    worksheet3.Cells[svRow, 6].Value = item.ServiceInvoice.CurrentAndPreviousAmount;
+                    worksheet3.Cells[svRow, 7].Value = item.ServiceInvoice.UnearnedAmount;
+                    worksheet3.Cells[svRow, 8].Value = item.ServiceInvoice.Status;
+                    worksheet3.Cells[svRow, 9].Value = item.ServiceInvoice.AmountPaid;
+                    worksheet3.Cells[svRow, 10].Value = item.ServiceInvoice.Balance;
+                    worksheet3.Cells[svRow, 11].Value = item.ServiceInvoice.Instructions;
+                    worksheet3.Cells[svRow, 12].Value = item.ServiceInvoice.IsPaid;
+                    worksheet3.Cells[svRow, 13].Value = item.ServiceInvoice.CreatedBy;
+                    worksheet3.Cells[svRow, 14].Value = item.ServiceInvoice.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet3.Cells[svRow, 15].Value = item.ServiceInvoice.CancellationRemarks;
+                    worksheet3.Cells[svRow, 16].Value = item.ServiceInvoice.CustomerId;
+                    worksheet3.Cells[svRow, 17].Value = item.ServiceInvoice.ServiceInvoiceNo;
+                    worksheet3.Cells[svRow, 18].Value = item.ServiceInvoice.ServiceId;
+                    worksheet3.Cells[svRow, 19].Value = item.ServiceInvoice.ServiceInvoiceId;
+
+                    svRow++;
+                }
+
+                #endregion -- Service Invoice Export --
+
+                //Set password in Excel
+                foreach (var excelWorkSheet in package.Workbook.Worksheets)
+                {
+                    excelWorkSheet.Protection.SetPassword("mis123");
+                }
+
+                package.Workbook.Protection.SetPassword("mis123");
+
+                // Convert the Excel package to a byte array
+                var excelBytes = await package.GetAsByteArrayAsync();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "CreditMemoList.xlsx");
             }
-
-            // Convert the Excel package to a byte array
-            var excelBytes = await package.GetAsByteArrayAsync();
-
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CreditMemoList.xlsx");
         }
 
         #endregion -- export xlsx record --

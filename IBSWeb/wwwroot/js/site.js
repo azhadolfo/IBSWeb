@@ -63,3 +63,39 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+// Format the tin number
+document.addEventListener('DOMContentLoaded', () => {
+    const inputFields = document.querySelectorAll('.formattedTinNumberInput');
+
+    inputFields.forEach(inputField => {
+        inputField.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/-/g, ''); // Remove existing dashes
+            let formattedValue = '';
+
+            // Add dashes after every 3 digits, keeping the last 5 digits without dashes
+            for (let i = 0; i < value.length; i++) {
+                if (i === 3 || i === 6 || i === 9) {
+                    formattedValue += '-';
+                }
+                formattedValue += value[i];
+            }
+
+            // If there are more than 12 characters, don't add a dash after the 10th character (i.e., for the last 5 digits)
+            if (formattedValue.length > 12) {
+                formattedValue = formattedValue.substring(0, 12) + formattedValue.substring(12).replace(/-/g, '');
+            }
+
+            e.target.value = formattedValue;
+        });
+
+        inputField.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace') {
+                let value = e.target.value;
+                // Remove the dash when backspace is pressed if it is at the end of a section of 3 digits
+                if (value.endsWith('-')) {
+                    e.target.value = value.slice(0, -1);
+                }
+            }
+        });
+    });
+});

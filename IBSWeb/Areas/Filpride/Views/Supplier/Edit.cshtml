@@ -58,9 +58,14 @@
                 <label asp-for="SupplierAddress" class="control-label">Address<span class="required">*</span></label>
                 <span asp-validation-for="SupplierAddress" class="text-danger"></span>
             </div>
+            <div class="form-floating mb-3">
+                <input asp-for="ZipCode" class="form-control" placeholder="" maxlength="4" />
+                <label asp-for="ZipCode" class="control-label">Zip Code<span class="required">*</span></label>
+                <span asp-validation-for="ZipCode" class="text-danger"></span>
+            </div>
             <div class="row mb-3">
                 <div class="form-floating col">
-                    <input asp-for="SupplierTin" class="form-control" placeholder="" />
+                    <input asp-for="SupplierTin" class="form-control formattedTinNumberInput" placeholder="" maxlength="17" />
                     <label asp-for="SupplierTin" class="control-label ms-2">Tin No<span class="required">*</span></label>
                     <span asp-validation-for="SupplierTin" class="text-danger"></span>
                 </div>
