@@ -642,7 +642,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    
+
                     #region --Saving the default properties
 
                     existingModel.Discount = model.Discount;
@@ -655,7 +655,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.Total = model.Amount;
                     existingModel.CustomerId = model.CustomerId;
                     existingModel.ServiceId = model.ServiceId;
-                    
+
                     if (DateOnly.FromDateTime(model.CreatedDate) < model.Period)
                     {
                         existingModel.UnearnedAmount += model.Amount;
@@ -735,7 +735,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Create the Excel package
             using var package = new ExcelPackage();
             // Add a new worksheet to the Excel package
-            var worksheet = package.Workbook.Worksheets.Add("ServiceInvoices");
+            var worksheet = package.Workbook.Worksheets.Add("ServiceInvoice");
 
             worksheet.Cells["A1"].Value = "DueDate";
             worksheet.Cells["B1"].Value = "Period";
@@ -783,6 +783,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 row++;
             }
+
+            //Set password in Excel
+            worksheet.Protection.IsProtected = true;
+            worksheet.Protection.SetPassword("mis123");
 
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();

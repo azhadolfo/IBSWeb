@@ -577,71 +577,158 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Retrieve the selected records from the database
             var selectedList = await _dbContext.FilprideReceivingReports
                 .Where(rr => recordIds.Contains(rr.ReceivingReportId) && rr.Type == nameof(DocumentType.Documented))
+                .Include(rr => rr.PurchaseOrder)
                 .OrderBy(rr => rr.ReceivingReportNo)
                 .ToListAsync();
 
             // Create the Excel package
-            using var package = new ExcelPackage();
-            // Add a new worksheet to the Excel package
-            var worksheet = package.Workbook.Worksheets.Add("ReceivingReport");
-
-            worksheet.Cells["A1"].Value = "Date";
-            worksheet.Cells["B1"].Value = "DueDate";
-            worksheet.Cells["C1"].Value = "SupplierInvoiceNumber";
-            worksheet.Cells["D1"].Value = "SupplierInvoiceDate";
-            worksheet.Cells["E1"].Value = "TruckOrVessels";
-            worksheet.Cells["F1"].Value = "QuantityDelivered";
-            worksheet.Cells["G1"].Value = "QuantityReceived";
-            worksheet.Cells["H1"].Value = "GainOrLoss";
-            worksheet.Cells["I1"].Value = "Amount";
-            worksheet.Cells["J1"].Value = "OtherRef";
-            worksheet.Cells["K1"].Value = "Remarks";
-            worksheet.Cells["L1"].Value = "AmountPaid";
-            worksheet.Cells["M1"].Value = "IsPaid";
-            worksheet.Cells["N1"].Value = "PaidDate";
-            worksheet.Cells["O1"].Value = "CanceledQuantity";
-            worksheet.Cells["P1"].Value = "CreatedBy";
-            worksheet.Cells["Q1"].Value = "CreatedDate";
-            worksheet.Cells["R1"].Value = "CancellationRemarks";
-            worksheet.Cells["S1"].Value = "ReceivedDate";
-            worksheet.Cells["T1"].Value = "OriginalPOId";
-            worksheet.Cells["U1"].Value = "OriginalSeriesNumber";
-            worksheet.Cells["V1"].Value = "OriginalDocumentId";
-
-            int row = 2;
-
-            foreach (var item in selectedList)
+            using (var package = new ExcelPackage())
             {
-                worksheet.Cells[row, 1].Value = item.Date.ToString("yyyy-MM-dd");
-                worksheet.Cells[row, 2].Value = item.DueDate.ToString("yyyy-MM-dd");
-                worksheet.Cells[row, 3].Value = item.SupplierInvoiceNumber;
-                worksheet.Cells[row, 4].Value = item.SupplierInvoiceDate;
-                worksheet.Cells[row, 5].Value = item.TruckOrVessels;
-                worksheet.Cells[row, 6].Value = item.QuantityDelivered;
-                worksheet.Cells[row, 7].Value = item.QuantityReceived;
-                worksheet.Cells[row, 8].Value = item.GainOrLoss;
-                worksheet.Cells[row, 9].Value = item.Amount;
-                worksheet.Cells[row, 10].Value = item.AuthorityToLoadNo;
-                worksheet.Cells[row, 11].Value = item.Remarks;
-                worksheet.Cells[row, 12].Value = item.AmountPaid;
-                worksheet.Cells[row, 13].Value = item.IsPaid;
-                worksheet.Cells[row, 14].Value = item.PaidDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
-                worksheet.Cells[row, 15].Value = item.CanceledQuantity;
-                worksheet.Cells[row, 16].Value = item.CreatedBy;
-                worksheet.Cells[row, 17].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
-                worksheet.Cells[row, 18].Value = item.CancellationRemarks;
-                worksheet.Cells[row, 19].Value = item.ReceivedDate?.ToString("yyyy-MM-dd");
-                worksheet.Cells[row, 20].Value = item.POId;
-                worksheet.Cells[row, 21].Value = item.ReceivingReportNo;
-                worksheet.Cells[row, 22].Value = item.ReceivingReportId;
+                // Add a new worksheet to the Excel package
+                #region -- Purchase Order Table Header --
 
-                row++;
+                var worksheet2 = package.Workbook.Worksheets.Add("PurchaseOrder");
+
+                worksheet2.Cells["A1"].Value = "Date";
+                worksheet2.Cells["B1"].Value = "Terms";
+                worksheet2.Cells["C1"].Value = "Quantity";
+                worksheet2.Cells["D1"].Value = "Price";
+                worksheet2.Cells["E1"].Value = "Amount";
+                worksheet2.Cells["F1"].Value = "FinalPrice";
+                worksheet2.Cells["G1"].Value = "QuantityReceived";
+                worksheet2.Cells["H1"].Value = "IsReceived";
+                worksheet2.Cells["I1"].Value = "ReceivedDate";
+                worksheet2.Cells["J1"].Value = "Remarks";
+                worksheet2.Cells["K1"].Value = "CreatedBy";
+                worksheet2.Cells["L1"].Value = "CreatedDate";
+                worksheet2.Cells["M1"].Value = "IsClosed";
+                worksheet2.Cells["N1"].Value = "CancellationRemarks";
+                worksheet2.Cells["O1"].Value = "OriginalProductId";
+                worksheet2.Cells["P1"].Value = "OriginalSeriesNumber";
+                worksheet2.Cells["Q1"].Value = "OriginalSupplierId";
+                worksheet2.Cells["R1"].Value = "OriginalDocumentId";
+
+                #endregion -- Purchase Order Table Header --
+
+                #region -- Receving Report Table Header --
+
+                var worksheet = package.Workbook.Worksheets.Add("ReceivingReport");
+
+                worksheet.Cells["A1"].Value = "Date";
+                worksheet.Cells["B1"].Value = "DueDate";
+                worksheet.Cells["C1"].Value = "SupplierInvoiceNumber";
+                worksheet.Cells["D1"].Value = "SupplierInvoiceDate";
+                worksheet.Cells["E1"].Value = "TruckOrVessels";
+                worksheet.Cells["F1"].Value = "QuantityDelivered";
+                worksheet.Cells["G1"].Value = "QuantityReceived";
+                worksheet.Cells["H1"].Value = "GainOrLoss";
+                worksheet.Cells["I1"].Value = "Amount";
+                worksheet.Cells["J1"].Value = "OtherRef";
+                worksheet.Cells["K1"].Value = "Remarks";
+                worksheet.Cells["L1"].Value = "AmountPaid";
+                worksheet.Cells["M1"].Value = "IsPaid";
+                worksheet.Cells["N1"].Value = "PaidDate";
+                worksheet.Cells["O1"].Value = "CanceledQuantity";
+                worksheet.Cells["P1"].Value = "CreatedBy";
+                worksheet.Cells["Q1"].Value = "CreatedDate";
+                worksheet.Cells["R1"].Value = "CancellationRemarks";
+                worksheet.Cells["S1"].Value = "ReceivedDate";
+                worksheet.Cells["T1"].Value = "OriginalPOId";
+                worksheet.Cells["U1"].Value = "OriginalSeriesNumber";
+                worksheet.Cells["V1"].Value = "OriginalDocumentId";
+
+                #endregion -- Receving Report Table Header --
+
+                #region -- Receving Report Export --
+
+                int row = 2;
+
+                foreach (var item in selectedList)
+                {
+                    worksheet.Cells[row, 1].Value = item.Date.ToString("yyyy-MM-dd");
+                    worksheet.Cells[row, 2].Value = item.DueDate.ToString("yyyy-MM-dd");
+                    worksheet.Cells[row, 3].Value = item.SupplierInvoiceNumber;
+                    worksheet.Cells[row, 4].Value = item.SupplierInvoiceDate;
+                    worksheet.Cells[row, 5].Value = item.TruckOrVessels;
+                    worksheet.Cells[row, 6].Value = item.QuantityDelivered;
+                    worksheet.Cells[row, 7].Value = item.QuantityReceived;
+                    worksheet.Cells[row, 8].Value = item.GainOrLoss;
+                    worksheet.Cells[row, 9].Value = item.Amount;
+                    worksheet.Cells[row, 10].Value = item.AuthorityToLoadNo;
+                    worksheet.Cells[row, 11].Value = item.Remarks;
+                    worksheet.Cells[row, 12].Value = item.AmountPaid;
+                    worksheet.Cells[row, 13].Value = item.IsPaid;
+                    worksheet.Cells[row, 14].Value = item.PaidDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet.Cells[row, 15].Value = item.CanceledQuantity;
+                    worksheet.Cells[row, 16].Value = item.CreatedBy;
+                    worksheet.Cells[row, 17].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet.Cells[row, 18].Value = item.CancellationRemarks;
+                    worksheet.Cells[row, 19].Value = item.ReceivedDate?.ToString("yyyy-MM-dd");
+                    worksheet.Cells[row, 20].Value = item.POId;
+                    worksheet.Cells[row, 21].Value = item.ReceivingReportNo;
+                    worksheet.Cells[row, 22].Value = item.ReceivingReportId;
+
+                    row++;
+                }
+
+                #endregion -- Receving Report Export --
+
+                #region -- Purchase Order Export --
+
+                int poRow = 2;
+                var currentPO = "";
+
+                foreach (var item in selectedList)
+                {
+                    if (item.PurchaseOrder == null)
+                    {
+                        continue;
+                    }
+
+                    if (item.PurchaseOrder.PurchaseOrderNo == currentPO)
+                    {
+                        continue;
+                    }
+
+                    currentPO = item.PurchaseOrder.PurchaseOrderNo;
+                    worksheet2.Cells[poRow, 1].Value = item.PurchaseOrder.Date.ToString("yyyy-MM-dd");
+                    worksheet2.Cells[poRow, 2].Value = item.PurchaseOrder.Terms;
+                    worksheet2.Cells[poRow, 3].Value = item.PurchaseOrder.Quantity;
+                    worksheet2.Cells[poRow, 4].Value = item.PurchaseOrder.Price;
+                    worksheet2.Cells[poRow, 5].Value = item.PurchaseOrder.Amount;
+                    worksheet2.Cells[poRow, 6].Value = item.PurchaseOrder.FinalPrice;
+                    worksheet2.Cells[poRow, 7].Value = item.PurchaseOrder.QuantityReceived;
+                    worksheet2.Cells[poRow, 8].Value = item.PurchaseOrder.IsReceived;
+                    worksheet2.Cells[poRow, 9].Value = item.PurchaseOrder.ReceivedDate != default ? item.PurchaseOrder.ReceivedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz") : default;
+                    worksheet2.Cells[poRow, 10].Value = item.PurchaseOrder.Remarks;
+                    worksheet2.Cells[poRow, 11].Value = item.PurchaseOrder.CreatedBy;
+                    worksheet2.Cells[poRow, 12].Value = item.PurchaseOrder.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet2.Cells[poRow, 13].Value = item.PurchaseOrder.IsClosed;
+                    worksheet2.Cells[poRow, 14].Value = item.PurchaseOrder.CancellationRemarks;
+                    worksheet2.Cells[poRow, 15].Value = item.PurchaseOrder.ProductId;
+                    worksheet2.Cells[poRow, 16].Value = item.PurchaseOrder.PurchaseOrderNo;
+                    worksheet2.Cells[poRow, 17].Value = item.PurchaseOrder.SupplierId;
+                    worksheet2.Cells[poRow, 18].Value = item.PurchaseOrder.PurchaseOrderId;
+
+                    poRow++;
+                }
+
+                #endregion -- Purchase Order Export --
+
+                //Set password in Excel
+                foreach (var excelWorkSheet in package.Workbook.Worksheets)
+                {
+                    excelWorkSheet.Protection.SetPassword("mis123");
+                }
+
+                package.Workbook.Protection.SetPassword("mis123");
+
+                // Convert the Excel package to a byte array
+                var excelBytes = await package.GetAsByteArrayAsync();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "ReceivingReportList.xlsx");
             }
-
-            // Convert the Excel package to a byte array
-            var excelBytes = await package.GetAsByteArrayAsync();
-
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReceivingReportList.xlsx");
         }
 
         #endregion -- export xlsx record --
