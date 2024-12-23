@@ -374,7 +374,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 worksheet.Cells[row, 1].Value = item.SupplierName;
                 worksheet.Cells[row, 2].Value = item.SupplierAddress;
-                worksheet.Cells[row, 3].Value = item.SupplierAddress;
+                worksheet.Cells[row, 3].Value = item.ZipCode;
                 worksheet.Cells[row, 4].Value = item.SupplierTin;
                 worksheet.Cells[row, 5].Value = item.SupplierTerms;
                 worksheet.Cells[row, 6].Value = item.VatType;
