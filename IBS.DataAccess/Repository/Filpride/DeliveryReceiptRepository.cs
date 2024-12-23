@@ -418,7 +418,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     var commissionGrossAmount = deliveryReceipt.CustomerOrderSlip.CommissionRate * deliveryReceipt.Quantity;
                     var commissionEwtAmount = deliveryReceipt.CustomerOrderSlip.Commissionee.TaxType == SD.TaxType_WithTax ?
                         ComputeEwtAmount(commissionGrossAmount, 0.05m) : 0;
-                    var commissionNetOfEwt = ComputeNetOfEwt(commissionGrossAmount, commissionEwtAmount);
+                    var commissionNetOfEwt = deliveryReceipt.CustomerOrderSlip.Commissionee.TaxType == SD.TaxType_WithTax ?
+                        ComputeNetOfEwt(commissionGrossAmount, commissionEwtAmount) : commissionGrossAmount;
 
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
@@ -475,7 +476,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountNo = ewtFivePercent.AccountNumber,
                             AccountTitle = ewtFivePercent.AccountName,
                             Debit = 0,
-                            Credit = commissionNetOfEwt,
+                            Credit = commissionEwtAmount,
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.CreatedBy,
                             CreatedDate = deliveryReceipt.CreatedDate
