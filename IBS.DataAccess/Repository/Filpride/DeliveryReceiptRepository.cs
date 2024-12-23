@@ -303,8 +303,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = (DateOnly)deliveryReceipt.DeliveredDate,
                     Reference = deliveryReceipt.DeliveryReceiptNo,
                     Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
-                    AccountNo = arTradeTitle.AccountNumber,
-                    AccountTitle = arTradeTitle.AccountName,
+                    AccountNo = apTradeTitle.AccountNumber,
+                    AccountTitle = apTradeTitle.AccountName,
                     Debit = 0,
                     Credit = cogsNetOfEwt,
                     Company = deliveryReceipt.Company,
@@ -553,6 +553,263 @@ namespace IBS.DataAccess.Repository.Filpride
 
             newAppointedSupplier.UnservedQuantity -= model.Quantity;
             newAppointedSupplier.IsAssignedToDR = true;
+        }
+
+        public async Task AutoReversalEntryForInTransit(CancellationToken cancellationToken = default)
+        {
+            var previousMonth = DateTime.UtcNow.AddMonths(-1);
+
+            var inTransits = await GetAllAsync(dr =>
+                    dr.Date.Month == previousMonth.Month &&
+                    dr.Date.Year == previousMonth.Year &&
+                    dr.Status == nameof(DRStatus.Pending), cancellationToken);
+
+            foreach (var dr in inTransits.OrderBy(dr => dr.DeliveryReceiptNo))
+            {
+                var productCode = dr.PurchaseOrder.Product.ProductCode;
+                var productCostGrossAmount = dr.Quantity * dr.PurchaseOrder.Price;
+                var productCostNetOfVatAmount = ComputeNetOfVat(productCostGrossAmount);
+                var productCostVatAmount = ComputeVatAmount(productCostNetOfVatAmount);
+                var productCostEwtAmount = ComputeEwtAmount(productCostNetOfVatAmount, 0.01m);
+                var productCostNetOfEwt = ComputeNetOfEwt(productCostGrossAmount, productCostEwtAmount);
+                var ledgers = new List<FilprideGeneralLedgerBook>();
+                var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
+                var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(productCode);
+                var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+                var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
+                var apHaulingPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010300") ?? throw new ArgumentException("Account title '201010300' not found.");
+                var apCommissionPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010200") ?? throw new ArgumentException("Account title '201010200' not found.");
+                var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
+                var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                    Reference = dr.DeliveryReceiptNo,
+                    Description = $"In-Transit for the month of {previousMonth:MMM yyyy}.",
+                    AccountNo = inventoryAcctNo,
+                    AccountTitle = inventoryAcctTitle,
+                    Debit = productCostNetOfVatAmount,
+                    Credit = 0,
+                    Company = dr.Company,
+                    CreatedBy = "SYSTEM GENERATED",
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                });
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                    Reference = dr.DeliveryReceiptNo,
+                    Description = $"In-Transit for the month of {previousMonth:MMM yyyy}.",
+                    AccountNo = vatInputTitle.AccountNumber,
+                    AccountTitle = vatInputTitle.AccountName,
+                    Debit = productCostVatAmount,
+                    Credit = 0,
+                    Company = dr.Company,
+                    CreatedBy = "SYSTEM GENERATED",
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                });
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                    Reference = dr.DeliveryReceiptNo,
+                    Description = $"In-Transit for the month of {previousMonth:MMM yyyy}.",
+                    AccountNo = apTradeTitle.AccountNumber,
+                    AccountTitle = apTradeTitle.AccountName,
+                    Debit = 0,
+                    Credit = productCostNetOfEwt,
+                    Company = dr.Company,
+                    CreatedBy = "SYSTEM GENERATED",
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    SupplierId = dr.PurchaseOrder.SupplierId,
+                });
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                    Reference = dr.DeliveryReceiptNo,
+                    Description = $"In-Transit for the month of {previousMonth:MMM yyyy}.",
+                    AccountNo = ewtOnePercent.AccountNumber,
+                    AccountTitle = ewtOnePercent.AccountName,
+                    Debit = 0,
+                    Credit = productCostEwtAmount,
+                    Company = dr.Company,
+                    CreatedBy = "SYSTEM GENERATED",
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                });
+
+                if (dr.Freight > 0 || dr.ECC > 0)
+                {
+                    if (dr.Freight > 0)
+                    {
+                        var freightGrossAmount = dr.Quantity * dr.Freight;
+                        var freightNetOfVat = ComputeNetOfVat(freightGrossAmount);
+                        var freightVatAmount = ComputeVatAmount(freightNetOfVat);
+
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                            Reference = dr.DeliveryReceiptNo,
+                            Description = $"In-Transit for the month of {previousMonth:MMM yyyy} for freight.",
+                            AccountNo = inventoryAcctNo,
+                            AccountTitle = inventoryAcctTitle,
+                            Debit = freightNetOfVat,
+                            Credit = 0,
+                            Company = dr.Company,
+                            CreatedBy = "SYSTEM GENERATED",
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        });
+
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                            Reference = dr.DeliveryReceiptNo,
+                            Description = $"In-Transit for the month of {previousMonth:MMM yyyy} for freight.",
+                            AccountNo = vatInputTitle.AccountNumber,
+                            AccountTitle = vatInputTitle.AccountName,
+                            Debit = freightVatAmount,
+                            Credit = 0,
+                            Company = dr.Company,
+                            CreatedBy = "SYSTEM GENERATED",
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        });
+                    }
+
+                    if (dr.ECC > 0)
+                    {
+                        var eccGrossAmount = dr.Quantity * dr.ECC;
+                        var eccNetOfVat = ComputeNetOfVat(eccGrossAmount);
+                        var eccVatAmount = ComputeVatAmount(eccNetOfVat);
+
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                            Reference = dr.DeliveryReceiptNo,
+                            Description = $"In-Transit for the month of {previousMonth:MMM yyyy} for freight.",
+                            AccountNo = inventoryAcctNo,
+                            AccountTitle = inventoryAcctTitle,
+                            Debit = eccNetOfVat,
+                            Credit = 0,
+                            Company = dr.Company,
+                            CreatedBy = "SYSTEM GENERATED",
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        });
+
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                            Reference = dr.DeliveryReceiptNo,
+                            Description = $"In-Transit for the month of {previousMonth:MMM yyyy} for freight.",
+                            AccountNo = vatInputTitle.AccountNumber,
+                            AccountTitle = vatInputTitle.AccountName,
+                            Debit = eccVatAmount,
+                            Credit = 0,
+                            Company = dr.Company,
+                            CreatedBy = "SYSTEM GENERATED",
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        });
+                    }
+
+                    var totalFreightGrossAmount = dr.Quantity * (dr.Freight + dr.ECC);
+                    var totalFreightNetOfVat = ComputeNetOfVat(totalFreightGrossAmount);
+                    var totalFreightEwtAmount = ComputeEwtAmount(totalFreightNetOfVat, 0.02m);
+                    var totalFreightNetOfEwt = ComputeNetOfEwt(totalFreightGrossAmount, totalFreightEwtAmount);
+
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"In-Transit for the month of {previousMonth:MMM yyyy}.",
+                        AccountNo = apHaulingPayableTitle.AccountNumber,
+                        AccountTitle = apHaulingPayableTitle.AccountName,
+                        Debit = 0,
+                        Credit = totalFreightNetOfEwt,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        SupplierId = dr.HaulerId
+                    });
+
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"In-Transit for the month of {previousMonth:MMM yyyy}.",
+                        AccountNo = ewtTwoPercent.AccountNumber,
+                        AccountTitle = ewtTwoPercent.AccountName,
+                        Debit = 0,
+                        Credit = totalFreightEwtAmount,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    });
+
+                }
+
+                if (dr.CustomerOrderSlip.CommissionRate > 0)
+                {
+                    var totalCommissionGrossAmount = dr.Quantity * dr.CustomerOrderSlip.CommissionRate;
+                    var totalCommissionNetOfVat = ComputeNetOfVat(totalCommissionGrossAmount);
+                    var totalCommissionVatAmount = ComputeVatAmount(totalCommissionNetOfVat);
+                    var totalCommissionEwtAmount = ComputeEwtAmount(totalCommissionNetOfVat, 0.05m);
+                    var totalCommissionNetOfEwt = ComputeNetOfEwt(totalCommissionGrossAmount, totalCommissionEwtAmount);
+
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"In-Transit for the month of {previousMonth:MMM yyyy} for commission.",
+                        AccountNo = inventoryAcctNo,
+                        AccountTitle = inventoryAcctTitle,
+                        Debit = totalCommissionGrossAmount,
+                        Credit = 0,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    });
+
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"In-Transit for the month of {previousMonth:MMM yyyy}.",
+                        AccountNo = apCommissionPayableTitle.AccountNumber,
+                        AccountTitle = apCommissionPayableTitle.AccountName,
+                        Debit = 0,
+                        Credit = totalCommissionNetOfEwt,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        SupplierId = dr.CustomerOrderSlip.CommissioneeId
+                    });
+
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                        Reference = dr.DeliveryReceiptNo,
+                        Description = $"In-Transit for the month of {previousMonth:MMM yyyy}.",
+                        AccountNo = ewtFivePercent.AccountNumber,
+                        AccountTitle = ewtTwoPercent.AccountName,
+                        Debit = 0,
+                        Credit = totalCommissionEwtAmount,
+                        Company = dr.Company,
+                        CreatedBy = "SYSTEM GENERATED",
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    });
+                }
+
+                if (!IsJournalEntriesBalanced(ledgers))
+                {
+                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                }
+
+                await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+
+            }
+
         }
     }
 }

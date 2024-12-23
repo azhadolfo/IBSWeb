@@ -102,6 +102,8 @@ namespace IBSWeb.Areas.User.Controllers
                     userNotification.RequiresResponse = false;
                     userNotification.IsRead = true;
 
+                    await _unitOfWork.FilprideDeliveryReceipt.AutoReversalEntryForInTransit();
+
                     var lockDrAppSetting = await _dbContext.AppSettings
                         .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfDr);
 
