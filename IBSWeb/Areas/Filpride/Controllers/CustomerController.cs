@@ -257,16 +257,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             worksheet.Cells["A1"].Value = "CustomerName";
             worksheet.Cells["B1"].Value = "CustomerAddress";
-            worksheet.Cells["C1"].Value = "CustomerTinNumber";
-            worksheet.Cells["D1"].Value = "BusinessStyle";
-            worksheet.Cells["E1"].Value = "Terms";
-            worksheet.Cells["F1"].Value = "CustomerType";
-            worksheet.Cells["G1"].Value = "WithHoldingVat";
-            worksheet.Cells["H1"].Value = "WithHoldingTax";
-            worksheet.Cells["I1"].Value = "CreatedBy";
-            worksheet.Cells["J1"].Value = "CreatedDate";
-            worksheet.Cells["K1"].Value = "OriginalCustomerId";
-            worksheet.Cells["L1"].Value = "OriginalCustomerNumber";
+            worksheet.Cells["C1"].Value = "CustomerZipCode";
+            worksheet.Cells["D1"].Value = "CustomerTinNumber";
+            worksheet.Cells["E1"].Value = "BusinessStyle";
+            worksheet.Cells["F1"].Value = "Terms";
+            worksheet.Cells["G1"].Value = "CustomerType";
+            worksheet.Cells["H1"].Value = "WithHoldingVat";
+            worksheet.Cells["I1"].Value = "WithHoldingTax";
+            worksheet.Cells["J1"].Value = "CreatedBy";
+            worksheet.Cells["K1"].Value = "CreatedDate";
+            worksheet.Cells["L1"].Value = "OriginalCustomerId";
+            worksheet.Cells["M1"].Value = "OriginalCustomerNumber";
 
             int row = 2;
 
@@ -274,16 +275,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 worksheet.Cells[row, 1].Value = item.CustomerName;
                 worksheet.Cells[row, 2].Value = item.CustomerAddress;
-                worksheet.Cells[row, 3].Value = item.CustomerTin;
-                worksheet.Cells[row, 4].Value = item.BusinessStyle;
-                worksheet.Cells[row, 5].Value = item.CustomerTerms;
-                worksheet.Cells[row, 6].Value = item.VatType;
-                worksheet.Cells[row, 7].Value = item.WithHoldingVat;
-                worksheet.Cells[row, 8].Value = item.WithHoldingTax;
-                worksheet.Cells[row, 9].Value = item.CreatedBy;
-                worksheet.Cells[row, 10].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
-                worksheet.Cells[row, 11].Value = item.CustomerId;
-                worksheet.Cells[row, 12].Value = item.CustomerCode;
+                worksheet.Cells[row, 3].Value = item.ZipCode;
+                worksheet.Cells[row, 4].Value = item.CustomerTin;
+                worksheet.Cells[row, 5].Value = item.BusinessStyle;
+                worksheet.Cells[row, 6].Value = item.CustomerTerms;
+                worksheet.Cells[row, 7].Value = item.VatType;
+                worksheet.Cells[row, 8].Value = item.WithHoldingVat;
+                worksheet.Cells[row, 9].Value = item.WithHoldingTax;
+                worksheet.Cells[row, 10].Value = item.CreatedBy;
+                worksheet.Cells[row, 11].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 12].Value = item.CustomerId;
+                worksheet.Cells[row, 13].Value = item.CustomerCode;
 
                 row++;
             }
