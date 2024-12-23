@@ -425,39 +425,23 @@ namespace IBS.DataAccess.Repository.Filpride
                     {
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
-                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
+                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
                         AccountNo = commissionAcctNo,
                         AccountTitle = commissionAcctTitle,
                         Debit = commissionGrossAmount,
                         Credit = 0,
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate,
-                        SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
+                        CreatedDate = deliveryReceipt.CreatedDate
                     });
 
                     ledgers.Add(new FilprideGeneralLedgerBook
                     {
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
-                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
+                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
                         AccountNo = apCommissionPayableTitle.AccountNumber,
                         AccountTitle = apCommissionPayableTitle.AccountName,
-                        Debit = 0,
-                        Credit = commissionNetOfEwt,
-                        Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate,
-                        SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
-                    });
-
-                    ledgers.Add(new FilprideGeneralLedgerBook
-                    {
-                        Date = (DateOnly)deliveryReceipt.DeliveredDate,
-                        Reference = deliveryReceipt.DeliveryReceiptNo,
-                        Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
-                        AccountNo = commissionAcctNo,
-                        AccountTitle = commissionAcctTitle,
                         Debit = 0,
                         Credit = commissionNetOfEwt,
                         Company = deliveryReceipt.Company,
@@ -472,7 +456,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         {
                             Date = (DateOnly)deliveryReceipt.DeliveredDate,
                             Reference = deliveryReceipt.DeliveryReceiptNo,
-                            Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
+                            Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
                             AccountNo = ewtFivePercent.AccountNumber,
                             AccountTitle = ewtFivePercent.AccountName,
                             Debit = 0,
