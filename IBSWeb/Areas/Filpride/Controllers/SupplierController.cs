@@ -338,24 +338,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             worksheet.Cells["A1"].Value = "Name";
             worksheet.Cells["B1"].Value = "Address";
-            worksheet.Cells["C1"].Value = "TinNo";
-            worksheet.Cells["D1"].Value = "Terms";
-            worksheet.Cells["E1"].Value = "VatType";
-            worksheet.Cells["F1"].Value = "TaxType";
-            worksheet.Cells["G1"].Value = "ProofOfRegistrationFilePath";
-            worksheet.Cells["H1"].Value = "ReasonOfExemption";
-            worksheet.Cells["I1"].Value = "Validity";
-            worksheet.Cells["J1"].Value = "ValidityDate";
-            worksheet.Cells["K1"].Value = "ProofOfExemptionFilePath";
-            worksheet.Cells["L1"].Value = "CreatedBy";
-            worksheet.Cells["M1"].Value = "CreatedDate";
-            worksheet.Cells["N1"].Value = "Branch";
-            worksheet.Cells["O1"].Value = "Category";
-            worksheet.Cells["P1"].Value = "TradeName";
-            worksheet.Cells["Q1"].Value = "DefaultExpenseNumber";
-            worksheet.Cells["R1"].Value = "WithholdingTaxPercent";
-            worksheet.Cells["S1"].Value = "WithholdingTaxTitle";
-            worksheet.Cells["T1"].Value = "OriginalSupplierId";
+            worksheet.Cells["C1"].Value = "ZipCode";
+            worksheet.Cells["D1"].Value = "TinNo";
+            worksheet.Cells["E1"].Value = "Terms";
+            worksheet.Cells["F1"].Value = "VatType";
+            worksheet.Cells["G1"].Value = "TaxType";
+            worksheet.Cells["H1"].Value = "ProofOfRegistrationFilePath";
+            worksheet.Cells["I1"].Value = "ReasonOfExemption";
+            worksheet.Cells["J1"].Value = "Validity";
+            worksheet.Cells["K1"].Value = "ValidityDate";
+            worksheet.Cells["L1"].Value = "ProofOfExemptionFilePath";
+            worksheet.Cells["M1"].Value = "CreatedBy";
+            worksheet.Cells["N1"].Value = "CreatedDate";
+            worksheet.Cells["O1"].Value = "Branch";
+            worksheet.Cells["P1"].Value = "Category";
+            worksheet.Cells["Q1"].Value = "TradeName";
+            worksheet.Cells["R1"].Value = "DefaultExpenseNumber";
+            worksheet.Cells["S1"].Value = "WithholdingTaxPercent";
+            worksheet.Cells["T1"].Value = "WithholdingTaxTitle";
+            worksheet.Cells["U1"].Value = "OriginalSupplierId";
 
             int row = 2;
 
@@ -363,24 +364,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 worksheet.Cells[row, 1].Value = item.SupplierName;
                 worksheet.Cells[row, 2].Value = item.SupplierAddress;
-                worksheet.Cells[row, 3].Value = item.SupplierTin;
-                worksheet.Cells[row, 4].Value = item.SupplierTerms;
-                worksheet.Cells[row, 5].Value = item.VatType;
-                worksheet.Cells[row, 6].Value = item.TaxType;
-                worksheet.Cells[row, 7].Value = item.ProofOfRegistrationFilePath;
-                worksheet.Cells[row, 8].Value = item.ReasonOfExemption;
-                worksheet.Cells[row, 9].Value = item.Validity;
-                worksheet.Cells[row, 10].Value = item.ValidityDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
-                worksheet.Cells[row, 11].Value = item.ProofOfExemptionFilePath;
-                worksheet.Cells[row, 12].Value = item.CreatedBy;
-                worksheet.Cells[row, 13].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
-                worksheet.Cells[row, 14].Value = item.Branch;
-                worksheet.Cells[row, 15].Value = item.Category;
-                worksheet.Cells[row, 16].Value = item.TradeName;
-                worksheet.Cells[row, 17].Value = item.DefaultExpenseNumber;
-                worksheet.Cells[row, 18].Value = item.WithholdingTaxPercent;
-                worksheet.Cells[row, 19].Value = item.WithholdingTaxtitle;
-                worksheet.Cells[row, 20].Value = item.SupplierId;
+                worksheet.Cells[row, 3].Value = item.ZipCode;
+                worksheet.Cells[row, 4].Value = item.SupplierTin;
+                worksheet.Cells[row, 5].Value = item.SupplierTerms;
+                worksheet.Cells[row, 6].Value = item.VatType;
+                worksheet.Cells[row, 7].Value = item.TaxType;
+                worksheet.Cells[row, 8].Value = item.ProofOfRegistrationFilePath;
+                worksheet.Cells[row, 9].Value = item.ReasonOfExemption;
+                worksheet.Cells[row, 10].Value = item.Validity;
+                worksheet.Cells[row, 11].Value = item.ValidityDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 12].Value = item.ProofOfExemptionFilePath;
+                worksheet.Cells[row, 13].Value = item.CreatedBy;
+                worksheet.Cells[row, 14].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                worksheet.Cells[row, 15].Value = item.Branch;
+                worksheet.Cells[row, 16].Value = item.Category;
+                worksheet.Cells[row, 17].Value = item.TradeName;
+                worksheet.Cells[row, 18].Value = item.DefaultExpenseNumber;
+                worksheet.Cells[row, 19].Value = item.WithholdingTaxPercent;
+                worksheet.Cells[row, 20].Value = item.WithholdingTaxtitle;
+                worksheet.Cells[row, 21].Value = item.SupplierId;
 
                 row++;
             }
