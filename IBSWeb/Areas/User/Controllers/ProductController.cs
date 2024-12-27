@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using OfficeOpenXml;
 using System.Threading;
+using IBS.Utility.Enums;
 
 namespace IBSWeb.Areas.User.Controllers
 {

@@ -5,12 +5,14 @@ using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -44,9 +46,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
             var user = await _dbContext.ApplicationUsers.FirstOrDefaultAsync(u => u.UserName == User.Identity.Name);
-            
+
             ViewData["Department"] = user.Department;
-            
+
             return View();
         }
 
@@ -278,12 +280,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var parts = accountEntry.AccountTitle.Split(' ', 2); // Split into at most two parts
                         var accountNo = parts[0];
                         var accountName = parts[1];
-                    
+
                         if (accountNo == "202010200")
                         {
                             checkVoucherHeader.InvoiceAmount = accountEntry.Amount;
                         }
-                        
+
                         checkVoucherDetails.Add(new FilprideCheckVoucherDetail
                         {
                             AccountNo = accountNo,
@@ -293,7 +295,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = accountEntry.Type == NormalBalance.Debit ? accountEntry.Amount : 0,
                             Credit = accountEntry.Type == NormalBalance.Credit ? accountEntry.Amount : 0,
                         });
-                        
+
                     }
 
                     #endregion
@@ -750,18 +752,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = viewModel.CVId
                         });
                     }
-                    
+
                     foreach (var accountEntry in viewModel.AccountingEntries)
                     {
                         var parts = accountEntry.AccountTitle.Split(' ', 2); // Split into at most two parts
                         var accountNo = parts[0];
                         var accountName = parts[1];
-                    
+
                         if (accountNo == "202010200")
                         {
                             existingModel.InvoiceAmount = accountEntry.Amount;
                         }
-                        
+
                         details.Add(new FilprideCheckVoucherDetail
                         {
                             AccountNo = accountNo,
@@ -771,7 +773,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = accountEntry.Type == NormalBalance.Debit ? accountEntry.Amount : 0,
                             Credit = accountEntry.Type == NormalBalance.Credit ? accountEntry.Amount : 0,
                         });
-                        
+
                     }
 
                     await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
@@ -1399,7 +1401,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             TempData["error"] = "The information provided was invalid.";
             return View(viewModel);
         }
-        
+
         public async Task<IActionResult> GetSupplierDetails(int? supplierId)
         {
             if (supplierId != null)

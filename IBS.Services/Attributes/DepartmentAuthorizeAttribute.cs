@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace IBS.DataAccess.Repository
+namespace IBS.Services.Attributes
 {
     public class DepartmentAuthorizeAttribute : AuthorizeAttribute, IAuthorizationFilter
     {

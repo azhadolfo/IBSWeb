@@ -6372,6 +6372,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("notification_id");
 
+                    b.Property<bool>("RequiresResponse")
+                        .HasColumnType("boolean")
+                        .HasColumnName("requires_response");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text")

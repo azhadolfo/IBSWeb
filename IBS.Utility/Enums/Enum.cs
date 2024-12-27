@@ -1,4 +1,4 @@
-﻿namespace IBS.Utility
+﻿namespace IBS.Utility.Enums
 {
     public enum CustomerType
     {
@@ -90,5 +90,5 @@
         Invoicing,
         Payment
     }
-    
+
 }

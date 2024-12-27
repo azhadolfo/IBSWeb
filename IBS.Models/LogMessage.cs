@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using IBS.Utility;
+using IBS.Utility.Helpers;
 
 namespace IBS.Models
 {

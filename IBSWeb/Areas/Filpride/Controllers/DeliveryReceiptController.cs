@@ -1,11 +1,9 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +11,10 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -124,6 +126,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+            var isDrLock = await _dbContext.AppSettings
+                .Where(s => s.SettingKey == AppSettingKey.LockTheCreationOfDr)
+                .Select(s => s.Value == "true")
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (isDrLock)
+            {
+                TempData["denied"] = "Creation of the DR is locked due to incomplete in-transit deliveries.";
+                return RedirectToAction(nameof(Index));
+            }
 
             DeliveryReceiptViewModel viewModel = new()
             {

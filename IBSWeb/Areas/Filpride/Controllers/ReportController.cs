@@ -1,8 +1,14 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Drawing;
+using System.Text;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -511,7 +517,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         worksheet.Cells[3, i + 1].Value = headers[i];
                         worksheet.Cells[3, i + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        worksheet.Cells[3, i + 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.ColorTranslator.FromHtml("#9966ff"));
+                        worksheet.Cells[3, i + 1].Style.Fill.BackgroundColor.SetColor(ColorTranslator.FromHtml("#9966ff"));
                         worksheet.Cells[3, i + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                         worksheet.Cells[3, i + 1].Style.Font.Bold = true;
                     }
@@ -645,70 +651,118 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 int currentRow = 10;
-                decimal sumOfCost = 0;
-                decimal sumOfFreight = 0;
-                decimal sumOfECC = 0;
-                decimal sumOfTotalFreight = 0;
                 string headerColumn = viewModel.ReportType == "AllDeliveries" ? "S9" : "Q9";
 
-                foreach (var dr in deliveryReceipts.OrderBy(d => d.Date))
+                var groupedReceipts = deliveryReceipts
+                    .OrderBy(d => d.CustomerOrderSlip.ProductId)
+                    .ThenBy(d => d.Date)
+                    .GroupBy(d => d.CustomerOrderSlip.ProductId);
+
+                decimal grandSumOfCost = 0;
+                decimal grandSumOfFreight = 0;
+                decimal grandSumOfECC = 0;
+                decimal grandSumOfTotalFreight = 0;
+                decimal grandTotalQuantity = 0;
+                decimal grandTotalAmount = 0;
+
+                foreach (var group in groupedReceipts)
                 {
-                    worksheet.Cells[currentRow, 1].Value = dr.Date.ToString("dd-MMM-yy");
-                    worksheet.Cells[currentRow, 2].Value = dr.Customer.CustomerName;
-                    worksheet.Cells[currentRow, 3].Value = dr.Customer.CustomerType;
-                    worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
-                    worksheet.Cells[currentRow, 5].Value = dr.CustomerOrderSlip.Product.ProductName;
-                    worksheet.Cells[currentRow, 6].Value = dr.Quantity;
-                    worksheet.Cells[currentRow, 7].Value = dr.TotalAmount;
-                    worksheet.Cells[currentRow, 8].Value = dr.CustomerOrderSlip.PickUpPoint.Depot;
-                    worksheet.Cells[currentRow, 9].Value = dr.PurchaseOrder.PurchaseOrderNo;
-                    worksheet.Cells[currentRow, 10].Value = dr.AuthorityToLoadNo;
-                    worksheet.Cells[currentRow, 11].Value = dr.CustomerOrderSlip.CustomerOrderSlipNo;
-                    worksheet.Cells[currentRow, 12].Value = dr.Hauler?.SupplierName;
-                    worksheet.Cells[currentRow, 13].Value = dr.PurchaseOrder.Supplier.SupplierName;
+                    string productName = group.First().CustomerOrderSlip.Product.ProductName;
+                    decimal sumOfCost = 0;
+                    decimal sumOfFreight = 0;
+                    decimal sumOfECC = 0;
+                    decimal sumOfTotalFreight = 0;
+                    decimal totalQuantity = 0;
+                    decimal totalAmount = 0;
 
-                    decimal cost = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.PurchaseOrder.Price) * dr.Quantity;
-                    worksheet.Cells[currentRow, 14].Value = cost;
-                    sumOfCost += cost;
-
-                    decimal freight = (dr.Freight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.Freight) : dr.Freight) * dr.Quantity;
-                    worksheet.Cells[currentRow, 15].Value = freight;
-                    sumOfFreight += freight;
-
-                    decimal ecc = (dr.ECC > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.ECC) : dr.ECC) * dr.Quantity;
-                    worksheet.Cells[currentRow, 16].Value = ecc;
-                    sumOfECC += ecc;
-
-                    decimal totalFreight = dr.Freight + dr.ECC;
-                    decimal netTotalFreight = (totalFreight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(totalFreight) : totalFreight) * dr.Quantity;
-                    worksheet.Cells[currentRow, 17].Value = netTotalFreight;
-                    sumOfTotalFreight += netTotalFreight;
-
-                    if (viewModel.ReportType == "AllDeliveries")
+                    foreach (var dr in group)
                     {
-                        worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate?.ToString("dd-MMM-yy");
-                        worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(Status.Pending) ? "IN TRANSIT" : dr.Status.ToUpper();
+                        worksheet.Cells[currentRow, 1].Value = dr.Date.ToString("dd-MMM-yy");
+                        worksheet.Cells[currentRow, 2].Value = dr.Customer.CustomerName;
+                        worksheet.Cells[currentRow, 3].Value = dr.Customer.CustomerType;
+                        worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
+                        worksheet.Cells[currentRow, 5].Value = dr.CustomerOrderSlip.Product.ProductName;
+                        worksheet.Cells[currentRow, 6].Value = dr.Quantity;
+                        worksheet.Cells[currentRow, 7].Value = dr.TotalAmount;
+                        worksheet.Cells[currentRow, 8].Value = dr.CustomerOrderSlip.PickUpPoint.Depot;
+                        worksheet.Cells[currentRow, 9].Value = dr.PurchaseOrder.PurchaseOrderNo;
+                        worksheet.Cells[currentRow, 10].Value = dr.AuthorityToLoadNo;
+                        worksheet.Cells[currentRow, 11].Value = dr.CustomerOrderSlip.CustomerOrderSlipNo;
+                        worksheet.Cells[currentRow, 12].Value = dr.Hauler?.SupplierName;
+                        worksheet.Cells[currentRow, 13].Value = dr.PurchaseOrder.Supplier.SupplierName;
+
+                        var cost = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.PurchaseOrder.Price) * dr.Quantity;
+                        worksheet.Cells[currentRow, 14].Value = cost;
+                        sumOfCost += cost;
+
+                        var freight = (dr.Freight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.Freight) : dr.Freight) * dr.Quantity;
+                        worksheet.Cells[currentRow, 15].Value = freight;
+                        sumOfFreight += freight;
+
+                        var ecc = (dr.ECC > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.ECC) : dr.ECC) * dr.Quantity;
+                        worksheet.Cells[currentRow, 16].Value = ecc;
+                        sumOfECC += ecc;
+
+                        var totalFreight = dr.Freight + dr.ECC;
+                        var netTotalFreight = (totalFreight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(totalFreight) : totalFreight) * dr.Quantity;
+                        worksheet.Cells[currentRow, 17].Value = netTotalFreight;
+                        sumOfTotalFreight += netTotalFreight;
+
+                        totalQuantity += dr.Quantity;
+                        totalAmount += dr.TotalAmount;
+
+                        if (viewModel.ReportType == "AllDeliveries")
+                        {
+                            worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate?.ToString("dd-MMM-yy");
+                            worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(Status.Pending) ? "IN TRANSIT" : dr.Status.ToUpper();
+                        }
+
+                        currentRow++;
                     }
 
-                    currentRow++;
+                    // Subtotal row for each product
+                    worksheet.Cells[currentRow, 5].Value = "SUB TOTAL";
+                    worksheet.Cells[currentRow, 6].Value = totalQuantity;
+                    worksheet.Cells[currentRow, 7].Value = totalAmount;
+                    worksheet.Cells[currentRow, 14].Value = sumOfCost;
+                    worksheet.Cells[currentRow, 15].Value = sumOfFreight;
+                    worksheet.Cells[currentRow, 16].Value = sumOfECC;
+                    worksheet.Cells[currentRow, 17].Value = sumOfTotalFreight;
+
+                    using (var subtotalRowRange = worksheet.Cells[currentRow, 1, currentRow, 17]) // Adjust range as needed
+                    {
+                        subtotalRowRange.Style.Font.Bold = true; // Make text bold
+                        subtotalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        subtotalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        subtotalRowRange.Style.Numberformat.Format = "#,##0.0000"; // Optional: Format numbers
+                    }
+
+                    grandSumOfCost += sumOfCost;
+                    grandSumOfFreight += sumOfFreight;
+                    grandSumOfECC += sumOfECC;
+                    grandSumOfTotalFreight += sumOfTotalFreight;
+                    grandTotalQuantity += totalQuantity;
+                    grandTotalAmount += totalAmount;
+
+                    currentRow += 2;
                 }
 
-                // Total row
-                worksheet.Cells[currentRow + 1, 5].Value = "TOTAL";
-                worksheet.Cells[currentRow + 1, 6].Value = deliveryReceipts.Sum(dr => dr.Quantity);
-                worksheet.Cells[currentRow + 1, 7].Value = deliveryReceipts.Sum(dr => dr.TotalAmount);
-                worksheet.Cells[currentRow + 1, 14].Value = sumOfCost;
-                worksheet.Cells[currentRow + 1, 15].Value = sumOfFreight;
-                worksheet.Cells[currentRow + 1, 16].Value = sumOfECC;
-                worksheet.Cells[currentRow + 1, 17].Value = sumOfTotalFreight;
+                // Grand Total row
+                worksheet.Cells[currentRow, 5].Value = "GRAND TOTAL";
+                worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
+                worksheet.Cells[currentRow, 7].Value = grandTotalAmount;
+                worksheet.Cells[currentRow, 14].Value = grandSumOfCost;
+                worksheet.Cells[currentRow, 15].Value = grandSumOfFreight;
+                worksheet.Cells[currentRow, 16].Value = grandSumOfECC;
+                worksheet.Cells[currentRow, 17].Value = grandSumOfTotalFreight;
 
                 // Adding borders and bold styling to the total row
-                using (var totalRowRange = worksheet.Cells[currentRow + 1, 1, currentRow + 1, 17]) // Whole row
+                using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, 17]) // Whole row
                 {
+                    totalRowRange.Style.Font.Bold = true; // Make text bold
                     totalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     totalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                    totalRowRange.Style.Font.Bold = true; // Make text bold
-                    totalRowRange.Style.Numberformat.Format = "#,##0.00";
+                    totalRowRange.Style.Numberformat.Format = "#,##0.0000"; // Optional: Format numbers
                 }
 
                 // Generated by, checked by, received by footer
@@ -726,7 +780,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Styling and formatting (optional)
                 worksheet.Cells["B:T"].AutoFitColumns();
-                worksheet.Cells["F,G,N:Q"].Style.Numberformat.Format = "#,##0.00";
+                worksheet.Cells["F,G,N:Q"].Style.Numberformat.Format = "#,##0.0000";
 
                 using (var range = worksheet.Cells[$"A9:{headerColumn}"])
                 {
@@ -2628,7 +2682,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Apply styling to the header row
             using (var range = worksheet.Cells["A7:U7"])
             {
-                range.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 range.Style.Font.Bold = true;
                 range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                 range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
@@ -2736,7 +2790,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             mergedCellForBiodiesel.Value = "Diesel";
             mergedCellForBiodiesel.Style.Font.Size = 13;
             mergedCellForBiodiesel.Style.Font.Bold = true;
-            worksheet.Cells[rowForSummary - 2, 3, rowForSummary - 2, 5].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[rowForSummary - 2, 3, rowForSummary - 2, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
             var textStyleForSummarry = worksheet.Cells[rowForSummary - 3, 2];
             textStyleForSummarry.Style.Font.Size = 16;
@@ -2748,7 +2802,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells[rowForSummary - 1, 4].Value = "Sales N. VAT";
             worksheet.Cells[rowForSummary - 1, 5].Value = "Ave. SP";
 
-            worksheet.Cells[rowForSummary - 1, 2, rowForSummary - 1, 5].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[rowForSummary - 1, 2, rowForSummary - 1, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
             // Apply styling to the header row for Biodiesel
             using (var range = worksheet.Cells[rowForSummary - 1, 2, rowForSummary - 1, 5])
@@ -2783,13 +2837,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             mergedCellForEconogas.Value = "Econo";
             mergedCellForEconogas.Style.Font.Size = 13;
             mergedCellForEconogas.Style.Font.Bold = true;
-            worksheet.Cells[rowForSummary - 2, 7, rowForSummary - 2, 9].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[rowForSummary - 2, 7, rowForSummary - 2, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
             worksheet.Cells[rowForSummary - 1, 7].Value = "Volume";
             worksheet.Cells[rowForSummary - 1, 8].Value = "Sales N. VAT";
             worksheet.Cells[rowForSummary - 1, 9].Value = "Ave. SP";
 
-            worksheet.Cells[rowForSummary - 1, 7, rowForSummary - 1, 9].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[rowForSummary - 1, 7, rowForSummary - 1, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
             // Apply styling to the header row for Econogas
             using (var range = worksheet.Cells[rowForSummary - 1, 7, rowForSummary - 1, 9])
@@ -2824,14 +2878,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             mergedCellForEnvirogas.Value = "Enviro";
             mergedCellForEnvirogas.Style.Font.Size = 13;
             mergedCellForEnvirogas.Style.Font.Bold = true;
-            worksheet.Cells[rowForSummary - 2, 11, rowForSummary - 2, 13].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[rowForSummary - 2, 11, rowForSummary - 2, 13].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
             //inset data/value in excel
             worksheet.Cells[rowForSummary - 1, 11].Value = "Volume";
             worksheet.Cells[rowForSummary - 1, 12].Value = "Sales N. VAT";
             worksheet.Cells[rowForSummary - 1, 13].Value = "Ave. SP";
 
-            worksheet.Cells[rowForSummary - 1, 11, rowForSummary - 1, 13].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+            worksheet.Cells[rowForSummary - 1, 11, rowForSummary - 1, 13].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
             // Apply styling to the header row for Envirogas
             using (var range = worksheet.Cells[rowForSummary - 1, 11, rowForSummary - 1, 13])

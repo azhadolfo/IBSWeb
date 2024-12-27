@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Models.Filpride.Books;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
