@@ -7,22 +7,22 @@
 
     string currencyFormat = "N4";
     var totalVolume = 0m;
-    decimal? totalCostPerLiter = 0m;
-    decimal? totalCostAmount = 0m;
-    decimal? totalVatAmount = 0m;
-    decimal? totalWHTAmount = 0m;
-    decimal? totalNetPurchases = 0m;
-    decimal? totalCOSPrice = 0m;
-    decimal? totalCOSAmount = 0m;
-    decimal? totalCOSPerLiter = 0m;
-    decimal? totalGMPerLiter = 0m;
-    decimal? totalGMAmount = 0m;
-    decimal? totalFreightCharge = 0m;
-    decimal? totalFCAmount = 0m;
-    decimal? totalCommissionPerLiter = 0m;
-    decimal? totalCommissionAmount = 0m;
-    decimal? totalNetMarginPerLiter = 0m;
-    decimal? totalNetMarginAmount = 0m;
+    decimal totalCostPerLiter = 0m;
+    decimal totalCostAmount = 0m;
+    decimal totalVatAmount = 0m;
+    decimal totalWHTAmount = 0m;
+    decimal totalNetPurchases = 0m;
+    decimal totalCOSPrice = 0m;
+    decimal totalCOSAmount = 0m;
+    decimal totalCOSPerLiter = 0m;
+    decimal totalGMPerLiter = 0m;
+    decimal totalGMAmount = 0m;
+    decimal totalFreightCharge = 0m;
+    decimal totalFCAmount = 0m;
+    decimal totalCommissionPerLiter = 0m;
+    decimal totalCommissionAmount = 0m;
+    decimal totalNetMarginPerLiter = 0m;
+    decimal totalNetMarginAmount = 0m;
 }
 <style>
     .container {
@@ -170,12 +170,12 @@
             <td></td>
             <td class="text-start px-3"><b>TOTAL:</b></td>
             <td class="text-start px-3">@totalVolume.ToString("N4")</td>
-            <td class="text-start px-3">@totalCostPerLiter?.ToString("N4")</td>
-            <td class="text-start px-3">@totalCostAmount?.ToString("N4")</td>
-            <td class="text-start px-3">@totalVatAmount?.ToString("N4")</td>
+            <td class="text-start px-3">@totalCostPerLiter.ToString("N4")</td>
+            <td class="text-start px-3">@totalCostAmount.ToString("N4")</td>
+            <td class="text-start px-3">@totalVatAmount.ToString("N4")</td>
             <td></td>
-            <td class="text-start px-3">@totalWHTAmount?.ToString("N4")</td>
-            <td class="text-start px-3">@totalNetPurchases?.ToString("N4")</td>
+            <td class="text-start px-3">@totalWHTAmount.ToString("N4")</td>
+            <td class="text-start px-3">@totalNetPurchases.ToString("N4")</td>
             <td></td>
         </tr>
         </tbody>
