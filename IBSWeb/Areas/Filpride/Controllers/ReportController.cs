@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.MasterFile;
@@ -912,6 +913,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             TempData["error"] = "Please input date from";
             return RedirectToAction(nameof(PurchaseReport));
+        }
+
+        public async Task<IActionResult> OtcFuelSalesReport()
+        {
+            return View();
         }
 
         //Generate as .txt file
@@ -3478,6 +3484,631 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion
+
+        #region -- Generate Fuel Sales Report Excel File --
+
+        public async Task<IActionResult> GenerateOtcFuelSalesReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(this.User);
+                var companyClaims = await GetCompanyClaimAsync();
+
+                // fetch sales report
+                var salesReport = _unitOfWork.FilprideReport.GetOtcFuelSalesReport(model.DateFrom, model.DateTo, companyClaims);
+
+                // check if there is no record
+                if (salesReport.Count == 0)
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(OtcFuelSalesReport));
+                }
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+
+                #region == Product worksheets ==
+
+                var groupedByProductReport = salesReport
+                    .OrderBy(sr => sr.Product?.ProductName)
+                    .GroupBy(sr => sr.Product?.ProductName);
+
+                foreach (var productReport in groupedByProductReport)
+                {
+                    var productName = productReport.First().Product?.ProductName;
+
+                    var worksheet = package.Workbook.Worksheets.Add(productName);
+
+                    #region == Header Contents and Formatting ==
+
+                        var mergedCells = worksheet.Cells["A1:B1"];
+                        mergedCells.Merge = true;
+                        mergedCells.Value = productName;
+                        mergedCells.Style.Font.Bold = true;
+                        mergedCells.Style.Font.Size = 15;
+                        mergedCells.Style.Font.Name = "Tahoma";
+                        mergedCells.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        worksheet.Row(1).Height = 20;
+
+                        worksheet.Cells["A2"].Value = "Sales Report Per Total";
+                        worksheet.Cells["A3"].Value = "Period Covered";
+                        worksheet.Cells["A4"].Value = "Date From:";
+                        worksheet.Cells["A5"].Value = "Date To:";
+
+                        worksheet.Cells["B4"].Value = $"{dateFrom}";
+                        worksheet.Cells["B5"].Value = $"{dateTo}";
+
+                        worksheet.Cells["A1:B5"].Style.Font.Name = "Tahoma";
+                        worksheet.Cells["A2:B5"].Style.Font.Size = 11;
+
+                        #endregion == Header Contents and Formatting ==
+
+                    #region == Column Names ==
+                    worksheet.Cells["A8"].Value = "DATE";
+                    worksheet.Cells["B8"].Value = "ACCOUNT NAME";
+                    worksheet.Cells["C8"].Value = "ACCT TYPE";
+                    worksheet.Cells["D8"].Value = "COS #";
+                    worksheet.Cells["E8"].Value = "OTC COS #";
+                    worksheet.Cells["F8"].Value = "DR #";;
+                    worksheet.Cells["G8"].Value = "OTC DR #";
+                    worksheet.Cells["H8"].Value = "ITEMS";
+                    worksheet.Cells["I8"].Value = "VOLUME";
+                    worksheet.Cells["J8"].Value = "TOTAL";
+                    worksheet.Cells["K8"].Value = "REMARKS";
+                    #endregion == Column Names ==
+
+                    #region == Initialize condition variables ==
+                    int row = 9;
+                    string currencyFormat = "#,##0.00";
+                    var totalVolume = 0m;
+                    var totalAmount = 0m;
+                    var grandTotalVolume = 0m;
+                    var grandTotalAmount = 0m;
+                    #endregion
+
+                    var groupedByCustomer = productReport
+                        .OrderBy(pr => pr.Customer?.CustomerName)
+                        .GroupBy(pr => pr.Customer?.CustomerName);
+
+                    foreach (var customer in groupedByCustomer)
+                    {
+                        var sortedByDateCustomer = customer
+                            .OrderBy(c => c.TransactionDate)
+                            .ToList();
+
+                        totalVolume = 0m;
+                        totalAmount = 0m;
+
+                        foreach (var transaction in sortedByDateCustomer)
+                        {
+                            #region -- Assign Values to Cells --
+
+                            worksheet.Cells[row, 1].Value = transaction.TransactionDate; // Date
+                            worksheet.Cells[row, 2].Value = transaction.Customer?.CustomerName; // Account Name
+                            worksheet.Cells[row, 3].Value = transaction.Customer?.CustomerType; // Account Type
+                            worksheet.Cells[row, 4].Value = transaction.CustomerOrderSlip?.OldCosNo; // Old COS #
+                            worksheet.Cells[row, 5].Value = transaction.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
+                            worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt?.ManualDrNo; // Old DR #
+                            worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt?.DeliveryReceiptNo; // New DR #
+                            worksheet.Cells[row, 8].Value = transaction.Product?.ProductName; // Items
+                            worksheet.Cells[row, 9].Value = transaction.Quantity; // Volume
+                            worksheet.Cells[row, 10].Value = transaction.Amount; // Total
+                            worksheet.Cells[row, 11].Value = transaction.Remarks; // Remarks
+
+                            #endregion -- Assign Values to Cells --
+
+                            // increment totals and format it
+                            totalVolume += transaction.Quantity;
+                            totalAmount += transaction.Amount;
+
+                            // format cells with number
+                            worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                            worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+
+                            row++;
+                        }
+
+                        // put total at the buttom of customer list
+                        worksheet.Cells[row, 9].Value = totalVolume;
+                        worksheet.Cells[row, 10].Value = totalAmount;
+
+                        //format total
+                        worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+
+                        // additional formatting for the subtotal
+                        using (var range = worksheet.Cells[row, 9, row, 10])
+                        {
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                            range.Style.Font.Bold = true;
+                            range.Style.Font.Size = 12;
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+                        }
+
+                        grandTotalVolume += totalVolume;
+                        grandTotalAmount += totalAmount;
+
+                        row++;
+
+                    }
+
+                    row++;
+
+                    worksheet.Cells[row, 8].Value = "Grand Total:";
+
+                    // put total at the buttom of customer list
+                    worksheet.Cells[row, 9].Value = grandTotalVolume;
+                    worksheet.Cells[row, 10].Value = grandTotalAmount;
+
+                    //format total
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+
+                    // additional formatting for the subtotal
+                    using (var range = worksheet.Cells[row, 9, row, 10])
+                    {
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Font.Bold = true;
+                        range.Style.Font.Size = 12;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+                    }
+
+                    using (var range = worksheet.Cells[$"A9:H{row}"])
+                    {
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+                    using (var range = worksheet.Cells[$"A9:K{row}"])
+                    {
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+
+                    // table header
+                    using (var range = worksheet.Cells["A7:K7"])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thick;
+                    }
+
+                    using (var range = worksheet.Cells["A8:K8"])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Thick;
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+
+                    // Auto-fit columns for better readability
+                    worksheet.Cells.AutoFitColumns();
+                    worksheet.View.FreezePanes(9, 1);
+                }
+
+                #endregion == Product worksheets ==
+
+                #region == Comparison worksheet ==
+
+                if (true)
+                {
+                    var worksheet = package.Workbook.Worksheets.Add("COMPARISON");
+
+                    #region == Header Contents and Formatting ==
+
+                    var mergedCells = worksheet.Cells["A1:B1"];
+                    mergedCells.Merge = true;
+                    mergedCells.Value = "Comparison";
+                    mergedCells.Style.Font.Bold = true;
+                    mergedCells.Style.Font.Size = 15;
+                    mergedCells.Style.Font.Name = "Tahoma";
+                    mergedCells.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    worksheet.Row(1).Height = 20;
+
+                    worksheet.Cells["A2"].Value = "Sales Report Per Total";
+                    worksheet.Cells["A3"].Value = "Period Covered";
+                    worksheet.Cells["A4"].Value = "Date From:";
+                    worksheet.Cells["A5"].Value = "Date To:";
+
+                    worksheet.Cells["B4"].Value = $"{dateFrom}";
+                    worksheet.Cells["B5"].Value = $"{dateTo}";
+
+                    worksheet.Cells["A1:B5"].Style.Font.Name = "Tahoma";
+                    worksheet.Cells["A2:B5"].Style.Font.Size = 11;
+
+                    #endregion == Header Contents and Formatting ==
+
+                    #region == Column Names ==
+                    worksheet.Cells["A8"].Value = "DATE";
+                    worksheet.Cells["B8"].Value = "ACCOUNT NAME";
+                    worksheet.Cells["C8"].Value = "ACCT TYPE";
+                    worksheet.Cells["D8"].Value = "COS #";
+                    worksheet.Cells["E8"].Value = "OTC COS #";
+                    worksheet.Cells["F8"].Value = "DR #";;
+                    worksheet.Cells["G8"].Value = "OTC DR #";
+                    worksheet.Cells["H8"].Value = "ITEMS";
+                    worksheet.Cells["I8"].Value = "VOLUME";
+                    worksheet.Cells["J8"].Value = "TOTAL";
+                    worksheet.Cells["K8"].Value = "REMARKS";
+                    #endregion == Column Names ==
+
+                    #region == Initialize condition variables ==
+                    int row = 9;
+                    string currencyFormat = "#,##0.00";
+                    var totalVolume = 0m;
+                    var totalAmount = 0m;
+                    var grandTotalVolume = 0m;
+                    var grandTotalAmount = 0m;
+                    #endregion
+
+                    groupedByProductReport = salesReport
+                        .OrderBy(sr => sr.Product?.ProductName)
+                        .ThenBy(sr => sr.Customer.CustomerName)
+                        .ThenBy(sr => sr.TransactionDate)
+                        .GroupBy(sr => sr.Product?.ProductName);
+
+                    // shows by product
+                    foreach (var product in groupedByProductReport)
+                    {
+                        totalVolume = 0m;
+                        totalAmount = 0m;
+
+                        foreach (var transaction in product)
+                        {
+                            #region -- Assign Values to Cells --
+
+                            worksheet.Cells[row, 1].Value = transaction.TransactionDate; // Date
+                            worksheet.Cells[row, 2].Value = transaction.Customer?.CustomerName; // Account Name
+                            worksheet.Cells[row, 3].Value = transaction.Customer?.CustomerType; // Account Type
+                            worksheet.Cells[row, 4].Value = transaction.CustomerOrderSlip?.OldCosNo; // Old COS #
+                            worksheet.Cells[row, 5].Value = transaction.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
+                            worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt?.ManualDrNo; // Old DR #
+                            worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt?.DeliveryReceiptNo; // New DR #
+                            worksheet.Cells[row, 8].Value = transaction.Product?.ProductName; // Items
+                            worksheet.Cells[row, 9].Value = transaction.Quantity; // Volume
+                            worksheet.Cells[row, 10].Value = transaction.Amount; // Total
+                            worksheet.Cells[row, 11].Value = transaction.Remarks; // Remarks
+
+                            #endregion -- Assign Values to Cells --
+
+                            // increment totals
+                            totalVolume += transaction.Quantity;
+                            totalAmount += transaction.Amount;
+
+                            // format cells with number
+                            worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                            worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+
+                            row++;
+                        }
+
+                        // put total at the buttom of customer list
+                        worksheet.Cells[row, 9].Value = totalVolume;
+                        worksheet.Cells[row, 10].Value = totalAmount;
+
+                        //format total
+                        worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+
+                        // additional formatting for the subtotal
+                        using (var range = worksheet.Cells[row, 9, row, 10])
+                        {
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                            range.Style.Font.Bold = true;
+                            range.Style.Font.Size = 12;
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+                        }
+
+                        // incrementing for grandtotal
+                        grandTotalVolume += totalVolume;
+                        grandTotalAmount += totalAmount;
+
+                        row++;
+                    }
+
+                    row++;
+
+                    #region == Grandtotal ==
+                    // showing grandtotal
+                    worksheet.Cells[row, 8].Value = "Grand Total:";
+                    worksheet.Cells[row, 9].Value = grandTotalVolume;
+                    worksheet.Cells[row, 10].Value = grandTotalAmount;
+
+                    //format grantotal
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+
+                    // additional formatting for the grandtotal
+                    using (var range = worksheet.Cells[row, 9, row, 10])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Font.Size = 12;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+                    }
+
+                    using (var range = worksheet.Cells["A7:K7"])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thick;
+                    }
+
+                    using (var range = worksheet.Cells["A8:K8"])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Thick;
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+
+                    // Auto-fit columns for better readability
+                    worksheet.Cells.AutoFitColumns();
+                    worksheet.View.FreezePanes(9, 1);
+
+                    #endregion == Grandtotal ==
+                }
+
+                #endregion == Comparison worksheet ==
+
+                #region == Month to Date Sales ==
+
+                if (true)
+                {
+                    string currencyFormat = "#,##0.00";
+                    var worksheet = package.Workbook.Worksheets.Add("MONTH TO DATE SALES REPORT");
+
+                    #region == Header Contents and Formatting ==
+
+                    var mergedCells = worksheet.Cells["A1:F1"];
+                    mergedCells.Merge = true;
+                    mergedCells.Value = "MONTH TO DATE SALES REPORT";
+                    mergedCells.Style.Font.Bold = true;
+                    mergedCells.Style.Font.Size = 18;
+                    mergedCells.Style.Font.Name = "Aptos Narrow";
+                    mergedCells.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    mergedCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+                    worksheet.Row(1).Height = 24;
+
+                    #endregion == Header Contents and Formatting ==
+
+                    int row = 3;
+                    bool isStation = true;
+
+                    var groupByCustomerType = salesReport
+                        .OrderBy(sr => sr.Customer?.CustomerType)
+                        .GroupBy(sr => sr.Customer?.CustomerType)
+                        .OrderBy(g => g.Key != "Retail") // Replace "PreferredType" with the group you want first
+                        .ThenBy(g => g.Key);
+
+                    #region == Contents ==
+
+                    foreach (var ct in groupByCustomerType)
+                    {
+                        worksheet.Cells[row, 1].Value = ct.First().Customer?.CustomerType;
+                        worksheet.Cells[row, 1].Style.Font.Bold = true;
+                        worksheet.Cells[row, 1].Style.Font.Italic = true;
+                        worksheet.Cells[row, 1].Style.Font.Size = 18;
+
+                        row++;
+                        worksheet.Cells[row, 1].Value = isStation ? "STATION" : "ACCOUNTS";
+
+                        worksheet.Cells[row, 2].Value = "BIODIESEL";
+                        worksheet.Cells[row, 3].Value = "AMOUNT";
+                        worksheet.Cells[row, 4].Value = "ECONOGAS";
+                        worksheet.Cells[row, 5].Value = "AMOUNT";
+                        worksheet.Cells[row, 6].Value = "ENVIROGAS";
+                        worksheet.Cells[row, 7].Value = "AMOUNT";
+                        worksheet.Cells[row, 8].Value = "LUBES";
+                        worksheet.Cells[row, 9].Value = "AMOUNT";
+                        worksheet.Cells[row, 10].Value = "TOTAL";
+                        worksheet.Cells[row, 11].Value = "AMOUNT";
+
+                        using (var range = worksheet.Cells[row, 1, row, 11])
+                        {
+                            range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                            range.Style.Font.Bold = true;
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+                        }
+
+                        var rowToResize = row;
+                        row++;
+
+                        var groupByCustomerName = ct
+                            .OrderBy(sr => sr.Customer?.CustomerName)
+                            .GroupBy(sr => sr.Customer?.CustomerName);
+
+                        foreach (var customerGroup in groupByCustomerName)
+                        {
+                            worksheet.Cells[row, 1].Value = customerGroup.First().Customer?.CustomerName;
+                            worksheet.Cells[row, 1].Style.Font.Bold = true;
+
+                            worksheet.Cells[row, 2].Value = customerGroup
+                                .Where(cg => cg.Product?.ProductName == "BIODIESEL")
+                                .Sum(cg => cg.Quantity);
+                            worksheet.Cells[row, 3].Value = customerGroup
+                                .Where(cg => cg.Product?.ProductName == "BIODIESEL")
+                                .Sum(cg => cg.Amount);
+                            worksheet.Cells[row, 4].Value = customerGroup
+                                .Where(cg => cg.Product?.ProductName == "ECONOGAS")
+                                .Sum(cg => cg.Quantity);
+                            worksheet.Cells[row, 5].Value = customerGroup
+                                .Where(cg => cg.Product?.ProductName == "ECONOGAS")
+                                .Sum(cg => cg.Amount);
+                            worksheet.Cells[row, 6].Value = customerGroup
+                                .Where(cg => cg.Product?.ProductName == "ENVIROGAS")
+                                .Sum(cg => cg.Quantity);
+                            worksheet.Cells[row, 7].Value = customerGroup
+                                .Where(cg => cg.Product?.ProductName == "ENVIROGAS")
+                                .Sum(cg => cg.Amount);
+                            worksheet.Cells[row, 10].Value = customerGroup
+                                .Sum(cg => cg.Quantity);
+                            worksheet.Cells[row, 11].Value = customerGroup
+                                .Sum(cg => cg.Amount);
+
+                            worksheet.Cells[row, 2, row, 11].Style.Numberformat.Format = "#,##0.00";
+
+                            row++;
+                        }
+
+                        worksheet.Cells[row, 1].Value = "Total";
+                        worksheet.Cells[row, 2].Value = ct
+                            .Where(si => si.Product.ProductName == "BIODIESEL")
+                            .Sum(si => si.Quantity); // Total Volume
+                        worksheet.Cells[row, 3].Value = ct
+                            .Where(si => si.Product.ProductName == "BIODIESEL")
+                            .Sum(si => si.Amount); // Total Amount
+                        worksheet.Cells[row, 4].Value = ct
+                            .Where(si => si.Product.ProductName == "ECONOGAS")
+                            .Sum(si => si.Quantity); // Total Volume
+                        worksheet.Cells[row, 5].Value = ct
+                            .Where(si => si.Product.ProductName == "ECONOGAS")
+                            .Sum(si => si.Amount); // Total Amount
+                        worksheet.Cells[row, 6].Value = ct
+                            .Where(si => si.Product.ProductName == "ENVIROGAS")
+                            .Sum(si => si.Quantity); // Total Volume
+                        worksheet.Cells[row, 7].Value = ct
+                            .Where(si => si.Product.ProductName == "ENVIROGAS")
+                            .Sum(si => si.Amount); // Total Amount
+                        worksheet.Cells[row, 10].Value = ct
+                            .Sum(si => si.Quantity); // Total Volume
+                        worksheet.Cells[row, 11].Value = ct
+                            .Sum(si => si.Amount); // Total Amount
+
+                        var tillRowToResize = row;
+                        worksheet.Cells[rowToResize, 1, tillRowToResize, 11].Style.Font.Size = 10;
+
+                        using (var range = worksheet.Cells[row, 1, row, 11])
+                        {
+                            range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                            range.Style.Font.Bold = true;
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+                            range.Style.Numberformat.Format = "#,##0.00";
+                        }
+
+                        row += 2;
+                        isStation = false;
+                    }
+
+                    #endregion == Contents ==
+
+                    worksheet.Cells[row, 1].Value = "Grand Total";
+                    worksheet.Cells[row, 2].Value = salesReport
+                        .Where(si => si.Product?.ProductName == "BIODIESEL")
+                        .Sum(si => si.Quantity);
+                    worksheet.Cells[row, 3].Value = salesReport
+                        .Where(si => si.Product?.ProductName == "BIODIESEL")
+                        .Sum(si => si.Amount);
+                    worksheet.Cells[row, 4].Value = salesReport
+                        .Where(si => si.Product?.ProductName == "ECONOGAS")
+                        .Sum(si => si.Quantity);
+                    worksheet.Cells[row, 5].Value = salesReport
+                        .Where(si => si.Product?.ProductName == "ECONOGAS")
+                        .Sum(si => si.Amount);
+                    worksheet.Cells[row, 6].Value = salesReport
+                        .Where(si => si.Product?.ProductName == "ENVIROGAS")
+                        .Sum(si => si.Quantity);
+                    worksheet.Cells[row, 7].Value = salesReport
+                        .Where(si => si.Product?.ProductName == "ENVIROGAS")
+                        .Sum(si => si.Amount);
+                    worksheet.Cells[row, 10].Value = salesReport
+                        .Sum(si => si.Quantity);
+                    worksheet.Cells[row, 11].Value = salesReport
+                        .Sum(si => si.Amount);
+
+                    using (var range = worksheet.Cells[row, 1, row, 11])
+                    {
+                        range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+                        range.Style.Numberformat.Format = "#,##0.00";
+                    }
+
+                    row += 2;
+
+                    var summaryRowStart = row;
+
+                    worksheet.Cells[row, 2].Value = "BIODIESEL";
+                    worksheet.Cells[row, 3].Value = "ECONOGAS";
+                    worksheet.Cells[row, 4].Value = "ENVIROGAS";
+                    worksheet.Cells[row, 5].Value = "TOTAL";
+                    row++;
+
+                    foreach (var typeGroup in groupByCustomerType)
+                    {
+                        worksheet.Cells[row, 1].Value = typeGroup.First().Customer.CustomerType;
+                        worksheet.Cells[row, 2].Value = typeGroup
+                            .Where(tg => tg.Product?.ProductName == "BIODIESEL")
+                            .Sum(tg => tg.Quantity);
+                        worksheet.Cells[row, 3].Value = typeGroup
+                            .Where(tg => tg.Product?.ProductName == "ECONOGAS")
+                            .Sum(tg => tg.Quantity);
+                        worksheet.Cells[row, 4].Value = typeGroup
+                            .Where(tg => tg.Product?.ProductName == "ENVIROGAS")
+                            .Sum(tg => tg.Quantity);
+                        worksheet.Cells[row, 5].Value = typeGroup
+                            .Sum(tg => tg.Quantity);
+                        row++;
+                    }
+
+                    using (var range = worksheet.Cells[row, 1, row, 4])
+                    {
+                        range.Merge = true;
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        range.Value = "Total:";
+                        range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                    }
+
+                    worksheet.Cells[row, 5].Value = salesReport.Sum(si => si.Quantity);
+                    worksheet.Cells[row, 5].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, 5].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+
+                    var summaryReportEnd = row;
+
+                    using (var range = worksheet.Cells[summaryRowStart, 1, summaryReportEnd, 5])
+                    {
+                        range.Style.Font.Name = "Aptos Narrow";
+                        range.Style.Font.Size = 14;
+                        range.Style.Numberformat.Format = "#,##0.00";
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    }
+
+                    worksheet.Cells.AutoFitColumns();
+
+                }
+
+                #endregion == Month to Date Sales ==
+
+
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "OTC Fuel Sales Report.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(OtcFuelSalesReport));
+            }
+        }
+
+        #endregion
+
 
         #region -- Generate GM Report Excel File --
 

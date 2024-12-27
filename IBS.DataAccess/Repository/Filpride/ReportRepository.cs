@@ -284,7 +284,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             return purchaseOrder;
         }
-        
+
         public List<FilprideReceivingReport> GetPurchaseReport (DateOnly dateFrom, DateOnly dateTo, string company)
         {
             if (dateFrom > dateTo)
@@ -301,7 +301,27 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Hauler)
                 .OrderBy(rr => rr.Date) // Order by TransactionDate
                 .ToList();
-            
+
+            return receivingReports;
+        }
+
+        public List<FilprideSalesInvoice> GetOtcFuelSalesReport (DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var receivingReports = _db.FilprideSalesInvoices
+                .Where(si => si.Company == company && si.TransactionDate >= dateFrom && si.TransactionDate <= dateTo) // Filter by date and company
+                .Include(si => si.Customer)
+                .Include(si => si.CustomerOrderSlip)
+                .Include (si => si.DeliveryReceipt)
+                .Include(si => si.Product)
+                .OrderBy(si => si.Product.ProductName).ThenBy(si => si.Customer.CustomerName).ThenBy((si => si.TransactionDate))
+                .ThenBy(si => si.Customer.CustomerType) // Order by TransactionDate
+                .ToList();
+
             return receivingReports;
         }
     }
