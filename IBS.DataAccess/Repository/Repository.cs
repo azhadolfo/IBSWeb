@@ -135,7 +135,7 @@ namespace IBS.DataAccess.Repository
                 "PET001" => ("401010100", "Sales - Biodiesel"),
                 "PET002" => ("401010200", "Sales - Econogas"),
                 "PET003" => ("401010300", "Sales - Envirogas"),
-                _ => ("401100100", "Sales - Lubes"),
+                _ => throw new ArgumentException($"Invalid product code: {productCode}"),
             };
         }
 
@@ -146,7 +146,7 @@ namespace IBS.DataAccess.Repository
                 "PET001" => ("501010100", "COGS - Biodiesel"),
                 "PET002" => ("501010200", "COGS - Econogas"),
                 "PET003" => ("501010300", "COGS - Envirogas"),
-                _ => ("501100100", "COGS - Lubes"),
+                _ => throw new ArgumentException($"Invalid product code: {productCode}"),
             };
         }
 
@@ -157,7 +157,7 @@ namespace IBS.DataAccess.Repository
                 "PET001" => ("101040100", "Inventory - Biodiesel"),
                 "PET002" => ("101040200", "Inventory - Econogas"),
                 "PET003" => ("101040300", "Inventory - Envirogas"),
-                _ => ("101041000", "Inventory - Lubes"),
+                _ => throw new ArgumentException($"Invalid product code: {productCode}"),
             };
         }
 
@@ -165,20 +165,20 @@ namespace IBS.DataAccess.Repository
         {
             return productCode switch
             {
-                "PET001" => ("502010100", "COGS - Biodiesel"),
-                "PET002" => ("502010200", "COGS - Econogas"),
-                "PET003" => ("502010300", "COGS - Envirogas"),
+                "PET001" => ("502010100", "COGS - Freight - Biodiesel"),
+                "PET002" => ("502010200", "COGS - Freight - Econogas"),
+                "PET003" => ("502010300", "COGS - Freight - Envirogas"),
                 _ => throw new ArgumentException($"Invalid product code: {productCode}"),
             };
         }
-        
+
         public (string AccountNo, string AccountTitle) GetCommissionAccount(string productCode)
         {
             return productCode switch
             {
-                "PET001" => ("503010100", "COGS - Biodiesel"),
-                "PET002" => ("503010200", "COGS - Econogas"),
-                "PET003" => ("503010300", "COGS - Envirogas"),
+                "PET001" => ("503010100", "COGS  - Commission - Biodiesel"),
+                "PET002" => ("503010200", "COGS - Commission - Econogas"),
+                "PET003" => ("503010300", "COGS - Commission - Envirogas"),
                 _ => throw new ArgumentException($"Invalid product code: {productCode}"),
             };
         }

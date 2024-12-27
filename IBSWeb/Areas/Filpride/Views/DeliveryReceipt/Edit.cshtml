@@ -159,9 +159,18 @@
 
     <script>
         $(document).ready(function () {
-            //Get customer
-            $('select[name="CustomerId"]').on('change', function () {
-                var customerId = $(this).val();
+            // Initial load for editing
+            var initialCustomerId = $('select[name="CustomerId"]').val();
+            var initialCosId = $('select[name="CustomerOrderSlipId"]').val();
+            var currentVolume = parseNumber($('input[name="Volume"]').val()); // Get current volume for editing
+
+            // Load customer details if CustomerId exists
+            if (initialCustomerId) {
+                loadCustomerDetails(initialCustomerId);
+            }
+
+            // Function to load customer details
+            function loadCustomerDetails(customerId) {
                 if (customerId) {
                     $.ajax({
                         url: '@Url.Action("GetCustomerDetails", "DeliveryReceipt", new { area = "Filpride" })',
@@ -175,24 +184,23 @@
                                 $('input[name="CustomerAddress"]').val('');
                                 $('input[name="CustomerTin"]').val('');
                             }
-
-                            // Update COS list
-                            updateCustomerOrderSlips(customerId);
+                            // Update COS list and then load COS details
+                            updateCustomerOrderSlips(customerId, function() {
+                                if (initialCosId) {
+                                    $('select[name="CustomerOrderSlipId"]').val(initialCosId);
+                                    loadCosDetails(initialCosId, true); // Pass true for initial load
+                                }
+                            });
                         },
                         error: function (xhr, status, error) {
                             console.log("Error: " + error);
                         }
                     });
-                } else {
-                    $('input[name="CustomerAddress"]').val('');
-                    $('input[name="CustomerTin"]').val('');
                 }
-            });
+            }
 
-            //Get cos
-            $('select[name="CustomerOrderSlipId"]').on('change', function () {
-                console.log($('select[name="CustomerOrderSlipId"]').val());
-                var cosId = $(this).val();
+            // Function to load COS details
+            function loadCosDetails(cosId, isInitialLoad = false) {
                 if (cosId) {
                     $.ajax({
                         url: '@Url.Action("GetCosDetails", "DeliveryReceipt", new { area = "Filpride" })',
@@ -200,39 +208,32 @@
                         data: { id: cosId },
                         success: function (data) {
                             if (data) {
-
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
-                                    //Remove the else condition in the future
                                     $('#haulerList').show();
                                     if (parseInt(cosId) > 748) {
                                         $('input[name="Freight"]').parent().show();
-                                        $('input[name="Freight"]').prop('readonly', true).val(data.freight);
+                                        $('input[name="Freight"]').prop('readonly', true).val(formatNumber(data.freight));
                                         $('select[name="HaulerId"]').prop('disabled', true);
                                         $('select[name="HaulerId"]').val(data.haulerId).change();
-                                    }
-                                    else{
+                                    } else {
                                         $('select[name="HaulerId"]').prop('disabled', false);
                                         $('select[name="HaulerId"]').val("").change();
                                         $('input[name="Freight"]').parent().show();
                                         $('input[name="Freight"]').prop('readonly', false).val("");
                                     }
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
-
                                     $('#haulerList').show();
                                     $('input[name="Freight"]').parent().hide();
-                                    $('input[name="Freight"]').val(data.freight);
+                                    $('input[name="Freight"]').val(formatNumber(data.freight));
 
-                                    //Remove the else condition in the future
                                     if (parseInt(cosId) > 748) {
                                         $('select[name="HaulerId"]').prop('disabled', true);
                                         $('select[name="HaulerId"]').val(data.haulerId).change();
-                                    }
-                                    else{
+                                    } else {
                                         $('select[name="HaulerId"]').prop('disabled', false);
                                         $('select[name="HaulerId"]').val("").change();
                                     }
                                 } else {
-                                    // hide the hauler list
                                     $('input[name="Freight"]').parent().hide();
                                     $('#haulerList').hide();
                                 }
@@ -240,48 +241,54 @@
                                 $('input[name="ATLNo"]').val(data.atlNo);
                                 $('input[name="Driver"]').val(data.driver);
                                 $('input[name="PlateNo"]').val(data.plateNo);
-
                                 $('input[name="Product"]').val(data.product);
                                 $('input[name="CosVolume"]').val(formatNumber(data.quantity));
-                                $('input[name="RemainingVolume"]').val(formatNumber(data.remainingVolume));
-                                $('input[name="Volume"]').val(data.remainingVolume);
+                                
+                                // Handle remaining volume calculation
+                                var remainingVolume = data.remainingVolume;
+                                if (isInitialLoad && currentVolume) {
+                                    // Add current volume back to remaining volume for editing
+                                    remainingVolume = parseNumber(data.remainingVolume) + parseNumber(currentVolume);
+                                }
+                                
+                                $('input[name="RemainingVolume"]').val(formatNumber(remainingVolume));
+                                
+                                // Set volume field
+                                if (isInitialLoad && currentVolume) {
+                                    $('input[name="Volume"]').val(formatNumber(currentVolume));
+                                } else {
+                                    $('input[name="Volume"]').val(formatNumber(data.remainingVolume));
+                                }
+                                
                                 $('input[name="DeliveryOption"]').val(data.deliveryOption);
                                 $('input[name="Price"]').val(formatNumber(data.price));
-                                $('input[name="TotalAmount"]').val(formatNumber(data.quantity * data.price))
-                            } else {
-                                $('input[name="Product"]').val('');
-                                $('input[name="CosVolume"]').val('');
-                                $('input[name="RemainingVolume"]').val('');
-                                $('input[name="DeliveryOption"]').val('');
-                                $('input[name="Price"]').val('');
+                                
+                                // Calculate total amount
+                                calculateTotalAmount();
                             }
                         },
                         error: function (xhr, status, error) {
                             console.log("Error: " + error);
                         }
                     });
-                } else {
-                    $('input[name="Product"]').val('');
-                    $('input[name="CosVolume"]').val('');
-                    $('input[name="RemainingVolume"]').val('');
-                    $('input[name="DeliveryOption"]').val('');
-                    $('input[name="Price"]').val('');
                 }
+            }
+
+            // Event handler for customer change
+            $('select[name="CustomerId"]').on('change', function () {
+                var customerId = $(this).val();
+                currentVolume = 0; // Reset current volume on customer change
+                loadCustomerDetails(customerId);
             });
 
-            // Calculate Total Amount
-            $('input[name="Volume"]').on('input', function () {
-                calculateTotalAmount();
-            });
-
-            //Validate volume
-            $("#Volume").change(function () {
-                validateVolume();
-                calculateTotalAmount();
+            // Event handler for COS change
+            $('select[name="CustomerOrderSlipId"]').on('change', function () {
+                var cosId = $(this).val();
+                loadCosDetails(cosId, false); // Pass false for non-initial load
             });
 
             // Update COS list based on customer
-            function updateCustomerOrderSlips(customerId) {
+            function updateCustomerOrderSlips(customerId, callback) {
                 if (customerId) {
                     $.ajax({
                         url: '@Url.Action("GetCustomerOrderSlipList", "DeliveryReceipt", new { area = "Filpride" })',
@@ -298,6 +305,9 @@
                             } else {
                                 $cosSelect.append('<option value="">No cos available</option>');
                             }
+                            if (typeof callback === 'function') {
+                                callback();
+                            }
                         },
                         error: function (xhr, status, error) {
                             console.log("Error: " + error);
@@ -305,6 +315,17 @@
                     });
                 }
             }
+
+            // Calculate Total Amount
+            $('input[name="Volume"]').on('input', function () {
+                calculateTotalAmount();
+            });
+
+            // Validate volume
+            $("#Volume").change(function () {
+                validateVolume();
+                calculateTotalAmount();
+            });
 
             function calculateTotalAmount() {
                 var volume = parseNumber($('input[name="Volume"]').val());
@@ -316,6 +337,10 @@
             function validateVolume() {
                 var remainingVolume = parseNumber($("#RemainingVolume").val());
                 var volume = parseNumber($("#Volume").val());
+                // Add current volume for validation when editing
+                if (initialCosId === $('select[name="CustomerOrderSlipId"]').val()) {
+                    remainingVolume += currentVolume;
+                }
                 if (volume > remainingVolume) {
                     alert("Volume cannot exceed the remaining volume.");
                     $("#Volume").val(remainingVolume);
