@@ -3145,24 +3145,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Initialize "total" Variables for operations --
 
-                var totalVolume = purchaseReport.Sum(pr => pr.QuantityReceived);
-                decimal? totalCostPerLiter = 0m;
-                decimal? totalCostAmount = 0m;
-                decimal? totalVatAmount = 0m;
-                decimal? totalWHTAmount = 0m;
-                decimal? totalNetPurchases = 0m;
-                var totalCOSPrice = purchaseReport.Sum(pr => pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice);
-                decimal? totalCOSAmount = 0m;
-                decimal? totalGMPerLiter = 0m;
-                decimal? totalGMAmount = 0m;
-                var totalFreightCharge = purchaseReport.Sum(pr => pr.DeliveryReceipt?.Freight);
-                decimal? totalFCAmount = 0m;
-                var totalCommissionPerLiter =  purchaseReport.Sum(pr => pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate);
-                decimal? totalCommisionAmount = 0m;
-                decimal? totalNetMarginPerLiter = 0m;
-                decimal? totalNetMarginAmount = 0m;
-                decimal? totalNetFreight = 0m;
-                decimal? totalCommission = 0m;
+                decimal totalVolume = purchaseReport.Sum(pr => pr.QuantityReceived);
+                decimal totalCostPerLiter = 0m;
+                decimal totalCostAmount = 0m;
+                decimal totalVatAmount = 0m;
+                decimal totalWHTAmount = 0m;
+                decimal totalNetPurchases = 0m;
+                decimal totalCOSPrice = purchaseReport.Sum(pr => (pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m));
+                decimal totalCOSAmount = 0m;
+                decimal totalGMPerLiter = 0m;
+                decimal totalGMAmount = 0m;
+                decimal totalFreightCharge = purchaseReport.Sum(pr => (pr.DeliveryReceipt?.Freight ?? 0m));
+                decimal totalFCAmount = 0m;
+                decimal totalCommissionPerLiter =  purchaseReport.Sum(pr => (pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m));
+                decimal totalCommissionAmount = 0m;
+                decimal totalNetMarginPerLiter = 0m;
+                decimal totalNetMarginAmount = 0m;
+                decimal totalNetFreight = 0m;
+                decimal totalCommission = 0m;
 
                 #endregion
 
@@ -3213,6 +3213,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["V7"].Value = "PURCHASES N.VAT";
                     purchaseReportWorksheet.Cells["W7"].Value = "FREIGHT N.VAT";
                     purchaseReportWorksheet.Cells["X7"].Value = "COMMISSION";
+                    purchaseReportWorksheet.Cells["Y7"].Value = "MANUAL DR NO.";
+                    purchaseReportWorksheet.Cells["Z7"].Value = "OLD PO NO.";
 
                     #endregion
 
@@ -3283,6 +3285,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, 22].Value = netPurchases; // Purchase total net ======== move to third last
                         purchaseReportWorksheet.Cells[row, 23].Value = netFreight; // freight n vat ============
                         purchaseReportWorksheet.Cells[row, 24].Value = commission; // commission =========
+                        purchaseReportWorksheet.Cells[row, 25].Value = pr.DeliveryReceipt?.ManualDrNo; // commission =========
+                        purchaseReportWorksheet.Cells[row, 26].Value = pr.PurchaseOrder?.OldPoNo; // commission =========
 
                         #endregion -- Assign Values to Cells --
 
@@ -3316,7 +3320,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     totalCOSPrice = totalCOSAmount / totalVolume;
                     totalGMPerLiter = totalGMAmount / totalVolume;
                     totalFreightCharge = totalFCAmount / totalVolume;
-                    totalCommissionPerLiter = totalCommisionAmount / totalVolume;
+                    totalCommissionPerLiter = totalCommissionAmount / totalVolume;
                     totalNetMarginPerLiter = totalNetMarginAmount / totalVolume;
 
                     purchaseReportWorksheet.Cells[row, 14].Value = "Total: ";
@@ -3941,7 +3945,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var groupByCustomerType = salesReport
                         .OrderBy(sr => sr.Customer?.CustomerType)
                         .GroupBy(sr => sr.Customer?.CustomerType)
-                        .OrderBy(g => g.Key != "Retail") // Replace "PreferredType" with the group you want first
+                        .OrderBy(g => g.Key != "Retail")
                         .ThenBy(g => g.Key);
 
                     #region == Contents ==
@@ -3973,6 +3977,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             range.Style.Font.Bold = true;
                             range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                             range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+                            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                         }
 
                         var rowToResize = row;
@@ -4094,15 +4099,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var summaryRowStart = row;
 
+                    // summary column names
                     worksheet.Cells[row, 2].Value = "BIODIESEL";
                     worksheet.Cells[row, 3].Value = "ECONOGAS";
                     worksheet.Cells[row, 4].Value = "ENVIROGAS";
                     worksheet.Cells[row, 5].Value = "TOTAL";
+
+                    // summary columns names styling
+                    using (var range = worksheet.Cells[row, 2, row, 5])
+                    {
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        range.Style.Font.Bold = true;
+                        range.Style.Font.Italic = true;
+                    }
+
                     row++;
 
+                    // summary values
                     foreach (var typeGroup in groupByCustomerType)
                     {
-                        worksheet.Cells[row, 1].Value = typeGroup.First().Customer.CustomerType;
+                        worksheet.Cells[row, 1].Value = typeGroup.First().Customer?.CustomerType;
+                        worksheet.Cells[row, 1].Style.Font.Italic = true;
+                        worksheet.Cells[row, 1].Style.Font.Bold = true;
                         worksheet.Cells[row, 2].Value = typeGroup
                             .Where(tg => tg.Product?.ProductName == "BIODIESEL")
                             .Sum(tg => tg.Quantity);
@@ -4117,21 +4137,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         row++;
                     }
 
+                    // merge cells of "total" label
                     using (var range = worksheet.Cells[row, 1, row, 4])
                     {
                         range.Merge = true;
-                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                         range.Value = "Total:";
                         range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                     }
 
+                    // styling total value
                     worksheet.Cells[row, 5].Value = salesReport.Sum(si => si.Quantity);
+                    worksheet.Cells[row, 5].Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                     worksheet.Cells[row, 5].Style.Fill.PatternType = ExcelFillStyle.Solid;
                     worksheet.Cells[row, 5].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
+                    worksheet.Cells[row, 5].Style.Font.Bold = true;
 
-                    var summaryReportEnd = row;
+                    var summaryRowEnd = row;
 
-                    using (var range = worksheet.Cells[summaryRowStart, 1, summaryReportEnd, 5])
+                    // range for the summary
+                    using (var range = worksheet.Cells[summaryRowStart, 1, summaryRowEnd, 5])
                     {
                         range.Style.Font.Name = "Aptos Narrow";
                         range.Style.Font.Size = 14;
@@ -4140,14 +4165,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                         range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                         range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.BorderAround(ExcelBorderStyle.Medium);
                     }
 
                     worksheet.Cells.AutoFitColumns();
 
+                    for (int col = 2; col <= 5; col++)
+                    {
+                        worksheet.Column(col).Width = 20;
+                    }
+
                 }
 
                 #endregion == Month to Date Sales ==
-
 
                 var excelBytes = package.GetAsByteArray();
 
@@ -4163,7 +4193,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion
 
-
         #region -- Generate GM Report Excel File --
 
         public async Task<IActionResult> GenerateGmReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
@@ -4173,8 +4202,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var startingSummaryTableRow = 0;
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
+
                 var extractedBy = _userManager.GetUserName(this.User);
                 var companyClaims = await GetCompanyClaimAsync();
+
                 using var package = new ExcelPackage();
                 var gmReportWorksheet = package.Workbook.Worksheets.Add("GMReport");
 
@@ -4189,23 +4220,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Initialize "total" Variables for operations --
 
                 var totalVolume = purchaseReport.Sum(pr => pr.QuantityReceived);
-                decimal? totalCostPerLiter = 0m;
-                decimal? totalCostAmount = 0m;
-                decimal? totalVatAmount = 0m;
-                decimal? totalWHTAmount = 0m;
-                decimal? totalNetPurchases = 0m;
+                decimal totalCostPerLiter = 0m;
+                decimal totalCostAmount = 0m;
+                decimal totalVatAmount = 0m;
+                decimal totalWHTAmount = 0m;
+                decimal totalNetPurchases = 0m;
                 var totalCOSPrice = purchaseReport.Sum(pr => pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice);
-                decimal? totalCOSAmount = 0m;
-                decimal? totalCosNet = 0m;
-                decimal? totalGMPerLiter = 0m;
-                decimal? totalGmAmount = 0m;
+                decimal totalCOSAmount = 0m;
+                decimal totalCosNet = 0m;
+                decimal totalGMPerLiter = 0m;
+                decimal totalGmAmount = 0m;
                 var totalFreightCharge = purchaseReport.Sum(pr => pr.DeliveryReceipt?.Freight);
-                decimal? totalFCAmount = 0m;
-                decimal? totalFCNet = 0m;
+                decimal totalFCAmount = 0m;
+                decimal totalFCNet = 0m;
                 var totalCommissionPerLiter =  purchaseReport.Sum(pr => pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate);
-                decimal? totalCommissionAmount = 0m;
-                decimal? totalNetMarginPerLiter = 0m;
-                decimal? totalNetMarginAmount = 0m;
+                decimal totalCommissionAmount = 0m;
+                decimal totalNetMarginPerLiter = 0m;
+                decimal totalNetMarginAmount = 0m;
 
                 #endregion
 
@@ -4240,9 +4271,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 gmReportWorksheet.Cells["N7"].Value = "SPECIALIST";
                 gmReportWorksheet.Cells["O7"].Value = "COS PRICE";
                 gmReportWorksheet.Cells["P7"].Value = "COS AMOUNT";
-                gmReportWorksheet.Cells["Q7"].Value = "SALES N.VAT"; // RECALCULATE
-                gmReportWorksheet.Cells["R7"].Value = "GM/LITER"; // RECALCULATE
-                gmReportWorksheet.Cells["S7"].Value = "GM AMOUNT"; // RECALCULATE
+                gmReportWorksheet.Cells["Q7"].Value = "SALES N.VAT";
+                gmReportWorksheet.Cells["R7"].Value = "GM/LITER";
+                gmReportWorksheet.Cells["S7"].Value = "GM AMOUNT";
                 gmReportWorksheet.Cells["T7"].Value = "HAULER'S NAME";
                 gmReportWorksheet.Cells["U7"].Value = "FREIGHT CHARGE";
                 gmReportWorksheet.Cells["V7"].Value = "FC AMOUNT";
@@ -4250,7 +4281,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 gmReportWorksheet.Cells["X7"].Value = "COMMISSION/LITER";
                 gmReportWorksheet.Cells["Y7"].Value = "COMMISSION AMOUNT";
                 gmReportWorksheet.Cells["Z7"].Value = "NET MARGIN/LIT";
-                gmReportWorksheet.Cells["AA7"].Value = "NET MARGIN AMOUNT"; // RECALCULATE
+                gmReportWorksheet.Cells["AA7"].Value = "NET MARGIN AMOUNT";
 
                 #endregion
 
@@ -4447,7 +4478,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 gmReportWorksheet.Cells[row, 2].Value = "SUMMARY: ";
                 gmReportWorksheet.Cells[row, 2].Style.Font.Bold = true;
                 gmReportWorksheet.Cells[row, 2].Style.Font.Size = 16;
-                gmReportWorksheet.Cells[row, 2].Style.Font.UnderLine = true;
 
                 row++;
 
