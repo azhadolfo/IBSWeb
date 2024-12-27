@@ -138,10 +138,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("end_date");
 
-                    b.Property<decimal>("InvoiceAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("invoice_amount");
-
                     b.Property<bool>("IsComplete")
                         .HasColumnType("boolean")
                         .HasColumnName("is_complete");
@@ -212,7 +208,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("supplier_id");
 
                     b.Property<decimal>("Total")
-                        .HasColumnType("numeric(18,4)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("total");
 
                     b.Property<string>("Type")
@@ -2036,14 +2032,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("account_no");
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
-
-                    b.Property<decimal>("AmountPaid")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount_paid");
-
                     b.Property<int>("CheckVoucherHeaderId")
                         .HasColumnType("integer")
                         .HasColumnName("check_voucher_header_id");
@@ -2056,10 +2044,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("debit");
 
-                    b.Property<int?>("SupplierId")
-                        .HasColumnType("integer")
-                        .HasColumnName("supplier_id");
-
                     b.Property<string>("TransactionNo")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2070,9 +2054,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("CheckVoucherHeaderId")
                         .HasDatabaseName("ix_filpride_check_voucher_details_check_voucher_header_id");
-
-                    b.HasIndex("SupplierId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_supplier_id");
 
                     b.ToTable("filpride_check_voucher_details", (string)null);
                 });
@@ -3313,8 +3294,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(10)")
                         .HasColumnName("vat_type");
 
-                    b.Property<decimal?>("WithholdingTaxPercent")
-                        .HasColumnType("numeric")
+                    b.Property<int?>("WithholdingTaxPercent")
+                        .HasColumnType("integer")
                         .HasColumnName("withholding_tax_percent");
 
                     b.Property<string>("WithholdingTaxtitle")
@@ -6950,14 +6931,7 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_check_voucher_details_filpride_check_voucher_heade");
 
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_suppliers_supplier_");
-
                     b.Navigation("CheckVoucherHeader");
-
-                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.FilprideDebitMemo", b =>
