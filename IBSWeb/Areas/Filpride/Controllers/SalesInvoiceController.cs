@@ -775,7 +775,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
             var selectedList = await _unitOfWork.FilprideSalesInvoice
-                .GetAllAsync(invoice => recordIds.Contains(invoice.SalesInvoiceId) && invoice.Type == nameof(DocumentType.Documented));
+                .GetAllAsync(invoice => recordIds.Contains(invoice.SalesInvoiceId));
 
             // Create the Excel package
             using var package = new ExcelPackage();
@@ -851,6 +851,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllSalesInvoiceIds()
         {
             var invoiceIds = _dbContext.FilprideSalesInvoices
+                                     .Where(invoice => invoice.Type == nameof(DocumentType.Documented))
                                      .Select(invoice => invoice.SalesInvoiceId) // Assuming Id is the primary key
                                      .ToList();
 

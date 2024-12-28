@@ -1899,7 +1899,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideCollectionReceipts
-                .Where(cr => recordIds.Contains(cr.CollectionReceiptId) && cr.Type == nameof(DocumentType.Documented))
+                .Where(cr => recordIds.Contains(cr.CollectionReceiptId))
                 .Include(cr => cr.SalesInvoice)
                 .Include(cr => cr.ServiceInvoice)
                 .OrderBy(cr => cr.CollectionReceiptNo)
@@ -2239,6 +2239,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllCollectionReceiptIds()
         {
             var crIds = _dbContext.FilprideCollectionReceipts
+                                     .Where(cr => cr.Type == nameof(DocumentType.Documented))
                                      .Select(cr => cr.CollectionReceiptId) // Assuming Id is the primary key
                                      .ToList();
 

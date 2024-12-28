@@ -1070,7 +1070,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideCreditMemos
-                .Where(cm => recordIds.Contains(cm.CreditMemoId) && cm.Type == nameof(DocumentType.Documented))
+                .Where(cm => recordIds.Contains(cm.CreditMemoId))
                 .Include(cm => cm.SalesInvoice)
                 .Include(cm => cm.ServiceInvoice)
                 .ThenInclude(sv => sv.Service)
@@ -1303,6 +1303,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllCreditMemoIds()
         {
             var cmIds = _dbContext.FilprideCreditMemos
+                                     .Where(cm => cm.Type == nameof(DocumentType.Documented))
                                      .Select(cm => cm.CreditMemoId) // Assuming Id is the primary key
                                      .ToList();
 

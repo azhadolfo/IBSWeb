@@ -576,7 +576,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected records from the database
             var selectedList = await _dbContext.FilprideReceivingReports
-                .Where(rr => recordIds.Contains(rr.ReceivingReportId) && rr.Type == nameof(DocumentType.Documented))
+                .Where(rr => recordIds.Contains(rr.ReceivingReportId))
                 .Include(rr => rr.PurchaseOrder)
                 .OrderBy(rr => rr.ReceivingReportNo)
                 .ToListAsync();
@@ -737,6 +737,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllReceivingReportIds()
         {
             var rrIds = _dbContext.FilprideReceivingReports
+                                     .Where(rr => rr.Type == nameof(DocumentType.Documented))
                                      .Select(rr => rr.ReceivingReportId) // Assuming Id is the primary key
                                      .ToList();
 
