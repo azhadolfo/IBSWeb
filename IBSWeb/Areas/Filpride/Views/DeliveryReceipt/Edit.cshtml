@@ -94,7 +94,13 @@
                     </div>
                 </fieldset>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Volume" class="form-control border-0 shadow" placeholder="" required min="0.01" />
+                    <input asp-for="Volume" 
+                           class="form-control border-0 shadow" 
+                           placeholder="" 
+                           required
+                           min="0.01"
+                           value="@Model.Volume.ToString("0.0000")"
+                           />
                     <label asp-for="Volume">Volume<span class="required">*</span></label>
                     <span asp-validation-for="Volume" class="text-danger"></span>
                 </div>
@@ -163,7 +169,13 @@
             // Initial load for editing
             var initialCustomerId = $('select[name="CustomerId"]').val();
             var initialCosId = $('select[name="CustomerOrderSlipId"]').val();
-            var currentVolume = parseNumber($('input[name="Volume"]').val()); // Get current volume for editing
+            var currentVolume = parseNumber($('input[name="Volume"]').val());
+            
+            console.log(currentVolume);
+
+            // Store initial hauler and freight values
+            var initialHaulerId = $('select[name="HaulerId"]').val();
+            var initialFreight = $('input[name="Freight"]').val();
 
             // Load customer details if CustomerId exists
             if (initialCustomerId) {
@@ -189,7 +201,7 @@
                             updateCustomerOrderSlips(customerId, function() {
                                 if (initialCosId) {
                                     $('select[name="CustomerOrderSlipId"]').val(initialCosId);
-                                    loadCosDetails(initialCosId, true); // Pass true for initial load
+                                    loadCosDetails(initialCosId, true);
                                 }
                             });
                         },
@@ -213,26 +225,48 @@
                                     $('#haulerList').show();
                                     if (parseInt(cosId) > 748) {
                                         $('input[name="Freight"]').parent().show();
-                                        $('input[name="Freight"]').prop('readonly', true).val(formatNumber(data.freight));
+                                        $('input[name="Freight"]').prop('readonly', true);
                                         $('select[name="HaulerId"]').prop('disabled', true);
-                                        $('select[name="HaulerId"]').val(data.haulerId).change();
+
+                                        // Set values based on whether it's initial load or not
+                                        if (isInitialLoad && initialHaulerId) {
+                                            $('select[name="HaulerId"]').val(initialHaulerId).change();
+                                            $('input[name="Freight"]').val(initialFreight);
+                                        } else {
+                                            $('select[name="HaulerId"]').val(data.haulerId).change();
+                                            $('input[name="Freight"]').val(data.freight);
+                                        }
                                     } else {
-                                        $('select[name="HaulerId"]').prop('disabled', false);
-                                        $('select[name="HaulerId"]').val("").change();
-                                        $('input[name="Freight"]').parent().show();
-                                        $('input[name="Freight"]').prop('readonly', false).val("");
+                                        if (isInitialLoad && initialHaulerId) {
+                                            $('select[name="HaulerId"]').prop('disabled', false);
+                                            $('select[name="HaulerId"]').val(initialHaulerId).change();
+                                            $('input[name="Freight"]').parent().show();
+                                            $('input[name="Freight"]').prop('readonly', false);
+                                            $('input[name="Freight"]').val(initialFreight);
+                                        } else {
+                                            $('select[name="HaulerId"]').prop('disabled', false);
+                                            $('select[name="HaulerId"]').val("").change();
+                                            $('input[name="Freight"]').parent().show();
+                                            $('input[name="Freight"]').prop('readonly', false);
+                                            $('input[name="Freight"]').val("");
+                                        }
                                     }
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
                                     $('#haulerList').show();
                                     $('input[name="Freight"]').parent().hide();
-                                    $('input[name="Freight"]').val(formatNumber(data.freight));
 
-                                    if (parseInt(cosId) > 748) {
-                                        $('select[name="HaulerId"]').prop('disabled', true);
-                                        $('select[name="HaulerId"]').val(data.haulerId).change();
+                                    if (isInitialLoad && initialHaulerId) {
+                                        $('input[name="Freight"]').val(initialFreight);
+                                        $('select[name="HaulerId"]').val(initialHaulerId).change();
                                     } else {
-                                        $('select[name="HaulerId"]').prop('disabled', false);
-                                        $('select[name="HaulerId"]').val("").change();
+                                        $('input[name="Freight"]').val(data.freight);
+                                        if (parseInt(cosId) > 748) {
+                                            $('select[name="HaulerId"]').prop('disabled', true);
+                                            $('select[name="HaulerId"]').val(data.haulerId).change();
+                                        } else {
+                                            $('select[name="HaulerId"]').prop('disabled', false);
+                                            $('select[name="HaulerId"]').val("").change();
+                                        }
                                     }
                                 } else {
                                     $('input[name="Freight"]').parent().hide();
@@ -244,27 +278,23 @@
                                 $('input[name="PlateNo"]').val(data.plateNo);
                                 $('input[name="Product"]').val(data.product);
                                 $('input[name="CosVolume"]').val(formatNumber(data.quantity));
-                                
+
                                 // Handle remaining volume calculation
                                 var remainingVolume = data.remainingVolume;
                                 if (isInitialLoad && currentVolume) {
-                                    // Add current volume back to remaining volume for editing
                                     remainingVolume = parseNumber(data.remainingVolume) + parseNumber(currentVolume);
                                 }
-                                
+
                                 $('input[name="RemainingVolume"]').val(formatNumber(remainingVolume));
-                                
-                                // Set volume field
+
                                 if (isInitialLoad && currentVolume) {
-                                    $('input[name="Volume"]').val(formatNumber(currentVolume));
+                                    $('input[name="Volume"]').val(currentVolume);
                                 } else {
-                                    $('input[name="Volume"]').val(formatNumber(data.remainingVolume));
+                                    $('input[name="Volume"]').val(data.remainingVolume);
                                 }
-                                
+
                                 $('input[name="DeliveryOption"]').val(data.deliveryOption);
                                 $('input[name="Price"]').val(formatNumber(data.price));
-                                
-                                // Calculate total amount
                                 calculateTotalAmount();
                             }
                         },
@@ -278,14 +308,19 @@
             // Event handler for customer change
             $('select[name="CustomerId"]').on('change', function () {
                 var customerId = $(this).val();
-                currentVolume = 0; // Reset current volume on customer change
+                if (customerId !== initialCustomerId) {
+                    currentVolume = 0;
+                    initialHaulerId = null;
+                    initialFreight = null;
+                }
                 loadCustomerDetails(customerId);
             });
 
             // Event handler for COS change
             $('select[name="CustomerOrderSlipId"]').on('change', function () {
                 var cosId = $(this).val();
-                loadCosDetails(cosId, false); // Pass false for non-initial load
+                var isInitialLoad = (cosId === initialCosId);
+                loadCosDetails(cosId, isInitialLoad);
             });
 
             // Update COS list based on customer

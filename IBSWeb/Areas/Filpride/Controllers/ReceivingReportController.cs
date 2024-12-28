@@ -680,7 +680,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 int poRow = 2;
                 var currentPO = "";
 
-                foreach (var item in selectedList)
+                foreach (var item in selectedList.DistinctBy(rr => rr.PurchaseOrder.PurchaseOrderNo))
                 {
                     if (item.PurchaseOrder == null)
                     {

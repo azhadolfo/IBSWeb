@@ -46,7 +46,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         #endregion
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal Volume { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
@@ -67,7 +67,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string? ATLNo { get; set; }
 
         public int? HaulerId { get; set; }
-        
+
         public List<SelectListItem>? Haulers { get; set; }
 
         public string Driver { get; set; }
