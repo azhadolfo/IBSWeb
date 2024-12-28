@@ -1,3 +1,5 @@
+@using IBS.Utility.Helpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model ViewModelBook
 
 @{
@@ -8,7 +10,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">GM REPORT</h2>
+                <h2 class="text-white py-2">GROSS MARGIN REPORT</h2>
             </div>
         </div>
     </div>
@@ -17,12 +19,12 @@
             <div class="row">
                 <div class="mb-3">
                     <label asp-for="DateFrom" class="control-label"></label>
-                    <input type="date" asp-for="DateFrom" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <input type="date" asp-for="DateFrom" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="DateFrom" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
                     <label asp-for="DateTo" class="control-label"></label>
-                    <input type="date" asp-for="DateTo" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <input type="date" asp-for="DateTo" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="DateTo" class="text-danger"></span>
                 </div>
                 <div class="row pt-2">

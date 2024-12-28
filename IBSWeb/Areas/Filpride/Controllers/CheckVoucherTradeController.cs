@@ -1493,5 +1493,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- export xlsx record --
+
+        [HttpGet]
+        public IActionResult GetAllCheckVoucherIds()
+        {
+            var cvIds = _dbContext.FilprideCheckVoucherHeaders
+                .Select(cvh => cvh.CheckVoucherHeaderId) // Assuming Id is the primary key
+                .ToList();
+
+            return Json(cvIds);
+        }
     }
 }

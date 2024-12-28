@@ -19,7 +19,7 @@
             </div>
             <div class="col-6 text-end">
                 <p>
-                    <button type="button" class="btn btn-primary" onclick="exportToCsv()">Export Selected to CSV</button>
+                    <button type="button" class="btn btn-primary" onclick="exportToExcel()">Export Selected to CSV</button>
                 </p>
             </div>
         </div>
@@ -135,13 +135,13 @@
             }
         });
 
-        function exportToCsv() {
+        function exportToExcel() {
             let selectedIds = '';
 
             if (allRecordsSelected) {
                 // Optionally make an AJAX call to get all IDs if "Select All" was selected
                 // Example of a call:
-                fetch('@Url.Action("GetAllCheckVoucherIds", "CheckVoucher", new { area = "Filpride" })')
+                fetch('@Url.Action("GetAllCheckVoucherIds", "CheckVoucherTrade", new { area = "Filpride" })')
                     .then(response => response.json())
                     .then(data => {
                         selectedIds = data.join(',');
@@ -162,7 +162,7 @@
         function submitForm(selectedIds) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '@Url.Action("Export", "CheckVoucher", new { area = "Filpride" })';
+            form.action = '@Url.Action("Export", "CheckVoucherTrade", new { area = "Filpride" })';
 
             const input = document.createElement('input');
             input.type = 'hidden';

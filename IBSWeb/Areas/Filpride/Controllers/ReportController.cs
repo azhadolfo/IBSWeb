@@ -557,7 +557,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var stream = new MemoryStream();
                     package.SaveAs(stream);
                     stream.Position = 0;
-                    var fileName = $"COS_Unserved_Volume_{DateTime.UtcNow:yyyyMMdd}.xlsx";
+                    var fileName = $"COS_Unserved_Volume_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx";
                     return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
                 }
                 catch (Exception ex)
@@ -796,7 +796,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var stream = new MemoryStream();
                 package.SaveAs(stream);
                 stream.Position = 0;
-                var fileName = "DispatchReport.xlsx";
+                var fileName = $"DispatchReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx";
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
         }
@@ -1751,11 +1751,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion -- Generate Sales Book .Txt File --
 
-        //Generate as .csv file
+        //Generate as Excel file
 
-        #region -- Generate DisbursmentBook .Csv File --
+        #region -- Generate DisbursmentBook Excel File --
 
-        public async Task<IActionResult> GenerateDisbursementBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateDisbursementBookExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
@@ -1866,14 +1866,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = package.GetAsByteArray();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DisbursementBook.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"DisbursementBook_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
-        #endregion -- Generate DisbursmentBook .Csv File --
+        #endregion -- Generate DisbursmentBook Excel File --
 
-        #region -- Generate CashReceiptBook .Csv File --
+        #region -- Generate CashReceiptBook Excel File --
 
-        public async Task<IActionResult> GenerateCashReceiptBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateCashReceiptBookExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
@@ -1982,14 +1982,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = package.GetAsByteArray();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CashReceiptBook.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CashReceiptBook_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
-        #endregion -- Generate CashReceiptBook .Csv File --
+        #endregion -- Generate CashReceiptBook Excel File --
 
-        #region -- Generate GeneralLedgerBook .Csv File --
+        #region -- Generate GeneralLedgerBook Excel File --
 
-        public async Task<IActionResult> GenerateGeneralLedgerBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateGeneralLedgerBookExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
@@ -2092,14 +2092,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = package.GetAsByteArray();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "GeneralLedgerBook.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"GeneralLedgerBook_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
-        #endregion -- Generate GeneralLedgerBook .Csv File --
+        #endregion -- Generate GeneralLedgerBook Excel File --
 
-        #region -- Generate InventoryBook .Csv File --
+        #region -- Generate InventoryBook Excel File --
 
-        public async Task<IActionResult> GenerateInventoryBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateInventoryBookExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
             var dateTo = model.DateTo;
             var dateFrom = dateTo.AddDays(-dateTo.Day + 1);
@@ -2217,14 +2217,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = package.GetAsByteArray();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "InventoryBook.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"InventoryBook_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
-        #endregion -- Generate InventoryBook .Csv File --
+        #endregion -- Generate InventoryBook Excel File --
 
-        #region -- Generate JournalBook .Csv File --
+        #region -- Generate JournalBook Excel File --
 
-        public async Task<IActionResult> GenerateJournalBookCsvFile(ViewModelBook model, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateJournalBookExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
@@ -2327,14 +2327,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = package.GetAsByteArray();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "JournalBook.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"JournalBook_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
-        #endregion -- Generate JournalBook .Csv File --
+        #endregion -- Generate JournalBook Excel File --
 
-        #region -- Generate PurchaseBook .Csv File --
+        #region -- Generate PurchaseBook Excel File --
 
-        public async Task<IActionResult> GeneratePurchaseBookCsvFile(ViewModelBook model, string? selectedFiltering, string? poListFrom, string? poListTo, CancellationToken cancellationToken)
+        public async Task<IActionResult> GeneratePurchaseBookExcelFile(ViewModelBook model, string? selectedFiltering, string? poListFrom, string? poListTo, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
@@ -2465,14 +2465,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = package.GetAsByteArray();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PurchaseBook.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"PurchaseBook_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
-        #endregion -- Generate PurchaseBook .Csv File --
+        #endregion -- Generate PurchaseBook Excel File --
 
-        #region -- Generate SalesBook .Csv File --
+        #region -- Generate SalesBook Excel File --
 
-        public async Task<IActionResult> GenerateSalesBookCsvFile(ViewModelBook model, string? selectedDocument, string? soaList, string? siList, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateSalesBookExcelFile(ViewModelBook model, string? selectedDocument, string? soaList, string? siList, CancellationToken cancellationToken)
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
@@ -2614,10 +2614,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = package.GetAsByteArray();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SalesBook.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"SalesBook_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
-        #endregion -- Generate SalesBook .Csv File --
+        #endregion -- Generate SalesBook Excel File --
 
         //reports
         #region -- Generate Sales Report Excel File --
@@ -3023,7 +3023,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = package.GetAsByteArray();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SalesReport.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"SalesReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion
@@ -3117,7 +3117,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = package.GetAsByteArray();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PurchaseOrderReport.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"PurchaseOrderReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion
@@ -3532,7 +3532,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = package.GetAsByteArray();
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Purchase Report.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Purchase Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
@@ -4182,7 +4182,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var excelBytes = package.GetAsByteArray();
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "OTC Fuel Sales Report.xlsx");
+                    $"OTC Fuel Sales Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
@@ -4652,7 +4652,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = package.GetAsByteArray();
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "GM Report.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"GM Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
