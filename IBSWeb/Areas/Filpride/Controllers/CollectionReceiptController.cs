@@ -828,13 +828,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     var existingServiceInvoice = await _dbContext.FilprideServiceInvoices
                                                    .FirstOrDefaultAsync(si => si.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
+                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, existingServiceInvoice.Type, cancellationToken);
 
                     model.SVNo = existingServiceInvoice.ServiceInvoiceNo;
                     model.CollectionReceiptNo = generateCRNo;
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Total = computeTotalInModelIfZero;
                     model.Company = companyClaims;
+                    model.Type = existingServiceInvoice.Type;
 
                     try
                     {

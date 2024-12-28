@@ -17,25 +17,15 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
         {
-            FilprideCollectionReceipt? lastCv = await _db
-                .FilprideCollectionReceipts
-                .Where(c => c.Company == company)
-                .OrderBy(c => c.CollectionReceiptNo)
-                .LastOrDefaultAsync(cancellationToken);
-
-            if (lastCv != null)
+            if (type == nameof(DocumentType.Documented))
             {
-                string lastSeries = lastCv.CollectionReceiptNo;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+                return await GenerateCodeForDocumented(company, cancellationToken);
             }
             else
             {
-                return "CR0000000001";
+                return await GenerateCodeForUnDocumented(company, cancellationToken);
             }
         }
 
