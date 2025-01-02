@@ -828,13 +828,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     var existingServiceInvoice = await _dbContext.FilprideServiceInvoices
                                                    .FirstOrDefaultAsync(si => si.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, cancellationToken);
+                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, existingServiceInvoice.Type, cancellationToken);
 
                     model.SVNo = existingServiceInvoice.ServiceInvoiceNo;
                     model.CollectionReceiptNo = generateCRNo;
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Total = computeTotalInModelIfZero;
                     model.Company = companyClaims;
+                    model.Type = existingServiceInvoice.Type;
 
                     try
                     {
@@ -1898,7 +1899,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideCollectionReceipts
-                .Where(cr => recordIds.Contains(cr.CollectionReceiptId) && cr.Type == nameof(DocumentType.Documented))
+                .Where(cr => recordIds.Contains(cr.CollectionReceiptId))
                 .Include(cr => cr.SalesInvoice)
                 .Include(cr => cr.ServiceInvoice)
                 .OrderBy(cr => cr.CollectionReceiptNo)
@@ -2238,6 +2239,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllCollectionReceiptIds()
         {
             var crIds = _dbContext.FilprideCollectionReceipts
+                                     .Where(cr => cr.Type == nameof(DocumentType.Documented))
                                      .Select(cr => cr.CollectionReceiptId) // Assuming Id is the primary key
                                      .ToList();
 

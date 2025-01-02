@@ -1039,7 +1039,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideDebitMemos
-                .Where(dm => recordIds.Contains(dm.DebitMemoId) && dm.Type == nameof(DocumentType.Documented))
+                .Where(dm => recordIds.Contains(dm.DebitMemoId))
                 .Include(dm => dm.SalesInvoice)
                 .Include(dm => dm.ServiceInvoice)
                 .ThenInclude(sv => sv.Service)
@@ -1256,7 +1256,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 package.Workbook.Protection.SetPassword("mis123");
-                
+
                 // Convert the Excel package to a byte array
                 var excelBytes = await package.GetAsByteArrayAsync();
 
@@ -1271,6 +1271,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllDebitMemoIds()
         {
             var dmIds = _dbContext.FilprideDebitMemos
+                                     .Where(dm => dm.Type == nameof(DocumentType.Documented))
                                      .Select(dm => dm.DebitMemoId) // Assuming Id is the primary key
                                      .ToList();
 
