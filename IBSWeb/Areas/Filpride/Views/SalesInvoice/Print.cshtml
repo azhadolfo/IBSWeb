@@ -141,22 +141,26 @@
     }
 }
 
-<table class="w-100" style="height:170px; margin-top:20px;">
+<table class="w-100" style="height: 170px; margin-top: 20px; table-layout: fixed;">
     <tbody>
         <tr>
-            <td>
-
-                <table class="table-bordered w-100 h-100" style="padding: 0; margin: 0;">
+            <td style="width: 200px; height: 200px; padding: 0; margin: 0; vertical-align: top;">
+                <table class="table-bordered w-100 h-100" style="width: 100%; height: 100%; border-collapse: collapse;">
                     <tbody>
-
-                        <tr class="h-100">
-                            <td style="position:relative; top:-35px; left:4%;">INSTRUCTIONS: <br /><pre style="margin: 0; padding: 0">@Html.DisplayFor(model => model.Remarks)</pre></td>
-                        </tr>
+                    <tr style="height: 100%;">
+                        <td style="position: relative; top: -35px; left: 4%; overflow: auto;">
+                            <strong>INSTRUCTIONS:</strong>
+                            <br />
+                            <span class="text-start" style="margin: 0; padding: 0; white-space: pre-wrap; word-wrap: break-word;">
+                        @Html.DisplayFor(model => model.Remarks)
+                    </span>
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </td>
             <td>
-                <table class="table-bordered w-100 h-100" style="padding: 0; margin: 0;">
+                <table class="table-bordered w-100 h-100" style="padding: 0; margin: 0; table-layout: fixed;">
                     <tbody>
 
                         <tr class="align-text-top text-center text-nowrap">
@@ -183,12 +187,12 @@
                 </table>
             </td>
             <td>
-                <table class="table-bordered w-100 h-100" style="padding: 0; margin: 0;">
+                <table class="table-bordered w-100 h-100" style="padding: 0; margin: 0; table-layout: fixed;">
                     <tbody class="text-nowrap table-font-bold">
                         <tr style="padding-left: 8%;">
-                            <td><b>Vatable Sales: </b></td>
+                            <td style="padding-left: 0.5rem;"><b>Vatable Sales: </b></td>
 
-                            <td class="text-end">
+                            <td class="text-end px-2">
                                 @if (Model.Customer.VatType == "Vatable")
                                 {
                                     @(Model.Customer.CustomerCode != "GOV0027" ? netOfVatAmount.ToString("N4") : netOfVatAmount.ToString("N4"));
@@ -196,9 +200,9 @@
                                 </td>
                         </tr>
                         <tr style="padding-left: 8%;">
-                            <td><b>Zero-Rated Sales: </b></td>
+                            <td style="padding-left: 0.5rem;"><b>Zero-Rated Sales: </b></td>
 
-                            <td class="text-end">
+                            <td class="text-end px-2">
                                 @if (Model.Customer.VatType == "Zero Rated")
                                 {
                                     @(Model.Customer.CustomerCode != "GOV0027" ? netOfVatAmount.ToString("N4") : netOfVatAmount.ToString("N4"));
@@ -206,9 +210,9 @@
                                 </td>
                         </tr>
                         <tr style="padding-left: 8%;">
-                            <td><b>VAT-Exempt Sales: </b></td>
+                            <td style="padding-left: 0.5rem;"><b>VAT-Exempt Sales: </b></td>
 
-                            <td class="text-end">
+                            <td class="text-end px-2">
                                 @if (Model.Customer.VatType == "Exempt")
                                 {
                                     @(Model.Customer.CustomerCode != "GOV0027" ? netOfVatAmount.ToString("N4") : netOfVatAmount.ToString("N4"));
@@ -216,9 +220,9 @@
                                 </td>
                         </tr>
                         <tr style="padding-left: 8%;">
-                            <td><b>VAT Amount: </b></td>
+                            <td style="padding-left: 0.5rem;"><b>VAT Amount: </b></td>
 
-                            <td class="text-end">
+                            <td class="text-end px-2">
                                 @if (Model.Customer.VatType == "Vatable")
                                 {
                                     @(Model.Customer.CustomerCode != "GOV0027" ? vatAmount.ToString("N4") : vatAmount.ToString("N4") );
@@ -226,9 +230,9 @@
                                 </td>
                         </tr>
                         <tr style="padding-left: 8%;">
-                            <td><b>Discount: </b></td>
+                            <td style="padding-left: 0.5rem;"><b>Discount: </b></td>
 
-                            <td class="text-end">
+                            <td class="text-end px-2">
                                 @if (Model.Discount != 0)
                                 {
                                     <p style="height: 9px;">@Html.DisplayFor(model => model.Discount)</p>
@@ -236,9 +240,9 @@
                             </td>
                         </tr>
                         <tr style="padding-left: 8%;">
-                            <td><b>TOTAL SALES: </b></td>
+                            <td style="padding-left: 0.5rem;"><b>TOTAL SALES: </b></td>
 
-                            <td class="text-end">
+                            <td class="text-end px-2">
                                 @{
                                     var totalSales = Model.Amount;
                                     var otherDiscount = Model.Amount - Model.Discount;
