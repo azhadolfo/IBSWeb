@@ -222,7 +222,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerOrderSlipId = exisitingRecord.CustomerOrderSlipId,
                     Date = exisitingRecord.Date,
                     CustomerId = exisitingRecord.CustomerId,
-                    CustomerAddress = exisitingRecord.Customer.CustomerAddress,
                     TinNo = exisitingRecord.Customer.CustomerTin,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                     HasCommission = exisitingRecord.HasCommission,
@@ -269,7 +268,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
                     viewModel.CurrentUser = _userManager.GetUserName(User);
 
+                    if (string.IsNullOrEmpty(viewModel.Terms))
+                    {
+                        var customer = await _unitOfWork.FilprideCustomer
+                            .GetAsync(cos => cos.CustomerId == viewModel.CustomerId, cancellationToken);
+
+                        viewModel.Terms = customer.CustomerTerms;
+                    }
+
                     var changes = new List<string>();
+
                     if (existingRecord.Date != viewModel.Date)
                     {
                         changes.Add("Order Date was updated.");
