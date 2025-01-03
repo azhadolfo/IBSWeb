@@ -67,8 +67,8 @@
     </table>
 </div>
 
-<div class="table-responsive" style="margin-top:20px;">
-    <table class="table-bordered w-100 text-center">
+<div style="margin-top:20px;">
+    <table class="table-bordered text-center" style="table-layout: fixed; width: 99.9%;">
         <tbody>
             <tr>
                 <td><b>PRODUCT DESCRIPTION</b></td>
@@ -81,9 +81,9 @@
             <tr style="height:80px;">
                 <td>@Html.DisplayFor(model => model.Product.ProductName)</td>
                 <td>@Html.DisplayFor(model => model.Product.ProductUnit)</td>
-                <td>@(Model.Customer.CustomerCode != "GOV0027" ? Html.DisplayFor(model => model.Quantity) : Model.Quantity.ToString("N4") )</td>
-                <td>@(Model.Customer.CustomerCode != "GOV0027" ? Html.DisplayFor(model => model.UnitPrice) : Model.UnitPrice.ToString("N4") )</td>
-                <td>@(Model.Customer.CustomerCode != "GOV0027" ? Html.DisplayFor(model => model.Amount) : Model.Amount.ToString("N4"))</td>
+                <td>@Html.DisplayFor(model => model.Quantity)</td>
+                <td>@Html.DisplayFor(model => model.UnitPrice)</td>
+                <td>@Html.DisplayFor(model => model.Amount)</td>
             </tr>
         </tbody>
     </table>
@@ -151,7 +151,7 @@
                         <td style="position: relative; top: -35px; left: 4%; overflow: auto;">
                             <strong>INSTRUCTIONS:</strong>
                             <br />
-                            <span class="text-start" style="margin: 0; padding: 0; white-space: pre-wrap; word-wrap: break-word;">
+                            <span style="margin: 0; padding: 0; white-space: pre-wrap; word-wrap: break-word;">
                         @Html.DisplayFor(model => model.Remarks)
                     </span>
                         </td>
