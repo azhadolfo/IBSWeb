@@ -256,6 +256,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                     }
 
+                    if (viewModel.HaulerId != customerOrderSlip.HaulerId || viewModel.Freight != customerOrderSlip.Freight)
+                    {
+                        var operationManager = await _dbContext.ApplicationUsers
+                            .Where(a => a.Position == SD.Position_OperationManager)
+                            .ToListAsync(cancellationToken);
+
+                        var hauler = await _unitOfWork.FilprideSupplier
+                            .GetAsync(h => h.SupplierId == customerOrderSlip.HaulerId, cancellationToken);
+
+                        foreach (var user in operationManager)
+                        {
+                            var message = $"{model.DeliveryReceiptNo} has been generated and the Hauler/Freight has been modified by {model.CreatedBy.ToUpper()}." +
+                                          $" Please review and approve the changes from '{customerOrderSlip.Hauler.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
+                                          $" to '{hauler.SupplierName}' with a freight cost of '{model.Freight:N4}'.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                                .Where(h => h.UserName == user.UserName)
+                                .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
+
+                        model.Status = nameof(DRStatus.ForApprovalOfOM);
+                    }
+
                     await _unitOfWork.SaveAsync(cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);
@@ -403,6 +434,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
                             }
                         }
+                    }
+
+                    if (viewModel.HaulerId != existingRecord.HaulerId || viewModel.Freight != existingRecord.Freight)
+                    {
+                        var operationManager = await _dbContext.ApplicationUsers
+                            .Where(a => a.Position == SD.Position_OperationManager)
+                            .ToListAsync(cancellationToken);
+
+                        var hauler = await _unitOfWork.FilprideSupplier
+                            .GetAsync(h => h.SupplierId == viewModel.HaulerId, cancellationToken);
+
+                        foreach (var user in operationManager)
+                        {
+                            var message = $"{existingRecord.DeliveryReceiptNo} has been modified by {viewModel.CurrentUser.ToUpper()} to update the Hauler/Freight." +
+                                          $" Please review and approve the changes from '{existingRecord.Hauler.SupplierName}' with a freight cost of '{existingRecord.Freight:N4}'" +
+                                          $" to '{hauler.SupplierName}' with a freight cost of '{viewModel.Freight:N4}'.";
+
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
+
+                            var hubConnections = await _dbContext.HubConnections
+                                .Where(h => h.UserName == user.UserName)
+                                .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
+
+                        existingRecord.Status = nameof(DRStatus.ForApprovalOfOM);
                     }
 
                     await _unitOfWork.FilprideDeliveryReceipt.UpdateAsync(viewModel, cancellationToken);
