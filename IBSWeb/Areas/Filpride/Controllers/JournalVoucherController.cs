@@ -775,7 +775,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideJournalVoucherHeaders
-                .Where(jv => recordIds.Contains(jv.JournalVoucherHeaderId) && jv.Type == nameof(DocumentType.Documented))
+                .Where(jv => recordIds.Contains(jv.JournalVoucherHeaderId))
                 .Include(jv => jv.CheckVoucherHeader)
                 .OrderBy(jv => jv.JournalVoucherHeaderNo)
                 .ToListAsync();
@@ -1265,6 +1265,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllJournalVoucherIds()
         {
             var jvIds = _dbContext.FilprideJournalVoucherHeaders
+                                     .Where(jv => jv.Type == nameof(DocumentType.Documented))
                                      .Select(jv => jv.JournalVoucherHeaderId) // Assuming Id is the primary key
                                      .ToList();
 

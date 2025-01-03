@@ -557,7 +557,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilpridePurchaseOrders
-                .Where(po => recordIds.Contains(po.PurchaseOrderId) && po.Type == nameof(DocumentType.Documented))
+                .Where(po => recordIds.Contains(po.PurchaseOrderId))
                 .OrderBy(po => po.PurchaseOrderNo)
                 .ToListAsync();
 
@@ -627,6 +627,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllPurchaseOrderIds()
         {
             var poIds = _dbContext.FilpridePurchaseOrders
+                                     .Where(po => po.Type == nameof(DocumentType.Documented))
                                      .Select(po => po.PurchaseOrderId) // Assuming Id is the primary key
                                      .ToList();
 

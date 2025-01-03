@@ -119,7 +119,7 @@
                     <span asp-validation-for="PlateNo" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Freight" class="form-control border-0 shadow" min="0.01" placeholder="" readonly tabindex="-1" />
+                    <input asp-for="Freight" class="form-control border-0 shadow" min="0.01" placeholder=""  />
                     <label asp-for="Freight">Freight</label>
                     <span asp-validation-for="Freight" class="text-danger"></span>
                 </div>
@@ -205,15 +205,13 @@
                                     $('#haulerList').show();
                                     if (parseInt(cosId) > 748) {
                                         $('input[name="Freight"]').parent().show();
-                                        $('input[name="Freight"]').prop('readonly', true).val(data.freight);
-                                        $('select[name="HaulerId"]').prop('disabled', true);
+                                        $('input[name="Freight"]').val(data.freight);
                                         $('select[name="HaulerId"]').val(data.haulerId).change();
                                     }
                                     else{
-                                        $('select[name="HaulerId"]').prop('disabled', false);
                                         $('select[name="HaulerId"]').val("").change();
                                         $('input[name="Freight"]').parent().show();
-                                        $('input[name="Freight"]').prop('readonly', false).val("");
+                                        $('input[name="Freight"]').val("");
                                     }
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
 
@@ -223,11 +221,9 @@
                                     
                                     //Remove the else condition in the future
                                     if (parseInt(cosId) > 748) {
-                                        $('select[name="HaulerId"]').prop('disabled', true);
                                         $('select[name="HaulerId"]').val(data.haulerId).change();
                                     }
                                     else{
-                                        $('select[name="HaulerId"]').prop('disabled', false);
                                         $('select[name="HaulerId"]').val("").change();
                                     }
                                 } else {

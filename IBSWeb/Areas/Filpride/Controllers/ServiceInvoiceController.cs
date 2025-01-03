@@ -730,7 +730,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Retrieve the selected invoices from the database
             var selectedList = await _dbContext.FilprideServiceInvoices
-                .Where(sv => recordIds.Contains(sv.ServiceInvoiceId) && sv.Type == nameof(DocumentType.Documented))
+                .Where(sv => recordIds.Contains(sv.ServiceInvoiceId))
                 .OrderBy(sv => sv.ServiceInvoiceNo)
                 .ToListAsync();
 
@@ -802,6 +802,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllServiceInvoiceIds()
         {
             var svIds = _dbContext.FilprideServiceInvoices
+                                     .Where(sv => sv.Type == nameof(DocumentType.Documented))
                                      .Select(sv => sv.ServiceInvoiceId) // Assuming Id is the primary key
                                      .ToList();
 

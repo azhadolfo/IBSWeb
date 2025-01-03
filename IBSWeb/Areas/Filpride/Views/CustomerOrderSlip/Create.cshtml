@@ -51,7 +51,8 @@
                     </div>
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Customer Terms<span class="required">*</span></label>
-                        <select asp-for="Terms" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                        <select asp-for="Terms" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;"
+                                id ="termsSelect" required>
                             <option value="" selected disabled>Select payment terms</option>
                             <option value="@SD.Terms_Cod">@SD.Terms_Cod</option>
                             <option value="@SD.Terms_Prepaid">@SD.Terms_Prepaid</option>
@@ -180,13 +181,13 @@
         $(document).ready(function () {
             $('select[name="CustomerId"]').on('change', function () {
                 var customerId = $(this).val();
+                updateTermsEditability(customerId);
                 if (customerId) {
                     $.ajax({
                         url: '@Url.Action("GetCustomerDetails", "CustomerOrderSlip", new { area = "Filpride" })',
                         type: "GET",
                         data: { id: customerId },
                         success: function (data) {
-                            console.log(data)
                             if (data) {
                                 $('input[name="CustomerAddress"]').val(data.address);
                                 $('input[name="TinNo"]').val(data.tinNo);
@@ -213,6 +214,8 @@
                     clearBranches();
                 }
             });
+
+            updateTermsEditability($('select[name="CustomerId"]').val());
 
             $('input[name="Quantity"], input[name="DeliveredPrice"]').on('input', function () {
                 var quantity = parseNumber($('input[name="Quantity"]').val());
@@ -256,30 +259,50 @@
             }
 
             function checkCustomerBalance(totalAmount) {
-            var customerId = $('select[name="CustomerId"]').val();
-            if (customerId) {
-                $.ajax({
-                    url: '@Url.Action("CheckCustomerBalance", "CustomerOrderSlip", new { area = "Filpride" })',
-                    type: "GET",
-                    data: { customerId: customerId },
-                    success: function (data) {
-                        if (totalAmount > data) {
-                            if (confirm("Customer balance exceeded! Current balance: " + formatNumber(data) + ". Do you want to proceed with the creation?")) {
-                                // User chose to proceed
-                            } else {
-                                // User chose not to proceed
-                                $('input[name="DeliveredPrice"]').val('0.0000');
-                                $('input[name="TotalAmount"]').val('0.0000');
-                                $('input[name="Vat"]').val('0.0000');
+                var customerId = $('select[name="CustomerId"]').val();
+                if (customerId) {
+                    $.ajax({
+                        url: '@Url.Action("CheckCustomerBalance", "CustomerOrderSlip", new { area = "Filpride" })',
+                        type: "GET",
+                        data: { customerId: customerId },
+                        success: function (data) {
+                            if (totalAmount > data) {
+                                if (confirm("Customer balance exceeded! Current balance: " + formatNumber(data) + ". Do you want to proceed with the creation?")) {
+                                    // User chose to proceed
+                                } else {
+                                    // User chose not to proceed
+                                    $('input[name="DeliveredPrice"]').val('0.0000');
+                                    $('input[name="TotalAmount"]').val('0.0000');
+                                    $('input[name="Vat"]').val('0.0000');
+                                }
                             }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error: " + error);
                         }
-                    },
-                    error: function (xhr, status, error) {
-                        console.log("Error: " + error);
-                    }
-                });
+                    });
+                }
             }
-        }
+
+            function updateTermsEditability(customerId) {
+                var termsSelect = $('#termsSelect');
+                var selectedValue = termsSelect.val(); // Get the current selected value
+                console.log(selectedValue);
+
+                if (customerId === '7') {
+                    termsSelect.prop('disabled', false);
+                    termsSelect.removeClass('bg-light');
+                } else {
+                    // Set the value to the model before disabling
+                    termsSelect.val(selectedValue).change();
+                    termsSelect.prop('disabled', true);
+                    termsSelect.addClass('bg-light');
+
+                    // This ensures the value is bound to your model
+                    $('select[name="Terms"]').val(selectedValue);
+                }
+            }
+            
         });
     </script>
     <script>
