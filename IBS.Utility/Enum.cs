@@ -34,7 +34,7 @@
         ForAtlBooking,
         ForApprovalOfOM,
         ForApprovalOfFM,
-        Approved,
+        ForDR,
         Completed,
         Disapproved,
         Expired

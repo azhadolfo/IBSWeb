@@ -115,7 +115,7 @@
                                 case '@CosStatus.ForApprovalOfFM':
                                     badgeClass = "badge bg-warning";
                                     break;
-                                case '@CosStatus.Approved':
+                                case '@CosStatus.ForDR':
                                 case '@CosStatus.Completed':
                                     badgeClass = "badge bg-success";
                                     break;
@@ -180,7 +180,7 @@
                                 case '@CosStatus.ForApprovalOfFM':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                                     break;
-                                case '@CosStatus.Approved':
+                                case '@CosStatus.ForDR':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Print</a></li>`;
                                     break;
                                 default:

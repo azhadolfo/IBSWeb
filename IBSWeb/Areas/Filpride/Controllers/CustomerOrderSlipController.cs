@@ -1360,7 +1360,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingCos.AuthorityToLoadNo = model.AuthorityToLoadNo;
                 //existingCos.Status = nameof(CosStatus.ForApprovalOfOM); --should be the code for status
 
-                if (existingCos.Status != nameof(CosStatus.Approved) && existingCos.Status != nameof(CosStatus.Completed))
+                if (existingCos.Status != nameof(CosStatus.ForDR) && existingCos.Status != nameof(CosStatus.Completed))
                 {
                     existingCos.Status = nameof(CosStatus.ForApprovalOfOM);
                 }

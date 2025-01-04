@@ -507,7 +507,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (cos.Status == nameof(CosStatus.Completed))
             {
-                cos.Status = nameof(CosStatus.Approved);
+                cos.Status = nameof(CosStatus.ForDR);
             }
 
             cos.DeliveredQuantity -= drVolume;
