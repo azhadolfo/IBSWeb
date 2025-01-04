@@ -97,12 +97,12 @@
                 </fieldset>
                 <div class="row py-2">
                     <div class="form-floating col-4">
-                        <input asp-for="Quantity" class="form-control border-0 shadow" placeholder="" readonly="@(Model.Status != nameof(CosStatus.Created))" />
+                        <input asp-for="Quantity" class="form-control border-0 shadow" placeholder="" required min="0.01" readonly="@(Model.Status != nameof(CosStatus.Created))" />
                         <label asp-for="Quantity" class="ms-2">Quantity<span class="required">*</span></label>
                         <span asp-validation-for="Quantity" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-4">
-                        <input asp-for="DeliveredPrice" class="form-control border-0 shadow" placeholder="" />
+                        <input asp-for="DeliveredPrice" class="form-control border-0 shadow" placeholder="" required min="0.01" />
                         <label asp-for="DeliveredPrice" class="ms-2">Delivered Price<span class="required">*</span></label>
                         <span asp-validation-for="DeliveredPrice" class="text-danger"></span>
                     </div>
