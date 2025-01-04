@@ -29,6 +29,9 @@
                         @Html.DisplayNameFor(model => model.PurchaseOrder.PurchaseOrderNo)
                     </th>
                     <th>
+                        IS PO No
+                    </th>
+                    <th>
                         DR No
                     </th>
                     <th>
@@ -36,9 +39,6 @@
                     </th>
                     <th>
                         Product
-                    </th>
-                    <th>
-                        Delivered
                     </th>
                     <th>
                         Received
@@ -129,15 +129,10 @@
                         }
                     },
                     { "data": "purchaseOrder.purchaseOrderNo" },
+                    { "data": "purchaseOrder.oldPoNo" },
                     { "data": data => data.deliveryReceipt ? data.deliveryReceipt.deliveryReceiptNo : "" },
+                    { "data": data => data.deliveryReceipt ? data.deliveryReceipt.customer.customerName : "" },
                     { "data": "purchaseOrder.product.productName" },
-                    {
-                        "data": "quantityDelivered",
-                        "render": function (data, type, row) {
-                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
-                            return `<span class="text-end d-block">${amount}</span>`;
-                        }
-                    },
                     {
                         "data": "quantityReceived",
                         "render": function (data, type, row) {
