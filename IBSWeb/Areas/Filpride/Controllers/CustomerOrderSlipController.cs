@@ -45,13 +45,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string? filterType)
         {
+            ViewBag.FilterType = filterType;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetCustomerOrderSlips([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCustomerOrderSlips([FromForm] DataTablesParameters parameters, string? filterType, CancellationToken cancellationToken)
         {
             try
             {
@@ -59,6 +60,41 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var cosList = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAllAsync(cos => cos.Company == companyClaims, cancellationToken);
+
+                // Apply status filter based on filterType
+                if (!string.IsNullOrEmpty(filterType))
+                {
+                    switch (filterType)
+                    {
+                        case "ForAppointSupplier":
+                            cosList = cosList.Where(cos =>
+                                cos.Status == nameof(CosStatus.HaulerAppointed) ||
+                                cos.Status == nameof(CosStatus.Created));
+                            break;
+                        case "ForAppointHauler":
+                            cosList = cosList.Where(cos =>
+                                cos.Status == nameof(CosStatus.SupplierAppointed) ||
+                                cos.Status == nameof(CosStatus.Created));
+                            break;
+                        case "ForATLBooking":
+                            cosList = cosList.Where(cos =>
+                                cos.Status == nameof(CosStatus.ForAtlBooking));
+                            break;
+                        case "ForOMApproval":
+                            cosList = cosList.Where(cos =>
+                                cos.Status == nameof(CosStatus.ForApprovalOfOM));
+                            break;
+                        case "ForFMApproval":
+                            cosList = cosList.Where(cos =>
+                                cos.Status == nameof(CosStatus.ForApprovalOfFM));
+                            break;
+                        case "ForDR":
+                            cosList = cosList.Where(cos =>
+                                cos.Status == nameof(CosStatus.ForDR));
+                            break;
+                        // Add other cases as needed
+                    }
+                }
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))

@@ -48,13 +48,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string? filterType)
         {
+            ViewBag.FilterType = filterType;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetDeliveryReceipts([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetDeliveryReceipts([FromForm] DataTablesParameters parameters, string? filterType, CancellationToken cancellationToken)
         {
             try
             {
@@ -62,6 +63,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var drList = await _unitOfWork.FilprideDeliveryReceipt
                     .GetAllAsync(cos => cos.Company == companyClaims, cancellationToken);
+
+                // Apply status filter based on filterType
+                if (!string.IsNullOrEmpty(filterType))
+                {
+                    switch (filterType)
+                    {
+                        case "InTransit":
+                            drList = drList.Where(dr =>
+                                dr.Status == nameof(DRStatus.Pending));
+                            break;
+                        case "ForInvoice":
+                            drList = drList.Where(dr =>
+                                dr.Status == nameof(DRStatus.Delivered));
+                            break;
+                        // Add other cases as needed
+                    }
+                }
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))

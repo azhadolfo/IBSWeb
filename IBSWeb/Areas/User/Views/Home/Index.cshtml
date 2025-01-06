@@ -1,6 +1,5 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿@using IBS.Models.Filpride.ViewModels
+@model DashboardCountViewModel
 
 <div class="container">
     <div class="row justify-content-center mt-5">
@@ -11,6 +10,110 @@
             {
                 <a class="btn btn-primary btn-lg" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="">Login</a>
             }
+            else
+            {
+                <div class="mt-5">
+                    <h2 class="mb-4">Tasks</h2>
+                    <div class="row g-4">
+                        <!-- First Row -->
+                        <div class="col-md-4">
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForAppointSupplier" })" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">For Appoint Supplier</h5>
+                                        <p class="card-text display-4">@Model.SupplierAppointmentCount.ToString("N0")</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForAppointHauler" })" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">For Appoint Hauler</h5>
+                                        <p class="card-text display-4">@Model.HaulerAppointmentCount.ToString("N0")</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForATLBooking" })" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">For ATL Booking</h5>
+                                        <p class="card-text display-4">@Model.ATLBookingCount.ToString("N0")</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Second Row -->
+                        <div class="col-md-4">
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForOMApproval" })" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">For Approval of OM</h5>
+                                        <p class="card-text display-4">@Model.OMApprovalCount.ToString("N0")</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForFMApproval" })" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">For Approval of FM</h5>
+                                        <p class="card-text display-4">@Model.FMApprovalCount.ToString("N0")</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForDR" })" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">For DR</h5>
+                                        <p class="card-text display-4">@Model.DRCount.ToString("N0")</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "InTransit" })" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">In-Transit</h5>
+                                        <p class="card-text display-4">@Model.InTransitCount.ToString("N0")</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForInvoice" })" class="text-decoration-none">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">For Invoice</h5>
+                                        <p class="card-text display-4">@Model.InvoiceCount.ToString("N0")</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+        background-color: white;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .card-title {
+        font-weight: 500;
+    }
+</style>
