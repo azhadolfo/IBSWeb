@@ -71,6 +71,7 @@
                             <option value="@SD.Terms_M30">@SD.Terms_M30</option>
                         </select>
                         <span asp-validation-for="Terms" class="text-danger"></span>
+                        <input type="hidden" asp-for="Terms"/>
                     </div>
                     <div class="form-group py-2 col-12" style="display: @(Model.SelectedBranch != null ? "block" : "none")">
                         <label class="control-label">Branch<span class="required">*</span></label>
@@ -180,7 +181,6 @@
         $(document).ready(function () {
             $('select[name="CustomerId"]').on('change', function () {
                 var customerId = $(this).val();
-                updateTermsEditability(customerId);
                 if (customerId) {
                     $.ajax({
                         url: '@Url.Action("GetCustomerDetails", "CustomerOrderSlip", new { area = "Filpride" })',
@@ -194,6 +194,8 @@
 
                                 // Populate Branches dropdown using fetched data
                                 populateBranches(data.branches);
+
+                                updateTermsEditability(customerId);
 
                             } else {
                                 $('input[name="CustomerAddress"]').val('');
@@ -213,8 +215,6 @@
                     clearBranches();
                 }
             });
-
-            updateTermsEditability($('select[name="CustomerId"]').val());
 
             $('input[name="Quantity"], input[name="DeliveredPrice"]').on('input', function () {
                 var quantity = parseNumber($('input[name="Quantity"]').val());
@@ -298,7 +298,7 @@
                     termsSelect.addClass('bg-light');
 
                     // This ensures the value is bound to your model
-                    $('select[name="Terms"]').val(selectedValue);
+                    $('input[name="Terms"]').val(selectedValue);
                 }
             }
             
