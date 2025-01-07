@@ -48,7 +48,11 @@ namespace IBSWeb.Areas.User.Controllers
                     .Where(cos => cos.Status == nameof(CosStatus.ForAtlBooking))
                     .CountAsync(),
 
-                OMApprovalCount = await _dbContext.FilprideCustomerOrderSlips
+                OMApprovalCOSCount = await _dbContext.FilprideCustomerOrderSlips
+                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfOM))
+                    .CountAsync(),
+
+                OMApprovalDRCount = await _dbContext.FilprideDeliveryReceipts
                     .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfOM))
                     .CountAsync(),
 
