@@ -121,11 +121,11 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Freight = viewModel.Freight;
             existingRecord.AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo;
 
-            if (!customerOrderSlip.HasMultiplePO)
+            if (!customerOrderSlip.HasMultiplePO && existingRecord.CustomerOrderSlipId != customerOrderSlip.CustomerOrderSlipId)
             {
                 existingRecord.PurchaseOrderId = customerOrderSlip.PurchaseOrderId;
             }
-            else
+            else if (customerOrderSlip.HasMultiplePO && existingRecord.CustomerOrderSlipId != customerOrderSlip.CustomerOrderSlipId)
             {
                 var selectedPo = await _db.FilprideCOSAppointedSuppliers
                     .OrderBy(s => s.PurchaseOrderId)
