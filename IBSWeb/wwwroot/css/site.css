@@ -520,10 +520,10 @@ table {
 
     /* Optionally, reduce the size of specific elements like table headers */
     table th {
-        font-size: 0.90em; /* Adjust as needed */
+        font-size: 0.80em; /* Adjust as needed */
     }
 
     /* Also adjust the font size of table data cells */
     table td {
-        font-size: 0.90em; /* Adjust as needed */
+        font-size: 0.80em; /* Adjust as needed */
     }

@@ -47,6 +47,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(cos => cos.Hauler)
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
+                .Include(cos => cos.PickUpPoint)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier);
 
@@ -65,6 +66,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(cos => cos.Hauler)
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
+                .Include(cos => cos.PickUpPoint)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
