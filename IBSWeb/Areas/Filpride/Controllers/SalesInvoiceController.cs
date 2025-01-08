@@ -641,7 +641,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         if (dr != null)
                         {
                             dr.HasAlreadyInvoiced = false;
-                            dr.Status = nameof(DRStatus.Delivered);
+                            dr.Status = nameof(DRStatus.ForInvoicing);
                         }
 
                         #region --Audit Trail Recording

@@ -50,8 +50,8 @@
 
     public enum DRStatus
     {
-        Pending,
-        Delivered,
+        PendingDelivery,
+        ForInvoicing,
         Invoiced,
         ForApprovalOfOM,
         Canceled,

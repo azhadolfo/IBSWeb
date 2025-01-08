@@ -1374,7 +1374,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var dr in existingDr)
                 {
                     dr.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                    dr.Status = nameof(Status.Pending);
+                    dr.Status = nameof(DRStatus.PendingDelivery);
                 }
 
                 #endregion

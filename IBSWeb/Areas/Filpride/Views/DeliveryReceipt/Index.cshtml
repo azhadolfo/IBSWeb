@@ -105,7 +105,7 @@
                 {
                     "data": "status",
                     "render": function(data, type, row) {
-                        var statusClass = row.status == "@nameof(DRStatus.Delivered)" ? "bg-info" :
+                        var statusClass = row.status == "@nameof(DRStatus.ForInvoicing)" ? "bg-info" :
                                           row.status == "@nameof(DRStatus.Invoiced)" ? "bg-success" :
                                           row.status == "@nameof(DRStatus.Voided)" || row.status == "@nameof(CosStatus.ForApprovalOfOM)"  ? "bg-danger" :
                                           row.status == "@nameof(DRStatus.Canceled)" ? "bg-warning" : "";

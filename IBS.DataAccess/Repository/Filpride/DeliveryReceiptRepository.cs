@@ -171,7 +171,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         dr.CustomerOrderSlipId == cosId &&
                         dr.DeliveredDate != null &&
                         !dr.HasAlreadyInvoiced &&
-                        dr.Status == nameof(DRStatus.Delivered))
+                        dr.Status == nameof(DRStatus.ForInvoicing))
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.DeliveryReceiptId.ToString(),

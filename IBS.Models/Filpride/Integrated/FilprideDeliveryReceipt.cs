@@ -64,7 +64,7 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "varchar(50)")]
         public string ManualDrNo { get; set; }
 
-        public string Status { get; set; } = nameof(Utility.DRStatus.Pending);
+        public string Status { get; set; } = nameof(Utility.DRStatus.PendingDelivery);
 
         #region Appointing Hauler
 
