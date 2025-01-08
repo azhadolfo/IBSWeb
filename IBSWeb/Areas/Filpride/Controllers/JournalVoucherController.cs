@@ -915,6 +915,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet2.Cells["C1"].Value = "TransactionNo";
                 worksheet2.Cells["D1"].Value = "Debit";
                 worksheet2.Cells["E1"].Value = "Credit";
+                worksheet2.Cells["F1"].Value = "JVHeaderId";
+                worksheet2.Cells["G1"].Value = "OriginalDocumentId";
 
                 #endregion -- Journal Voucher Details Table Header --
 
@@ -1093,6 +1095,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[jvdRow, 3].Value = item.TransactionNo;
                     worksheet2.Cells[jvdRow, 4].Value = item.Debit;
                     worksheet2.Cells[jvdRow, 5].Value = item.Credit;
+                    worksheet2.Cells[jvdRow, 6].Value = item.JournalVoucherHeaderId;
+                    worksheet2.Cells[jvdRow, 7].Value = item.JournalVoucherDetailId;
 
                     jvdRow++;
                 }
