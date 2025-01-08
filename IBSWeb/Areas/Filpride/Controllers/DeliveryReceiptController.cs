@@ -232,7 +232,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.Status = nameof(DRStatus.ForApprovalOfOM);
                     }
 
-                    if (viewModel.Driver != customerOrderSlip.Driver || viewModel.PlateNo != customerOrderSlip.PlateNo)
+                    if ((viewModel.Driver != customerOrderSlip.Driver || viewModel.PlateNo != customerOrderSlip.PlateNo) && !string.IsNullOrEmpty(viewModel.ATLNo))
                     {
                         var tnsUser = await _dbContext.ApplicationUsers
                             .Where(a => a.Department == SD.Department_TradeAndSupply)
@@ -256,7 +256,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                     }
 
-                    if (viewModel.HaulerId != customerOrderSlip.HaulerId || viewModel.Freight != customerOrderSlip.Freight)
+                    if ((viewModel.HaulerId != customerOrderSlip.HaulerId || viewModel.Freight != customerOrderSlip.Freight) && !string.IsNullOrEmpty(viewModel.ATLNo))
                     {
                         var operationManager = await _dbContext.ApplicationUsers
                             .Where(a => a.Position == SD.Position_OperationManager)
