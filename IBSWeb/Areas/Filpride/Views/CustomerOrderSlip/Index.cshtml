@@ -33,7 +33,10 @@
                         OTC COS No
                     </th>
                     <th>
-                        IS PO No
+                        PO No
+                    </th>
+                    <th>
+                        Depot
                     </th>
                     <th>
                         @Html.DisplayNameFor(m => m.Date)
@@ -79,7 +82,8 @@
                 "columns": [
                     { "data": "customerOrderSlipNo" },
                     { "data": "oldCosNo" },
-                    { "data": "purchaseOrder.oldPoNo" },
+                    { "data": "purchaseOrder.purchaseOrderNo" },
+                    { "data": "pickUpPoint.depot" },
                     { "data": "date", "render": function (data) {
                         var date = new Date(data);
                         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
@@ -113,15 +117,17 @@
                                 case '@CosStatus.ForAtlBooking':
                                     badgeClass = "badge bg-info";
                                     break;
+                                case '@CosStatus.ForApprovalOfOM':
                                 case '@CosStatus.ForApprovalOfFM':
                                     badgeClass = "badge bg-warning";
                                     break;
-                                case '@CosStatus.Approved':
+                                case '@CosStatus.ForDR':
                                 case '@CosStatus.Completed':
                                     badgeClass = "badge bg-success";
                                     break;
                                 case "@CosStatus.Expired":
                                 case "@CosStatus.Disapproved":
+                                case "@CosStatus.Closed":
                                     badgeClass = "badge bg-danger";
                                     break;
                                 default:
@@ -181,7 +187,7 @@
                                 case '@CosStatus.ForApprovalOfFM':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                                     break;
-                                case '@CosStatus.Approved':
+                                case '@CosStatus.ForDR':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Print</a></li>`;
                                     break;
                                 default:
@@ -189,6 +195,7 @@
                                     break;
                             }
 
+                            actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                             actions += `</ul></div>`;
                             return actions;
                         }
@@ -247,6 +254,25 @@
             });
         }
     }
+
+    // SweetAlert function
+    function confirmCloseCos(customerOrderSlipId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, close it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Redirect to the Close COS action
+                window.location.href = `@Url.Action("Close", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}`;
+            }
+        });
+    }
+    
     </script>
 
 }

@@ -244,7 +244,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.Status = nameof(DRStatus.ForApprovalOfOM);
                     }
 
-                    if (viewModel.Driver != customerOrderSlip.Driver || viewModel.PlateNo != customerOrderSlip.PlateNo)
+                    if ((viewModel.Driver != customerOrderSlip.Driver || viewModel.PlateNo != customerOrderSlip.PlateNo) && !string.IsNullOrEmpty(viewModel.ATLNo))
                     {
                         var tnsUser = await _dbContext.ApplicationUsers
                             .Where(a => a.Department == SD.Department_TradeAndSupply)
@@ -268,7 +268,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                     }
 
-                    if (viewModel.HaulerId != customerOrderSlip.HaulerId || viewModel.Freight != customerOrderSlip.Freight)
+                    if ((viewModel.HaulerId != customerOrderSlip.HaulerId || viewModel.Freight != customerOrderSlip.Freight) && !string.IsNullOrEmpty(viewModel.ATLNo))
                     {
                         var operationManager = await _dbContext.ApplicationUsers
                             .Where(a => a.Position == SD.Position_OperationManager)
@@ -580,7 +580,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingRecord.PostedBy = _userManager.GetUserName(User);
                 existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                existingRecord.Status = nameof(DRStatus.Pending);
+                existingRecord.Status = nameof(DRStatus.PendingDelivery);
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Approved delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
@@ -673,7 +673,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
-                existingRecord.Status = nameof(DRStatus.Delivered);
+                existingRecord.Status = nameof(DRStatus.ForInvoicing);
                 existingRecord.PostedBy = _userManager.GetUserName(User);
                 existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
@@ -742,6 +742,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
@@ -838,7 +839,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
 
                 existingRecord.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                existingRecord.Status = nameof(Status.Pending);
+                existingRecord.Status = nameof(DRStatus.PendingDelivery);
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);

@@ -30,13 +30,16 @@
                         @Html.DisplayNameFor(model => model.PurchaseOrder.PurchaseOrderNo)
                     </th>
                     <th>
+                        IS PO No
+                    </th>
+                    <th>
                         DR No
                     </th>
                     <th>
-                        Product
+                        Customer
                     </th>
                     <th>
-                        Delivered
+                        Product
                     </th>
                     <th>
                         Received
@@ -127,15 +130,10 @@
                         }
                     },
                     { "data": "purchaseOrder.purchaseOrderNo" },
+                    { "data": "purchaseOrder.oldPoNo" },
                     { "data": data => data.deliveryReceipt ? data.deliveryReceipt.deliveryReceiptNo : "" },
+                    { "data": data => data.deliveryReceipt ? data.deliveryReceipt.customer.customerName : "" },
                     { "data": "purchaseOrder.product.productName" },
-                    {
-                        "data": "quantityDelivered",
-                        "render": function (data, type, row) {
-                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
-                            return `<span class="text-end d-block">${amount}</span>`;
-                        }
-                    },
                     {
                         "data": "quantityReceived",
                         "render": function (data, type, row) {
@@ -170,11 +168,6 @@
                                                     ` : `
                                                         <li><a class="dropdown-item" href="@Url.Action("Edit", "ReceivingReport", new { area = "Filpride" })/${data}">Edit</a></li>
                                                         <li><a class="dropdown-item" href="@Url.Action("Print", "ReceivingReport", new { area = "Filpride" })/${data}">Print</a></li>
-                                                        ${row.amountPaid == 0 ? `
-                                                            <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${data})">Void</a></li>
-                                                        ` : `
-                                                            <li><button class="dropdown-item" disabled readonly>Void</button></li>
-                                                        `}
                                                     `}
                                                 </ul>
                                             </div>`;

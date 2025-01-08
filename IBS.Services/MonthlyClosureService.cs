@@ -52,7 +52,7 @@ namespace IBS.Services
                 .AnyAsync(dr =>
                     dr.Date.Month == previousMonth.Month &&
                     dr.Date.Year == previousMonth.Year &&
-                    dr.Status == nameof(DRStatus.Pending));
+                    dr.Status == nameof(DRStatus.PendingDelivery));
 
             if (!hadInTransit)
             {

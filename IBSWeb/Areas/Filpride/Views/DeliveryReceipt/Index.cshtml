@@ -42,6 +42,9 @@
                         PO No
                     </th>
                     <th>
+                        Depot
+                    </th>
+                    <th>
                         Customer
                     </th>
                     <th>
@@ -87,6 +90,7 @@
                 }},
                 { "data": "customerOrderSlip.customerOrderSlipNo" },
                 { "data": "purchaseOrder.purchaseOrderNo" },
+                { "data": "customerOrderSlip.pickUpPoint.depot" },
                 { "data": "customer.customerName" },
                 { "data": "customerOrderSlip.product.productName" },
                 {
@@ -106,7 +110,7 @@
                 {
                     "data": "status",
                     "render": function(data, type, row) {
-                        var statusClass = row.status == "@nameof(DRStatus.Delivered)" ? "bg-info" :
+                        var statusClass = row.status == "@nameof(DRStatus.ForInvoicing)" ? "bg-info" :
                                           row.status == "@nameof(DRStatus.Invoiced)" ? "bg-success" :
                                           row.status == "@nameof(DRStatus.Voided)" || row.status == "@nameof(CosStatus.ForApprovalOfOM)"  ? "bg-danger" :
                                           row.status == "@nameof(DRStatus.Canceled)" ? "bg-warning" : "";

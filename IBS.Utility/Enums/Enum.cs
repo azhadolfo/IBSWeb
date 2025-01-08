@@ -35,10 +35,11 @@
         ForAtlBooking,
         ForApprovalOfOM,
         ForApprovalOfFM,
-        Approved,
+        ForDR,
         Completed,
         Disapproved,
-        Expired
+        Expired,
+        Closed
     }
 
     public enum Status
@@ -51,8 +52,8 @@
 
     public enum DRStatus
     {
-        Pending,
-        Delivered,
+        PendingDelivery,
+        ForInvoicing,
         Invoiced,
         ForApprovalOfOM,
         Canceled,

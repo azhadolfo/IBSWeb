@@ -596,7 +596,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     && i.AuthorityToLoadNo != null
                     && i.Date >= firstDayOfMonth
                     && i.Date <= lastDayOfMonth
-                    && (viewModel.ReportType == "AllDeliveries" || i.Status == nameof(Status.Pending)), cancellationToken);
+                    && (viewModel.ReportType == "AllDeliveries" || i.Status == nameof(DRStatus.PendingDelivery)), cancellationToken);
 
             using (var package = new ExcelPackage())
             {
@@ -714,7 +714,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         if (viewModel.ReportType == "AllDeliveries")
                         {
                             worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate?.ToString("dd-MMM-yy");
-                            worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(Status.Pending) ? "IN TRANSIT" : dr.Status.ToUpper();
+                            worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
                         }
 
                         currentRow++;

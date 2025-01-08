@@ -13,6 +13,7 @@ using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -598,6 +599,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
@@ -643,7 +645,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         if (dr != null)
                         {
                             dr.HasAlreadyInvoiced = false;
-                            dr.Status = nameof(DRStatus.Delivered);
+                            dr.Status = nameof(DRStatus.ForInvoicing);
                         }
 
                         #region --Audit Trail Recording

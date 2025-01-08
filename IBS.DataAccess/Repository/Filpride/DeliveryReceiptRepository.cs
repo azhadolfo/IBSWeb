@@ -124,11 +124,11 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Freight = viewModel.Freight;
             existingRecord.AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo;
 
-            if (!customerOrderSlip.HasMultiplePO)
+            if (!customerOrderSlip.HasMultiplePO && existingRecord.CustomerOrderSlipId != customerOrderSlip.CustomerOrderSlipId)
             {
                 existingRecord.PurchaseOrderId = customerOrderSlip.PurchaseOrderId;
             }
-            else
+            else if (customerOrderSlip.HasMultiplePO && existingRecord.CustomerOrderSlipId != customerOrderSlip.CustomerOrderSlipId)
             {
                 var selectedPo = await _db.FilprideCOSAppointedSuppliers
                     .OrderBy(s => s.PurchaseOrderId)
@@ -174,7 +174,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         dr.CustomerOrderSlipId == cosId &&
                         dr.DeliveredDate != null &&
                         !dr.HasAlreadyInvoiced &&
-                        dr.Status == nameof(DRStatus.Delivered))
+                        dr.Status == nameof(DRStatus.ForInvoicing))
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.DeliveryReceiptId.ToString(),
@@ -510,7 +510,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (cos.Status == nameof(CosStatus.Completed))
             {
-                cos.Status = nameof(CosStatus.Approved);
+                cos.Status = nameof(CosStatus.ForDR);
             }
 
             cos.DeliveredQuantity -= drVolume;
@@ -553,7 +553,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var inTransits = await GetAllAsync(dr =>
                     dr.Date.Month == previousMonth.Month &&
                     dr.Date.Year == previousMonth.Year &&
-                    dr.Status == nameof(DRStatus.Pending), cancellationToken);
+                    dr.Status == nameof(DRStatus.PendingDelivery), cancellationToken);
 
             foreach (var dr in inTransits.OrderBy(dr => dr.DeliveryReceiptNo))
             {
