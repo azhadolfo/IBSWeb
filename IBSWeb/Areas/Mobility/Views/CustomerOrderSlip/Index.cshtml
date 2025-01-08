@@ -3,6 +3,7 @@
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @using IBS.Utility
+@using Newtonsoft.Json
 
 @{
     ViewData["Title"] = "Customer Order Slip";
@@ -74,283 +75,286 @@
                     </a>
                 </div>
             }
-
         </div>
 
         <table class="table table-bordered" id="dataTable">
             <thead>
-                <tr>
-                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.CustomerOrderSlipNo)</th>
-                    @if (currentStationCode == "ALL")
-                    {
-                        <th class="text-start align-middle">@Html.DisplayNameFor(model => model.StationCode)</th>
-                    }
-                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Date)</th>
-                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Customer)</th>
-                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Driver)</th>
-                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.PlateNo)</th>
-                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Product)</th>
-                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Quantity)</th>
-                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Amount)</th>
-                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Status)</th>
-                    <th class="text-center align-middle">Actions</th>
-                </tr>
+            <tr>
+                <th class="text-start align-middle">@Html.DisplayNameFor(model => model.CustomerOrderSlipNo)</th>
+                @if (currentStationCode == "ALL")
+                {
+                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.StationCode)</th>
+                }
+                <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Date)</th>
+                <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Customer)</th>
+                <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Driver)</th>
+                <th class="text-start align-middle">@Html.DisplayNameFor(model => model.PlateNo)</th>
+                <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Product)</th>
+                <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Quantity)</th>
+                <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Amount)</th>
+                <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Status)</th>
+                <th class="text-center align-middle">Actions</th>
+            </tr>
             </thead>
 
             <tbody>
-                @foreach (var item in Model)
+            @foreach (var item in Model)
+            {
+                if ((userDepartment == SD.Department_StationCashier || userDepartment == SD.Department_RetailAudit) && (item.Status == "Pending" || item.Status == "Disapproved"))
                 {
-                    if ((userDepartment == SD.Department_StationCashier || userDepartment == SD.Department_RetailAudit) && (item.Status == "Pending" || item.Status == "Disapproved"))
-                    {
-                        // Will not show cashier the pending and disapproved
-                    }
-                    else
-                    {
-                        <tr>
+                    // Will not show cashier the pending and disapproved
+                }
+                else
+                {
+                    <tr>
+                        <td class="text-start align-middle">
+                            @item.CustomerOrderSlipNo
+                        </td>
+                        @if (currentStationCode == "ALL")
+                        {
                             <td class="text-start align-middle">
-                                @item.CustomerOrderSlipNo
+                                @Html.DisplayFor(model => item.MobilityStation.StationName)
                             </td>
-                            @if (currentStationCode == "ALL")
-                            {
-                                <td class="text-start align-middle">
-                                    @Html.DisplayFor(model => item.MobilityStation.StationName)
-                                </td>
-                            }
-                            <td class="text-start align-middle">
-                                @item.Date.ToString("yyyy/MM/dd")
-                            </td>
-                            <td class="text-start align-middle">
-                                @item.Customer.CustomerName
-                            </td>
-                            <td class="text-start align-middle">
-                                @item.Driver
-                            </td>
-                            <td class="text-start align-middle">
-                                @item.PlateNo
-                            </td>
-                            <td class="text-start align-middle">
-                                @item.Product.ProductName
-                            </td>
-                            <td class="text-end align-middle">
-                                @Html.DisplayFor(model => item.Quantity)
-                            </td>
-                            <td class="text-end align-middle">
-                                @Html.DisplayFor(model => item.Amount)
-                            </td>
-                            <td class="text-center align-middle">
-                                @{
-                                    var status = item.Status == "Disapproved"
+                        }
+                        <td class="text-start align-middle">
+                            @item.Date.ToString("yyyy/MM/dd")
+                        </td>
+                        <td class="text-start align-middle">
+                            @item.Customer.CustomerName
+                        </td>
+                        <td class="text-start align-middle">
+                            @item.Driver
+                        </td>
+                        <td class="text-start align-middle">
+                            @item.PlateNo
+                        </td>
+                        <td class="text-start align-middle">
+                            @item.Product.ProductName
+                        </td>
+                        <td class="text-end align-middle">
+                            @Html.DisplayFor(model => item.Quantity)
+                        </td>
+                        <td class="text-end align-middle">
+                            @Html.DisplayFor(model => item.Amount)
+                        </td>
+                        <td class="text-center align-middle">
+                            @{
+                                var status = item.Status == "Disapproved"
                                     ? "Disapproved"
                                     : item.Status == "Approved"
-                                    ? "Approved"
-                                    : item.Status == "Lifted"
-                                    ? "Lifted"
-                                    : "Pending";
-                                }
-                                <span class="badge rounded-pill @if(item.Status == "Approved") {
-                                                            <text>bg-info</text>
-                                    } else if(status == "Disapproved") {
-                                                            <text>bg-danger</text>
-                                    } else if(status == "Pending") {
-                                                            <text>bg-warning</text>
-                                    } else if(status == "Lifted") {
-                                                            <text>bg-success</text>
-                                    }" style="font-size: 14px">@Html.DisplayFor(model => item.Status)</span>
-                            </td>
-                            <td class="text-center">
-                                <div class="dropdown">
-                                    <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                    <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                        @if ((userDepartment == SD.Department_RetailAdmin || User.IsInRole("Admin")) && (item.Status == "Pending" || item.Status == "Disapproved"))
-                                        {
-                                            <li><a class="dropdown-item" href="@Url.Action("Edit", "CustomerOrderSlip", new { area = "Mobility" })/@item.CustomerOrderSlipId">Edit</a></li>
-                                        }
-                                        <li><a class="dropdown-item" href="@Url.Action("Print", "CustomerOrderSlip", new { area = "Mobility" })/@item.CustomerOrderSlipId">Preview</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                    }
+                                        ? "Approved"
+                                        : item.Status == "Lifted"
+                                            ? "Lifted"
+                                            : "Pending";
+                            }
+                            <span class="badge rounded-pill @if(item.Status == "Approved") {
+                                                                <text>bg-info</text>
+                                                            } else if(status == "Disapproved") {
+                                                                <text>bg-danger</text>
+                                                            } else if(status == "Pending") {
+                                                                <text>bg-warning</text>
+                                                            } else if(status == "Lifted") {
+                                                                <text>bg-success</text>
+                                                            }" style="font-size: 14px">@Html.DisplayFor(model => item.Status)</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                    @if ((userDepartment == SD.Department_RetailAdmin || User.IsInRole("Admin")) && (item.Status == "Pending" || item.Status == "Disapproved"))
+                                    {
+                                        <li><a class="dropdown-item" href="@Url.Action("Edit", "CustomerOrderSlip", new { area = "Mobility" })/@item.CustomerOrderSlipId">Edit</a></li>
+                                    }
+                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CustomerOrderSlip", new { area = "Mobility" })/@item.CustomerOrderSlipId">Preview</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
                 }
+            }
             </tbody>
         </table>
+
+        <div class="col-12 text-end mt-3">
+            <a id="print-button" class="btn btn-primary">
+                <i class="bi bi-file-earmark-arrow-down"></i> Export Excel
+            </a>
+            <a id="print-current-list" class="btn btn-primary">
+                <i class="bi bi-file-earmark-arrow-down"></i> Print List
+            </a>
+        </div>
+        
     </div>
 </div>
 
 @section Scripts {
     <script>
         $(document).ready(function () {
-            var userDepartment = '@ViewBag.userDepartment';
-            var currentStationCode = '@ViewData["currentStationCode"]';
+            // Extract user and station info from server-side variables
+            const userDepartment = '@ViewBag.userDepartment';
+            const currentStationCode = '@ViewData["currentStationCode"]';
 
+            // Redirect Cashier with 'ALL' station to logout
             if (userDepartment === "Cashier" && currentStationCode === "ALL") {
-                // Redirect to the logout page with the return URL
                 window.location.href = '@Url.Page("/Account/Logout", new { area = "Identity", returnUrl = Url.Action("Index", "Home", new { area = "" }) })';
+                return;
             }
-        });
-    </script>
 
-    <script>
-        $(document).ready(function () {
-            var userDepartment = '@ViewBag.userDepartment';
-            var currentStationCode = '@ViewData["currentStationCode"]';
+            let filteredModelGlobal = @Html.Raw(JsonConvert.SerializeObject(Model));
+            let statusFilter = "";
+            let stationFilter = "";
 
-            var statusFilter = "";  // Default is empty (All)
-            var stationFilter = ""; // Default is empty (All)
-
+            // Event listeners for radio buttons
             $('input[name="statusRadio"]').change(function () {
-                statusFilter = $(this).val();  // Get the selected value of the status group
+                statusFilter = $(this).val();
             });
 
             $('input[name="stationRadio"]').change(function () {
-                stationFilter = $(this).val();  // Get the selected value of the station group
+                stationFilter = $(this).val();
             });
 
+            // Fetch and update table on filter change
             $('.search-radio').change(function () {
-                var selectedFilter = $(this).val();
+                fetchAndUpdateTable(statusFilter, stationFilter);
+            });
 
-                // Query based on radio buttons
-                if (stationFilter == "S06") {
-                    if (statusFilter == "Approved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Approved" && j.StationCode == "S06")));
+            // Export table data to Excel
+            $('#print-button').click(function () {
+                exportToExcel(filteredModelGlobal);
+            });
+
+            // Print Current List
+            $('#print-current-list').click(function () {
+                printCurrentList(filteredModelGlobal);
+            });
+
+            function fetchAndUpdateTable(status, station) {
+                $.ajax({
+                    url: '@Url.Action("GetCustomerOrderSlipList", "CustomerOrderSlip", new { area = "Mobility" })',
+                    type: "GET",
+                    data: { statusFilter: status, stationFilter: station, currentStationCode : currentStationCode },
+                    success: function (filteredModel) {
+                        filteredModelGlobal = filteredModel;
+                        updateTable(filteredModel);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("AJAX error:", error);
                     }
-                    if (statusFilter == "Disapproved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Disapproved" && j.StationCode == "S06")));
-                    }
-                    if (statusFilter == "") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.StationCode == "S06")));
-                    }
-                    if (statusFilter == "Lifted") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Lifted" && j.StationCode == "S06")));
-                    }
-                    if (statusFilter == "Pending") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Pending" && j.StationCode == "S06")));
-                    }
-                }
-                if (stationFilter == "S08"){
-                    if (statusFilter == "Approved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Approved" && j.StationCode == "S08")));
-                    }
-                    if (statusFilter == "Disapproved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Disapproved" && j.StationCode == "S08")));
-                    }
-                    if (statusFilter == "") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.StationCode == "S08")));
-                    }
-                    if (statusFilter == "Lifted") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Lifted" && j.StationCode == "S08")));
-                    }
-                    if (statusFilter == "Pending") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Pending" && j.StationCode == "S08")));
-                    }
-                }
-                if (stationFilter == "S21"){
-                    if (statusFilter == "Approved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Approved" && j.StationCode == "S21")));
-                    }
-                    if (statusFilter == "Disapproved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Disapproved" && j.StationCode == "S21")));
-                    }
-                    if (statusFilter == "") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.StationCode == "S21")));
-                    }
-                    if (statusFilter == "Lifted") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Lifted" && j.StationCode == "S21")));
-                    }
-                    if (statusFilter == "Pending") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Pending" && j.StationCode == "S21")));
-                    }
-                }
-                if (stationFilter == ""){
-                    if (statusFilter == "Approved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Approved")));
-                    }
-                    if (statusFilter == "Disapproved") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Disapproved")));
-                    }
-                    if (statusFilter == "") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo)));
-                    }
-                    if (statusFilter == "Lifted") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Lifted")));
-                    }
-                    if (statusFilter == "Pending") {
-                        var filteredModel = @Html.Raw(Json.Serialize(Model.OrderBy(j => j.CustomerOrderSlipNo).Where(j => j.Status == "Pending")));
-                    }
-                }
+                });
+            }
+
+            function updateTable(data) {
                 if ($.fn.DataTable.isDataTable('#dataTable')) {
                     $('#dataTable').DataTable().destroy();
                 }
 
-                // Clear the table body content
                 $('#dataTable tbody').empty();
-                $.each(filteredModel, function (index, value) {
-                    // Skip items based on user department and status
-                    console.log(userDepartment);
+
+                $.each(data, function (index, value) {
                     if ((userDepartment === "Station Cashier" || userDepartment === "Retail Audit") && (value.status === "Pending" || value.status === "Disapproved")) {
-                        return; // continue to the next item
+                        return;
                     }
 
-                    // Determine badge class for status
-                    let badgeClass = "";
-                    switch (value.status) {
-                        case "Approved":
-                            badgeClass = "bg-info";
-                            break;
-                        case "Disapproved":
-                            badgeClass = "bg-danger";
-                            break;
-                        case "Pending":
-                            badgeClass = "bg-warning";
-                            break;
-                        case "Lifted":
-                            badgeClass = "bg-success";
-                            break;
-                        default:
-                            badgeClass = "bg-secondary";
-                    }
+                    const badgeClass = getBadgeClass(value.status);
 
-                    // Append a new row to the table body
-                    $('#dataTable tbody').append(`
-                    <tr>
-                        <td class="text-start align-middle">${value.customerOrderSlipNo}</td>
-                        ${currentStationCode === "ALL" ? `<td class="text-start align-middle">${value.mobilityStation?.stationName || ''}</td>` : ''}
-                        <td class="text-start align-middle">${new Date(value.date).toISOString().slice(0, 10).replace(/-/g, '/')}</td>
-                        <td class="text-start align-middle">${value.customer?.customerName || ''}</td>
-                        <td class="text-start align-middle">${value.driver || ''}</td>
-                        <td class="text-start align-middle">${value.plateNo || ''}</td>
-                        <td class="text-start align-middle">${value.product?.productName || ''}</td>
-                        <td class="text-end align-middle">${(value.quantity || 0).toFixed(2)}</td>
-                        <td class="text-end align-middle">${(value.amount || 0).toFixed(2)}</td>
-                        <td class="text-center align-middle">
-                            <span class="badge rounded-pill ${badgeClass}" style="font-size: 14px">
-                                ${value.status}
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <div class="dropdown">
-                                <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown${index}"
-                                        data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown${index}">
-                                    ${(userDepartment === "Marketing" || userDepartment === "Admin") &&
-                            (value.status === "Pending" || value.status === "Disapproved")
-                            ? `<li><a class="dropdown-item" href="/Mobility/CustomerOrderSlip/Edit/${value.customerOrderSlipId}">Edit</a></li>`
-                            : ''
-                        }
-                                    <li>
-                                        <a class="dropdown-item" href="/Mobility/CustomerOrderSlip/Print/${value.customerOrderSlipId}">Preview</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
-                `);
+                    const rowHtml = `
+                        <tr>
+                            <td class="text-start align-middle">${value.customerOrderSlipNo}</td>
+                            ${currentStationCode === "ALL" ? `<td class="text-start align-middle">${value.mobilityStation?.stationName || ''}</td>` : ''}
+                            <td class="text-start align-middle">${new Date(value.date).toISOString().slice(0, 10).replace(/-/g, '/')}</td>
+                            <td class="text-start align-middle">${value.customer?.customerName || ''}</td>
+                            <td class="text-start align-middle">${value.driver || ''}</td>
+                            <td class="text-start align-middle">${value.plateNo || ''}</td>
+                            <td class="text-start align-middle">${value.product?.productName || ''}</td>
+                            <td class="text-end align-middle">${(value.quantity || 0).toFixed(2)}</td>
+                            <td class="text-end align-middle">${(value.amount || 0).toFixed(2)}</td>
+                            <td class="text-center align-middle">
+                                <span class="badge rounded-pill ${badgeClass}" style="font-size: 14px">
+                                    ${value.status}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                ${getActionsDropdown(value, index)}
+                            </td>
+                        </tr>
+                    `;
+
+                    $('#dataTable tbody').append(rowHtml);
                 });
 
                 $('#dataTable').DataTable({
-                    "bInfo": true // This will disable the "Showing x to y of z entries" info text
+                    paging: true,
+                    searching: true,
+                    info: true,
+                    lengthChange: true,
+                    order: [[0, 'asc']]
                 });
-            });
+            }
+
+            function getBadgeClass(status) {
+                switch (status) {
+                    case "Approved": return "bg-info";
+                    case "Disapproved": return "bg-danger";
+                    case "Pending": return "bg-warning";
+                    case "Lifted": return "bg-success";
+                    default: return "bg-secondary";
+                }
+            }
+
+            function getActionsDropdown(value, index) {
+                const editOption = (userDepartment === "Marketing" || userDepartment === "RCD") && (value.status === "Pending" || value.status === "Disapproved")
+                    ? `<li><a class="dropdown-item" href="/Mobility/CustomerOrderSlip/Edit/${value.customerOrderSlipId}">Edit</a></li>`
+                    : '';
+
+                return `
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown${index}" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                        <ul class="dropdown-menu" aria-labelledby="actionsDropdown${index}">
+                            ${editOption}
+                            <li><a class="dropdown-item" href="/Mobility/CustomerOrderSlip/Print/${value.customerOrderSlipId}">Preview</a></li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            function exportToExcel(data) {
+                $.ajax({
+                    url: '@Url.Action("GenerateIndexExcel", "CustomerOrderSlip", new { area = "Mobility" })',
+                    type: "POST",
+                    data: { jsonModel: JSON.stringify(data) },
+                    xhrFields: { responseType: 'blob' },
+                    success: function (blob, textStatus, xhr) {
+                        const disposition = xhr.getResponseHeader('Content-Disposition');
+                        const fileName = disposition && disposition.indexOf('filename=') !== -1
+                            ? disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1].replace(/['"]/g, '')
+                            : "download.xlsx";
+
+                        const link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = fileName;
+                        link.click();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("AJAX error:", error);
+                    }
+                });
+            }
+
+            function printCurrentList(data) {
+                $.ajax({
+                    url: '@Url.Action("PrintCosList", "CustomerOrderSlip", new { area = "Mobility" })',
+                    type: "POST",
+                    data: { jsonModel: JSON.stringify(data) },
+                    success: function (response) {
+                        document.open();
+                        document.write(response);
+                        document.close();
+                    },
+                    error: function (error) {
+                        console.error("AJAX error: ", error);
+                    }
+                });
+            }
         });
     </script>
 }

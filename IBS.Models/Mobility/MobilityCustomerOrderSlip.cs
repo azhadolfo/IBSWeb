@@ -31,6 +31,7 @@ namespace IBS.Models.Mobility.ViewModels
 
         [Display(Name = "Address")]
         [Column(TypeName = "varchar(100)")]
+        [MaxLength(100, ErrorMessage = "The field cannot exceed 100 characters.")]
         public string? Address { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
@@ -39,10 +40,12 @@ namespace IBS.Models.Mobility.ViewModels
 
         [Display(Name = "Plate Number")]
         [Column(TypeName = "varchar(10)")]
+        [MaxLength(10, ErrorMessage = "The field cannot exceed 10 characters.")]
         public string PlateNo { get; set; }
 
         [Display(Name = "Driver Name")]
         [Column(TypeName = "varchar(50)")]
+        [MaxLength(50, ErrorMessage = "The field cannot exceed 50 characters.")]
         public string Driver { get; set; }
 
         [Display(Name = "Status")]
