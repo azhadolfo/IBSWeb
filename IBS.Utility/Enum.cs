@@ -37,7 +37,8 @@
         ForDR,
         Completed,
         Disapproved,
-        Expired
+        Expired,
+        Closed
     }
 
     public enum Status

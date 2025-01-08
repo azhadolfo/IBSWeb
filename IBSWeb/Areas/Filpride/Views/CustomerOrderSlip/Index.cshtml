@@ -116,6 +116,7 @@
                                 case '@CosStatus.ForAtlBooking':
                                     badgeClass = "badge bg-info";
                                     break;
+                                case '@CosStatus.ForApprovalOfOM':
                                 case '@CosStatus.ForApprovalOfFM':
                                     badgeClass = "badge bg-warning";
                                     break;
@@ -125,6 +126,7 @@
                                     break;
                                 case "@CosStatus.Expired":
                                 case "@CosStatus.Disapproved":
+                                case "@CosStatus.Closed":
                                     badgeClass = "badge bg-danger";
                                     break;
                                 default:
@@ -192,6 +194,7 @@
                                     break;
                             }
 
+                            actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                             actions += `</ul></div>`;
                             return actions;
                         }
@@ -250,6 +253,25 @@
             });
         }
     }
+
+    // SweetAlert function
+    function confirmCloseCos(customerOrderSlipId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, close it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Redirect to the Close COS action
+                window.location.href = `@Url.Action("Close", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}`;
+            }
+        });
+    }
+    
     </script>
 
 }
