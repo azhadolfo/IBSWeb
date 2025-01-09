@@ -3646,10 +3646,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 1].Value = transaction.TransactionDate; // Date
                             worksheet.Cells[row, 2].Value = transaction.Customer?.CustomerName; // Account Name
                             worksheet.Cells[row, 3].Value = transaction.Customer?.CustomerType; // Account Type
-                            worksheet.Cells[row, 4].Value = transaction.CustomerOrderSlip?.OldCosNo; // Old COS #
-                            worksheet.Cells[row, 5].Value = transaction.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
-                            worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt?.ManualDrNo; // Old DR #
-                            worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt?.DeliveryReceiptNo; // New DR #
+                            worksheet.Cells[row, 4].Value = transaction.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
+                            worksheet.Cells[row, 5].Value = transaction.CustomerOrderSlip?.OldCosNo; // Old COS #
+                            worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt?.DeliveryReceiptNo; // New DR #
+                            worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt?.ManualDrNo; // Old DR #
                             worksheet.Cells[row, 8].Value = transaction.Product?.ProductName; // Items
                             worksheet.Cells[row, 9].Value = transaction.Quantity; // Volume
                             worksheet.Cells[row, 10].Value = transaction.Amount; // Total
@@ -3823,10 +3823,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 1].Value = transaction.TransactionDate; // Date
                             worksheet.Cells[row, 2].Value = transaction.Customer?.CustomerName; // Account Name
                             worksheet.Cells[row, 3].Value = transaction.Customer?.CustomerType; // Account Type
-                            worksheet.Cells[row, 4].Value = transaction.CustomerOrderSlip?.OldCosNo; // Old COS #
-                            worksheet.Cells[row, 5].Value = transaction.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
-                            worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt?.ManualDrNo; // Old DR #
-                            worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt?.DeliveryReceiptNo; // New DR #
+                            worksheet.Cells[row, 4].Value = transaction.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
+                            worksheet.Cells[row, 5].Value = transaction.CustomerOrderSlip?.OldCosNo; // Old COS #
+                            worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt?.DeliveryReceiptNo; // New DR #
+                            worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt?.ManualDrNo; // Old DR #
                             worksheet.Cells[row, 8].Value = transaction.Product?.ProductName; // Items
                             worksheet.Cells[row, 9].Value = transaction.Quantity; // Volume
                             worksheet.Cells[row, 10].Value = transaction.Amount; // Total
@@ -3966,12 +3966,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 5].Value = "AMOUNT";
                         worksheet.Cells[row, 6].Value = "ENVIROGAS";
                         worksheet.Cells[row, 7].Value = "AMOUNT";
-                        worksheet.Cells[row, 8].Value = "LUBES";
+                        worksheet.Cells[row, 8].Value = "TOTAL";
                         worksheet.Cells[row, 9].Value = "AMOUNT";
-                        worksheet.Cells[row, 10].Value = "TOTAL";
-                        worksheet.Cells[row, 11].Value = "AMOUNT";
 
-                        using (var range = worksheet.Cells[row, 1, row, 11])
+                        using (var range = worksheet.Cells[row, 1, row, 9])
                         {
                             range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
                             range.Style.Font.Bold = true;
@@ -4010,12 +4008,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 7].Value = customerGroup
                                 .Where(cg => cg.Product?.ProductName == "ENVIROGAS")
                                 .Sum(cg => cg.Amount);
-                            worksheet.Cells[row, 10].Value = customerGroup
+                            worksheet.Cells[row, 8].Value = customerGroup
                                 .Sum(cg => cg.Quantity);
-                            worksheet.Cells[row, 11].Value = customerGroup
+                            worksheet.Cells[row, 9].Value = customerGroup
                                 .Sum(cg => cg.Amount);
 
-                            worksheet.Cells[row, 2, row, 11].Style.Numberformat.Format = "#,##0.00";
+                            worksheet.Cells[row, 2, row, 9].Style.Numberformat.Format = "#,##0.00";
 
                             row++;
                         }
@@ -4039,15 +4037,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 7].Value = ct
                             .Where(si => si.Product.ProductName == "ENVIROGAS")
                             .Sum(si => si.Amount); // Total Amount
-                        worksheet.Cells[row, 10].Value = ct
+                        worksheet.Cells[row, 8].Value = ct
                             .Sum(si => si.Quantity); // Total Volume
-                        worksheet.Cells[row, 11].Value = ct
+                        worksheet.Cells[row, 9].Value = ct
                             .Sum(si => si.Amount); // Total Amount
 
                         var tillRowToResize = row;
-                        worksheet.Cells[rowToResize, 1, tillRowToResize, 11].Style.Font.Size = 10;
+                        worksheet.Cells[rowToResize, 1, tillRowToResize, 9].Style.Font.Size = 10;
 
-                        using (var range = worksheet.Cells[row, 1, row, 11])
+                        using (var range = worksheet.Cells[row, 1, row, 9])
                         {
                             range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
                             range.Style.Font.Bold = true;
@@ -4081,12 +4079,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 7].Value = salesReport
                         .Where(si => si.Product?.ProductName == "ENVIROGAS")
                         .Sum(si => si.Amount);
-                    worksheet.Cells[row, 10].Value = salesReport
+                    worksheet.Cells[row, 8].Value = salesReport
                         .Sum(si => si.Quantity);
-                    worksheet.Cells[row, 11].Value = salesReport
+                    worksheet.Cells[row, 9].Value = salesReport
                         .Sum(si => si.Amount);
 
-                    using (var range = worksheet.Cells[row, 1, row, 11])
+                    using (var range = worksheet.Cells[row, 1, row, 9])
                     {
                         range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
                         range.Style.Font.Bold = true;
