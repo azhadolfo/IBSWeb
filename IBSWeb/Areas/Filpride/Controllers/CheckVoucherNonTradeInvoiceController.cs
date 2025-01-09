@@ -656,7 +656,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     AccountTitle = $"{details.AccountNo} {details.AccountName}",
                     Amount = details.Debit != 0 ? details.Debit : details.Credit,
                     Vatable = existingModel.Supplier.VatType == SD.VatType_Vatable,
-                    TaxPercentage = (decimal)existingModel.Supplier.WithholdingTaxPercent,
+                    TaxPercentage = existingModel.Supplier.WithholdingTaxPercent ?? 0,
                     Type = details.Debit != 0 ? NormalBalance.Debit : NormalBalance.Credit,
                 });
             }

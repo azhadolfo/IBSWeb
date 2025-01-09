@@ -90,11 +90,11 @@
                                 <tr>
                                     <th>Account</th>
                                     <th>Type</th>
-                                    <th>Amount</th>
+                                    <th>Gross Amount</th>
                                     <th>Vatable</th>
-                                    <th>Taxable</th>
+                                    <th>EWT</th>
                                     <th>VAT Amount</th>
-                                    <th>Tax Amount</th>
+                                    <th>EWT Amount</th>
                                     <th>Net of VAT</th>
                                     <th>Actions</th>
                                 </tr>
@@ -102,7 +102,9 @@
                                 <tbody>
                                 <tr>
                                     <td>
-                                        <select asp-for="AccountingEntries[0].AccountTitle" class="form-select form-select-sm chart-of-accounts default-expense">
+                                        <select asp-for="AccountingEntries[0].AccountTitle" 
+                                                class="form-select form-select-sm chart-of-accounts default-expense js-select2"
+                                                style="width: 100%">
                                             <option value="">-- Select Account --</option>
                                             @foreach (var account in Model.ChartOfAccounts)
                                             {
@@ -111,7 +113,7 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <select asp-for="AccountingEntries[0].Type" class="form-select form-select-sm normal-balance">
+                                        <select asp-for="AccountingEntries[0].Type" class="form-select form-select-sm normal-balance" readonly tabindex="-1">
                                             <option value="@NormalBalance.Debit" selected>@NormalBalance.Debit.ToString()</option>
                                             <option value="@NormalBalance.Credit">@NormalBalance.Credit.ToString()</option>
                                         </select>
@@ -149,7 +151,7 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <select class="form-select form-select-sm chart-of-accounts" disabled>
+                                        <select class="form-select form-select-sm chart-of-accounts js-select2" style="width: 100%" disabled>
                                             <option value="">-- Select Account --</option>
                                             @foreach (var account in Model.ChartOfAccounts)
                                             {
@@ -343,7 +345,7 @@
             const newRowHTML = `
                 <tr>
                     <td class="px-2">
-                        <select name="AccountingEntries[${rowCount}].AccountTitle" class="form-select form-select-sm chart-of-accounts" required>
+                        <select name="AccountingEntries[${rowCount}].AccountTitle" class="form-select form-select-sm chart-of-accounts js-select2" style="width: 100%" required>
                             ${document.querySelector(".chart-of-accounts").innerHTML}
                         </select>
                     </td>
@@ -385,9 +387,17 @@
                     </td>
                 </tr>
             `;
-
+                            
             // Add the new row to the table
             tableBody.insertAdjacentHTML("beforeend", newRowHTML);
+
+            // Reinitialize Select2 for all js-select2 dropdowns
+            $('.js-select2').select2({
+                placeholder: "Select an option...",
+                allowClear: true,
+                width: 'resolve',
+                theme: 'classic'
+            });
 
             // Attach remove functionality only to the newly added row
             const newRow = tableBody.lastElementChild;
