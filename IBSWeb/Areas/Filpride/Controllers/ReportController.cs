@@ -3346,7 +3346,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // Apply style to subtotal rows
                     // color to whole row
-                    using (var range = purchaseReportWorksheet.Cells[row, 1, row, 24])
+                    using (var range = purchaseReportWorksheet.Cells[row, 1, row, 26])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
