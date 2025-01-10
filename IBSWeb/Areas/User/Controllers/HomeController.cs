@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Linq.Dynamic.Core;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
+using IBS.Utility.Enums;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -65,11 +66,11 @@ namespace IBSWeb.Areas.User.Controllers
                     .CountAsync(),
 
                 InTransitCount = await _dbContext.FilprideDeliveryReceipts
-                    .Where(dr => dr.Status == nameof(DRStatus.Pending))
+                    .Where(dr => dr.Status == nameof(DRStatus.PendingDelivery))
                     .CountAsync(),
 
                 InvoiceCount = await _dbContext.FilprideDeliveryReceipts
-                    .Where(dr => dr.Status == nameof(DRStatus.Delivered))
+                    .Where(dr => dr.Status == nameof(DRStatus.ForInvoicing))
                     .CountAsync(),
             };
 

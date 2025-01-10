@@ -109,11 +109,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         case "InTransit":
                             drList = drList.Where(dr =>
-                                dr.Status == nameof(DRStatus.Pending));
+                                dr.Status == nameof(DRStatus.PendingDelivery));
                             break;
                         case "ForInvoice":
                             drList = drList.Where(dr =>
-                                dr.Status == nameof(DRStatus.Delivered));
+                                dr.Status == nameof(DRStatus.ForInvoicing));
                             break;
                         case "ForOMApproval":
                             drList = drList.Where(cos =>
