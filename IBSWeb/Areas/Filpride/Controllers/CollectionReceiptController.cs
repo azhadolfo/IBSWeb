@@ -1,17 +1,19 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
-using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -1372,7 +1374,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = model.TransactionDate,
                                         Reference = model.CollectionReceiptNo,
                                         Description = "Collection for Receivable",
-                                        AccountNo = "1010101",
+                                        AccountNo = "101010100",
                                         AccountTitle = "Cash in Bank",
                                         Debit = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount,
                                         Credit = 0,
@@ -1391,7 +1393,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = model.TransactionDate,
                                     Reference = model.CollectionReceiptNo,
                                     Description = "Collection for Receivable",
-                                    AccountNo = "1010604",
+                                    AccountNo = "101060400",
                                     AccountTitle = "Creditable Withholding Tax",
                                     Debit = model.EWT,
                                     Credit = 0,
@@ -1410,8 +1412,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = model.TransactionDate,
                                     Reference = model.CollectionReceiptNo,
                                     Description = "Collection for Receivable",
-                                    AccountNo = "1010605",
-                                    AccountTitle = "Creditable Withholding Vat",
+                                    AccountNo = "101060600",
+                                    AccountTitle = "Creditable Withholding Vat Input",
                                     Debit = model.WVAT,
                                     Credit = 0,
                                     Company = model.Company,
@@ -1453,7 +1455,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = model.TransactionDate,
                                     Reference = model.CollectionReceiptNo,
                                     Description = "Collection for Receivable",
-                                    AccountNo = "1010201",
+                                    AccountNo = "101020100",
                                     AccountTitle = "AR-Trade Receivable",
                                     Debit = 0,
                                     Credit = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + offsetAmount,
@@ -1472,8 +1474,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = model.TransactionDate,
                                     Reference = model.CollectionReceiptNo,
                                     Description = "Collection for Receivable",
-                                    AccountNo = "1010202",
-                                    AccountTitle = "Deferred Creditable Withholding Tax",
+                                    AccountNo = "101060500",
+                                    AccountTitle = "Deferred Withholding Tax",
                                     Debit = 0,
                                     Credit = model.EWT,
                                     Company = model.Company,
@@ -1491,8 +1493,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = model.TransactionDate,
                                     Reference = model.CollectionReceiptNo,
                                     Description = "Collection for Receivable",
-                                    AccountNo = "1010203",
-                                    AccountTitle = "Deferred Creditable Withholding Vat",
+                                    AccountNo = "101060700",
+                                    AccountTitle = "Deferred Withholding Vat Input",
                                     Debit = 0,
                                     Credit = model.WVAT,
                                     Company = model.Company,
@@ -1523,7 +1525,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 CustomerName = model.SalesInvoiceId != null ? model.SalesInvoice.Customer.CustomerName : model.MultipleSIId != null ? model.Customer.CustomerName : model.ServiceInvoice.Customer.CustomerName,
                                 Bank = model.CheckBank ?? (model.ManagerCheckBank != null ? model.ManagerCheckBank : "--"),
                                 CheckNo = model.CheckNo ?? (model.ManagerCheckNo != null ? model.ManagerCheckNo : "--"),
-                                COA = "1010101 Cash in Bank",
+                                COA = "101010100 Cash in Bank",
                                 Particulars = model.SalesInvoiceId != null ? model.SalesInvoice.SalesInvoiceNo : model.MultipleSIId != null ? string.Join(", ", model.MultipleSI.Select(si => si.ToString())) : model.ServiceInvoice.ServiceInvoiceNo,
                                 Debit = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount,
                                 Credit = 0,
@@ -1544,7 +1546,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CustomerName = model.SalesInvoiceId != null ? model.SalesInvoice.Customer.CustomerName : model.MultipleSIId != null ? model.Customer.CustomerName : model.ServiceInvoice.Customer.CustomerName,
                                     Bank = model.CheckBank ?? (model.ManagerCheckBank != null ? model.ManagerCheckBank : "--"),
                                     CheckNo = model.CheckNo ?? (model.ManagerCheckNo != null ? model.ManagerCheckNo : "--"),
-                                    COA = "1010604 Creditable Withholding Tax",
+                                    COA = "101060400 Creditable Withholding Tax",
                                     Particulars = model.SalesInvoiceId != null ? model.SalesInvoice.SalesInvoiceNo : model.MultipleSIId != null ? string.Join(", ", model.MultipleSI.Select(si => si.ToString())) : model.ServiceInvoice.ServiceInvoiceNo,
                                     Debit = model.EWT,
                                     Credit = 0,
@@ -1565,7 +1567,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CustomerName = model.SalesInvoiceId != null ? model.SalesInvoice.Customer.CustomerName : model.MultipleSIId != null ? model.Customer.CustomerName : model.ServiceInvoice.Customer.CustomerName,
                                     Bank = model.CheckBank ?? (model.ManagerCheckBank != null ? model.ManagerCheckBank : "--"),
                                     CheckNo = model.CheckNo ?? (model.ManagerCheckNo != null ? model.ManagerCheckNo : "--"),
-                                    COA = "1010605 Creditable Withholding Vat",
+                                    COA = "101060600 Creditable Withholding Vat Input",
                                     Particulars = model.SalesInvoiceId != null ? model.SalesInvoice.SalesInvoiceNo : model.MultipleSIId != null ? string.Join(", ", model.MultipleSI.Select(si => si.ToString())) : model.ServiceInvoice.ServiceInvoiceNo,
                                     Debit = model.WVAT,
                                     Credit = 0,
@@ -1608,7 +1610,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CustomerName = model.SalesInvoiceId != null ? model.SalesInvoice.Customer.CustomerName : model.MultipleSIId != null ? model.Customer.CustomerName : model.ServiceInvoice.Customer.CustomerName,
                             Bank = model.CheckBank ?? (model.ManagerCheckBank != null ? model.ManagerCheckBank : "--"),
                             CheckNo = model.CheckNo ?? (model.ManagerCheckNo != null ? model.ManagerCheckNo : "--"),
-                            COA = "1010201 AR-Trade Receivable",
+                            COA = "101020100 AR-Trade Receivable",
                             Particulars = model.SalesInvoiceId != null ? model.SalesInvoice.SalesInvoiceNo : model.MultipleSIId != null ? string.Join(", ", model.MultipleSI.Select(si => si.ToString())) : model.ServiceInvoice.ServiceInvoiceNo,
                             Debit = 0,
                             Credit = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + offsetAmount,
@@ -1628,7 +1630,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CustomerName = model.SalesInvoiceId != null ? model.SalesInvoice.Customer.CustomerName : model.MultipleSIId != null ? model.Customer.CustomerName : model.ServiceInvoice.Customer.CustomerName,
                                     Bank = model.CheckBank ?? (model.ManagerCheckBank != null ? model.ManagerCheckBank : "--"),
                                     CheckNo = model.CheckNo ?? (model.ManagerCheckNo != null ? model.ManagerCheckNo : "--"),
-                                    COA = "1010202 Deferred Creditable Withholding Tax",
+                                    COA = "101060500 Deferred Withholding Tax",
                                     Particulars = model.SalesInvoiceId != null ? model.SalesInvoice.SalesInvoiceNo : model.MultipleSIId != null ? string.Join(", ", model.MultipleSI.Select(si => si.ToString())) : model.ServiceInvoice.ServiceInvoiceNo,
                                     Debit = 0,
                                     Credit = model.EWT,
@@ -1649,7 +1651,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CustomerName = model.SalesInvoiceId != null ? model.SalesInvoice.Customer.CustomerName : model.MultipleSIId != null ? model.Customer.CustomerName : model.ServiceInvoice.Customer.CustomerName,
                                     Bank = model.CheckBank ?? (model.ManagerCheckBank != null ? model.ManagerCheckBank : "--"),
                                     CheckNo = model.CheckNo ?? (model.ManagerCheckNo != null ? model.ManagerCheckNo : "--"),
-                                    COA = "1010203 Deferred Creditable Withholding Vat",
+                                    COA = "101060700 Deferred Withholding Vat Input",
                                     Particulars = model.SalesInvoiceId != null ? model.SalesInvoice.SalesInvoiceNo : model.MultipleSIId != null ? string.Join(", ", model.MultipleSI.Select(si => si.ToString())) : model.ServiceInvoice.ServiceInvoiceNo,
                                     Debit = 0,
                                     Credit = model.WVAT,

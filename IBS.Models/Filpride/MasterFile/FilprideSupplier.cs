@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Utility;
+using IBS.Utility.Helpers;
 
 namespace IBS.Models.Filpride.MasterFile
 {
@@ -80,7 +81,7 @@ namespace IBS.Models.Filpride.MasterFile
         public List<SelectListItem>? DefaultExpenses { get; set; }
 
         [Display(Name = "Withholding Tax Percent")]
-        public int? WithholdingTaxPercent { get; set; }
+        public decimal? WithholdingTaxPercent { get; set; }
 
         [Column(TypeName = "varchar(100)")]
         [Display(Name = "Withholding Tax Title")]

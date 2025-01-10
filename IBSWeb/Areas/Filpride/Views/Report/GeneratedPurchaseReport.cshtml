@@ -1,0 +1,202 @@
+@model IEnumerable<FilprideReceivingReport>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Purchase Report";
+
+    string currencyFormat = "N4";
+    var totalVolume = 0m;
+    decimal totalCostPerLiter = 0m;
+    decimal totalCostAmount = 0m;
+    decimal totalVatAmount = 0m;
+    decimal totalWHTAmount = 0m;
+    decimal totalNetPurchases = 0m;
+    decimal totalCOSPrice = 0m;
+    decimal totalCOSAmount = 0m;
+    decimal totalCOSPerLiter = 0m;
+    decimal totalGMPerLiter = 0m;
+    decimal totalGMAmount = 0m;
+    decimal totalFreightCharge = 0m;
+    decimal totalFCAmount = 0m;
+    decimal totalCommissionPerLiter = 0m;
+    decimal totalCommissionAmount = 0m;
+    decimal totalNetMarginPerLiter = 0m;
+    decimal totalNetMarginAmount = 0m;
+}
+<style>
+    .container {
+        max-width: none;
+    }
+
+    .table-responsive {
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+
+    table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .print-header, .table-responsive, .table-responsive * {
+            visibility: visible;
+        }
+
+        .print-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .table-responsive {
+            position: absolute;
+            top: 0; /* Adjust this value based on your header's height */
+            left: 0;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+    }
+</style>
+
+<div class="table-responsive">
+    <h5>PURCHASE REPORT</h5>
+    <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
+    <table id="ledgerTable" class="table">
+        <thead>
+        <tr class="table-primary text-nowrap">
+            <th class="px-3">Date</th>
+            <th class="px-3">Supplier Name</th>
+            <th class="px-3">Supplier Tin</th>
+            <th class="px-3">Supplier Address</th>
+            <th class="px-3">PO No.</th>
+            <th class="px-3">Filpride RR</th>
+            <th class="px-3">Filpride DR</th>
+            <th class="px-3">ATL No.</th>
+            <th class="px-3">Supplier Sales Invoice</th>
+            <th class="px-3">Supplier DR</th>
+            <th class="px-3">Supplier WC</th>
+            <th class="px-3">Customer Name</th>
+            <th class="px-3">Product</th>
+            <th class="px-3">Volume</th>
+            <th class="px-3">Cost Per Liter</th>
+            <th class="px-3">Cost Amount</th>
+            <th class="px-3">Vat Amount</th>
+            <th class="px-3">Def Vat Amount</th>
+            <th class="px-3">WHT Amount</th>
+            <th class="px-3">Net Purchases</th>
+            <th class="px-3">Hauler Name</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        @* Populate rows *@
+        @foreach (var rr in Model)
+        {
+            var volume = rr.QuantityReceived;
+            var costPerLiter = (rr.PurchaseOrder?.Price ?? 0m);
+            var cosPricePerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m);
+            var freightChargePerLiter = (rr.DeliveryReceipt?.Freight ?? 0m);
+            var commissionPerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m);
+            var costAmountGross = volume * costPerLiter;
+            var costAmountNet = costAmountGross / 1.12m;
+            var cosAmountGross = volume * cosPricePerLiter;
+            var gmPerLiter = (cosPricePerLiter - costPerLiter);
+        
+            <tr class="align-text-bottom text-nowrap">
+                <td class="px-3"> @rr.Date </td> @* Date *@
+                <td class="px-3"> @rr.PurchaseOrder?.Supplier?.SupplierName </td> @* Supplier Name *@
+                <td class="px-3"> @rr.PurchaseOrder?.Supplier?.SupplierTin </td> @* Supplier Tin *@
+                <td class="px-3"> @rr.PurchaseOrder?.Supplier?.SupplierAddress </td> @* Supplier Address *@
+                <td class="px-3"> @rr.PurchaseOrder?.PurchaseOrderNo </td> @* PO No. *@
+                <td class="px-3"> @rr.ReceivingReportNo </td> @* Filpride RR *@
+                <td class="px-3"> @rr.DeliveryReceipt?.DeliveryReceiptNo </td> @* Filpride DR *@
+                <td class="px-3"> @rr.AuthorityToLoadNo </td> @* ATL # *@
+                <td class="px-3"> @rr.SupplierInvoiceNumber </td> @* Supplier Sales Invoice *@
+                <td class="px-3"> @rr.SupplierDrNo </td> @* Supplier DR No. *@
+                <td class="px-3"> @rr.WithdrawalCertificate </td> @* Supplier WC *@
+                <td class="px-3"> @rr.DeliveryReceipt?.Customer?.CustomerName </td> @* Customer Name *@
+                <td class="px-3"> @rr.PurchaseOrder?.Product?.ProductName </td> @* Product *@
+                <td class="px-3"> @volume.ToString("N4") </td> @* Volume *@
+                <td class="px-3"> @costPerLiter.ToString("N4")) </td> @* Cost/Liter *@
+                <td class="px-3"> @((costAmountGross).ToString("N4")) </td> @* Cost Amount *@
+                <td class="px-3"> @((costAmountNet * 0.12m).ToString("N4")) </td> @* VAT Amount??? *@
+                <td class="px-3"></td> @* Def VAT Amount *@
+                <td class="px-3"> @((costAmountNet * 0.01m).ToString("N4")) </td> @* WHT Amount??? *@
+                <td class="px-3"> @(costAmountNet.ToString("N4")) </td> @* Net Purchases *@
+                <td class="px-3"> @rr.DeliveryReceipt?.Hauler?.SupplierName </td> @* Hauler Name *@
+            </tr>
+            
+            @* Add values to total variables *@
+            totalVolume += volume;
+            totalCostAmount += costAmountGross;
+            totalVatAmount += costAmountNet * 0.12m;
+            totalWHTAmount += costAmountNet * 0.01m;
+            totalNetPurchases += costAmountNet;
+            totalCOSAmount += cosPricePerLiter * volume;
+            totalGMAmount += cosAmountGross - costAmountGross;
+            totalFCAmount += freightChargePerLiter * volume;
+            totalCommissionAmount += volume * commissionPerLiter;
+            totalNetMarginAmount += (gmPerLiter - freightChargePerLiter) * volume;
+        }
+
+        @* After getting all totals, compute for other totals *@
+        @{
+            totalCostPerLiter = totalCostAmount / totalVolume;
+        }
+
+        @* Populate subtotal rows *@
+        <tr class="table-primary" style="border-top: double">
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="text-start px-3"><b>TOTAL:</b></td>
+            <td class="text-start px-3">@totalVolume.ToString("N4")</td>
+            <td class="text-start px-3">@totalCostPerLiter.ToString("N4")</td>
+            <td class="text-start px-3">@totalCostAmount.ToString("N4")</td>
+            <td class="text-start px-3">@totalVatAmount.ToString("N4")</td>
+            <td></td>
+            <td class="text-start px-3">@totalWHTAmount.ToString("N4")</td>
+            <td class="text-start px-3">@totalNetPurchases.ToString("N4")</td>
+            <td></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="row mt-5">
+    <div class="col-6 col-md-3">
+        <a onclick="printTable()" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="Report" asp-action="PurchaseReport"
+           class="btn btn-outline-primary border form-control buttons">Back</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function printTable() {
+            window.print();
+        }
+    </script>
+}

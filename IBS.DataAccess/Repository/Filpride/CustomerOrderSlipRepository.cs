@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Models.Filpride.Books;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -47,6 +49,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(cos => cos.Hauler)
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
+                .Include(cos => cos.PickUpPoint)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier);
 
@@ -65,6 +68,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(cos => cos.Hauler)
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
+                .Include(cos => cos.PickUpPoint)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -110,7 +114,8 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => (!cos.IsDelivered && cos.Status == nameof(CosStatus.Completed)) || cos.Status == nameof(CosStatus.ForDR))
+                .Where(cos =>
+                    (!cos.IsDelivered && cos.Status == nameof(CosStatus.Completed)) || cos.Status == nameof(CosStatus.ForDR))
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),

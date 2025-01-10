@@ -1,17 +1,19 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -424,7 +426,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = model.TransactionDate,
                                     Reference = model.DebitMemoNo,
                                     Description = model.SalesInvoice.Product.ProductName,
-                                    AccountNo = "1010201",
+                                    AccountNo = "101020100",
                                     AccountTitle = "AR-Trade Receivable",
                                     Debit = model.DebitAmount - (withHoldingTaxAmount + withHoldingVatAmount),
                                     Credit = 0,
@@ -442,8 +444,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "1010202",
-                                        AccountTitle = "Deferred Creditable Withholding Tax",
+                                        AccountNo = "101060500",
+                                        AccountTitle = "Deferred Withholding Tax",
                                         Debit = withHoldingTaxAmount,
                                         Credit = 0,
                                         Company = model.Company,
@@ -460,8 +462,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "1010203",
-                                        AccountTitle = "Deferred Creditable Withholding Vat",
+                                        AccountNo = "101060700",
+                                        AccountTitle = "Deferred Withholding Vat Input",
                                         Debit = withHoldingVatAmount,
                                         Credit = 0,
                                         Company = model.Company,
@@ -478,7 +480,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "4010101",
+                                        AccountNo = "401010100",
                                         AccountTitle = "Sales - Biodiesel",
                                         Debit = 0,
                                         Company = model.Company,
@@ -496,7 +498,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "4010102",
+                                        AccountNo = "401010200",
                                         AccountTitle = "Sales - Econogas",
                                         Debit = 0,
                                         Company = model.Company,
@@ -514,7 +516,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "4010103",
+                                        AccountNo = "401010300",
                                         AccountTitle = "Sales - Envirogas",
                                         Debit = 0,
                                         Company = model.Company,
@@ -533,7 +535,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "2010301",
+                                        AccountNo = "201030100",
                                         AccountTitle = "Vat Output",
                                         Debit = 0,
                                         Credit = vatAmount,
@@ -661,7 +663,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = viewModelDMCM.Period,
                                         Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
-                                        AccountNo = "1010204",
+                                        AccountNo = "101020500",
                                         AccountTitle = "AR-Non Trade Receivable",
                                         Debit = viewModelDMCM.Total - (viewModelDMCM.WithholdingTaxAmount + viewModelDMCM.WithholdingVatAmount),
                                         Credit = 0,
@@ -678,8 +680,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = viewModelDMCM.Period,
                                         Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
-                                        AccountNo = "1010202",
-                                        AccountTitle = "Deferred Creditable Withholding Tax",
+                                        AccountNo = "101060500",
+                                        AccountTitle = "Deferred Withholding Tax",
                                         Debit = viewModelDMCM.WithholdingTaxAmount,
                                         Credit = 0,
                                         Company = model.Company,
@@ -696,8 +698,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = viewModelDMCM.Period,
                                         Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
-                                        AccountNo = "1010203",
-                                        AccountTitle = "Deferred Creditable Withholding Vat",
+                                        AccountNo = "101060700",
+                                        AccountTitle = "Deferred Withholding Vat Input",
                                         Debit = viewModelDMCM.WithholdingVatAmount,
                                         Credit = 0,
                                         Company = model.Company,
@@ -732,7 +734,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = viewModelDMCM.Period,
                                         Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
-                                        AccountNo = "2010304",
+                                        AccountNo = "201030400",
                                         AccountTitle = "Deferred Vat Output",
                                         Debit = 0,
                                         Credit = viewModelDMCM.VatAmount,

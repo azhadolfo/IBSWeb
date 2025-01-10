@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net;
 using IBS.Utility;
+using IBS.Utility.Helpers;
 
 namespace IBS.Models.Filpride.Books
 {

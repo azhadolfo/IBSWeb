@@ -3,11 +3,14 @@ using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.Filpride;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Mobility;
-using IBS.DataAccess.Services;
+using IBS.Services;
 using IBS.Utility;
+using IBS.Utility.Constants;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +44,36 @@ builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
 builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 builder.Services.AddSignalR();
+
+// Add Quartz services
+builder.Services.AddQuartz(q =>
+{
+    // Use DI with Quartz
+    q.UseMicrosoftDependencyInjectionJobFactory();
+
+    // Register the job
+    var jobKey = JobKey.Create(nameof(MonthlyClosureService));
+    q.AddJob<MonthlyClosureService>(options => options.WithIdentity(jobKey));
+
+    // Add the first trigger
+    q.AddTrigger(opts => opts
+        .ForJob(jobKey)
+        .WithIdentity("MonthlyTrigger") // Trigger 1
+        .WithCronSchedule("0 0 0 1 * ?",
+            x => x.InTimeZone(
+                TimeZoneInfo
+                    .FindSystemTimeZoneById("Asia/Manila")))); // Run at midnight on the first day of every month
+
+    // Add the second trigger
+    q.AddTrigger(opts => opts
+        .ForJob(jobKey)
+        .WithIdentity("TestTrigger") // Trigger 2
+        .WithCronSchedule("0 27 15 21 * ?")); // Run today at 11:34 AM format (sec, min, hour, day, month, year)
+});
+
+
+// Add Quartz Hosted Service
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
 var app = builder.Build();
 

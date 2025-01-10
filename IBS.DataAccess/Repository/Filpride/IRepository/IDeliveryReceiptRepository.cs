@@ -22,5 +22,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task UpdatePreviousAppointedSupplierAsync(FilprideDeliveryReceipt model);
 
         Task AssignNewPurchaseOrderAsync(DeliveryReceiptViewModel viewModel, FilprideDeliveryReceipt model);
+
+        Task AutoReversalEntryForInTransit(CancellationToken cancellationToken = default);
     }
 }

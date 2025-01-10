@@ -1,9 +1,9 @@
-﻿@model ViewModelBook
+﻿@using IBS.Utility.Helpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model ViewModelBook
 
 @{
     ViewData["Title"] = "Disbursement Book";
-    var dateFrom = ViewBag.DateFrom;
-    var dateTo = ViewBag.DateTo;
 }
 
 <div class="card shadow border-0 mt-4">
@@ -19,12 +19,12 @@
             <div class="row">
                 <div class="mb-3">
                     <label asp-for="DateFrom" class="control-label"></label>
-                    <input type="date" asp-for="DateFrom" class="form-control" value="@dateFrom" />
+                    <input type="date" asp-for="DateFrom" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="DateFrom" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
                     <label asp-for="DateTo" class="control-label"></label>
-                    <input type="date" asp-for="DateTo" class="form-control" value="@dateTo" />
+                    <input type="date" asp-for="DateTo" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="DateTo" class="text-danger"></span>
                 </div>
                 <div class="row pt-2">
@@ -35,7 +35,7 @@
                     <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateDisbursementBookTxtFile')"><i class="bi bi-file-text"></i> Generate as .txt file</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateDisbursementBookCsvFile')"><i class="bi bi-file-text"></i> Generate as .csv file</button>
+                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateDisbursementBookExcelFile')"><i class="bi bi-file-text"></i> Generate as Excel file</button>
                     </div>
                 </div>
             </div>

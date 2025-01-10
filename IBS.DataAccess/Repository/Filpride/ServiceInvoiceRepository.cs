@@ -4,6 +4,7 @@ using IBS.Models.Filpride.AccountsReceivable;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Utility;
+using IBS.Utility.Enums;
 
 namespace IBS.DataAccess.Repository.Filpride
 {

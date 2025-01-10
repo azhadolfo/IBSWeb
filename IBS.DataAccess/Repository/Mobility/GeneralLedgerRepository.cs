@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
+using IBS.Utility.Enums;
 
 namespace IBS.DataAccess.Repository.Mobility
 {

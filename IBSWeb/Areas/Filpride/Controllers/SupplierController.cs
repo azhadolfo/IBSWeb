@@ -2,7 +2,8 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility;
+using IBS.Services.Attributes;
+using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -99,11 +100,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     ModelState.AddModelError("SupplierTin", "Tin number already exist.");
                     return View(model);
-                }
-
-                if (model.WithholdingTaxtitle != null && model.WithholdingTaxPercent != 0)
-                {
-                    model.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
                 }
 
                 try
@@ -209,11 +205,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "documents", companyClaims, "Proof of Exemption", model.SupplierName);
 
                         model.ProofOfExemptionFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(document, localPath, cancellationToken);
-                    }
-
-                    if (model.WithholdingTaxtitle != null && model.WithholdingTaxPercent != 0)
-                    {
-                        model.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
                     }
 
                     model.EditedBy = _userManager.GetUserName(User);

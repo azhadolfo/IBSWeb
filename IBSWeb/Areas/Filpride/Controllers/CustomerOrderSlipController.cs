@@ -1,12 +1,10 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +12,10 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -782,16 +784,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
-                if (existingRecord == null)
-                {
-                    return BadRequest();
-                }
-
                 if (existingRecord.DisapprovedBy == null)
                 {
                     existingRecord.DisapprovedBy = _userManager.GetUserName(User);
                     existingRecord.DisapprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.Status = nameof(CosStatus.Disapproved);
+
+                    FilprideAuditTrail auditTrailBook = new(existingRecord.DisapprovedBy, $"Disapproved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", "", existingRecord.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
                     await _unitOfWork.SaveAsync(cancellationToken);
                 }
 
@@ -1446,7 +1447,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var dr in existingDr)
                 {
                     dr.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                    dr.Status = nameof(Status.Pending);
+                    dr.Status = nameof(DRStatus.PendingDelivery);
                 }
 
                 #endregion
@@ -1465,6 +1466,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 await transaction.RollbackAsync(cancellationToken);
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+        }
+
+        public async Task<IActionResult> Close(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                existingRecord.Status = nameof(CosStatus.Closed);
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Closed customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", "", existingRecord.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                TempData["success"] = "Customer order slip closed successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Preview), new { id });
             }
         }
     }

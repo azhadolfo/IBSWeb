@@ -1,13 +1,19 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Drawing;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.DataAccess.Services;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
-using IBS.Utility;
+using IBS.Services;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -47,7 +53,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            #region -- get user department --
+            #region -- Get user department --
 
             var findUser = await _dbContext.ApplicationUsers
                 .Where(user => user.Id == _userManager.GetUserId(this.User))
@@ -61,26 +67,26 @@ namespace IBSWeb.Areas.Mobility.Controllers
             ViewData["CurrentStationCode"] = stationCodeClaims;
             ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
-            List<MobilityCustomerOrderSlip> customerOrderSlip = new List<MobilityCustomerOrderSlip>();
+            IQueryable<MobilityCustomerOrderSlip> customerOrderSlip = _dbContext.MobilityCustomerOrderSlips
+                .Include(c => c.Customer)
+                .Include(p => p.Product)
+                .Include(s => s.MobilityStation);
 
             if (stationCodeClaims != "ALL")
             {
-                customerOrderSlip = await _dbContext.MobilityCustomerOrderSlips
-                    .Include(c => c.Customer)
-                    .Include(p => p.Product)
-                    .Include(s => s.MobilityStation)
-                    .Where(record => record.StationCode == stationCodeClaims)
-                    .ToListAsync(cancellationToken);
+                // Filter by StationCode if stationCodeClaims is not "ALL"
+                customerOrderSlip = customerOrderSlip.Where(record => record.StationCode == stationCodeClaims);
             }
-            if (stationCodeClaims == "ALL" && findUser?.Department != "Station Cashier")
-            {
-                customerOrderSlip = await _dbContext.MobilityCustomerOrderSlips
-                    .Include(c => c.Customer)
-                    .Include(p => p.Product)
-                    .Include(s => s.MobilityStation)
-                    .ToListAsync(cancellationToken);
-            }
-            return View(customerOrderSlip);
+
+            // Apply sorting and execute the query
+            var sortedCustomerOrderSlip = await customerOrderSlip
+                .OrderBy(cos => cos.CustomerOrderSlipNo)
+                .ThenBy(cos => cos.MobilityStation.StationName)
+                .ThenBy(cos => cos.Date)
+                .ToListAsync(cancellationToken);
+
+            return View(sortedCustomerOrderSlip);
+
         }
 
         [HttpGet]
@@ -131,7 +137,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 try
                 {
-                    #region -- selected customer --
+                    #region -- Selected customer --
 
                     var selectedCustomer = await _dbContext.MobilityCustomers
                         .Where(c => c.CustomerId == model.CustomerId)
@@ -139,7 +145,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #endregion -- selected customer --
 
-                    #region -- get mobility station --
+                    #region -- Get mobility station --
 
                     var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
 
@@ -250,7 +256,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 try
                 {
-                    #region -- selected customer --
+                    #region -- Selected customer --
 
                     var selectedCustomer = await _dbContext.MobilityCustomers
                         .Where(c => c.CustomerId == model.CustomerId)
@@ -258,7 +264,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #endregion -- selected customer --
 
-                    #region -- getMobilityStation --
+                    #region -- GetMobilityStation --
 
                     var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
 
@@ -306,17 +312,28 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
                 catch (Exception ex)
                 {
+                    List<MobilityCustomer> mobilityPOCustomers = await _dbContext.MobilityCustomers
+                        .Where(a => a.CustomerType == SD.CustomerType_PO)
+                        .ToListAsync(cancellationToken);
+
                     await transaction.RollbackAsync(cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                    model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
+                    model.MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(mobilityPOCustomers, cancellationToken);
+                    model.Customers = await GetInitialCustomers(stationCodeString, cancellationToken);
+
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
             }
             else
             {
+                List<MobilityCustomer> mobilityPOCustomers = await _dbContext.MobilityCustomers
+                    .Where(a => a.CustomerType == SD.CustomerType_PO)
+                    .ToListAsync(cancellationToken);
+
                 model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                 model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
+                model.MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(mobilityPOCustomers, cancellationToken);
                 ModelState.AddModelError("", "The information you submitted is not valid!");
                 return View(model);
             }
@@ -329,7 +346,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             ViewData["StationCode"] = stationCodeClaims;
             ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
-            #region -- get user department --
+            #region -- Get user department --
 
             var findUser = await _dbContext.ApplicationUsers
                 .Where(user => user.Id == _userManager.GetUserId(this.User))
@@ -500,6 +517,200 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 model.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.SavedFileName);
                 model.CheckPictureSignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.CheckPictureSavedFileName);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCustomerOrderSlipList(string statusFilter, string stationFilter, string currentStationCode, CancellationToken cancellationToken)
+        {
+            var item = new List<MobilityCustomerOrderSlip>();
+
+            IQueryable<MobilityCustomerOrderSlip> query = _dbContext.MobilityCustomerOrderSlips
+                .Include(c => c.Customer)
+                .Include(p => p.Product)
+                .Include(s => s.MobilityStation);
+
+            if (statusFilter != null)
+            {
+                query = query.Where(cos => cos.Status == statusFilter);
+            }
+            if (stationFilter != null)
+            {
+                query = query.Where(cos => cos.StationCode == stationFilter);
+            }
+            if (currentStationCode != "ALL")
+            {
+                query = query.Where(cos => cos.StationCode == currentStationCode);
+            }
+            item = await query.OrderBy(cos => cos.Date)
+                .ThenBy(cos => cos.CustomerOrderSlipNo)
+                .ToListAsync(cancellationToken);
+
+            return Json(item);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GenerateIndexExcel(string jsonModel, CancellationToken cancellationToken)
+        {
+
+            var findUser = await _dbContext.ApplicationUsers
+                .Where(user => user.Id == _userManager.GetUserId(this.User))
+                .FirstOrDefaultAsync();
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(jsonModel))
+                {
+                    TempData["error"] = "The input JSON model is empty or invalid.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                List<MobilityCustomerOrderSlip> model;
+
+                try
+                {
+                    model = JsonConvert.DeserializeObject<List<MobilityCustomerOrderSlip>>(jsonModel);
+                }
+                catch (JsonSerializationException)
+                {
+                    TempData["error"] = "Failed to deserialize the input JSON model.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                if (jsonModel != null)
+                {
+                    using var package = new ExcelPackage();
+                    string currencyFormat = "#,##0.00";
+                    var worksheet = package.Workbook.Worksheets.Add("Customer Order Slip List");
+
+                    var mergedCells = worksheet.Cells["A1:C1"];
+                    mergedCells.Merge = true;
+                    mergedCells.Value = "Mobility Customer Order Slip";
+                    mergedCells.Style.Font.Bold = true;
+                    mergedCells.Style.Font.Size = 15;
+                    mergedCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Row(1).Height = 20;
+
+                    worksheet.Cells[2, 1].Value = "Date Exported:";
+                    worksheet.Cells[2, 2].Value = DateOnly.FromDateTime(DateTime.Now);
+                    worksheet.Cells[3, 1].Value = "Exported by:";
+                    worksheet.Cells[3, 2].Value = findUser?.Name;
+
+                    mergedCells = worksheet.Cells["A2:B3"];
+                    mergedCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+
+                    mergedCells = worksheet.Cells["A2:A3"];
+                    mergedCells.Style.Font.Bold = true;
+
+                    var row = 5;
+
+                    worksheet.Cells[row, 1].Value = "COS No.";
+                    worksheet.Cells[row, 2].Value = "Station";
+                    worksheet.Cells[row, 3].Value = "Date";
+                    worksheet.Cells[row, 4].Value = "Customer";
+                    worksheet.Cells[row, 5].Value = "Driver Name";
+                    worksheet.Cells[row, 6].Value = "Plate Number";
+                    worksheet.Cells[row, 7].Value = "Product";
+                    worksheet.Cells[row, 8].Value = "Price";
+                    worksheet.Cells[row, 9].Value = "Quantity";
+                    worksheet.Cells[row, 10].Value = "Amount";
+                    worksheet.Cells[row, 11].Value = "Status";
+
+                    using (var range = worksheet.Cells[row, 1, row, 11])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                        range.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+
+                    row++;
+                    var startingRow = row;
+                    var endingRow = row;
+
+                    foreach (var item in model)
+                    {
+                        worksheet.Cells[row, 1].Value = item.CustomerOrderSlipNo ?? "N/A";
+                        worksheet.Cells[row, 2].Value = item.MobilityStation.StationName ?? "N/A";
+                        worksheet.Cells[row, 3].Value = item.Date.ToString("O") ?? "N/A";
+                        worksheet.Cells[row, 4].Value = item.Customer.CustomerName ?? "N/A";
+                        worksheet.Cells[row, 5].Value = item.Driver ?? "N/A";
+                        worksheet.Cells[row, 6].Value = item.PlateNo ?? "N/A";
+                        worksheet.Cells[row, 7].Value = item.Product.ProductName;
+                        worksheet.Cells[row, 8].Value = item.PricePerLiter;
+                        worksheet.Cells[row, 9].Value = item.Quantity;
+                        worksheet.Cells[row, 10].Value = item.Amount;
+                        worksheet.Cells[row, 11].Value = item.Status ?? "N/A";
+
+                        worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+
+                        endingRow = row;
+                        row++;
+                    }
+
+                    using (var range = worksheet.Cells[startingRow, 1, endingRow, 11])
+                    {
+                        range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+
+                    worksheet.Cells.AutoFitColumns();
+
+                    var excelBytes = package.GetAsByteArray();
+                    var fileName = $"Mobility_Customer_Order_Slip_{DateTime.Now.ToString("yyyyMMddhhmm")}.xlsx";
+
+                    var contentDisposition = new System.Net.Mime.ContentDisposition
+                    {
+                        FileName = fileName,
+                        Inline = false  // This forces a download
+                    };
+
+                    Response.Headers.Add("Content-Disposition", contentDisposition.ToString());
+                    return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+                }
+                else
+                {
+                    TempData["error"] = "No Data!";
+
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PrintCosList(string jsonModel, CancellationToken cancellationToken)
+        {
+            try
+            {
+                List<MobilityCustomerOrderSlip> model;
+
+                try
+                {
+                    model = JsonConvert.DeserializeObject<List<MobilityCustomerOrderSlip>>(jsonModel);
+                }
+                catch (JsonSerializationException)
+                {
+                    TempData["error"] = "Failed to deserialize the input JSON model.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
     }

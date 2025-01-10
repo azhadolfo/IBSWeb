@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.MasterFile;
 using IBS.Utility;
+using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MasterFile
