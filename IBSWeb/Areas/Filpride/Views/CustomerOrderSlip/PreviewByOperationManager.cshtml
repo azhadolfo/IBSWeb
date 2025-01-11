@@ -132,7 +132,7 @@
                 grossMarginValue = '-' + grossMarginValue.replace(/[()]/g, '');
             }
 
-            if (grossMarginValue.includes('-')) {
+            if (grossMarginValue.includes('-') || parseFloat(grossMarginValue) === 0) {
                 Swal.fire({
                     title: 'Negative or Zero Gross Margin',
                     text: 'Please provide a reason for approving a negative or zero gross margin.',
