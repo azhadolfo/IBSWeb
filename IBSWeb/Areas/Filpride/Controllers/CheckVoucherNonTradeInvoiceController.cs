@@ -275,16 +275,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region Waiting for ma'am LSA final accounting entry
 
+
+                    decimal apNontradeAmount = 0;
+                    decimal vatAmount = 0;
+                    decimal ewtOnePercentAmount = 0;
+                    decimal ewtTwoPercentAmount = 0;
+                    decimal ewtFivePercentAmount = 0;
+                    decimal ewtTenPercentAmount = 0;
+
+                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                    var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
+                    var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+                    var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                    var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
+                    var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
+                    var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
+
                     foreach (var accountEntry in viewModel.AccountingEntries)
                     {
                         var parts = accountEntry.AccountTitle.Split(' ', 2); // Split into at most two parts
                         var accountNo = parts[0];
                         var accountName = parts[1];
-
-                        if (accountNo == "202010200")
-                        {
-                            checkVoucherHeader.InvoiceAmount = accountEntry.Amount;
-                        }
 
                         checkVoucherDetails.Add(new FilprideCheckVoucherDetail
                         {
@@ -292,10 +303,114 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             AccountName = accountName,
                             TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = accountEntry.Type == NormalBalance.Debit ? accountEntry.Amount : 0,
-                            Credit = accountEntry.Type == NormalBalance.Credit ? accountEntry.Amount : 0,
+                            Debit = accountEntry.NetOfVatAmount,
+                            Credit = 0,
                         });
 
+                        if (accountEntry.Vatable)
+                        {
+                            vatAmount += accountEntry.VatAmount;
+                        }
+
+                        // Check EWT percentage
+                        switch (accountEntry.TaxPercentage)
+                        {
+                            case 0.01m:
+                                ewtOnePercentAmount += accountEntry.TaxAmount;
+                                break;
+                            case 0.02m:
+                                ewtTwoPercentAmount += accountEntry.TaxAmount;
+                                break;
+                            case 0.05m:
+                                ewtFivePercentAmount += accountEntry.TaxAmount;
+                                break;
+                            case 0.10m:
+                                ewtTenPercentAmount += accountEntry.TaxAmount;
+                                break;
+                            default:
+                                throw new ArgumentException($"Unexpected EWT percentage: {accountEntry.TaxPercentage}");
+                        }
+
+                        apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
+
+                    }
+
+                    if (vatAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = vatInputTitle.AccountNumber,
+                            AccountName = vatInputTitle.AccountName,
+                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                            Debit = vatAmount,
+                            Credit = 0,
+                        });
+                    }
+
+                    if (apNontradeAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = apNonTradeTitle.AccountNumber,
+                            AccountName = apNonTradeTitle.AccountName,
+                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                            Debit = 0,
+                            Credit = apNontradeAmount,
+                        });
+                    }
+
+                    if (ewtOnePercentAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = ewtOnePercent.AccountNumber,
+                            AccountName = ewtOnePercent.AccountName,
+                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                            Debit = 0,
+                            Credit = ewtOnePercentAmount,
+                        });
+                    }
+
+                    if (ewtTwoPercentAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = ewtTwoPercent.AccountNumber,
+                            AccountName = ewtTwoPercent.AccountName,
+                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                            Debit = 0,
+                            Credit = ewtTwoPercentAmount,
+                        });
+                    }
+
+                    if (ewtFivePercentAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = ewtFivePercent.AccountNumber,
+                            AccountName = ewtFivePercent.AccountName,
+                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                            Debit = 0,
+                            Credit = ewtFivePercentAmount,
+                        });
+                    }
+
+                    if (ewtTenPercentAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = ewtTenPercent.AccountNumber,
+                            AccountName = ewtTenPercent.AccountName,
+                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                            Debit = 0,
+                            Credit = ewtTenPercentAmount,
+                        });
                     }
 
                     #endregion

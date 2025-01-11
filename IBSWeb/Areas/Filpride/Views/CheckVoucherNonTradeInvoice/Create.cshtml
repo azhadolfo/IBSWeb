@@ -236,9 +236,14 @@
     <script>
         const VAT_RATE = 0.12;
         const VAT_INCLUDED_PRICE_MULTIPLIER = 1.12;
-        const AP_NON_TRADE = "20101";
-        const INPUT_VAT = "11701";
-        const EWT_PAYABLE = "20202";
+        const AP_NON_TRADE = "202010200 AP-Non Trade Payable";
+        const INPUT_VAT = "101060200 Vat - Input";
+        const PAYABLE_ACCOUNTS = {
+            0.01: "201030210 Expanded Withholding Tax 1%",
+            0.02: "201030220 Expanded Withholding Tax 2%",
+            0.05: "201030230 Expanded Withholding Tax 5%",
+            0.10: "201030240 Expanded Withholding Tax 10%"
+        };
 
         // Object to store accumulated journal entries
         let accumulatedEntries = {};
@@ -293,11 +298,19 @@
             // Add to accumulated entries without clearing previous entries
             addToAccumulatedEntries(accountTitle, netOfVat, 0);
             if (isVatable && vatAmount > 0) {
-                addToAccumulatedEntries("Input VAT", vatAmount, 0);
+                addToAccumulatedEntries(INPUT_VAT, vatAmount, 0);
             }
-            addToAccumulatedEntries("AP Non-Trade", 0, netOfTaxAmount);
+            
+            addToAccumulatedEntries(AP_NON_TRADE, 0, netOfTaxAmount);
+
+
             if (taxAmount > 0) {
-                addToAccumulatedEntries("EWT Payable", 0, taxAmount);
+                const payableAccount = PAYABLE_ACCOUNTS[taxPercentage];
+                if (!payableAccount) {
+                    console.error("Invalid tax percentage");
+                    return; // Exit if the percentage is invalid
+                }
+                addToAccumulatedEntries(payableAccount, 0, taxAmount);
             }
 
             // Only update display if requested
