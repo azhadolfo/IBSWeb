@@ -15,11 +15,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
-using System.Drawing;
-using System.Runtime.InteropServices.JavaScript;
-using System.Text;
-using IBS.Models.Filpride.AccountsReceivable;
-using IBS.Models.MasterFile;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -644,14 +639,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["P9"].Value = "ECC";
                 worksheet.Cells["Q9"].Value = "TOTAL FREIGHT";
 
+                //Remove this in the future
+                worksheet.Cells["R9"].Value = "OTC COS No.";
+                worksheet.Cells["S9"].Value = "OTC DR No.";
+
                 if (viewModel.ReportType == "AllDeliveries")
                 {
-                    worksheet.Cells["R9"].Value = "DELIVERY DATE";
-                    worksheet.Cells["S9"].Value = "STATUS";
+                    worksheet.Cells["T9"].Value = "DELIVERY DATE";
+                    worksheet.Cells["U9"].Value = "STATUS";
                 }
 
+
                 int currentRow = 10;
-                string headerColumn = viewModel.ReportType == "AllDeliveries" ? "S9" : "Q9";
+                string headerColumn = viewModel.ReportType == "AllDeliveries" ? "U9" : "S9";
 
                 var groupedReceipts = deliveryReceipts
                     .OrderBy(d => d.CustomerOrderSlip.ProductId)
@@ -711,10 +711,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         totalQuantity += dr.Quantity;
                         totalAmount += dr.TotalAmount;
 
+                        worksheet.Cells[currentRow, 18].Value = dr.CustomerOrderSlip.OldCosNo;
+                        worksheet.Cells[currentRow, 19].Value = dr.ManualDrNo;
+
                         if (viewModel.ReportType == "AllDeliveries")
                         {
-                            worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate?.ToString("dd-MMM-yy");
-                            worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
+                            worksheet.Cells[currentRow, 20].Value = dr.DeliveredDate?.ToString("dd-MMM-yy");
+                            worksheet.Cells[currentRow, 21].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
                         }
 
                         currentRow++;
