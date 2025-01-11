@@ -156,6 +156,8 @@ namespace IBS.DataAccess.Data
         public DbSet<FilpridePurchaseOrder> FilpridePurchaseOrders { get; set; }
         public DbSet<FilprideReceivingReport> FilprideReceivingReports { get; set; }
 
+        public DbSet<FilprideMultipleCheckVoucherPayment> FilprideMultipleCheckVoucherPayments { get; set; }
+
         #endregion
 
         #region Books
@@ -649,7 +651,7 @@ namespace IBS.DataAccess.Data
 
             #endregion -- Receving Report --
 
-            #region -- Check Voucher --
+            #region -- Check Voucher Header --
 
             builder.Entity<FilprideCheckVoucherHeader>(cv =>
             {
@@ -666,7 +668,7 @@ namespace IBS.DataAccess.Data
 
             #endregion -- Check Voucher --
 
-            #region -- Check Voucher --
+            #region -- Journal Voucher Header --
 
             builder.Entity<FilprideJournalVoucherHeader>(jv =>
             {
@@ -677,6 +679,23 @@ namespace IBS.DataAccess.Data
             });
 
             #endregion -- Check Voucher --
+
+            #region -- Multiple Check Voucher Payment --
+
+            builder.Entity<FilprideMultipleCheckVoucherPayment>(mcvp =>
+            {
+                mcvp.HasOne(mcvp => mcvp.CheckVoucherHeaderPayment)
+                    .WithMany()
+                    .HasForeignKey(mcvp => mcvp.CheckVoucherHeaderPaymentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                mcvp.HasOne(mcvp => mcvp.CheckVoucherHeaderInvoice)
+                    .WithMany()
+                    .HasForeignKey(mcvp => mcvp.CheckVoucherHeaderInvoiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Multiple Check Voucher Payment --
 
             #endregion -- Accounts Payable --
 
