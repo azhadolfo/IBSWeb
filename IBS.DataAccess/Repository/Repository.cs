@@ -161,6 +161,17 @@ namespace IBS.DataAccess.Repository
             };
         }
 
+        public (string AccountNo, string AccountTitle) MobilityGetInventoryAccountTitle(string productCode)
+        {
+            return productCode switch
+            {
+                "PET001" => ("1010401", "Inventory - Biodiesel"),
+                "PET002" => ("1010402", "Inventory - Econogas"),
+                "PET003" => ("1010403", "Inventory - Envirogas"),
+                _ => ("1010410", "Inventory - Lubes"),
+            };
+        }
+
         public (string AccountNo, string AccountTitle) GetFreightAccount(string productCode)
         {
             return productCode switch

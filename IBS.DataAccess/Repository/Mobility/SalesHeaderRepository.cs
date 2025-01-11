@@ -29,11 +29,11 @@ namespace IBS.DataAccess.Repository.Mobility
                     .ToListAsync(cancellationToken);
 
                 var lubeSales = await _db.MobilityLubes
-                    .Where(l => !l.IsProcessed && l.BusinessDate.Month == 6)
+                    .Where(l => !l.IsProcessed)
                     .ToListAsync(cancellationToken);
 
                 var safeDropDeposits = await _db.MobilitySafeDrops
-                    .Where(s => !s.IsProcessed && s.BusinessDate.Month == 6)
+                    .Where(s => !s.IsProcessed)
                     .ToListAsync(cancellationToken);
 
                 var fuelPoSales = Enumerable.Empty<MobilityFuel>();
