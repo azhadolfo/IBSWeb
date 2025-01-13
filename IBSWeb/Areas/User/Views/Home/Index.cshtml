@@ -1,7 +1,5 @@
-﻿@using IBS.Models.Filpride.ViewModels
-@using IBS.Utility
-@using IBS.Utility.Constants
-@model DashboardCountViewModel
+﻿@using IBS.Utility.Constants
+@model IBS.Models.Filpride.ViewModels.DashboardCountViewModel
 
 @{
     var department = ViewBag.GetUserDepartment;
@@ -84,7 +82,7 @@
                                     <div class="card shadow-sm h-100 border-0">
                                         <div class="card-body text-center">
                                             <h5 class="card-title text-dark fw-semibold">
-                                                <i class="bi bi-arrow-right-circle me-2 text-primary"></i>In-Transit
+                                                <i class="bi bi-arrow-right-circle me-2 text-primary"></i>Pending Delivery
                                             </h5>
                                             <p class="card-text display-6 text-primary fw-bold">@Model.InTransitCount.ToString("N0")</p>
                                         </div>
