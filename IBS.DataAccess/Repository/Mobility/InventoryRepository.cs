@@ -118,7 +118,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             #region--General Ledger Entries
 
-            var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(inventory.ProductCode);
+            var (inventoryAcctNo, inventoryAcctTitle) = MobilityGetInventoryAccountTitle(inventory.ProductCode);
 
             var journals = new List<MobilityGeneralLedger>
             {
