@@ -1,7 +1,6 @@
-﻿using IBS.Models.Filpride.AccountsPayable;
+﻿using System.ComponentModel.DataAnnotations;
+using IBS.Models.Filpride.AccountsPayable;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http;
 
 namespace IBS.Models.Filpride.ViewModels
 {
@@ -64,7 +63,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         public FilprideCheckVoucherHeader? Headers { get; set; }
 
-        public List<AccountingEntryViewModel> AccountingEntries { get; set; }
-
+        public List<AccountingEntryViewModel>? AccountingEntries { get; set; }
     }
 }
