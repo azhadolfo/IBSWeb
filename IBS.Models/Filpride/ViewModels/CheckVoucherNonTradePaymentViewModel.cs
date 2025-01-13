@@ -12,7 +12,7 @@ namespace IBS.Models.Filpride.ViewModels
         public int CvId { get; set; }
 
         [Required(ErrorMessage = "The CV No is required.")]
-        public int[] MultipleCvId { get; set; }
+        public int[]? MultipleCvId { get; set; }
 
         [Display(Name = "Payee")]
         public string Payee { get; set; }
@@ -61,6 +61,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         public int CvPaymentId { get; set; }
 
-        public decimal[] AmountPaid { get; set; }
+        public decimal[]? AmountPaid { get; set; }
     }
 }
