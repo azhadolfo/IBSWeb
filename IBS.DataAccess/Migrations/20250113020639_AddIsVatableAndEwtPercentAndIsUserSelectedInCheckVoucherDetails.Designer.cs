@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250113020639_AddIsVatableAndEwtPercentAndIsUserSelectedInCheckVoucherDetails")]
+    partial class AddIsVatableAndEwtPercentAndIsUserSelectedInCheckVoucherDetails
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -392,37 +395,6 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_journal_voucher_headers_cv_id");
 
                     b.ToTable("filpride_journal_voucher_headers", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideMultipleCheckVoucherPayment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<decimal>("AmountPaid")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount_paid");
-
-                    b.Property<int>("CheckVoucherHeaderInvoiceId")
-                        .HasColumnType("integer")
-                        .HasColumnName("check_voucher_header_invoice_id");
-
-                    b.Property<int>("CheckVoucherHeaderPaymentId")
-                        .HasColumnType("integer")
-                        .HasColumnName("check_voucher_header_payment_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_filpride_multiple_check_voucher_payments");
-
-                    b.HasIndex("CheckVoucherHeaderInvoiceId")
-                        .HasDatabaseName("ix_filpride_multiple_check_voucher_payments_check_voucher_head");
-
-                    b.HasIndex("CheckVoucherHeaderPaymentId")
-                        .HasDatabaseName("ix_filpride_multiple_check_voucher_payments_check_voucher_head1");
-
-                    b.ToTable("filpride_multiple_check_voucher_payments", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", b =>
@@ -6782,27 +6754,6 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_filpride_journal_voucher_headers_filpride_check_voucher_hea");
 
                     b.Navigation("CheckVoucherHeader");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideMultipleCheckVoucherPayment", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", "CheckVoucherHeaderInvoice")
-                        .WithMany()
-                        .HasForeignKey("CheckVoucherHeaderInvoiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_multiple_check_voucher_payments_filpride_check_vou");
-
-                    b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", "CheckVoucherHeaderPayment")
-                        .WithMany()
-                        .HasForeignKey("CheckVoucherHeaderPaymentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_multiple_check_voucher_payments_filpride_check_vou1");
-
-                    b.Navigation("CheckVoucherHeaderInvoice");
-
-                    b.Navigation("CheckVoucherHeaderPayment");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", b =>

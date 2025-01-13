@@ -139,13 +139,13 @@
                     { "data": "transactionNo" },
                     { "data": data => data.supplier ? data.supplier.supplierName : data.checkVoucherHeader.supplier.supplierName },
                     {
-                        "data": "amount",
+                        "data": "invoiceAmount",
                         "render": function (data, type, row) {
                             if (row.checkVoucherHeader?.supplier?.supplierId == null) {
                                 return formatNumber(row.amount);
                             }
                             else {
-                                return formatNumber(row.checkVoucherHeader.total);
+                                return formatNumber(row.checkVoucherHeader.invoiceAmount);
                             }
                         }
                     },
@@ -167,7 +167,7 @@
                                 return formatNumber(row.amount - row.amountPaid);
                             }
                             else {
-                                return formatNumber(row.checkVoucherHeader.total - row.checkVoucherHeader.amountPaid);
+                                return formatNumber(row.checkVoucherHeader.invoiceAmount - row.checkVoucherHeader.amountPaid);
                             } // Calculate and format the balance
                         }
                     },
@@ -209,14 +209,14 @@
                                             <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
                                         ` : `
                                             <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Print</a></li>
-                                            ${row.checkVoucherHeader.amountPaid == 0 ? `
+                                            ${!row.checkVoucherHeader.isPaid ? `
                                                 <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a></li>
                                             ` : `
                                                 <li><button class="dropdown-item" disabled readonly>Void</button></li>
                                             `}
                                             ${row.amountPaid == 0 && row.checkVoucherHeader?.supplier?.supplierId == null ? `
                                                 <li><a class="dropdown-item" href="@Url.Action("CreatePayrollPayment", "CheckVoucherNonTradePayment", new { area = "Filpride" })?cvId=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Create Payroll Payment</a></li>
-                                            ` : row.amountPaid == 0 && row.checkVoucherHeader?.supplier?.supplierId != null ? `
+                                            ` : !row.checkVoucherHeader.isPaid && row.checkVoucherHeader?.supplier?.supplierId != null ? `
                                             <li><a class="dropdown-item" href="@Url.Action("Create", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Create Payment</a></li>
                                             ` : ''}
                                         `}
@@ -235,11 +235,11 @@
 
                     // Sum up columns
                     data.forEach(function (row) {
-                        var amount = row.amount + row.checkVoucherHeader.amount;
+                        var amount = row.amount + row.checkVoucherHeader.invoiceAmount;
                         var amountPaid = row.amountPaid + row.checkVoucherHeader.amountPaid;
                         totalAmount += amount;
                         totalAmountPaid += amountPaid;
-                        totalBalance += row.amount - row.amountPaid;
+                        totalBalance += amount - amountPaid;
                     });
 
                     // Update footer with totals

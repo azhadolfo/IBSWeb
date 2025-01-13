@@ -44,5 +44,11 @@ namespace IBS.Models.Filpride
         [Column(TypeName = "numeric(18,4)")]
         public decimal AmountPaid { get; set; }
 
+        public bool IsVatable { get; set; }
+
+        public decimal EwtPercent { get; set; }
+
+        public bool IsUserSelected { get; set; }
+
     }
 }
