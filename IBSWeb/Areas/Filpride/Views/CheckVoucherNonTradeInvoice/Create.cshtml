@@ -89,7 +89,6 @@
                                 <thead class="table-light">
                                 <tr>
                                     <th>Account</th>
-                                    <th>Type</th>
                                     <th>Gross Amount</th>
                                     <th>Vatable</th>
                                     <th>EWT</th>
@@ -110,12 +109,6 @@
                                             {
                                                 <option value="@account.Value">@account.Text</option>
                                             }
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select asp-for="AccountingEntries[0].Type" class="form-select form-select-sm normal-balance" readonly tabindex="-1">
-                                            <option value="@NormalBalance.Debit" selected>@NormalBalance.Debit.ToString()</option>
-                                            <option value="@NormalBalance.Credit">@NormalBalance.Credit.ToString()</option>
                                         </select>
                                     </td>
                                     <td>
@@ -426,12 +419,6 @@
                 <td class="px-2">
                     <select name="AccountingEntries[${rowCount}].AccountTitle" class="form-select form-select-sm chart-of-accounts js-select2" style="width: 100%" required>
                         ${document.querySelector(".chart-of-accounts").innerHTML}
-                    </select>
-                </td>
-                <td class="px-2">
-                    <select name="AccountingEntries[${rowCount}].Type" class="form-select form-select-sm normal-balance">
-                        <option value="@NormalBalance.Debit">@NormalBalance.Debit.ToString()</option>
-                        <option value="@NormalBalance.Credit">@NormalBalance.Credit.ToString()</option>
                     </select>
                 </td>
                 <td class="px-2">

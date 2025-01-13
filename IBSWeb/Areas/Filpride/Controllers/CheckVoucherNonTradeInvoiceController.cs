@@ -13,6 +13,7 @@ using System.Linq.Dynamic.Core;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -253,29 +254,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     List<FilprideCheckVoucherDetail> checkVoucherDetails = new();
 
-                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
-                    {
-                        if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
-                        {
-                            if (viewModel.AccountNumber[i] == "202010200")
-                            {
-                                checkVoucherHeader.Total = viewModel.Credit[i];
-                            }
-                            checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                                CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i]
-                            });
-                        }
-                    }
-
-                    #region Waiting for ma'am LSA final accounting entry
-
-
                     decimal apNontradeAmount = 0;
                     decimal vatAmount = 0;
                     decimal ewtOnePercentAmount = 0;
@@ -305,9 +283,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = accountEntry.NetOfVatAmount,
                             Credit = 0,
+                            IsVatable = accountEntry.VatAmount > 0,
+                            EwtPercent = accountEntry.TaxPercentage,
+                            IsUserSelected = true,
                         });
 
-                        if (accountEntry.Vatable)
+                        if (accountEntry.VatAmount > 0)
                         {
                             vatAmount += accountEntry.VatAmount;
                         }
@@ -334,6 +315,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
 
                     }
+
+                    checkVoucherHeader.InvoiceAmount = apNontradeAmount;
 
                     if (vatAmount > 0)
                     {
@@ -412,8 +395,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Credit = ewtTenPercentAmount,
                         });
                     }
-
-                    #endregion
 
                     await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
 
@@ -727,7 +708,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(c => c.Supplier)
                 .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
 
-            var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingModel.CheckVoucherHeaderId).ToListAsync();
+            var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
+                .Where(d => d.IsUserSelected && d.CheckVoucherHeaderId == existingModel.CheckVoucherHeaderId )
+                .ToListAsync(cancellationToken);
 
             existingModel.Suppliers = await _dbContext.FilprideSuppliers
                 .Where(supp => supp.Company == companyClaims)
@@ -739,13 +722,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync();
 
             existingModel.COA = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 || coa.Level == 5)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber + " " + s.AccountName,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
+                .Where(coa => coa.Level == 4 || coa.Level == 5)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber + " " + s.AccountName,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
 
             CheckVoucherNonTradeInvoicingViewModel viewModel = new()
             {
@@ -769,10 +752,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 viewModel.AccountingEntries.Add(new AccountingEntryViewModel
                 {
                     AccountTitle = $"{details.AccountNo} {details.AccountName}",
-                    Amount = details.Debit != 0 ? details.Debit : details.Credit,
-                    Vatable = existingModel.Supplier.VatType == SD.VatType_Vatable,
-                    TaxPercentage = existingModel.Supplier.WithholdingTaxPercent ?? 0,
-                    Type = details.Debit != 0 ? NormalBalance.Debit : NormalBalance.Credit,
+                    Amount = details.IsVatable ? Math.Round(details.Debit * 1.12m, 2) : Math.Round(details.Debit, 2),
+                    Vatable = details.IsVatable,
+                    TaxPercentage = details.EwtPercent,
                 });
             }
 
@@ -805,6 +787,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingModel.PONo = [viewModel.PoNo];
                         existingModel.SINo = [viewModel.SiNo];
                         existingModel.Particulars = viewModel.Particulars;
+                        existingModel.Total = viewModel.Total;
                     }
 
                     //For automation purposes
@@ -849,24 +832,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     _dbContext.RemoveRange(existingDetailsModel);
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    var details = new List<FilprideCheckVoucherDetail>();
+                    var checkVoucherDetails = new List<FilprideCheckVoucherDetail>();
 
-                    for (int i = 0; i < viewModel.AccountTitle.Length; i++)
-                    {
-                        if (viewModel.AccountNumber[i] == "202010200")
-                        {
-                            existingModel.Total = viewModel.Credit[i];
-                        }
-                        details.Add(new FilprideCheckVoucherDetail
-                        {
-                            AccountNo = viewModel.AccountNumber[i],
-                            AccountName = viewModel.AccountTitle[i],
-                            Debit = viewModel.Debit[i],
-                            Credit = viewModel.Credit[i],
-                            TransactionNo = existingModel.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = viewModel.CVId
-                        });
-                    }
+                    decimal apNontradeAmount = 0;
+                    decimal vatAmount = 0;
+                    decimal ewtOnePercentAmount = 0;
+                    decimal ewtTwoPercentAmount = 0;
+                    decimal ewtFivePercentAmount = 0;
+                    decimal ewtTenPercentAmount = 0;
+
+                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                    var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
+                    var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+                    var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                    var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
+                    var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
+                    var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
 
                     foreach (var accountEntry in viewModel.AccountingEntries)
                     {
@@ -874,24 +855,128 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var accountNo = parts[0];
                         var accountName = parts[1];
 
-                        if (accountNo == "202010200")
-                        {
-                            existingModel.InvoiceAmount = accountEntry.Amount;
-                        }
-
-                        details.Add(new FilprideCheckVoucherDetail
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
                         {
                             AccountNo = accountNo,
                             AccountName = accountName,
                             TransactionNo = existingModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
-                            Debit = accountEntry.Type == NormalBalance.Debit ? accountEntry.Amount : 0,
-                            Credit = accountEntry.Type == NormalBalance.Credit ? accountEntry.Amount : 0,
+                            Debit = accountEntry.NetOfVatAmount,
+                            Credit = 0,
+                            IsVatable = accountEntry.Vatable,
+                            EwtPercent = accountEntry.TaxPercentage,
+                            IsUserSelected = true,
                         });
+
+                        if (accountEntry.Vatable)
+                        {
+                            vatAmount += accountEntry.VatAmount;
+                        }
+
+                        // Check EWT percentage
+                        switch (accountEntry.TaxPercentage)
+                        {
+                            case 0.01m:
+                                ewtOnePercentAmount += accountEntry.TaxAmount;
+                                break;
+                            case 0.02m:
+                                ewtTwoPercentAmount += accountEntry.TaxAmount;
+                                break;
+                            case 0.05m:
+                                ewtFivePercentAmount += accountEntry.TaxAmount;
+                                break;
+                            case 0.10m:
+                                ewtTenPercentAmount += accountEntry.TaxAmount;
+                                break;
+                            default:
+                                throw new ArgumentException($"Unexpected EWT percentage: {accountEntry.TaxPercentage}");
+                        }
+
+                        apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
 
                     }
 
-                    await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
+                    existingModel.InvoiceAmount = apNontradeAmount;
+
+                    if (vatAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = vatInputTitle.AccountNumber,
+                            AccountName = vatInputTitle.AccountName,
+                            TransactionNo = existingModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                            Debit = vatAmount,
+                            Credit = 0,
+                        });
+                    }
+
+                    if (apNontradeAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = apNonTradeTitle.AccountNumber,
+                            AccountName = apNonTradeTitle.AccountName,
+                            TransactionNo = existingModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                            Debit = 0,
+                            Credit = apNontradeAmount,
+                        });
+                    }
+
+                    if (ewtOnePercentAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = ewtOnePercent.AccountNumber,
+                            AccountName = ewtOnePercent.AccountName,
+                            TransactionNo = existingModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                            Debit = 0,
+                            Credit = ewtOnePercentAmount,
+                        });
+                    }
+
+                    if (ewtTwoPercentAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = ewtTwoPercent.AccountNumber,
+                            AccountName = ewtTwoPercent.AccountName,
+                            TransactionNo = existingModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                            Debit = 0,
+                            Credit = ewtTwoPercentAmount,
+                        });
+                    }
+
+                    if (ewtFivePercentAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = ewtFivePercent.AccountNumber,
+                            AccountName = ewtFivePercent.AccountName,
+                            TransactionNo = existingModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                            Debit = 0,
+                            Credit = ewtFivePercentAmount,
+                        });
+                    }
+
+                    if (ewtTenPercentAmount > 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = ewtTenPercent.AccountNumber,
+                            AccountName = ewtTenPercent.AccountName,
+                            TransactionNo = existingModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                            Debit = 0,
+                            Credit = ewtTenPercentAmount,
+                        });
+                    }
+
+                    await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
 
                     #endregion --CV Details Entry
 
@@ -918,6 +1003,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         // model.Header.SupportingFilePath = fileSavePath
                     }
 
+                    #endregion -- Uploading file --
+
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -930,8 +1017,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Non-trade invoicing edited successfully";
                     return RedirectToAction(nameof(Index));
-
-                    #endregion -- Uploading file --
                 }
                 catch (Exception ex)
                 {
@@ -1179,6 +1264,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var model = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
