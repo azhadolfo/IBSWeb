@@ -7,9 +7,15 @@ for details on configuring this project to bundle and minify static web assets. 
     border: 1px solid red;
 }*/
 
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
+
 main {
     margin-bottom: 4rem !important;
 }
+
+/*body {*/
+/*    font-family: 'Roboto Mono', monospace;*/
+/*}*/
 
 .divider-text:before,
 .divider-text:after {
