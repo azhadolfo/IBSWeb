@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250111054911_AddTableNamedFilprideMultipleCheckVoucherPayment")]
+    partial class AddTableNamedFilprideMultipleCheckVoucherPayment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2086,18 +2089,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("Debit")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("debit");
-
-                    b.Property<decimal>("EwtPercent")
-                        .HasColumnType("numeric")
-                        .HasColumnName("ewt_percent");
-
-                    b.Property<bool>("IsUserSelected")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_user_selected");
-
-                    b.Property<bool>("IsVatable")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_vatable");
 
                     b.Property<int?>("SupplierId")
                         .HasColumnType("integer")
