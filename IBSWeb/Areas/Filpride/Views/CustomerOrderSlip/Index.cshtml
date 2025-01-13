@@ -195,7 +195,10 @@
                                     break;
                             }
 
-                            actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
+                            if (status != '@CosStatus.Expired' && status != '@CosStatus.Completed' && status != '@CosStatus.Closed')
+                            {
+                                actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
+                            }
                             actions += `</ul></div>`;
                             return actions;
                         }

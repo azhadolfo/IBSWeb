@@ -32,6 +32,8 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
+        public string CustomerType { get; set; }
+
         #endregion Preparation of COS
 
         [Column(TypeName = "numeric(18,4)")]

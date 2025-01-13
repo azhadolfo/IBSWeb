@@ -52,23 +52,29 @@ builder.Services.AddQuartz(q =>
     q.UseMicrosoftDependencyInjectionJobFactory();
 
     // Register the job
-    var jobKey = JobKey.Create(nameof(MonthlyClosureService));
-    q.AddJob<MonthlyClosureService>(options => options.WithIdentity(jobKey));
+    var monthlyClosureKey = JobKey.Create(nameof(MonthlyClosureService));
+    var cosExpirationKey  = JobKey.Create(nameof(CustomerOrderSlipExpiration));
+
+    q.AddJob<CustomerOrderSlipExpiration>(options => options.WithIdentity(monthlyClosureKey));
+    q.AddJob<CustomerOrderSlipExpiration>(options => options.WithIdentity(cosExpirationKey));
 
     // Add the first trigger
+    // Format (sec, min, hour, day, month, year)
     q.AddTrigger(opts => opts
-        .ForJob(jobKey)
+        .ForJob(monthlyClosureKey)
         .WithIdentity("MonthlyTrigger") // Trigger 1
         .WithCronSchedule("0 0 0 1 * ?",
             x => x.InTimeZone(
                 TimeZoneInfo
                     .FindSystemTimeZoneById("Asia/Manila")))); // Run at midnight on the first day of every month
 
-    // Add the second trigger
+    // Trigger for CustomerOrderSlipExpiration (every day at 12:00 AM)
     q.AddTrigger(opts => opts
-        .ForJob(jobKey)
-        .WithIdentity("TestTrigger") // Trigger 2
-        .WithCronSchedule("0 27 15 21 * ?")); // Run today at 11:34 AM format (sec, min, hour, day, month, year)
+        .ForJob(cosExpirationKey)
+        .WithIdentity("DailyExpirationTrigger")
+        .WithCronSchedule("0 46 22 * * ?",
+            x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"))));
+
 });
 
 
