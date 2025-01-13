@@ -23,7 +23,7 @@
                 <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Create" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Create
                 </a>
-                @if (department == SD.Department_HRAndAdminOrLegal)
+                @if (department == SD.Department_HRAndAdminOrLegal || User.IsInRole("Admin"))
                 {
                     <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="CreatePayrollInvoice" class="btn btn-primary">
                         <i class="bi bi-plus-circle"></i> Create Payroll Invoice
