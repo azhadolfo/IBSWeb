@@ -27,10 +27,16 @@ namespace IBS.DataAccess.Repository.IRepository
 
         (string AccountNo, string AccountTitle) GetCogsAccountTitle(string productCode);
 
+        (string AccountNo, string AccountTitle) MobilityGetSalesAccountTitle(string productCode);
+
+        (string AccountNo, string AccountTitle) MobilityGetCogsAccountTitle(string productCode);
+
         (string AccountNo, string AccountTitle) GetInventoryAccountTitle(string productCode);
-        
+
+        (string AccountNo, string AccountTitle) MobilityGetInventoryAccountTitle(string productCode);
+
         (string AccountNo, string AccountTitle) GetFreightAccount(string productCode);
-        
+
         (string AccountNo, string AccountTitle) GetCommissionAccount(string productCode);
 
         decimal ComputeNetOfVat(decimal grossAmount);

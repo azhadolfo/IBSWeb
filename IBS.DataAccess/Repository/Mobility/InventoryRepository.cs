@@ -43,7 +43,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             #region--General Ledger Entries
 
-            var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.ProductCode);
+            var (inventoryAcctNo, inventoryAcctTitle) = MobilityGetInventoryAccountTitle(model.ProductCode);
             var journals = new List<MobilityGeneralLedger>
             {
                 new() {
@@ -119,7 +119,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             #region--General Ledger Entries
 
-            var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(inventory.ProductCode);
+            var (inventoryAcctNo, inventoryAcctTitle) = MobilityGetInventoryAccountTitle(inventory.ProductCode);
 
             var journals = new List<MobilityGeneralLedger>
             {

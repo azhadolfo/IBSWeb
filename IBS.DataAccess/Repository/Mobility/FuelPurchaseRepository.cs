@@ -92,7 +92,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 List<MobilityGeneralLedger> journals = new();
 
-                var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(product.ProductCode);
+                var (inventoryAcctNo, inventoryAcctTitle) = MobilityGetInventoryAccountTitle(product.ProductCode);
 
                 journals.Add(new MobilityGeneralLedger
                 {
