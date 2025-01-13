@@ -322,9 +322,9 @@ namespace IBS.DataAccess.Repository.Mobility
                 {
                     ProductDto productDetails = await MapProductToDTO(product.Key, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{product.Key}' not found.");
 
-                    var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(product.Key);
-                    var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(product.Key);
-                    var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(product.Key);
+                    var (salesAcctNo, salesAcctTitle) = MobilityGetSalesAccountTitle(product.Key);
+                    var (cogsAcctNo, cogsAcctTitle) = MobilityGetCogsAccountTitle(product.Key);
+                    var (inventoryAcctNo, inventoryAcctTitle) = MobilityGetInventoryAccountTitle(product.Key);
 
                     journals.Add(new MobilityGeneralLedger
                     {
