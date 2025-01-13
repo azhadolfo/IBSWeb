@@ -183,9 +183,10 @@
                     {
                         "data": "checkVoucherHeader.status",
                         "render": function (data, type, row) {
-                            var statusClass = row.checkVoucherHeader.status == "@nameof(Status.Posted)" ? "bg-info" :
-                                row.checkVoucherHeader.status == "@nameof(Status.Voided)" ? "bg-danger" :
-                                    row.checkVoucherHeader.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
+                            var statusClass = row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.ForPayment)" ? "bg-info" :
+                                row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Voided)" ? "bg-danger" :
+                                    row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Paid)" ? "bg-success" :
+                                    row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Canceled)" ? "bg-warning" : "";
 
                             return `<span class="badge rounded-pill w-100 ${statusClass}">${row.checkVoucherHeader.status}</span>`;
                         }

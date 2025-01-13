@@ -174,9 +174,9 @@
                     {
                         "data": "checkVoucherHeader.status",
                         "render": function (data, type, row) {
-                            var statusClass = row.checkVoucherHeader.status == "@nameof(Status.Posted)" ? "bg-info" :
-                                row.checkVoucherHeader.status == "@nameof(Status.Voided)" ? "bg-danger" :
-                                    row.checkVoucherHeader.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
+                            var statusClass = row.checkVoucherHeader.status == "@nameof(CheckVoucherPaymentStatus.Posted)" ? "bg-info" :
+                                row.checkVoucherHeader.status == "@nameof(CheckVoucherPaymentStatus.Voided)" ? "bg-danger" :
+                                    row.checkVoucherHeader.status == "@nameof(CheckVoucherPaymentStatus.Canceled)" ? "bg-warning" : "";
 
                             return `<span class="badge rounded-pill w-100 ${statusClass}">${row.checkVoucherHeader.status}</span>`;
                         }

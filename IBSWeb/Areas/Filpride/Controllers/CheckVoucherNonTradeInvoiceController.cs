@@ -1126,7 +1126,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         modelHeader.PostedBy = _userManager.GetUserName(this.User);
                         modelHeader.PostedDate = DateTime.Now;
-                        modelHeader.Status = nameof(Status.Posted);
+                        modelHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
 
                         #region --General Ledger Book Recording(CV)--
 
@@ -1231,7 +1231,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
                     model.CanceledDate = DateTime.Now;
-                    model.Status = nameof(Status.Canceled);
+                    model.Status = nameof(CheckVoucherInvoiceStatus.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
                     if (model.CvType == nameof(CVType.Payment) && getPaymentDetails != null)
@@ -1284,7 +1284,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
                         model.VoidedDate = DateTime.Now;
-                        model.Status = nameof(Status.Voided);
+                        model.Status = nameof(CheckVoucherInvoiceStatus.Voided);
 
                         await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo, cancellationToken);
                         await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo, cancellationToken);

@@ -84,6 +84,7 @@ namespace IBS.DataAccess.Repository.Filpride
             if (invoiceVoucher.AmountPaid >= detailsVoucher)
             {
                 invoiceVoucher.IsPaid = true;
+                invoiceVoucher.Status = nameof(CheckVoucherInvoiceStatus.Paid);
             }
         }
 
