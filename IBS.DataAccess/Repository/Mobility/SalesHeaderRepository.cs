@@ -29,11 +29,11 @@ namespace IBS.DataAccess.Repository.Mobility
                     .ToListAsync(cancellationToken);
 
                 var lubeSales = await _db.MobilityLubes
-                    .Where(l => !l.IsProcessed && l.BusinessDate.Month == 6)
+                    .Where(l => !l.IsProcessed)
                     .ToListAsync(cancellationToken);
 
                 var safeDropDeposits = await _db.MobilitySafeDrops
-                    .Where(s => !s.IsProcessed && s.BusinessDate.Month == 6)
+                    .Where(s => !s.IsProcessed)
                     .ToListAsync(cancellationToken);
 
                 var fuelPoSales = Enumerable.Empty<MobilityFuel>();
@@ -322,9 +322,9 @@ namespace IBS.DataAccess.Repository.Mobility
                 {
                     ProductDto productDetails = await MapProductToDTO(product.Key, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{product.Key}' not found.");
 
-                    var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(product.Key);
-                    var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(product.Key);
-                    var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(product.Key);
+                    var (salesAcctNo, salesAcctTitle) = MobilityGetSalesAccountTitle(product.Key);
+                    var (cogsAcctNo, cogsAcctTitle) = MobilityGetCogsAccountTitle(product.Key);
+                    var (inventoryAcctNo, inventoryAcctTitle) = MobilityGetInventoryAccountTitle(product.Key);
 
                     journals.Add(new MobilityGeneralLedger
                     {

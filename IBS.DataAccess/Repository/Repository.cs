@@ -150,6 +150,28 @@ namespace IBS.DataAccess.Repository
             };
         }
 
+        public (string AccountNo, string AccountTitle) MobilityGetSalesAccountTitle(string productCode)
+        {
+            return productCode switch
+            {
+                "PET001" => ("4010101", "Sales - Biodiesel"),
+                "PET002" => ("4010102", "Sales - Econogas"),
+                "PET003" => ("4010103", "Sales - Envirogas"),
+                _ => ("4010110", "Inventory - Lubes"),
+            };
+        }
+
+        public (string AccountNo, string AccountTitle) MobilityGetCogsAccountTitle(string productCode)
+        {
+            return productCode switch
+            {
+                "PET001" => ("5010101", "COGS - Biodiesel"),
+                "PET002" => ("5010102", "COGS - Econogas"),
+                "PET003" => ("5010103", "COGS - Envirogas"),
+                _ => ("5010110", "Inventory - Lubes"),
+            };
+        }
+
         public (string AccountNo, string AccountTitle) GetInventoryAccountTitle(string productCode)
         {
             return productCode switch
@@ -158,6 +180,17 @@ namespace IBS.DataAccess.Repository
                 "PET002" => ("101040200", "Inventory - Econogas"),
                 "PET003" => ("101040300", "Inventory - Envirogas"),
                 _ => throw new ArgumentException($"Invalid product code: {productCode}"),
+            };
+        }
+
+        public (string AccountNo, string AccountTitle) MobilityGetInventoryAccountTitle(string productCode)
+        {
+            return productCode switch
+            {
+                "PET001" => ("1010401", "Inventory - Biodiesel"),
+                "PET002" => ("1010402", "Inventory - Econogas"),
+                "PET003" => ("1010403", "Inventory - Envirogas"),
+                _ => ("1010410", "Inventory - Lubes"),
             };
         }
 
