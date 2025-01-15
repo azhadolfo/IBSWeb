@@ -415,13 +415,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(p => p.ActualPrices)
                         .FirstOrDefaultAsync(p => p.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken);
 
-                    if (purchaseOrder.UnTriggeredQuantity != purchaseOrder.Quantity)
+                    if (purchaseOrder.UnTriggeredQuantity != purchaseOrder.Quantity && purchaseOrder.ActualPrices.Any(p => p.IsApproved))
                     {
                         decimal weightedCostTotal = 0m;
                         decimal totalCOSVolume = 0m;
                         decimal requiredQuantity = existingRecord.Quantity;
 
-                        foreach (var price in purchaseOrder.ActualPrices.Where(p => p.IsApproved))
+                        foreach (var price in purchaseOrder.ActualPrices)
                         {
                             var effectiveVolume = Math.Min(price.TriggeredVolume, requiredQuantity - totalCOSVolume);
 
