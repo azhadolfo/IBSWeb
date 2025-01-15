@@ -1076,19 +1076,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                         // for paid in details model
-                        var getCVDetails = await _dbContext.FilprideCheckVoucherDetails
-                            .Where(i => viewModel.MultipleCvId.Contains(i.CheckVoucherHeaderId) && i.SupplierId != null && i.SupplierId == viewModel.MultipleSupplierId && i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing))
-                            .OrderBy(i => i.CheckVoucherHeaderId)
-                            .FirstOrDefaultAsync(cancellationToken);
-
-                        if (getCVDetails != null)
+                        for (int j = 0; j < invoicingVoucher.Count; j++)
                         {
-                            for (int i = 0; i < invoicingVoucher.Count; i++)
+                            var getCVDetails = await _dbContext.FilprideCheckVoucherDetails
+                                .Where(i => viewModel.MultipleCvId[j] == i.CheckVoucherHeaderId && i.SupplierId != null && i.SupplierId == viewModel.MultipleSupplierId && i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing))
+                                .OrderBy(i => i.CheckVoucherHeaderId)
+                                .FirstOrDefaultAsync(cancellationToken);
+
+                            if (getCVDetails != null && getCVDetails.CheckVoucherHeaderId == viewModel.MultipleCvId[j])
                             {
-                                if (getCVDetails.CheckVoucherHeaderId == viewModel.MultipleCvId[i])
-                                {
-                                    getCVDetails.AmountPaid += viewModel.AmountPaid[i];
-                                }
+                                getCVDetails.AmountPaid += viewModel.AmountPaid[j];
                             }
                         }
 
