@@ -70,6 +70,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr.Customer)
                 .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
                 .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.AppointedSuppliers).ThenInclude(a => a.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.Customer)
                 .FirstOrDefaultAsync(cancellationToken);
         }
     }
