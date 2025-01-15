@@ -23,18 +23,14 @@
             <tbody>
                 <tr>
                     <td><b>Supplier:</b> @(Model.CustomerOrderSlip.Supplier?.SupplierName ?? Model.CustomerOrderSlip.PurchaseOrder.Supplier.SupplierName)</td>
-                    <td class="text-end"><b>Customer PO Ref#:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.CustomerPoNo)</td>
-                </tr>
-                <tr>
-                    <td><b>Date Booked:</b> @Html.DisplayFor(model => model.DateBooked)</td>
                     <td class="text-end"><b>Freight:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.Freight)</td>
                 </tr>
                 <tr>
-                    <td><b>Valid Until:</b> @Html.DisplayFor(model => model.ValidUntil)</td>
-                    <td></td>
+                    <td><b>Date Booked:</b> @Html.DisplayFor(model => model.DateBooked)</td>
+                    <td class="text-end"><b>Load Port:</b> @Model.CustomerOrderSlip.PickUpPoint.Depot</td>
                 </tr>
                 <tr>
-                    <td><b>Load Port:</b> @Model.CustomerOrderSlip.PickUpPoint.Depot</td>
+                    <td><b>Valid Until:</b> @Html.DisplayFor(model => model.ValidUntil)</td>
                     <td></td>
                 </tr>
             </tbody>
@@ -44,51 +40,67 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th colspan="5" class="text-center table-secondary">Filpride's ATL#: @Model.AuthorityToLoadNo</th>
+                    <th colspan="7" class="text-center table-secondary">Filpride's ATL#: @Model.AuthorityToLoadNo</th>
                 </tr>
                 @if (Model.UppiAtlNo != null)
                 {
                     <tr>
-                        <th colspan="5" class="text-center table-secondary">Supplier's ATL#: @Model.UppiAtlNo</th>
+                        <th colspan="7" class="text-center table-secondary">Supplier's ATL#: @Model.UppiAtlNo</th>
                     </tr>
                 }
                 <tr>
+                    <th>COS#</th>
                     <th>Customer</th>
                     <th>Product</th>
                     <th>Volume</th>
                     <th>Supplier SO#</th>
                     <th>Filpride PO#</th>
+                    <th>Customer PO#</th>
                 </tr>
             </thead>
             <tbody>
-                @if (purchaseOrders.Count > 0)
-                {
-                    var isFirstRow = true;
-                    foreach (var po in purchaseOrders)
-                    {
-                        <tr>
-                            @if (isFirstRow)
-                            {
-                                <td rowspan="@purchaseOrders.Count" class="align-content-center">@Model.CustomerOrderSlip.Customer.CustomerName</td>
-                                <td rowspan="@purchaseOrders.Count" class="align-content-center">@Model.CustomerOrderSlip.Product.ProductName</td>
-                                <td rowspan="@purchaseOrders.Count" class="align-content-center">@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
-                                isFirstRow = false;
-                            }
-                            <td>@po.PurchaseOrder.SupplierSalesOrderNo</td>
-                            <td>@po.PurchaseOrder.PurchaseOrderNo</td>
-                        </tr>
-                    }
-                }
-                else
+                
+                @foreach (var cos in Model.Details)
                 {
                     <tr>
-                        <td>@Model.CustomerOrderSlip.Customer.CustomerName</td>
-                        <td>@Model.CustomerOrderSlip.Product.ProductName</td>
-                        <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
-                        <td>@(Model.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo)</td>
-                        <td>@(Model.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo)</td>
+                        <td>
+                            @cos.CustomerOrderSlip.CustomerOrderSlipNo
+                        </td>
+                        <td>
+                            @cos.CustomerOrderSlip.Customer.CustomerName
+                        </td>
+                        <td>
+                            @cos.CustomerOrderSlip.Product.ProductName
+                        </td>
+                        <td class="text-end">
+                            @cos.CustomerOrderSlip.Quantity.ToString("N4")
+                        </td>
+                        <td>
+                            @if (cos.CustomerOrderSlip.AppointedSuppliers.Count > 0)
+                            {
+                                @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers.Select(x => x.PurchaseOrder.SupplierSalesOrderNo))
+                            }
+                            else
+                            {
+                                @cos.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo
+                            }
+                        </td>
+                        <td>
+                            @if (cos.CustomerOrderSlip.AppointedSuppliers.Count > 0)
+                            {
+                                @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers.Select(x => x.PurchaseOrder.PurchaseOrderNo))
+                            }
+                            else
+                            {
+                                @cos.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo
+                            }
+                        </td>
+                        <td>
+                            @cos.CustomerOrderSlip.CustomerPoNo
+                        </td>
                     </tr>
                 }
+                
             </tbody>
         </table>
     </div>

@@ -9,8 +9,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         public DateOnly Date { get; set; }
 
-        public DateOnly ETA { get; set; }
-
         #region--Customer
 
         [Required(ErrorMessage = "Customer field is required.")]

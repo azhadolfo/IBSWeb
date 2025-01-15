@@ -193,5 +193,7 @@ namespace IBS.Models.Filpride.Integrated
         public string OldCosNo { get; set; }
 
         public bool HasMultiplePO { get; set; }
+
+        public ICollection<FilprideCOSAppointedSupplier>? AppointedSuppliers { get; set; }
     }
 }

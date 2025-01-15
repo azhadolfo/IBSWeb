@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250114081448_AddForeignKeyInCosAppointSuppliers")]
+    partial class AddForeignKeyInCosAppointSuppliers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2788,6 +2791,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
+
+                    b.Property<DateOnly>("EstimatedTimeOfArrival")
+                        .HasColumnType("date")
+                        .HasColumnName("estimated_time_of_arrival");
 
                     b.Property<decimal>("Freight")
                         .HasColumnType("numeric(18,4)")
