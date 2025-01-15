@@ -540,7 +540,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Category = "Non-Trade",
                         CvType = nameof(CVType.Invoicing),
                         Company = companyClaims,
-                        Type = viewModel.Type
+                        Type = viewModel.Type,
+                        InvoiceAmount = viewModel.Total
                     };
 
                     #endregion -- Saving the default entries --

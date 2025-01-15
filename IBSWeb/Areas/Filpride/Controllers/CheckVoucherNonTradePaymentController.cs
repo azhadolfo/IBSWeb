@@ -117,219 +117,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Create(int id, CancellationToken cancellationToken)
-        {
-            var viewModel = new CheckVoucherNonTradePaymentViewModel();
-            var companyClaims = await GetCompanyClaimAsync();
-
-            viewModel.CvId = id;
-
-            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
-
-            viewModel.CheckVouchers = await _dbContext.FilprideCheckVoucherHeaders
-                .Where(cvh => cvh.Company == companyClaims && cvh.CvType == "Invoicing" && !cvh.IsPaid && cvh.PostedBy != null && cvh.SupplierId != null)
-                .Select(cvh => new SelectListItem
-                {
-                    Value = cvh.CheckVoucherHeaderId.ToString(),
-                    Text = cvh.CheckVoucherHeaderNo
-                })
-                .ToListAsync();
-
-            viewModel.Banks = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
-
-            return View(viewModel);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Create(CheckVoucherNonTradePaymentViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
-        {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region--Get Check Voucher Invoicing
-
-                    var invoicingVoucher = await _dbContext.FilprideCheckVoucherHeaders
-                        .FindAsync(viewModel.CvId, cancellationToken);
-
-                    #endregion
-
-                    #region--Saving the default entries
-
-                    FilprideCheckVoucherHeader checkVoucherHeader = new()
-                    {
-                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultiplePaymentAsync(companyClaims, invoicingVoucher.Type, cancellationToken),
-                        Date = viewModel.TransactionDate,
-                        PONo = invoicingVoucher.PONo,
-                        SINo = invoicingVoucher.SINo,
-                        SupplierId = invoicingVoucher.SupplierId,
-                        Particulars = viewModel.Particulars,
-                        Total = viewModel.Total,
-                        CreatedBy = _userManager.GetUserName(this.User),
-                        Category = "Non-Trade",
-                        CvType = "Payment",
-                        Reference = invoicingVoucher.CheckVoucherHeaderNo,
-                        BankId = viewModel.BankId,
-                        Payee = viewModel.Payee,
-                        CheckNo = viewModel.CheckNo,
-                        CheckDate = viewModel.CheckDate,
-                        CheckAmount = viewModel.Total,
-                        Company = companyClaims,
-                        Type = invoicingVoucher.Type
-                    };
-
-                    await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    List<FilprideCheckVoucherDetail> checkVoucherDetails = new();
-
-                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
-                    {
-                        if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
-                        {
-                            checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                                CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i]
-                            });
-                        }
-                    }
-
-                    await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
-
-                    #endregion
-
-                    #region -- Uploading file --
-                    if (file != null && file.Length > 0)
-                    {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", checkVoucherHeader.CheckVoucherHeaderNo);
-
-                        if (!Directory.Exists(uploadsFolder))
-                        {
-                            Directory.CreateDirectory(uploadsFolder);
-                        }
-
-                        string fileName = Path.GetFileName(file.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(stream);
-                        }
-
-                        //if necessary add field to store location path
-                        // model.Header.SupportingFilePath = fileSavePath
-                    }
-                    #endregion -- Uploading file --
-
-                    #region--Update invoicing voucher
-
-                    await _unitOfWork.FilprideCheckVoucher.UpdateInvoicingVoucher(checkVoucherHeader.Total, viewModel.CvId, cancellationToken);
-
-                    #endregion
-
-                    #region --Audit Trail Recording
-
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, checkVoucherHeader.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Check voucher payment created successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 || coa.Level == 5)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
-
-                    viewModel.CheckVouchers = await _dbContext.FilprideCheckVoucherHeaders
-                        .Where(cvh => cvh.Company == companyClaims && cvh.CvType == "Invoicing" && !cvh.IsPaid && cvh.PostedBy != null && cvh.SupplierId != null)
-                        .Select(cvh => new SelectListItem
-                        {
-                            Value = cvh.CheckVoucherHeaderId.ToString(),
-                            Text = cvh.CheckVoucherHeaderNo
-                        })
-                        .ToListAsync();
-
-                    viewModel.Banks = await _dbContext.FilprideBankAccounts
-                        .Where(ba => ba.Company == companyClaims)
-                        .Select(ba => new SelectListItem
-                        {
-                            Value = ba.BankAccountId.ToString(),
-                            Text = ba.AccountNo + " " + ba.AccountName
-                        })
-                        .ToListAsync();
-
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
-            }
-
-            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 || coa.Level == 5)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
-
-            viewModel.CheckVouchers = await _dbContext.FilprideCheckVoucherHeaders
-                .Where(cvh => cvh.Company == companyClaims && cvh.CvType == "Invoicing" && !cvh.IsPaid && cvh.PostedBy != null && cvh.SupplierId != null)
-                .Select(cvh => new SelectListItem
-                {
-                    Value = cvh.CheckVoucherHeaderId.ToString(),
-                    Text = cvh.CheckVoucherHeaderNo
-                })
-                .ToListAsync();
-
-            viewModel.Banks = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
-
-            TempData["error"] = "The information provided was invalid.";
-            return View(viewModel);
-        }
-
-        [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -828,248 +615,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CreatePayrollPayment(int cvId, int? supplierId, CancellationToken cancellationToken)
-        {
-            var viewModel = new CheckVoucherNonTradePaymentViewModel();
-            var companyClaims = await GetCompanyClaimAsync();
-
-            viewModel.CvId = cvId;
-            viewModel.MultipleSupplierId = supplierId;
-
-            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
-
-            viewModel.CheckVouchers = await _dbContext.FilprideCheckVoucherHeaders
-                .Where(cvh => cvh.Company == companyClaims && cvh.CvType == nameof(CVType.Invoicing) && !cvh.IsPaid && cvh.PostedBy != null && cvh.SupplierId == null)
-                .Select(cvh => new SelectListItem
-                {
-                    Value = cvh.CheckVoucherHeaderId.ToString(),
-                    Text = cvh.CheckVoucherHeaderNo
-                })
-                .ToListAsync();
-
-            viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(cvh => cvh.Company == companyClaims)
-                .Select(cvh => new SelectListItem
-                {
-                    Value = cvh.SupplierId.ToString(),
-                    Text = cvh.SupplierName
-                })
-                .ToListAsync();
-
-            viewModel.Banks = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.Bank + " " + ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
-
-            return View(viewModel);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreatePayrollPayment(CheckVoucherNonTradePaymentViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
-        {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region--Get Check Voucher Invoicing
-
-                    var invoicingVoucher = await _dbContext.FilprideCheckVoucherHeaders
-                        .FindAsync(viewModel.CvId, cancellationToken);
-
-                    var getCVInvoicingSupplier = await _dbContext.FilprideCheckVoucherDetails
-                        .Where(cvd => cvd.SupplierId != null && cvd.SupplierId == viewModel.MultipleSupplierId && cvd.CheckVoucherHeaderId == invoicingVoucher.CheckVoucherHeaderId)
-                        .Include(cvd => cvd.CheckVoucherHeader)
-                        .Select(cvd => cvd.Credit)
-                        .FirstOrDefaultAsync(cancellationToken);
-
-                    #endregion
-
-                    #region--Saving the default entries
-
-                    FilprideCheckVoucherHeader checkVoucherHeader = new()
-                    {
-                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultiplePaymentAsync(companyClaims, invoicingVoucher.Type, cancellationToken),
-                        Date = viewModel.TransactionDate,
-                        PONo = invoicingVoucher.PONo,
-                        SINo = invoicingVoucher.SINo,
-                        SupplierId = null,
-                        Particulars = viewModel.Particulars,
-                        Total = viewModel.Total,
-                        CreatedBy = _userManager.GetUserName(this.User),
-                        Category = "Non-Trade",
-                        CvType = nameof(CVType.Payment),
-                        Reference = invoicingVoucher.CheckVoucherHeaderNo,
-                        BankId = viewModel.BankId,
-                        Payee = null,
-                        CheckNo = viewModel.CheckNo,
-                        CheckDate = viewModel.CheckDate,
-                        CheckAmount = viewModel.Total,
-                        Company = companyClaims,
-                        Type = invoicingVoucher.Type
-                    };
-
-                    // for paid in details model
-                    var getCVDetails = await _dbContext.FilprideCheckVoucherDetails
-                                            .Where(cvd => cvd.SupplierId == viewModel.MultipleSupplierId && cvd.CheckVoucherHeaderId == invoicingVoucher.CheckVoucherHeaderId && cvd.Amount == viewModel.Total)
-                                            .FirstOrDefaultAsync(cancellationToken);
-
-                    if (getCVDetails != null)
-                    {
-                        getCVDetails.AmountPaid += viewModel.Total;
-                    }
-
-                    await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    List<FilprideCheckVoucherDetail> checkVoucherDetails = new();
-
-                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
-                    {
-                        if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
-                        {
-                            checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                                CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i],
-                                Amount = viewModel.MultipleSupplierId != null ? getCVInvoicingSupplier : 0,
-                                AmountPaid = viewModel.MultipleSupplierId != null ? viewModel.Total : 0,
-                                SupplierId = viewModel.MultipleSupplierId != null ? viewModel.MultipleSupplierId : null
-                            });
-                        }
-                    }
-
-                    await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
-
-                    #endregion
-
-                    #region -- Uploading file --
-                    if (file != null && file.Length > 0)
-                    {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", checkVoucherHeader.CheckVoucherHeaderNo);
-
-                        if (!Directory.Exists(uploadsFolder))
-                        {
-                            Directory.CreateDirectory(uploadsFolder);
-                        }
-
-                        string fileName = Path.GetFileName(file.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(stream);
-                        }
-
-                        //if necessary add field to store location path
-                        // model.Header.SupportingFilePath = fileSavePath
-                    }
-                    #endregion -- Uploading file --
-
-                    #region--Update invoicing voucher
-
-                    await _unitOfWork.FilprideCheckVoucher.UpdateMultipleInvoicingVoucher(checkVoucherHeader.Total, viewModel.CvId, cancellationToken);
-
-                    #endregion
-
-                    #region --Audit Trail Recording
-
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, checkVoucherHeader.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Check voucher payment created successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 || coa.Level == 5)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
-
-                    viewModel.CheckVouchers = await _dbContext.FilprideCheckVoucherHeaders
-                        .Where(cvh => cvh.Company == companyClaims && cvh.CvType == nameof(CVType.Invoicing) && !cvh.IsPaid && cvh.PostedBy != null)
-                        .Select(cvh => new SelectListItem
-                        {
-                            Value = cvh.CheckVoucherHeaderId.ToString(),
-                            Text = cvh.CheckVoucherHeaderNo
-                        })
-                        .ToListAsync();
-
-                    viewModel.Banks = await _dbContext.FilprideBankAccounts
-                        .Where(ba => ba.Company == companyClaims)
-                        .Select(ba => new SelectListItem
-                        {
-                            Value = ba.BankAccountId.ToString(),
-                            Text = ba.AccountNo + " " + ba.AccountName
-                        })
-                        .ToListAsync();
-
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
-            }
-
-            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 || coa.Level == 5)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
-
-            viewModel.CheckVouchers = await _dbContext.FilprideCheckVoucherHeaders
-                .Where(cvh => cvh.Company == companyClaims && cvh.CvType == nameof(CVType.Invoicing) && !cvh.IsPaid && cvh.PostedBy != null)
-                .Select(cvh => new SelectListItem
-                {
-                    Value = cvh.CheckVoucherHeaderId.ToString(),
-                    Text = cvh.CheckVoucherHeaderNo
-                })
-                .ToListAsync();
-
-            viewModel.Banks = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
-
-            TempData["error"] = "The information provided was invalid.";
-            return View(viewModel);
-        }
-
-        [HttpGet]
         public async Task<IActionResult> EditPayrollPayment(int id, CancellationToken cancellationToken)
         {
             if (id == 0)
@@ -1474,7 +1019,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CreateMultiplePayment(int cvId, int? supplierId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(int cvId, int? supplierId, CancellationToken cancellationToken)
         {
             var viewModel = new CheckVoucherNonTradePaymentViewModel();
             var companyClaims = await GetCompanyClaimAsync();
@@ -1513,7 +1058,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateMultiplePayment(CheckVoucherNonTradePaymentViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(CheckVoucherNonTradePaymentViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -1526,10 +1071,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region--Get Check Voucher Invoicing
 
                     var invoicingVoucher = await _dbContext.FilprideCheckVoucherHeaders
-                        .FirstOrDefaultAsync(cv => viewModel.MultipleCvId.Contains(cv.CheckVoucherHeaderId), cancellationToken);
+                        .Where(cv => viewModel.MultipleCvId.Contains(cv.CheckVoucherHeaderId))
+                        .OrderBy(cv => cv.CheckVoucherHeaderId)
+                        .ToListAsync(cancellationToken);
 
+                        // for paid in details model
+                        var getCVDetails = await _dbContext.FilprideCheckVoucherDetails
+                            .Where(i => viewModel.MultipleCvId.Contains(i.CheckVoucherHeaderId) && i.SupplierId != null && i.SupplierId == viewModel.MultipleSupplierId && i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing))
+                            .OrderBy(i => i.CheckVoucherHeaderId)
+                            .FirstOrDefaultAsync(cancellationToken);
+
+                        if (getCVDetails != null)
+                        {
+                            for (int i = 0; i < invoicingVoucher.Count; i++)
+                            {
+                                if (getCVDetails.CheckVoucherHeaderId == viewModel.MultipleCvId[i])
+                                {
+                                    getCVDetails.AmountPaid += viewModel.AmountPaid[i];
+                                }
+                            }
+                        }
+
+                    var voucherIds = invoicingVoucher.Select(i => i.CheckVoucherHeaderId).ToList();
                     var getCVInvoicingSupplier = await _dbContext.FilprideCheckVoucherDetails
-                        .Where(cvd => cvd.SupplierId != null && cvd.SupplierId == viewModel.MultipleSupplierId && cvd.CheckVoucherHeaderId == invoicingVoucher.CheckVoucherHeaderId)
+                        .Where(cvd => cvd.SupplierId != null && cvd.SupplierId == viewModel.MultipleSupplierId && voucherIds.Contains(cvd.CheckVoucherHeaderId))
                         .Include(cvd => cvd.CheckVoucherHeader)
                         .Select(cvd => cvd.Credit)
                         .FirstOrDefaultAsync(cancellationToken);
@@ -1542,35 +1107,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     FilprideCheckVoucherHeader checkVoucherHeader = new()
                     {
-                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultiplePaymentAsync(companyClaims, invoicingVoucher.Type, cancellationToken),
+                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultiplePaymentAsync(companyClaims, invoicingVoucher.Select(i => i.Type).FirstOrDefault(), cancellationToken),
                         Date = viewModel.TransactionDate,
-                        PONo = invoicingVoucher.PONo,
-                        SINo = invoicingVoucher.SINo,
+                        PONo = invoicingVoucher.Select(i => i.PONo).FirstOrDefault(),
+                        SINo = invoicingVoucher.Select(i => i.PONo).FirstOrDefault(),
                         SupplierId = null,
-                        Particulars = viewModel.Particulars,
+                        Particulars = $"{viewModel.Particulars}. Payment for {string.Join(",", invoicingVoucher.Select(i => i.CheckVoucherHeaderNo))}",
                         Total = viewModel.Total,
                         CreatedBy = _userManager.GetUserName(this.User),
                         Category = "Non-Trade",
                         CvType = nameof(CVType.Payment),
-                        Reference = invoicingVoucher.CheckVoucherHeaderNo,
+                        Reference = invoicingVoucher.Select(i => i.CheckVoucherHeaderNo).FirstOrDefault(),
                         BankId = viewModel.BankId,
                         Payee = null,
                         CheckNo = viewModel.CheckNo,
                         CheckDate = viewModel.CheckDate,
                         CheckAmount = viewModel.Total,
                         Company = companyClaims,
-                        Type = invoicingVoucher.Type
+                        Type = invoicingVoucher.Select(i => i.Type).FirstOrDefault()
                     };
-
-                    // for paid in details model
-                    var getCVDetails = await _dbContext.FilprideCheckVoucherDetails
-                        .Where(cvd => cvd.SupplierId == viewModel.MultipleSupplierId && cvd.CheckVoucherHeaderId == invoicingVoucher.CheckVoucherHeaderId && cvd.Amount == viewModel.Total)
-                        .FirstOrDefaultAsync(cancellationToken);
-
-                    if (getCVDetails != null)
-                    {
-                        getCVDetails.AmountPaid += viewModel.Total;
-                    }
 
                     await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -1582,40 +1137,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     for (int i = 0; i < viewModel.MultipleCvId.Length; i++)
                     {
                         var cvId = viewModel.MultipleCvId[i];
-                        var amountPaid = viewModel.AmountPaid[i];
                         FilprideMultipleCheckVoucherPayment multipleCheckVoucherPayment = new()
                         {
                             Id = Guid.NewGuid(),
                             CheckVoucherHeaderPaymentId = checkVoucherHeader.CheckVoucherHeaderId,
                             CheckVoucherHeaderInvoiceId = cvId,
-                            AmountPaid = amountPaid,
+                            AmountPaid = viewModel.AmountPaid[i],
                         };
 
                         _dbContext.Add(multipleCheckVoucherPayment);
                         await _dbContext.SaveChangesAsync(cancellationToken);
-
-                        #region--Update invoicing voucher
-
-                        // await _unitOfWork.FilprideCheckVoucher.UpdateMultipleInvoicingVoucher(checkVoucherHeader.Total, viewModel.CvId, cancellationToken);
-                        var updateMultipleInvoicingVoucher = await _dbContext.FilprideMultipleCheckVoucherPayments
-                            .Where(mcvp => mcvp.CheckVoucherHeaderInvoiceId == cvId && mcvp.CheckVoucherHeaderPaymentId == checkVoucherHeader.CheckVoucherHeaderId)
-                            .Include(mcvp => mcvp.CheckVoucherHeaderInvoice)
-                            .ToListAsync(cancellationToken);
-
-                            if (updateMultipleInvoicingVoucher.Any())
-                            {
-                                for (int j = 0; j < updateMultipleInvoicingVoucher.Count; j++)
-                                {
-                                    updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice.AmountPaid += amountPaid;
-                                    if (updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice?.AmountPaid >= updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice?.InvoiceAmount)
-                                    {
-                                        updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice.IsPaid = true;
-                                    }
-                                }
-                            }
-
-                        #endregion
                     }
+
+                    #region--Update invoicing voucher
+
+                    // await _unitOfWork.FilprideCheckVoucher.UpdateMultipleInvoicingVoucher(checkVoucherHeader.Total, viewModel.CvId, cancellationToken);
+                    var updateMultipleInvoicingVoucher = await _dbContext.FilprideMultipleCheckVoucherPayments
+                        .Where(mcvp => viewModel.MultipleCvId.Contains(mcvp.CheckVoucherHeaderInvoiceId) && mcvp.CheckVoucherHeaderPaymentId == checkVoucherHeader.CheckVoucherHeaderId)
+                        .Include(mcvp => mcvp.CheckVoucherHeaderInvoice)
+                        .ToListAsync(cancellationToken);
+
+                    if (updateMultipleInvoicingVoucher.Any())
+                    {
+                        for (int j = 0; j < updateMultipleInvoicingVoucher.Count; j++)
+                        {
+                            updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice.AmountPaid += viewModel.AmountPaid[j];
+                            if (updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice?.AmountPaid >= updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice?.InvoiceAmount)
+                            {
+                                updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice.IsPaid = true;
+                                updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.Paid);
+                            }
+                        }
+                    }
+
+                    #endregion
 
                     #endregion -- Multiple Payment Storing --
 
@@ -1760,16 +1315,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(null);
         }
 
-        public async Task<IActionResult> GetCVs(int supplierId)
+        public async Task<IActionResult> GetCVs(int supplierId, CancellationToken cancellationToken)
         {
-            var checkVoucher = await _unitOfWork.FilprideCheckVoucher
-                .GetAllAsync(cv => cv.SupplierId == supplierId && cv.PostedBy != null && cv.CvType == nameof(CVType.Invoicing) && !cv.IsPaid);
+
+            var checkVoucher = await _dbContext.FilprideCheckVoucherDetails
+                .Where(cvd => cvd.CheckVoucherHeader.SupplierId != null && cvd.CheckVoucherHeader.SupplierId == supplierId && cvd.CheckVoucherHeader.PostedBy != null && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) && !cvd.CheckVoucherHeader.IsPaid ||
+                                                                        cvd.SupplierId != null && cvd.SupplierId == supplierId && cvd.CheckVoucherHeader.PostedBy != null && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) && !cvd.CheckVoucherHeader.IsPaid && cvd.CheckVoucherHeaderId == cvd.CheckVoucherHeader.CheckVoucherHeaderId && cvd.Amount > cvd.AmountPaid)
+                .Include(cvd => cvd.CheckVoucherHeader)
+                .ToListAsync(cancellationToken);
 
             if (checkVoucher != null && checkVoucher.Any())
             {
                 var cvList = checkVoucher
-                    .OrderBy(cv => cv.CheckVoucherHeaderNo)
-                    .Select(cv => new { Id = cv.CheckVoucherHeaderId, CVNumber = cv.CheckVoucherHeaderNo })
+                    .OrderBy(cv => cv.CheckVoucherDetailId)
+                    .Select(cv => new { Id = cv.CheckVoucherHeader.CheckVoucherHeaderId, CVNumber = cv.CheckVoucherHeader.CheckVoucherHeaderNo })
+                    .Distinct()
                     .ToList();
                 return Json(cvList);
             }
@@ -1778,26 +1338,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMultipleInvoiceDetails(int[] cvId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetMultipleInvoiceDetails(int[] cvId, int supplierId, CancellationToken cancellationToken)
         {
             if (cvId == null)
             {
                 return Json(null);
             }
 
-            var invoice = await _dbContext.FilprideCheckVoucherHeaders
-                .Where(i => cvId.Contains(i.CheckVoucherHeaderId))
+            var invoice = await _dbContext.FilprideCheckVoucherDetails
+                .Where(i => cvId.Contains(i.CheckVoucherHeaderId) && i.SupplierId != null && i.SupplierId == supplierId && i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) ||
+                            cvId.Contains(i.CheckVoucherHeader.CheckVoucherHeaderId) && i.CheckVoucherHeader.SupplierId != null && i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing))
                 .Include(i => i.Supplier)
+                .Include(i => i.CheckVoucherHeader)
                 .ToListAsync(cancellationToken);
 
             var totalInvoiceAmount = 0m;
             var invoiceAmount = 0m;
-            var particulars = invoice.Select(cvh => cvh.Particulars).FirstOrDefault();
-            foreach (var item in invoice)
+            var particulars = invoice.Select(cvh => cvh.CheckVoucherHeader.Particulars).FirstOrDefault();
+            for (int i = 0; i < invoice.Count; i++)
             {
-                var getBalance = item.InvoiceAmount - item.AmountPaid;
-                totalInvoiceAmount += getBalance;
-                invoiceAmount = getBalance;
+                if (invoice[i].CheckVoucherHeader.SupplierId != null)
+                {
+                    var getBalance = invoice[i].CheckVoucherHeader.InvoiceAmount - invoice[i].CheckVoucherHeader.AmountPaid;
+                    totalInvoiceAmount += getBalance;
+                    invoiceAmount = getBalance;
+                }
+                else
+                {
+                    var getBalance = invoice[i].Amount - invoice[i].AmountPaid;
+                    totalInvoiceAmount += getBalance;
+                    invoiceAmount = getBalance;
+                }
+
             }
 
             if (invoice != null)
