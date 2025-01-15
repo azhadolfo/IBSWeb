@@ -305,8 +305,8 @@
                 totalAmount += cvAmount;
             });
             $("#Total").val(formatNumber(totalAmount));
-            $(".cib-credit").val(totalAmount);
-            $(".debit").val(totalAmount);
+            $(".cib-credit").val(formatNumber(totalAmount));
+            $(".debit").val(formatNumber(totalAmount));
             updateTotalDebitAndCredit();
         }
 
@@ -329,8 +329,8 @@
                 totalCredit += credit;
             });
             // Display the total debit value
-            $(".totalDebit").text(totalDebit);
-            $(".totalCredit").text(totalCredit);
+            $(".totalDebit").text(formatNumber(totalDebit));
+            $(".totalCredit").text(formatNumber(totalCredit));
             $("#debit").val("0.000");
             $("#credit").val("0.000");
         }
