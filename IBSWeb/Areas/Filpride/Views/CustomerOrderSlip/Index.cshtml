@@ -174,7 +174,7 @@
                                     }
 
                                     if (status === '@CosStatus.ForAtlBooking') {
-                                        actions += `<li><a class="dropdown-item BookATL" href="#" onclick="bookAuthorityToLoad('${customerOrderSlipId}', '${row.supplier.supplierName}')">Book ATL</a></li>`;
+                                        actions += `<li><a class="dropdown-item" target="_blank" href="@Url.Action("Create", "AuthorityToLoad", new { area = "Filpride" })">Book ATL</a></li>`;
                                     }
 
                                     break;
