@@ -168,6 +168,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task UpdateActualCostOnSalesAndReceiptsAsync(FilpridePOActualPrice model, CancellationToken cancellationToken = default)
         {
             var receivingReports = await _db.FilprideReceivingReports
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
                 .Where(r => r.POId == model.PurchaseOrderId && r.Status == nameof(Status.Posted) && !r.IsCostUpdated)
                 .OrderBy(r => r.ReceivingReportId)
                 .ToListAsync(cancellationToken);
@@ -182,6 +183,10 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 for (int i = 0; i < receivingReports.Count; i++)
                 {
+
+                    var isSupplierVatable = receivingReports[i].PurchaseOrder.Supplier.VatType == SD.VatType_Vatable;
+                    var isSupplierTaxable = receivingReports[i].PurchaseOrder.Supplier.TaxType == SD.TaxType_WithTax;
+
                     #region Update RR Amount
 
                     // Calculate the effective volume
@@ -215,9 +220,9 @@ namespace IBS.DataAccess.Repository.Filpride
                         .FirstOrDefaultAsync(p => p.Company == receivingReports[i].Company && p.DocumentNo == receivingReports[i].ReceivingReportNo, cancellationToken);
 
                     purchaseBook.Amount = receivingReports[i].Amount;
-                    purchaseBook.NetPurchases = ComputeNetOfVat(receivingReports[i].Amount);
-                    purchaseBook.VatAmount = ComputeVatAmount(purchaseBook.NetPurchases);
-                    purchaseBook.WhtAmount = ComputeEwtAmount(purchaseBook.NetPurchases, 0.01m);
+                    purchaseBook.NetPurchases = isSupplierVatable ? ComputeNetOfVat(receivingReports[i].Amount) : receivingReports[i].Amount;
+                    purchaseBook.VatAmount = isSupplierVatable ? ComputeVatAmount(purchaseBook.NetPurchases) : purchaseBook.NetPurchases;
+                    purchaseBook.WhtAmount = isSupplierTaxable ? ComputeEwtAmount(purchaseBook.NetPurchases, 0.01m) : 0;
 
                     #endregion Update Purchase Book
 
@@ -244,7 +249,14 @@ namespace IBS.DataAccess.Repository.Filpride
                         }
                         else
                         {
-                            journalEntry.Credit = ComputeNetOfEwt(receivingReports[i].Amount, purchaseBook.WhtAmount);
+                            if (purchaseBook.WhtAmount > 0)
+                            {
+                                journalEntry.Credit = ComputeNetOfEwt(purchaseBook.Amount, purchaseBook.WhtAmount);
+                            }
+                            else
+                            {
+                                journalEntry.Credit = purchaseBook.Amount;
+                            }
                         }
                     }
 
