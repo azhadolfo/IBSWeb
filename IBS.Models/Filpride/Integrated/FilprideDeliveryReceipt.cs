@@ -23,10 +23,6 @@ namespace IBS.Models.Filpride.Integrated
 
         [Column(TypeName = "date")]
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
-        public DateOnly EstimatedTimeOfArrival { get; set; }
-
-        [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly? DeliveredDate { get; set; }
 
         #region--Customer properties

@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250114065524_CreateBookAtlDetails")]
+    partial class CreateBookAtlDetails
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2788,6 +2791,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
+
+                    b.Property<DateOnly>("EstimatedTimeOfArrival")
+                        .HasColumnType("date")
+                        .HasColumnName("estimated_time_of_arrival");
 
                     b.Property<decimal>("Freight")
                         .HasColumnType("numeric(18,4)")
@@ -7130,21 +7137,12 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideCOSAppointedSupplier", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", "CustomerOrderSlip")
-                        .WithMany("AppointedSuppliers")
-                        .HasForeignKey("CustomerOrderSlipId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_cos_appointed_suppliers_filpride_customer_order_sl");
-
                     b.HasOne("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", "PurchaseOrder")
                         .WithMany()
                         .HasForeignKey("PurchaseOrderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_filpride_cos_appointed_suppliers_filpride_purchase_orders_p");
-
-                    b.Navigation("CustomerOrderSlip");
 
                     b.Navigation("PurchaseOrder");
                 });
@@ -7482,11 +7480,6 @@ namespace IBS.DataAccess.Migrations
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", b =>
                 {
                     b.Navigation("Details");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", b =>
-                {
-                    b.Navigation("AppointedSuppliers");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideCustomer", b =>

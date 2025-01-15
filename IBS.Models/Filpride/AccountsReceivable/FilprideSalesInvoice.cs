@@ -60,7 +60,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public decimal Amount { get; set; }
 
         [Required]
-        [Column(TypeName = "varchar(100)")]
         public string Remarks { get; set; }
 
         [Column(TypeName = "varchar(20)")]

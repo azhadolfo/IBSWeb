@@ -227,7 +227,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(cancellationToken),
                         Date = viewModel.Date,
-                        EstimatedTimeOfArrival = viewModel.ETA,
                         CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
                         CustomerId = viewModel.CustomerId,
                         Remarks = viewModel.Remarks,
@@ -404,7 +403,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     DeliverReceiptId = existingRecord.DeliveryReceiptId,
                     Date = existingRecord.Date,
-                    ETA = existingRecord.EstimatedTimeOfArrival,
                     CustomerId = existingRecord.Customer.CustomerId,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                     CustomerAddress = existingRecord.Customer.CustomerAddress,
