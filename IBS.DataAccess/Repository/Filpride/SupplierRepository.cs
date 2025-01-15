@@ -5,6 +5,7 @@ using IBS.Models.Filpride.MasterFile;
 using IBS.Utility;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -114,6 +115,19 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 throw new InvalidOperationException("No data changes!");
             }
+        }
+
+        public async Task<List<SelectListItem>> GetFilprideTradeSupplierListAsyncById(string company, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideSuppliers
+                .OrderBy(s => s.SupplierCode)
+                .Where(s => s.IsActive && s.Company == company && s.Category == "Trade")
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = s.SupplierCode + " " + s.SupplierName
+                })
+                .ToListAsync(cancellationToken);
         }
     }
 }

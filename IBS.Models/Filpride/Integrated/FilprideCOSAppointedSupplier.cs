@@ -12,6 +12,9 @@ namespace IBS.Models.Filpride.Integrated
 
         public int CustomerOrderSlipId { get; set; }
 
+        [ForeignKey(nameof(CustomerOrderSlipId))]
+        public FilprideCustomerOrderSlip? CustomerOrderSlip { get; set; }
+
         public int PurchaseOrderId { get; set; }
 
         [ForeignKey(nameof(PurchaseOrderId))]

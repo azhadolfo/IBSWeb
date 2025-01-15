@@ -105,6 +105,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideCustomerBranch> FilprideCustomerBranches { get; set; }
 
+        public DbSet<FilprideBookAtlDetail> FilprideBookAtlDetails { get; set; }
+
         #region--Master File
 
         public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
@@ -474,7 +476,10 @@ namespace IBS.DataAccess.Data
                     .HasForeignKey(a => a.PurchaseOrderId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                a.HasIndex(a => a.CustomerOrderSlipId);
+                a.HasOne(a => a.CustomerOrderSlip)
+                    .WithMany(cos => cos.AppointedSuppliers)
+                    .HasForeignKey(a => a.CustomerOrderSlipId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<FilpridePOActualPrice>(p =>
@@ -490,6 +495,19 @@ namespace IBS.DataAccess.Data
                 b.HasOne(b => b.Customer)
                     .WithMany(c => c.Branches)
                     .HasForeignKey(b => b.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideBookAtlDetail>(b =>
+            {
+                b.HasOne(b => b.Header)
+                    .WithMany(b => b.Details)
+                    .HasForeignKey(b => b.AuthorityToLoadId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(b => b.CustomerOrderSlip)
+                    .WithMany()
+                    .HasForeignKey(b => b.CustomerOrderSlipId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
