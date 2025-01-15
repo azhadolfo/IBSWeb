@@ -110,7 +110,6 @@ namespace IBS.DataAccess.Repository.Filpride
             #endregion
 
             existingRecord.Date = viewModel.Date;
-            existingRecord.EstimatedTimeOfArrival = viewModel.ETA;
             existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
             existingRecord.CustomerId = viewModel.CustomerId;
             existingRecord.Remarks = viewModel.Remarks;
