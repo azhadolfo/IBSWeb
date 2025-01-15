@@ -83,8 +83,24 @@
                     { "data": "remarks" },
                     {
                         "data": "authorityToLoadId",
-                        "render": function(data) {
-                            return `<a class="btn btn-primary" href="@Url.Action("Print", "AuthorityToLoad", new { area = "Filpride" })/${data}">Print</a>`;
+                        "orderable": false,
+                        "render": function(data, type, row) {
+                            let actions = `<div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown_${data}" 
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown_${data}">`;
+
+                            // Add Print option
+                            actions += `<li><a class="dropdown-item" href="@Url.Action("Print", "AuthorityToLoad", new { area = "Filpride" })/${data}">
+                                Print</a></li>`;
+
+                            // Add Update Valid Until option
+                            actions += `<li><a class="dropdown-item" href="#" onclick="showUpdateValidUntil('${data}', '${row.validUntil}')"> Update Valid Until</a></li>`;
+
+                            actions += `</ul></div>`;
+                            return actions;
                         }
                     }
                 ],
@@ -92,5 +108,72 @@
                 "pageLength": 10 // Default number of rows per page
             });
         });
+
+        function showUpdateValidUntil(atlId, currentValidUntil) {
+            const previousDate = new Date(currentValidUntil);
+            const minDate = new Date(previousDate);
+            minDate.setDate(minDate.getDate() + 1);
+
+            const formattedDate = minDate.toISOString().split("T")[0];
+            
+            Swal.fire({
+                title: 'Update Validity Date',
+                html: `
+            <div style="text-align: center; font-size: 16px; margin-bottom: 10px;">
+                <label for="newValidUntil" style="display: block; margin-bottom: 5px; font-weight: bold;">Select Validity Date</label>
+                <input type="date" id="newValidUntil" class="swal2-input" 
+                       style="width: 70%; margin: 0 auto;" 
+                       placeholder="Select Date" 
+                       min="${formattedDate}" 
+                       value="${formattedDate}">
+                <small style="display: block; margin-top: 5px; color: gray;">Must not be earlier than <strong>${formattedDate}</strong></small>
+            </div>`,
+                confirmButtonText: 'Save Changes',
+                confirmButtonColor: '#6C63FF',
+                cancelButtonText: 'Cancel',
+                cancelButtonColor: '#6C757D',
+                showCancelButton: true,
+                focusConfirm: false,
+                preConfirm: () => {
+                    const newValidUntil = document.getElementById('newValidUntil').value;
+                    if (!newValidUntil) {
+                        Swal.showValidationMessage('Please select a new validity date');
+                        return false;
+                    }
+                    return newValidUntil;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const newValidUntil = result.value;
+                    console.log(atlId)
+                    updateValidUntil(atlId, newValidUntil);
+                }
+            });
+        }
+
+
+        function updateValidUntil(atlId, newValidUntil) {
+            $.ajax({
+                url: '@Url.Action("UpdateValidityDate", "AuthorityToLoad", new { area = "Filpride" })',
+                type: 'POST',
+                data: {
+                    id: atlId,
+                    newValidUntil: newValidUntil,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#paginatedTable').DataTable().ajax.reload();
+                        Swal.fire('Success', 'Valid Until date updated successfully', 'success');
+                    } else {
+                        Swal.fire('Error', response.message || 'Error updating Valid Until date', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Error updating Valid Until date', 'error');
+                }
+            });
+        }
+
     </script>
 }
