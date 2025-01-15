@@ -21,13 +21,7 @@
             <div class="col-6">
             </div>
             <div class="col-6 text-end">
-                @* <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Create" class="btn btn-primary"> *@
-                @*     <i class="bi bi-plus-circle"></i> Create Payment *@
-                @* </a> *@
-                @* <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="CreatePayrollPayment" class="btn btn-primary"> *@
-                @*     <i class="bi bi-plus-circle"></i> Create Payroll Payment *@
-                @* </a> *@
-                <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="CreateMultiplePayment" class="btn btn-primary">
+                <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Create" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Create Payment
                 </a>
             </div>
@@ -36,13 +30,13 @@
             <thead>
                 <tr class="text-nowrap table-secondary">
                     <th>
-                        INV No.
+                        CVN No.
                     </th>
                     <th>
                         Supplier Name
                     </th>
                     <th>
-                        INV Amount
+                        Payable Amount
                     </th>
                     <th>
                         Amount Paid
@@ -191,11 +185,7 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                                 ${row.checkVoucherHeader.postedBy == null ? `
-                                                    ${row.checkVoucherHeader?.supplier?.supplierId != null ? `
                                                     <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
-                                                    ` : `
-                                                    <li><a class="dropdown-item" href="@Url.Action("EditPayrollPayment", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
-                                                    `}
                                                     <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Preview</a></li>
                                                     <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
                                                 ` : `

@@ -103,13 +103,14 @@
                                     <td>
                                         <select asp-for="AccountingEntries[0].AccountTitle" 
                                                 class="form-select form-select-sm chart-of-accounts default-expense js-select2 w-100"
-                                                style="width: 100%">
+                                                style="width: 100%" required>
                                             <option value="">-- Select Account --</option>
                                             @foreach (var account in Model.ChartOfAccounts)
                                             {
                                                 <option value="@account.Value">@account.Text</option>
                                             }
                                         </select>
+                                        <span asp-validation-for="AccountingEntries[0].AccountTitle" class="text-danger"></span>
                                     </td>
                                     <td>
                                         <input type="number" asp-for="AccountingEntries[0].Amount" class="form-control form-control-sm text-end amount" value="0" />

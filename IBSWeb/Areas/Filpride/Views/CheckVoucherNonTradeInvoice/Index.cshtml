@@ -215,11 +215,6 @@
                                             ` : `
                                                 <li><button class="dropdown-item" disabled readonly>Void</button></li>
                                             `}
-                                            ${row.amountPaid == 0 && row.checkVoucherHeader?.supplier?.supplierId == null ? `
-                                                <li><a class="dropdown-item" href="@Url.Action("CreatePayrollPayment", "CheckVoucherNonTradePayment", new { area = "Filpride" })?cvId=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Create Payroll Payment</a></li>
-                                            ` : !row.checkVoucherHeader.isPaid && row.checkVoucherHeader?.supplier?.supplierId != null ? `
-                                            <li><a class="dropdown-item" href="@Url.Action("Create", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Create Payment</a></li>
-                                            ` : ''}
                                         `}
                                     </ul>
                                 </div>`;
