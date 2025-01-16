@@ -1,10 +1,12 @@
 ﻿using System.Drawing;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.DataAccess.Services;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
-using IBS.Utility;
+using IBS.Services;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -51,7 +53,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            #region -- get user department --
+            #region -- Get user department --
 
             var findUser = await _dbContext.ApplicationUsers
                 .Where(user => user.Id == _userManager.GetUserId(this.User))
@@ -135,7 +137,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 try
                 {
-                    #region -- selected customer --
+                    #region -- Selected customer --
 
                     var selectedCustomer = await _dbContext.MobilityCustomers
                         .Where(c => c.CustomerId == model.CustomerId)
@@ -143,7 +145,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #endregion -- selected customer --
 
-                    #region -- get mobility station --
+                    #region -- Get mobility station --
 
                     var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
 
@@ -254,7 +256,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 try
                 {
-                    #region -- selected customer --
+                    #region -- Selected customer --
 
                     var selectedCustomer = await _dbContext.MobilityCustomers
                         .Where(c => c.CustomerId == model.CustomerId)
@@ -262,7 +264,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #endregion -- selected customer --
 
-                    #region -- getMobilityStation --
+                    #region -- GetMobilityStation --
 
                     var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
 
@@ -344,7 +346,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             ViewData["StationCode"] = stationCodeClaims;
             ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
-            #region -- get user department --
+            #region -- Get user department --
 
             var findUser = await _dbContext.ApplicationUsers
                 .Where(user => user.Id == _userManager.GetUserId(this.User))

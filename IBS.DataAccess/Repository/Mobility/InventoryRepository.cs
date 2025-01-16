@@ -3,6 +3,7 @@ using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
+using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Mobility

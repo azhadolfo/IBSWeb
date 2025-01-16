@@ -6,6 +6,8 @@ using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -280,6 +282,37 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 #endregion ReCalculate Inventory
 
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task<List<string>> GetUntriggeredPurchaseOrderNumbersAsync(CancellationToken cancellationToken = default)
+        {
+            var previousMonth = DateTime.UtcNow.AddMonths(-1);
+
+            var uppi = await _db.FilprideSuppliers
+                .FirstOrDefaultAsync(s =>
+                    s.SupplierName.Contains("UNIOIL PETROLEUM PHILS, INC"), cancellationToken);
+
+            return await _db.FilpridePurchaseOrders
+                .Where(po =>
+                    po.SupplierId == uppi.SupplierId &&
+                    po.Status == nameof(Status.Posted) &&
+                    po.UnTriggeredQuantity > 0 &&
+                    po.Date.Month == previousMonth.Month &&
+                    po.Date.Year == previousMonth.Year)
+                .Select(p => p.PurchaseOrderNo)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task UnlockTheCreationOfPurchaseOrderAsync(CancellationToken cancellationToken = default)
+        {
+            var lockPoAppSetting = await _db.AppSettings
+                .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfPo, cancellationToken);
+
+            if (lockPoAppSetting != null)
+            {
+                lockPoAppSetting.Value = "false";
                 await _db.SaveChangesAsync(cancellationToken);
             }
         }

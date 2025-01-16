@@ -1,11 +1,9 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +11,11 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -32,6 +35,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IHubContext<NotificationHub> _hubContext;
 
+        private const string FilterTypeClaimType = "DeliveryReceipt.FilterType";
+
         public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment, IHubContext<NotificationHub> hubContext)
         {
             _unitOfWork = unitOfWork;
@@ -48,8 +53,41 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public IActionResult Index()
+        private async Task UpdateFilterTypeClaim(string filterType)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var existingClaim = (await _userManager.GetClaimsAsync(user))
+                    .FirstOrDefault(c => c.Type == FilterTypeClaimType);
+
+                if (existingClaim != null)
+                {
+                    await _userManager.RemoveClaimAsync(user, existingClaim);
+                }
+
+                if (!string.IsNullOrEmpty(filterType))
+                {
+                    await _userManager.AddClaimAsync(user, new Claim(FilterTypeClaimType, filterType));
+                }
+            }
+        }
+
+        private async Task<string> GetCurrentFilterType()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var claims = await _userManager.GetClaimsAsync(user);
+                return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
+            }
+            return null;
+        }
+
+        public async Task<IActionResult> Index(string filterType)
+        {
+            await UpdateFilterTypeClaim(filterType);
+            ViewBag.FilterType = filterType;
             return View();
         }
 
@@ -59,9 +97,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
+                var filterTypeClaim = await GetCurrentFilterType();
 
                 var drList = await _unitOfWork.FilprideDeliveryReceipt
                     .GetAllAsync(cos => cos.Company == companyClaims, cancellationToken);
+
+                // Apply status filter based on filterType
+                if (!string.IsNullOrEmpty(filterTypeClaim))
+                {
+                    switch (filterTypeClaim)
+                    {
+                        case "InTransit":
+                            drList = drList.Where(dr =>
+                                dr.Status == nameof(DRStatus.PendingDelivery));
+                            break;
+                        case "ForInvoice":
+                            drList = drList.Where(dr =>
+                                dr.Status == nameof(DRStatus.ForInvoicing));
+                            break;
+                        case "ForOMApproval":
+                            drList = drList.Where(cos =>
+                                cos.Status == nameof(CosStatus.ForApprovalOfOM));
+                            break;
+                        // Add other cases as needed
+                    }
+                }
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -116,7 +176,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -124,6 +184,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+            var isDrLock = await _dbContext.AppSettings
+                .Where(s => s.SettingKey == AppSettingKey.LockTheCreationOfDr)
+                .Select(s => s.Value == "true")
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (isDrLock)
+            {
+                TempData["denied"] = "Creation of the DR is locked due to incomplete in-transit deliveries.";
+                return RedirectToAction(nameof(Index));
+            }
 
             DeliveryReceiptViewModel viewModel = new()
             {
@@ -157,7 +227,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(cancellationToken),
                         Date = viewModel.Date,
-                        EstimatedTimeOfArrival = viewModel.ETA,
                         CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
                         CustomerId = viewModel.CustomerId,
                         Remarks = viewModel.Remarks,
@@ -292,7 +361,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await transaction.CommitAsync(cancellationToken);
 
                     TempData["success"] = "Delivery receipt created successfully.";
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 catch (Exception ex)
                 {
@@ -334,7 +403,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     DeliverReceiptId = existingRecord.DeliveryReceiptId,
                     Date = existingRecord.Date,
-                    ETA = existingRecord.EstimatedTimeOfArrival,
                     CustomerId = existingRecord.Customer.CustomerId,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                     CustomerAddress = existingRecord.Customer.CustomerAddress,
@@ -366,7 +434,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -472,7 +540,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await transaction.CommitAsync(cancellationToken);
 
                     TempData["success"] = "Delivery receipt updated successfully.";
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 catch (Exception ex)
                 {
@@ -512,7 +580,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -689,13 +757,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.CommitAsync(cancellationToken);
 
                 TempData["success"] = "Product has been delivered";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -724,7 +792,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.SaveAsync(cancellationToken);
                     TempData["success"] = "Delivery Receipt has been canceled.";
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
             return NotFound();
@@ -780,13 +848,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Delivery receipt has been Voided.";
                     }
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }
 
@@ -842,7 +910,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 

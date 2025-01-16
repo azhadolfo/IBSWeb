@@ -21,5 +21,7 @@ namespace IBS.Models
         public bool IsRead { get; set; }
 
         public bool IsArchived { get; set; }
+
+        public bool RequiresResponse { get; set; }
     }
 }

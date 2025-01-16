@@ -3,6 +3,7 @@ using IBS.Models.Filpride.MasterFile;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Utility.Enums;
 
 namespace IBS.Models.Filpride.Integrated
 {
@@ -19,10 +20,6 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "date")]
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly Date { get; set; }
-
-        [Column(TypeName = "date")]
-        [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
-        public DateOnly EstimatedTimeOfArrival { get; set; }
 
         [Column(TypeName = "date")]
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
@@ -64,7 +61,7 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "varchar(50)")]
         public string ManualDrNo { get; set; }
 
-        public string Status { get; set; } = nameof(Utility.DRStatus.PendingDelivery);
+        public string Status { get; set; } = nameof(DRStatus.PendingDelivery);
 
         #region Appointing Hauler
 

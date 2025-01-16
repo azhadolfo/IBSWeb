@@ -74,6 +74,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Discount { get; set; }
+        
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal AmountPaid { get; set; }
@@ -116,7 +117,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         public int ReceivingReportId { get; set; }
 
-        public string Status { get; set; } = nameof(Utility.Status.Pending);
+        public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
         #region Enhancing
 

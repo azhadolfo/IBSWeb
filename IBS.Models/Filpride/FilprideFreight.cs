@@ -2,6 +2,7 @@
 using IBS.Utility;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Utility.Enums;
 
 namespace IBS.Models.Filpride
 {

@@ -40,5 +40,7 @@ namespace IBS.Models.Filpride.Integrated
         public string CreatedBy { get; set; }
 
         public DateTime CreatedDate { get; set; }
+
+        public ICollection<FilprideBookAtlDetail> Details { get; set; }
     }
 }

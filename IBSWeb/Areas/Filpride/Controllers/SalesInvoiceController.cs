@@ -1,16 +1,18 @@
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
-using IBS.Utility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -467,7 +469,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (withHoldingTaxAmount > 0)
                         {
-                            var withHoldingTaxTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
+                            var withHoldingTaxTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060500") ?? throw new ArgumentException("Account title '101060700' not found.");
 
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook
@@ -487,7 +489,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                         if (withHoldingVatAmount > 0)
                         {
-                            var withHoldingVatTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
+                            var withHoldingVatTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060700") ?? throw new ArgumentException("Account title '101060700' not found.");
 
                             ledgers.Add(
                                 new FilprideGeneralLedgerBook

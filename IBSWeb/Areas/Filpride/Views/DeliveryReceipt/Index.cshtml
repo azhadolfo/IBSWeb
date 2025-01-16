@@ -1,4 +1,5 @@
-﻿@model IEnumerable<FilprideDeliveryReceipt>
+﻿@using IBS.Utility.Enums
+@model IEnumerable<FilprideDeliveryReceipt>
 
 @{
     ViewData["Title"] = "Delivery Receipt";
@@ -72,7 +73,7 @@
             "serverSide": true,
             "stateSave": true,
             "ajax": {
-                "url": "@Url.Action("GetDeliveryReceipts", "DeliveryReceipt", new { area = "Filpride" })",
+                "url": "@Url.Action("GetDeliveryReceipts", "DeliveryReceipt", new { area = "Filpride", filterType = ViewBag.FilterType?.ToString() })",
                 "type": "POST",
                 "data": function (d) {
                     return $.extend({}, d, {

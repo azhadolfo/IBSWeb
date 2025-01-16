@@ -1,0 +1,586 @@
+@using IBS.Utility.Enums
+@model CheckVoucherNonTradeInvoicingViewModel
+
+@{
+    ViewData["Title"] = "Edit Non Trade Invoicing";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Edit Non-Trade Invoice</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data">
+            <div class="row">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group mb-3">
+                    <label asp-for="TransactionDate" class="control-label"></label>
+                    <input asp-for="TransactionDate" type="Date" class="form-control" />
+                    <span asp-validation-for="TransactionDate" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Supplier</label>
+                    <input asp-for="SupplierId" type="hidden" />
+                    <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 supplier" style="width:100%" required>
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="SupplierId" class="text-danger"></span>
+                </div>
+                <input asp-for="SupplierName" type="hidden" />
+                <input asp-for="CVId" type="hidden" />
+                <div class="form-floating mb-3">
+                    <input asp-for="SupplierAddress" type="text" class="form-control" placeholder="Optional" readonly />
+                    <label asp-for="SupplierAddress" class="control-label ms-2"></label>
+                    <span asp-validation-for="SupplierAddress" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="SupplierTinNo" type="text" class="form-control" placeholder="Optional" readonly />
+                    <label asp-for="SupplierTinNo" class="control-label ms-2"></label>
+                    <span asp-validation-for="SupplierTinNo" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea asp-for="PoNo" class="form-control" placeholder="Input si no" style="height: 100px"></textarea>
+                    <label asp-for="PoNo" class="control-label ms-2">PO No</label>
+                    <span asp-validation-for="PoNo" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea asp-for="SiNo" class="form-control" placeholder="Input po no" style="height: 100px"></textarea>
+                    <label asp-for="SiNo" class="control-label ms-2">Supplier Invoice No</label>
+                    <span asp-validation-for="SiNo" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Total" class="control-label"></label>
+                    <input asp-for="Total" class="form-control money inputAmount" placeholder="0.000" />
+                    <span asp-validation-for="Total" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Upload File (Optional)</label>
+                    <input name="file" type="file" class="form-control" />
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea asp-for="Particulars" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
+                    <label asp-for="Particulars" class="control-label ms-2">Particulars</label>
+                    <span asp-validation-for="Particulars" class="text-danger"></span>
+                </div>
+                <input type="hidden" id="StartDate" name="StartDate" />
+                <input type="hidden" id="NumberOfYears" name="NumberOfYears" value="0" />
+                <div class="container my-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Accounting Entries</h5>
+                        </div>
+                        <div class="card-body">
+                            <table id="accountTable" class="table table-striped table-hover align-middle">
+                                <thead class="table-light">
+                                <tr>
+                                    <th>Account</th>
+                                    <th>Gross Amount</th>
+                                    <th>Vatable</th>
+                                    <th>EWT</th>
+                                    <th>VAT Amount</th>
+                                    <th>EWT Amount</th>
+                                    <th>Net of VAT</th>
+                                    <th>Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @for (var i = 0; i < Model.AccountingEntries.Count; i++)
+                                {
+                                    <tr>
+                                        <td>
+                                            <select asp-for="AccountingEntries[i].AccountTitle"
+                                                    class="form-select form-select-sm chart-of-accounts default-expense js-select2 w-100"
+                                                    style="width: 100%">
+                                                <option value="">-- Select Account --</option>
+                                                @foreach (var account in Model.ChartOfAccounts)
+                                                {
+                                                    <option value="@account.Value">@account.Text</option>
+                                                }
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" asp-for="AccountingEntries[i].Amount" class="form-control form-control-sm text-end amount" />
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="checkbox" asp-for="AccountingEntries[i].Vatable" class="form-check-input vatable default-vatable" />
+                                        </td>
+                                        <td>
+                                            <select asp-for="AccountingEntries[i].TaxPercentage" class="form-select form-select-sm taxable">
+                                                <option value="0" selected="">0%</option>
+                                                <option value="0.01">1%</option>
+                                                <option value="0.02">2%</option>
+                                                <option value="0.05">5%</option>
+                                                <option value="0.1">10%</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" asp-for="AccountingEntries[i].VatAmount" class="form-control form-control-sm text-end vat-amount" readonly />
+                                        </td>
+                                        <td>
+                                            <input type="number" asp-for="AccountingEntries[i].TaxAmount" class="form-control form-control-sm text-end tax-amount" readonly />
+                                        </td>
+                                        <td>
+                                            <input type="number" asp-for="AccountingEntries[i].NetOfVatAmount" class="form-control form-control-sm text-end net-of-vat" readonly />
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-danger btn-sm removeRow" @(i == 0 ? "disabled" : "")>
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                            <div class="d-flex justify-content-end">
+                                <button id="addRow" type="button" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-plus-circle"></i> Add Row
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-end mt-3">
+                        <button id="submitButton" class="btn btn-success me-2" type="submit">
+                            <i class="bi bi-check-circle"></i> Save
+                        </button>
+                        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Index"
+                           class="btn btn-outline-primary d-flex align-items-center">
+                            <i class="bi bi-arrow-left-circle me-2"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $("#AccountNo").change(function () {
+            var accountNumber = $(this).val();
+            if (accountNumber.startsWith("10201") || accountNumber.startsWith("10105")) {
+                // Close the modal
+                $("#AddAccEntry").modal("hide");
+                Swal.fire({
+                    title: "Create Automatic Journal Entry",
+                    text: "Do you want to create an automatic journal entry?",
+                    icon: "question",
+                    showCancelButton: true,
+                    allowEscapeKey: false,
+                    allowOutsideClick: false,
+                    confirmButtonText: "Yes",
+                    cancelButtonText: "No",
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        return new Promise((resolve) => {
+                            Swal.fire({
+                                title: "Input Start Date and Number of Years",
+                                html:
+                                    "<input id='start-date' type='date' class='swal2-input' placeholder='Start Date'>" +
+                                    "<input id='num-years' type='number' class='swal2-input' placeholder='Number of Years'>",
+                                focusConfirm: false,
+                                allowEscapeKey: false,
+                                allowOutsideClick: false,
+                                preConfirm: () => {
+                                    return [
+                                        $("#start-date").val(),
+                                        $("#num-years").val()
+                                    ];
+                                }
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    resolve(result.value);
+                                }
+                            });
+                        });
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Result contains an array with the start date and number of years
+                        var startDate = result.value[0];
+                        var numYears = result.value[1];
+                        // Assign the values to hidden inputs in your form
+                        $("#StartDate").val(startDate);
+                        $("#NumberOfYears").val(numYears);
+                        // Close the modal
+                        $("#AddAccEntry").modal("show");
+                    }
+                });
+            }
+        });
+    </script>
+    <script>
+        // Constants for calculations
+        const VAT_RATE = 0.12;
+        const VAT_INCLUDED_PRICE_MULTIPLIER = 1.12;
+        const AP_NON_TRADE = "202010200 AP-Non Trade Payable";
+        const INPUT_VAT = "101060200 Vat - Input";
+        const PAYABLE_ACCOUNTS = {
+            0.01: "201030210 Expanded Withholding Tax 1%",
+            0.02: "201030220 Expanded Withholding Tax 2%",
+            0.05: "201030230 Expanded Withholding Tax 5%",
+            0.10: "201030240 Expanded Withholding Tax 10%"
+        };
+
+        // Object to store accumulated journal entries
+        let accumulatedEntries = {};
+
+        // Initialize event listeners for a row
+        function initializeRowEventListeners(row) {
+            const inputs = row.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    recalculateAllRows();
+                });
+
+                if (input.type === 'number') {
+                    input.addEventListener('input', debounce(() => {
+                        recalculateAllRows();
+                    }, 300));
+                }
+            });
+        }
+
+        // Function to recalculate all rows
+        function recalculateAllRows() {
+            // Clear accumulated entries
+            accumulatedEntries = {};
+
+            // Get all rows and calculate for each
+            const rows = document.querySelectorAll("#accountTable tbody tr");
+            rows.forEach(row => {
+                calculateTaxAndVat(row, false);
+            });
+
+            // Update display once after all calculations
+            displayAccumulatedEntries();
+        }
+
+        // Calculate tax and VAT for a single row
+        function calculateTaxAndVat(row, updateDisplay = true) {
+            if (!row) return;
+
+            // Get all necessary fields
+            const amountField = row.querySelector(".amount");
+            const vatableField = row.querySelector(".vatable");
+            const taxSelect = row.querySelector(".taxable");
+            const taxAmountField = row.querySelector(".tax-amount");
+            const vatAmountField = row.querySelector(".vat-amount");
+            const netOfVatField = row.querySelector(".net-of-vat");
+            const accountField = row.querySelector(".chart-of-accounts");
+
+            // Convert values properly
+            const amount = parseFloat(amountField.value) || 0;
+            const taxPercentage = parseFloat(taxSelect.value) || 0;
+            const isVatable = vatableField.checked;
+
+            // Calculate values
+            let netOfVat, vatAmount, taxAmount;
+
+            if (isVatable) {
+                netOfVat = amount / VAT_INCLUDED_PRICE_MULTIPLIER;
+                vatAmount = netOfVat * VAT_RATE;
+            } else {
+                netOfVat = amount;
+                vatAmount = 0;
+            }
+
+            taxAmount = netOfVat * taxPercentage;
+
+            // Update fields with formatted values
+            vatAmountField.value = vatAmount.toFixed(2);
+            taxAmountField.value = taxAmount.toFixed(2);
+            netOfVatField.value = netOfVat.toFixed(2);
+
+            // Add to accumulated entries
+            const accountTitle = accountField.options[accountField.selectedIndex]?.text || '';
+            addToAccumulatedEntries(accountTitle, netOfVat, 0);
+
+            if (vatAmount > 0) {
+                addToAccumulatedEntries(INPUT_VAT, vatAmount, 0);
+            }
+
+            const netOfTaxAmount = amount - taxAmount;
+            addToAccumulatedEntries(AP_NON_TRADE, 0, netOfTaxAmount);
+
+            if (taxAmount > 0) {
+                const payableAccount = PAYABLE_ACCOUNTS[taxPercentage];
+                if (payableAccount) {
+                    addToAccumulatedEntries(payableAccount, 0, taxAmount);
+                }
+            }
+
+            if (updateDisplay) {
+                displayAccumulatedEntries();
+            }
+        }
+
+        function addToAccumulatedEntries(account, debit, credit) {
+            if (!accumulatedEntries[account]) {
+                accumulatedEntries[account] = { debit: 0, credit: 0 };
+            }
+            accumulatedEntries[account].debit += debit;
+            accumulatedEntries[account].credit += credit;
+        }
+
+        function createJournalEntriesTable() {
+            const div = document.createElement("div");
+            div.className = "card shadow-sm mt-4";
+            div.innerHTML = `
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Generated Journal Entries</h5>
+            </div>
+            <div class="card-body">
+                <table id="journalEntriesTable" class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Account</th>
+                            <th class="text-end">Debit</th>
+                            <th class="text-end">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        `;
+
+            const accountingCard = document.querySelector("#accountTable").closest(".card");
+            accountingCard.parentNode.insertBefore(div, accountingCard.nextSibling);
+
+            return div.querySelector("table");
+        }
+
+        function displayAccumulatedEntries() {
+            let journalTable = document.getElementById("journalEntriesTable");
+            if (!journalTable) {
+                journalTable = createJournalEntriesTable();
+            }
+
+            const tbody = journalTable.querySelector("tbody");
+            tbody.innerHTML = "";
+
+            Object.entries(accumulatedEntries).forEach(([account, amounts]) => {
+                if (amounts.debit > 0 || amounts.credit > 0) {
+                    addJournalRow(tbody, account, amounts.debit, amounts.credit);
+                }
+            });
+
+            // Calculate totals
+            const totalDebit = Object.values(accumulatedEntries).reduce((sum, amt) => sum + amt.debit, 0);
+            const totalCredit = Object.values(accumulatedEntries).reduce((sum, amt) => sum + amt.credit, 0);
+
+            // Add separator and totals rows
+            tbody.insertAdjacentHTML('beforeend', `
+            <tr><td colspan="3"><hr></td></tr>
+            <tr>
+                <td><strong>Totals</strong></td>
+                <td class="text-end"><strong>${totalDebit.toFixed(2)}</strong></td>
+                <td class="text-end"><strong>${totalCredit.toFixed(2)}</strong></td>
+            </tr>
+            `);
+            
+        }
+
+        function addJournalRow(tbody, account, debit, credit) {
+            tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+            <td>${account}</td>
+            <td class="text-end">${debit > 0 ? debit.toFixed(2) : ""}</td>
+            <td class="text-end">${credit > 0 ? credit.toFixed(2) : ""}</td>
+        </tr>
+    `);
+        }
+
+        // Event handler for removing a row
+        function handleRowRemoval(row) {
+            row.remove();
+            recalculateAllRows();
+        }
+
+        // Add Row button click handler
+        document.getElementById("addRow").addEventListener("click", () => {
+            const tableBody = document.querySelector("#accountTable tbody");
+            const rowCount = tableBody.rows.length;
+
+            const newRowHTML = `
+        <tr>
+            <td class="px-2">
+                <select name="AccountingEntries[${rowCount}].AccountTitle" class="form-select form-select-sm chart-of-accounts js-select2" style="width: 100%" required>
+                    ${document.querySelector(".chart-of-accounts").innerHTML}
+                </select>
+            </td>
+            <td class="px-2">
+                <input type="number" name="AccountingEntries[${rowCount}].Amount" class="form-control form-control-sm text-end amount" value="0" />
+            </td>
+            <td class="text-center px-2">
+                <input type="checkbox" name="AccountingEntries[${rowCount}].Vatable" class="form-check-input vatable" value="false" />
+            </td>
+            <td class="px-2">
+                <select name="AccountingEntries[${rowCount}].TaxPercentage" class="form-select form-select-sm taxable" required>
+                    <option value="0" selected>0%</option>
+                    <option value="0.01">1%</option>
+                    <option value="0.02">2%</option>
+                    <option value="0.05">5%</option>
+                    <option value="0.1">10%</option>
+                </select>
+            </td>
+            <td class="px-2">
+                <input type="number" name="AccountingEntries[${rowCount}].VatAmount" class="form-control form-control-sm text-end vat-amount" readonly />
+            </td>
+            <td class="px-2">
+                <input type="number" name="AccountingEntries[${rowCount}].TaxAmount" class="form-control form-control-sm text-end tax-amount" readonly />
+            </td>
+            <td class="px-2">
+                <input type="number" name="AccountingEntries[${rowCount}].NetOfVatAmount" class="form-control form-control-sm text-end net-of-vat" readonly />
+            </td>
+            <td class="text-center px-2">
+                <button type="button" class="btn btn-sm btn-danger removeRow">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+
+            // Add the new row and initialize
+            tableBody.insertAdjacentHTML("beforeend", newRowHTML);
+            const newRow = tableBody.lastElementChild;
+
+            // Initialize Select2
+            $(newRow).find('.js-select2').select2({
+                placeholder: "Select an option...",
+                allowClear: true,
+                width: 'resolve',
+                theme: 'classic'
+            });
+
+            // Initialize event listeners
+            initializeRowEventListeners(newRow);
+
+            // Add remove button handler
+            newRow.querySelector(".removeRow").addEventListener("click", () => handleRowRemoval(newRow));
+
+            // Recalculate all rows
+            recalculateAllRows();
+        });
+
+        // Document ready handlers
+        $(document).ready(function () {
+            // Initialize event listeners for existing rows
+            document.querySelectorAll('#accountTable tbody tr').forEach(row => {
+                initializeRowEventListeners(row);
+            });
+
+            // Initialize calculations for existing rows
+            recalculateAllRows();
+
+            // Supplier change handler
+            $('.supplier').on('change', function () {
+                var supplierId = $(this).val();
+                if (supplierId) {
+                    fetchSupplierDetails(supplierId, function (data) {
+                        $("#SupplierName").val(data.name);
+                        $("#SupplierAddress").val(data.address);
+                        $("#SupplierTinNo").val(data.tinNo);
+                        $(".default-expense").val(data.defaultExpense).change();
+                        const taxDropdown = $(".default-tax-percentage");
+                        taxDropdown.val(data.taxPercent).change();
+                        const vatableCheckbox = $(".default-vatable");
+                        vatableCheckbox.prop("checked", data.vatable);
+                        recalculateAllRows();
+                    });
+                }
+            });
+
+            // Initialize Select2
+            $('.js-select2').select2({
+                placeholder: "Select an option...",
+                allowClear: true,
+                width: 'resolve',
+                theme: 'classic'
+            });
+        });
+
+        // Utility function to fetch supplier details
+        function fetchSupplierDetails(supplierId, onSuccessCallback) {
+            if (!supplierId) return;
+
+            $.ajax({
+                url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
+                type: 'GET',
+                data: { supplierId: supplierId },
+                success: function (data) {
+                    if (data && typeof onSuccessCallback === 'function') {
+                        onSuccessCallback(data);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching supplier details:', error);
+                    alert('Error fetching supplier details');
+                }
+            });
+        }
+
+        // Debounce utility function
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        // Form validation
+        function validateTotals() {
+            const totalAmount = parseFloat(document.querySelector('[name="Total"]').value) || 0;
+            const totalDebit = Object.values(accumulatedEntries).reduce((sum, amt) => sum + amt.debit, 0);
+            const totalCredit = Object.values(accumulatedEntries).reduce((sum, amt) => sum + amt.credit, 0);
+
+            if (totalAmount <= 0) {
+                Swal.fire({
+                    title: 'Validation Error',
+                    text: 'Total amount must be greater than zero.',
+                    icon: 'error'
+                });
+                return false;
+            }
+
+            if (Math.abs(totalDebit - totalCredit) > 0.01) {
+                Swal.fire({
+                    title: 'Validation Error',
+                    text: 'Debit and Credit totals must be equal.',
+                    icon: 'error'
+                });
+                return false;
+            }
+
+            if (Math.abs(totalAmount - totalDebit) > 0.01) {
+                Swal.fire({
+                    title: 'Validation Error',
+                    text: 'Total amount must match the sum of accounting entries.',
+                    icon: 'error'
+                });
+                return false;
+            }
+
+            return true;
+        }
+
+        // Form submit handler
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (validateTotals()) {
+                this.submit();
+            }
+        });
+        
+    </script>
+}

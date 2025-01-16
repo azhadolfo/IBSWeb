@@ -3,11 +3,14 @@ using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.Filpride;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Mobility;
-using IBS.DataAccess.Services;
+using IBS.Services;
 using IBS.Utility;
+using IBS.Utility.Constants;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +44,42 @@ builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
 builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 builder.Services.AddSignalR();
+
+// Add Quartz services
+builder.Services.AddQuartz(q =>
+{
+    // Use DI with Quartz
+    q.UseMicrosoftDependencyInjectionJobFactory();
+
+    // Register the job
+    var monthlyClosureKey = JobKey.Create(nameof(MonthlyClosureService));
+    var cosExpirationKey  = JobKey.Create(nameof(CustomerOrderSlipExpiration));
+
+    q.AddJob<CustomerOrderSlipExpiration>(options => options.WithIdentity(monthlyClosureKey));
+    q.AddJob<CustomerOrderSlipExpiration>(options => options.WithIdentity(cosExpirationKey));
+
+    // Add the first trigger
+    // Format (sec, min, hour, day, month, year)
+    q.AddTrigger(opts => opts
+        .ForJob(monthlyClosureKey)
+        .WithIdentity("MonthlyTrigger") // Trigger 1
+        .WithCronSchedule("0 0 0 1 * ?",
+            x => x.InTimeZone(
+                TimeZoneInfo
+                    .FindSystemTimeZoneById("Asia/Manila")))); // Run at midnight on the first day of every month
+
+    // Trigger for CustomerOrderSlipExpiration (every day at 12:00 AM)
+    q.AddTrigger(opts => opts
+        .ForJob(cosExpirationKey)
+        .WithIdentity("DailyExpirationTrigger")
+        .WithCronSchedule("0 46 22 * * ?",
+            x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"))));
+
+});
+
+
+// Add Quartz Hosted Service
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
 var app = builder.Build();
 

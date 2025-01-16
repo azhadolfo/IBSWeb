@@ -3,7 +3,9 @@ using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Utility;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -86,7 +88,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingSupplier.VatType = model.VatType;
             existingSupplier.TaxType = model.TaxType;
             existingSupplier.DefaultExpenseNumber = model.DefaultExpenseNumber;
-            existingSupplier.WithholdingTaxtitle = model.WithholdingTaxtitle;
+            existingSupplier.WithholdingTaxPercent = model.WithholdingTaxPercent;
             existingSupplier.ZipCode = model.ZipCode;
 
             if (model.ProofOfRegistrationFilePath != null && existingSupplier.ProofOfRegistrationFilePath != model.ProofOfRegistrationFilePath)
@@ -97,11 +99,6 @@ namespace IBS.DataAccess.Repository.Filpride
             if (model.ProofOfExemptionFilePath != null && existingSupplier.ProofOfExemptionFilePath != model.ProofOfExemptionFilePath)
             {
                 existingSupplier.ProofOfExemptionFilePath = model.ProofOfExemptionFilePath;
-            }
-
-            if (model.WithholdingTaxtitle != null && model.WithholdingTaxPercent != null)
-            {
-                existingSupplier.WithholdingTaxPercent = model.WithholdingTaxtitle.StartsWith("2010302") ? 1 : 2;
             }
 
             if (_db.ChangeTracker.HasChanges())
@@ -118,6 +115,19 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 throw new InvalidOperationException("No data changes!");
             }
+        }
+
+        public async Task<List<SelectListItem>> GetFilprideTradeSupplierListAsyncById(string company, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideSuppliers
+                .OrderBy(s => s.SupplierCode)
+                .Where(s => s.IsActive && s.Company == company && s.Category == "Trade")
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = s.SupplierCode + " " + s.SupplierName
+                })
+                .ToListAsync(cancellationToken);
         }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Utility;
+using IBS.Utility.Helpers;
 
 namespace IBS.Models.Filpride.Integrated
 {
@@ -30,6 +31,8 @@ namespace IBS.Models.Filpride.Integrated
 
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
+
+        public string CustomerType { get; set; }
 
         #endregion Preparation of COS
 
@@ -190,5 +193,7 @@ namespace IBS.Models.Filpride.Integrated
         public string OldCosNo { get; set; }
 
         public bool HasMultiplePO { get; set; }
+
+        public ICollection<FilprideCOSAppointedSupplier>? AppointedSuppliers { get; set; }
     }
 }

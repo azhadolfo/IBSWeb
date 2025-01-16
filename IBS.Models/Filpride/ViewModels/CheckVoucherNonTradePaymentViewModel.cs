@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride.ViewModels
 {
@@ -10,7 +11,8 @@ namespace IBS.Models.Filpride.ViewModels
         [Required(ErrorMessage = "The CV No is required.")]
         public int CvId { get; set; }
 
-        public int CVId { get; set; }
+        [Required(ErrorMessage = "The CV No is required.")]
+        public int[]? MultipleCvId { get; set; }
 
         [Display(Name = "Payee")]
         public string Payee { get; set; }
@@ -24,6 +26,7 @@ namespace IBS.Models.Filpride.ViewModels
         [Display(Name = "Transaction Date")]
         public DateOnly TransactionDate { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Total { get; set; }
 
         public List<SelectListItem>? Banks { get; set; }
@@ -50,5 +53,14 @@ namespace IBS.Models.Filpride.ViewModels
         public decimal[] Credit { get; set; }
 
         public string? Type { get; set; }
+
+        public int? MultipleSupplierId { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Suppliers { get; set; }
+
+        public int CvPaymentId { get; set; }
+
+        public decimal[]? AmountPaid { get; set; }
     }
 }

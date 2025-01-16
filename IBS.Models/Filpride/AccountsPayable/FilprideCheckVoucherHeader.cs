@@ -46,7 +46,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public List<SelectListItem>? Suppliers { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:N2}", ApplyFormatInEditMode = true)]
-        [Column(TypeName = "numeric(18,2)")]
+        [Column(TypeName = "numeric(18,4)")]
         public decimal Total { get; set; }
 
         public decimal[]? Amount { get; set; }
@@ -122,8 +122,12 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsPrinted { get; set; }
 
-        public string Status { get; set; } = nameof(Utility.Status.Pending);
+        public string Status { get; set; } = nameof(Utility.Enums.CheckVoucherPaymentStatus.ForPosting);
 
         public string? Type { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal InvoiceAmount { get; set; }
     }
 }

@@ -14,7 +14,7 @@ namespace IBS.DataAccess.Repository
             _db = db;
         }
 
-        public async Task AddNotificationAsync(string userId, string message)
+        public async Task AddNotificationAsync(string userId, string message, bool requiresResponse = false)
         {
             var notification = new Notification
             {
@@ -29,7 +29,8 @@ namespace IBS.DataAccess.Repository
             {
                 UserId = userId,
                 NotificationId = notification.NotificationId,
-                IsRead = false
+                IsRead = false,
+                RequiresResponse = requiresResponse
             };
 
             _db.UserNotifications.Add(userNotification);

@@ -21,7 +21,7 @@
 
             <div class="row pt-2">
                 <div class="form-floating py-1 px-1 col-6">
-                    <input type="date" id="uploadDate" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" name="loadDate" class="form-control border-0 shadow" placeholder="" required />
+                    <input type="date" id="uploadDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" name="loadDate" class="form-control border-0 shadow" placeholder="" required />
                     <label>Transaction Date<span class="required">*</span></label>
                     <span asp-validation-for="LoadDate" class="text-danger"></span>
                 </div>
@@ -43,7 +43,7 @@
 
             <div class="w-100 text-center">
                 <a id="documentLink" href="" target="_blank">
-                    <br/><img id="output" class="img-fluid" style="max-height: 400px; width:auto; cursor: pointer;" />
+                    <br/><img id="output" class="img-fluid" style="max-height: 400px; width:auto; cursor: pointer;"  alt=""/>
                 </a>
             </div>
             <br/>

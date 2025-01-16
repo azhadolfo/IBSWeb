@@ -1,9 +1,12 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
+using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
+using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -244,6 +247,83 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(a => a.Company == company && a.Date >= dateFrom && a.Date <= dateTo && a.Status == nameof(CosStatus.ForDR))
                 .OrderBy(a => a.Date)
                 .ToListAsync();
+        }
+
+        public List<FilprideSalesInvoice> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var salesInvoice = _db.FilprideSalesInvoices
+            .Where(s => s.Company == company && s.TransactionDate >= dateFrom && s.TransactionDate <= dateTo && s.Status == nameof(Status.Posted)) // Filter by date and company
+            .Include (s => s.Product)
+            .Include (s => s.Customer)
+            .Include (s => s.CustomerOrderSlip)
+            .Include (s => s.DeliveryReceipt)
+            .Include (s => s.PurchaseOrder)
+            .OrderBy(s => s.TransactionDate) // Order by TransactionDate
+            .ToList();
+
+            return salesInvoice;
+        }
+
+        public List<FilpridePurchaseOrder> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var purchaseOrder = _db.FilpridePurchaseOrders
+            .Where(p => p.Company == company && p.Date >= dateFrom && p.Date <= dateTo && p.Status == nameof(Status.Posted)) // Filter by date and company
+            .Include(p => p.Supplier)
+            .Include(p => p.Product)
+            .OrderBy(p => p.Date) // Order by TransactionDate
+            .ToList();
+
+            return purchaseOrder;
+        }
+
+        public List<FilprideReceivingReport> GetPurchaseReport (DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var receivingReports = _db.FilprideReceivingReports
+                .Where(rr => rr.Company == company && rr.Date >= dateFrom && rr.Date <= dateTo && rr.Status == nameof(Status.Posted)) // Filter by date and company
+                .Include (rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include (rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include (rr => rr.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Customer)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Hauler)
+                .OrderBy(rr => rr.Date) // Order by TransactionDate
+                .ToList();
+
+            return receivingReports;
+        }
+
+        public List<FilprideSalesInvoice> GetOtcFuelSalesReport (DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var receivingReports = _db.FilprideSalesInvoices
+                .Where(si => si.Company == company && si.TransactionDate >= dateFrom && si.TransactionDate <= dateTo) // Filter by date and company
+                .Include(si => si.Customer)
+                .Include(si => si.CustomerOrderSlip)
+                .Include (si => si.DeliveryReceipt)
+                .Include(si => si.Product)
+                .OrderBy(si => si.Product.ProductName).ThenBy(si => si.Customer.CustomerName).ThenBy((si => si.TransactionDate))
+                .ThenBy(si => si.Customer.CustomerType) // Order by TransactionDate
+                .ToList();
+
+            return receivingReports;
         }
     }
 }

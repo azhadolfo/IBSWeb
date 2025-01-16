@@ -1,4 +1,7 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿@using IBS.Utility.Constants
+@using IBS.Utility.Enums
+@using IBS.Utility.Helpers
+@using Microsoft.AspNetCore.Identity
 @model FilpridePurchaseOrder
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
@@ -219,7 +222,7 @@
                         <td class="text-end">@updatedPrice.TriggeredVolume.ToString("N4")</td>
                         <td class="text-end">@updatedPrice.TriggeredPrice.ToString("N4")</td>
                         <td>@DateTimeHelper.GetCurrentPhilippineTimeFormatted(updatedPrice.TriggeredDate)</td>
-                        <td>@(updatedPrice.ApprovedDate != null ? DateTimeHelper.GetCurrentPhilippineTimeFormatted((DateTime)updatedPrice.ApprovedDate) : "")</td>
+                        <td>@(updatedPrice.ApprovedDate != null ? DateTimeHelper.GetCurrentPhilippineTimeFormatted((DateTime)updatedPrice.ApprovedDate) : "" )</td>
                     </tr>
                 }
                 </tbody>
