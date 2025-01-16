@@ -13,6 +13,18 @@ namespace IBS.DataAccess.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "app_settings",
+                columns: table => new
+                {
+                    setting_key = table.Column<string>(type: "text", nullable: false),
+                    value = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_app_settings", x => x.setting_key);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
                 {
@@ -34,6 +46,8 @@ namespace IBS.DataAccess.Migrations
                     discriminator = table.Column<string>(type: "character varying(21)", maxLength: 21, nullable: false),
                     name = table.Column<string>(type: "text", nullable: true),
                     department = table.Column<string>(type: "text", nullable: true),
+                    station_access = table.Column<string>(type: "text", nullable: true),
+                    position = table.Column<string>(type: "text", nullable: true),
                     user_name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     normalized_user_name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -52,29 +66,6 @@ namespace IBS.DataAccess.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_asp_net_users", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "chart_of_accounts",
-                columns: table => new
-                {
-                    account_id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    is_main = table.Column<bool>(type: "boolean", nullable: false),
-                    account_number = table.Column<string>(type: "varchar(15)", nullable: true),
-                    account_name = table.Column<string>(type: "varchar(100)", nullable: false),
-                    account_type = table.Column<string>(type: "varchar(25)", nullable: true),
-                    normal_balance = table.Column<string>(type: "varchar(20)", nullable: true),
-                    level = table.Column<int>(type: "integer", nullable: false),
-                    parent = table.Column<string>(type: "varchar(15)", nullable: true),
-                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_chart_of_accounts", x => x.account_id);
                 });
 
             migrationBuilder.CreateTable(
@@ -100,6 +91,23 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "filpride_audit_trails",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    username = table.Column<string>(type: "text", nullable: false),
+                    date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    machine_name = table.Column<string>(type: "text", nullable: false),
+                    activity = table.Column<string>(type: "text", nullable: false),
+                    document_type = table.Column<string>(type: "text", nullable: false),
+                    company = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_audit_trails", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "filpride_bank_accounts",
                 columns: table => new
                 {
@@ -111,7 +119,6 @@ namespace IBS.DataAccess.Migrations
                     account_name = table.Column<string>(type: "text", nullable: false),
                     created_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    account_no_coa = table.Column<string>(type: "text", nullable: true),
                     company = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
@@ -144,6 +151,29 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "filpride_chart_of_accounts",
+                columns: table => new
+                {
+                    account_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    is_main = table.Column<bool>(type: "boolean", nullable: false),
+                    account_number = table.Column<string>(type: "varchar(15)", nullable: true),
+                    account_name = table.Column<string>(type: "varchar(100)", nullable: false),
+                    account_type = table.Column<string>(type: "varchar(25)", nullable: true),
+                    normal_balance = table.Column<string>(type: "varchar(20)", nullable: true),
+                    level = table.Column<int>(type: "integer", nullable: false),
+                    parent = table.Column<string>(type: "varchar(15)", nullable: true),
+                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_chart_of_accounts", x => x.account_id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "filpride_customers",
                 columns: table => new
                 {
@@ -165,7 +195,12 @@ namespace IBS.DataAccess.Migrations
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     company = table.Column<string>(type: "text", nullable: false),
-                    station_code = table.Column<string>(type: "varchar(3)", nullable: true)
+                    cluster_code = table.Column<int>(type: "integer", nullable: true),
+                    station_code = table.Column<string>(type: "varchar(3)", nullable: true),
+                    credit_limit = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    credit_limit_as_of_today = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    has_branch = table.Column<bool>(type: "boolean", nullable: false),
+                    zip_code = table.Column<string>(type: "varchar(10)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -196,29 +231,6 @@ namespace IBS.DataAccess.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_filpride_disbursement_books", x => x.disbursement_book_id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "filpride_general_ledger_books",
-                columns: table => new
-                {
-                    general_ledger_book_id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    date = table.Column<DateOnly>(type: "date", nullable: false),
-                    reference = table.Column<string>(type: "text", nullable: false),
-                    account_no = table.Column<string>(type: "text", nullable: false),
-                    account_title = table.Column<string>(type: "text", nullable: false),
-                    description = table.Column<string>(type: "text", nullable: false),
-                    debit = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    credit = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    is_posted = table.Column<bool>(type: "boolean", nullable: false),
-                    company = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_filpride_general_ledger_books", x => x.general_ledger_book_id);
                 });
 
             migrationBuilder.CreateTable(
@@ -350,7 +362,7 @@ namespace IBS.DataAccess.Migrations
                     supplier_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     supplier_code = table.Column<string>(type: "varchar(7)", nullable: true),
-                    supplier_name = table.Column<string>(type: "varchar(50)", nullable: false),
+                    supplier_name = table.Column<string>(type: "varchar(200)", nullable: false),
                     supplier_address = table.Column<string>(type: "varchar(200)", nullable: false),
                     supplier_tin = table.Column<string>(type: "varchar(20)", nullable: false),
                     supplier_terms = table.Column<string>(type: "varchar(3)", nullable: false),
@@ -367,12 +379,13 @@ namespace IBS.DataAccess.Migrations
                     trade_name = table.Column<string>(type: "varchar(255)", nullable: true),
                     branch = table.Column<string>(type: "varchar(20)", nullable: true),
                     default_expense_number = table.Column<string>(type: "varchar(100)", nullable: true),
-                    withholding_tax_percent = table.Column<int>(type: "integer", nullable: true),
+                    withholding_tax_percent = table.Column<decimal>(type: "numeric", nullable: true),
                     withholding_taxtitle = table.Column<string>(type: "varchar(100)", nullable: true),
                     reason_of_exemption = table.Column<string>(type: "varchar(100)", nullable: true),
                     validity = table.Column<string>(type: "varchar(20)", nullable: true),
                     validity_date = table.Column<DateTime>(type: "date", nullable: true),
-                    company = table.Column<string>(type: "text", nullable: false)
+                    company = table.Column<string>(type: "text", nullable: false),
+                    zip_code = table.Column<string>(type: "varchar(10)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -380,24 +393,16 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "haulers",
+                name: "hub_connections",
                 columns: table => new
                 {
-                    hauler_id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    hauler_code = table.Column<string>(type: "varchar(3)", nullable: true),
-                    hauler_name = table.Column<string>(type: "varchar(100)", nullable: false),
-                    hauler_address = table.Column<string>(type: "varchar(200)", nullable: false),
-                    contact_no = table.Column<string>(type: "varchar(15)", nullable: false),
-                    created_by = table.Column<string>(type: "varchar(100)", nullable: true),
-                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    edited_by = table.Column<string>(type: "varchar(100)", nullable: true),
-                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    company = table.Column<string>(type: "text", nullable: false)
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    connection_id = table.Column<string>(type: "text", nullable: false),
+                    user_name = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_haulers", x => x.hauler_id);
+                    table.PrimaryKey("pk_hub_connections", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -416,20 +421,48 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "mobility_chart_of_accounts",
+                columns: table => new
+                {
+                    account_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    is_main = table.Column<bool>(type: "boolean", nullable: false),
+                    account_number = table.Column<string>(type: "varchar(15)", nullable: true),
+                    account_name = table.Column<string>(type: "varchar(100)", nullable: false),
+                    account_type = table.Column<string>(type: "varchar(25)", nullable: true),
+                    normal_balance = table.Column<string>(type: "varchar(20)", nullable: true),
+                    level = table.Column<int>(type: "integer", nullable: false),
+                    parent = table.Column<string>(type: "varchar(15)", nullable: true),
+                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_mobility_chart_of_accounts", x => x.account_id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "mobility_customers",
                 columns: table => new
                 {
                     customer_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    customer_code = table.Column<string>(type: "varchar(7)", maxLength: 7, nullable: true),
                     customer_name = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
                     customer_code_name = table.Column<string>(type: "varchar(10)", maxLength: 10, nullable: false),
                     station_code = table.Column<string>(type: "varchar(3)", maxLength: 3, nullable: false),
+                    customer_address = table.Column<string>(type: "varchar(200)", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     created_by = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true),
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    quantity_limit = table.Column<decimal>(type: "numeric", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true),
-                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    customer_terms = table.Column<string>(type: "varchar(10)", nullable: false),
+                    customer_tin = table.Column<string>(type: "text", nullable: false),
+                    customer_type = table.Column<string>(type: "varchar(10)", nullable: false),
+                    is_check_details_required = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -502,6 +535,7 @@ namespace IBS.DataAccess.Migrations
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -559,6 +593,7 @@ namespace IBS.DataAccess.Migrations
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -700,6 +735,7 @@ namespace IBS.DataAccess.Migrations
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -744,6 +780,7 @@ namespace IBS.DataAccess.Migrations
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -812,6 +849,7 @@ namespace IBS.DataAccess.Migrations
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -877,6 +915,7 @@ namespace IBS.DataAccess.Migrations
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -919,6 +958,7 @@ namespace IBS.DataAccess.Migrations
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -965,6 +1005,19 @@ namespace IBS.DataAccess.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_mobility_suppliers", x => x.supplier_id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "notifications",
+                columns: table => new
+                {
+                    notification_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    message = table.Column<string>(type: "text", nullable: false),
+                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_notifications", x => x.notification_id);
                 });
 
             migrationBuilder.CreateTable(
@@ -1094,6 +1147,26 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "filpride_customer_branches",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    customer_id = table.Column<int>(type: "integer", nullable: false),
+                    branch_name = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_customer_branches", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_filpride_customer_branches_filpride_customers_customer_id",
+                        column: x => x.customer_id,
+                        principalTable: "filpride_customers",
+                        principalColumn: "customer_id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "filpride_service_invoices",
                 columns: table => new
                 {
@@ -1105,25 +1178,24 @@ namespace IBS.DataAccess.Migrations
                     due_date = table.Column<DateOnly>(type: "date", nullable: false),
                     period = table.Column<DateOnly>(type: "date", nullable: false),
                     amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    vat_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    net_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     total = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     discount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    withholding_tax_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    withholding_vat_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     current_and_previous_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     unearned_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    status = table.Column<string>(type: "varchar(20)", nullable: false),
+                    payment_status = table.Column<string>(type: "varchar(20)", nullable: false),
                     amount_paid = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     balance = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     instructions = table.Column<string>(type: "varchar(200)", nullable: true),
                     is_paid = table.Column<bool>(type: "boolean", nullable: false),
                     company = table.Column<string>(type: "text", nullable: false),
                     is_printed = table.Column<bool>(type: "boolean", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: true),
                     created_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -1139,13 +1211,13 @@ namespace IBS.DataAccess.Migrations
                         column: x => x.customer_id,
                         principalTable: "filpride_customers",
                         principalColumn: "customer_id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "fk_filpride_service_invoices_filpride_services_service_id",
                         column: x => x.service_id,
                         principalTable: "filpride_services",
                         principalColumn: "service_id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1160,7 +1232,7 @@ namespace IBS.DataAccess.Migrations
                     si_no = table.Column<string[]>(type: "varchar[]", nullable: true),
                     po_no = table.Column<string[]>(type: "varchar[]", nullable: true),
                     supplier_id = table.Column<int>(type: "integer", nullable: true),
-                    total = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    total = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     amount = table.Column<decimal[]>(type: "numeric[]", nullable: true),
                     particulars = table.Column<string>(type: "text", nullable: true),
                     bank_id = table.Column<int>(type: "integer", nullable: true),
@@ -1183,10 +1255,14 @@ namespace IBS.DataAccess.Migrations
                     is_paid = table.Column<bool>(type: "boolean", nullable: false),
                     company = table.Column<string>(type: "text", nullable: false),
                     is_printed = table.Column<bool>(type: "boolean", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: true),
+                    invoice_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     created_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -1201,12 +1277,80 @@ namespace IBS.DataAccess.Migrations
                         name: "fk_filpride_check_voucher_headers_filpride_bank_accounts_bank_",
                         column: x => x.bank_id,
                         principalTable: "filpride_bank_accounts",
-                        principalColumn: "bank_account_id");
+                        principalColumn: "bank_account_id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "fk_filpride_check_voucher_headers_filpride_suppliers_supplier_",
                         column: x => x.supplier_id,
                         principalTable: "filpride_suppliers",
-                        principalColumn: "supplier_id");
+                        principalColumn: "supplier_id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "filpride_general_ledger_books",
+                columns: table => new
+                {
+                    general_ledger_book_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    date = table.Column<DateOnly>(type: "date", nullable: false),
+                    reference = table.Column<string>(type: "text", nullable: false),
+                    account_no = table.Column<string>(type: "text", nullable: false),
+                    account_title = table.Column<string>(type: "text", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: false),
+                    debit = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    credit = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    is_posted = table.Column<bool>(type: "boolean", nullable: false),
+                    company = table.Column<string>(type: "text", nullable: false),
+                    bank_account_id = table.Column<int>(type: "integer", nullable: true),
+                    supplier_id = table.Column<int>(type: "integer", nullable: true),
+                    customer_id = table.Column<int>(type: "integer", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_general_ledger_books", x => x.general_ledger_book_id);
+                    table.ForeignKey(
+                        name: "fk_filpride_general_ledger_books_filpride_bank_accounts_bank_a",
+                        column: x => x.bank_account_id,
+                        principalTable: "filpride_bank_accounts",
+                        principalColumn: "bank_account_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_general_ledger_books_filpride_customers_customer_id",
+                        column: x => x.customer_id,
+                        principalTable: "filpride_customers",
+                        principalColumn: "customer_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_general_ledger_books_filpride_suppliers_supplier_id",
+                        column: x => x.supplier_id,
+                        principalTable: "filpride_suppliers",
+                        principalColumn: "supplier_id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "filpride_pick_up_points",
+                columns: table => new
+                {
+                    pick_up_point_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    depot = table.Column<string>(type: "varchar(50)", nullable: false),
+                    supplier_id = table.Column<int>(type: "integer", nullable: false),
+                    created_by = table.Column<string>(type: "varchar(50)", nullable: false),
+                    created_date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_pick_up_points", x => x.pick_up_point_id);
+                    table.ForeignKey(
+                        name: "fk_filpride_pick_up_points_filpride_suppliers_supplier_id",
+                        column: x => x.supplier_id,
+                        principalTable: "filpride_suppliers",
+                        principalColumn: "supplier_id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1273,29 +1417,69 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "user_notifications",
+                columns: table => new
+                {
+                    user_notification_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<string>(type: "text", nullable: false),
+                    notification_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    is_read = table.Column<bool>(type: "boolean", nullable: false),
+                    is_archived = table.Column<bool>(type: "boolean", nullable: false),
+                    requires_response = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_user_notifications", x => x.user_notification_id);
+                    table.ForeignKey(
+                        name: "fk_user_notifications_application_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_user_notifications_notifications_notification_id",
+                        column: x => x.notification_id,
+                        principalTable: "notifications",
+                        principalColumn: "notification_id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "filpride_purchase_orders",
                 columns: table => new
                 {
                     purchase_order_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    purchase_order_no = table.Column<string>(type: "varchar(12)", nullable: false),
+                    purchase_order_no = table.Column<string>(type: "text", nullable: true),
                     date = table.Column<DateOnly>(type: "date", nullable: false),
                     supplier_id = table.Column<int>(type: "integer", nullable: false),
                     product_id = table.Column<int>(type: "integer", nullable: false),
                     quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    unit_cost = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    total_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    price = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    final_price = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     remarks = table.Column<string>(type: "varchar(200)", nullable: false),
                     terms = table.Column<string>(type: "varchar(5)", nullable: false),
-                    port = table.Column<int>(type: "integer", nullable: false),
-                    quantity_served = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    is_served = table.Column<bool>(type: "boolean", nullable: false),
-                    served_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    quantity_received = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    is_received = table.Column<bool>(type: "boolean", nullable: false),
+                    received_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    supplier_sales_order_no = table.Column<string>(type: "varchar(100)", nullable: true),
+                    is_closed = table.Column<bool>(type: "boolean", nullable: false),
+                    company = table.Column<string>(type: "text", nullable: false),
                     is_printed = table.Column<bool>(type: "boolean", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    is_sub_po = table.Column<bool>(type: "boolean", nullable: false),
+                    sub_po_series = table.Column<string>(type: "varchar(20)", nullable: true),
+                    customer_id = table.Column<int>(type: "integer", nullable: true),
+                    old_po_no = table.Column<string>(type: "text", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: true),
+                    trigger_date = table.Column<DateOnly>(type: "date", nullable: false),
+                    un_triggered_quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     created_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -1306,6 +1490,12 @@ namespace IBS.DataAccess.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_filpride_purchase_orders", x => x.purchase_order_id);
+                    table.ForeignKey(
+                        name: "fk_filpride_purchase_orders_filpride_customers_customer_id",
+                        column: x => x.customer_id,
+                        principalTable: "filpride_customers",
+                        principalColumn: "customer_id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "fk_filpride_purchase_orders_filpride_suppliers_supplier_id",
                         column: x => x.supplier_id,
@@ -1318,6 +1508,109 @@ namespace IBS.DataAccess.Migrations
                         principalTable: "products",
                         principalColumn: "product_id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "mobility_customer_order_slips",
+                columns: table => new
+                {
+                    customer_order_slip_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    customer_order_slip_no = table.Column<string>(type: "varchar(13)", nullable: false),
+                    date = table.Column<DateOnly>(type: "date", nullable: false),
+                    quantity = table.Column<decimal>(type: "numeric", nullable: false),
+                    price_per_liter = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    address = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true),
+                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    plate_no = table.Column<string>(type: "varchar(10)", maxLength: 10, nullable: false),
+                    driver = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    status = table.Column<string>(type: "varchar(20)", nullable: false),
+                    load_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    station_code = table.Column<string>(type: "varchar(3)", nullable: false),
+                    terms = table.Column<string>(type: "varchar(10)", nullable: false),
+                    created_by = table.Column<string>(type: "varchar(100)", nullable: true),
+                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    edited_by = table.Column<string>(type: "varchar(100)", nullable: true),
+                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    disapproved_by = table.Column<string>(type: "varchar(100)", nullable: true),
+                    disapproved_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    approved_by = table.Column<string>(type: "varchar(100)", nullable: true),
+                    approved_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    uploaded_by = table.Column<string>(type: "varchar(100)", nullable: true),
+                    uploaded_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    trip_ticket = table.Column<string>(type: "varchar(20)", nullable: true),
+                    is_printed = table.Column<bool>(type: "boolean", nullable: false),
+                    disapproval_remarks = table.Column<string>(type: "varchar(200)", nullable: true),
+                    product_id = table.Column<int>(type: "integer", nullable: false),
+                    customer_id = table.Column<int>(type: "integer", nullable: false),
+                    station_id = table.Column<int>(type: "integer", nullable: false),
+                    saved_url = table.Column<string>(type: "text", nullable: true),
+                    saved_file_name = table.Column<string>(type: "text", nullable: true),
+                    check_picture_saved_url = table.Column<string>(type: "text", nullable: true),
+                    check_picture_saved_file_name = table.Column<string>(type: "text", nullable: true),
+                    check_no = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_mobility_customer_order_slips", x => x.customer_order_slip_id);
+                    table.ForeignKey(
+                        name: "fk_mobility_customer_order_slips_mobility_customers_customer_id",
+                        column: x => x.customer_id,
+                        principalTable: "mobility_customers",
+                        principalColumn: "customer_id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_mobility_customer_order_slips_mobility_stations_station_id",
+                        column: x => x.station_id,
+                        principalTable: "mobility_stations",
+                        principalColumn: "station_id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_mobility_customer_order_slips_products_product_id",
+                        column: x => x.product_id,
+                        principalTable: "products",
+                        principalColumn: "product_id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "mobility_customer_purchase_orders",
+                columns: table => new
+                {
+                    customer_purchase_order_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    customer_purchase_order_no = table.Column<string>(type: "text", nullable: false),
+                    date = table.Column<DateOnly>(type: "date", nullable: false),
+                    quantity = table.Column<decimal>(type: "numeric", nullable: false),
+                    price = table.Column<decimal>(type: "numeric", nullable: false),
+                    amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    address = table.Column<string>(type: "text", nullable: false),
+                    station_id = table.Column<int>(type: "integer", nullable: false),
+                    station_code = table.Column<string>(type: "text", nullable: false),
+                    product_id = table.Column<int>(type: "integer", nullable: false),
+                    customer_id = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_mobility_customer_purchase_orders", x => x.customer_purchase_order_id);
+                    table.ForeignKey(
+                        name: "fk_mobility_customer_purchase_orders_mobility_customers_custom",
+                        column: x => x.customer_id,
+                        principalTable: "mobility_customers",
+                        principalColumn: "customer_id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_mobility_customer_purchase_orders_mobility_stations_station",
+                        column: x => x.station_id,
+                        principalTable: "mobility_stations",
+                        principalColumn: "station_id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_mobility_customer_purchase_orders_products_product_id",
+                        column: x => x.product_id,
+                        principalTable: "products",
+                        principalColumn: "product_id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1341,6 +1634,7 @@ namespace IBS.DataAccess.Migrations
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -1366,58 +1660,6 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "purchase_orders",
-                columns: table => new
-                {
-                    purchase_order_id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    purchase_order_no = table.Column<string>(type: "text", nullable: true),
-                    date = table.Column<DateOnly>(type: "date", nullable: false),
-                    supplier_id = table.Column<int>(type: "integer", nullable: false),
-                    supplier_no = table.Column<int>(type: "integer", nullable: false),
-                    product_id = table.Column<int>(type: "integer", nullable: false),
-                    product_no = table.Column<string>(type: "text", nullable: true),
-                    terms = table.Column<string>(type: "varchar(10)", nullable: false),
-                    quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    price = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    final_price = table.Column<decimal>(type: "numeric(18,4)", nullable: true),
-                    quantity_received = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    is_received = table.Column<bool>(type: "boolean", nullable: false),
-                    received_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    remarks = table.Column<string>(type: "varchar(200)", nullable: false),
-                    is_closed = table.Column<bool>(type: "boolean", nullable: false),
-                    company = table.Column<string>(type: "text", nullable: false),
-                    is_printed = table.Column<bool>(type: "boolean", nullable: false),
-                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    voided_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    posted_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    posted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_purchase_orders", x => x.purchase_order_id);
-                    table.ForeignKey(
-                        name: "fk_purchase_orders_filpride_suppliers_supplier_id",
-                        column: x => x.supplier_id,
-                        principalTable: "filpride_suppliers",
-                        principalColumn: "supplier_id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_purchase_orders_products_product_id",
-                        column: x => x.product_id,
-                        principalTable: "products",
-                        principalColumn: "product_id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "filpride_check_voucher_details",
                 columns: table => new
                 {
@@ -1428,7 +1670,13 @@ namespace IBS.DataAccess.Migrations
                     transaction_no = table.Column<string>(type: "text", nullable: false),
                     debit = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     credit = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    check_voucher_header_id = table.Column<int>(type: "integer", nullable: false)
+                    check_voucher_header_id = table.Column<int>(type: "integer", nullable: false),
+                    supplier_id = table.Column<int>(type: "integer", nullable: true),
+                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    amount_paid = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    is_vatable = table.Column<bool>(type: "boolean", nullable: false),
+                    ewt_percent = table.Column<decimal>(type: "numeric", nullable: false),
+                    is_user_selected = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1439,6 +1687,11 @@ namespace IBS.DataAccess.Migrations
                         principalTable: "filpride_check_voucher_headers",
                         principalColumn: "check_voucher_header_id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_filpride_check_voucher_details_filpride_suppliers_supplier_",
+                        column: x => x.supplier_id,
+                        principalTable: "filpride_suppliers",
+                        principalColumn: "supplier_id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1456,10 +1709,13 @@ namespace IBS.DataAccess.Migrations
                     jv_reason = table.Column<string>(type: "text", nullable: false),
                     company = table.Column<string>(type: "text", nullable: false),
                     is_printed = table.Column<bool>(type: "boolean", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: true),
                     created_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -1474,7 +1730,55 @@ namespace IBS.DataAccess.Migrations
                         name: "fk_filpride_journal_voucher_headers_filpride_check_voucher_hea",
                         column: x => x.cv_id,
                         principalTable: "filpride_check_voucher_headers",
-                        principalColumn: "check_voucher_header_id");
+                        principalColumn: "check_voucher_header_id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "filpride_multiple_check_voucher_payments",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    check_voucher_header_payment_id = table.Column<int>(type: "integer", nullable: false),
+                    check_voucher_header_invoice_id = table.Column<int>(type: "integer", nullable: false),
+                    amount_paid = table.Column<decimal>(type: "numeric(18,4)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_multiple_check_voucher_payments", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_filpride_multiple_check_voucher_payments_filpride_check_vou",
+                        column: x => x.check_voucher_header_invoice_id,
+                        principalTable: "filpride_check_voucher_headers",
+                        principalColumn: "check_voucher_header_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_multiple_check_voucher_payments_filpride_check_vou1",
+                        column: x => x.check_voucher_header_payment_id,
+                        principalTable: "filpride_check_voucher_headers",
+                        principalColumn: "check_voucher_header_id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "filpride_freights",
+                columns: table => new
+                {
+                    freight_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    pick_up_point_id = table.Column<int>(type: "integer", nullable: false),
+                    cluster_code = table.Column<int>(type: "integer", nullable: false),
+                    freight = table.Column<decimal>(type: "numeric(18,4)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_freights", x => x.freight_id);
+                    table.ForeignKey(
+                        name: "fk_filpride_freights_filpride_pick_up_points_pick_up_point_id",
+                        column: x => x.pick_up_point_id,
+                        principalTable: "filpride_pick_up_points",
+                        principalColumn: "pick_up_point_id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1486,27 +1790,50 @@ namespace IBS.DataAccess.Migrations
                     customer_order_slip_no = table.Column<string>(type: "varchar(13)", nullable: false),
                     date = table.Column<DateOnly>(type: "date", nullable: false),
                     customer_id = table.Column<int>(type: "integer", nullable: false),
+                    customer_type = table.Column<string>(type: "text", nullable: false),
                     total_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    remarks = table.Column<string>(type: "varchar(200)", nullable: false),
+                    remarks = table.Column<string>(type: "text", nullable: false),
                     customer_po_no = table.Column<string>(type: "varchar(100)", nullable: false),
-                    purchase_order_id = table.Column<int>(type: "integer", nullable: false),
-                    delivery_date_and_time = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    vat = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     delivered_price = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     delivered_quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     balance_quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    has_commission = table.Column<bool>(type: "boolean", nullable: false),
+                    commissionee_id = table.Column<int>(type: "integer", nullable: true),
+                    commission_rate = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    account_specialist = table.Column<string>(type: "varchar(100)", nullable: false),
+                    product_id = table.Column<int>(type: "integer", nullable: false),
+                    branch = table.Column<string>(type: "text", nullable: true),
+                    purchase_order_id = table.Column<int>(type: "integer", nullable: true),
+                    delivery_option = table.Column<string>(type: "varchar(50)", nullable: true),
+                    freight = table.Column<decimal>(type: "numeric(18,4)", nullable: true),
+                    pick_up_point_id = table.Column<int>(type: "integer", nullable: true),
+                    supplier_id = table.Column<int>(type: "integer", nullable: true),
+                    sub_po_remarks = table.Column<string>(type: "text", nullable: true),
+                    first_approved_by = table.Column<string>(type: "varchar(100)", nullable: true),
+                    first_approved_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    expiration_date = table.Column<DateOnly>(type: "date", nullable: true),
+                    operation_manager_reason = table.Column<string>(type: "text", nullable: true),
+                    second_approved_by = table.Column<string>(type: "varchar(100)", nullable: true),
+                    second_approved_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    terms = table.Column<string>(type: "text", nullable: true),
+                    finance_instruction = table.Column<string>(type: "text", nullable: true),
+                    hauler_id = table.Column<int>(type: "integer", nullable: true),
+                    driver = table.Column<string>(type: "text", nullable: true),
+                    plate_no = table.Column<string>(type: "text", nullable: true),
+                    authority_to_load_no = table.Column<string>(type: "varchar(20)", nullable: true),
                     is_delivered = table.Column<bool>(type: "boolean", nullable: false),
                     created_by = table.Column<string>(type: "varchar(100)", nullable: true),
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(100)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    approved_by = table.Column<string>(type: "varchar(100)", nullable: true),
-                    approved_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     disapproved_by = table.Column<string>(type: "varchar(100)", nullable: true),
                     disapproved_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     is_printed = table.Column<bool>(type: "boolean", nullable: false),
-                    expiration_date = table.Column<DateOnly>(type: "date", nullable: true)
+                    company = table.Column<string>(type: "text", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    old_cos_no = table.Column<string>(type: "text", nullable: false),
+                    has_multiple_po = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1518,11 +1845,38 @@ namespace IBS.DataAccess.Migrations
                         principalColumn: "customer_id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
+                        name: "fk_filpride_customer_order_slips_filpride_pick_up_points_pick_",
+                        column: x => x.pick_up_point_id,
+                        principalTable: "filpride_pick_up_points",
+                        principalColumn: "pick_up_point_id");
+                    table.ForeignKey(
                         name: "fk_filpride_customer_order_slips_filpride_purchase_orders_purc",
                         column: x => x.purchase_order_id,
                         principalTable: "filpride_purchase_orders",
                         principalColumn: "purchase_order_id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_customer_order_slips_filpride_suppliers_commission",
+                        column: x => x.commissionee_id,
+                        principalTable: "filpride_suppliers",
+                        principalColumn: "supplier_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_customer_order_slips_filpride_suppliers_hauler_id",
+                        column: x => x.hauler_id,
+                        principalTable: "filpride_suppliers",
+                        principalColumn: "supplier_id");
+                    table.ForeignKey(
+                        name: "fk_filpride_customer_order_slips_filpride_suppliers_supplier_id",
+                        column: x => x.supplier_id,
+                        principalTable: "filpride_suppliers",
+                        principalColumn: "supplier_id");
+                    table.ForeignKey(
+                        name: "fk_filpride_customer_order_slips_products_product_id",
+                        column: x => x.product_id,
+                        principalTable: "products",
+                        principalColumn: "product_id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1552,137 +1906,42 @@ namespace IBS.DataAccess.Migrations
                 {
                     table.PrimaryKey("pk_filpride_inventories", x => x.inventory_id);
                     table.ForeignKey(
+                        name: "fk_filpride_inventories_filpride_purchase_orders_po_id",
+                        column: x => x.po_id,
+                        principalTable: "filpride_purchase_orders",
+                        principalColumn: "purchase_order_id");
+                    table.ForeignKey(
                         name: "fk_filpride_inventories_products_product_id",
                         column: x => x.product_id,
                         principalTable: "products",
                         principalColumn: "product_id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_filpride_inventories_purchase_orders_po_id",
-                        column: x => x.po_id,
-                        principalTable: "purchase_orders",
-                        principalColumn: "purchase_order_id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "filpride_sales_invoices",
+                name: "filpride_po_actual_prices",
                 columns: table => new
                 {
-                    sales_invoice_id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    sales_invoice_no = table.Column<string>(type: "varchar(12)", nullable: true),
-                    customer_id = table.Column<int>(type: "integer", nullable: false),
-                    product_id = table.Column<int>(type: "integer", nullable: false),
-                    other_ref_no = table.Column<string>(type: "varchar(20)", nullable: false),
-                    quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    unit_price = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    remarks = table.Column<string>(type: "varchar(100)", nullable: false),
-                    vatable_sales = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    vat_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    status = table.Column<string>(type: "varchar(20)", nullable: false),
-                    transaction_date = table.Column<DateOnly>(type: "date", nullable: false),
-                    discount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    net_discount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    vat_exempt = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    zero_rated = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    with_holding_vat_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    with_holding_tax_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    amount_paid = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    balance = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    is_paid = table.Column<bool>(type: "boolean", nullable: false),
-                    is_tax_and_vat_paid = table.Column<bool>(type: "boolean", nullable: false),
-                    due_date = table.Column<DateOnly>(type: "date", nullable: false),
                     purchase_order_id = table.Column<int>(type: "integer", nullable: false),
-                    company = table.Column<string>(type: "text", nullable: false),
-                    is_printed = table.Column<bool>(type: "boolean", nullable: false),
-                    type = table.Column<string>(type: "text", nullable: false),
-                    receiving_report_id = table.Column<int>(type: "integer", nullable: false),
-                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    voided_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    posted_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    posted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    triggered_volume = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    applied_volume = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    triggered_price = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    is_approved = table.Column<bool>(type: "boolean", nullable: false),
+                    approved_by = table.Column<string>(type: "text", nullable: true),
+                    approved_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    triggered_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_filpride_sales_invoices", x => x.sales_invoice_id);
+                    table.PrimaryKey("pk_filpride_po_actual_prices", x => x.id);
                     table.ForeignKey(
-                        name: "fk_filpride_sales_invoices_filpride_customers_customer_id",
-                        column: x => x.customer_id,
-                        principalTable: "filpride_customers",
-                        principalColumn: "customer_id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_filpride_sales_invoices_products_product_id",
-                        column: x => x.product_id,
-                        principalTable: "products",
-                        principalColumn: "product_id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_filpride_sales_invoices_purchase_orders_purchase_order_id",
+                        name: "fk_filpride_po_actual_prices_filpride_purchase_orders_purchase",
                         column: x => x.purchase_order_id,
-                        principalTable: "purchase_orders",
+                        principalTable: "filpride_purchase_orders",
                         principalColumn: "purchase_order_id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "receiving_reports",
-                columns: table => new
-                {
-                    receiving_report_id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    receiving_report_no = table.Column<string>(type: "text", nullable: true),
-                    date = table.Column<DateOnly>(type: "date", nullable: false),
-                    due_date = table.Column<DateOnly>(type: "date", nullable: false),
-                    po_id = table.Column<int>(type: "integer", nullable: false),
-                    po_no = table.Column<string>(type: "varchar(12)", nullable: true),
-                    supplier_invoice_number = table.Column<string>(type: "varchar(100)", nullable: true),
-                    supplier_invoice_date = table.Column<string>(type: "text", nullable: true),
-                    truck_or_vessels = table.Column<string>(type: "varchar(100)", nullable: false),
-                    quantity_delivered = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    quantity_received = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    gain_or_loss = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    net_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    vat_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    ewt_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    other_ref = table.Column<string>(type: "varchar(100)", nullable: true),
-                    remarks = table.Column<string>(type: "text", nullable: false),
-                    amount_paid = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    is_paid = table.Column<bool>(type: "boolean", nullable: false),
-                    paid_date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    canceled_quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    net_amount_of_ewt = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    company = table.Column<string>(type: "text", nullable: false),
-                    is_printed = table.Column<bool>(type: "boolean", nullable: false),
-                    received_date = table.Column<DateOnly>(type: "date", nullable: true),
-                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    voided_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    posted_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    posted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_receiving_reports", x => x.receiving_report_id);
-                    table.ForeignKey(
-                        name: "fk_receiving_reports_purchase_orders_po_id",
-                        column: x => x.po_id,
-                        principalTable: "purchase_orders",
-                        principalColumn: "purchase_order_id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1710,6 +1969,35 @@ namespace IBS.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "filpride_cos_appointed_suppliers",
+                columns: table => new
+                {
+                    sequence_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    customer_order_slip_id = table.Column<int>(type: "integer", nullable: false),
+                    purchase_order_id = table.Column<int>(type: "integer", nullable: false),
+                    quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    unserved_quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    is_assigned_to_dr = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_cos_appointed_suppliers", x => x.sequence_id);
+                    table.ForeignKey(
+                        name: "fk_filpride_cos_appointed_suppliers_filpride_customer_order_sl",
+                        column: x => x.customer_order_slip_id,
+                        principalTable: "filpride_customer_order_slips",
+                        principalColumn: "customer_order_slip_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_cos_appointed_suppliers_filpride_purchase_orders_p",
+                        column: x => x.purchase_order_id,
+                        principalTable: "filpride_purchase_orders",
+                        principalColumn: "purchase_order_id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "filpride_delivery_receipts",
                 columns: table => new
                 {
@@ -1717,23 +2005,29 @@ namespace IBS.DataAccess.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     delivery_receipt_no = table.Column<string>(type: "varchar(12)", nullable: false),
                     date = table.Column<DateOnly>(type: "date", nullable: false),
-                    invoice_no = table.Column<string>(type: "varchar(50)", nullable: false),
+                    delivered_date = table.Column<DateOnly>(type: "date", nullable: true),
                     customer_id = table.Column<int>(type: "integer", nullable: false),
                     customer_order_slip_id = table.Column<int>(type: "integer", nullable: false),
-                    hauler_id = table.Column<int>(type: "integer", nullable: true),
-                    freight = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    authority_to_load_no = table.Column<string>(type: "varchar(20)", nullable: false),
                     remarks = table.Column<string>(type: "varchar(200)", nullable: false),
                     quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     total_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    net_of_vat_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    vat_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     is_printed = table.Column<bool>(type: "boolean", nullable: false),
-                    delivery_type = table.Column<string>(type: "varchar(15)", nullable: false),
+                    company = table.Column<string>(type: "text", nullable: false),
+                    manual_dr_no = table.Column<string>(type: "varchar(50)", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    hauler_id = table.Column<int>(type: "integer", nullable: true),
+                    driver = table.Column<string>(type: "varchar(200)", nullable: true),
+                    plate_no = table.Column<string>(type: "varchar(200)", nullable: true),
+                    freight = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    ecc = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    authority_to_load_no = table.Column<string>(type: "varchar(20)", nullable: true),
+                    has_already_invoiced = table.Column<bool>(type: "boolean", nullable: false),
+                    purchase_order_id = table.Column<int>(type: "integer", nullable: true),
                     created_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -1757,189 +2051,47 @@ namespace IBS.DataAccess.Migrations
                         principalColumn: "customer_id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_filpride_delivery_receipts_haulers_hauler_id",
+                        name: "fk_filpride_delivery_receipts_filpride_purchase_orders_purchas",
+                        column: x => x.purchase_order_id,
+                        principalTable: "filpride_purchase_orders",
+                        principalColumn: "purchase_order_id");
+                    table.ForeignKey(
+                        name: "fk_filpride_delivery_receipts_filpride_suppliers_hauler_id",
                         column: x => x.hauler_id,
-                        principalTable: "haulers",
-                        principalColumn: "hauler_id",
+                        principalTable: "filpride_suppliers",
+                        principalColumn: "supplier_id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "filpride_collection_receipts",
+                name: "filpride_authority_to_loads",
                 columns: table => new
                 {
-                    collection_receipt_id = table.Column<int>(type: "integer", nullable: false)
+                    authority_to_load_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    collection_receipt_no = table.Column<string>(type: "varchar(12)", nullable: true),
-                    sales_invoice_id = table.Column<int>(type: "integer", nullable: true),
-                    si_no = table.Column<string>(type: "varchar(12)", nullable: true),
-                    multiple_si_id = table.Column<int[]>(type: "integer[]", nullable: true),
-                    multiple_si = table.Column<string[]>(type: "text[]", nullable: true),
-                    service_invoice_id = table.Column<int>(type: "integer", nullable: true),
-                    sv_no = table.Column<string>(type: "varchar(12)", nullable: true),
-                    customer_id = table.Column<int>(type: "integer", nullable: false),
-                    transaction_date = table.Column<DateOnly>(type: "date", nullable: false),
-                    series_number = table.Column<long>(type: "bigint", nullable: false),
-                    reference_no = table.Column<string>(type: "varchar(20)", nullable: false),
-                    remarks = table.Column<string>(type: "varchar(100)", nullable: true),
-                    cash_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    check_date = table.Column<string>(type: "text", nullable: true),
-                    check_no = table.Column<string>(type: "varchar(20)", nullable: true),
-                    check_bank = table.Column<string>(type: "varchar(20)", nullable: true),
-                    check_branch = table.Column<string>(type: "varchar(20)", nullable: true),
-                    check_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    manager_check_date = table.Column<DateOnly>(type: "date", nullable: true),
-                    manager_check_no = table.Column<string>(type: "varchar(20)", nullable: true),
-                    manager_check_bank = table.Column<string>(type: "varchar(20)", nullable: true),
-                    manager_check_branch = table.Column<string>(type: "varchar(20)", nullable: true),
-                    manager_check_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    ewt = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    wvat = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    total = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    is_certificate_upload = table.Column<bool>(type: "boolean", nullable: false),
-                    f2306file_path = table.Column<string>(type: "varchar(200)", nullable: true),
-                    f2307file_path = table.Column<string>(type: "varchar(200)", nullable: true),
-                    si_multiple_amount = table.Column<decimal[]>(type: "numeric[]", nullable: true),
-                    company = table.Column<string>(type: "text", nullable: false),
-                    is_printed = table.Column<bool>(type: "boolean", nullable: false),
-                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    voided_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    posted_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    posted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    authority_to_load_no = table.Column<string>(type: "varchar(20)", nullable: false),
+                    customer_order_slip_id = table.Column<int>(type: "integer", nullable: true),
+                    delivery_receipt_id = table.Column<int>(type: "integer", nullable: true),
+                    date_booked = table.Column<DateOnly>(type: "date", nullable: false),
+                    valid_until = table.Column<DateOnly>(type: "date", nullable: false),
+                    uppi_atl_no = table.Column<string>(type: "varchar(20)", nullable: true),
+                    remarks = table.Column<string>(type: "varchar(255)", nullable: false),
+                    created_by = table.Column<string>(type: "varchar(20)", nullable: false),
+                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_filpride_collection_receipts", x => x.collection_receipt_id);
+                    table.PrimaryKey("pk_filpride_authority_to_loads", x => x.authority_to_load_id);
                     table.ForeignKey(
-                        name: "fk_filpride_collection_receipts_filpride_customers_customer_id",
-                        column: x => x.customer_id,
-                        principalTable: "filpride_customers",
-                        principalColumn: "customer_id",
-                        onDelete: ReferentialAction.Cascade);
+                        name: "fk_filpride_authority_to_loads_filpride_customer_order_slips_c",
+                        column: x => x.customer_order_slip_id,
+                        principalTable: "filpride_customer_order_slips",
+                        principalColumn: "customer_order_slip_id");
                     table.ForeignKey(
-                        name: "fk_filpride_collection_receipts_filpride_sales_invoices_sales_",
-                        column: x => x.sales_invoice_id,
-                        principalTable: "filpride_sales_invoices",
-                        principalColumn: "sales_invoice_id");
-                    table.ForeignKey(
-                        name: "fk_filpride_collection_receipts_filpride_service_invoices_serv",
-                        column: x => x.service_invoice_id,
-                        principalTable: "filpride_service_invoices",
-                        principalColumn: "service_invoice_id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "filpride_credit_memos",
-                columns: table => new
-                {
-                    credit_memo_id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    credit_memo_no = table.Column<string>(type: "varchar(12)", nullable: true),
-                    transaction_date = table.Column<DateOnly>(type: "date", nullable: false),
-                    sales_invoice_id = table.Column<int>(type: "integer", nullable: true),
-                    service_invoice_id = table.Column<int>(type: "integer", nullable: true),
-                    description = table.Column<string>(type: "text", nullable: false),
-                    adjusted_price = table.Column<decimal>(type: "numeric(18,4)", nullable: true),
-                    quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: true),
-                    credit_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    vatable_sales = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    vat_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    total_sales = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    with_holding_vat_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    with_holding_tax_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    source = table.Column<string>(type: "text", nullable: false),
-                    remarks = table.Column<string>(type: "text", nullable: true),
-                    period = table.Column<DateOnly>(type: "date", nullable: false),
-                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: true),
-                    current_and_previous_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    unearned_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    services_id = table.Column<int>(type: "integer", nullable: false),
-                    company = table.Column<string>(type: "text", nullable: false),
-                    is_printed = table.Column<bool>(type: "boolean", nullable: false),
-                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    voided_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    posted_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    posted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_filpride_credit_memos", x => x.credit_memo_id);
-                    table.ForeignKey(
-                        name: "fk_filpride_credit_memos_filpride_sales_invoices_sales_invoice",
-                        column: x => x.sales_invoice_id,
-                        principalTable: "filpride_sales_invoices",
-                        principalColumn: "sales_invoice_id");
-                    table.ForeignKey(
-                        name: "fk_filpride_credit_memos_filpride_service_invoices_service_inv",
-                        column: x => x.service_invoice_id,
-                        principalTable: "filpride_service_invoices",
-                        principalColumn: "service_invoice_id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "filpride_debit_memos",
-                columns: table => new
-                {
-                    debit_memo_id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    sales_invoice_id = table.Column<int>(type: "integer", nullable: true),
-                    service_invoice_id = table.Column<int>(type: "integer", nullable: true),
-                    debit_memo_no = table.Column<string>(type: "varchar(12)", nullable: true),
-                    transaction_date = table.Column<DateOnly>(type: "date", nullable: false),
-                    debit_amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    description = table.Column<string>(type: "text", nullable: false),
-                    vatable_sales = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    vat_amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    total_sales = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    adjusted_price = table.Column<decimal>(type: "numeric(18,2)", nullable: true),
-                    quantity = table.Column<decimal>(type: "numeric(18,2)", nullable: true),
-                    with_holding_vat_amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    with_holding_tax_amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    source = table.Column<string>(type: "text", nullable: false),
-                    remarks = table.Column<string>(type: "text", nullable: false),
-                    period = table.Column<DateOnly>(type: "date", nullable: false),
-                    amount = table.Column<decimal>(type: "numeric(18,2)", nullable: true),
-                    current_and_previous_amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    unearned_amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    services_id = table.Column<int>(type: "integer", nullable: false),
-                    company = table.Column<string>(type: "text", nullable: false),
-                    is_printed = table.Column<bool>(type: "boolean", nullable: false),
-                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    voided_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    posted_by = table.Column<string>(type: "varchar(50)", nullable: true),
-                    posted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_filpride_debit_memos", x => x.debit_memo_id);
-                    table.ForeignKey(
-                        name: "fk_filpride_debit_memos_filpride_sales_invoices_sales_invoice_",
-                        column: x => x.sales_invoice_id,
-                        principalTable: "filpride_sales_invoices",
-                        principalColumn: "sales_invoice_id");
-                    table.ForeignKey(
-                        name: "fk_filpride_debit_memos_filpride_service_invoices_service_invo",
-                        column: x => x.service_invoice_id,
-                        principalTable: "filpride_service_invoices",
-                        principalColumn: "service_invoice_id");
+                        name: "fk_filpride_authority_to_loads_filpride_delivery_receipts_deli",
+                        column: x => x.delivery_receipt_id,
+                        principalTable: "filpride_delivery_receipts",
+                        principalColumn: "delivery_receipt_id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1948,34 +2100,38 @@ namespace IBS.DataAccess.Migrations
                 {
                     receiving_report_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    receiving_report_no = table.Column<string>(type: "varchar(12)", nullable: false),
+                    receiving_report_no = table.Column<string>(type: "text", nullable: true),
                     date = table.Column<DateOnly>(type: "date", nullable: false),
                     due_date = table.Column<DateOnly>(type: "date", nullable: false),
-                    delivery_receipt_id = table.Column<int>(type: "integer", nullable: false),
-                    customer_id = table.Column<int>(type: "integer", nullable: false),
-                    supplier_si_no = table.Column<string>(type: "varchar(50)", nullable: true),
-                    supplier_si_date = table.Column<DateOnly>(type: "date", nullable: true),
+                    po_id = table.Column<int>(type: "integer", nullable: false),
+                    po_no = table.Column<string>(type: "varchar(12)", nullable: true),
+                    supplier_invoice_number = table.Column<string>(type: "varchar(100)", nullable: true),
+                    supplier_invoice_date = table.Column<string>(type: "text", nullable: true),
                     supplier_dr_no = table.Column<string>(type: "varchar(50)", nullable: true),
-                    supplier_dr_date = table.Column<DateOnly>(type: "date", nullable: true),
                     withdrawal_certificate = table.Column<string>(type: "varchar(50)", nullable: true),
-                    other_reference = table.Column<string>(type: "varchar(100)", nullable: false),
-                    remarks = table.Column<string>(type: "varchar(200)", nullable: false),
-                    total_freight = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    truck_or_vessels = table.Column<string>(type: "varchar(100)", nullable: false),
                     quantity_delivered = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     quantity_received = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     gain_or_loss = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    total_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    vat_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    net_of_vat_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
-                    net_of_tax_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    authority_to_load_no = table.Column<string>(type: "varchar(100)", nullable: true),
+                    remarks = table.Column<string>(type: "text", nullable: false),
                     amount_paid = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     is_paid = table.Column<bool>(type: "boolean", nullable: false),
-                    paid_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    paid_date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    canceled_quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    company = table.Column<string>(type: "text", nullable: false),
                     is_printed = table.Column<bool>(type: "boolean", nullable: false),
+                    received_date = table.Column<DateOnly>(type: "date", nullable: true),
+                    delivery_receipt_id = table.Column<int>(type: "integer", nullable: true),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: true),
+                    is_cost_updated = table.Column<bool>(type: "boolean", nullable: false),
                     created_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -1987,16 +2143,92 @@ namespace IBS.DataAccess.Migrations
                 {
                     table.PrimaryKey("pk_filpride_receiving_reports", x => x.receiving_report_id);
                     table.ForeignKey(
-                        name: "fk_filpride_receiving_reports_filpride_customers_customer_id",
+                        name: "fk_filpride_receiving_reports_filpride_delivery_receipts_deliv",
+                        column: x => x.delivery_receipt_id,
+                        principalTable: "filpride_delivery_receipts",
+                        principalColumn: "delivery_receipt_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_receiving_reports_filpride_purchase_orders_po_id",
+                        column: x => x.po_id,
+                        principalTable: "filpride_purchase_orders",
+                        principalColumn: "purchase_order_id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "filpride_sales_invoices",
+                columns: table => new
+                {
+                    sales_invoice_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    sales_invoice_no = table.Column<string>(type: "varchar(12)", nullable: true),
+                    customer_id = table.Column<int>(type: "integer", nullable: false),
+                    product_id = table.Column<int>(type: "integer", nullable: false),
+                    other_ref_no = table.Column<string>(type: "varchar(100)", nullable: false),
+                    quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    unit_price = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    remarks = table.Column<string>(type: "text", nullable: false),
+                    payment_status = table.Column<string>(type: "varchar(20)", nullable: false),
+                    transaction_date = table.Column<DateOnly>(type: "date", nullable: false),
+                    discount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    amount_paid = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    balance = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    is_paid = table.Column<bool>(type: "boolean", nullable: false),
+                    is_tax_and_vat_paid = table.Column<bool>(type: "boolean", nullable: false),
+                    due_date = table.Column<DateOnly>(type: "date", nullable: false),
+                    purchase_order_id = table.Column<int>(type: "integer", nullable: false),
+                    company = table.Column<string>(type: "text", nullable: false),
+                    is_printed = table.Column<bool>(type: "boolean", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: false),
+                    receiving_report_id = table.Column<int>(type: "integer", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    delivery_receipt_id = table.Column<int>(type: "integer", nullable: true),
+                    customer_order_slip_id = table.Column<int>(type: "integer", nullable: true),
+                    terms = table.Column<string>(type: "text", nullable: false),
+                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
+                    canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    voided_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    posted_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    posted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_sales_invoices", x => x.sales_invoice_id);
+                    table.ForeignKey(
+                        name: "fk_filpride_sales_invoices_filpride_customer_order_slips_custo",
+                        column: x => x.customer_order_slip_id,
+                        principalTable: "filpride_customer_order_slips",
+                        principalColumn: "customer_order_slip_id");
+                    table.ForeignKey(
+                        name: "fk_filpride_sales_invoices_filpride_customers_customer_id",
                         column: x => x.customer_id,
                         principalTable: "filpride_customers",
                         principalColumn: "customer_id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_filpride_receiving_reports_filpride_delivery_receipts_deliv",
+                        name: "fk_filpride_sales_invoices_filpride_delivery_receipts_delivery",
                         column: x => x.delivery_receipt_id,
                         principalTable: "filpride_delivery_receipts",
-                        principalColumn: "delivery_receipt_id",
+                        principalColumn: "delivery_receipt_id");
+                    table.ForeignKey(
+                        name: "fk_filpride_sales_invoices_filpride_purchase_orders_purchase_o",
+                        column: x => x.purchase_order_id,
+                        principalTable: "filpride_purchase_orders",
+                        principalColumn: "purchase_order_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_sales_invoices_products_product_id",
+                        column: x => x.product_id,
+                        principalTable: "products",
+                        principalColumn: "product_id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -2018,6 +2250,7 @@ namespace IBS.DataAccess.Migrations
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
                     canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
                     canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
@@ -2035,6 +2268,219 @@ namespace IBS.DataAccess.Migrations
                         principalColumn: "delivery_receipt_id",
                         onDelete: ReferentialAction.Restrict);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "filpride_book_atl_details",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    authority_to_load_id = table.Column<int>(type: "integer", nullable: false),
+                    customer_order_slip_id = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_book_atl_details", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_filpride_book_atl_details_filpride_authority_to_loads_autho",
+                        column: x => x.authority_to_load_id,
+                        principalTable: "filpride_authority_to_loads",
+                        principalColumn: "authority_to_load_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_book_atl_details_filpride_customer_order_slips_cus",
+                        column: x => x.customer_order_slip_id,
+                        principalTable: "filpride_customer_order_slips",
+                        principalColumn: "customer_order_slip_id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "filpride_collection_receipts",
+                columns: table => new
+                {
+                    collection_receipt_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    collection_receipt_no = table.Column<string>(type: "varchar(12)", nullable: true),
+                    sales_invoice_id = table.Column<int>(type: "integer", nullable: true),
+                    si_no = table.Column<string>(type: "varchar(12)", nullable: true),
+                    multiple_si_id = table.Column<int[]>(type: "integer[]", nullable: true),
+                    multiple_si = table.Column<string[]>(type: "text[]", nullable: true),
+                    service_invoice_id = table.Column<int>(type: "integer", nullable: true),
+                    sv_no = table.Column<string>(type: "varchar(12)", nullable: true),
+                    customer_id = table.Column<int>(type: "integer", nullable: false),
+                    transaction_date = table.Column<DateOnly>(type: "date", nullable: false),
+                    series_number = table.Column<long>(type: "bigint", nullable: false),
+                    reference_no = table.Column<string>(type: "varchar(50)", nullable: false),
+                    remarks = table.Column<string>(type: "varchar(100)", nullable: true),
+                    cash_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    check_date = table.Column<string>(type: "text", nullable: true),
+                    check_no = table.Column<string>(type: "varchar(50)", nullable: true),
+                    check_bank = table.Column<string>(type: "varchar(50)", nullable: true),
+                    check_branch = table.Column<string>(type: "varchar(50)", nullable: true),
+                    check_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    manager_check_date = table.Column<DateOnly>(type: "date", nullable: true),
+                    manager_check_no = table.Column<string>(type: "varchar(50)", nullable: true),
+                    manager_check_bank = table.Column<string>(type: "varchar(50)", nullable: true),
+                    manager_check_branch = table.Column<string>(type: "varchar(50)", nullable: true),
+                    manager_check_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    ewt = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    wvat = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    total = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    is_certificate_upload = table.Column<bool>(type: "boolean", nullable: false),
+                    f2306file_path = table.Column<string>(type: "varchar(200)", nullable: true),
+                    f2307file_path = table.Column<string>(type: "varchar(200)", nullable: true),
+                    si_multiple_amount = table.Column<decimal[]>(type: "numeric[]", nullable: true),
+                    company = table.Column<string>(type: "text", nullable: false),
+                    is_printed = table.Column<bool>(type: "boolean", nullable: false),
+                    multiple_transaction_date = table.Column<DateOnly[]>(type: "date[]", nullable: true),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: true),
+                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
+                    canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    voided_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    posted_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    posted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_collection_receipts", x => x.collection_receipt_id);
+                    table.ForeignKey(
+                        name: "fk_filpride_collection_receipts_filpride_customers_customer_id",
+                        column: x => x.customer_id,
+                        principalTable: "filpride_customers",
+                        principalColumn: "customer_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_collection_receipts_filpride_sales_invoices_sales_",
+                        column: x => x.sales_invoice_id,
+                        principalTable: "filpride_sales_invoices",
+                        principalColumn: "sales_invoice_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_collection_receipts_filpride_service_invoices_serv",
+                        column: x => x.service_invoice_id,
+                        principalTable: "filpride_service_invoices",
+                        principalColumn: "service_invoice_id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "filpride_credit_memos",
+                columns: table => new
+                {
+                    credit_memo_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    credit_memo_no = table.Column<string>(type: "varchar(12)", nullable: true),
+                    transaction_date = table.Column<DateOnly>(type: "date", nullable: false),
+                    sales_invoice_id = table.Column<int>(type: "integer", nullable: true),
+                    service_invoice_id = table.Column<int>(type: "integer", nullable: true),
+                    description = table.Column<string>(type: "text", nullable: false),
+                    adjusted_price = table.Column<decimal>(type: "numeric(18,4)", nullable: true),
+                    quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: true),
+                    credit_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    source = table.Column<string>(type: "text", nullable: false),
+                    remarks = table.Column<string>(type: "text", nullable: true),
+                    period = table.Column<DateOnly>(type: "date", nullable: false),
+                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: true),
+                    current_and_previous_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    unearned_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    company = table.Column<string>(type: "text", nullable: false),
+                    is_printed = table.Column<bool>(type: "boolean", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: true),
+                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
+                    canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    voided_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    posted_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    posted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_credit_memos", x => x.credit_memo_id);
+                    table.ForeignKey(
+                        name: "fk_filpride_credit_memos_filpride_sales_invoices_sales_invoice",
+                        column: x => x.sales_invoice_id,
+                        principalTable: "filpride_sales_invoices",
+                        principalColumn: "sales_invoice_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_credit_memos_filpride_service_invoices_service_inv",
+                        column: x => x.service_invoice_id,
+                        principalTable: "filpride_service_invoices",
+                        principalColumn: "service_invoice_id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "filpride_debit_memos",
+                columns: table => new
+                {
+                    debit_memo_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    sales_invoice_id = table.Column<int>(type: "integer", nullable: true),
+                    service_invoice_id = table.Column<int>(type: "integer", nullable: true),
+                    debit_memo_no = table.Column<string>(type: "varchar(12)", nullable: true),
+                    transaction_date = table.Column<DateOnly>(type: "date", nullable: false),
+                    debit_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: false),
+                    adjusted_price = table.Column<decimal>(type: "numeric(18,4)", nullable: true),
+                    quantity = table.Column<decimal>(type: "numeric(18,4)", nullable: true),
+                    source = table.Column<string>(type: "text", nullable: false),
+                    remarks = table.Column<string>(type: "text", nullable: false),
+                    period = table.Column<DateOnly>(type: "date", nullable: false),
+                    amount = table.Column<decimal>(type: "numeric(18,4)", nullable: true),
+                    current_and_previous_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    unearned_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    company = table.Column<string>(type: "text", nullable: false),
+                    is_printed = table.Column<bool>(type: "boolean", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: true),
+                    created_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    edited_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    edited_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancellation_remarks = table.Column<string>(type: "varchar(255)", nullable: true),
+                    canceled_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    canceled_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    voided_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    voided_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    posted_by = table.Column<string>(type: "varchar(50)", nullable: true),
+                    posted_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_filpride_debit_memos", x => x.debit_memo_id);
+                    table.ForeignKey(
+                        name: "fk_filpride_debit_memos_filpride_sales_invoices_sales_invoice_",
+                        column: x => x.sales_invoice_id,
+                        principalTable: "filpride_sales_invoices",
+                        principalColumn: "sales_invoice_id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_filpride_debit_memos_filpride_service_invoices_service_invo",
+                        column: x => x.service_invoice_id,
+                        principalTable: "filpride_service_invoices",
+                        principalColumn: "service_invoice_id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_app_settings_setting_key",
+                table: "app_settings",
+                column: "setting_key",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ix_asp_net_role_claims_role_id",
@@ -2074,17 +2520,6 @@ namespace IBS.DataAccess.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_chart_of_accounts_account_name",
-                table: "chart_of_accounts",
-                column: "account_name");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_chart_of_accounts_account_number",
-                table: "chart_of_accounts",
-                column: "account_number",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "ix_companies_company_code",
                 table: "companies",
                 column: "company_code",
@@ -2097,9 +2532,45 @@ namespace IBS.DataAccess.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "ix_filpride_authority_to_loads_customer_order_slip_id",
+                table: "filpride_authority_to_loads",
+                column: "customer_order_slip_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_authority_to_loads_delivery_receipt_id",
+                table: "filpride_authority_to_loads",
+                column: "delivery_receipt_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_book_atl_details_authority_to_load_id",
+                table: "filpride_book_atl_details",
+                column: "authority_to_load_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_book_atl_details_customer_order_slip_id",
+                table: "filpride_book_atl_details",
+                column: "customer_order_slip_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_chart_of_accounts_account_name",
+                table: "filpride_chart_of_accounts",
+                column: "account_name");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_chart_of_accounts_account_number",
+                table: "filpride_chart_of_accounts",
+                column: "account_number",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_filpride_check_voucher_details_check_voucher_header_id",
                 table: "filpride_check_voucher_details",
                 column: "check_voucher_header_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_check_voucher_details_supplier_id",
+                table: "filpride_check_voucher_details",
+                column: "supplier_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_check_voucher_headers_bank_id",
@@ -2127,6 +2598,16 @@ namespace IBS.DataAccess.Migrations
                 column: "service_invoice_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_filpride_cos_appointed_suppliers_customer_order_slip_id",
+                table: "filpride_cos_appointed_suppliers",
+                column: "customer_order_slip_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_cos_appointed_suppliers_purchase_order_id",
+                table: "filpride_cos_appointed_suppliers",
+                column: "purchase_order_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_filpride_credit_memos_sales_invoice_id",
                 table: "filpride_credit_memos",
                 column: "sales_invoice_id");
@@ -2135,6 +2616,16 @@ namespace IBS.DataAccess.Migrations
                 name: "ix_filpride_credit_memos_service_invoice_id",
                 table: "filpride_credit_memos",
                 column: "service_invoice_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_customer_branches_customer_id",
+                table: "filpride_customer_branches",
+                column: "customer_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_customer_order_slips_commissionee_id",
+                table: "filpride_customer_order_slips",
+                column: "commissionee_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_customer_order_slips_customer_id",
@@ -2153,9 +2644,29 @@ namespace IBS.DataAccess.Migrations
                 column: "date");
 
             migrationBuilder.CreateIndex(
+                name: "ix_filpride_customer_order_slips_hauler_id",
+                table: "filpride_customer_order_slips",
+                column: "hauler_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_customer_order_slips_pick_up_point_id",
+                table: "filpride_customer_order_slips",
+                column: "pick_up_point_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_customer_order_slips_product_id",
+                table: "filpride_customer_order_slips",
+                column: "product_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_filpride_customer_order_slips_purchase_order_id",
                 table: "filpride_customer_order_slips",
                 column: "purchase_order_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_customer_order_slips_supplier_id",
+                table: "filpride_customer_order_slips",
+                column: "supplier_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_customers_customer_code",
@@ -2204,10 +2715,29 @@ namespace IBS.DataAccess.Migrations
                 column: "hauler_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_filpride_delivery_receipts_invoice_no",
+                name: "ix_filpride_delivery_receipts_purchase_order_id",
                 table: "filpride_delivery_receipts",
-                column: "invoice_no",
-                unique: true);
+                column: "purchase_order_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_freights_pick_up_point_id",
+                table: "filpride_freights",
+                column: "pick_up_point_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_general_ledger_books_bank_account_id",
+                table: "filpride_general_ledger_books",
+                column: "bank_account_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_general_ledger_books_customer_id",
+                table: "filpride_general_ledger_books",
+                column: "customer_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_general_ledger_books_supplier_id",
+                table: "filpride_general_ledger_books",
+                column: "supplier_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_inventories_po_id",
@@ -2230,9 +2760,29 @@ namespace IBS.DataAccess.Migrations
                 column: "cv_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_filpride_purchase_orders_date",
+                name: "ix_filpride_multiple_check_voucher_payments_check_voucher_head",
+                table: "filpride_multiple_check_voucher_payments",
+                column: "check_voucher_header_invoice_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_multiple_check_voucher_payments_check_voucher_head1",
+                table: "filpride_multiple_check_voucher_payments",
+                column: "check_voucher_header_payment_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_pick_up_points_supplier_id",
+                table: "filpride_pick_up_points",
+                column: "supplier_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_po_actual_prices_purchase_order_id",
+                table: "filpride_po_actual_prices",
+                column: "purchase_order_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_purchase_orders_customer_id",
                 table: "filpride_purchase_orders",
-                column: "date");
+                column: "customer_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_purchase_orders_product_id",
@@ -2240,25 +2790,9 @@ namespace IBS.DataAccess.Migrations
                 column: "product_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_filpride_purchase_orders_purchase_order_no",
-                table: "filpride_purchase_orders",
-                column: "purchase_order_no",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "ix_filpride_purchase_orders_supplier_id",
                 table: "filpride_purchase_orders",
                 column: "supplier_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_filpride_receiving_reports_customer_id",
-                table: "filpride_receiving_reports",
-                column: "customer_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_filpride_receiving_reports_date",
-                table: "filpride_receiving_reports",
-                column: "date");
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_receiving_reports_delivery_receipt_id",
@@ -2266,15 +2800,24 @@ namespace IBS.DataAccess.Migrations
                 column: "delivery_receipt_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_filpride_receiving_reports_receiving_report_no",
+                name: "ix_filpride_receiving_reports_po_id",
                 table: "filpride_receiving_reports",
-                column: "receiving_report_no",
-                unique: true);
+                column: "po_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_sales_invoices_customer_id",
                 table: "filpride_sales_invoices",
                 column: "customer_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_sales_invoices_customer_order_slip_id",
+                table: "filpride_sales_invoices",
+                column: "customer_order_slip_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_filpride_sales_invoices_delivery_receipt_id",
+                table: "filpride_sales_invoices",
+                column: "delivery_receipt_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_sales_invoices_product_id",
@@ -2307,19 +2850,50 @@ namespace IBS.DataAccess.Migrations
                 column: "supplier_name");
 
             migrationBuilder.CreateIndex(
-                name: "ix_haulers_hauler_code",
-                table: "haulers",
-                column: "hauler_code");
+                name: "ix_mobility_chart_of_accounts_account_name",
+                table: "mobility_chart_of_accounts",
+                column: "account_name");
 
             migrationBuilder.CreateIndex(
-                name: "ix_haulers_hauler_name",
-                table: "haulers",
-                column: "hauler_name");
+                name: "ix_mobility_chart_of_accounts_account_number",
+                table: "mobility_chart_of_accounts",
+                column: "account_number",
+                unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_mobility_customers_customer_code",
+                name: "ix_mobility_customer_order_slips_customer_id",
+                table: "mobility_customer_order_slips",
+                column: "customer_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mobility_customer_order_slips_product_id",
+                table: "mobility_customer_order_slips",
+                column: "product_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mobility_customer_order_slips_station_id",
+                table: "mobility_customer_order_slips",
+                column: "station_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mobility_customer_purchase_orders_customer_id",
+                table: "mobility_customer_purchase_orders",
+                column: "customer_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mobility_customer_purchase_orders_product_id",
+                table: "mobility_customer_purchase_orders",
+                column: "product_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mobility_customer_purchase_orders_station_id",
+                table: "mobility_customer_purchase_orders",
+                column: "station_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_mobility_customers_customer_id",
                 table: "mobility_customers",
-                column: "customer_code",
+                column: "customer_id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -2642,24 +3216,22 @@ namespace IBS.DataAccess.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_purchase_orders_product_id",
-                table: "purchase_orders",
-                column: "product_id");
+                name: "ix_user_notifications_notification_id",
+                table: "user_notifications",
+                column: "notification_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_purchase_orders_supplier_id",
-                table: "purchase_orders",
-                column: "supplier_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_receiving_reports_po_id",
-                table: "receiving_reports",
-                column: "po_id");
+                name: "ix_user_notifications_user_id",
+                table: "user_notifications",
+                column: "user_id");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "app_settings");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -2676,13 +3248,19 @@ namespace IBS.DataAccess.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "chart_of_accounts");
-
-            migrationBuilder.DropTable(
                 name: "companies");
 
             migrationBuilder.DropTable(
+                name: "filpride_audit_trails");
+
+            migrationBuilder.DropTable(
+                name: "filpride_book_atl_details");
+
+            migrationBuilder.DropTable(
                 name: "filpride_cash_receipt_books");
+
+            migrationBuilder.DropTable(
+                name: "filpride_chart_of_accounts");
 
             migrationBuilder.DropTable(
                 name: "filpride_check_voucher_details");
@@ -2691,13 +3269,22 @@ namespace IBS.DataAccess.Migrations
                 name: "filpride_collection_receipts");
 
             migrationBuilder.DropTable(
+                name: "filpride_cos_appointed_suppliers");
+
+            migrationBuilder.DropTable(
                 name: "filpride_credit_memos");
+
+            migrationBuilder.DropTable(
+                name: "filpride_customer_branches");
 
             migrationBuilder.DropTable(
                 name: "filpride_debit_memos");
 
             migrationBuilder.DropTable(
                 name: "filpride_disbursement_books");
+
+            migrationBuilder.DropTable(
+                name: "filpride_freights");
 
             migrationBuilder.DropTable(
                 name: "filpride_general_ledger_books");
@@ -2712,7 +3299,13 @@ namespace IBS.DataAccess.Migrations
                 name: "filpride_journal_voucher_details");
 
             migrationBuilder.DropTable(
+                name: "filpride_multiple_check_voucher_payments");
+
+            migrationBuilder.DropTable(
                 name: "filpride_offsettings");
+
+            migrationBuilder.DropTable(
+                name: "filpride_po_actual_prices");
 
             migrationBuilder.DropTable(
                 name: "filpride_purchase_books");
@@ -2724,10 +3317,19 @@ namespace IBS.DataAccess.Migrations
                 name: "filpride_sales_books");
 
             migrationBuilder.DropTable(
+                name: "hub_connections");
+
+            migrationBuilder.DropTable(
                 name: "log_messages");
 
             migrationBuilder.DropTable(
-                name: "mobility_customers");
+                name: "mobility_chart_of_accounts");
+
+            migrationBuilder.DropTable(
+                name: "mobility_customer_order_slips");
+
+            migrationBuilder.DropTable(
+                name: "mobility_customer_purchase_orders");
 
             migrationBuilder.DropTable(
                 name: "mobility_fuel_deliveries");
@@ -2778,16 +3380,13 @@ namespace IBS.DataAccess.Migrations
                 name: "mobility_sales_details");
 
             migrationBuilder.DropTable(
-                name: "mobility_stations");
-
-            migrationBuilder.DropTable(
-                name: "receiving_reports");
+                name: "user_notifications");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "filpride_authority_to_loads");
 
             migrationBuilder.DropTable(
                 name: "filpride_sales_invoices");
@@ -2799,19 +3398,28 @@ namespace IBS.DataAccess.Migrations
                 name: "filpride_journal_voucher_headers");
 
             migrationBuilder.DropTable(
+                name: "mobility_customers");
+
+            migrationBuilder.DropTable(
+                name: "mobility_stations");
+
+            migrationBuilder.DropTable(
                 name: "mobility_lube_purchase_headers");
 
             migrationBuilder.DropTable(
                 name: "mobility_suppliers");
 
             migrationBuilder.DropTable(
-                name: "filpride_delivery_receipts");
-
-            migrationBuilder.DropTable(
                 name: "mobility_sales_headers");
 
             migrationBuilder.DropTable(
-                name: "purchase_orders");
+                name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "notifications");
+
+            migrationBuilder.DropTable(
+                name: "filpride_delivery_receipts");
 
             migrationBuilder.DropTable(
                 name: "filpride_services");
@@ -2823,16 +3431,16 @@ namespace IBS.DataAccess.Migrations
                 name: "filpride_customer_order_slips");
 
             migrationBuilder.DropTable(
-                name: "haulers");
-
-            migrationBuilder.DropTable(
                 name: "filpride_bank_accounts");
 
             migrationBuilder.DropTable(
-                name: "filpride_customers");
+                name: "filpride_pick_up_points");
 
             migrationBuilder.DropTable(
                 name: "filpride_purchase_orders");
+
+            migrationBuilder.DropTable(
+                name: "filpride_customers");
 
             migrationBuilder.DropTable(
                 name: "filpride_suppliers");

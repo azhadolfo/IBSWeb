@@ -55,7 +55,7 @@ builder.Services.AddQuartz(q =>
     var monthlyClosureKey = JobKey.Create(nameof(MonthlyClosureService));
     var cosExpirationKey  = JobKey.Create(nameof(CustomerOrderSlipExpiration));
 
-    q.AddJob<CustomerOrderSlipExpiration>(options => options.WithIdentity(monthlyClosureKey));
+    q.AddJob<MonthlyClosureService>(options => options.WithIdentity(monthlyClosureKey));
     q.AddJob<CustomerOrderSlipExpiration>(options => options.WithIdentity(cosExpirationKey));
 
     // Add the first trigger
@@ -69,11 +69,11 @@ builder.Services.AddQuartz(q =>
                     .FindSystemTimeZoneById("Asia/Manila")))); // Run at midnight on the first day of every month
 
     // Trigger for CustomerOrderSlipExpiration (every day at 12:00 AM)
-    q.AddTrigger(opts => opts
-        .ForJob(cosExpirationKey)
-        .WithIdentity("DailyExpirationTrigger")
-        .WithCronSchedule("0 46 22 * * ?",
-            x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"))));
+    // q.AddTrigger(opts => opts
+    //     .ForJob(cosExpirationKey)
+    //     .WithIdentity("DailyExpirationTrigger")
+    //     .WithCronSchedule("0 46 22 * * ?",
+    //         x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"))));
 
 });
 
