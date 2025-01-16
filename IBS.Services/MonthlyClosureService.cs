@@ -64,8 +64,7 @@ namespace IBS.Services
             try
             {
                 var logisticUsers = await _dbContext.ApplicationUsers
-                    //.Where(u => u.Department == SD.Department_Logistics)
-                    .Where(u => u.UserName == "azh")
+                    .Where(u => u.Department == SD.Department_Logistics)
                     .ToListAsync();
 
                 var managementAccountingUsers = await _dbContext.ApplicationUsers
@@ -134,8 +133,7 @@ namespace IBS.Services
             try
             {
                 var tnsUsers = await _dbContext.ApplicationUsers
-                    //.Where(u => u.Department == SD.Department_TradeAndSupply)
-                    .Where(u => u.UserName == "azh")
+                    .Where(u => u.Department == SD.Department_TradeAndSupply)
                     .ToListAsync();
 
                 var managementAccountingUsers = await _dbContext.ApplicationUsers

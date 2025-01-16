@@ -53,10 +53,10 @@ builder.Services.AddQuartz(q =>
 
     // Register the job
     var monthlyClosureKey = JobKey.Create(nameof(MonthlyClosureService));
-    var cosExpirationKey  = JobKey.Create(nameof(CustomerOrderSlipExpiration));
+    //var cosExpirationKey  = JobKey.Create(nameof(CustomerOrderSlipExpiration)); Uncomment if needs to enable
 
     q.AddJob<MonthlyClosureService>(options => options.WithIdentity(monthlyClosureKey));
-    q.AddJob<CustomerOrderSlipExpiration>(options => options.WithIdentity(cosExpirationKey));
+    //q.AddJob<CustomerOrderSlipExpiration>(options => options.WithIdentity(cosExpirationKey)); Uncomment if needs to enable
 
     // Add the first trigger
     // Format (sec, min, hour, day, month, year)
@@ -73,7 +73,7 @@ builder.Services.AddQuartz(q =>
     //     .ForJob(cosExpirationKey)
     //     .WithIdentity("DailyExpirationTrigger")
     //     .WithCronSchedule("0 46 22 * * ?",
-    //         x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"))));
+    //         x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila")))); Uncomment if needs to enable
 
 });
 
