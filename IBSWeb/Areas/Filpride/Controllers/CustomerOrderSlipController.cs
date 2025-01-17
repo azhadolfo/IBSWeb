@@ -233,7 +233,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Status = nameof(CosStatus.Created),
                         OldCosNo = viewModel.OtcCosNo,
                         Terms = viewModel.Terms,
-                        Branch = viewModel.SelectedBranch
+                        Branch = viewModel.SelectedBranch,
+                        CustomerType = viewModel.CustomerType,
                     };
 
                     if (viewModel.HasCommission)
@@ -316,7 +317,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Terms = exisitingRecord.Terms,
                     Branches = await _unitOfWork.FilprideCustomer
                         .GetCustomerBranchesSelectListAsync(exisitingRecord.CustomerId, cancellationToken),
-                    SelectedBranch = exisitingRecord.Branch
+                    SelectedBranch = exisitingRecord.Branch,
+                    CustomerType = exisitingRecord.CustomerType,
                 };
 
                 return View(viewModel);
@@ -826,6 +828,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Address = customer.CustomerAddress,
                 TinNo = customer.CustomerTin,
                 Terms = customer.CustomerTerms,
+                customer.CustomerType,
                 Branches = !customer.HasBranch ? null : await _unitOfWork.FilprideCustomer
                     .GetCustomerBranchesSelectListAsync(customer.CustomerId)
             });
