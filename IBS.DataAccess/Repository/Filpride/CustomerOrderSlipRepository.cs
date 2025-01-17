@@ -93,6 +93,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.OldCosNo = viewModel.OtcCosNo;
             existingRecord.Branch = viewModel.SelectedBranch;
             existingRecord.Terms = viewModel.Terms;
+            existingRecord.CustomerType = viewModel.CustomerType;
 
             if (_db.ChangeTracker.HasChanges())
             {

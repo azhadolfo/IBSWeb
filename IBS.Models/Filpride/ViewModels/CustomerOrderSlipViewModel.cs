@@ -24,6 +24,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string? Terms { get; set; }
 
+        public string? CustomerType { get; set; }
+
         #endregion Customer properties
 
         [Required(ErrorMessage = "Customer PO No field is required.")]

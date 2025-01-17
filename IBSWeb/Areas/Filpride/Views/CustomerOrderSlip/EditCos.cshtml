@@ -41,6 +41,7 @@
                         </select>
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
+                    <input type="hidden" asp-for="CustomerType"/>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                         <label asp-for="CustomerAddress"></label>
@@ -193,6 +194,7 @@
                             if (data) {
                                 $('input[name="CustomerAddress"]').val(data.address);
                                 $('input[name="TinNo"]').val(data.tinNo);
+                                $('input[name="CustomerType"]').val(data.customerType);
                                 $('select[name="Terms"]').val(data.terms).change();
 
                                 // Populate Branches dropdown using fetched data
