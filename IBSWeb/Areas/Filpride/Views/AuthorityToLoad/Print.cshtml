@@ -60,7 +60,7 @@
             </thead>
             <tbody>
                 
-                @foreach (var cos in Model.Details)
+                @foreach (var cos in Model.Details.OrderBy(d => d.CustomerOrderSlip.CustomerId))
                 {
                     <tr>
                         <td>
