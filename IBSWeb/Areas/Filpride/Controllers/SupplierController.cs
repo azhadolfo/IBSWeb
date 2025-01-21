@@ -62,15 +62,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             FilprideSupplier model = new();
             model.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.AccountNumber + " " + s.AccountName,
+                    Value = s.AccountNumber,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
             model.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.AccountNumber == "2010302" || coa.AccountNumber == "2010303")
+                .Where(coa => coa.Parent == "201030200")
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber + " " + s.AccountName,
