@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -525,6 +526,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var model = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
