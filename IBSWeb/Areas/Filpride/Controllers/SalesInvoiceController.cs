@@ -419,7 +419,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(i => i.Product)
                 .FirstOrDefaultAsync(i => i.Reference == model.SalesInvoiceNo && i.Company == model.Company);
 
-            if (model != null && existingInventory != null)
+            if (model != null)
             {
                 var hasAlreadyBeenUsed =
                     await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.SalesInvoiceId == model.SalesInvoiceId && cr.Status != nameof(Status.Voided), cancellationToken) ||
@@ -449,7 +449,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideSalesBook>(sb => sb.SerialNo == model.SalesInvoiceNo, cancellationToken);
                         await _unitOfWork.FilprideSalesInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.SalesInvoiceNo, cancellationToken);
-                        await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
+
+                        if (existingInventory != null)
+                        {
+                            await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
+                        }
 
                         var dr = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(d => d.HasAlreadyInvoiced && d.DeliveryReceiptId == model.DeliveryReceiptId);
 
