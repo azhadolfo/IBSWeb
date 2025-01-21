@@ -34,7 +34,8 @@ namespace IBS.Services
         {
             try
             {
-                var previousMonth = DateTime.UtcNow.AddMonths(-1);
+                var today = DateTimeHelper.GetCurrentPhilippineTime();
+                var previousMonth = today.AddMonths(-1);
                 await InTransit(previousMonth);
                 await CheckTheUntriggeredPurchaseOrders(previousMonth);
                 _logger.LogInformation(
