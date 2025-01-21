@@ -3,6 +3,7 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using IBS.Utility.Helpers;
@@ -200,56 +201,56 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task AddSalesToInventoryAsync(FilprideSalesInvoice salesInvoice, CancellationToken cancellationToken = default)
+        public async Task AddSalesToInventoryAsync(FilprideDeliveryReceipt deliveryReceipt, CancellationToken cancellationToken = default)
         {
             var sortedInventory = await _db.FilprideInventories
-            .Where(i => i.Company == salesInvoice.Company && i.ProductId == salesInvoice.Product.ProductId && i.POId == salesInvoice.PurchaseOrderId)
+            .Where(i => i.Company == deliveryReceipt.Company && i.ProductId == deliveryReceipt.CustomerOrderSlip.ProductId && i.POId == deliveryReceipt.PurchaseOrderId)
             .OrderBy(i => i.Date)
             .ThenBy(i => i.InventoryId)
             .ToListAsync(cancellationToken);
 
-            var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= salesInvoice.TransactionDate);
+            var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= deliveryReceipt.DeliveredDate);
             if (lastIndex >= 0)
             {
                 sortedInventory = sortedInventory.Skip(lastIndex).ToList();
             }
             else
             {
-                throw new ArgumentException($"Beginning inventory for {salesInvoice.Product.ProductName} not found!");
+                throw new ArgumentException($"Beginning inventory for {deliveryReceipt.CustomerOrderSlip.Product.ProductName} not found!");
             }
 
             var previousInventory = sortedInventory.FirstOrDefault();
 
             if (previousInventory != null)
             {
-                if (previousInventory.InventoryBalance < salesInvoice.Quantity)
+                if (previousInventory.InventoryBalance < deliveryReceipt.Quantity)
                 {
-                    throw new InvalidOperationException($"The requested quantity exceeds the available inventory for '{salesInvoice.Product.ProductName}'. " +
+                    throw new InvalidOperationException($"The requested quantity exceeds the available inventory for '{deliveryReceipt.CustomerOrderSlip.Product.ProductName}'. " +
                                                         $"Please contact the Logistics department to verify the delivery date if it aligns with your transaction date.");
                 }
 
-                decimal total = salesInvoice.Quantity * previousInventory.AverageCost;
-                decimal inventoryBalance = previousInventory.InventoryBalance - salesInvoice.Quantity;
+                decimal total = deliveryReceipt.Quantity * previousInventory.AverageCost;
+                decimal inventoryBalance = previousInventory.InventoryBalance - deliveryReceipt.Quantity;
                 decimal totalBalance = previousInventory.TotalBalance - total;
                 decimal averageCost = inventoryBalance <= 0 || totalBalance <= 0 ? previousInventory.AverageCost : totalBalance / inventoryBalance;
 
                 FilprideInventory inventory = new()
                 {
-                    Date = salesInvoice.TransactionDate,
-                    ProductId = salesInvoice.Product.ProductId,
+                    Date = (DateOnly)deliveryReceipt.DeliveredDate!,
+                    ProductId = deliveryReceipt.CustomerOrderSlip.ProductId,
                     Particular = "Sales",
-                    Reference = salesInvoice.SalesInvoiceNo,
-                    Quantity = salesInvoice.Quantity,
+                    Reference = deliveryReceipt.DeliveryReceiptNo,
+                    Quantity = deliveryReceipt.Quantity,
                     Cost = previousInventory.AverageCost,
-                    POId = salesInvoice.PurchaseOrderId,
+                    POId = deliveryReceipt.PurchaseOrderId,
                     IsValidated = true,
-                    ValidatedBy = salesInvoice.CreatedBy,
+                    ValidatedBy = deliveryReceipt.CreatedBy,
                     ValidatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     Total = total,
                     InventoryBalance = inventoryBalance,
                     TotalBalance = totalBalance,
                     AverageCost = averageCost,
-                    Company = salesInvoice.Company
+                    Company = deliveryReceipt.Company
                 };
 
                 foreach (var transaction in sortedInventory.Skip(1))
@@ -310,35 +311,35 @@ namespace IBS.DataAccess.Repository.Filpride
                     }
                 }
 
-                var (salesAccountNo, salesAccountTitle) = GetSalesAccountTitle(salesInvoice.Product.ProductCode);
+                var (salesAccountNo, salesAccountTitle) = GetSalesAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
 
                 var ledgers = new List<FilprideGeneralLedgerBook>
                 {
                     new FilprideGeneralLedgerBook
                     {
-                        Date = salesInvoice.TransactionDate,
-                        Reference = salesInvoice.SalesInvoiceNo,
-                        Description = salesInvoice.Product.ProductName,
+                        Date = (DateOnly)deliveryReceipt.DeliveredDate!,
+                        Reference = deliveryReceipt.DeliveryReceiptNo,
+                        Description = deliveryReceipt.CustomerOrderSlip.Product.ProductName,
                         AccountNo = salesAccountNo,
                         AccountTitle = salesAccountTitle,
                         Debit = inventory.Total,
                         Credit = 0,
-                        Company = salesInvoice.Company,
-                        CreatedBy = salesInvoice.CreatedBy,
-                        CreatedDate = salesInvoice.CreatedDate
+                        Company = deliveryReceipt.Company,
+                        CreatedBy = deliveryReceipt.CreatedBy,
+                        CreatedDate = deliveryReceipt.CreatedDate
                     },
                     new FilprideGeneralLedgerBook
                     {
-                        Date = salesInvoice.TransactionDate,
-                        Reference = salesInvoice.SalesInvoiceNo,
-                        Description = salesInvoice.Product.ProductName,
+                        Date = (DateOnly)deliveryReceipt.DeliveredDate!,
+                        Reference = deliveryReceipt.DeliveryReceiptNo,
+                        Description = deliveryReceipt.CustomerOrderSlip.Product.ProductName,
                         AccountNo = salesAccountNo,
                         AccountTitle = salesAccountTitle,
                         Debit = 0,
                         Credit = inventory.Total,
-                        Company = salesInvoice.Company,
-                        CreatedBy = salesInvoice.CreatedBy,
-                        CreatedDate = salesInvoice.CreatedDate
+                        Company = deliveryReceipt.Company,
+                        CreatedBy = deliveryReceipt.CreatedBy,
+                        CreatedDate = deliveryReceipt.CreatedDate
                     }
                 };
 
@@ -357,7 +358,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
             else
             {
-                throw new InvalidOperationException($"Beginning inventory for this product '{salesInvoice.Product.ProductName}' not found!");
+                throw new InvalidOperationException($"Beginning inventory for this product '{deliveryReceipt.CustomerOrderSlip.Product.ProductName}' not found!");
             }
         }
 

@@ -2,6 +2,7 @@
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 
 namespace IBS.DataAccess.Repository.Filpride.IRepository
@@ -14,7 +15,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task AddPurchaseToInventoryAsync(FilprideReceivingReport receivingReport, CancellationToken cancellationToken = default);
 
-        Task AddSalesToInventoryAsync(FilprideSalesInvoice salesInvoice, CancellationToken cancellationToken = default);
+        Task AddSalesToInventoryAsync(FilprideDeliveryReceipt deliveryReceipt, CancellationToken cancellationToken = default);
 
         Task AddActualInventory(ActualInventoryViewModel viewModel, string company, CancellationToken cancellationToken = default);
 
