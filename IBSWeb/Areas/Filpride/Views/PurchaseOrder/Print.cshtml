@@ -241,7 +241,7 @@
         }
         else if (Model.PostedBy != null && Model.Status == nameof(DRStatus.ForApprovalOfOM))
         {
-            if (User.IsInRole("OperationManager"))
+            if (User.IsInRole("OperationManager") || User.IsInRole("Admin"))
             {
                 <div class="col-6 col-md-3">
                     <a class="btn btn-primary form-control buttons" onclick="confirmApprove(@Model.PurchaseOrderId)">Approve</a>

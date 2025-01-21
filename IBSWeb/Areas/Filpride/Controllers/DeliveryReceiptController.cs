@@ -811,7 +811,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
 
-            if (model != null)
+            var existingInventory = await _dbContext.FilprideInventories
+                .Include(i => i.Product)
+                .FirstOrDefaultAsync(i => i.Reference == model.DeliveryReceiptNo && i.Company == model.Company);
+
+            if (model != null && existingInventory != null)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -828,6 +832,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(DRStatus.Voided);
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                        await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
 
                         var connectedReceivingReport = await _dbContext.FilprideReceivingReports
                             .FirstOrDefaultAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
