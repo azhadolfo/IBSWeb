@@ -15,6 +15,7 @@ using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using IBS.Models.Filpride;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -470,6 +471,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var model = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(id, cancellationToken);
