@@ -156,10 +156,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.AccountNumber + " " + s.AccountName,
+                    Value = s.AccountNumber,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
@@ -441,7 +442,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 || coa.Level == 5)
+                        .Where(coa => !coa.HasChildren)
+                        .OrderBy(coa => coa.AccountNumber)
                         .Select(s => new SelectListItem
                         {
                             Value = s.AccountNumber,
@@ -465,7 +467,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -493,7 +496,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -655,7 +659,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 || coa.Level == 5)
+                        .Where(coa => !coa.HasChildren)
+                        .OrderBy(coa => coa.AccountNumber)
                         .Select(s => new SelectListItem
                         {
                             Value = s.AccountNumber,
@@ -679,7 +684,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -723,10 +729,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync();
 
             existingModel.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.AccountNumber + " " + s.AccountName,
+                    Value = s.AccountNumber,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
@@ -1031,7 +1038,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToListAsync(cancellationToken);
 
                     viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 || coa.Level == 5)
+                        .Where(coa => !coa.HasChildren)
+                        .OrderBy(coa => coa.AccountNumber)
                         .Select(s => new SelectListItem
                         {
                             Value = s.AccountNumber,
@@ -1054,13 +1062,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToListAsync(cancellationToken);
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 || coa.Level == 5)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
 
             TempData["error"] = "The information provided was invalid.";
             return View(viewModel);
@@ -1365,7 +1374,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var coa = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -1559,7 +1569,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 || coa.Level == 5)
+                        .Where(coa => !coa.HasChildren)
+                        .OrderBy(coa => coa.AccountNumber)
                         .Select(s => new SelectListItem
                         {
                             Value = s.AccountNumber,
@@ -1583,7 +1594,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,

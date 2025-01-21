@@ -135,8 +135,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.Header.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -163,8 +163,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             model.Header.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -581,7 +581,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var rrIds = _dbContext.FilprideReceivingReports.Where(model => model.Company == companyClaims && existingHeaderModel.CheckVoucherHeader.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
 
             var coa = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && coa.Level == 4 || coa.Level == 5)
+                        .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
                         .Select(s => new SelectListItem
                         {
                             Value = s.AccountNumber,

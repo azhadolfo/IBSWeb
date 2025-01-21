@@ -134,8 +134,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -164,8 +164,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             model.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -320,8 +320,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -351,8 +351,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             model.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -541,8 +541,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             existingModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -783,7 +783,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
 
-            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
 
             return View(viewModel);
         }
@@ -806,8 +814,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             model.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -1111,8 +1119,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             existingModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,

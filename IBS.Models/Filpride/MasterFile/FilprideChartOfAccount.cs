@@ -50,6 +50,8 @@ namespace IBS.Models.Filpride.MasterFile
         [Display(Name = "Edited Date")]
         public DateTime EditedDate { get; set; }
 
+        public bool HasChildren { get; set; }
+
 
         // Select List
 
