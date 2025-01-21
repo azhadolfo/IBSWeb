@@ -507,7 +507,10 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var hasAlreadyBeenUsed = await _db.FilprideSalesInvoices
-                .AnyAsync(si => si.ReceivingReportId == model.ReceivingReportId && si.Status != nameof(Status.Voided), cancellationToken);
+                .AnyAsync(si =>
+                    si.ReceivingReportId == model.ReceivingReportId &&
+                    si.Status != nameof(Status.Voided) &&
+                    si.Status != nameof(Status.Canceled), cancellationToken);
 
             if (hasAlreadyBeenUsed)
             {
