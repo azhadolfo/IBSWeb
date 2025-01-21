@@ -160,7 +160,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.AccountNumber,
+                    Value = s.AccountNumber + " " + s.AccountName,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
@@ -446,7 +446,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .OrderBy(coa => coa.AccountNumber)
                         .Select(s => new SelectListItem
                         {
-                            Value = s.AccountNumber,
+                            Value = s.AccountNumber + " " + s.AccountName,
                             Text = s.AccountNumber + " " + s.AccountName
                         })
                         .ToListAsync(cancellationToken);
@@ -471,7 +471,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.AccountNumber,
+                    Value = s.AccountNumber + " " + s.AccountName,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
@@ -733,7 +733,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.AccountNumber,
+                    Value = s.AccountNumber + " " + s.AccountName,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
@@ -1042,7 +1042,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .OrderBy(coa => coa.AccountNumber)
                         .Select(s => new SelectListItem
                         {
-                            Value = s.AccountNumber,
+                            Value = s.AccountNumber + " " + s.AccountName,
                             Text = s.AccountNumber + " " + s.AccountName
                         })
                         .ToListAsync(cancellationToken);
@@ -1066,7 +1066,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderBy(coa => coa.AccountNumber)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.AccountNumber,
+                    Value = s.AccountNumber + " " + s.AccountName,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
