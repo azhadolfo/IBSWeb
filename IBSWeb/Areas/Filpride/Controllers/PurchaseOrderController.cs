@@ -713,7 +713,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "OperationManager")]
+        [Authorize(Roles = "OperationManager, Admin")]
         public async Task<IActionResult> Approve(int id, CancellationToken cancellationToken)
         {
             var existingRecord = await _unitOfWork.FilpridePurchaseOrder
@@ -747,10 +747,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var untriggeredPoNumbers = await _unitOfWork.FilpridePurchaseOrder
                         .GetUntriggeredPurchaseOrderNumbersAsync(cancellationToken);
 
-                    if (isCreationOfPoLocked)
+                    if (isCreationOfPoLocked && untriggeredPoNumbers.Count == 0)
                     {
                         await _unitOfWork.FilpridePurchaseOrder
                             .UnlockTheCreationOfPurchaseOrderAsync(cancellationToken);
+
+                        var users = await _dbContext.ApplicationUsers
+                            .Where(u => u.Department == SD.Department_TradeAndSupply ||
+                                        u.Department == SD.Department_ManagementAccounting)
+                            .ToListAsync(cancellationToken);
+
+                        var message = "Please be informed that all un-triggered POs have now been triggered completely. The creation of POs is now available.";
+                        var ccMessage = "CC: Management Accounting";
+
+                        // Send notifications to Logistics
+                        foreach (var user in users)
+                        {
+                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, $"{message} {ccMessage}");
+
+                            var hubConnections = await _dbContext.HubConnections
+                                .Where(h => h.UserName == user.UserName)
+                                .ToListAsync(cancellationToken);
+
+                            foreach (var hubConnection in hubConnections)
+                            {
+                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                            }
+                        }
+
                     }
 
                     #region --Audit Trail Recording

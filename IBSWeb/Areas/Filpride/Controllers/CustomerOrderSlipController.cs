@@ -554,7 +554,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "OperationManager")]
+        [Authorize(Roles = "OperationManager, Admin")]
         public async Task<IActionResult> ApproveByOperationManager(int? id, decimal grossMargin, string reason, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -726,7 +726,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "FinanceManager")]
+        [Authorize(Roles = "FinanceManager, Admin")]
         public async Task<IActionResult> ApproveByFinance(int? id, string? terms, string? instructions, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -771,7 +771,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "OperationManager, FinanceManager")]
+        [Authorize(Roles = "OperationManager, FinanceManager, Admin")]
         public async Task<IActionResult> Disapprove(int? id, CancellationToken cancellationToken)
         {
             if (id == null)

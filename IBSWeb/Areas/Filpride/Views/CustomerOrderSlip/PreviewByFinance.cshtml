@@ -125,7 +125,7 @@
         @{
             if (Model.CustomerOrderSlip.SecondApprovedBy == null)
             {
-                if (User.IsInRole("FinanceManager"))
+                if (User.IsInRole("FinanceManager") || User.IsInRole("Admin"))
                 {
                     <div class="col-6 col-md-3">
                         <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
