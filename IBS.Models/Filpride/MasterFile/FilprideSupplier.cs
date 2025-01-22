@@ -44,8 +44,12 @@ namespace IBS.Models.Filpride.MasterFile
         [Column(TypeName = "varchar(1024)")]
         public string? ProofOfRegistrationFilePath { get; set; }
 
+        public string? ProofOfRegistrationFileName { get; set; }
+
         [Column(TypeName = "varchar(1024)")]
         public string? ProofOfExemptionFilePath { get; set; }
+
+        public string? ProofOfExemptionFileName { get; set; }
 
         public bool IsActive { get; set; } = true;
 

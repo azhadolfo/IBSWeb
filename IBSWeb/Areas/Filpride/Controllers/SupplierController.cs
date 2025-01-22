@@ -2,6 +2,7 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
+using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
@@ -17,22 +18,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
     public class SupplierController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-
         private readonly ILogger<SupplierController> _logger;
-
         private readonly IWebHostEnvironment _webHostEnvironment;
-
         private readonly UserManager<IdentityUser> _userManager;
-
         private readonly ApplicationDbContext _dbContext;
+        private readonly ICloudStorageService _cloudStorageService;
 
-        public SupplierController(IUnitOfWork unitOfWork, ILogger<SupplierController> logger, IWebHostEnvironment webHostEnvironment, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        public SupplierController(IUnitOfWork unitOfWork,
+            ILogger<SupplierController> logger,
+            IWebHostEnvironment webHostEnvironment,
+            UserManager<IdentityUser> userManager,
+            ApplicationDbContext dbContext,
+            ICloudStorageService cloudStorageService)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
             _userManager = userManager;
             _dbContext = dbContext;
+            _cloudStorageService = cloudStorageService;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -40,6 +44,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        private string? GenerateFileNameToSave(string incomingFileName)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
+            var extension = Path.GetExtension(incomingFileName);
+            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+        }
+
+        private async Task GenerateSignedUrl(FilprideSupplier model)
+        {
+            // Get Signed URL only when Saved File Name is available.
+            if (!string.IsNullOrWhiteSpace(model.ProofOfExemptionFileName))
+            {
+                model.ProofOfExemptionFilePath = await _cloudStorageService.GetSignedUrlAsync(model.ProofOfExemptionFileName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.ProofOfRegistrationFileName))
+            {
+                model.ProofOfRegistrationFilePath = await _cloudStorageService.GetSignedUrlAsync(model.ProofOfRegistrationFileName);
+            }
         }
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
@@ -107,16 +132,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     if (registration != null && registration.Length > 0)
                     {
-                        string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "documents", companyClaims, "Proof of Registration", model.SupplierName);
-
-                        model.ProofOfRegistrationFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(registration, localPath, cancellationToken);
+                        model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
+                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName);
                     }
 
                     if (document != null && document.Length > 0)
                     {
-                        string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "documents", companyClaims, "Proof of Exemption", model.SupplierName);
-
-                        model.ProofOfExemptionFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(document, localPath, cancellationToken);
+                        model.ProofOfExemptionFileName = GenerateFileNameToSave(registration.FileName);
+                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfExemptionFileName);
                     }
 
                     model.SupplierCode = await _unitOfWork.FilprideSupplier
@@ -196,16 +219,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (registration != null && registration.Length > 0)
                     {
-                        string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "documents", companyClaims, "Proof of Registration", model.SupplierName);
-
-                        model.ProofOfRegistrationFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(registration, localPath, cancellationToken);
+                        model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
+                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName);
                     }
 
                     if (document != null && document.Length > 0)
                     {
-                        string localPath = Path.Combine(_webHostEnvironment.WebRootPath, "documents", companyClaims, "Proof of Exemption", model.SupplierName);
-
-                        model.ProofOfExemptionFilePath = await _unitOfWork.FilprideSupplier.SaveProofOfRegistration(document, localPath, cancellationToken);
+                        model.ProofOfExemptionFileName = GenerateFileNameToSave(registration.FileName);
+                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfExemptionFileName);
                     }
 
                     model.EditedBy = _userManager.GetUserName(User);
