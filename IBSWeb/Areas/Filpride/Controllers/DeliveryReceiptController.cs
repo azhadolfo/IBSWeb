@@ -180,6 +180,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
@@ -379,6 +380,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
+        [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
@@ -709,6 +711,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             });
         }
 
+        [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
         public async Task<IActionResult> Delivered(int? id, string deliveredDate, CancellationToken cancellationToken)
         {
             if (id == null)

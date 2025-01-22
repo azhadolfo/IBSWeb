@@ -189,6 +189,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [DepartmentAuthorize(SD.Department_Marketing, SD.Department_RCD)]
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
@@ -272,6 +273,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
+        [DepartmentAuthorize(SD.Department_Marketing, SD.Department_RCD)]
         [HttpGet]
         public async Task<IActionResult> EditCos(int? id, CancellationToken cancellationToken)
         {
@@ -834,6 +836,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             });
         }
 
+        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
         [HttpGet]
         public async Task<IActionResult> AppointSupplier(int? id, CancellationToken cancellationToken)
         {
@@ -985,6 +988,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
+        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
         [HttpGet]
         public async Task<IActionResult> ReAppointSupplier(int? id, CancellationToken cancellationToken)
         {
@@ -1241,6 +1245,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(balance);
         }
 
+
+        [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
         [HttpGet]
         public async Task<IActionResult> AppointHauler(int? id, CancellationToken cancellationToken)
         {
@@ -1320,6 +1326,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
+        [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
         [HttpGet]
         public async Task<IActionResult> ReAppointHauler(int? id, CancellationToken cancellationToken)
         {
