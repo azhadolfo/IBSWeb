@@ -258,11 +258,11 @@
                                     $('#haulerList').hide();
                                 }
 
-                                $('input[name="ATLNo"]').val(data.atlNo);
-                                $('input[name="Driver"]').val(data.driver);
-                                $('input[name="PlateNo"]').val(data.plateNo);
-                                $('input[name="Product"]').val(data.product);
-                                $('input[name="CosVolume"]').val(formatNumber(data.quantity));
+                                $('input[name="ATLNo"]').val($('input[name="ATLNo"]').val() ? $('input[name="ATLNo"]').val() : data.atlNo);
+                                $('input[name="Driver"]').val($('input[name="Driver"]').val() ? $('input[name="Driver"]').val() : data.driver);
+                                $('input[name="PlateNo"]').val($('input[name="PlateNo"]').val() ? $('input[name="PlateNo"]').val() : data.plateNo);
+                                $('input[name="Product"]').val($('input[name="Product"]').val() ? $('input[name="Product"]').val() : data.product);
+                                $('input[name="CosVolume"]').val($('input[name="CosVolume"]').val() ? $('input[name="CosVolume"]').val() : formatNumber(data.quantity));
 
                                 // Handle remaining volume calculation
                                 var remainingVolume = data.remainingVolume;
