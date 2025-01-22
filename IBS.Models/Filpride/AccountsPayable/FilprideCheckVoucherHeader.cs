@@ -129,5 +129,9 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal InvoiceAmount { get; set; }
+
+        public string? SupportingFileSavedFileName { get; set; }
+
+        public string?  SupportingFileSavedUrl { get; set; }
     }
 }

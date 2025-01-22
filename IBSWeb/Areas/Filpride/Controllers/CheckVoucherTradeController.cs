@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -31,12 +32,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public CheckVoucherTradeController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment)
+        private readonly ICloudStorageService _cloudStorageService;
+
+        public CheckVoucherTradeController(IUnitOfWork unitOfWork,
+            UserManager<IdentityUser> userManager,
+            ApplicationDbContext dbContext,
+            IWebHostEnvironment webHostEnvironment,
+            ICloudStorageService cloudStorageService)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
             _webHostEnvironment = webHostEnvironment;
+            _cloudStorageService = cloudStorageService;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -44,6 +52,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        private string? GenerateFileNameToSave(string incomingFileName)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
+            var extension = Path.GetExtension(incomingFileName);
+            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+        }
+
+        private async Task GenerateSignedUrl(FilprideCheckVoucherHeader model)
+        {
+            // Get Signed URL only when Saved File Name is available.
+            if (!string.IsNullOrWhiteSpace(model.SupportingFileSavedFileName))
+            {
+                model.SupportingFileSavedUrl = await _cloudStorageService.GetSignedUrlAsync(model.SupportingFileSavedFileName);
+            }
         }
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
@@ -307,26 +331,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (file != null && file.Length > 0)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", cvh.CheckVoucherHeaderNo);
-
-                        if (!Directory.Exists(uploadsFolder))
-                        {
-                            Directory.CreateDirectory(uploadsFolder);
-                        }
-
-                        string fileName = Path.GetFileName(file.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(stream);
-                        }
-
-                        //if necessary add field to store location path
-                        // model.Header.SupportingFilePath = fileSavePath
+                        cvh.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                        cvh.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, cvh.SupportingFileSavedFileName);
                     }
 
-                    TempData["success"] = "Check voucher trade created successfully";
 
                     #region --Audit Trail Recording
 
@@ -336,6 +344,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Audit Trail Recording
 
+                    TempData["success"] = "Check voucher trade created successfully";
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
@@ -733,23 +742,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (file != null && file.Length > 0)
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Supporting CV Files", viewModel.CVNo);
-
-                        if (!Directory.Exists(uploadsFolder))
-                        {
-                            Directory.CreateDirectory(uploadsFolder);
-                        }
-
-                        string fileName = Path.GetFileName(file.FileName);
-                        string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(stream);
-                        }
-
-                        //if necessary add field to store location path
-                        // model.Header.SupportingFilePath = fileSavePath
+                        existingHeaderModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                        existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName);
                     }
 
                     #region --Audit Trail Recording
