@@ -255,7 +255,7 @@
                             transactionDate.attr('min', minDate.toISOString().split('T')[0]);
 
                             // Set the Transaction Date
-                            transactionDate.val(data.transactionDate);
+                            transactionDate.val(transactionDate.val() ? transactionDate.val() : data.transactionDate);
 
                             // Add validation event listener
                             transactionDate.off('blur').on('blur', function() {
@@ -270,7 +270,7 @@
                             $("#ReceivingReportId").val(data.receivingReportId);
                             $("#PurchaseOrderId").val(data.purchaseOrderId);
                             $("#OtherRefNo").val(data.otherRefNo);
-                            $("#Remarks").val(data.remarks);
+                            $("#Remarks").val($("#Remarks").val() ? $("#Remarks").val() : data.remarks);
                         }
                         else {
                             $("#TransactionDate").val("");
