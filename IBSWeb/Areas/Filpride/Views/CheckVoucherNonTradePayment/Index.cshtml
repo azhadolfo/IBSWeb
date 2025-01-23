@@ -185,7 +185,7 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                                 ${row.checkVoucherHeader.postedBy == null ? `
-                                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="@Url.Action("EditPayrollPayment", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
                                                     <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Preview</a></li>
                                                     <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
                                                 ` : `
