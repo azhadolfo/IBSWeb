@@ -16,7 +16,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string? UPPIAtlNo { get; set; }
 
-        public string Hauler { get; set; }
+        public string? Hauler { get; set; }
 
         public string Driver { get; set; }
 
