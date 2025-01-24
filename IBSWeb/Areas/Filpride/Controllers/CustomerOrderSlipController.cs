@@ -911,7 +911,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
 
-                    if (existingCos.HaulerId != null)
+                    if (existingCos.Status == nameof(CosStatus.HaulerAppointed))
                     {
                         existingCos.Status = nameof(CosStatus.ForAtlBooking);
                     }
@@ -922,18 +922,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingCos.SupplierId = viewModel.SupplierId;
 
-                    if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery)
+                    switch (viewModel.DeliveryOption)
                     {
-                        existingCos.Freight = viewModel.Freight;
-                        existingCos.SubPORemarks = viewModel.SubPoRemarks;
-                    }
-                    else if (existingCos.HaulerId != null && viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
-                    {
-                        //Do nothing because it means the logistics already assigned the freight
-                    }
-                    else
-                    {
-                        existingCos.Freight = 0;
+                        case SD.DeliveryOption_DirectDelivery:
+                            existingCos.Freight = viewModel.Freight;
+                            existingCos.SubPORemarks = viewModel.SubPoRemarks;
+                            break;
+                        case SD.DeliveryOption_ForPickUpByClient:
+                            existingCos.Hauler = null;
+                            existingCos.Freight = 0;
+                            break;
                     }
 
                     existingCos.DeliveryOption = viewModel.DeliveryOption;
@@ -1092,18 +1090,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
                     existingCos.SupplierId = viewModel.SupplierId;
 
-                    if (viewModel.DeliveryOption == SD.DeliveryOption_DirectDelivery)
+                    switch (viewModel.DeliveryOption)
                     {
-                        existingCos.Freight = viewModel.Freight;
-                        existingCos.SubPORemarks = viewModel.SubPoRemarks;
-                    }
-                    else if (existingCos.HaulerId != null && viewModel.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
-                    {
-                        //Do nothing because it means the logistics already assigned the freight
-                    }
-                    else
-                    {
-                        existingCos.Freight = 0;
+                        case SD.DeliveryOption_DirectDelivery:
+                            existingCos.Freight = viewModel.Freight;
+                            existingCos.SubPORemarks = viewModel.SubPoRemarks;
+                            break;
+                        case SD.DeliveryOption_ForPickUpByClient:
+                            existingCos.Hauler = null;
+                            existingCos.Freight = 0;
+                            break;
                     }
 
                     existingCos.DeliveryOption = viewModel.DeliveryOption;
@@ -1286,13 +1282,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return BadRequest();
                     }
 
-                    existingCos.HaulerId = viewModel.HaulerId;
 
                     if (existingCos.SupplierId != null)
                     {
                         if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
                         {
                             existingCos.Freight = viewModel.Freight;
+                            existingCos.HaulerId = viewModel.HaulerId;
                         }
 
                         existingCos.Status = nameof(CosStatus.ForAtlBooking);
@@ -1371,13 +1367,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return BadRequest();
                     }
 
-                    existingCos.HaulerId = viewModel.HaulerId;
-
                     if (existingCos.SupplierId != null)
                     {
                         if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
                         {
                             existingCos.Freight = viewModel.Freight;
+                            existingCos.HaulerId = viewModel.HaulerId;
                         }
                     }
                     else

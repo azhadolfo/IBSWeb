@@ -20,6 +20,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
+    [DepartmentAuthorize(SD.Department_Accounting, SD.Department_RCD)]
     public class CheckVoucherNonTradeInvoiceController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
@@ -333,8 +334,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             case 0.10m:
                                 ewtTenPercentAmount += accountEntry.TaxAmount;
                                 break;
-                            default:
-                                throw new ArgumentException($"Unexpected EWT percentage: {accountEntry.TaxPercentage}");
                         }
 
                         apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
@@ -379,6 +378,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtOnePercentAmount,
+                            Amount = ewtOnePercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -392,6 +393,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtTwoPercentAmount,
+                            Amount = ewtTwoPercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -405,6 +408,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtFivePercentAmount,
+                            Amount = ewtFivePercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -418,6 +423,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtTenPercentAmount,
+                            Amount = ewtTenPercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -618,7 +625,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = viewModel.Debit[i],
                                 Credit = viewModel.Credit[i],
                                 Amount = viewModel.Credit[i],
-                                SupplierId = viewModel.MultipleSupplierId[i] != 0 ? viewModel.MultipleSupplierId[i] : null
+                                SupplierId = viewModel.MultipleSupplierId[i] != 0 ? viewModel.MultipleSupplierId[i] : null,
+                                IsUserSelected = true
                             });
                         }
                     }

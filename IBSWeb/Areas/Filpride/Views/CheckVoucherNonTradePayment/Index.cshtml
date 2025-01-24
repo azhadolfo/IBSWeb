@@ -33,19 +33,16 @@
                         CVN No.
                     </th>
                     <th>
+                        Date
+                    </th>
+                    <th>
                         Supplier Name
                     </th>
                     <th>
-                        Payable Amount
+                        INV No.
                     </th>
                     <th>
-                        Amount Paid
-                    </th>
-                    <th>
-                        Reference
-                    </th>
-                    <th>
-                        Created Date
+                        Total
                     </th>
                     <th>
                         Status
@@ -56,11 +53,10 @@
             <tfoot>
                 <tr class="text-nowrap table-secondary">
                     <th></th>
+                    <th></th>
+                    <th></th>
                     <th class="text-end">Grand Total:</th>
-                    <th id="totalAmount" class="text-start"></th>
-                    <th id="totalAmountPaid" class="text-start"></th>
-                    <th></th>
-                    <th></th>
+                    <th id="totalAmount" class="text-end"></th>
                     <th></th>
                     <th></th>
                 </tr>
@@ -121,6 +117,7 @@
                 "processing": true,
                 "serverSide": true,
                 "stateSave": true,
+                "stateDuration": 86400,
                 "ajax": {
                     "url": "@Url.Action("GetPaymentCheckVouchers", "CheckVoucherNonTradePayment", new { area = "Filpride" })",
                     "type": "POST",
@@ -132,37 +129,30 @@
                 },
                 "columns": [
                     { "data": "checkVoucherHeader.checkVoucherHeaderNo" },
-                    { "data": data => data.supplier ? data.supplier.supplierName : data.checkVoucherHeader.supplier.supplierName },
                     {
-                        "data": "amount",
-                        "render": function (data, type, row) {
-                            if (row.checkVoucherHeader?.supplier?.supplierId == null) {
-                                return formatNumber(row.amount);
-                            }
-                            else {
-                                return formatNumber(row.checkVoucherHeader.total);
-                            }
-                        }
-                    },
-                    {
-                        "data": "amountPaid",
-                        "render": function (data, type, row) {
-                            if (row.checkVoucherHeader?.supplier?.supplierId == null) {
-                                return formatNumber(row.amountPaid);
-                            }
-                            else {
-                                return formatNumber(row.checkVoucherHeader.total);
-                            }
-                        }
-                    },
-                    { "data": data => data.checkVoucherHeader ? data.checkVoucherHeader.reference : "" },
-                    {
-                        "data": "checkVoucherHeader.createdDate",
-                        "name": "createdDate",
+                        "data": "checkVoucherHeader.date",
+                        "name": "date",
                         "render": function (data, type, row) {
                             // Assuming 'Date' is in ISO format like "2024-07-12T00:00:00"
                             var date = new Date(data);
                             return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                        }
+                    },
+                    { "data": data => data.supplier ? data.supplier.supplierName : data.checkVoucherHeader.supplier.supplierName },
+                    { "data": data => data.checkVoucherHeader ? data.checkVoucherHeader.reference : "" },
+                    {
+                        "data": "amount",
+                        "render": function (data, type, row) {
+                            if (row.amount > 0) {
+                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.amount);
+                                return `<span class="text-end d-block">${amount}</span>`;
+                            }
+                            else {
+                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.checkVoucherHeader.total);
+                                return `<span class="text-end d-block">${amount}</span>`;
+                            }
+                            
+                            
                         }
                     },
                     {
@@ -185,7 +175,7 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                                 ${row.checkVoucherHeader.postedBy == null ? `
-                                                    <li><a class="dropdown-item" href="@Url.Action("EditPayrollPayment", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
                                                     <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Preview</a></li>
                                                     <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
                                                 ` : `
@@ -206,13 +196,11 @@
 
                     // Sum up columns
                     data.forEach(function (row) {
-                        totalAmount += row.amount;
-                        totalAmountPaid += row.amountPaid;
+                        totalAmount += row.amount + row.checkVoucherHeader.total;
                     });
 
                     // Update footer with totals
-                    $(this.api().column(2).footer()).html(formatNumber(totalAmount));
-                    $(this.api().column(3).footer()).html(formatNumber(totalAmountPaid));
+                    $(this.api().column(4).footer()).html(formatNumber(totalAmount));
                 }
             });
         });

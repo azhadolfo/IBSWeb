@@ -38,19 +38,19 @@
                         Invoice No.
                     </th>
                     <th>
+                        Date
+                    </th>
+                    <th>
                         Supplier Name
                     </th>
-                    <th>
+                    <th class="text-start">
                         Payable Amount
                     </th>
-                    <th>
+                    <th class="text-start">
                         Amount Paid
                     </th>
-                    <th>
+                    <th class="text-start">
                         Balance
-                    </th>
-                    <th>
-                        Created Date
                     </th>
                     <th>
                         Status
@@ -61,11 +61,11 @@
             <tfoot>
                 <tr class="text-nowrap table-secondary">
                     <th></th>
-                    <th class="text-end">Grand Total:</th>
-                    <th id="totalAmount" class="text-start"></th>
-                    <th id="totalAmountPaid" class="text-start"></th>
-                    <th id="totalBalance" class="text-start"></th>
                     <th></th>
+                    <th class="text-end">Grand Total:</th>
+                    <th id="totalAmount" class="text-end"></th>
+                    <th id="totalAmountPaid" class="text-end"></th>
+                    <th id="totalBalance" class="text-end"></th>
                     <th></th>
                     <th></th>
                 </tr>
@@ -126,6 +126,7 @@
                 "processing": true,
                 "serverSide": true,
                 "stateSave": true,
+                "stateDuration": 86400,
                 "ajax": {
                     "url": "@Url.Action("GetInvoiceCheckVouchers", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })",
                     "type": "POST",
@@ -137,47 +138,53 @@
                 },
                 "columns": [
                     { "data": "transactionNo" },
+                    {
+                        "data": "checkVoucherHeader.date",
+                        "name": "date",
+                        "render": function (data, type, row) {
+                            // Assuming 'Date' is in ISO format like "2024-07-12T00:00:00"
+                            var date = new Date(data);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                        }
+                    },
                     { "data": data => data.supplier ? data.supplier.supplierName : data.checkVoucherHeader.supplier.supplierName },
                     {
                         "data": "invoiceAmount",
                         "render": function (data, type, row) {
-                            if (row.checkVoucherHeader?.supplier?.supplierId == null) {
-                                return formatNumber(row.amount);
+                            if (row.amount > 0) {
+                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.amount);
+                                return `<span class="text-end d-block">${amount}</span>`;
                             }
-                            else {
-                                return formatNumber(row.checkVoucherHeader.invoiceAmount);
+                            else{
+                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.checkVoucherHeader.invoiceAmount);
+                                return `<span class="text-end d-block">${amount}</span>`;
                             }
                         }
                     },
                     {
                         "data": "amountPaid",
                         "render": function (data, type, row) {
-                            if (row.checkVoucherHeader?.supplier?.supplierId == null) {
-                                return formatNumber(row.amountPaid);
+                            if (row.amount > 0) {
+                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.amountPaid);
+                                return `<span class="text-end d-block">${amount}</span>`;
                             }
-                            else {
-                                return formatNumber(row.checkVoucherHeader.amountPaid);
+                            else{
+                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.checkVoucherHeader.amountPaid);
+                                return `<span class="text-end d-block">${amount}</span>`;
                             }
                         }
                     },
                     {
                         "data": null,
                         "render": function (data, type, row) {
-                            if (row.checkVoucherHeader?.supplier?.supplierId == null) {
-                                return formatNumber(row.amount - row.amountPaid);
+                            if (row.amount > 0) {
+                                var amount = $.fn.dataTable.render.number(',', '.', 4).display((row.amount - row.amountPaid));
+                                return `<span class="text-end d-block">${amount}</span>`;
                             }
-                            else {
-                                return formatNumber(row.checkVoucherHeader.invoiceAmount - row.checkVoucherHeader.amountPaid);
-                            } // Calculate and format the balance
-                        }
-                    },
-                    {
-                        "data": "checkVoucherHeader.createdDate",
-                        "name": "createdDate",
-                        "render": function (data, type, row) {
-                            // Assuming 'Date' is in ISO format like "2024-07-12T00:00:00"
-                            var date = new Date(data);
-                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                            else{
+                                var amount = $.fn.dataTable.render.number(',', '.', 4).display((row.checkVoucherHeader.invoiceAmount - row.checkVoucherHeader.amountPaid));
+                                return `<span class="text-end d-block">${amount}</span>`;
+                            }
                         }
                     },
                     {
@@ -187,6 +194,12 @@
                                 row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Voided)" ? "bg-danger" :
                                     row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Paid)" ? "bg-success" :
                                     row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Canceled)" ? "bg-warning" : "";
+                            
+                            if (row.checkVoucherHeader.postedBy != null &&
+                                row.supplierId == 133 && (row.amountPaid < row.amount)) { //BIR Supplier Id
+                                statusClass = "bg-info";
+                                row.checkVoucherHeader.status = "@nameof(CheckVoucherInvoiceStatus.ForPayment)";
+                            }
 
                             return `<span class="badge rounded-pill w-100 ${statusClass}">${row.checkVoucherHeader.status}</span>`;
                         }
@@ -239,9 +252,9 @@
                     });
 
                     // Update footer with totals
-                    $(this.api().column(2).footer()).html(formatNumber(totalAmount));
-                    $(this.api().column(3).footer()).html(formatNumber(totalAmountPaid));
-                    $(this.api().column(4).footer()).html(formatNumber(totalBalance));
+                    $(this.api().column(3).footer()).html(formatNumber(totalAmount));
+                    $(this.api().column(4).footer()).html(formatNumber(totalAmountPaid));
+                    $(this.api().column(5).footer()).html(formatNumber(totalBalance));
                 }
             });
         });

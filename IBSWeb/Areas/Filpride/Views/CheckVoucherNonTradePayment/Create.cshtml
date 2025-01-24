@@ -163,7 +163,7 @@
         function getSupplierDetails(supplierId) {
             if (supplierId !== "") {
                 $.ajax({
-                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })', // Replace with the actual controller and action names
+                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
                     method: "GET",
                     data: { supplierId: supplierId },
                     success: function (data) {

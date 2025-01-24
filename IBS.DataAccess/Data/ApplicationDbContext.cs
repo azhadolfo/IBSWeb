@@ -115,6 +115,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilpridePickUpPoint> FilpridePickUpPoints { get; set; }
 
+        public DbSet<FilprideEmployee> FilprideEmployees { get; set; }
+
         #endregion
 
         #endregion
@@ -525,6 +527,11 @@ namespace IBS.DataAccess.Data
             {
                 s.HasIndex(s => s.SupplierCode);
                 s.HasIndex(s => s.SupplierName);
+            });
+
+            builder.Entity<FilprideEmployee>(c =>
+            {
+                c.HasIndex(c => c.EmployeeNumber);
             });
 
             #endregion
