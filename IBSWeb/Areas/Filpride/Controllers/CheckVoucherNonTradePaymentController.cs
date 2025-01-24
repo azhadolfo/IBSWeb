@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using IBS.Services;
 using IBS.Services.Attributes;
+using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Authorization;
 
@@ -20,6 +21,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
+    [DepartmentAuthorize(SD.Department_Accounting, SD.Department_RCD)]
     public class CheckVoucherNonTradePaymentController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;

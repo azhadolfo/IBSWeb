@@ -21,7 +21,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    [DepartmentAuthorize(SD.Department_CreditAndCollection, SD.Department_RCD)]
+    [DepartmentAuthorize(SD.Department_Accounting, SD.Department_RCD)]
     public class CheckVoucherTradeController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
