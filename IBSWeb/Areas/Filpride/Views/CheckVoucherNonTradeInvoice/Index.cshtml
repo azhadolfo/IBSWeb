@@ -141,10 +141,10 @@
                     {
                         "data": "invoiceAmount",
                         "render": function (data, type, row) {
-                            if (row.checkVoucherHeader?.supplier?.supplierId == null) {
+                            if (row.amount > 0) {
                                 return formatNumber(row.amount);
                             }
-                            else {
+                            else{
                                 return formatNumber(row.checkVoucherHeader.invoiceAmount);
                             }
                         }
@@ -152,10 +152,10 @@
                     {
                         "data": "amountPaid",
                         "render": function (data, type, row) {
-                            if (row.checkVoucherHeader?.supplier?.supplierId == null) {
+                            if (row.amount > 0) {
                                 return formatNumber(row.amountPaid);
                             }
-                            else {
+                            else{
                                 return formatNumber(row.checkVoucherHeader.amountPaid);
                             }
                         }
@@ -163,12 +163,12 @@
                     {
                         "data": null,
                         "render": function (data, type, row) {
-                            if (row.checkVoucherHeader?.supplier?.supplierId == null) {
+                            if (row.amount > 0) {
                                 return formatNumber(row.amount - row.amountPaid);
                             }
-                            else {
+                            else{
                                 return formatNumber(row.checkVoucherHeader.invoiceAmount - row.checkVoucherHeader.amountPaid);
-                            } // Calculate and format the balance
+                            }
                         }
                     },
                     {
@@ -187,6 +187,12 @@
                                 row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Voided)" ? "bg-danger" :
                                     row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Paid)" ? "bg-success" :
                                     row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Canceled)" ? "bg-warning" : "";
+                            
+                            if (row.checkVoucherHeader.postedBy != null &&
+                                row.supplierId == 133 && (row.amountPaid < row.amount)) { //BIR Supplier Id
+                                statusClass = "bg-info";
+                                row.checkVoucherHeader.status = "@nameof(CheckVoucherInvoiceStatus.ForPayment)";
+                            }
 
                             return `<span class="badge rounded-pill w-100 ${statusClass}">${row.checkVoucherHeader.status}</span>`;
                         }

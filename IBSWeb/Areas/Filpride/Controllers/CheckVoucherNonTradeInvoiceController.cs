@@ -377,6 +377,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtOnePercentAmount,
+                            Amount = ewtOnePercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -390,6 +392,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtTwoPercentAmount,
+                            Amount = ewtTwoPercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -403,6 +407,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtFivePercentAmount,
+                            Amount = ewtFivePercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -416,6 +422,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtTenPercentAmount,
+                            Amount = ewtTenPercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -616,7 +624,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = viewModel.Debit[i],
                                 Credit = viewModel.Credit[i],
                                 Amount = viewModel.Credit[i],
-                                SupplierId = viewModel.MultipleSupplierId[i] != 0 ? viewModel.MultipleSupplierId[i] : null
+                                SupplierId = viewModel.MultipleSupplierId[i] != 0 ? viewModel.MultipleSupplierId[i] : null,
+                                IsUserSelected = true
                             });
                         }
                     }
