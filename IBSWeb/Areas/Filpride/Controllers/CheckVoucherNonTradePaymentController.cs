@@ -1017,7 +1017,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CvType = nameof(CVType.Payment),
                         Reference = string.Join(", ", invoicingVoucher.Select(inv => inv.CheckVoucherHeaderNo)),
                         BankId = viewModel.BankId,
-                        Payee = null,
+                        Payee = invoicingVoucher.Select(i => i.Payee).FirstOrDefault(),
                         CheckNo = viewModel.CheckNo,
                         CheckDate = viewModel.CheckDate,
                         CheckAmount = viewModel.Total,
