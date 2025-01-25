@@ -100,6 +100,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Supplier?.SupplierId.ToString().Contains(searchValue) == true ||
+                        s.CheckVoucherHeader?.Total.ToString().Contains(searchValue) == true ||
                         s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
                         s.Amount.ToString().Contains(searchValue) ||
                         s.AmountPaid.ToString().Contains(searchValue) ||
@@ -1274,41 +1275,56 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
-            var invoice = await _dbContext.FilprideCheckVoucherDetails
-                .Where(i => cvId.Contains(i.CheckVoucherHeaderId) && i.SupplierId != null && i.SupplierId == supplierId && i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) ||
-                            cvId.Contains(i.CheckVoucherHeader.CheckVoucherHeaderId) && i.CheckVoucherHeader.SupplierId != null && i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing))
+            var invoices = await _dbContext.FilprideCheckVoucherDetails
+                .Where(i =>
+                    cvId.Contains(i.CheckVoucherHeaderId) &&
+                    i.SupplierId != null &&
+                    i.SupplierId == supplierId &&
+                    i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) ||
+                    cvId.Contains(i.CheckVoucherHeader.CheckVoucherHeaderId) &&
+                    i.CheckVoucherHeader.SupplierId != null &&
+                    i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing))
                 .Include(i => i.Supplier)
                 .Include(i => i.CheckVoucherHeader)
                 .ToListAsync(cancellationToken);
 
             var totalInvoiceAmount = 0m;
             var invoiceAmount = 0m;
-            var particulars = invoice.Select(cvh => cvh.CheckVoucherHeader.Particulars).FirstOrDefault();
-            for (int i = 0; i < invoice.Count; i++)
+            var particulars = invoices.Select(cvh => cvh.CheckVoucherHeader.Particulars).FirstOrDefault();
+            var accountNumber = "202010200";
+            var accountTitle = "AP-Non Trade Payable";
+            foreach (var invoice in invoices.Where(i => i.Credit > 0))
             {
-                if (invoice[i].CheckVoucherHeader.SupplierId != null && supplierId != invoice[i].SupplierId)
+
+                if (invoice.CheckVoucherHeader.SupplierId != null && supplierId != invoice.SupplierId)
                 {
-                    var getBalance = invoice[i].CheckVoucherHeader.InvoiceAmount - invoice[i].CheckVoucherHeader.AmountPaid;
+                    var getBalance = invoice.CheckVoucherHeader.InvoiceAmount - invoice.CheckVoucherHeader.AmountPaid;
                     totalInvoiceAmount += getBalance;
                     invoiceAmount = getBalance;
+
                 }
                 else
                 {
-                    var getBalance = invoice[i].Amount - invoice[i].AmountPaid;
-
+                    var getBalance = invoice.Amount - invoice.AmountPaid;
+                    accountNumber = invoice.AccountNo;
+                    accountTitle = invoice.AccountName;
                     totalInvoiceAmount += getBalance;
                     invoiceAmount = getBalance;
                 }
-
             }
 
-            if (invoice != null)
+            if (invoices != null)
             {
                 return Json(new
                 {
                     Amount = totalInvoiceAmount,
                     InvoiceAmount = invoiceAmount,
-                    Particulars = particulars
+                    Particulars = particulars,
+                    ApAccount = new
+                    {
+                        AccountNumber = accountNumber,
+                        AccountTitle = accountTitle,
+                    }
                 });
             }
 
