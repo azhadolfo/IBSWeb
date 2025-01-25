@@ -476,6 +476,13 @@
             // Initialize event listeners for existing rows
             document.querySelectorAll('#accountTable tbody tr').forEach(row => {
                 initializeRowEventListeners(row);
+
+                // Add this block to handle existing remove buttons
+                const removeButton = row.querySelector(".removeRow");
+                if (removeButton && removeButton.getAttribute('disabled') !== 'disabled') {
+                    removeButton.addEventListener("click", () => handleRowRemoval(row));
+                }
+                
             });
 
             // Initialize calculations for existing rows
