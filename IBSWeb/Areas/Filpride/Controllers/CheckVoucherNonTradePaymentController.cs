@@ -494,7 +494,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync();
 
             var suppliers = await _dbContext.FilprideSuppliers
-                .Where(cvh => cvh.Company == companyClaims && cvh.Category != "Trade")
+                .Where(cvh => cvh.Company == companyClaims)
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.SupplierId.ToString(),
@@ -937,7 +937,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(cvh => cvh.Company == companyClaims && cvh.Category != "Trade")
+                .Where(cvh => cvh.Company == companyClaims)
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.SupplierId.ToString(),
