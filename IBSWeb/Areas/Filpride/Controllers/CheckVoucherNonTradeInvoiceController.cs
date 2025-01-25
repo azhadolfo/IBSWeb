@@ -899,8 +899,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             case 0.10m:
                                 ewtTenPercentAmount += accountEntry.TaxAmount;
                                 break;
-                            default:
-                                throw new ArgumentException($"Unexpected EWT percentage: {accountEntry.TaxPercentage}");
                         }
 
                         apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
