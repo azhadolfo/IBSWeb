@@ -14,6 +14,7 @@ using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -791,7 +792,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingModel != null)
                     {
                         existingModel.EditedBy = _userManager.GetUserName(User);
-                        existingModel.EditedDate = DateTime.Now;
+                        existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         existingModel.Date = viewModel.TransactionDate;
                         existingModel.SupplierId = viewModel.SupplierId;
                         existingModel.PONo = [viewModel.PoNo];
@@ -1122,7 +1123,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (modelHeader.PostedBy == null)
                     {
                         modelHeader.PostedBy = _userManager.GetUserName(this.User);
-                        modelHeader.PostedDate = DateTime.Now;
+                        modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         modelHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
 
                         #region --General Ledger Book Recording(CV)--
@@ -1227,7 +1228,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(CheckVoucherInvoiceStatus.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
@@ -1280,7 +1281,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(CheckVoucherInvoiceStatus.Voided);
 
                         await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo, cancellationToken);
@@ -1433,7 +1434,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingHeaderModel != null)
                     {
                         existingHeaderModel.EditedBy = _userManager.GetUserName(User);
-                        existingHeaderModel.EditedDate = DateTime.Now;
+                        existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         existingHeaderModel.Date = viewModel.TransactionDate;
                         existingHeaderModel.PONo = [viewModel.PoNo];
                         existingHeaderModel.SINo = [viewModel.SiNo];

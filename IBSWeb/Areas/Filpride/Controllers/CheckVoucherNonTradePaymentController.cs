@@ -15,6 +15,7 @@ using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -192,7 +193,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                         modelHeader.PostedBy = _userManager.GetUserName(this.User);
-                        modelHeader.PostedDate = DateTime.Now;
+                        modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         modelHeader.Status = nameof(CheckVoucherPaymentStatus.Posted);
 
                         #region --General Ledger Book Recording(CV)--
@@ -331,7 +332,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(CheckVoucherPaymentStatus.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
@@ -409,7 +410,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(CheckVoucherPaymentStatus.Voided);
 
                         if (model.CvType == nameof(CVType.Payment) && getPaymentDetails != null)
@@ -603,7 +604,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingHeaderModel.CheckVoucherHeader.Particulars = $"{viewModel.Particulars} Payment for {string.Join(",", invoicingVoucher.Select(i => i.CheckVoucherHeaderNo))}";
                         existingHeaderModel.CheckVoucherHeader.Total = viewModel.Total;
                         existingHeaderModel.CheckVoucherHeader.EditedBy = _userManager.GetUserName(this.User);
-                        existingHeaderModel.CheckVoucherHeader.EditedDate = DateTime.Now;
+                        existingHeaderModel.CheckVoucherHeader.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         existingHeaderModel.CheckVoucherHeader.Category = "Non-Trade";
                         existingHeaderModel.CheckVoucherHeader.CvType = nameof(CVType.Payment);
                         existingHeaderModel.CheckVoucherHeader.Reference = string.Join(", ", invoicingVoucher.Select(inv => inv.CheckVoucherHeaderNo));
