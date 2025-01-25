@@ -191,7 +191,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
+                .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
                 .Select(sup => new SelectListItem
                 {
                     Value = sup.SupplierId.ToString(),
@@ -468,7 +468,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                     viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                        .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
+                        .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
                         .Select(sup => new SelectListItem
                         {
                             Value = sup.SupplierId.ToString(),
@@ -493,7 +493,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
+                .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
                 .Select(sup => new SelectListItem
                 {
                     Value = sup.SupplierId.ToString(),
@@ -522,7 +522,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
+                .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
                 .Select(sup => new SelectListItem
                 {
                     Value = sup.SupplierId.ToString(),
@@ -671,7 +671,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                     viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                        .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
+                        .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
                         .Select(sup => new SelectListItem
                         {
                             Value = sup.SupplierId.ToString(),
@@ -696,7 +696,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
+                .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
                 .Select(sup => new SelectListItem
                 {
                     Value = sup.SupplierId.ToString(),
@@ -1551,7 +1551,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                     viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                        .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
+                        .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
                         .Select(sup => new SelectListItem
                         {
                             Value = sup.SupplierId.ToString(),
@@ -1576,7 +1576,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
+                .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
                 .Select(sup => new SelectListItem
                 {
                     Value = sup.SupplierId.ToString(),
