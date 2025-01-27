@@ -86,7 +86,7 @@ namespace IBS.DataAccess.Repository.Filpride
              .FilprideDisbursementBooks
              .AsEnumerable()
              .Where(d => d.Company == company && d.Date >= dateFrom && d.Date <= dateTo)
-             .OrderBy(d => d.DisbursementBookId)
+             .OrderBy(d => d.Date)
              .ToList();
 
             return disbursementBooks;
