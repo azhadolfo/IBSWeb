@@ -790,12 +790,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(cv => cv.Supplier)
                         .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
 
+                    var supplier = await _unitOfWork.FilprideSupplier
+                        .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+
                     if (existingModel != null)
                     {
                         existingModel.EditedBy = _userManager.GetUserName(User);
                         existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         existingModel.Date = viewModel.TransactionDate;
-                        existingModel.SupplierId = viewModel.SupplierId;
+                        existingModel.SupplierId = supplier.SupplierId;
+                        existingModel.Payee = supplier.SupplierName;
                         existingModel.PONo = [viewModel.PoNo];
                         existingModel.SINo = [viewModel.SiNo];
                         existingModel.Particulars = viewModel.Particulars;
