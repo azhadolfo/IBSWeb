@@ -133,5 +133,9 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string? SupportingFileSavedFileName { get; set; }
 
         public string?  SupportingFileSavedUrl { get; set; }
+
+        public DateOnly? DcpDate { get; set; }
+
+        public DateOnly? DcrDate { get; set; }
     }
 }

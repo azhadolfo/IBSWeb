@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
@@ -38,8 +39,8 @@ namespace IBS.Services
                 var previousMonth = today.AddMonths(-1);
                 await InTransit(previousMonth);
                 await CheckTheUntriggeredPurchaseOrders(previousMonth);
-                _logger.LogInformation(
-                    $"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
+                await AutoReversalForCvWithoutDcrDate(previousMonth);
+                _logger.LogInformation($"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
             }
             catch (Exception ex)
             {
@@ -187,6 +188,122 @@ namespace IBS.Services
                 await transaction.RollbackAsync();
             }
 
+        }
+
+        private async Task AutoReversalForCvWithoutDcrDate(DateTime previousMonth)
+        {
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                var today = DateTimeHelper.GetCurrentPhilippineTime();
+
+                // Start of the current month
+                var startOfMonth = new DateTime(today.Year, today.Month, 1);
+
+                var endOfPreviousMonth = startOfMonth.AddDays(-1);
+
+                var disbursementsWithoutDcrDate = await _dbContext.FilprideCheckVoucherHeaders
+                    .Where(cv =>
+                        cv.Date.Month == previousMonth.AddMonths(-3).Month &&
+                        cv.Date.Year == previousMonth.AddMonths(-3).Year &&
+                        cv.CvType != nameof(CVType.Invoicing) &&
+                        cv.PostedBy != null &&
+                        cv.DcrDate == null
+                    )
+                    .ToListAsync();
+
+                if (disbursementsWithoutDcrDate.Count == 0)
+                {
+                    return;
+                }
+
+                foreach (var cv in disbursementsWithoutDcrDate)
+                {
+                    var ledgers = new List<FilprideGeneralLedgerBook>();
+                    var journalBooks = new List<FilprideJournalBook>();
+
+                    var details = await _dbContext.FilprideCheckVoucherDetails
+                        .Where(cvd => cvd.CheckVoucherHeaderId == cv.CheckVoucherHeaderId)
+                        .ToListAsync();
+
+                    foreach (var cvDetails in details)
+                    {
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = DateOnly.FromDateTime(endOfPreviousMonth),
+                            Reference = cv.CheckVoucherHeaderNo,
+                            Description = cv.Particulars,
+                            AccountNo = cvDetails.AccountNo,
+                            AccountTitle = cvDetails.AccountName,
+                            Debit = cvDetails.Credit,
+                            Credit = cvDetails.Debit,
+                            Company = cv.Company,
+                            CreatedBy = "SYSTEM GENERATED",
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        });
+
+                        ledgers.Add(new FilprideGeneralLedgerBook
+                        {
+                            Date = DateOnly.FromDateTime(startOfMonth),
+                            Reference = cv.CheckVoucherHeaderNo,
+                            Description = cv.Particulars,
+                            AccountNo = cvDetails.AccountNo,
+                            AccountTitle = cvDetails.AccountName,
+                            Debit = cvDetails.Debit,
+                            Credit = cvDetails.Credit,
+                            Company = cv.Company,
+                            CreatedBy = "SYSTEM GENERATED",
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        });
+
+                        journalBooks.Add(new FilprideJournalBook
+                        {
+                            Date = DateOnly.FromDateTime(endOfPreviousMonth),
+                            Reference = cv.CheckVoucherHeaderNo,
+                            Description = cv.Particulars,
+                            AccountTitle = $"{cvDetails.AccountNo} {cvDetails.AccountName}",
+                            Debit = cvDetails.Credit,
+                            Credit = cvDetails.Debit,
+                            Company = cv.Company,
+                            CreatedBy = "SYSTEM GENERATED",
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        });
+
+                        journalBooks.Add(new FilprideJournalBook
+                        {
+                            Date = DateOnly.FromDateTime(endOfPreviousMonth),
+                            Reference = cv.CheckVoucherHeaderNo,
+                            Description = cv.Particulars,
+                            AccountTitle = $"{cvDetails.AccountNo} {cvDetails.AccountName}",
+                            Debit = cvDetails.Debit,
+                            Credit = cvDetails.Credit,
+                            Company = cv.Company,
+                            CreatedBy = "SYSTEM GENERATED",
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        });
+
+                        if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))
+                        {
+                            throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                        }
+
+                    }
+
+                    await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers);
+                    await _dbContext.FilprideJournalBooks.AddRangeAsync(journalBooks);
+                    await _dbContext.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing the auto reversal for CV.");
+                await transaction.RollbackAsync();
+            }
         }
     }
 }

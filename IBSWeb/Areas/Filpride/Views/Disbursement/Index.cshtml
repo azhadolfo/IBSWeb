@@ -1,0 +1,243 @@
+@using IBS.Utility.Enums
+@model IEnumerable<FilprideCheckVoucherHeader>
+
+@{
+    ViewBag.Title = "Disbursement";
+    Layout = "_Layout";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">DISBURSEMENT</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <table class="table table-bordered table-hover" id="paginatedTable">
+            <thead>
+            <tr class="text-nowrap table-secondary">
+                <th>
+                    CVN No.
+                </th>
+                <th>
+                    Date
+                </th>
+                <th>
+                    Payee
+                </th>
+                <th>
+                    INV No.
+                </th>
+                <th class="text-start">
+                    Total
+                </th>
+                <th class="text-start">
+                    DCP Date
+                </th>
+                <th class="text-start">
+                    DCR Date
+                </th>
+                <th></th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $('#paginatedTable').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "stateSave": true,
+            "stateDuration": 86400,
+            "language": {
+                "processing": "Loading data..."
+            },
+            "ajax": {
+                "url": "@Url.Action("GetDisbursements", "Disbursement", new { area = "Filpride" })",
+                "type": "POST",
+                "data": function (d){
+                    return $.extend({}, d,  {
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    });
+                },
+                "error": function (xhr, error, thrown) {
+                    console.error('DataTables error:', error);
+                    alert('An error occurred while loading the data');
+                }
+            },
+            "preDrawCallback": function(settings) {
+                $('#paginatedTable').addClass('table-loading');
+            },
+            "drawCallback": function(settings) {
+                $('#paginatedTable').removeClass('table-loading');
+            },
+            "columns": [
+                { "data": "checkVoucherHeaderNo"},
+                {
+                    "data": "date",
+                    "name": "date",
+                    "render": function (data, type, row){
+                        var date = new Date(data);
+                        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                    }
+                },
+                { "data": "payee" },
+                { "data": "reference" },
+                {
+                    "data": "total",
+                    "render": function (data, type, row){
+                        var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.total);
+                        return `<span class="text-end d-block">${amount}</span>`;
+                    }
+                },
+                {
+                    "data": "dcpDate",
+                    "name": "dcpDate",
+                    "render": function (data, type, row) {
+                        if (!data) {
+                            return ''; // Return an empty string or any placeholder for null values
+                        }
+                        var date = new Date(data);
+                        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                    }
+                },
+                {
+                    "data": "dcrDate",
+                    "name": "dcrDate",
+                    "render": function (data, type, row) {
+                        if (!data) {
+                            return ''; // Return an empty string or any placeholder for null values
+                        }
+                        var date = new Date(data);
+                        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                    }
+                },
+                {
+                    "data": "checkVoucherHeaderId",
+                    "orderable": false,
+                    "render": function(data, type, row) {
+                        let actions = `<div class="dropdown">
+                                        <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown_${data}" 
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                            Actions
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="actionsDropdown_${data}">`;
+
+                        if (row.dcpDate === null) {
+                            actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCPDate('${data}')"> Add DCP Date</a></li>`;
+                        } else {
+                            actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCRDate('${data}')"> Add DCR Date</a></li>`;
+                        }
+
+                        actions += `</ul></div>`;
+                        return actions;
+                    }
+                }
+            ]
+        });
+
+        function showAddDCPDate(cvId) {
+            const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            Swal.fire({
+                title: 'Add DCP Date',
+                html: `
+                        <label for="dcpDate" class="form-label">Select DCP Date</label>
+                        <input type="date" id="dcpDate" class="swal2-input" value="${today}" required>
+                    `,
+                confirmButtonText: 'Save',
+                showCancelButton: true,
+                preConfirm: () => {
+                    const dcpDate = document.getElementById('dcpDate').value;
+                    if (!dcpDate) {
+                        Swal.showValidationMessage('Please select a DCP date');
+                        return false;
+                    }
+                    return dcpDate;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const dcpDate = result.value;
+                    updateDCPDate(cvId, dcpDate);
+                }
+            });
+        }
+
+        function showAddDCRDate(cvId) {
+            const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            Swal.fire({
+                title: 'Add DCR Date',
+                html: `
+                        <label for="dcrDate" class="form-label">Select DCR Date</label>
+                        <input type="date" id="dcrDate" class="swal2-input" value="${today}" required>
+                    `,
+                confirmButtonText: 'Save',
+                showCancelButton: true,
+                preConfirm: () => {
+                    const dcrDate = document.getElementById('dcrDate').value;
+                    if (!dcrDate) {
+                        Swal.showValidationMessage('Please select a DCR date');
+                        return false;
+                    }
+                    return dcrDate;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const dcrDate = result.value;
+                    updateDCRDate(cvId, dcrDate);
+                }
+            });
+        }
+
+        function updateDCPDate(cvId, dcpDate) {
+            $.ajax({
+                url: '@Url.Action("UpdateDCPDate", "Disbursement", new { area = "Filpride" })',
+                type: 'POST',
+                data: {
+                    cvId: cvId,
+                    dcpDate: dcpDate,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#paginatedTable').DataTable().ajax.reload();
+                        Swal.fire('Success', 'DCP date added successfully', 'success');
+                    } else {
+                        Swal.fire('Error', response.message || 'Error adding DCP date', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Error adding DCP date', 'error');
+                }
+            });
+        }
+
+        function updateDCRDate(cvId, dcrDate) {
+            $.ajax({
+                url: '@Url.Action("UpdateDCRDate", "Disbursement", new { area = "Filpride" })',
+                type: 'POST',
+                data: {
+                    cvId: cvId,
+                    dcrDate: dcrDate,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#paginatedTable').DataTable().ajax.reload();
+                        Swal.fire('Success', 'DCR date added successfully', 'success');
+                    } else {
+                        Swal.fire('Error', response.message || 'Error adding DCR date', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Error adding DCR date', 'error');
+                }
+            });
+        }
+    </script>
+}
+

@@ -14,6 +14,7 @@ using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -107,6 +108,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CheckVoucherHeader?.CreatedDate.ToString().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Status.ToLower().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.AmountPaid.ToString().Contains(searchValue) == true ||
+                        s.CheckVoucherHeader?.InvoiceAmount.ToString().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToString().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Supplier?.SupplierName.ToLower().Contains(searchValue) == true
                         )
@@ -191,7 +193,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
+                .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
                 .Select(sup => new SelectListItem
                 {
                     Value = sup.SupplierId.ToString(),
@@ -468,7 +470,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                     viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                        .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
+                        .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
                         .Select(sup => new SelectListItem
                         {
                             Value = sup.SupplierId.ToString(),
@@ -493,7 +495,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
+                .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
                 .Select(sup => new SelectListItem
                 {
                     Value = sup.SupplierId.ToString(),
@@ -522,7 +524,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
+                .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
                 .Select(sup => new SelectListItem
                 {
                     Value = sup.SupplierId.ToString(),
@@ -671,7 +673,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                     viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                        .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
+                        .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
                         .Select(sup => new SelectListItem
                         {
                             Value = sup.SupplierId.ToString(),
@@ -696,7 +698,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
+                .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
                 .Select(sup => new SelectListItem
                 {
                     Value = sup.SupplierId.ToString(),
@@ -788,12 +790,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(cv => cv.Supplier)
                         .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
 
+                    var supplier = await _unitOfWork.FilprideSupplier
+                        .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+
                     if (existingModel != null)
                     {
                         existingModel.EditedBy = _userManager.GetUserName(User);
-                        existingModel.EditedDate = DateTime.Now;
+                        existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         existingModel.Date = viewModel.TransactionDate;
-                        existingModel.SupplierId = viewModel.SupplierId;
+                        existingModel.SupplierId = supplier.SupplierId;
+                        existingModel.Payee = supplier.SupplierName;
                         existingModel.PONo = [viewModel.PoNo];
                         existingModel.SINo = [viewModel.SiNo];
                         existingModel.Particulars = viewModel.Particulars;
@@ -898,8 +904,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             case 0.10m:
                                 ewtTenPercentAmount += accountEntry.TaxAmount;
                                 break;
-                            default:
-                                throw new ArgumentException($"Unexpected EWT percentage: {accountEntry.TaxPercentage}");
                         }
 
                         apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
@@ -930,7 +934,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             TransactionNo = existingModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = 0,
-                            Credit = apNontradeAmount,
+                            Credit = apNontradeAmount
                         });
                     }
 
@@ -944,6 +948,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtOnePercentAmount,
+                            Amount = ewtOnePercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -957,6 +963,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtTwoPercentAmount,
+                            Amount = ewtTwoPercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -970,6 +978,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtFivePercentAmount,
+                            Amount = ewtFivePercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -983,6 +993,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = ewtTenPercentAmount,
+                            Amount = ewtTenPercentAmount,
+                            SupplierId = 133
                         });
                     }
 
@@ -1122,7 +1134,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (modelHeader.PostedBy == null)
                     {
                         modelHeader.PostedBy = _userManager.GetUserName(this.User);
-                        modelHeader.PostedDate = DateTime.Now;
+                        modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         modelHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
 
                         #region --General Ledger Book Recording(CV)--
@@ -1227,7 +1239,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(CheckVoucherInvoiceStatus.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
@@ -1280,7 +1292,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(CheckVoucherInvoiceStatus.Voided);
 
                         await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo, cancellationToken);
@@ -1433,7 +1445,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingHeaderModel != null)
                     {
                         existingHeaderModel.EditedBy = _userManager.GetUserName(User);
-                        existingHeaderModel.EditedDate = DateTime.Now;
+                        existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         existingHeaderModel.Date = viewModel.TransactionDate;
                         existingHeaderModel.PONo = [viewModel.PoNo];
                         existingHeaderModel.SINo = [viewModel.SiNo];
@@ -1551,7 +1563,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                     viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                        .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
+                        .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
                         .Select(sup => new SelectListItem
                         {
                             Value = sup.SupplierId.ToString(),
@@ -1576,7 +1588,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category != "Trade")
+                .Where(supp => supp.Company == companyClaims && supp.Category == "Non-Trade")
                 .Select(sup => new SelectListItem
                 {
                     Value = sup.SupplierId.ToString(),

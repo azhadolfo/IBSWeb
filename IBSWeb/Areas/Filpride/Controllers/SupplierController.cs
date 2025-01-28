@@ -138,8 +138,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (document != null && document.Length > 0)
                     {
-                        model.ProofOfExemptionFileName = GenerateFileNameToSave(registration.FileName);
-                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfExemptionFileName);
+                        model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
+                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName);
                     }
 
                     model.SupplierCode = await _unitOfWork.FilprideSupplier
@@ -225,8 +225,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (document != null && document.Length > 0)
                     {
-                        model.ProofOfExemptionFileName = GenerateFileNameToSave(registration.FileName);
-                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfExemptionFileName);
+                        model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
+                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName);
                     }
 
                     model.EditedBy = _userManager.GetUserName(User);

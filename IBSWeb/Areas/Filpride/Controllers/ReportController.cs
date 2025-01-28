@@ -1822,7 +1822,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var cv in disbursementBooks)
             {
-                worksheet.Cells[row, 1].Value = cv.Date;
+                worksheet.Cells[row, 1].Value = cv.Date.ToString("dd-MMM-yyyy");
                 worksheet.Cells[row, 2].Value = cv.CVNo;
                 worksheet.Cells[row, 3].Value = cv.Payee;
                 worksheet.Cells[row, 4].Value = cv.Particulars;

@@ -15,6 +15,7 @@ using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -99,6 +100,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Supplier?.SupplierId.ToString().Contains(searchValue) == true ||
+                        s.CheckVoucherHeader?.Total.ToString().Contains(searchValue) == true ||
                         s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
                         s.Amount.ToString().Contains(searchValue) ||
                         s.AmountPaid.ToString().Contains(searchValue) ||
@@ -192,7 +194,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                         modelHeader.PostedBy = _userManager.GetUserName(this.User);
-                        modelHeader.PostedDate = DateTime.Now;
+                        modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         modelHeader.Status = nameof(CheckVoucherPaymentStatus.Posted);
 
                         #region --General Ledger Book Recording(CV)--
@@ -331,7 +333,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.CanceledBy == null)
                 {
                     model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTime.Now;
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(CheckVoucherPaymentStatus.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
@@ -409,7 +411,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTime.Now;
+                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(CheckVoucherPaymentStatus.Voided);
 
                         if (model.CvType == nameof(CVType.Payment) && getPaymentDetails != null)
@@ -493,7 +495,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync();
 
             var suppliers = await _dbContext.FilprideSuppliers
-                .Where(cvh => cvh.Company == companyClaims && cvh.Category != "Trade")
+                .Where(cvh => cvh.Company == companyClaims)
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.SupplierId.ToString(),
@@ -603,7 +605,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingHeaderModel.CheckVoucherHeader.Particulars = $"{viewModel.Particulars} Payment for {string.Join(",", invoicingVoucher.Select(i => i.CheckVoucherHeaderNo))}";
                         existingHeaderModel.CheckVoucherHeader.Total = viewModel.Total;
                         existingHeaderModel.CheckVoucherHeader.EditedBy = _userManager.GetUserName(this.User);
-                        existingHeaderModel.CheckVoucherHeader.EditedDate = DateTime.Now;
+                        existingHeaderModel.CheckVoucherHeader.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         existingHeaderModel.CheckVoucherHeader.Category = "Non-Trade";
                         existingHeaderModel.CheckVoucherHeader.CvType = nameof(CVType.Payment);
                         existingHeaderModel.CheckVoucherHeader.Reference = string.Join(", ", invoicingVoucher.Select(inv => inv.CheckVoucherHeaderNo));
@@ -936,7 +938,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(cvh => cvh.Company == companyClaims && cvh.Category != "Trade")
+                .Where(cvh => cvh.Company == companyClaims)
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.SupplierId.ToString(),
@@ -1017,7 +1019,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CvType = nameof(CVType.Payment),
                         Reference = string.Join(", ", invoicingVoucher.Select(inv => inv.CheckVoucherHeaderNo)),
                         BankId = viewModel.BankId,
-                        Payee = null,
+                        Payee = invoicingVoucher.Select(i => i.Payee).FirstOrDefault(),
                         CheckNo = viewModel.CheckNo,
                         CheckDate = viewModel.CheckDate,
                         CheckAmount = viewModel.Total,
@@ -1273,41 +1275,56 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
-            var invoice = await _dbContext.FilprideCheckVoucherDetails
-                .Where(i => cvId.Contains(i.CheckVoucherHeaderId) && i.SupplierId != null && i.SupplierId == supplierId && i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) ||
-                            cvId.Contains(i.CheckVoucherHeader.CheckVoucherHeaderId) && i.CheckVoucherHeader.SupplierId != null && i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing))
+            var invoices = await _dbContext.FilprideCheckVoucherDetails
+                .Where(i =>
+                    cvId.Contains(i.CheckVoucherHeaderId) &&
+                    i.SupplierId != null &&
+                    i.SupplierId == supplierId &&
+                    i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) ||
+                    cvId.Contains(i.CheckVoucherHeader.CheckVoucherHeaderId) &&
+                    i.CheckVoucherHeader.SupplierId != null &&
+                    i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing))
                 .Include(i => i.Supplier)
                 .Include(i => i.CheckVoucherHeader)
                 .ToListAsync(cancellationToken);
 
             var totalInvoiceAmount = 0m;
             var invoiceAmount = 0m;
-            var particulars = invoice.Select(cvh => cvh.CheckVoucherHeader.Particulars).FirstOrDefault();
-            for (int i = 0; i < invoice.Count; i++)
+            var particulars = invoices.Select(cvh => cvh.CheckVoucherHeader.Particulars).FirstOrDefault();
+            var accountNumber = "202010200";
+            var accountTitle = "AP-Non Trade Payable";
+            foreach (var invoice in invoices.Where(i => i.Credit > 0))
             {
-                if (invoice[i].CheckVoucherHeader.SupplierId != null && supplierId != invoice[i].SupplierId)
+
+                if (invoice.CheckVoucherHeader.SupplierId != null && supplierId != invoice.SupplierId)
                 {
-                    var getBalance = invoice[i].CheckVoucherHeader.InvoiceAmount - invoice[i].CheckVoucherHeader.AmountPaid;
+                    var getBalance = invoice.CheckVoucherHeader.InvoiceAmount - invoice.CheckVoucherHeader.AmountPaid;
                     totalInvoiceAmount += getBalance;
                     invoiceAmount = getBalance;
+
                 }
                 else
                 {
-                    var getBalance = invoice[i].Amount - invoice[i].AmountPaid;
-
+                    var getBalance = invoice.Amount - invoice.AmountPaid;
+                    accountNumber = invoice.AccountNo;
+                    accountTitle = invoice.AccountName;
                     totalInvoiceAmount += getBalance;
                     invoiceAmount = getBalance;
                 }
-
             }
 
-            if (invoice != null)
+            if (invoices != null)
             {
                 return Json(new
                 {
                     Amount = totalInvoiceAmount,
                     InvoiceAmount = invoiceAmount,
-                    Particulars = particulars
+                    Particulars = particulars,
+                    ApAccount = new
+                    {
+                        AccountNumber = accountNumber,
+                        AccountTitle = accountTitle,
+                    }
                 });
             }
 

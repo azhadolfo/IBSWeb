@@ -258,6 +258,10 @@
                         if (data) {
                             $("#Particulars").val(data.particulars);
                             $(".amountPaid_" + cvId).val(data.invoiceAmount);
+
+                            $("#accountingEntriesBody tr:first-child").find("input[name='AccountNumber']").val(data.apAccount.accountNumber);
+                            $("#accountingEntriesBody tr:first-child").find("input[name='AccountTitle']").val(data.apAccount.accountTitle);
+                            
                             updateAmounts();
                         }
                     },
