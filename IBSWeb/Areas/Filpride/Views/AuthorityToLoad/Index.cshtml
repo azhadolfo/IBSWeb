@@ -55,6 +55,9 @@
                 "serverSide": true, // Enable server-side processing
                 "stateSave": true,
                 "stateDuration": 86400,
+                "language": {
+                    "processing": "Loading data..."
+                },
                 "ajax": {
                     "url": "@Url.Action("GetAuthorityToLoads", "AuthorityToLoad", new { area = "Filpride" })",
                     "type": "POST",
@@ -62,7 +65,17 @@
                         return $.extend({}, d, {
                             __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
                         });
+                    },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
                     }
+                },
+                "preDrawCallback": function(settings) {
+                    $('#paginatedTable').addClass('table-loading');
+                },
+                "drawCallback": function(settings) {
+                    $('#paginatedTable').removeClass('table-loading');
                 },
                 "columns": [
                     { "data": "authorityToLoadNo" },

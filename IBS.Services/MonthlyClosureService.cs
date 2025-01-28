@@ -40,8 +40,7 @@ namespace IBS.Services
                 await InTransit(previousMonth);
                 await CheckTheUntriggeredPurchaseOrders(previousMonth);
                 await AutoReversalForCvWithoutDcrDate(previousMonth);
-                _logger.LogInformation(
-                    $"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
+                _logger.LogInformation($"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
             }
             catch (Exception ex)
             {
@@ -206,7 +205,6 @@ namespace IBS.Services
                 var endOfPreviousMonth = startOfMonth.AddDays(-1);
 
                 var disbursementsWithoutDcrDate = await _dbContext.FilprideCheckVoucherHeaders
-                    .Include(cv => cv.Details)
                     .Where(cv =>
                         cv.Date.Month == previousMonth.AddMonths(-3).Month &&
                         cv.Date.Year == previousMonth.AddMonths(-3).Year &&
@@ -226,7 +224,11 @@ namespace IBS.Services
                     var ledgers = new List<FilprideGeneralLedgerBook>();
                     var journalBooks = new List<FilprideJournalBook>();
 
-                    foreach (var cvDetails in cv.Details)
+                    var details = await _dbContext.FilprideCheckVoucherDetails
+                        .Where(cvd => cvd.CheckVoucherHeaderId == cv.CheckVoucherHeaderId)
+                        .ToListAsync();
+
+                    foreach (var cvDetails in details)
                     {
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {

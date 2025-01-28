@@ -106,6 +106,9 @@
                 "serverSide": true,
                 "stateSave": true,
                 "stateDuration": 86400,
+                "language": {
+                    "processing": "Loading data..."
+                },
                 "ajax": {
                     "url": "@Url.Action("GetCollectionReceipts", "CollectionReceipt", new { area = "Filpride" })",
                     "type": "POST",
@@ -114,10 +117,16 @@
                             __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
                         });
                     },
-                    "dataSrc": function (json) {
-                        console.log(json); // Log the returned data to the console
-                        return json.data; // Return the data to populate the DataTable
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
                     }
+                },
+                "preDrawCallback": function(settings) {
+                    $('#paginatedTable').addClass('table-loading');
+                },
+                "drawCallback": function(settings) {
+                    $('#paginatedTable').removeClass('table-loading');
                 },
                 "columns": [
                     { "data": "collectionReceiptNo" },

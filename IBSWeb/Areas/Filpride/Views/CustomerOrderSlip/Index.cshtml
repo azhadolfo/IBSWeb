@@ -72,6 +72,9 @@
                 "serverSide": true,
                 "stateSave": true,
                 "stateDuration": 86400,
+                "language": {
+                    "processing": "Loading data..."
+                },
                 "ajax": {
                     "url": "@Url.Action("GetCustomerOrderSlips", "CustomerOrderSlip", new { area = "Filpride", filterType = ViewBag.FilterType?.ToString() })",
                     "type": "POST",
@@ -80,6 +83,16 @@
                             __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
                         });
                     },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
+                    }
+                },
+                "preDrawCallback": function(settings) {
+                    $('#paginatedTable').addClass('table-loading');
+                },
+                "drawCallback": function(settings) {
+                    $('#paginatedTable').removeClass('table-loading');
                 },
                 "columns": [
                     { "data": "customerOrderSlipNo" },
