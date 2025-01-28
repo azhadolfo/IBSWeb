@@ -137,5 +137,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public DateOnly? DcpDate { get; set; }
 
         public DateOnly? DcrDate { get; set; }
+
+        public ICollection<FilprideCheckVoucherDetail>? Details { get; set; }
     }
 }
