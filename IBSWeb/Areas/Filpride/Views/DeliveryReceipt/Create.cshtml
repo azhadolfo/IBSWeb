@@ -215,6 +215,7 @@
                                     //Remove the else condition in the future
                                     if (parseInt(cosId) > 748) {
                                         $('select[name="HaulerId"]').val(data.haulerId).change();
+                                        console.log(data.haulerId);
                                     }
                                     else{
                                         $('select[name="HaulerId"]').val("").change();

@@ -1285,10 +1285,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (existingCos.SupplierId != null)
                     {
-                        if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                        if (existingCos.DeliveryOption != SD.DeliveryOption_ForPickUpByClient)
                         {
                             existingCos.Freight = viewModel.Freight;
                             existingCos.HaulerId = viewModel.HaulerId;
+                        }
+                        else
+                        {
+                            existingCos.Freight = 0;
+                            existingCos.HaulerId = null;
                         }
 
                         existingCos.Status = nameof(CosStatus.ForAtlBooking);
@@ -1296,6 +1301,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     else
                     {
                         existingCos.Freight = viewModel.Freight;
+                        existingCos.HaulerId = viewModel.HaulerId;
                         existingCos.Status = nameof(CosStatus.HaulerAppointed);
                     }
 
@@ -1369,15 +1375,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (existingCos.SupplierId != null)
                     {
-                        if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
+                        if (existingCos.DeliveryOption != SD.DeliveryOption_ForPickUpByClient)
                         {
                             existingCos.Freight = viewModel.Freight;
                             existingCos.HaulerId = viewModel.HaulerId;
+                        }
+                        else
+                        {
+                            existingCos.Freight = 0;
+                            existingCos.HaulerId = null;
                         }
                     }
                     else
                     {
                         existingCos.Freight = viewModel.Freight;
+                        existingCos.HaulerId = viewModel.HaulerId;
                     }
 
                     existingCos.Driver = viewModel.Driver;
