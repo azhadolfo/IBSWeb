@@ -1939,7 +1939,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var cashReceipt in cashReceiptBooks)
             {
-                worksheet.Cells[row, 1].Value = cashReceipt.Date;
+                worksheet.Cells[row, 1].Value = cashReceipt.Date.ToString("dd-MMM-yyyy");
                 worksheet.Cells[row, 2].Value = cashReceipt.RefNo;
                 worksheet.Cells[row, 3].Value = cashReceipt.CustomerName;
                 worksheet.Cells[row, 4].Value = cashReceipt.Bank;
@@ -2052,7 +2052,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var gl in generalBooks)
             {
-                worksheet.Cells[row, 1].Value = gl.Date;
+                worksheet.Cells[row, 1].Value = gl.Date.ToString("dd-MMM-yyyy");
                 worksheet.Cells[row, 2].Value = gl.Reference;
                 worksheet.Cells[row, 3].Value = gl.Description;
                 worksheet.Cells[row, 4].Value = $"{gl.AccountNo} {gl.AccountTitle}";
@@ -2173,7 +2173,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     totalPriceUnitAmount = getLastRecordCost;
                 }
-                worksheet.Cells[row, 1].Value = inventory.Date;
+                worksheet.Cells[row, 1].Value = inventory.Date.ToString("dd-MMM-yyyy");
                 worksheet.Cells[row, 2].Value = inventory.Product.ProductCode;
                 worksheet.Cells[row, 3].Value = inventory.Product.ProductName;
                 worksheet.Cells[row, 4].Value = inventory.Product.ProductUnit;
@@ -2287,7 +2287,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var jv in journalBooks)
             {
-                worksheet.Cells[row, 1].Value = jv.Date;
+                worksheet.Cells[row, 1].Value = jv.Date.ToString("dd-MMM-yyyy");
                 worksheet.Cells[row, 2].Value = jv.Reference;
                 worksheet.Cells[row, 3].Value = jv.Description;
                 worksheet.Cells[row, 4].Value = jv.AccountTitle;
@@ -2411,7 +2411,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var pb in purchaseBooks)
             {
-                worksheet.Cells[row, 1].Value = pb.Date;
+                worksheet.Cells[row, 1].Value = pb.Date.ToString("dd-MMM-yyyy");
                 worksheet.Cells[row, 2].Value = pb.SupplierName;
                 worksheet.Cells[row, 3].Value = pb.SupplierTin;
                 worksheet.Cells[row, 4].Value = pb.SupplierAddress;
@@ -2553,7 +2553,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var cv in salesBook)
             {
-                worksheet.Cells[row, 1].Value = cv.TransactionDate;
+                worksheet.Cells[row, 1].Value = cv.TransactionDate.ToString("dd-MMM-yyyy");
                 worksheet.Cells[row, 2].Value = cv.SerialNo;
                 worksheet.Cells[row, 3].Value = cv.SoldTo;
                 worksheet.Cells[row, 4].Value = cv.TinNo;
@@ -2714,7 +2714,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var vat = salesNetOfVat * .12m;
                 var freightNetOfVat = freight / 1.12m;
 
-                worksheet.Cells[row, 1].Value = si.TransactionDate;
+                worksheet.Cells[row, 1].Value = si.TransactionDate.ToString("dd-MMM-yyyy");
                 worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
                 worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
                 worksheet.Cells[row, 4].Value = si.CustomerOrderSlip?.AccountSpecialist;
@@ -3097,7 +3097,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 worksheet.Cells[row, 1].Value = po.PurchaseOrderNo;
                 worksheet.Cells[row, 2].Value = po.OldPoNo;
-                worksheet.Cells[row, 3].Value = po.Date;
+                worksheet.Cells[row, 3].Value = po.Date.ToString("dd-MMM-yyyy");
                 worksheet.Cells[row, 4].Value = po.Supplier?.SupplierName;
                 worksheet.Cells[row, 5].Value = po.Product?.ProductName;
                 worksheet.Cells[row, 6].Value = po.Quantity;
@@ -3210,20 +3210,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["P7"].Value = "CPL G.VAT";
                     purchaseReportWorksheet.Cells["Q7"].Value = "PURCHASES G.VAT";
                     purchaseReportWorksheet.Cells["R7"].Value = "VAT AMOUNT";
-                    purchaseReportWorksheet.Cells["S7"].Value = "DEF VAT AMOUNT";
-                    purchaseReportWorksheet.Cells["T7"].Value = "WHT AMOUNT";
-                    purchaseReportWorksheet.Cells["U7"].Value = "HAULER'S NAME";
-                    purchaseReportWorksheet.Cells["V7"].Value = "PURCHASES N.VAT";
-                    purchaseReportWorksheet.Cells["W7"].Value = "FREIGHT N.VAT";
-                    purchaseReportWorksheet.Cells["X7"].Value = "COMMISSION";
-                    purchaseReportWorksheet.Cells["Y7"].Value = "MANUAL DR NO.";
-                    purchaseReportWorksheet.Cells["Z7"].Value = "OLD PO NO.";
+                    purchaseReportWorksheet.Cells["S7"].Value = "WHT AMOUNT";
+                    purchaseReportWorksheet.Cells["T7"].Value = "HAULER'S NAME";
+                    purchaseReportWorksheet.Cells["U7"].Value = "PURCHASES N.VAT";
+                    purchaseReportWorksheet.Cells["V7"].Value = "FREIGHT N.VAT";
+                    purchaseReportWorksheet.Cells["W7"].Value = "COMMISSION";
+                    purchaseReportWorksheet.Cells["X7"].Value = "MANUAL DR NO.";
+                    purchaseReportWorksheet.Cells["Y7"].Value = "OLD PO NO.";
 
                     #endregion
 
                     #region -- Apply styling to the header row --
 
-                    using (var range = purchaseReportWorksheet.Cells["A7:Z7"])
+                    using (var range = purchaseReportWorksheet.Cells["A7:Y7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -3264,8 +3263,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Assign Values to Cells --
 
-                        purchaseReportWorksheet.Cells[row, 1].Value = pr.DeliveryReceipt?.Date; // Date ====== dr date
-                        purchaseReportWorksheet.Cells[row, 2].Value = pr.Date; // Date ====== rr date
+                        purchaseReportWorksheet.Cells[row, 1].Value = pr.DeliveryReceipt?.Date.ToString("dd-MMM-yyyy"); // Date ====== dr date
+                        purchaseReportWorksheet.Cells[row, 2].Value = pr.Date.ToString("dd-MMM-yyyy"); // Date ====== rr date
                         purchaseReportWorksheet.Cells[row, 3].Value = pr.PurchaseOrder?.Supplier?.SupplierName; // Supplier Name
                         purchaseReportWorksheet.Cells[row, 4].Value = pr.PurchaseOrder?.Supplier?.SupplierTin; // Supplier Tin
                         purchaseReportWorksheet.Cells[row, 5].Value = pr.PurchaseOrder?.Supplier?.SupplierAddress; // Supplier Address
@@ -3283,17 +3282,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, 17].Value = costAmount; // Purchase total gross
                         purchaseReportWorksheet.Cells[row, 18].Value = vatAmount; // Vat total
                         // Def Vat Amount
-                        purchaseReportWorksheet.Cells[row, 20].Value = whtAmount; // WHT total
-                        purchaseReportWorksheet.Cells[row, 21].Value = pr.DeliveryReceipt?.Hauler?.SupplierName; // Hauler's Name
-                        purchaseReportWorksheet.Cells[row, 22].Value = netPurchases; // Purchase total net ======== move to third last
-                        purchaseReportWorksheet.Cells[row, 23].Value = netFreight; // freight n vat ============
-                        purchaseReportWorksheet.Cells[row, 24].Value = commission; // commission =========
-                        purchaseReportWorksheet.Cells[row, 25].Value = pr.DeliveryReceipt?.ManualDrNo; // commission =========
-                        purchaseReportWorksheet.Cells[row, 26].Value = pr.PurchaseOrder?.OldPoNo; // commission =========
+                        purchaseReportWorksheet.Cells[row, 19].Value = whtAmount; // WHT total
+                        purchaseReportWorksheet.Cells[row, 20].Value = pr.DeliveryReceipt?.Hauler?.SupplierName; // Hauler's Name
+                        purchaseReportWorksheet.Cells[row, 21].Value = netPurchases; // Purchase total net ======== move to third last
+                        purchaseReportWorksheet.Cells[row, 22].Value = netFreight; // freight n vat ============
+                        purchaseReportWorksheet.Cells[row, 23].Value = commission; // commission =========
+                        purchaseReportWorksheet.Cells[row, 24].Value = pr.DeliveryReceipt?.ManualDrNo; // commission =========
+                        purchaseReportWorksheet.Cells[row, 25].Value = pr.PurchaseOrder?.OldPoNo; // commission =========
 
                         #endregion -- Assign Values to Cells --
 
-                        #region -- Add the values to total and format number cells --
+                        #region -- Add the values to total --
 
                         totalCostAmount += costAmount;
                         totalVatAmount += vatAmount;
@@ -3302,15 +3301,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         totalCOSAmount += cosAmount;
                         totalCommission += commission;
 
+                        #endregion -- Add the values to total and format number cells --
+
+                        #region -- Add format number cells from Assign Values to Cells --
+
                         purchaseReportWorksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat0;
                         purchaseReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
                         purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat2;
                         purchaseReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat2;
                         purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat2;
+                        purchaseReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat2;
+                        purchaseReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
+                        purchaseReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat2;
 
-                        #endregion -- Add the values to total and format number cells --
+                        #endregion -- Add format number cells from Assign Values to Cells --
 
                         row++;
                     }
@@ -3331,19 +3335,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells[row, 16].Value = totalCostPerLiter;
                     purchaseReportWorksheet.Cells[row, 17].Value = totalCostAmount;
                     purchaseReportWorksheet.Cells[row, 18].Value = totalVatAmount;
-                    purchaseReportWorksheet.Cells[row, 20].Value = totalWHTAmount;
-                    purchaseReportWorksheet.Cells[row, 22].Value = totalNetPurchases;
-                    purchaseReportWorksheet.Cells[row, 23].Value = totalNetFreight;
-                    purchaseReportWorksheet.Cells[row, 24].Value = totalCommission;
+                    purchaseReportWorksheet.Cells[row, 19].Value = totalWHTAmount;
+                    purchaseReportWorksheet.Cells[row, 21].Value = totalNetPurchases;
+                    purchaseReportWorksheet.Cells[row, 22].Value = totalNetFreight;
+                    purchaseReportWorksheet.Cells[row, 23].Value = totalCommission;
 
                     purchaseReportWorksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat0;
                     purchaseReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
                     purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
                     purchaseReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
                     purchaseReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
                     purchaseReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
 
                     #endregion -- Assign values of other totals and formatting of total cells --
 
@@ -3646,7 +3650,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             #region -- Assign Values to Cells --
 
-                            worksheet.Cells[row, 1].Value = transaction.TransactionDate; // Date
+                            worksheet.Cells[row, 1].Value = transaction.TransactionDate.ToString("dd-MMM-yyyy"); // Date
                             worksheet.Cells[row, 2].Value = transaction.Customer?.CustomerName; // Account Name
                             worksheet.Cells[row, 3].Value = transaction.Customer?.CustomerType; // Account Type
                             worksheet.Cells[row, 4].Value = transaction.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
@@ -3823,7 +3827,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             #region -- Assign Values to Cells --
 
-                            worksheet.Cells[row, 1].Value = transaction.TransactionDate; // Date
+                            worksheet.Cells[row, 1].Value = transaction.TransactionDate.ToString("dd-MMM-yyyy"); // Date
                             worksheet.Cells[row, 2].Value = transaction.Customer?.CustomerName; // Account Name
                             worksheet.Cells[row, 3].Value = transaction.Customer?.CustomerType; // Account Type
                             worksheet.Cells[row, 4].Value = transaction.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
@@ -4336,7 +4340,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Assign Values to Cells --
 
-                    gmReportWorksheet.Cells[row, 1].Value = pr.Date; // Date
+                    gmReportWorksheet.Cells[row, 1].Value = pr.Date.ToString("dd-MMM-yyyy"); // Date
                     gmReportWorksheet.Cells[row, 2].Value = pr.PurchaseOrder?.Supplier?.SupplierName; // Supplier Name
                     gmReportWorksheet.Cells[row, 3].Value = pr.PurchaseOrder?.PurchaseOrderNo; // PO No.
                     gmReportWorksheet.Cells[row, 4].Value = pr.ReceivingReportNo; // Filpride RR
