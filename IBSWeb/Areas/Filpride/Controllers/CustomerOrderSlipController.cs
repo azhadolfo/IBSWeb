@@ -1474,6 +1474,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
         public async Task<IActionResult> Close(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
