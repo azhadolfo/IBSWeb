@@ -89,7 +89,7 @@
                                 {
                                     <tr>
                                         <td>
-                                            <select asp-for="AccountingEntries[i].AccountTitle"
+                                            <select name="AccountingEntries[@i].AccountTitle" asp-for="@Model.AccountingEntries[i].AccountTitle"
                                                     class="form-select form-select-sm chart-of-accounts default-expense js-select2 w-100"
                                                     style="width: 100%">
                                                 <option value="">-- Select Account --</option>
@@ -100,13 +100,17 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <input type="number" asp-for="AccountingEntries[i].Amount" class="form-control form-control-sm text-end amount" />
+                                            <input type="number" name="AccountingEntries[@i].Amount" value="@Model.AccountingEntries[i].Amount" class="form-control form-control-sm text-end amount" />
                                         </td>
                                         <td class="text-center">
-                                            <input type="checkbox" asp-for="AccountingEntries[i].Vatable" class="form-check-input vatable default-vatable" />
+                                            <input type="checkbox"
+                                                   name="AccountingEntries[@i].Vatable"
+                                                   value="true"
+                                                   @(Model.AccountingEntries[i].Vatable ? "checked" : "")
+                                                   class="form-check-input vatable default-vatable" />
                                         </td>
                                         <td>
-                                            <select asp-for="AccountingEntries[i].TaxPercentage" class="form-select form-select-sm taxable">
+                                            <select name="AccountingEntries[@i].TaxPercentage" asp-for="@Model.AccountingEntries[i].TaxPercentage" class="form-select form-select-sm taxable">
                                                 <option value="0" selected="">0%</option>
                                                 <option value="0.01">1%</option>
                                                 <option value="0.02">2%</option>
@@ -115,13 +119,13 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <input type="number" asp-for="AccountingEntries[i].VatAmount" class="form-control form-control-sm text-end vat-amount" readonly />
+                                            <input type="number" name="AccountingEntries[@i].VatAmount" value="@Model.AccountingEntries[i].VatAmount" class="form-control form-control-sm text-end vat-amount" readonly />
                                         </td>
                                         <td>
-                                            <input type="number" asp-for="AccountingEntries[i].TaxAmount" class="form-control form-control-sm text-end tax-amount" readonly />
+                                            <input type="number" name="AccountingEntries[@i].TaxAmount" value="@Model.AccountingEntries[i].TaxAmount" class="form-control form-control-sm text-end tax-amount" readonly />
                                         </td>
                                         <td>
-                                            <input type="number" asp-for="AccountingEntries[i].NetOfVatAmount" class="form-control form-control-sm text-end net-of-vat" readonly />
+                                            <input type="number" name="AccountingEntries[@i].NetOfVatAmount" value="@Model.AccountingEntries[i].NetOfVatAmount" class="form-control form-control-sm text-end net-of-vat" readonly />
                                         </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-danger btn-sm removeRow" @(i == 0 ? "disabled" : "")>
@@ -545,8 +549,11 @@
         // Form validation
         function validateTotals() {
             const totalAmount = parseFloat(document.querySelector('[name="Total"]').value) || 0;
+            console.log(totalAmount);
             const totalDebit = Object.values(accumulatedEntries).reduce((sum, amt) => sum + amt.debit, 0);
+            console.log(totalDebit);
             const totalCredit = Object.values(accumulatedEntries).reduce((sum, amt) => sum + amt.credit, 0);
+            console.log(totalCredit);
 
             if (totalAmount <= 0) {
                 Swal.fire({
@@ -578,12 +585,17 @@
             return true;
         }
 
-        // Form submit handler
-        document.querySelector('form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (validateTotals()) {
-                this.submit();
-            }
+        $(document).ready(function() {
+            // Remove any existing submit handlers
+            $('form').off('submit');
+
+            // Add our submit handler
+            $('form').on('submit', function(e) {
+                e.preventDefault();
+                if (validateTotals()) {
+                    this.submit();
+                }
+            });
         });
         
     </script>
