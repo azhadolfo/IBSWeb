@@ -325,5 +325,42 @@ namespace IBS.DataAccess.Repository.Filpride
 
             return receivingReports;
         }
+
+        public List<FilprideCollectionReceipt> GetCollectionReport (DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var collectionReceipts = _db.FilprideCollectionReceipts
+                .Where(cr => cr.Company == company && cr.TransactionDate >= dateFrom && cr.TransactionDate <= dateTo)
+                .Include(cr => cr.SalesInvoice)
+                .Include(cr => cr.Customer)
+                .OrderBy(cr => cr.Customer.CustomerCode)
+                .ThenBy(cr => cr.Customer.CustomerName)
+                .ThenBy(cr => cr.Customer.CustomerType) // Order by TransactionDate
+                .ToList();
+
+            return collectionReceipts;
+        }
+
+        public List<FilprideReceivingReport> GetTradePayableReport (DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var receivingReports = _db.FilprideReceivingReports
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Where(rr => rr.Company == company && rr.Date <= dateTo)
+                .OrderBy(rr => rr.Date.Year)
+                .ThenBy(rr => rr.Date.Month)
+                .ThenBy(rr => rr.PurchaseOrder.Supplier.SupplierName)
+                .ToList();
+
+            return receivingReports;
+        }
     }
 }

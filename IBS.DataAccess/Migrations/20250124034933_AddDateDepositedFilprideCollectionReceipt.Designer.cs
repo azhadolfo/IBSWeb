@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250124034933_AddDateDepositedFilprideCollectionReceipt")]
+    partial class AddDateDepositedFilprideCollectionReceipt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,14 +128,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
                         .HasColumnName("date");
-
-                    b.Property<DateOnly?>("DcpDate")
-                        .HasColumnType("date")
-                        .HasColumnName("dcp_date");
-
-                    b.Property<DateOnly?>("DcrDate")
-                        .HasColumnType("date")
-                        .HasColumnName("dcr_date");
 
                     b.Property<string>("EditedBy")
                         .HasColumnType("varchar(50)")
@@ -3208,138 +3203,6 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_customer_branches_customer_id");
 
                     b.ToTable("filpride_customer_branches", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideEmployee", b =>
-                {
-                    b.Property<int>("EmployeeId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("employee_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EmployeeId"));
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("address");
-
-                    b.Property<DateOnly>("BirthDate")
-                        .HasColumnType("date")
-                        .HasColumnName("birth_date");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("company");
-
-                    b.Property<DateOnly>("DateHired")
-                        .HasColumnType("date")
-                        .HasColumnName("date_hired");
-
-                    b.Property<DateOnly?>("DateResigned")
-                        .HasColumnType("date")
-                        .HasColumnName("date_resigned");
-
-                    b.Property<string>("Depatment")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("depatment");
-
-                    b.Property<string>("EmployeeNumber")
-                        .IsRequired()
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("employee_number");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("first_name");
-
-                    b.Property<string>("Initial")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("initial");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<bool>("IsManagerial")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_managerial");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("last_name");
-
-                    b.Property<string>("MiddleName")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("middle_name");
-
-                    b.Property<string>("PagibigNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("pagibig_no");
-
-                    b.Property<string>("Paygrade")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("paygrade");
-
-                    b.Property<string>("PhilhealthNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("philhealth_no");
-
-                    b.Property<string>("Position")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("position");
-
-                    b.Property<decimal>("Salary")
-                        .HasColumnType("numeric(18,2)")
-                        .HasColumnName("salary");
-
-                    b.Property<string>("SssNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("sss_no");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("varchar(5)")
-                        .HasColumnName("status");
-
-                    b.Property<string>("Suffix")
-                        .IsRequired()
-                        .HasColumnType("varchar(5)")
-                        .HasColumnName("suffix");
-
-                    b.Property<string>("Supervisor")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("supervisor");
-
-                    b.Property<string>("TelNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("tel_no");
-
-                    b.Property<string>("TinNo")
-                        .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("tin_no");
-
-                    b.HasKey("EmployeeId")
-                        .HasName("pk_filpride_employees");
-
-                    b.HasIndex("EmployeeNumber")
-                        .HasDatabaseName("ix_filpride_employees_employee_number");
-
-                    b.ToTable("filpride_employees", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilpridePickUpPoint", b =>
