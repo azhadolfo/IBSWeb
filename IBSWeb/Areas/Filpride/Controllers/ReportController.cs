@@ -977,6 +977,75 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult ArPerCustomer()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GeneratedArPerCustomer(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            ViewData["DateFrom"] = model.DateFrom;
+            ViewData["DateTo"] = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var salesInvoice = await _dbContext.FilprideSalesInvoices
+                        .Where(si => si.PostedBy != null)
+                        .Include(si => si.Product)
+                        .Include(si => si.Customer)
+                        .Include(si => si.DeliveryReceipt)
+                        .Include(si => si.CustomerOrderSlip)
+                        .ToListAsync(cancellationToken);
+
+                    return View(salesInvoice);
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(ArPerCustomer));
+                }
+            }
+
+            TempData["error"] = "Please input date from";
+            return RedirectToAction(nameof(ArPerCustomer));
+        }
+
+        [HttpGet]
+        public IActionResult AgingReport()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GeneratedAgingReport(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            ViewData["DateFrom"] = model.DateFrom;
+            ViewData["DateTo"] = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var salesInvoice = await _unitOfWork.FilprideSalesInvoice
+                        .GetAllAsync(si => si.PostedBy != null, cancellationToken);
+
+                    return View(salesInvoice);
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(AgingReport));
+                }
+            }
+
+            TempData["error"] = "Please input date from";
+            return RedirectToAction(nameof(AgingReport));
+        }
+
         //Generate as .txt file
 
         #region -- Generate Audit Trail .Txt File --
@@ -4667,5 +4736,447 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- Generate GM Report Excel File --
+
+        #region -- Generate AR Per Customer Excel File --
+
+        public async Task<IActionResult> GenerateArPerCustomerExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var salesInvoice = await _dbContext.FilprideSalesInvoices
+                .Where(si => si.PostedBy != null)
+                .Include(si => si.Product)
+                .Include(si => si.Customer)
+                .Include(si => si.DeliveryReceipt)
+                .Include(si => si.CustomerOrderSlip)
+                .ToListAsync(cancellationToken);
+
+            if (!salesInvoice.Any())
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(ArPerCustomer));
+            }
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("ARPerCustomer");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "AR PER CUSTOMER";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Extracted By:";
+            worksheet.Cells["A4"].Value = "Company:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{extractedBy}";
+            worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+            worksheet.Cells["A7"].Value = "CUSTOMER No.";
+            worksheet.Cells["B7"].Value = "CUSTOMER NAME";
+            worksheet.Cells["C7"].Value = "ACCT. TYPE";
+            worksheet.Cells["D7"].Value = "TERMS";
+            worksheet.Cells["E7"].Value = "TRAN. DATE";
+            worksheet.Cells["F7"].Value = "DUE DATE";
+            worksheet.Cells["G7"].Value = "INVOICE No.";
+            worksheet.Cells["H7"].Value = "DR No.";
+            worksheet.Cells["I7"].Value = "PO No.";
+            worksheet.Cells["J7"].Value = "COS No.";
+            worksheet.Cells["K7"].Value = "REMARKS";
+            worksheet.Cells["L7"].Value = "PRODUCT";
+            worksheet.Cells["M7"].Value = "QTY";
+            worksheet.Cells["N7"].Value = "UNIT";
+            worksheet.Cells["O7"].Value = "UNIT PRICE";
+            worksheet.Cells["P7"].Value = "FREIGHT";
+            worksheet.Cells["Q7"].Value = "FREIGHT/LTR";
+            worksheet.Cells["R7"].Value = "VAT/LTR";
+            worksheet.Cells["S7"].Value = "VAT AMT.";
+            worksheet.Cells["T7"].Value = "TOTAL AMT. (G. VAT)";
+            worksheet.Cells["U7"].Value = "AMT. PAID";
+            worksheet.Cells["V7"].Value = "SI BALANCE";
+            worksheet.Cells["W7"].Value = "EWT AMT.";
+            worksheet.Cells["X7"].Value = "EWT PAID";
+            worksheet.Cells["Y7"].Value = "CWT BALANCE";
+
+            // Apply styling to the header row
+            using (var range = worksheet.Cells["A7:Y7"])
+            {
+                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Populate the data rows
+            int row = 8;
+            string currencyFormat = "#,##0.0000";
+            string currencyFormatTwoDecimal = "#,##0.00";
+            string currencyFormatNoDecimal = "#,##0";
+
+            var totalQuantity = 0m;
+            var totalUnitPrice = 0m;
+            var totalFreight = 0m;
+            var totalFreightPerLiter = 0m;
+            var totalVatPerLiter = 0m;
+            var totalVatAmount = 0m;
+            var totalGrossAmount = 0m;
+            var totalAmountPaid = 0m;
+            var totalBalance = 0m;
+            var totalEwtAmount = 0m;
+            var totalEwtAmountPaid = 0m;
+            var totalewtBalance = 0m;
+
+            foreach (var si in salesInvoice)
+            {
+                var freight = si.DeliveryReceipt?.Freight * si.DeliveryReceipt?.Quantity;
+                var grossAmount = si.Amount;
+                var vatableAmount = grossAmount / 1.12m;
+                var vatAmount = vatableAmount * .12m;
+                var vatPerLiter = vatAmount * si.Quantity;
+                var ewtAmount = vatableAmount * .01m;
+                var isEwtAmountPaid = si.IsTaxAndVatPaid ? ewtAmount : 0m;
+                var ewtBalance = ewtAmount - isEwtAmountPaid;
+
+                worksheet.Cells[row, 1].Value = si.Customer?.CustomerCode;
+                worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
+                worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
+                worksheet.Cells[row, 4].Value = si.Terms;
+                worksheet.Cells[row, 5].Value = si.TransactionDate.ToString("dd-MMM-yyyy");
+                worksheet.Cells[row, 6].Value = si.DueDate.ToString("dd-MMM-yyyy");
+                worksheet.Cells[row, 7].Value = si.SalesInvoiceNo;
+                worksheet.Cells[row, 8].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
+                worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.CustomerOrderSlip?.CustomerPoNo;
+                worksheet.Cells[row, 10].Value = si.DeliveryReceipt?.CustomerOrderSlip?.CustomerOrderSlipNo;
+                worksheet.Cells[row, 11].Value = si.Remarks;
+                worksheet.Cells[row, 12].Value = si.Product?.ProductName;
+                worksheet.Cells[row, 13].Value = si.Quantity;
+                worksheet.Cells[row, 14].Value = si.Product?.ProductUnit;
+                worksheet.Cells[row, 15].Value = si.UnitPrice;
+                worksheet.Cells[row, 16].Value = freight;
+                worksheet.Cells[row, 17].Value = si.DeliveryReceipt?.Freight;
+                worksheet.Cells[row, 18].Value = vatPerLiter;
+                worksheet.Cells[row, 19].Value = vatAmount;
+                worksheet.Cells[row, 20].Value = grossAmount;
+                worksheet.Cells[row, 21].Value = si.AmountPaid;
+                worksheet.Cells[row, 22].Value = si.Balance;
+                worksheet.Cells[row, 23].Value = ewtAmount;
+                worksheet.Cells[row, 24].Value = isEwtAmountPaid;
+                worksheet.Cells[row, 25].Value = ewtBalance;
+
+                worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatNoDecimal;
+                worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
+
+                row++;
+
+                totalQuantity += si.Quantity;
+                totalFreight += freight ?? 0m;
+                totalFreightPerLiter += si.DeliveryReceipt?.Freight ?? 0m;
+                totalVatPerLiter += vatPerLiter;
+                totalVatAmount += vatAmount;
+                totalGrossAmount += grossAmount;
+                totalAmountPaid += si.AmountPaid;
+                totalBalance += si.Balance;
+                totalEwtAmount += ewtAmount;
+                totalEwtAmountPaid += isEwtAmountPaid;
+                totalewtBalance += ewtBalance;
+            }
+
+            worksheet.Cells[row, 12].Value = "Total ";
+
+            worksheet.Cells[row, 13].Value = totalQuantity;
+            worksheet.Cells[row, 15].Value = totalGrossAmount/totalQuantity;
+            worksheet.Cells[row, 16].Value = totalFreight;
+            worksheet.Cells[row, 17].Value = totalFreightPerLiter;
+            worksheet.Cells[row, 18].Value = totalVatPerLiter;
+            worksheet.Cells[row, 19].Value = totalVatAmount;
+            worksheet.Cells[row, 20].Value = totalGrossAmount;
+            worksheet.Cells[row, 21].Value = totalAmountPaid;
+            worksheet.Cells[row, 22].Value = totalBalance;
+            worksheet.Cells[row, 23].Value = totalEwtAmount;
+            worksheet.Cells[row, 24].Value = totalEwtAmountPaid;
+            worksheet.Cells[row, 25].Value = totalewtBalance;
+
+            worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatNoDecimal;
+            worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
+
+            // Apply style to subtotal row
+            using (var range = worksheet.Cells[row, 1, row, 25])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+            }
+
+            using (var range = worksheet.Cells[row, 12, row, 25])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+            }
+
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ArPerCustomerReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+        }
+
+        #endregion
+
+        #region -- Generate Aging Report Excel File --
+
+        public async Task<IActionResult> GenerateAgingReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var salesInvoice = await _unitOfWork.FilprideSalesInvoice
+                        .GetAllAsync(si => si.PostedBy != null && si.AmountPaid == 0 && !si.IsPaid, cancellationToken);
+
+            if (!salesInvoice.Any())
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(AgingReport));
+            }
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("AgingReport");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "AGING REPORT";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Extracted By:";
+            worksheet.Cells["A4"].Value = "Company:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{extractedBy}";
+            worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+            worksheet.Cells["A7"].Value = "MONTH";
+            worksheet.Cells["B7"].Value = "CUSTOMER NAME";
+            worksheet.Cells["C7"].Value = "ACCT. TYPE";
+            worksheet.Cells["D7"].Value = "TERMS";
+            worksheet.Cells["E7"].Value = "EWT %";
+            worksheet.Cells["F7"].Value = "SALES DATE";
+            worksheet.Cells["G7"].Value = "DUE DATE";
+            worksheet.Cells["H7"].Value = "INVOICE No.";
+            worksheet.Cells["I7"].Value = "DR";
+            worksheet.Cells["J7"].Value = "GROSS";
+            worksheet.Cells["K7"].Value = "PARTIAL COLLECTIONS";
+            worksheet.Cells["L7"].Value = "ADJUSTED GROSS";
+            worksheet.Cells["M7"].Value = "EWT";
+            worksheet.Cells["N7"].Value = "NET OF VAT";
+            worksheet.Cells["O7"].Value = "VCF";
+            worksheet.Cells["P7"].Value = "RETENTION AMOUNT";
+            worksheet.Cells["Q7"].Value = "ADJUSTED NET";
+            worksheet.Cells["R7"].Value = "DAYS DUE";
+            worksheet.Cells["S7"].Value = "CURRENT";
+            worksheet.Cells["T7"].Value = "1-30 DAYS";
+            worksheet.Cells["U7"].Value = "31-60 DAYS";
+            worksheet.Cells["V7"].Value = "61-90 DAYS";
+            worksheet.Cells["W7"].Value = "OVER 90 DAYS";
+
+            // Apply styling to the header row
+            using (var range = worksheet.Cells["A7:W7"])
+            {
+                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Populate the data rows
+            int row = 8;
+            string currencyFormat = "#,##0.0000";
+            string currencyFormatTwoDecimal = "#,##0.00";
+
+            var totalGrossAmount = 0m;
+            var totalAmountPaid = 0m;
+            var totalAdjustedGross = 0m;
+            var totalWithHoldingTaxAmount = 0m;
+            var totalNetOfVatAmount = 0m;
+            var totalVcfAmount = 0m;
+            var totalRetentionAmount = 0m;
+            var totalAdjustedNet = 0m;
+            var totalCurrent = 0m;
+            var totalOneToThirtyDays = 0m;
+            var totalThirtyOneToSixtyDays = 0m;
+            var totalSixtyOneToNinetyDays = 0m;
+            var totalOverNinetyDays = 0m;
+            foreach (var si in salesInvoice)
+            {
+                var gross = si.Amount;
+                decimal netDiscount = si.Amount - si.Discount;
+                decimal netOfVatAmount = si.Customer?.VatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
+                decimal withHoldingTaxAmount = (si.Customer?.WithHoldingTax ?? false) ? (netDiscount / 1.12m) * 0.01m : 0;
+                decimal retentionAmount = (si.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
+                decimal vcfAmount = 0.0000m;
+                decimal adjustedGross = gross - vcfAmount;
+                decimal adjustedNet = gross - vcfAmount - retentionAmount;
+
+                DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+                int daysDue = (today > si.DueDate) ? (today.DayNumber - si.DueDate.DayNumber) : 0;
+                var current = (si.DueDate >= today) ? gross : 0.0000m;
+                var oneToThirtyDays = (daysDue >= 1 && daysDue <= 30) ? gross : 0.0000m;
+                var thirtyOneToSixtyDays = (daysDue >= 31 && daysDue <= 60) ? gross : 0.0000m;
+                var sixtyOneToNinetyDays = (daysDue >= 61 && daysDue <= 90) ? gross : 0.0000m;
+                var overNinetyDays = (daysDue > 90) ? gross : 0.0000m;
+
+                worksheet.Cells[row, 1].Value = si.TransactionDate.ToString("MMM");
+                worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
+                worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
+                worksheet.Cells[row, 4].Value = si.Terms;
+                worksheet.Cells[row, 5].Value = (si.Customer?.WithHoldingTax ?? false) ? "1" : "0";
+                worksheet.Cells[row, 6].Value = si.TransactionDate.ToString("dd-MMM-yyyy");
+                worksheet.Cells[row, 7].Value = si.DueDate.ToString("dd-MMM-yyyy");
+                worksheet.Cells[row, 8].Value = si.SalesInvoiceNo;
+                worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
+                worksheet.Cells[row, 10].Value = gross;
+                worksheet.Cells[row, 11].Value = si.AmountPaid;
+                worksheet.Cells[row, 12].Value = adjustedGross;
+                worksheet.Cells[row, 13].Value = withHoldingTaxAmount;
+                worksheet.Cells[row, 14].Value = netOfVatAmount;
+                worksheet.Cells[row, 15].Value = vcfAmount;
+                worksheet.Cells[row, 16].Value = retentionAmount;
+                worksheet.Cells[row, 17].Value = adjustedNet;
+                worksheet.Cells[row, 18].Value = daysDue;
+                worksheet.Cells[row, 19].Value = current;
+                worksheet.Cells[row, 20].Value = oneToThirtyDays;
+                worksheet.Cells[row, 21].Value = thirtyOneToSixtyDays;
+                worksheet.Cells[row, 22].Value = sixtyOneToNinetyDays;
+                worksheet.Cells[row, 23].Value = overNinetyDays;
+
+                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+
+                row++;
+
+                totalGrossAmount += si.Amount;
+                totalAmountPaid += si.AmountPaid;
+                totalAdjustedGross += adjustedGross;
+                totalWithHoldingTaxAmount += withHoldingTaxAmount;
+                totalNetOfVatAmount += netOfVatAmount;
+                totalVcfAmount += vcfAmount;
+                totalRetentionAmount += retentionAmount;
+                totalAdjustedNet += adjustedNet;
+                totalCurrent += current;
+                totalOneToThirtyDays += oneToThirtyDays;
+                totalThirtyOneToSixtyDays += thirtyOneToSixtyDays;
+                totalSixtyOneToNinetyDays += sixtyOneToNinetyDays;
+                totalOverNinetyDays += overNinetyDays;
+            }
+
+            worksheet.Cells[row, 9].Value = "Total ";
+            worksheet.Cells[row, 10].Value = totalGrossAmount;
+            worksheet.Cells[row, 11].Value = totalAmountPaid;
+            worksheet.Cells[row, 12].Value = totalAdjustedGross;
+            worksheet.Cells[row, 13].Value = totalWithHoldingTaxAmount;
+            worksheet.Cells[row, 14].Value = totalNetOfVatAmount;
+            worksheet.Cells[row, 15].Value = totalVcfAmount;
+            worksheet.Cells[row, 16].Value = totalRetentionAmount;
+            worksheet.Cells[row, 17].Value = totalAdjustedNet;
+            worksheet.Cells[row, 19].Value = totalCurrent;
+            worksheet.Cells[row, 20].Value = totalOneToThirtyDays;
+            worksheet.Cells[row, 21].Value = totalThirtyOneToSixtyDays;
+            worksheet.Cells[row, 22].Value = totalSixtyOneToNinetyDays;
+            worksheet.Cells[row, 23].Value = totalOverNinetyDays;
+
+            worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+
+            // Apply style to subtotal row
+            using (var range = worksheet.Cells[row, 1, row, 23])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+            }
+
+            using (var range = worksheet.Cells[row, 9, row, 23])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+            }
+
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"AgingReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+        }
+
+        #endregion
     }
 }
