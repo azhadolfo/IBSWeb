@@ -34,6 +34,11 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         public List<FilpridePurchaseOrder> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string company);
 
         public List<FilprideReceivingReport> GetPurchaseReport(DateOnly dateFrom, DateOnly dateTo, string company);
+
         public List<FilprideSalesInvoice> GetOtcFuelSalesReport (DateOnly dateFrom, DateOnly dateTo, string company);
+
+        public List<FilprideCollectionReceipt> GetCollectionReceiptReport (DateOnly dateFrom, DateOnly dateTo, string company);
+
+        public List<FilprideReceivingReport> GetTradePayableReport (DateOnly dateFrom, DateOnly dateTo, string company);
     }
 }
