@@ -3436,14 +3436,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // Apply style to subtotal rows
                     // color to whole row
-                    using (var range = purchaseReportWorksheet.Cells[row, 1, row, 26])
+                    using (var range = purchaseReportWorksheet.Cells[row, 1, row, 23])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                     }
                     // line to subtotal values
-                    using (var range = purchaseReportWorksheet.Cells[row, 14, row, 24])
+                    using (var range = purchaseReportWorksheet.Cells[row, 14, row, 23])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
