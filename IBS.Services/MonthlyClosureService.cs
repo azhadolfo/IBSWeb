@@ -200,14 +200,14 @@ namespace IBS.Services
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
 
                 // Start of the current month
-                var startOfMonth = new DateTime(today.Year, today.Month, 1);
+                var startOfMonth = new DateTime(today.Year, today.AddMonths(-2).Month, 1);
 
                 var endOfPreviousMonth = startOfMonth.AddDays(-1);
 
                 var disbursementsWithoutDcrDate = await _dbContext.FilprideCheckVoucherHeaders
                     .Where(cv =>
-                        cv.Date.Month == previousMonth.AddMonths(-3).Month &&
-                        cv.Date.Year == previousMonth.AddMonths(-3).Year &&
+                        cv.Date.Month == previousMonth.Month &&
+                        cv.Date.Year == previousMonth.Year &&
                         cv.CvType != nameof(CVType.Invoicing) &&
                         cv.PostedBy != null &&
                         cv.DcrDate == null

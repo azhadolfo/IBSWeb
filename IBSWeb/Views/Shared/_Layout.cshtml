@@ -271,16 +271,16 @@
                                     </ul>
                                 </li>
                                 @* Waiting for the approval of showing this to the user *@
-                                @* <li class="nav-item dropdown-layout"> *@ 
-                                @*     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false"> *@
-                                @*         Treasury *@
-                                @*     </a> *@
-                                @*     <ul class="dropdown-menu"> *@
-                                @*         <li class="nav-item"> *@
-                                @*             <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Disbursement" asp-action="Index">Disbursement</a> *@
-                                @*         </li> *@
-                                @*     </ul> *@
-                                @* </li> *@
+                                <li class="nav-item dropdown-layout">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                        Treasury
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Disbursement" asp-action="Index">Disbursement</a>
+                                        </li>
+                                    </ul>
+                                </li>
                                 @if (User.IsInRole("Admin"))
                                 {
                                     <li class="nav-item dropdown-layout">

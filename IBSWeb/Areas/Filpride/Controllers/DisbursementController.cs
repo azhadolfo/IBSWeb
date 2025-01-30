@@ -3,6 +3,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Services.Attributes;
+using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
+    [DepartmentAuthorize(SD.Department_Finance, SD.Department_RCD)]
     public class DisbursementController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
@@ -50,8 +52,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var disbursements = await _unitOfWork.FilprideCheckVoucher
                     .GetAllAsync(d =>
                         d.CvType != nameof(CVType.Invoicing) &&
-                        d.PostedBy != null &&
-                        (d.DcrDate == null || d.DcpDate == null), cancellationToken);
+                        d.PostedBy != null, cancellationToken);
 
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
                 {
@@ -64,7 +65,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.Total.ToString().Contains(searchValue) ||
                         s.CheckVoucherHeaderId.ToString().Contains(searchValue) ||
                         s.Reference?.ToLower().Contains(searchValue) == true ||
-                        s.Date.ToString().Contains(searchValue)
+                        s.Date.ToString().Contains(searchValue) ||
+                        s.DcpDate?.ToString().Contains(searchValue) == true ||
+                        s.DcrDate?.ToString().Contains(searchValue) == true
                         )
                     .ToList();
                 }
