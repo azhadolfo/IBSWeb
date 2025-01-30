@@ -131,7 +131,7 @@
                         if (row.dcpDate === null) {
                             actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCPDate('${data}')"> Add DCP Date</a></li>`;
                         } else {
-                            actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCRDate('${data}')"> Add DCR Date</a></li>`;
+                            actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCRDate('${data}', '${row.dcpDate}')"> Add DCR Date</a></li>`;
                         }
 
                         actions += `</ul></div>`;
@@ -146,9 +146,9 @@
             Swal.fire({
                 title: 'Add DCP Date',
                 html: `
-                        <label for="dcpDate" class="form-label">Select DCP Date</label>
-                        <input type="date" id="dcpDate" class="swal2-input" value="${today}" required>
-                    `,
+                <label for="dcpDate" class="form-label">Select DCP Date</label>
+                <input type="date" id="dcpDate" class="swal2-input" value="${today}" required>
+            `,
                 confirmButtonText: 'Save',
                 showCancelButton: true,
                 preConfirm: () => {
@@ -167,14 +167,21 @@
             });
         }
 
-        function showAddDCRDate(cvId) {
-            const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+        function showAddDCRDate(cvId, dcpDate) {
+            if (!dcpDate) {
+                Swal.fire('Error', 'DCP date must be set before adding DCR date', 'error');
+                return;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            const minDate = new Date(dcpDate).toISOString().split('T')[0];
+
             Swal.fire({
                 title: 'Add DCR Date',
                 html: `
-                        <label for="dcrDate" class="form-label">Select DCR Date</label>
-                        <input type="date" id="dcrDate" class="swal2-input" value="${today}" required>
-                    `,
+                <label for="dcrDate" class="form-label">Select DCR Date</label>
+                <input type="date" id="dcrDate" class="swal2-input" value="${today}" min="${minDate}" required>
+            `,
                 confirmButtonText: 'Save',
                 showCancelButton: true,
                 preConfirm: () => {
@@ -183,6 +190,13 @@
                         Swal.showValidationMessage('Please select a DCR date');
                         return false;
                     }
+
+                    // Additional validation to ensure DCR date is not before DCP date
+                    if (new Date(dcrDate) < new Date(minDate)) {
+                        Swal.showValidationMessage('DCR date cannot be earlier than DCP date');
+                        return false;
+                    }
+
                     return dcrDate;
                 }
             }).then((result) => {
