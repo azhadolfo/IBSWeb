@@ -849,6 +849,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(SalesReport));
         }
 
+
         [HttpGet]
         public IActionResult PurchaseOrderReport()
         {
@@ -878,6 +879,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             TempData["error"] = "Please input date from";
             return RedirectToAction(nameof(PurchaseOrderReport));
+        }
+
+        [HttpGet]
+        public IActionResult ClearedDisbursementReport()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GeneratedClearedDisbursementReport(ViewModelBook model)
+        {
+            ViewData["DateFrom"] = model.DateFrom;
+            ViewData["DateTo"] = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var checkVoucherHeader = _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims);
+
+                    return View(checkVoucherHeader);
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(ClearedDisbursementReport));
+                }
+            }
+
+            TempData["error"] = "Please input date from";
+            return RedirectToAction(nameof(ClearedDisbursementReport));
         }
 
         public async Task<IActionResult> PurchaseReport()
@@ -3114,6 +3146,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion
 
+
         #region -- Generate Purchase Order Report Excel File --
 
         public async Task<IActionResult> GeneratePurchaseOrderReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
@@ -3207,6 +3240,113 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion
+
+
+        #region -- Generate Cleared Disbursement Report Excel File --
+
+        public async Task<IActionResult> GenerateClearedDisbursementReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var ClearedDisbursementReport = _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims);
+            if (ClearedDisbursementReport.Count == 0)
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(ClearedDisbursementReport));
+            }
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("ClearedDisbursementReport");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "CLEARED DISBURSEMENT REPORT";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Extracted By:";
+            worksheet.Cells["A4"].Value = "Company:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{extractedBy}";
+            worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+            worksheet.Cells["A7"].Value = "Category";
+            worksheet.Cells["B7"].Value = "Subcategory";
+            worksheet.Cells["C7"].Value = "Payee";
+            worksheet.Cells["D7"].Value = "Date";
+            worksheet.Cells["E7"].Value = "Voucher #";
+            worksheet.Cells["F7"].Value = "Bank Name";
+            worksheet.Cells["G7"].Value = "Check #";
+            worksheet.Cells["H7"].Value = "Particulars";
+            worksheet.Cells["I7"].Value = "Amount";
+
+            // Apply styling to the header row
+            using (var range = worksheet.Cells["A7:I7"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Populate the data rows
+            int row = 8;
+            string currencyFormat = "#,##0.0000";
+
+            foreach (var cd in ClearedDisbursementReport)
+            {
+                worksheet.Cells[row, 1].Value = "Empty";
+                worksheet.Cells[row, 2].Value = "Empty";
+                worksheet.Cells[row, 3].Value = cd.Payee;
+                worksheet.Cells[row, 4].Value = cd.Date.ToString("dd-MMM-yyyy");
+                worksheet.Cells[row, 5].Value = cd.CheckVoucherHeaderNo;
+                worksheet.Cells[row, 6].Value = cd.BankAccount.AccountName;
+                worksheet.Cells[row, 7].Value = cd.CheckNo;
+                worksheet.Cells[row, 8].Value = cd.Particulars;
+                worksheet.Cells[row, 9].Value = cd.Total;
+
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 9].Style.Numberformat.Format = "0.00";
+
+                row++;
+            }
+
+            worksheet.Cells[row, 8].Value = "Total: ";
+            worksheet.Cells[row, 9].Formula = $"SUM(I8:I{row - 1})";
+            using (var range = worksheet.Cells[row, 1, row, 9])
+            {
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thick;  // Apply thick border at the top of the row
+            }
+
+            worksheet.Cells[row, 8].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 9].Style.Numberformat.Format = "0.00";
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ClearedDisbursementReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+        }
+
+
+        #endregion
+
+
+
+
 
         #region -- Generate Purchase Report Excel File --
 

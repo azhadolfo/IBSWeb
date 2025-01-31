@@ -286,6 +286,27 @@ namespace IBS.DataAccess.Repository.Filpride
             return purchaseOrder;
         }
 
+
+        public List<FilprideCheckVoucherHeader> GetClearedDisbursementReport(DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var checkVoucherHeader = _db.FilprideCheckVoucherHeaders
+                .Where(cd =>
+                    cd.Company == company && cd.DcrDate >= dateFrom && cd.DcrDate <= dateTo &&
+                    cd.Status == nameof(Status.Posted) &&
+                    cd.CvType != nameof(CVType.Invoicing))
+                .Include(cd => cd.BankAccount)
+                .ToList();
+
+
+
+            return checkVoucherHeader;
+        }
+
         public List<FilprideReceivingReport> GetPurchaseReport (DateOnly dateFrom, DateOnly dateTo, string company)
         {
             if (dateFrom > dateTo)
