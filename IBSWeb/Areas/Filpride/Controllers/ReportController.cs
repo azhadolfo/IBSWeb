@@ -1077,7 +1077,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     var salesInvoice = await _unitOfWork.FilprideSalesInvoice
-                        .GetAllAsync(si => si.PostedBy != null, cancellationToken);
+                        .GetAllAsync(si => si.PostedBy != null && si.AmountPaid == 0 && !si.IsPaid, cancellationToken);
 
                     return View(salesInvoice);
                 }
@@ -3146,7 +3146,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion
 
-
         #region -- Generate Purchase Order Report Excel File --
 
         public async Task<IActionResult> GeneratePurchaseOrderReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
@@ -3240,7 +3239,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion
-
 
         #region -- Generate Cleared Disbursement Report Excel File --
 
@@ -3343,10 +3341,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
         #endregion
-
-
-
-
 
         #region -- Generate Purchase Report Excel File --
 
@@ -5497,9 +5491,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- Generate AP Trade Report --
-    }
-
-
 
         #region -- Generate AR Per Customer Excel File --
 
