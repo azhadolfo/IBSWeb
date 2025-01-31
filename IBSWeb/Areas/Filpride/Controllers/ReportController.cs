@@ -3460,7 +3460,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, 4].Value = pr.PurchaseOrder?.Supplier?.SupplierTin; // Supplier Tin
                         purchaseReportWorksheet.Cells[row, 5].Value = pr.PurchaseOrder?.Supplier?.SupplierAddress; // Supplier Address
                         purchaseReportWorksheet.Cells[row, 6].Value = pr.PurchaseOrder?.PurchaseOrderNo; // PO No.
-                        purchaseReportWorksheet.Cells[row, 7].Value = pr.ReceivingReportNo; // Filpride RR
+                        purchaseReportWorksheet.Cells[row, 7].Value = pr.ReceivingReportNo ?? pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride RR
                         purchaseReportWorksheet.Cells[row, 8].Value = pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride DR
                         purchaseReportWorksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.AuthorityToLoadNo; // ATL #
                         purchaseReportWorksheet.Cells[row, 10].Value = pr.SupplierInvoiceNumber; // Supplier's Sales Invoice
