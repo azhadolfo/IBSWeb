@@ -1,0 +1,126 @@
+@model IEnumerable<FilprideCheckVoucherHeader>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Cleared Disbursement Report";
+    decimal totalAmt = 0;
+}
+<style>
+    .container {
+        max-width: none;
+    }
+
+    .table-responsive {
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+
+    table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .print-header, .table-responsive, .table-responsive * {
+            visibility: visible;
+        }
+
+        .print-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .table-responsive {
+            position: absolute;
+            top: 0; /* Adjust this value based on your header's height */
+            left: 0;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+    }
+</style>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <h5>@ViewData["Title"].ToString().ToUpper()</h5>
+        <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
+        <table id="ledgerTable" class="table">
+            <thead>
+            <tr class="table-primary">
+                <th>Category</th>
+                <th>Subcategory</th>
+                <th>Payee</th>
+                <th>Date</th>
+                <th>Voucher#</th>
+                <th>Bank Name</th>
+                <th>Check</th>
+                <th class="text-center">Particulars</th>
+                <th class="text-end">@Html.DisplayNameFor(model => model.Total)</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            @foreach (var cleared in Model)
+            {
+                totalAmt += cleared.Total;
+                <tr class="align-text-bottom">
+                    <td>Empty</td>
+                    <td>Empty</td>
+                    <td>@Html.DisplayFor(model => cleared.Payee)</td>
+                    <td>@Html.DisplayFor(model => cleared.Date)</td>
+                    <td>@Html.DisplayFor(model => cleared.CheckVoucherHeaderNo)</td>
+                    <td>@Html.DisplayFor(model => cleared.BankAccount.AccountName)</td>
+                    <td>@Html.DisplayFor(model => cleared.CheckNo)</td>
+                    <td>@Html.DisplayFor(model => cleared.Particulars)</td>
+                    <td class="text-end">@Html.DisplayFor(model => cleared.Total)</td>
+                </tr>
+            }
+            </tbody>
+            
+            <tfoot>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="text-end">Totals:</td>
+                <td class="text-end">@totalAmt.ToString("N2")</td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+}
+else
+{
+    <p><i>No data available in report.</i></p>
+}
+
+<div class="row mt-5">
+    <div class="col-6 col-md-3">
+        <a onclick="printTable()" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="Report" asp-action="ClearedDisbursementReport" class="btn btn-outline-primary border form-control buttons">Back</a>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function printTable() {
+            window.print();
+        }
+    </script>
+}
