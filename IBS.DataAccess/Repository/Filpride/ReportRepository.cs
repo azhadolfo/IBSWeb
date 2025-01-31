@@ -300,6 +300,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     cd.Status == nameof(Status.Posted) &&
                     cd.CvType != nameof(CVType.Invoicing))
                 .Include(cd => cd.BankAccount)
+                .OrderBy(cd => cd.Date)
                 .ToList();
 
 
