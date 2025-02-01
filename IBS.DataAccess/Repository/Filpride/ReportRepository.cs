@@ -286,6 +286,27 @@ namespace IBS.DataAccess.Repository.Filpride
             return purchaseOrder;
         }
 
+
+        public List<FilprideCheckVoucherHeader> GetClearedDisbursementReport(DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var checkVoucherHeader = _db.FilprideCheckVoucherHeaders
+                .Where(cd =>
+                    cd.Company == company && cd.DcrDate >= dateFrom && cd.DcrDate <= dateTo &&
+                    cd.Status == nameof(Status.Posted) &&
+                    cd.CvType != nameof(CVType.Invoicing))
+                .Include(cd => cd.BankAccount)
+                .ToList();
+
+
+
+            return checkVoucherHeader;
+        }
+
         public List<FilprideReceivingReport> GetPurchaseReport (DateOnly dateFrom, DateOnly dateTo, string company)
         {
             if (dateFrom > dateTo)
@@ -350,6 +371,43 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(si => si.Product)
                 .OrderBy(si => si.Product.ProductName).ThenBy(si => si.Customer.CustomerName).ThenBy((si => si.TransactionDate))
                 .ThenBy(si => si.Customer.CustomerType) // Order by TransactionDate
+                .ToList();
+
+            return receivingReports;
+        }
+
+        public List<FilprideCollectionReceipt> GetCollectionReceiptReport (DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var collectionReceipts = _db.FilprideCollectionReceipts
+                .Where(cr => cr.Company == company && cr.TransactionDate >= dateFrom && cr.TransactionDate <= dateTo)
+                .Include(cr => cr.SalesInvoice)
+                .Include(cr => cr.Customer)
+                .OrderBy(cr => cr.Customer.CustomerCode)
+                .ThenBy(cr => cr.Customer.CustomerName)
+                .ThenBy(cr => cr.Customer.CustomerType) // Order by TransactionDate
+                .ToList();
+
+            return collectionReceipts;
+        }
+
+        public List<FilprideReceivingReport> GetTradePayableReport (DateOnly dateFrom, DateOnly dateTo, string company)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var receivingReports = _db.FilprideReceivingReports
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Where(rr => rr.Company == company && rr.Date <= dateTo)
+                .OrderBy(rr => rr.Date.Year)
+                .ThenBy(rr => rr.Date.Month)
+                .ThenBy(rr => rr.PurchaseOrder.Supplier.SupplierName)
                 .ToList();
 
             return receivingReports;

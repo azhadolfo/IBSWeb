@@ -1,0 +1,214 @@
+@model IEnumerable<FilprideSalesInvoice>
+@using IBS.Utility.Constants
+@using IBS.Utility.Enums
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Aging Report";
+
+    string currencyFormat = "N4";
+    string currencyFormatTwoDecimal = "N2";
+
+    var totalGrossAmount = 0m;
+    var totalAmountPaid = 0m;
+    var totalAdjustedGross = 0m;
+    var totalWithHoldingTaxAmount = 0m;
+    var totalNetOfVatAmount = 0m;
+    var totalVcfAmount = 0m;
+    var totalRetentionAmount = 0m;
+    var totalAdjustedNet = 0m;
+    var totalCurrent = 0m;
+    var totalOneToThirtyDays = 0m;
+    var totalThirtyOneToSixtyDays = 0m;
+    var totalSixtyOneToNinetyDays = 0m;
+    var totalOverNinetyDays = 0m;
+}
+<style>
+    .container {
+        max-width: none;
+    }
+
+    .table-responsive {
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+
+    table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .print-header, .table-responsive, .table-responsive * {
+            visibility: visible;
+        }
+
+        .print-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .table-responsive {
+            position: absolute;
+            top: 0; /* Adjust this value based on your header's height */
+            left: 0;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+    }
+</style>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <h5>AGING REPORT</h5>
+        <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
+        <table id="ledgerTable" class="table">
+            <thead>
+            <tr class="table-primary text-center text-nowrap sticky-top">
+                <th>MONTH</th>
+                <th>CUSTOMER NAME</th>
+                <th>ACCT. TYPE</th>
+                <th>TERMS</th>
+                <th>EWT %</th>
+                <th>SALES DATE</th>
+                <th>DUE DATE</th>
+                <th>INVOICE No.</th>
+                <th>DR</th>
+                <th>GROSS</th>
+                <th>PARTIAL COLLECTIONS</th>
+                <th>ADJUSTED GROSS</th>
+                <th>EWT</th>
+                <th>NET OF VAT</th>
+                <th>VCF</th>
+                <th>RETENTION AMOUNT</th>
+                <th>ADJUSTED NET</th>
+                <th>DAYS DUE</th>
+                <th>CURRENT</th>
+                <th>1-30 DAYS</th>
+                <th>31-60 DAYS</th>
+                <th>61-90 DAYS</th>
+                <th>OVER 90 DAYS</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            @foreach (var invoice in Model)
+            {
+                var gross = invoice.Amount;
+                decimal netDiscount = invoice.Amount - invoice.Discount;
+                decimal netOfVatAmount = invoice.Customer?.VatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
+                decimal withHoldingTaxAmount = (invoice.Customer?.WithHoldingTax ?? false) ? (netDiscount / 1.12m) * 0.01m : 0;
+                decimal retentionAmount = (invoice.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
+                decimal vcfAmount = 0.0000m;
+                decimal adjustedGross = gross - vcfAmount;
+                decimal adjustedNet = gross - vcfAmount - retentionAmount;
+                
+                DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+                int daysDue = (today > invoice.DueDate) ? (today.DayNumber - invoice.DueDate.DayNumber) : 0;
+                var current = (invoice.DueDate >= today) ? gross : 0.0000m;
+                var oneToThirtyDays = (daysDue >= 1 && daysDue <= 30) ? gross : 0.0000m;
+                var thirtyOneToSixtyDays = (daysDue >= 31 && daysDue <= 60) ? gross : 0.0000m;
+                var sixtyOneToNinetyDays = (daysDue >= 61 && daysDue <= 90) ? gross : 0.0000m;
+                var overNinetyDays = (daysDue > 90) ? gross : 0.0000m;
+                
+                <tr class="align-text-bottom">
+                    <td>@invoice.TransactionDate.ToString("MMM")</td>
+                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerName)</td>
+                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerType)</td>
+                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerTerms)</td>
+                    <td>@(invoice.Customer.WithHoldingTax ? 1 : 0)</td>
+                    <td>@Html.DisplayFor(model => invoice.TransactionDate)</td>
+                    <td>@Html.DisplayFor(model => invoice.DueDate)</td>
+                    <td>@Html.DisplayFor(model => invoice.SalesInvoiceNo)</td>
+                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.DeliveryReceiptNo)</td>
+                    <td class="text-end">@gross</td>
+                    <td class="text-end">@invoice.AmountPaid</td>
+                    <td class="text-end">@adjustedGross</td>
+                    <td class="text-end">@withHoldingTaxAmount.ToString(currencyFormat)</td>
+                    <td class="text-end">@netOfVatAmount.ToString(currencyFormat)</td>
+                    <td class="text-end">@vcfAmount</td>
+                    <td class="text-end">@retentionAmount.ToString(currencyFormat)</td>
+                    <td class="text-end">@adjustedNet</td>
+                    <td class="text-end">@daysDue</td>
+                    <td class="text-end">@current</td>
+                    <td class="text-end">@oneToThirtyDays</td>
+                    <td class="text-end">@thirtyOneToSixtyDays</td>
+                    <td class="text-end">@sixtyOneToNinetyDays</td>
+                    <td class="text-end">@overNinetyDays</td>
+                </tr>
+
+                totalGrossAmount += invoice.Amount;
+                totalAmountPaid += invoice.AmountPaid;
+                totalAdjustedGross += adjustedGross;
+                totalWithHoldingTaxAmount += withHoldingTaxAmount;
+                totalNetOfVatAmount += netOfVatAmount;
+                totalVcfAmount += vcfAmount;
+                totalRetentionAmount += retentionAmount;
+                totalAdjustedNet += adjustedNet;
+                totalCurrent += current;
+                totalOneToThirtyDays += oneToThirtyDays;
+                totalThirtyOneToSixtyDays += thirtyOneToSixtyDays;
+                totalSixtyOneToNinetyDays += sixtyOneToNinetyDays;
+                totalOverNinetyDays += overNinetyDays;
+            }
+            <tr class="table-primary" style="border-top: double">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="text-center"><b>TOTAL:</b></td>
+                <td class="text-end">@totalGrossAmount.ToString(currencyFormat)</td>
+                <td class="text-end">@totalAmountPaid.ToString(currencyFormat)</td>
+                <td class="text-end">@totalAdjustedGross.ToString(currencyFormat)</td>
+                <td class="text-end">@totalWithHoldingTaxAmount.ToString(currencyFormat)</td>
+                <td class="text-end">@totalNetOfVatAmount.ToString(currencyFormat)</td>
+                <td class="text-end">@totalVcfAmount.ToString(currencyFormat)</td>
+                <td class="text-end">@totalRetentionAmount.ToString(currencyFormat)</td>
+                <td class="text-end">@totalAdjustedNet.ToString(currencyFormat)</td>
+                <td class="text-end"></td>
+                <td class="text-end">@totalCurrent.ToString(currencyFormat)</td>
+                <td class="text-end">@totalOneToThirtyDays.ToString(currencyFormat)</td>
+                <td class="text-end">@totalThirtyOneToSixtyDays.ToString(currencyFormat)</td>
+                <td class="text-end">@totalSixtyOneToNinetyDays.ToString(currencyFormat)</td>
+                <td class="text-end">@totalOverNinetyDays.ToString(currencyFormat)</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p><i>No data available in report.</i></p>
+}
+
+<div class="row mt-5">
+    <div class="col-6 col-md-3">
+        <a onclick="printTable()" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="Report" asp-action="AgingReport" class="btn btn-outline-primary border form-control buttons">Back</a>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function printTable() {
+            window.print();
+        }
+    </script>
+}
