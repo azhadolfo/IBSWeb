@@ -3440,11 +3440,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var extractedBy = _userManager.GetUserName(this.User);
             var companyClaims = await GetCompanyClaimAsync();
 
-            var ClearedDisbursementReport = _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims);
-            if (ClearedDisbursementReport.Count == 0)
+            var clearedDisbursementReport = _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims);
+
+
+            if (clearedDisbursementReport.Count == 0)
             {
                 TempData["error"] = "No Record Found";
-                return RedirectToAction(nameof(ClearedDisbursementReport));
+                return RedirectToAction(nameof(clearedDisbursementReport));
             }
 
             // Create the Excel package
@@ -3490,12 +3492,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Populate the data rows
             int row = 8;
-            string currencyFormat = "#,##0.0000";
+            string currencyFormat = "#,##0.00";
 
-            foreach (var cd in ClearedDisbursementReport)
+            foreach (var cd in clearedDisbursementReport)
             {
-                worksheet.Cells[row, 1].Value = "Empty";
-                worksheet.Cells[row, 2].Value = "Empty";
+                var getCheckVoucherInvoiceHeader = await _dbContext.FilprideCheckVoucherHeaders
+                    .Where(inv => inv.CheckVoucherHeaderNo == cd.Reference)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                var getCheckVoucherInvoiceDetails = await _dbContext.FilprideCheckVoucherDetails
+                    .Where(invd =>
+                        invd.TransactionNo == getCheckVoucherInvoiceHeader.CheckVoucherHeaderNo)
+                    .ToListAsync(cancellationToken);
+
+                var invoiceDebit = getCheckVoucherInvoiceDetails
+                    .FirstOrDefault(inv => inv.Debit > 0);
+
+                var invoiceCredit = getCheckVoucherInvoiceDetails
+                    .FirstOrDefault(inv => inv.Credit > 0);
+
+                var getCategoryInChartOfAccount = await _dbContext.FilprideChartOfAccounts
+                    .Where(coa => coa.Parent.StartsWith(invoiceDebit.AccountNo.Substring(0, 2)) &&
+                    coa.Level == 2)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+
+                worksheet.Cells[row, 1].Value = $"{getCategoryInChartOfAccount.AccountNumber} {getCategoryInChartOfAccount.AccountName}";
+                worksheet.Cells[row, 2].Value = $"{invoiceCredit.AccountNo} {invoiceCredit.AccountName}";
                 worksheet.Cells[row, 3].Value = cd.Payee;
                 worksheet.Cells[row, 4].Value = cd.Date.ToString("dd-MMM-yyyy");
                 worksheet.Cells[row, 5].Value = cd.CheckVoucherHeaderNo;
@@ -3505,13 +3528,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 9].Value = cd.Total;
 
                 worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 9].Style.Numberformat.Format = "0.00";
 
                 row++;
             }
 
             worksheet.Cells[row, 8].Value = "Total: ";
-            worksheet.Cells[row, 9].Formula = $"SUM(I8:I{row - 1})";
+            worksheet.Cells[row, 9].Value = clearedDisbursementReport.Sum(cv => cv.Total);
             using (var range = worksheet.Cells[row, 1, row, 9])
             {
                 range.Style.Border.Top.Style = ExcelBorderStyle.Thick;  // Apply thick border at the top of the row
@@ -3519,7 +3541,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             worksheet.Cells[row, 8].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
             worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 9].Style.Numberformat.Format = "0.00";
             // Auto-fit columns for better readability
             worksheet.Cells.AutoFitColumns();
             worksheet.View.FreezePanes(8, 1);
