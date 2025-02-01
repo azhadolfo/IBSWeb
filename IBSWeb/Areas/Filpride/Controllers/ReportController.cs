@@ -582,6 +582,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
+        public IActionResult L1Report()
+        {
+            return View();
+        }
+
+        [HttpGet]
         public IActionResult TradePayableReport()
         {
             return View();
@@ -6142,6 +6148,41 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var excelBytes = package.GetAsByteArray();
 
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"AgingReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+        }
+
+        #endregion
+
+        #region -- Generate L1 Report --
+
+        public async Task<IActionResult> GenerateL1Report(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(this.User);
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var generalLedger = _unitOfWork.FilprideReport
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
+
+                var chartOfAccount = _unitOfWork.FilprideChartOfAccount
+                    .GetLevel4Accounts();
+
+                var groupedByAccountType = chartOfAccount.GroupBy(ca => ca.AccountType);
+
+
+
+                int i = 1;
+
+                return RedirectToAction(nameof(L1Report));
+            }
+            catch (Exception ex)
+            {
+                ViewData["error"] = ex.Message;
+
+                return RedirectToAction(nameof(L1Report));
+            }
         }
 
         #endregion

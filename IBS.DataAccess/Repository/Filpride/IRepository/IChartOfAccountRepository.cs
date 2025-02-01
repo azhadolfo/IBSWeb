@@ -16,5 +16,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task UpdateAsync(FilprideChartOfAccount model, CancellationToken cancellationToken = default);
 
         IEnumerable<ChartOfAccountDto> GetSummaryReportView(CancellationToken cancellationToken = default);
+
+        List<ChartOfAccountDto> GetLevel4Accounts(CancellationToken cancellationToken = default);
     }
 }

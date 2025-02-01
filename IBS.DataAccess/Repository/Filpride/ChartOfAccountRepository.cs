@@ -58,6 +58,31 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
         }
 
+        public List<ChartOfAccountDto> GetLevel4Accounts(CancellationToken cancellationToken = default)
+        {
+             var query = from c in _db.FilprideChartOfAccounts
+                 join gl in _db.FilprideGeneralLedgerBooks on c.AccountNumber equals gl.AccountNo into glGroup
+                 from gl in glGroup.DefaultIfEmpty()
+                 where c.Level == 4
+                 group new { c, gl } by new { c.Level, c.AccountNumber, c.AccountName, c.AccountType, c.Parent } into g
+                 select new ChartOfAccountDto
+                 {
+                     Level = g.Key.Level,
+                     AccountNumber = g.Key.AccountNumber,
+                     AccountName = g.Key.AccountName,
+                     AccountType = g.Key.AccountType,
+                     Parent = g.Key.Parent,
+                     Debit = g.Sum(x => x.gl.Debit),
+                     Credit = g.Sum(x => x.gl.Credit),
+                     Balance = g.Sum(x => x.gl.Debit) - g.Sum(x => x.gl.Credit),
+                     Children = new List<ChartOfAccountDto>()
+                 };
+
+             var resultList = query.ToList();
+
+             return resultList;
+        }
+
         public IEnumerable<ChartOfAccountDto> GetSummaryReportView(CancellationToken cancellationToken = default)
         {
             var query = from c in _db.FilprideChartOfAccounts
