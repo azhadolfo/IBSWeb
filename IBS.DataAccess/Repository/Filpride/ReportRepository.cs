@@ -316,14 +316,43 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var receivingReports = _db.FilprideReceivingReports
-                .Where(rr => rr.Company == company && rr.Date >= dateFrom && rr.Date <= dateTo && rr.Status == nameof(Status.Posted)) // Filter by date and company
-                .Include (rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
-                .Include (rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
-                .Include (rr => rr.DeliveryReceipt).ThenInclude(dr => dr.CustomerOrderSlip)
-                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Customer)
-                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Hauler)
-                .OrderBy(rr => rr.Date) // Order by TransactionDate
+                .Where(rr => rr.Company == company
+                             && rr.Date >= dateFrom
+                             && rr.Date <= dateTo
+                             && rr.Status == nameof(Status.Posted))
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(rr => rr.DeliveryReceipt)
+                .ThenInclude(dr => dr.CustomerOrderSlip)
+                .Include(rr => rr.DeliveryReceipt)
+                .ThenInclude(dr => dr.Customer)
+                .Include(rr => rr.DeliveryReceipt)
+                .ThenInclude(dr => dr.Hauler)
                 .ToList();
+
+            // Add DeliveryReceipts that are in the date range but not yet delivered
+            var additionalDeliveryReceipts = _db.FilprideDeliveryReceipts
+                .Where(dr => dr.Date >= dateFrom
+                             && dr.Date <= dateTo
+                             && dr.Status == nameof(DRStatus.PendingDelivery))
+                .Include(dr => dr.CustomerOrderSlip)
+                .Include(dr => dr.Customer)
+                .Include(dr => dr.Hauler)
+                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po.Product)
+                .ToList();
+
+            var allReports = receivingReports
+                .Concat(additionalDeliveryReceipts.Select(dr => new FilprideReceivingReport
+                {
+                    DeliveryReceipt = dr,
+                    Date = dr.Date,
+                    Company = company,
+                    PurchaseOrder = dr.PurchaseOrder,
+                    QuantityReceived = dr.Quantity,
+                    QuantityDelivered = dr.Quantity
+                }))
+                .OrderBy(rr => rr.Date)
+                .ToList(); // Call this if needs to implement the in-transit purchases
 
             return receivingReports;
         }

@@ -15,30 +15,31 @@
         </div>
     </div>
     <div class="card-body p-4 table-responsive">
+        <div class="btn-group mb-3" role="group" aria-label="Filter Options">
+            <button id="filterAll" class="btn btn-outline-primary active">
+                <i class="bi bi-list"></i> All
+            </button>
+            <button id="filterWithDCP" class="btn btn-outline-primary">
+                <i class="bi bi-calendar-check"></i> With DCP Date
+            </button>
+            <button id="filterWithDCR" class="btn btn-outline-primary">
+                <i class="bi bi-calendar-check-fill"></i> With DCR Date
+            </button>
+            <button id="filterWithoutDates" class="btn btn-outline-primary">
+                <i class="bi bi-x-circle"></i> Without Dates
+            </button>
+        </div>
+
         <table class="table table-bordered table-hover" id="paginatedTable">
             <thead>
             <tr class="text-nowrap table-secondary">
-                <th>
-                    CVN No.
-                </th>
-                <th>
-                    Date
-                </th>
-                <th>
-                    Payee
-                </th>
-                <th>
-                    INV No.
-                </th>
-                <th class="text-start">
-                    Total
-                </th>
-                <th class="text-start">
-                    DCP Date
-                </th>
-                <th class="text-start">
-                    DCR Date
-                </th>
+                <th>CVN No.</th>
+                <th>Date</th>
+                <th>Payee</th>
+                <th>INV No.</th>
+                <th class="text-start">Total</th>
+                <th class="text-start">DCP Date</th>
+                <th class="text-start">DCR Date</th>
                 <th></th>
             </tr>
             </thead>
@@ -49,96 +50,125 @@
 @section Scripts
 {
     <script>
-        $('#paginatedTable').DataTable({
-            "processing": true,
-            "serverSide": true,
-            "stateSave": true,
-            "stateDuration": 86400,
-            "language": {
-                "processing": "Loading data..."
-            },
-            "ajax": {
-                "url": "@Url.Action("GetDisbursements", "Disbursement", new { area = "Filpride" })",
-                "type": "POST",
-                "data": function (d){
-                    return $.extend({}, d,  {
-                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                    });
+        $(document).ready(function() {
+            var table = $('#paginatedTable').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "stateSave": true,
+                "stateDuration": 86400,
+                "language": {
+                    "processing": "Loading data..."
                 },
-                "error": function (xhr, error, thrown) {
-                    console.error('DataTables error:', error);
-                    alert('An error occurred while loading the data');
-                }
-            },
-            "preDrawCallback": function(settings) {
-                $('#paginatedTable').addClass('table-loading');
-            },
-            "drawCallback": function(settings) {
-                $('#paginatedTable').removeClass('table-loading');
-            },
-            "columns": [
-                { "data": "checkVoucherHeaderNo"},
-                {
-                    "data": "date",
-                    "name": "date",
-                    "render": function (data, type, row){
-                        var date = new Date(data);
-                        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                "ajax": {
+                    "url": "@Url.Action("GetDisbursements", "Disbursement", new { area = "Filpride" })",
+                    "type": "POST",
+                    "data": function (d){
+                        return $.extend({}, d,  {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
                     }
                 },
-                { "data": "payee" },
-                { "data": "reference" },
-                {
-                    "data": "total",
-                    "render": function (data, type, row){
-                        var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.total);
-                        return `<span class="text-end d-block">${amount}</span>`;
-                    }
+                "preDrawCallback": function(settings) {
+                    $('#paginatedTable').addClass('table-loading');
                 },
-                {
-                    "data": "dcpDate",
-                    "name": "dcpDate",
-                    "render": function (data, type, row) {
-                        if (!data) {
-                            return ''; // Return an empty string or any placeholder for null values
+                "drawCallback": function(settings) {
+                    $('#paginatedTable').removeClass('table-loading');
+                },
+                "columns": [
+                    { "data": "checkVoucherHeaderNo"},
+                    {
+                        "data": "date",
+                        "name": "date",
+                        "render": function (data, type, row){
+                            var date = new Date(data);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
                         }
-                        var date = new Date(data);
-                        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
-                    }
-                },
-                {
-                    "data": "dcrDate",
-                    "name": "dcrDate",
-                    "render": function (data, type, row) {
-                        if (!data) {
-                            return ''; // Return an empty string or any placeholder for null values
+                    },
+                    { "data": "payee" },
+                    { "data": "reference" },
+                    {
+                        "data": "total",
+                        "render": function (data, type, row){
+                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.total);
+                            return `<span class="text-end d-block">${amount}</span>`;
                         }
-                        var date = new Date(data);
-                        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
-                    }
-                },
-                {
-                    "data": "checkVoucherHeaderId",
-                    "orderable": false,
-                    "render": function(data, type, row) {
-                        let actions = `<div class="dropdown">
-                                        <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown_${data}" 
-                                                data-bs-toggle="dropdown" aria-expanded="false">
-                                            Actions
-                                        </button>
-                                        <ul class="dropdown-menu" aria-labelledby="actionsDropdown_${data}">`;
+                    },
+                    {
+                        "data": "dcpDate",
+                        "name": "dcpDate",
+                        "render": function (data, type, row) {
+                            if (!data) {
+                                return ''; // Return an empty string or any placeholder for null values
+                            }
+                            var date = new Date(data);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                        }
+                    },
+                    {
+                        "data": "dcrDate",
+                        "name": "dcrDate",
+                        "render": function (data, type, row) {
+                            if (!data) {
+                                return ''; // Return an empty string or any placeholder for null values
+                            }
+                            var date = new Date(data);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                        }
+                    },
+                    {
+                        "data": "checkVoucherHeaderId",
+                        "orderable": false,
+                        "render": function(data, type, row) {
+                            let actions = `<div class="dropdown">
+                                            <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown_${data}" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                Actions
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown_${data}">`;
 
-                        if (row.dcpDate === null) {
-                            actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCPDate('${data}')"> Add DCP Date</a></li>`;
-                        } else {
-                            actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCRDate('${data}', '${row.dcpDate}')"> Add DCR Date</a></li>`;
-                        }
+                            if (row.dcpDate === null) {
+                                actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCPDate('${data}')"> Add DCP Date</a></li>`;
+                            } else {
+                                actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCRDate('${data}', '${row.dcpDate}')"> Add DCR Date</a></li>`;
+                            }
 
-                        actions += `</ul></div>`;
-                        return actions;
+                            actions += `</ul></div>`;
+                            return actions;
+                        }
                     }
-                }
-            ]
+                ]
+            });
+
+            $('#filterAll').on('click', function() {
+                table.columns().search('').draw();
+            });
+
+            $('#filterWithDCP').on('click', function() {
+                table.columns().search(''); // Clear previous filters
+                table.columns(5).search('not-null', true, true).draw();
+            });
+
+            $('#filterWithDCR').on('click', function() {
+                table.columns().search(''); // Clear previous filters
+                table.columns(6).search('not-null', true, true).draw();
+            });
+
+            $('#filterWithoutDates').on('click', function() {
+                table.columns().search(''); // Clear previous filters
+                table.columns(5).search('^$|^\\s*$', true, true)
+                    .columns(6).search('^$|^\\s*$', true, true)
+                    .draw();
+            });
+
+            $('.btn-group button').on('click', function() {
+                $('.btn-group button').removeClass('active');
+                $(this).addClass('active');
+            });
+
         });
 
         function showAddDCPDate(cvId) {

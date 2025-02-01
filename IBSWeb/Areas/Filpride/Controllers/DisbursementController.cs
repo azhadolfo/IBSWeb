@@ -54,6 +54,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         d.CvType != nameof(CVType.Invoicing) &&
                         d.PostedBy != null, cancellationToken);
 
+                // Global search
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
@@ -70,6 +71,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.DcrDate?.ToString().Contains(searchValue) == true
                         )
                     .ToList();
+                }
+
+                // Column-specific search
+                foreach (var column in parameters.Columns)
+                {
+                    if (!string.IsNullOrEmpty(column.Search?.Value))
+                    {
+                        var searchValue = column.Search.Value.ToLower();
+                        switch (column.Data)
+                        {
+                            case "dcpDate":
+                                if (searchValue == "not-null")
+                                {
+                                    disbursements = disbursements.Where(s => s.DcpDate != null).ToList();
+                                }
+                                else
+                                {
+                                    disbursements = disbursements.Where(s => s.DcpDate == null).ToList();
+                                }
+                                break;
+                            case "dcrDate":
+                                if (searchValue == "not-null")
+                                {
+                                    disbursements = disbursements.Where(s => s.DcrDate != null).ToList();
+                                }
+                                else
+                                {
+                                    disbursements = disbursements.Where(s => s.DcrDate == null).ToList();
+                                }
+                                break;
+                        }
+                    }
                 }
 
                 // Sorting

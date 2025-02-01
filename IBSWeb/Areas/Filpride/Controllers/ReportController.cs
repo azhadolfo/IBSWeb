@@ -1093,6 +1093,196 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(AgingReport));
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GeneralLedgerReportByAccountNumber()
+        {
+
+            var viewModel = new GeneralLedgerReportViewModel
+            {
+                ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
+                    .Where(coa => !coa.HasChildren)
+                    .OrderBy(coa => coa.AccountNumber)
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.AccountNumber + " " + s.AccountName,
+                        Text = s.AccountNumber + " " + s.AccountName
+                    })
+                    .ToListAsync(),
+            };
+
+            return View(viewModel);
+        }
+
+        public async Task<IActionResult> GenerateGeneralLedgerReportByAccountNumberExcelFile(GeneralLedgerReportViewModel model, CancellationToken cancellationToken)
+        {
+            var dateFrom = model.DateFrom;
+            var dateTo = model.DateTo;
+            var extractedBy = _userManager.GetUserName(this.User);
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var chartOfAccount = await _dbContext.FilprideChartOfAccounts
+                .FirstOrDefaultAsync(coa => coa.AccountNumber == model.AccountNo);
+
+            var generalLedgerByAccountNo = await _dbContext.FilprideGeneralLedgerBooks
+                .Include(g => g.Supplier)
+                .Include(g => g.Customer)
+                .Where(g =>
+                    g.Date >= dateFrom && g.Date <= dateTo &&
+                    (model.AccountNo == null || g.AccountNo == model.AccountNo))
+                .ToListAsync(cancellationToken);
+
+            if (generalLedgerByAccountNo.Count == 0)
+            {
+                TempData["error"] = "No Record Found";
+                return RedirectToAction(nameof(GeneralLedgerReportByAccountNumber));
+            }
+
+            // Create the Excel package
+            using var package = new ExcelPackage();
+            // Add a new worksheet to the Excel package
+            var worksheet = package.Workbook.Worksheets.Add("GeneralLedger");
+
+            // Set the column headers
+            var mergedCells = worksheet.Cells["A1:C1"];
+            mergedCells.Merge = true;
+            mergedCells.Value = "GENERAL LEDGER BY ACCOUNT NUMBER";
+            mergedCells.Style.Font.Size = 13;
+
+            worksheet.Cells["A2"].Value = "Date Range:";
+            worksheet.Cells["A3"].Value = "Account No:";
+            worksheet.Cells["A4"].Value = "Account Title:";
+
+            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+            worksheet.Cells["B3"].Value = $"{chartOfAccount}";
+            worksheet.Cells["B4"].Value = $"{chartOfAccount?.AccountNumber}";
+
+            worksheet.Cells["A7"].Value = "Date";
+            worksheet.Cells["B7"].Value = "Particular";
+            worksheet.Cells["C7"].Value = "Account No";
+            worksheet.Cells["D7"].Value = "Account Title";
+            worksheet.Cells["E7"].Value = "Customer Code";
+            worksheet.Cells["F7"].Value = "Customer Name";
+            worksheet.Cells["G7"].Value = "Supplier Code";
+            worksheet.Cells["H7"].Value = "Supplier Name";
+            worksheet.Cells["I7"].Value = "Debit";
+            worksheet.Cells["J7"].Value = "Credit";
+            worksheet.Cells["K7"].Value = "Balance";
+
+            using (var range = worksheet.Cells["A7:K7"])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            }
+
+            int row = 8;
+            decimal balance = 0;
+            string currencyFormat = "#,##0.0000";
+            decimal debit = 0;
+            decimal credit = 0;
+            foreach (var grouped in generalLedgerByAccountNo.OrderBy(g => g.AccountNo).GroupBy(g => g.AccountTitle))
+            {
+                balance = 0;
+
+                foreach (var journal in grouped.OrderBy(g => g.Date))
+                {
+                    var account = await _dbContext.FilprideChartOfAccounts
+                        .FirstOrDefaultAsync(a => a.AccountNumber == journal.AccountNo);
+
+                    if (balance != 0)
+                    {
+                        if (account?.NormalBalance == nameof(NormalBalance.Debit))
+                        {
+                            balance += journal.Debit - journal.Credit;
+                        }
+                        else
+                        {
+                            balance -= journal.Debit - journal.Credit;
+                        }
+                    }
+                    else
+                    {
+                        balance = journal.Debit > 0 ? journal.Debit : journal.Credit;
+                    }
+
+                    worksheet.Cells[row, 1].Value = journal.Date.ToString("dd-MMM-yyyy");
+                    worksheet.Cells[row, 2].Value = journal.Description;
+                    worksheet.Cells[row, 3].Value = journal.AccountNo;
+                    worksheet.Cells[row, 4].Value = journal.AccountTitle;
+                    worksheet.Cells[row, 5].Value = journal.Customer?.CustomerCode;
+                    worksheet.Cells[row, 6].Value = journal.Customer?.CustomerName;
+                    worksheet.Cells[row, 7].Value = journal.Supplier?.SupplierCode;
+                    worksheet.Cells[row, 8].Value = journal.Supplier?.SupplierName;
+
+                    worksheet.Cells[row, 9].Value = journal.Debit;
+                    worksheet.Cells[row, 10].Value = journal.Credit;
+                    worksheet.Cells[row, 11].Value = balance;
+
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+
+                    row++;
+                }
+
+                debit = grouped.Sum(j => j.Debit);
+                credit = grouped.Sum(j => j.Credit);
+                balance = debit - credit;
+
+                worksheet.Cells[row, 8].Value = "Total " + grouped.Key;
+                worksheet.Cells[row, 9].Value = debit;
+                worksheet.Cells[row, 10].Value = credit;
+                worksheet.Cells[row, 11].Value = balance;
+
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+
+                using (var range = worksheet.Cells[row, 1, row, 11])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                }
+
+                row++;
+            }
+
+            using (var range = worksheet.Cells[row, 9, row, 11])
+            {
+                range.Style.Font.Bold = true;
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+            }
+
+            debit = generalLedgerByAccountNo.Sum(j => j.Debit);
+            credit = generalLedgerByAccountNo.Sum(j => j.Credit);
+            balance = debit - credit;
+
+            worksheet.Cells[row, 9].Value = "Total";
+            worksheet.Cells[row, 9].Style.Font.Bold = true;
+            worksheet.Cells[row, 10].Value = debit;
+            worksheet.Cells[row, 11].Value = credit;
+            worksheet.Cells[row, 12].Value = balance;
+
+            worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+
+            // Auto-fit columns for better readability
+            worksheet.Cells.AutoFitColumns();
+            worksheet.View.FreezePanes(8, 1);
+
+            // Convert the Excel package to a byte array
+            var excelBytes = package.GetAsByteArray();
+
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"GeneralLedgerByAccountNo_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+        }
+
         //Generate as .txt file
 
         #region -- Generate Audit Trail .Txt File --
@@ -3508,7 +3698,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, 4].Value = pr.PurchaseOrder?.Supplier?.SupplierTin; // Supplier Tin
                         purchaseReportWorksheet.Cells[row, 5].Value = pr.PurchaseOrder?.Supplier?.SupplierAddress; // Supplier Address
                         purchaseReportWorksheet.Cells[row, 6].Value = pr.PurchaseOrder?.PurchaseOrderNo; // PO No.
-                        purchaseReportWorksheet.Cells[row, 7].Value = pr.ReceivingReportNo; // Filpride RR
+                        purchaseReportWorksheet.Cells[row, 7].Value = pr.ReceivingReportNo ?? pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride RR
                         purchaseReportWorksheet.Cells[row, 8].Value = pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride DR
                         purchaseReportWorksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.AuthorityToLoadNo; // ATL #
                         purchaseReportWorksheet.Cells[row, 10].Value = pr.SupplierInvoiceNumber; // Supplier's Sales Invoice
