@@ -601,7 +601,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingHeaderModel.CheckVoucherHeader.Date = viewModel.TransactionDate;
                         existingHeaderModel.CheckVoucherHeader.PONo = invoicingVoucher.Select(i => i.PONo).FirstOrDefault();
                         existingHeaderModel.CheckVoucherHeader.SINo = invoicingVoucher.Select(i => i.SINo).FirstOrDefault();
-                        // existingHeaderModel.SupplierId = viewModel.MultipleSupplierId;
+                        existingHeaderModel.SupplierId = viewModel.MultipleSupplierId;
                         existingHeaderModel.CheckVoucherHeader.Particulars = $"{viewModel.Particulars} Payment for {string.Join(",", invoicingVoucher.Select(i => i.CheckVoucherHeaderNo))}";
                         existingHeaderModel.CheckVoucherHeader.Total = viewModel.Total;
                         existingHeaderModel.CheckVoucherHeader.EditedBy = _userManager.GetUserName(this.User);
@@ -614,7 +614,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingHeaderModel.CheckVoucherHeader.CheckNo = viewModel.CheckNo;
                         existingHeaderModel.CheckVoucherHeader.CheckDate = viewModel.CheckDate;
                         existingHeaderModel.CheckVoucherHeader.CheckAmount = viewModel.Total;
-                         existingHeaderModel.CheckVoucherHeader.Total = viewModel.Total;
+                        existingHeaderModel.CheckVoucherHeader.Total = viewModel.Total;
                         existingHeaderModel.CheckVoucherHeader.Company = companyClaims;
                         existingHeaderModel.CheckVoucherHeader.Type = string.Join(", ", invoicingVoucher.Select(inv => inv.Type));
                     }
@@ -1011,7 +1011,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Date = viewModel.TransactionDate,
                         PONo = invoicingVoucher.Select(i => i.PONo).FirstOrDefault(),
                         SINo = invoicingVoucher.Select(i => i.SINo).FirstOrDefault(),
-                        SupplierId = null,
+                        SupplierId = viewModel.MultipleSupplierId,
                         Particulars = $"{viewModel.Particulars}. Payment for {string.Join(",", invoicingVoucher.Select(i => i.CheckVoucherHeaderNo))}",
                         Total = viewModel.Total,
                         CreatedBy = _userManager.GetUserName(this.User),
