@@ -629,5 +629,235 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion -- Trial Balance Report Excel File --
 
+
+        [HttpGet]
+        public async Task<IActionResult> BalanceSheetReport()
+        {
+            return View();
+        }
+
+
+        #region -- Generate Balance Sheet --
+
+        public async Task<IActionResult> BalanceSheetReport(DateOnly monthDate, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (monthDate == default)
+                {
+                    return BadRequest();
+                }
+
+                var companyClaims = await GetCompanyClaimAsync();
+                var today = DateTimeHelper.GetCurrentPhilippineTime();
+                var firstDayOfMonth = new DateOnly(monthDate.Year, monthDate.Month, 1);
+                var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+                var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
+                    .Include(gl => gl.Account) // Level 4
+                    .ThenInclude(ac => ac.ParentAccount) // Level 3
+                    .ThenInclude(ac => ac.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac.ParentAccount) // Level 1
+                    .Where(gl =>
+                        gl.Date >= firstDayOfMonth &&
+                        gl.Date <= lastDayOfMonth &&
+                        gl.AccountId != null && //Uncomment this if the GL is fix
+                        gl.Company == companyClaims)
+                    .ToListAsync(cancellationToken);
+
+                var chartOfAccounts = await _dbContext.FilprideChartOfAccounts
+                    .Include(coa => coa.Children)
+                    .OrderBy(coa => coa.AccountNumber)
+                    .Where(coa => coa.FinancialStatementType == nameof(FinancialStatementType.BalanceSheet))
+                    .ToListAsync(cancellationToken);
+
+                if (!generalLedgers.Any())
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(LevelOneReport));
+                }
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("Balance Sheet Report");
+                string currencyFormat = "#,##0.00_);[Red](#,##0.00)";
+                int row = 1;
+
+                #region == Column Header ==
+
+                using (var range = worksheet.Cells[row, 1, row, 8])
+                {
+                    range.Merge = true;
+                    range.Value = "FILPRIDE RESOURCES INC.";
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                row++;
+
+
+                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img\\Filpride.jpg");
+                var imageFile = new FileInfo(imagePath);
+
+                if (imageFile.Exists)
+                {
+                    var picture = worksheet.Drawings.AddPicture(Guid.NewGuid().ToString(), imageFile);
+                    picture.SetPosition(1, 15, 4, 10);
+                    picture.SetSize(330, 75);
+                }
+
+                worksheet.Row(row).Height = 80;
+
+                using (var range = worksheet.Cells[row, 1, row, 7])
+                {
+                    range.Merge = true;
+                }
+                row++;
+
+
+                using (var range = worksheet.Cells[row, 1, row, 7])
+                {
+                    range.Merge = true;
+                    range.Value = "BALANCE SHEET";
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                row++;
+
+                using (var range = worksheet.Cells[row, 1, row, 7])
+                {
+                    range.Merge = true;
+                    range.Value = "As of " + monthDate.ToString("MMM dd, yyyy");
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                row++;
+
+                using (var range = worksheet.Cells[row, 1, row, 7])
+                {
+                    range.Merge = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                row += 2;
+                worksheet.Cells[row, 1].Value = "L1";
+                worksheet.Cells[row, 2].Value = "L2";
+                worksheet.Cells[row, 3].Value = "L3";
+                worksheet.Cells[row, 4].Value = "L4";
+                worksheet.Cells[row, 5].Value = "L5";
+
+                worksheet.Cells[row, 1, row, 5].Style.Font.Bold = true;
+
+                row++;
+
+                #endregion
+
+                decimal totalAsset = 0;
+                decimal totalLiabilitiesAndEquity = 0;
+
+                foreach (var account in chartOfAccounts.Where(a => a.IsMain))
+                {
+                    decimal grandTotal = 0;
+
+                    worksheet.Cells[row, 1].Value = account.AccountName;
+                    row++;
+
+                    foreach (var levelTwo in account.Children)
+                    {
+                        decimal subTotal = 0;
+                        worksheet.Cells[row, 2].Value = levelTwo.AccountName;
+                        row++;
+
+                        foreach (var levelThree in levelTwo.Children)
+                        {
+                            worksheet.Cells[row, 3].Value = levelThree.AccountName;
+                            row++;
+
+                            foreach (var levelFour in levelThree.Children)
+                            {
+                                worksheet.Cells[row, 4].Value = levelFour.AccountName;
+                                var levelFourBalance = generalLedgers
+                                    .Where(gl =>
+                                        gl.AccountNo == levelFour.AccountNumber)
+                                    .Sum(gl => gl.Debit - gl.Credit);
+                                worksheet.Cells[row, 6].Value = levelFourBalance != 0 ? levelFourBalance : null;
+                                subTotal += levelFourBalance;
+                                row++;
+
+                                foreach (var levelFive in levelFour.Children)
+                                {
+                                    worksheet.Cells[row, 5].Value = levelFive.AccountName;
+                                    var levelFiveBalance = generalLedgers
+                                        .Where(gl =>
+                                            gl.AccountNo == levelFour.AccountNumber)
+                                        .Sum(gl => gl.Debit - gl.Credit);
+                                    worksheet.Cells[row, 6].Value = levelFiveBalance != 0 ? levelFiveBalance : null;
+                                    row++;
+                                }
+                            }
+                        }
+
+                        worksheet.Cells[row, 2].Value = $"TOTAL {levelTwo.AccountName.ToUpper()}";
+                        worksheet.Cells[row, 2].Style.Font.Bold = true;
+
+                        worksheet.Cells[row, 6].Value = subTotal != 0 ? subTotal : null;
+                        worksheet.Cells[row, 6].Style.Font.Bold = true;
+                        worksheet.Cells[row, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[row, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                        grandTotal += subTotal;
+                        row++;
+                    }
+
+                    worksheet.Cells[row, 1].Value = $"TOTAL {account.AccountName.ToUpper()}";
+                    worksheet.Cells[row, 1].Style.Font.Bold = true;
+
+                    worksheet.Cells[row, 6].Value = grandTotal != 0 ? grandTotal : null;
+                    worksheet.Cells[row, 6].Style.Font.Bold = true;
+                    worksheet.Cells[row, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[row, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    row++;
+
+                    if (account.AccountType == "Asset")
+                    {
+                        totalAsset += grandTotal;
+                    }
+                    else
+                    {
+                        totalLiabilitiesAndEquity += grandTotal;
+                    }
+
+
+                }
+
+                worksheet.Cells[row + 1, 1].Value = "TOTAL LIABILITIES AND EQUITY";
+                worksheet.Cells[row + 1, 6].Value = totalLiabilitiesAndEquity;
+                var difference = totalLiabilitiesAndEquity - totalAsset;
+                worksheet.Cells[row + 3, 6].Value = difference != 0 ? difference : null;
+
+                worksheet.Cells[row + 1, 1].Style.Font.Bold = true;
+                worksheet.Cells[row + 1, 6].Style.Font.Bold = true;
+                worksheet.Cells[row + 1, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[row + 1, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+
+
+                worksheet.Cells["F"].Style.Numberformat.Format = currencyFormat;
+
+                worksheet.Cells.AutoFitColumns();
+                for (int i = 1; i <= 4; i++)
+                {
+                    worksheet.Column(i).Width = 4.5;
+                }
+                worksheet.Column(5).Width = 50;
+
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Balance Sheet Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(ProfitAndLossReport));
+            }
+        }
+
+        #endregion
+
     }
 }
