@@ -59,10 +59,11 @@ namespace IBS.Models.Filpride.MasterFile
 
         public bool HasChildren { get; set; }
 
-
         // Select List
 
         [NotMapped]
         public List<SelectListItem>? Accounts { get; set; }
+
+        public string FinancialStatementType { get; set; }
     }
 }

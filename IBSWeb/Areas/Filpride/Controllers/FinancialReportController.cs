@@ -3,6 +3,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
+using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -49,70 +50,219 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+
+        #region -- Generate PNL Report --
+
         public async Task<IActionResult> ProfitAndLossReport(DateOnly monthDate, CancellationToken cancellationToken)
         {
-            if (monthDate == default)
+            try
             {
-                return BadRequest();
-            }
-
-            var companyClaims = await GetCompanyClaimAsync();
-            var today = DateTimeHelper.GetCurrentPhilippineTime();
-            var firstDayOfMonth = new DateOnly(monthDate.Year, monthDate.Month, 1);
-            var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
-
-            var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
-                .Include(gl => gl.Account) // Level 4
-                .ThenInclude(ac => ac.ParentAccount) // Level 3
-                .ThenInclude(ac => ac.ParentAccount) // Level 2
-                .ThenInclude(ac => ac.ParentAccount) // Level 1
-                .Where(gl =>
-                    gl.Date >= firstDayOfMonth &&
-                    gl.Date <= lastDayOfMonth &&
-                    gl.Company == companyClaims)
-                .ToListAsync(cancellationToken);
-
-            using (var package = new ExcelPackage())
-            {
-                var worksheet = package.Workbook.Worksheets.Add("PNL Report");
-
-                // Set up the column headers
-                worksheet.Cells[1, 1].Value = "Company Name";
-                worksheet.Cells[1, 2].Value = "Company Logo";
-                worksheet.Cells[1, 3].Value = "BALANCE SHEET";
-                worksheet.Cells[1, 4].Value = "AS of Oct 31, 2024";
-
-                worksheet.Cells[2, 1].Value = "L1";
-                worksheet.Cells[2, 2].Value = "L2";
-                worksheet.Cells[2, 3].Value = "L3";
-                worksheet.Cells[2, 4].Value = "L4";
-                worksheet.Cells[2, 5].Value = "L5";
-                worksheet.Cells[2, 6].Value = "ID";
-                worksheet.Cells[2, 7].Value = "Remarks";
-                worksheet.Cells[2, 8].Value = "level";
-                worksheet.Cells[2, 9].Value = "AMT";
-                worksheet.Cells[2, 10].Value = "VO";
-
-                // Populate the data
-                int row = 3;
-                foreach (var gl in generalLedgers)
+                if (monthDate == default)
                 {
-                    worksheet.Cells[row, 1].Value = gl.AccountNo;
-                    worksheet.Cells[row, 2].Value = gl.AccountTitle;
-                    worksheet.Cells[row, 3].Value = gl.Description;
-                    worksheet.Cells[row, 4].Value = gl.Debit;
-                    worksheet.Cells[row, 5].Value = gl.Credit;
-                    row++;
+                    return BadRequest();
                 }
 
-                // Adjust column widths and formatting
-                worksheet.Columns.AutoFit();
+                var companyClaims = await GetCompanyClaimAsync();
+                var today = DateTimeHelper.GetCurrentPhilippineTime();
+                var firstDayOfMonth = new DateOnly(monthDate.Year, monthDate.Month, 1);
+                var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
-                var stream = new MemoryStream();
-                await package.SaveAsAsync(stream, cancellationToken);
-                return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PNLReport.xlsx");
+                var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
+                    .Include(gl => gl.Account) // Level 4
+                    .ThenInclude(ac => ac.ParentAccount) // Level 3
+                    .ThenInclude(ac => ac.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac.ParentAccount) // Level 1
+                    .Where(gl =>
+                        gl.Date >= firstDayOfMonth &&
+                        gl.Date <= lastDayOfMonth &&
+                        gl.AccountId != null && //Uncomment this if the GL is fix
+                        gl.Company == companyClaims)
+                    .ToListAsync(cancellationToken);
+
+                var chartOfAccounts = await _dbContext.FilprideChartOfAccounts
+                    .Include(coa => coa.Children)
+                    .OrderBy(coa => coa.AccountNumber)
+                    .Where(coa => coa.FinancialStatementType == nameof(FinancialStatementType.PnL))
+                    .ToListAsync(cancellationToken);
+
+                if (!generalLedgers.Any())
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(LevelOneReport));
+                }
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("PNL Report");
+                string currencyFormat = "#,##0.00_);[Red](#,##0.00)";
+                int row = 1;
+
+                #region == Column Header ==
+
+                using (var range = worksheet.Cells[row, 1, row, 8])
+                {
+                    range.Merge = true;
+                    range.Value = "FILPRIDE RESOURCES INC.";
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                row++;
+
+
+                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img\\Filpride.jpg");
+                var imageFile = new FileInfo(imagePath);
+
+                if (imageFile.Exists)
+                {
+                    var picture = worksheet.Drawings.AddPicture(Guid.NewGuid().ToString(), imageFile);
+                    picture.SetPosition(1, 15, 4, 10);
+                    picture.SetSize(330, 75);
+                }
+
+                worksheet.Row(row).Height = 80;
+
+                using (var range = worksheet.Cells[row, 1, row, 7])
+                {
+                    range.Merge = true;
+                }
+                row++;
+
+
+                using (var range = worksheet.Cells[row, 1, row, 7])
+                {
+                    range.Merge = true;
+                    range.Value = "PNL REPORT";
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                row++;
+
+                using (var range = worksheet.Cells[row, 1, row, 7])
+                {
+                    range.Merge = true;
+                    range.Value = "As of " + monthDate.ToString("MMM dd, yyyy");
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                row++;
+
+                using (var range = worksheet.Cells[row, 1, row, 7])
+                {
+                    range.Merge = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                row += 2;
+                worksheet.Cells[row, 1].Value = "L1";
+                worksheet.Cells[row, 2].Value = "L2";
+                worksheet.Cells[row, 3].Value = "L3";
+                worksheet.Cells[row, 4].Value = "L4";
+                worksheet.Cells[row, 5].Value = "L5";
+
+                worksheet.Cells[row, 1, row, 5].Style.Font.Bold = true;
+
+                row++;
+
+                #endregion
+
+                decimal nibit = 0;
+
+                foreach (var account in chartOfAccounts.Where(a => a.IsMain))
+                {
+                    decimal grandTotal = 0;
+
+                    worksheet.Cells[row, 1].Value = account.AccountName;
+                    row++;
+
+                    foreach (var levelTwo in account.Children)
+                    {
+                        decimal subTotal = 0;
+                        worksheet.Cells[row, 2].Value = levelTwo.AccountName;
+                        row++;
+
+                        foreach (var levelThree in levelTwo.Children)
+                        {
+                            worksheet.Cells[row, 3].Value = levelThree.AccountName;
+                            row++;
+
+                            foreach (var levelFour in levelThree.Children)
+                            {
+                                worksheet.Cells[row, 4].Value = levelFour.AccountName;
+                                var levelFourBalance = generalLedgers
+                                    .Where(gl =>
+                                        gl.AccountNo == levelFour.AccountNumber)
+                                    .Sum(gl => gl.Debit - gl.Credit);
+                                worksheet.Cells[row, 6].Value = levelFourBalance != 0 ? levelFourBalance : null;
+                                subTotal += levelFourBalance;
+                                row++;
+
+                                foreach (var levelFive in levelFour.Children)
+                                {
+                                    worksheet.Cells[row, 5].Value = levelFive.AccountName;
+                                    var levelFiveBalance = generalLedgers
+                                        .Where(gl =>
+                                            gl.AccountNo == levelFour.AccountNumber)
+                                        .Sum(gl => gl.Debit - gl.Credit);
+                                    worksheet.Cells[row, 6].Value = levelFiveBalance != 0 ? levelFiveBalance : null;
+                                    row++;
+                                }
+                            }
+                        }
+
+                        worksheet.Cells[row, 2].Value = $"TOTAL {levelTwo.AccountName.ToUpper()}";
+                        worksheet.Cells[row, 2].Style.Font.Bold = true;
+                        worksheet.Cells[row, 6].Value = subTotal != 0 ? subTotal : null;
+                        worksheet.Cells[row, 6].Style.Font.Bold = true;
+                        worksheet.Cells[row, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[row, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                        grandTotal += subTotal;
+                        row++;
+                    }
+
+                    worksheet.Cells[row, 1].Value = $"TOTAL {account.AccountName.ToUpper()}";
+                    worksheet.Cells[row, 1].Style.Font.Bold = true;
+                    worksheet.Cells[row, 6].Value = grandTotal != 0 ? grandTotal : null;
+                    worksheet.Cells[row, 6].Style.Font.Bold = true;
+                    worksheet.Cells[row, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[row, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    row++;
+
+                    if (nibit == 0)
+                    {
+                        nibit += grandTotal;
+                        continue;
+                    }
+
+                    nibit -= grandTotal;
+
+
+                }
+
+                worksheet.Cells[row + 1, 1].Value = "NIBIT";
+                worksheet.Cells[row + 1, 6].Value = nibit;
+                worksheet.Cells[row + 1, 1].Style.Font.Bold = true;
+                worksheet.Cells[row + 1, 6].Style.Font.Bold = true;
+                worksheet.Cells[row + 1, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[row + 1, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+                worksheet.Cells["F"].Style.Numberformat.Format = currencyFormat;
+
+                worksheet.Cells.AutoFitColumns();
+                for (int i = 1; i <= 4; i++)
+                {
+                    worksheet.Column(i).Width = 4.5;
+                }
+                worksheet.Column(5).Width = 50;
+
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"PNL Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(ProfitAndLossReport));
             }
         }
+
+        #endregion
 
         [HttpGet]
         public IActionResult LevelOneReport()
@@ -138,9 +288,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var firstDayOfMonth = new DateOnly(monthDate.Year, monthDate.Month, 1);
                 var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
-                string currencyFormat = "#,##0.00_);[Red](#,##0.00)";
-                int row = 1;
-
                 var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
                     .ThenInclude(ac => ac.ParentAccount) // Level 3
@@ -160,7 +307,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 using var package = new ExcelPackage();
-                var worksheet = package.Workbook.Worksheets.Add("L1");
+                var worksheet = package.Workbook.Worksheets.Add("Level One");
+                string currencyFormat = "#,##0.00_);[Red](#,##0.00)";
+                int row = 1;
 
                 #region == Top of Header ==
 
