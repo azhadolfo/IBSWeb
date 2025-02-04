@@ -3512,12 +3512,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .FirstOrDefault(inv => inv.Credit > 0);
 
                 var getCategoryInChartOfAccount = await _dbContext.FilprideChartOfAccounts
-                    .Where(coa => coa.Parent.StartsWith(invoiceDebit.AccountNo.Substring(0, 2)) &&
-                    coa.Level == 2)
+                    .Include(coa => coa.ParentAccount) // Level 3
+                        .ThenInclude(a => a.ParentAccount) // Level 2
+                            .ThenInclude(a => a.ParentAccount) // Level 1
+                    .Where(coa => coa.AccountNumber == invoiceDebit.AccountNo)
                     .FirstOrDefaultAsync(cancellationToken);
 
+                var levelOneAccount = getCategoryInChartOfAccount?.ParentAccount?.ParentAccount;
 
-                worksheet.Cells[row, 1].Value = $"{getCategoryInChartOfAccount.AccountNumber} {getCategoryInChartOfAccount.AccountName}";
+                worksheet.Cells[row, 1].Value = $"{levelOneAccount.AccountNumber} " +
+                                                $"{levelOneAccount.AccountName}";
                 worksheet.Cells[row, 2].Value = $"{invoiceCredit.AccountNo} {invoiceCredit.AccountName}";
                 worksheet.Cells[row, 3].Value = cd.Payee;
                 worksheet.Cells[row, 4].Value = cd.Date.ToString("dd-MMM-yyyy");

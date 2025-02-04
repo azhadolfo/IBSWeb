@@ -742,6 +742,16 @@ namespace IBS.DataAccess.Data
                 .WithMany()
                 .HasForeignKey(gl => gl.BankAccountId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+                gl.HasOne(gl => gl.Employee)
+                    .WithMany()
+                    .HasForeignKey(gl => gl.EmployeeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                gl.HasOne(gl => gl.Account)
+                    .WithMany()
+                    .HasForeignKey(gl => gl.AccountId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             #endregion

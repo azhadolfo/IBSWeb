@@ -30,8 +30,15 @@ namespace IBS.Models.Filpride.MasterFile
 
         public int Level { get; set; }
 
-        [Column(TypeName = "varchar(15)")]
-        public string? Parent { get; set; }
+        // Change Parent to an int? (nullable) for FK reference
+        public int? ParentAccountId { get; set; }
+
+        // Navigation property for Parent Account
+        [ForeignKey("ParentAccountId")]
+        public virtual FilprideChartOfAccount? ParentAccount { get; set; }
+
+        // Navigation property for Child Accounts
+        public virtual ICollection<FilprideChartOfAccount> Children { get; set; } = new List<FilprideChartOfAccount>();
 
         [NotMapped]
         public List<SelectListItem>? Main { get; set; }
