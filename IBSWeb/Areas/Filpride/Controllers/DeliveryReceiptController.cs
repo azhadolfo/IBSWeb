@@ -618,7 +618,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "OperationManager")]
+        [Authorize(Roles = "OperationManager, Admin, HeadApprover")]
         public async Task<IActionResult> Post(int? id, CancellationToken cancellationToken)
         {
             if (id == null)

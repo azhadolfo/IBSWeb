@@ -556,7 +556,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "OperationManager, Admin")]
+        [Authorize(Roles = "OperationManager, Admin, HeadApprover")]
         public async Task<IActionResult> ApproveByOperationManager(int? id, decimal grossMargin, string reason, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -728,7 +728,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "FinanceManager, Admin")]
+        [Authorize(Roles = "FinanceManager, Admin, HeadApprover")]
         public async Task<IActionResult> ApproveByFinance(int? id, string? terms, string? instructions, CancellationToken cancellationToken)
         {
             if (id == null)
