@@ -1230,10 +1230,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
 
-            FilprideCheckVoucherDetail getPaymentDetails = new();
-            FilprideCheckVoucherHeader getInvoicingReference = new();
-            FilprideCheckVoucherDetail getInvoicingDetails = new();
-
             if (model != null)
             {
                 if (model.CanceledBy == null)
@@ -1242,18 +1238,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.Status = nameof(CheckVoucherInvoiceStatus.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
-
-                    if (model.CvType == nameof(CVType.Payment) && getPaymentDetails != null)
-                    {
-                        getPaymentDetails.AmountPaid -= model.Total;
-                        getInvoicingDetails.AmountPaid -= model.Total;
-                    }
-                    getInvoicingReference.AmountPaid -= model.Total;
-
-                    if (getInvoicingReference.IsPaid)
-                    {
-                        getInvoicingReference.IsPaid = false;
-                    }
 
                     #region --Audit Trail Recording
 

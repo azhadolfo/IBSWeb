@@ -308,25 +308,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             FilprideCheckVoucherDetail getInvoicingDetails = new();
 
             getPaymentDetails = await _dbContext.FilprideCheckVoucherDetails
-                                        .Where(cvd => cvd.SupplierId != null && cvd.CheckVoucherHeaderId == id)
+                                        .Where(cvd => cvd.SupplierId == model.SupplierId && cvd.CheckVoucherHeaderId == id)
                                         .FirstOrDefaultAsync(cancellationToken);
 
             getInvoicingReference = await _dbContext.FilprideCheckVoucherHeaders
                                     .Where(cvh => cvh.CheckVoucherHeaderNo == model.Reference)
                                     .FirstOrDefaultAsync(cancellationToken);
-
-            if (model.SupplierId != null)
-            {
-                getInvoicingDetails = await _dbContext.FilprideCheckVoucherDetails
-                                    .Where(cvd => cvd.SupplierId != null && cvd.AccountNo == "202010200" && cvd.CheckVoucherHeaderId == getInvoicingReference.CheckVoucherHeaderId)
-                                    .FirstOrDefaultAsync(cancellationToken);
-            }
-            else
-            {
-                getInvoicingDetails = await _dbContext.FilprideCheckVoucherDetails
-                                    .Where(cvd => cvd.SupplierId == getPaymentDetails.SupplierId && cvd.CheckVoucherHeaderId == getInvoicingReference.CheckVoucherHeaderId)
-                                    .FirstOrDefaultAsync(cancellationToken);
-            }
 
             if (model != null)
             {
