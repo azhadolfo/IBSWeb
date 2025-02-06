@@ -4,7 +4,6 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
-using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -49,9 +48,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        [HttpPost]
-
         #region -- Generate PNL Report --
+        [HttpPost]
 
         public async Task<IActionResult> ProfitAndLossReport(DateOnly monthDate, CancellationToken cancellationToken)
         {
@@ -63,7 +61,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var companyClaims = await GetCompanyClaimAsync();
-                var today = DateTimeHelper.GetCurrentPhilippineTime();
                 var firstDayOfMonth = new DateOnly(monthDate.Year, monthDate.Month, 1);
                 var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
@@ -75,7 +72,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.AccountId != null && //Uncomment this if the GL is fix
+                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -113,7 +110,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (imageFile.Exists)
                 {
-                    var picture = worksheet.Drawings.AddPicture(Guid.NewGuid().ToString(), imageFile);
+                    var picture = await worksheet.Drawings.AddPictureAsync(Guid.NewGuid().ToString(), imageFile);
                     picture.SetPosition(1, 15, 4, 10);
                     picture.SetSize(330, 75);
                 }
@@ -251,7 +248,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 worksheet.Column(5).Width = 50;
 
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"PNL Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
@@ -284,7 +281,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var companyClaims = await GetCompanyClaimAsync();
-                var today = DateTimeHelper.GetCurrentPhilippineTime();
                 var firstDayOfMonth = new DateOnly(monthDate.Year, monthDate.Month, 1);
                 var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
@@ -296,7 +292,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.AccountId != null && //Uncomment this if the GL is fix
+                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -327,7 +323,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (imageFile.Exists)
                 {
-                    var picture = worksheet.Drawings.AddPicture(Guid.NewGuid().ToString(), imageFile);
+                    var picture = await worksheet.Drawings.AddPictureAsync(Guid.NewGuid().ToString(), imageFile);
                     picture.SetPosition(1, 15, 1, -85);
                     picture.SetSize(330, 75);
                 }
@@ -411,7 +407,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Column(2).Width = 23;
                 worksheet.Column(3).Width = 17;
 
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Level One Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
@@ -448,7 +444,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= dateFrom &&
                         gl.Date <= dateTo &&
-                        gl.AccountId != null && //Uncomment this if the GL is fix
+                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -459,7 +455,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ThenInclude(ac => ac.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date < dateFrom &&
-                        gl.AccountId != null && //Uncomment this if the GL is fix
+                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -491,7 +487,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     worksheet.Column(2).Width = 80;
                     worksheet.Row(2).Height = 80;
-                    var picture = worksheet.Drawings.AddPicture(Guid.NewGuid().ToString(), imageFile);
+                    var picture = await worksheet.Drawings.AddPictureAsync(Guid.NewGuid().ToString(), imageFile);
                     picture.SetPosition(1, 15, 1, 15);
                     picture.SetSize(330, 75);
                 }
@@ -614,7 +610,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Convert the Excel package to a byte array
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     $"Trial Balance Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
@@ -631,7 +627,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> BalanceSheetReport()
+        public IActionResult BalanceSheetReport()
         {
             return View();
         }
@@ -649,7 +645,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var companyClaims = await GetCompanyClaimAsync();
-                var today = DateTimeHelper.GetCurrentPhilippineTime();
                 var firstDayOfMonth = new DateOnly(monthDate.Year, monthDate.Month, 1);
                 var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
@@ -659,9 +654,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ThenInclude(ac => ac.ParentAccount) // Level 2
                     .ThenInclude(ac => ac.ParentAccount) // Level 1
                     .Where(gl =>
-                        gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.AccountId != null && //Uncomment this if the GL is fix
+                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -699,7 +693,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (imageFile.Exists)
                 {
-                    var picture = worksheet.Drawings.AddPicture(Guid.NewGuid().ToString(), imageFile);
+                    var picture = await worksheet.Drawings.AddPictureAsync(Guid.NewGuid().ToString(), imageFile);
                     picture.SetPosition(1, 15, 4, 10);
                     picture.SetSize(330, 75);
                 }
@@ -846,7 +840,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 worksheet.Column(5).Width = 50;
 
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Balance Sheet Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
@@ -860,7 +854,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion
 
         [HttpGet]
-        public async Task<IActionResult> StatementOfRetainedEarningsReport()
+        public IActionResult StatementOfRetainedEarningsReport()
         {
             return View();
         }
@@ -878,7 +872,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var companyClaims = await GetCompanyClaimAsync();
-                var today = DateTimeHelper.GetCurrentPhilippineTime();
                 var firstDayOfMonth = new DateOnly(monthDate.Year, monthDate.Month, 1);
                 var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
@@ -890,7 +883,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
-                        gl.AccountId != null && //Uncomment this if the GL is fix
+                        gl.AccountId != null && //Uncomment this if the GL is fixed
                         gl.Company == companyClaims)
                     .ToListAsync(cancellationToken);
 
@@ -928,7 +921,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (imageFile.Exists)
                 {
-                    var picture = worksheet.Drawings.AddPicture(Guid.NewGuid().ToString(), imageFile);
+                    var picture = await worksheet.Drawings.AddPictureAsync(Guid.NewGuid().ToString(), imageFile);
                     picture.SetPosition(1, 15, 4, 10);
                     picture.SetSize(330, 75);
                 }
@@ -1070,7 +1063,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 worksheet.Column(5).Width = 50;
 
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"SRE Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
