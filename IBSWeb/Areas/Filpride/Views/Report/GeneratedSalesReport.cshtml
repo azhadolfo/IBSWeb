@@ -1,4 +1,4 @@
-﻿@model IEnumerable<FilprideSalesInvoice>
+﻿@model IEnumerable<SalesReportViewModel>
 @using IBS.Utility.Enums
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
@@ -78,7 +78,7 @@
             <thead>
             <tr class="table-primary text-center text-nowrap sticky-top">
                 <th>Date Delivered</th>
-                <th>@Html.DisplayNameFor(model => model.Customer.CustomerName)</th>
+                <th>Customer Name</th>
                 <th>Segment</th>
                 <th>Specialist</th>
                 <th>SI No.</th>
@@ -90,8 +90,8 @@
                 <th>IS PO #</th>
                 <th>Delivery Option</th>
                 <th>Items</th>
-                <th class="text-end">@Html.DisplayNameFor(model => model.Quantity)</th>
-                <th class="text-end">@Html.DisplayNameFor(model => model.CustomerOrderSlip.Freight)</th>
+                <th class="text-end">Quantity</th>
+                <th class="text-end">Freight</th>
                 <th class="text-end">Sales G. VAT</th>
                 <th class="text-end">VAT</th>
                 <th class="text-end">Sales N. VAT</th>
@@ -102,45 +102,45 @@
             </thead>
             <tbody>
 
-            @foreach (var invoice in Model)
+            @foreach (var viewModel in Model)
             {
-                var quantity = invoice.Quantity;
-                var freight = (invoice.DeliveryReceipt?.Freight ?? 0) * quantity;
+                var quantity = viewModel.DeliveryReceipt.Quantity;
+                var freight = (viewModel.DeliveryReceipt?.Freight ?? 0) * quantity;
                 var freightNetOfVat = freight / 1.12m;
-                var salesNetOfVat = invoice.Amount != 0 ? invoice.Amount / 1.12m : 0;
+                var salesNetOfVat = viewModel.DeliveryReceipt.TotalAmount != 0 ? viewModel.DeliveryReceipt.TotalAmount / 1.12m : 0;
                 var vat = salesNetOfVat * .12m;
                     
                 <tr class="align-text-bottom">
-                    <td>@Html.DisplayFor(model => invoice.TransactionDate)</td>
-                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerName)</td>
-                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerType)</td>
-                    <td>@Html.DisplayFor(model => invoice.CustomerOrderSlip.AccountSpecialist)</td>
-                    <td>@Html.DisplayFor(model => invoice.SalesInvoiceNo)</td>
-                    <td>@Html.DisplayFor(model => invoice.CustomerOrderSlip.CustomerOrderSlipNo)</td>
-                    <td>@Html.DisplayFor(model => invoice.CustomerOrderSlip.OldCosNo)</td>
-                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.DeliveryReceiptNo)</td>
-                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.ManualDrNo)</td>
-                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.PurchaseOrder.PurchaseOrderNo)</td>
-                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.PurchaseOrder.OldPoNo)</td>
-                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.CustomerOrderSlip.DeliveryOption)</td>
-                    <td>@Html.DisplayFor(model => invoice.Product.ProductName)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.DeliveredDate)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.Customer.CustomerName)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.Customer.CustomerType)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.AccountSpecialist)</td>
+                    <td>@Html.DisplayFor(model => viewModel.SalesInvoiceNo)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.CustomerOrderSlipNo)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.OldCosNo)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.DeliveryReceiptNo)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.ManualDrNo)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.PurchaseOrder.PurchaseOrderNo)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.PurchaseOrder.OldPoNo)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.DeliveryOption)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.Product.ProductName)</td>
                     <td class="text-end">@quantity.ToString(currencyFormat)</td>
                     <td class="text-end">@freight.ToString(currencyFormat)</td>
-                    <td class="text-end">@Html.DisplayFor(model => invoice.Amount)</td>
+                    <td class="text-end">@Html.DisplayFor(model => viewModel.DeliveryReceipt.TotalAmount)</td>
                     <td class="text-end">@vat.ToString(currencyFormat)</td>
                     <td class="text-end">@salesNetOfVat.ToString(currencyFormat)</td>
                     <td class="text-end">@freightNetOfVat.ToString(currencyFormat)</td>
-                    <td class="text-end">@Html.DisplayFor(model => invoice.CustomerOrderSlip.CommissionRate)</td>
-                    <td>@Html.DisplayFor(model => invoice.Remarks)</td>
+                    <td class="text-end">@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.CommissionRate)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.Remarks)</td>
                 </tr>
 
-                totalQuantity += invoice.Quantity;
+                totalQuantity += viewModel.DeliveryReceipt.Quantity;
                 totalFreight += freight;
-                totalAmount += invoice.Amount;
+                totalAmount += viewModel.DeliveryReceipt.TotalAmount;
                 totalVat += vat;
                 totalSalesNetOfVat += salesNetOfVat;
                 totalFreightNetOfVat += freightNetOfVat;
-                totalCommissionRate += invoice.CustomerOrderSlip?.CommissionRate ?? 0;
+                totalCommissionRate += viewModel.DeliveryReceipt.CustomerOrderSlip?.CommissionRate ?? 0;
             }
             <tr class="table-primary" style="border-top: double">
                 <td></td>
@@ -191,12 +191,12 @@
 
                 @foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
-                    var list = Model.Where(s => s.Customer?.CustomerType == customerType.ToString()).ToList();
-                    var listForBiodiesel = list.Where(s => s.Product?.ProductName == "BIODIESEL").ToList();
+                    var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+                    var listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL").ToList();
 
                     // Computation for Biodiesel
-                    var biodieselQuantitySum = listForBiodiesel.Sum(s => s.Quantity);
-                    var biodieselAmountSum = listForBiodiesel.Sum(s => s.Amount);
+                    var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity);
+                    var biodieselAmountSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.TotalAmount);
                     var biodieselNetOfAmountSum = biodieselAmountSum != 0m ? biodieselAmountSum / 1.12m : 0;
                     var biodieselAverageSellingPrice = biodieselNetOfAmountSum != 0m || biodieselQuantitySum != 0m ? biodieselNetOfAmountSum / biodieselQuantitySum : 0m;
                     <tr class="align-text-bottom">
@@ -236,12 +236,12 @@
 
                 @foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
-                    var list = Model.Where(s => s.Customer?.CustomerType == customerType.ToString()).ToList();
-                    var listForEconogas = list.Where(s => s.Product?.ProductName == "ECONOGAS").ToList();
+                    var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+                    var listForEconogas = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS").ToList();
 
                     // Computation for Econogas
-                    var econogasQuantitySum = listForEconogas.Sum(s => s.Quantity);
-                    var econogasAmountSum = listForEconogas.Sum(s => s.Amount);
+                    var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity);
+                    var econogasAmountSum = listForEconogas.Sum(s => s.DeliveryReceipt.TotalAmount);
                     var econogasNetOfAmountSum = econogasAmountSum != 0m ? econogasAmountSum / 1.12m : 0;
                     var econogasAverageSellingPrice = econogasNetOfAmountSum != 0m || econogasQuantitySum != 0m ? econogasNetOfAmountSum / econogasQuantitySum : 0m;
                     <tr class="align-text-bottom text-end">
@@ -281,12 +281,12 @@
 
                 @foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
-                    var list = Model.Where(s => s.Customer?.CustomerType == customerType.ToString()).ToList();
-                    var listForEnvirogas = list.Where(s => s.Product?.ProductName == "ENVIROGAS").ToList();
+                    var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+                    var listForEnvirogas = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS").ToList();
 
                     // Computation for Envirogas
-                    var envirogasQuantitySum = listForEnvirogas.Sum(s => s.Quantity);
-                    var envirogasAmountSum = listForEnvirogas.Sum(s => s.Amount);
+                    var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity);
+                    var envirogasAmountSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.TotalAmount);
                     var envirogasNetOfAmountSum = envirogasAmountSum != 0m ? envirogasAmountSum / 1.12m : 0;
                     var envirogasAverageSellingPrice = envirogasNetOfAmountSum != 0m || envirogasQuantitySum != 0m ? envirogasNetOfAmountSum / envirogasQuantitySum : 0m;
                     <tr class="align-text-bottom text-end">

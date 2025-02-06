@@ -8,6 +8,7 @@ using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
 using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Packaging;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -249,24 +250,52 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync();
         }
 
-        public List<FilprideSalesInvoice> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, string company)
+        public List<SalesReportViewModel> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, string company)
         {
             if (dateFrom > dateTo)
             {
                 throw new ArgumentException("Date From must be greater than Date To !");
             }
 
-            var salesInvoice = _db.FilprideSalesInvoices
-            .Where(s => s.Company == company && s.TransactionDate >= dateFrom && s.TransactionDate <= dateTo && s.Status == nameof(Status.Posted)) // Filter by date and company
-            .Include (s => s.Product)
-            .Include (s => s.Customer)
-            .Include (s => s.CustomerOrderSlip)
-            .Include (s => s.DeliveryReceipt)
-            .Include (s => s.PurchaseOrder)
-            .OrderBy(s => s.TransactionDate) // Order by TransactionDate
-            .ToList();
+            // Fetch all delivery receipts within the date range
+            var deliveryReceipts = _db.FilprideDeliveryReceipts
+                .Where(dr => dr.Company == company &&
+                             dr.DeliveredDate != null &&
+                             dr.DeliveredDate >= dateFrom &&
+                             dr.DeliveredDate <= dateTo)
+                .Include(dr => dr.CustomerOrderSlip.Product)
+                .Include(dr => dr.Customer)
+                .Include(dr => dr.PurchaseOrder)
+                .OrderBy(dr => dr.DeliveredDate)
+                .ToList();
 
-            return salesInvoice;
+            // Fetch all sales invoices within the date range
+            var salesInvoices = _db.FilprideSalesInvoices
+                .Where(si => si.Company == company &&
+                             si.TransactionDate >= dateFrom &&
+                             si.TransactionDate <= dateTo &&
+                             si.Status == nameof(Status.Posted))
+                .Include(si => si.DeliveryReceipt)
+                .ToList();
+
+            // Create a result list to hold the combined data
+            var result = new List<SalesReportViewModel>();
+
+            // Iterate through each delivery receipt
+            foreach (var dr in deliveryReceipts)
+            {
+                // Find the related sales invoice (if it exists)
+                var relatedSalesInvoice = salesInvoices.FirstOrDefault(si => si.DeliveryReceiptId == dr.DeliveryReceiptId);
+
+                // Add a new SalesReportViewModel to the result list
+                result.Add(new SalesReportViewModel
+                {
+                    DeliveryReceipt = dr,
+                    SalesInvoice = relatedSalesInvoice // This will be null if no related sales invoice exists
+                });
+            }
+
+            return result;
         }
 
         public List<FilpridePurchaseOrder> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string company)

@@ -2944,8 +2944,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = "No Record Found";
                 return RedirectToAction(nameof(SalesReport));
             }
-            var totalQuantity = salesReport.Sum(s => s.Quantity);
-            var totalAmount = salesReport.Sum(s => s.Amount);
+            var totalQuantity = salesReport.Sum(s => s.DeliveryReceipt.Quantity);
+            var totalAmount = salesReport.Sum(s => s.DeliveryReceipt.TotalAmount);
 
             // Create the Excel package
             using var package = new ExcelPackage();
@@ -3011,36 +3011,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var totalFreightNetOfVat = 0m;
             var totalCommissionRate = 0m;
             var totalVat = 0m;
-            foreach (var si in salesReport)
+            foreach (var dr in salesReport)
             {
-                var quantity = si.Quantity;
-                var freight = (si.DeliveryReceipt?.Freight ?? 0m) * quantity;
-                var segment = si.Amount;
+                var quantity = dr.DeliveryReceipt.Quantity;
+                var freight = (dr.DeliveryReceipt?.Freight ?? 0m) * quantity;
+                var segment = dr.DeliveryReceipt.TotalAmount;
                 var salesNetOfVat = segment != 0 ? segment / 1.12m : 0;
                 var vat = salesNetOfVat * .12m;
                 var freightNetOfVat = freight / 1.12m;
 
-                worksheet.Cells[row, 1].Value = si.TransactionDate.ToString("dd-MMM-yyyy");
-                worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
-                worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
-                worksheet.Cells[row, 4].Value = si.CustomerOrderSlip?.AccountSpecialist;
-                worksheet.Cells[row, 5].Value = si.SalesInvoiceNo;
-                worksheet.Cells[row, 6].Value = si.CustomerOrderSlip?.CustomerOrderSlipNo;
-                worksheet.Cells[row, 7].Value = si.CustomerOrderSlip?.OldCosNo;
-                worksheet.Cells[row, 8].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
-                worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.ManualDrNo;
-                worksheet.Cells[row, 10].Value = si.DeliveryReceipt?.PurchaseOrder?.PurchaseOrderNo;
-                worksheet.Cells[row, 11].Value = si.DeliveryReceipt?.PurchaseOrder?.OldPoNo;
-                worksheet.Cells[row, 12].Value = si.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
-                worksheet.Cells[row, 13].Value = si.Product?.ProductName;
-                worksheet.Cells[row, 14].Value = si.Quantity;
+                worksheet.Cells[row, 1].Value = dr.DeliveryReceipt.DeliveredDate?.ToString("dd-MMM-yyyy");
+                worksheet.Cells[row, 2].Value = dr.DeliveryReceipt.Customer?.CustomerName;
+                worksheet.Cells[row, 3].Value = dr.DeliveryReceipt.Customer?.CustomerType;
+                worksheet.Cells[row, 4].Value = dr.DeliveryReceipt.CustomerOrderSlip?.AccountSpecialist;
+                worksheet.Cells[row, 5].Value = dr.SalesInvoiceNo;
+                worksheet.Cells[row, 6].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo;
+                worksheet.Cells[row, 7].Value = dr.DeliveryReceipt.CustomerOrderSlip?.OldCosNo;
+                worksheet.Cells[row, 8].Value = dr.DeliveryReceipt?.DeliveryReceiptNo;
+                worksheet.Cells[row, 9].Value = dr.DeliveryReceipt?.ManualDrNo;
+                worksheet.Cells[row, 10].Value = dr.DeliveryReceipt?.PurchaseOrder?.PurchaseOrderNo;
+                worksheet.Cells[row, 11].Value = dr.DeliveryReceipt?.PurchaseOrder?.OldPoNo;
+                worksheet.Cells[row, 12].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
+                worksheet.Cells[row, 13].Value = dr.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName;
+                worksheet.Cells[row, 14].Value = dr.DeliveryReceipt.Quantity;
                 worksheet.Cells[row, 15].Value = freight;
                 worksheet.Cells[row, 16].Value = segment;
                 worksheet.Cells[row, 17].Value = vat;
                 worksheet.Cells[row, 18].Value = salesNetOfVat;
                 worksheet.Cells[row, 19].Value = freightNetOfVat;
-                worksheet.Cells[row, 20].Value = si.CustomerOrderSlip?.CommissionRate;
-                worksheet.Cells[row, 21].Value = si.Remarks;
+                worksheet.Cells[row, 20].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CommissionRate;
+                worksheet.Cells[row, 21].Value = dr.DeliveryReceipt.Remarks;
 
                 worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
@@ -3056,7 +3056,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 totalVat += vat;
                 totalSalesNetOfVat += salesNetOfVat;
                 totalFreightNetOfVat += freightNetOfVat;
-                totalCommissionRate += si.CustomerOrderSlip?.CommissionRate ?? 0m;
+                totalCommissionRate += dr.DeliveryReceipt.CustomerOrderSlip?.CommissionRate ?? 0m;
             }
 
             worksheet.Cells[row, 13].Value = "Total ";
@@ -3223,9 +3223,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
             }
 
-            var listForBiodiesel = new List<FilprideSalesInvoice>();
-            var listForEconogas = new List<FilprideSalesInvoice>();
-            var listForEnvirogas = new List<FilprideSalesInvoice>();
+            var listForBiodiesel = new List<SalesReportViewModel>();
+            var listForEconogas = new List<SalesReportViewModel>();
+            var listForEnvirogas = new List<SalesReportViewModel>();
 
             var totalQuantityForBiodiesel = 0m;
             var totalAmountForBiodiesel = 0m;
@@ -3238,14 +3238,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var customerType in Enum.GetValues<CustomerType>())
             {
-                var list = salesReport.Where(s => s.Customer?.CustomerType == customerType.ToString()).ToList();
-                listForBiodiesel = list.Where(s => s.Product?.ProductName == "BIODIESEL").ToList();
-                listForEconogas = list.Where(s => s.Product?.ProductName == "ECONOGAS").ToList();
-                listForEnvirogas = list.Where(s => s.Product?.ProductName == "ENVIROGAS").ToList();
+                var list = salesReport.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+                listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL").ToList();
+                listForEconogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ECONOGAS").ToList();
+                listForEnvirogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ENVIROGAS").ToList();
 
                 // Computation for Biodiesel
-                var biodieselQuantitySum = listForBiodiesel.Sum(s => s.Quantity);
-                var biodieselAmountSum = listForBiodiesel.Sum(s => s.Amount);
+                var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity);
+                var biodieselAmountSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.TotalAmount);
                 var biodieselNetOfAmountSum = biodieselAmountSum != 0m ? biodieselAmountSum / 1.12m : 0;
 
                 worksheet.Cells[rowForSummary, 2].Value = customerType.ToString();
@@ -3258,8 +3258,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[rowForSummary, 5].Style.Numberformat.Format = currencyFormat;
 
                 // Computation for Econogas
-                var econogasQuantitySum = listForEconogas.Sum(s => s.Quantity);
-                var econogasAmountSum = listForEconogas.Sum(s => s.Amount);
+                var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity);
+                var econogasAmountSum = listForEconogas.Sum(s => s.DeliveryReceipt.TotalAmount);
                 var econogasNetOfAmountSum = econogasAmountSum != 0m ? econogasAmountSum / 1.12m : 0;
 
                 worksheet.Cells[rowForSummary, 7].Value = econogasQuantitySum;
@@ -3271,8 +3271,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[rowForSummary, 9].Style.Numberformat.Format = currencyFormat;
 
                 // Computation for Envirogas
-                var envirogasQuantitySum = listForEnvirogas.Sum(s => s.Quantity);
-                var envirogasAmountSum = listForEnvirogas.Sum(s => s.Amount);
+                var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity);
+                var envirogasAmountSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.TotalAmount);
                 var envirogasNetOfAmountSum = envirogasAmountSum != 0m ? envirogasAmountSum / 1.12m : 0;
 
                 worksheet.Cells[rowForSummary, 11].Value = envirogasQuantitySum;
