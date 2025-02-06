@@ -96,7 +96,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
             model.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Parent == "201030200")
+                .Where(coa => coa.AccountNumber.Contains("2010302"))
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber + " " + s.AccountName,
