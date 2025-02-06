@@ -260,9 +260,9 @@ namespace IBS.DataAccess.Repository.Filpride
             // Fetch all delivery receipts within the date range
             var deliveryReceipts = _db.FilprideDeliveryReceipts
                 .Where(dr => dr.Company == company &&
-                             dr.DeliveredDate != null &&
                              dr.DeliveredDate >= dateFrom &&
-                             dr.DeliveredDate <= dateTo)
+                             dr.DeliveredDate <= dateTo &&
+                             dr.Status == nameof(DRStatus.ForInvoicing) || dr.Status == nameof(DRStatus.Invoiced))
                 .Include(dr => dr.CustomerOrderSlip.Product)
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.PurchaseOrder)
