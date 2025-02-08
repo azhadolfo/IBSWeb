@@ -618,7 +618,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "OperationManager")]
+        [Authorize(Roles = "OperationManager, Admin, HeadApprover")]
         public async Task<IActionResult> Post(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -818,7 +818,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(i => i.Product)
                 .FirstOrDefaultAsync(i => i.Reference == model.DeliveryReceiptNo && i.Company == model.Company);
 
-            if (model != null && existingInventory != null)
+            if (model != null)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -836,7 +836,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.Status = nameof(DRStatus.Voided);
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-                        await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
+                        if (existingInventory != null)
+                        {
+                            await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
+                        }
 
                         var connectedReceivingReport = await _dbContext.FilprideReceivingReports
                             .FirstOrDefaultAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);

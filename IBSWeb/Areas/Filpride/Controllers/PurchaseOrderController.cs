@@ -713,7 +713,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "OperationManager, Admin")]
+        [Authorize(Roles = "OperationManager, Admin, HeadApprover")]
         public async Task<IActionResult> Approve(int id, CancellationToken cancellationToken)
         {
             var existingRecord = await _unitOfWork.FilpridePurchaseOrder

@@ -108,7 +108,7 @@
 
         @if (Model.Status != nameof(CosStatus.Disapproved))
         {
-            if (User.IsInRole("OperationManager") || User.IsInRole("Admin"))
+            if (User.IsInRole("OperationManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
             {
                 <div class="col-6 col-md-3">
                     <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>

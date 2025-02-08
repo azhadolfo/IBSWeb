@@ -116,7 +116,7 @@ else
     }
     else
     {
-        if (User.IsInRole("OperationManager"))
+        if (User.IsInRole("OperationManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
         {
             <div class="col-6 col-md-3">
                 <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Post" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Approve</a>
