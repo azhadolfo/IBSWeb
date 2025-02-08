@@ -3762,24 +3762,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     totalCommissionPerLiter = totalCommissionAmount / totalVolume;
                     totalNetMarginPerLiter = totalNetMarginAmount / totalVolume;
 
-                    purchaseReportWorksheet.Cells[row, 14].Value = "Total: ";
-                    purchaseReportWorksheet.Cells[row, 15].Value = totalVolume;
-                    purchaseReportWorksheet.Cells[row, 16].Value = totalCostPerLiter;
-                    purchaseReportWorksheet.Cells[row, 17].Value = totalCostAmount;
-                    purchaseReportWorksheet.Cells[row, 18].Value = totalVatAmount;
-                    purchaseReportWorksheet.Cells[row, 19].Value = totalWHTAmount;
-                    purchaseReportWorksheet.Cells[row, 21].Value = totalNetPurchases;
-                    purchaseReportWorksheet.Cells[row, 22].Value = totalNetFreight;
-                    purchaseReportWorksheet.Cells[row, 23].Value = totalCommission;
+                    purchaseReportWorksheet.Cells[row, 16].Value = "Total: ";
+                    purchaseReportWorksheet.Cells[row, 17].Value = totalVolume;
+                    purchaseReportWorksheet.Cells[row, 18].Value = totalCostPerLiter;
+                    purchaseReportWorksheet.Cells[row, 19].Value = totalCostAmount;
+                    purchaseReportWorksheet.Cells[row, 20].Value = totalVatAmount;
+                    purchaseReportWorksheet.Cells[row, 21].Value = totalWHTAmount;
+                    purchaseReportWorksheet.Cells[row, 23].Value = totalNetPurchases;
+                    purchaseReportWorksheet.Cells[row, 24].Value = totalNetFreight;
+                    purchaseReportWorksheet.Cells[row, 25].Value = totalCommission;
 
-                    purchaseReportWorksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat0;
-                    purchaseReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat0;
                     purchaseReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
                     purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
                     purchaseReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
                     purchaseReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
 
                     #endregion -- Assign values of other totals and formatting of total cells --
 
