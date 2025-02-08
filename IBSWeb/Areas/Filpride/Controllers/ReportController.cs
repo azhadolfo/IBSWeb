@@ -1,6 +1,5 @@
 ﻿using System.Drawing;
 using System.Globalization;
-using System.Linq.Dynamic.Core;
 using System.Text;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -15,7 +14,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 
@@ -3626,32 +3624,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["C7"].Value = "SUPPLIER NAME";
                     purchaseReportWorksheet.Cells["D7"].Value = "SUPPLIER TIN";
                     purchaseReportWorksheet.Cells["E7"].Value = "SUPPLIER ADDRESS";
-                    purchaseReportWorksheet.Cells["F7"].Value = "PO NO.";
+                    purchaseReportWorksheet.Cells["F7"].Value = "PO#.";
                     purchaseReportWorksheet.Cells["G7"].Value = "FILPRIDE RR";
-                    purchaseReportWorksheet.Cells["H7"].Value = "FILPRIDE DR";
-                    purchaseReportWorksheet.Cells["I7"].Value = "ATL #";
-                    purchaseReportWorksheet.Cells["J7"].Value = "SUPPLIER'S SI";
-                    purchaseReportWorksheet.Cells["K7"].Value = "SUPPLIER'S DR";
-                    purchaseReportWorksheet.Cells["L7"].Value = "SUPPLIER'S WC";
-                    purchaseReportWorksheet.Cells["M7"].Value = "CUSTOMER NAME";
-                    purchaseReportWorksheet.Cells["N7"].Value = "PRODUCT";
-                    purchaseReportWorksheet.Cells["O7"].Value = "VOLUME";
-                    purchaseReportWorksheet.Cells["P7"].Value = "CPL G.VAT";
-                    purchaseReportWorksheet.Cells["Q7"].Value = "PURCHASES G.VAT";
-                    purchaseReportWorksheet.Cells["R7"].Value = "VAT AMOUNT";
-                    purchaseReportWorksheet.Cells["S7"].Value = "WHT AMOUNT";
-                    purchaseReportWorksheet.Cells["T7"].Value = "HAULER'S NAME";
-                    purchaseReportWorksheet.Cells["U7"].Value = "PURCHASES N.VAT";
-                    purchaseReportWorksheet.Cells["V7"].Value = "FREIGHT N.VAT";
-                    purchaseReportWorksheet.Cells["W7"].Value = "COMMISSION";
-                    purchaseReportWorksheet.Cells["X7"].Value = "MANUAL DR NO.";
-                    purchaseReportWorksheet.Cells["Y7"].Value = "OLD PO NO.";
+                    purchaseReportWorksheet.Cells["H7"].Value = "COS#";
+                    purchaseReportWorksheet.Cells["I7"].Value = "FILPRIDE DR";
+                    purchaseReportWorksheet.Cells["J7"].Value = "DEPOT";
+                    purchaseReportWorksheet.Cells["K7"].Value = "ATL #";
+                    purchaseReportWorksheet.Cells["L7"].Value = "SUPPLIER'S SI";
+                    purchaseReportWorksheet.Cells["M7"].Value = "SUPPLIER'S DR";
+                    purchaseReportWorksheet.Cells["N7"].Value = "SUPPLIER'S WC";
+                    purchaseReportWorksheet.Cells["O7"].Value = "CUSTOMER NAME";
+                    purchaseReportWorksheet.Cells["P7"].Value = "PRODUCT";
+                    purchaseReportWorksheet.Cells["Q7"].Value = "VOLUME";
+                    purchaseReportWorksheet.Cells["R7"].Value = "CPL G.VAT";
+                    purchaseReportWorksheet.Cells["S7"].Value = "PURCHASES G.VAT";
+                    purchaseReportWorksheet.Cells["T7"].Value = "VAT AMOUNT";
+                    purchaseReportWorksheet.Cells["U7"].Value = "WHT AMOUNT";
+                    purchaseReportWorksheet.Cells["V7"].Value = "HAULER'S NAME";
+                    purchaseReportWorksheet.Cells["W7"].Value = "PURCHASES N.VAT";
+                    purchaseReportWorksheet.Cells["X7"].Value = "FREIGHT N.VAT";
+                    purchaseReportWorksheet.Cells["Y7"].Value = "COMMISSION";
+                    purchaseReportWorksheet.Cells["Z7"].Value = "OTC COS#.";
+                    purchaseReportWorksheet.Cells["AA7"].Value = "OTC DR#.";
+                    purchaseReportWorksheet.Cells["AB7"].Value = "IS PO#";
 
                     #endregion
 
                     #region -- Apply styling to the header row --
 
-                    using (var range = purchaseReportWorksheet.Cells["A7:Y7"])
+                    using (var range = purchaseReportWorksheet.Cells["A7:AB7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -3699,25 +3700,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, 5].Value = pr.PurchaseOrder?.Supplier?.SupplierAddress; // Supplier Address
                         purchaseReportWorksheet.Cells[row, 6].Value = pr.PurchaseOrder?.PurchaseOrderNo; // PO No.
                         purchaseReportWorksheet.Cells[row, 7].Value = pr.ReceivingReportNo ?? pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride RR
-                        purchaseReportWorksheet.Cells[row, 8].Value = pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride DR
-                        purchaseReportWorksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.AuthorityToLoadNo; // ATL #
-                        purchaseReportWorksheet.Cells[row, 10].Value = pr.SupplierInvoiceNumber; // Supplier's Sales Invoice
-                        purchaseReportWorksheet.Cells[row, 11].Value = pr.SupplierDrNo; // Supplier's DR
-                        purchaseReportWorksheet.Cells[row, 12].Value = pr.WithdrawalCertificate; // Supplier's WC
-                        purchaseReportWorksheet.Cells[row, 13].Value = pr.DeliveryReceipt?.Customer?.CustomerName; // Customer Name
-                        purchaseReportWorksheet.Cells[row, 14].Value = pr.PurchaseOrder?.Product?.ProductName; // Product
-                        purchaseReportWorksheet.Cells[row, 15].Value = volume; // Volume
-                        purchaseReportWorksheet.Cells[row, 16].Value = costPerLiter; // Purchase price per liter
-                        purchaseReportWorksheet.Cells[row, 17].Value = costAmount; // Purchase total gross
-                        purchaseReportWorksheet.Cells[row, 18].Value = vatAmount; // Vat total
-                        // Def Vat Amount
-                        purchaseReportWorksheet.Cells[row, 19].Value = whtAmount; // WHT total
-                        purchaseReportWorksheet.Cells[row, 20].Value = pr.DeliveryReceipt?.Hauler?.SupplierName; // Hauler's Name
-                        purchaseReportWorksheet.Cells[row, 21].Value = netPurchases; // Purchase total net ======== move to third last
-                        purchaseReportWorksheet.Cells[row, 22].Value = netFreight; // freight n vat ============
-                        purchaseReportWorksheet.Cells[row, 23].Value = commission; // commission =========
-                        purchaseReportWorksheet.Cells[row, 24].Value = pr.DeliveryReceipt?.ManualDrNo; // commission =========
-                        purchaseReportWorksheet.Cells[row, 25].Value = pr.PurchaseOrder?.OldPoNo; // commission =========
+                        purchaseReportWorksheet.Cells[row, 8].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.CustomerOrderSlipNo; // COS
+                        purchaseReportWorksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride DR
+                        purchaseReportWorksheet.Cells[row, 10].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.PickUpPoint?.Depot; // Filpride DR
+                        purchaseReportWorksheet.Cells[row, 11].Value = pr.DeliveryReceipt?.AuthorityToLoadNo; // ATL #
+                        purchaseReportWorksheet.Cells[row, 12].Value = pr.SupplierInvoiceNumber; // Supplier's Sales Invoice
+                        purchaseReportWorksheet.Cells[row, 13].Value = pr.SupplierDrNo; // Supplier's DR
+                        purchaseReportWorksheet.Cells[row, 14].Value = pr.WithdrawalCertificate; // Supplier's WC
+                        purchaseReportWorksheet.Cells[row, 15].Value = pr.DeliveryReceipt?.Customer?.CustomerName; // Customer Name
+                        purchaseReportWorksheet.Cells[row, 16].Value = pr.PurchaseOrder?.Product?.ProductName; // Product
+                        purchaseReportWorksheet.Cells[row, 17].Value = volume; // Volume
+                        purchaseReportWorksheet.Cells[row, 18].Value = costPerLiter; // Purchase price per liter
+                        purchaseReportWorksheet.Cells[row, 19].Value = costAmount; // Purchase total gross
+                        purchaseReportWorksheet.Cells[row, 20].Value = vatAmount; // Vat total
+                        purchaseReportWorksheet.Cells[row, 21].Value = whtAmount; // WHT total
+                        purchaseReportWorksheet.Cells[row, 22].Value = pr.DeliveryReceipt?.Hauler?.SupplierName; // Hauler's Name
+                        purchaseReportWorksheet.Cells[row, 23].Value = netPurchases; // Purchase total net ======== move to third last
+                        purchaseReportWorksheet.Cells[row, 24].Value = netFreight; // freight n vat ============
+                        purchaseReportWorksheet.Cells[row, 25].Value = commission; // commission =========
+                        purchaseReportWorksheet.Cells[row, 26].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.OldCosNo; // commission =========
+                        purchaseReportWorksheet.Cells[row, 27].Value = pr.DeliveryReceipt?.ManualDrNo; // commission =========
+                        purchaseReportWorksheet.Cells[row, 28].Value = pr.PurchaseOrder?.OldPoNo; // commission =========
 
                         #endregion -- Assign Values to Cells --
 
@@ -3734,14 +3737,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Add format number cells from Assign Values to Cells --
 
-                        purchaseReportWorksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat0;
-                        purchaseReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
-                        purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat2;
+                        purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat0;
+                        purchaseReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
                         purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat2;
+                        purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat2;
                         purchaseReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
                         purchaseReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat2;
+                        purchaseReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
+                        purchaseReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat2;
 
                         #endregion -- Add format number cells from Assign Values to Cells --
 
@@ -3782,14 +3785,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // Apply style to subtotal rows
                     // color to whole row
-                    using (var range = purchaseReportWorksheet.Cells[row, 1, row, 23])
+                    using (var range = purchaseReportWorksheet.Cells[row, 1, row, 25])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                     }
                     // line to subtotal values
-                    using (var range = purchaseReportWorksheet.Cells[row, 14, row, 23])
+                    using (var range = purchaseReportWorksheet.Cells[row, 14, row, 25])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border

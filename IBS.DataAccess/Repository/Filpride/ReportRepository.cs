@@ -4,8 +4,6 @@ using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
-using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
 using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -324,6 +322,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
                 .Include(rr => rr.DeliveryReceipt)
                 .ThenInclude(dr => dr.CustomerOrderSlip)
+                .ThenInclude(cos => cos.PickUpPoint)
                 .Include(rr => rr.DeliveryReceipt)
                 .ThenInclude(dr => dr.Customer)
                 .Include(rr => rr.DeliveryReceipt)
