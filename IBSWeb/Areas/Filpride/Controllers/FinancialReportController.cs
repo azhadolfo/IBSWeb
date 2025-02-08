@@ -159,8 +159,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                decimal nibit = 0;
-
                 foreach (var account in chartOfAccounts.Where(a => a.IsMain))
                 {
                     decimal grandTotal = 0;
@@ -185,7 +183,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 var levelFourBalance = generalLedgers
                                     .Where(gl =>
                                         gl.AccountNo == levelFour.AccountNumber)
-                                    .Sum(gl => gl.Debit - gl.Credit);
+                                    .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit) ?
+                                        gl.Debit - gl.Credit :
+                                        gl.Credit - gl.Debit);
                                 worksheet.Cells[row, 6].Value = levelFourBalance != 0 ? levelFourBalance : null;
                                 subTotal += levelFourBalance;
                                 row++;
@@ -196,7 +196,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     var levelFiveBalance = generalLedgers
                                         .Where(gl =>
                                             gl.AccountNo == levelFour.AccountNumber)
-                                        .Sum(gl => gl.Debit - gl.Credit);
+                                        .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit) ?
+                                            gl.Debit - gl.Credit :
+                                            gl.Credit - gl.Debit);
                                     worksheet.Cells[row, 6].Value = levelFiveBalance != 0 ? levelFiveBalance : null;
                                     row++;
                                 }
@@ -221,19 +223,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     row++;
 
-                    if (nibit == 0)
-                    {
-                        nibit += grandTotal;
-                        continue;
-                    }
-
-                    nibit -= grandTotal;
-
-
                 }
 
+                var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
+                    .FirstOrDefaultAsync(i => i.Month == monthDate.Month &&
+                                              i.Year == monthDate.Year &&
+                                              i.Company == companyClaims, cancellationToken);
+
                 worksheet.Cells[row + 1, 1].Value = "NIBIT";
-                worksheet.Cells[row + 1, 6].Value = nibit;
+                worksheet.Cells[row + 1, 6].Value = nibitForThePeriod.NetIncome;
                 worksheet.Cells[row + 1, 1].Style.Font.Bold = true;
                 worksheet.Cells[row + 1, 6].Style.Font.Bold = true;
                 worksheet.Cells[row + 1, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
@@ -364,22 +362,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var groupByLevelOne = generalLedgers
                     .OrderBy(gl => gl.Account.AccountNumber)
-                    .GroupBy(gl => new { gl.Account.ParentAccount.ParentAccount.ParentAccount.AccountNumber, gl.Account.ParentAccount.ParentAccount.ParentAccount.AccountName });
+                    .GroupBy(gl =>
+                    {
+                        // Traverse the account hierarchy to find the top-level parent account
+                        var currentAccount = gl.Account;
+                        while (currentAccount.ParentAccount != null)
+                        {
+                            currentAccount = currentAccount.ParentAccount;
+                        }
+                        // Return the top-level parent account (mother account)
+                        return new { currentAccount.AccountNumber, currentAccount.AccountName };
+                    });
 
                 decimal nibit = 0;
                 foreach (var gl in groupByLevelOne)
                 {
                     worksheet.Cells[row, 1].Value = gl.Key.AccountNumber;
                     worksheet.Cells[row, 2].Value = gl.Key.AccountName;
-                    if (int.TryParse(gl.Key.AccountNumber, out int accountNumber) && accountNumber < 400000000)
+                    if (gl.First().Account.FinancialStatementType == nameof(FinancialStatementType.BalanceSheet))
                     {
-                        worksheet.Cells[row, 3].Value = gl.Sum(g => g.Debit - g.Credit);
+                        worksheet.Cells[row, 3].Value = gl.Sum(g => g.Account.NormalBalance == nameof(NormalBalance.Debit) ?
+                            g.Debit - g.Credit :
+                            g.Credit - g.Debit);
                         worksheet.Cells[row, 3].Style.Numberformat.Format = currencyFormat;
                         worksheet.Cells[row, 3].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     }
                     else
                     {
-                        worksheet.Cells[row, 4].Value = gl.Sum(g => g.Debit - g.Credit);
+                        worksheet.Cells[row, 4].Value = gl.Sum(g => g.Account.NormalBalance == nameof(NormalBalance.Debit) ?
+                            g.Debit - g.Credit :
+                            g.Credit - g.Debit);
                         worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormat;
                         worksheet.Cells[row, 4].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
 
@@ -769,7 +781,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 var levelFourBalance = generalLedgers
                                     .Where(gl =>
                                         gl.AccountNo == levelFour.AccountNumber)
-                                    .Sum(gl => gl.Debit - gl.Credit);
+                                    .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit) ?
+                                        gl.Debit - gl.Credit :
+                                        gl.Credit - gl.Debit);
                                 worksheet.Cells[row, 6].Value = levelFourBalance != 0 ? levelFourBalance : null;
                                 subTotal += levelFourBalance;
                                 row++;
@@ -780,7 +794,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     var levelFiveBalance = generalLedgers
                                         .Where(gl =>
                                             gl.AccountNo == levelFour.AccountNumber)
-                                        .Sum(gl => gl.Debit - gl.Credit);
+                                        .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit) ?
+                                            gl.Debit - gl.Credit :
+                                            gl.Credit - gl.Debit);
                                     worksheet.Cells[row, 6].Value = levelFiveBalance != 0 ? levelFiveBalance : null;
                                     row++;
                                 }
@@ -893,11 +909,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(coa => coa.AccountName.Contains("Retained Earnings") || coa.AccountName.Contains("Prior Period"))
                     .ToListAsync(cancellationToken);
 
-                if (!generalLedgers.Any())
-                {
-                    TempData["error"] = "No Record Found";
-                    return RedirectToAction(nameof(LevelOneReport));
-                }
+                // if (!generalLedgers.Any())
+                // {
+                //     TempData["error"] = "No Record Found";
+                //     return RedirectToAction(nameof(StatementOfRetainedEarningsReport));
+                // }
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("SRE Report");

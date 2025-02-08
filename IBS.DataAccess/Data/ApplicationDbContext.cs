@@ -107,6 +107,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideBookAtlDetail> FilprideBookAtlDetails { get; set; }
 
+        public DbSet<FilprideMonthlyNibit> FilprideMonthlyNibits { get; set; }
+
         #region--Master File
 
         public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
@@ -511,6 +513,13 @@ namespace IBS.DataAccess.Data
                     .WithMany()
                     .HasForeignKey(b => b.CustomerOrderSlipId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideMonthlyNibit>(n =>
+            {
+                n.HasIndex(n => n.Company);
+                n.HasIndex(n => n.Month);
+                n.HasIndex(n => n.Year);
             });
 
             #region-- Master File

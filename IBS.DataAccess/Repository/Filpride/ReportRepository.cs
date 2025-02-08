@@ -4,6 +4,7 @@ using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
+using IBS.Models.Filpride.ViewModels;
 using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Packaging;
