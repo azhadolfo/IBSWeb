@@ -102,6 +102,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("PNL Report");
                 string currencyFormat = "#,##0.00_);[Red](#,##0.00)";
+                worksheet.View.FreezePanes(5, 1);
                 int row = 1;
 
                 #region == Column Header ==
@@ -309,12 +310,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("Level One");
                 string currencyFormat = "#,##0.00_);[Red](#,##0.00)";
+                worksheet.View.FreezePanes(5, 1);
                 int row = 1;
 
                 #region == Top of Header ==
 
 
-                using (var range = worksheet.Cells[row, 1, row, 3])
+                using (var range = worksheet.Cells[row, 1, row, 4])
                 {
                     range.Merge = true;
                     range.Value = "FILPRIDE RESOURCES INC.";
@@ -334,25 +336,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Row(row).Height = 80;
 
-                using (var range = worksheet.Cells[row, 1, row, 3])
+                using (var range = worksheet.Cells[row, 1, row, 4])
                 {
                     range.Merge = true;
                 }
                 row++;
-                using (var range = worksheet.Cells[row, 1, row, 3])
+                using (var range = worksheet.Cells[row, 1, row, 4])
                 {
                     range.Merge = true;
                     range.Value = "Level 1";
                     range.Style.Font.Bold = true;
                 }
                 row++;
-                using (var range = worksheet.Cells[row, 1, row, 3])
+                using (var range = worksheet.Cells[row, 1, row, 4])
                 {
                     range.Merge = true;
                     range.Value =  "As of " + monthDate.ToString("dd MMMM yyyy");
                 }
                 row++;
-                using (var range = worksheet.Cells[1, 1, row, 3])
+                using (var range = worksheet.Cells[1, 1, row, 4])
                 {
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
@@ -706,6 +708,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("Balance Sheet Report");
                 string currencyFormat = "#,##0.00_);[Red](#,##0.00)";
+                worksheet.View.FreezePanes(5, 1);
                 int row = 1;
 
                 #region == Column Header ==
@@ -800,11 +803,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 if (levelFour.AccountName.Contains("Retained Earnings"))
                                 {
                                     worksheet.Cells[row, 4].Value = "Retained Earnings Beg";
-                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.BeginningBalance != 0 ? nibitForThePeriod.BeginningBalance : 0;
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.BeginningBalance != 0 ? nibitForThePeriod.BeginningBalance : null;
                                     row++;
 
                                     worksheet.Cells[row, 4].Value = "Net Income for the Period";
-                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.NetIncome != 0 ? nibitForThePeriod.NetIncome : 0;
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.NetIncome != 0 ? nibitForThePeriod.NetIncome : null;
 
                                     row++;
                                     continue;
@@ -814,11 +817,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 if (levelFour.AccountName.Contains("Prior Period"))
                                 {
                                     worksheet.Cells[row, 4].Value = levelFour.AccountName;
-                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.PriorPeriodAdjustment != 0 ? nibitForThePeriod.PriorPeriodAdjustment : 0;
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.PriorPeriodAdjustment != 0 ? nibitForThePeriod.PriorPeriodAdjustment : null;
                                     row++;
 
                                     worksheet.Cells[row, 2].Value = "Retained Earnings End";
-                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.EndingBalance != 0 ? nibitForThePeriod.EndingBalance : 0;
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.EndingBalance != 0 ? nibitForThePeriod.EndingBalance : null;
 
                                     subTotal += nibitForThePeriod.EndingBalance;
                                     row++;
@@ -959,6 +962,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("SRE Report");
                 string currencyFormat = "#,##0.00_);[Red](#,##0.00)";
+                worksheet.View.FreezePanes(5, 1);
                 int row = 1;
 
                 #region == Column Header ==
