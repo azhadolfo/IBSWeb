@@ -887,33 +887,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var companyClaims = await GetCompanyClaimAsync();
-                var firstDayOfMonth = new DateOnly(monthDate.Year, monthDate.Month, 1);
-                var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+                var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
+                    .FirstOrDefaultAsync(m => m.Year == monthDate.Year &&
+                                              m.Month == monthDate.Month, cancellationToken);
 
-                var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
-                    .Include(gl => gl.Account) // Level 4
-                    .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac.ParentAccount) // Level 1
-                    .Where(gl =>
-                        gl.Date >= firstDayOfMonth &&
-                        gl.Date <= lastDayOfMonth &&
-                        gl.AccountId != null && //Uncomment this if the GL is fixed
-                        gl.Company == companyClaims)
-                    .ToListAsync(cancellationToken);
-
-                var chartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                    .Include(coa => coa.Children)
-                    .OrderBy(coa => coa.AccountNumber)
-                    .Where(coa => coa.AccountName.Contains("Retained Earnings") || coa.AccountName.Contains("Prior Period"))
-                    .ToListAsync(cancellationToken);
-
-                // if (!generalLedgers.Any())
-                // {
-                //     TempData["error"] = "No Record Found";
-                //     return RedirectToAction(nameof(StatementOfRetainedEarningsReport));
-                // }
+                if (nibitForThePeriod == null)
+                {
+                    TempData["error"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
+                    return RedirectToAction(nameof(StatementOfRetainedEarningsReport));
+                }
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("SRE Report");
@@ -922,7 +904,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region == Column Header ==
 
-                using (var range = worksheet.Cells[row, 1, row, 8])
+                using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
                     range.Value = "FILPRIDE RESOURCES INC.";
@@ -944,23 +926,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Row(row).Height = 80;
 
-                using (var range = worksheet.Cells[row, 1, row, 7])
+                using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
                 }
                 row++;
 
 
-                using (var range = worksheet.Cells[row, 1, row, 7])
+                using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
-                    range.Value = "BALANCE SHEET";
+                    range.Value = "STATEMENT OF RETAINED EARNINGS";
                     range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
                 row++;
 
-                using (var range = worksheet.Cells[row, 1, row, 7])
+                using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
                     range.Value = "As of " + monthDate.ToString("MMM dd, yyyy");
@@ -968,7 +950,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 row++;
 
-                using (var range = worksheet.Cells[row, 1, row, 7])
+                using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -986,90 +968,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                decimal totalAsset = 0;
-                decimal totalLiabilitiesAndEquity = 0;
+                worksheet.Cells[8, 2].Value = "Retained Earnings";
+                worksheet.Cells[8, 2].Style.Font.Bold = true;
 
-                foreach (var account in chartOfAccounts.Where(a => a.Level == 2))
-                {
-                    decimal grandTotal = 0;
+                worksheet.Cells[9, 3].Value = "Retained Earnings";
 
-                    worksheet.Cells[row, 1].Value = account.AccountName;
-                    row++;
+                worksheet.Cells[10, 4].Value = "Retained Earnings Beg";
+                worksheet.Cells[10, 6].Value = nibitForThePeriod.BeginningBalance != 0 ? nibitForThePeriod.BeginningBalance : null;
+                worksheet.Cells[10, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[10, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
 
-                    foreach (var levelThree in account.Children)
-                    {
-                        decimal subTotal = 0;
-                        worksheet.Cells[row, 2].Value = levelThree.AccountName;
-                        row++;
+                worksheet.Cells[11, 4].Value = "Net Income for the Period";
+                worksheet.Cells[11, 6].Value = nibitForThePeriod.NetIncome != 0 ? nibitForThePeriod.NetIncome : null;
+                worksheet.Cells[11, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[11, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
 
-                        foreach (var levelFour in levelThree.Children)
-                        {
-                            worksheet.Cells[row, 3].Value = levelFour.AccountName;
-                            var levelFourBalance = generalLedgers
-                                .Where(gl =>
-                                    gl.AccountNo == levelFour.AccountNumber)
-                                .Sum(gl => gl.Debit - gl.Credit);
-                            worksheet.Cells[row, 6].Value = levelFourBalance != 0 ? levelFourBalance : null;
-                            subTotal += levelFourBalance;
-                            row++;
+                worksheet.Cells[12, 2].Value = "Prior Period Adjustment";
+                worksheet.Cells[12, 2].Style.Font.Bold = true;
 
-                            foreach (var levelFive in levelFour.Children)
-                            {
-                                worksheet.Cells[row, 4].Value = levelFive.AccountName;
-                                var levelFiveBalance = generalLedgers
-                                    .Where(gl =>
-                                        gl.AccountNo == levelFive.AccountNumber)
-                                    .Sum(gl => gl.Debit - gl.Credit);
-                                worksheet.Cells[row, 6].Value = levelFiveBalance != 0 ? levelFiveBalance : null;
-                                subTotal += levelFiveBalance;
-                                row++;
-                            }
-                        }
+                worksheet.Cells[13, 3].Value = "Prior Period Adjustment";
 
-                        worksheet.Cells[row, 2].Value = $"TOTAL {levelThree.AccountName.ToUpper()}";
-                        worksheet.Cells[row, 2].Style.Font.Bold = true;
+                worksheet.Cells[14, 4].Value = "Prior Period Adjustment";
+                worksheet.Cells[14, 6].Value = nibitForThePeriod.PriorPeriodAdjustment != 0 ? nibitForThePeriod.PriorPeriodAdjustment : null;
+                worksheet.Cells[14, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[14, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
 
-                        worksheet.Cells[row, 6].Value = subTotal != 0 ? subTotal : null;
-                        worksheet.Cells[row, 6].Style.Font.Bold = true;
-                        worksheet.Cells[row, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                        worksheet.Cells[row, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                        grandTotal += subTotal;
-                        row++;
-                    }
+                worksheet.Cells[15, 2].Value = "Retained Earnings End";
+                worksheet.Cells[15, 2].Style.Font.Bold = true;
+                worksheet.Cells[15, 6].Value = nibitForThePeriod.EndingBalance != 0 ? nibitForThePeriod.EndingBalance : null;
+                worksheet.Cells[15, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[15, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
 
-                    worksheet.Cells[row, 1].Value = $"TOTAL {account.AccountName.ToUpper()}";
-                    worksheet.Cells[row, 1].Style.Font.Bold = true;
-
-                    worksheet.Cells[row, 6].Value = grandTotal != 0 ? grandTotal : null;
-                    worksheet.Cells[row, 6].Style.Font.Bold = true;
-                    worksheet.Cells[row, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells[row, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                    row++;
-
-                    if (account.AccountType == "Asset")
-                    {
-                        totalAsset += grandTotal;
-                    }
-                    else
-                    {
-                        totalLiabilitiesAndEquity += grandTotal;
-                    }
-
-
-                }
-
-                worksheet.Cells[row + 1, 1].Value = "RETAINED EARNINGS END";
-                worksheet.Cells[row + 1, 6].Value = totalLiabilitiesAndEquity;
-                var difference = totalLiabilitiesAndEquity - totalAsset;
-                worksheet.Cells[row + 3, 6].Value = difference != 0 ? difference : null;
-
-                worksheet.Cells[row + 1, 1].Style.Font.Bold = true;
-                worksheet.Cells[row + 1, 6].Style.Font.Bold = true;
-                worksheet.Cells[row + 1, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                worksheet.Cells[row + 1, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-
-
-
+                worksheet.Cells["F"].Style.Font.Bold = true;
                 worksheet.Cells["F"].Style.Numberformat.Format = currencyFormat;
 
                 worksheet.Cells.AutoFitColumns();
@@ -1086,7 +1016,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(ProfitAndLossReport));
+                return RedirectToAction(nameof(StatementOfRetainedEarningsReport));
             }
         }
 
