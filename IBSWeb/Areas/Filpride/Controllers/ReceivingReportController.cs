@@ -54,14 +54,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View("ExportIndex", receivingReports);
             }
 
-            var receivingReportss = await _unitOfWork.FilprideReceivingReport
-                .GetAllAsync();
-
-            foreach (var receivingReports in receivingReportss)
-            {
-                await Void(receivingReports.ReceivingReportId, cancellationToken);
-                await Post(receivingReports.ReceivingReportId, cancellationToken);
-            }
+            //For the function of correcting the journal entries
+            // var receivingReportss = await _unitOfWork.FilprideReceivingReport
+            //     .GetAllAsync();
+            //
+            // foreach (var receivingReports in receivingReportss)
+            // {
+            //     await Void(receivingReports.ReceivingReportId, cancellationToken);
+            //     await Post(receivingReports.ReceivingReportId, cancellationToken);
+            // }
 
 
             return View();
