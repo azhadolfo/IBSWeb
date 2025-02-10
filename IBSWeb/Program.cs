@@ -75,14 +75,6 @@ builder.Services.AddQuartz(q =>
     //     .WithCronSchedule("0 46 22 * * ?",
     //         x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila")))); Uncomment if needs to enable
 
-    q.AddTrigger(opts => opts
-        .ForJob(monthlyClosureKey)
-        .WithIdentity("MonthlyTrigger") // Trigger 1
-        .WithCronSchedule("0 9 17 * * ?",
-            x => x.InTimeZone(
-                TimeZoneInfo
-                    .FindSystemTimeZoneById("Asia/Manila")))); // Run at midnight on the first day of every month
-
 });
 
 

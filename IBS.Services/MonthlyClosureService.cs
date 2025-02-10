@@ -38,9 +38,9 @@ namespace IBS.Services
             {
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
                 var previousMonth = today.AddMonths(-1);
-                //await InTransit(previousMonth);
-                //await CheckTheUntriggeredPurchaseOrders(previousMonth);
-                //await AutoReversalForCvWithoutDcrDate(previousMonth);
+                await InTransit(previousMonth);
+                await CheckTheUntriggeredPurchaseOrders(previousMonth);
+                await AutoReversalForCvWithoutDcrDate(previousMonth);
                 await ComputeNibit(previousMonth);
                 _logger.LogInformation($"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
             }
@@ -314,9 +314,6 @@ namespace IBS.Services
 
             try
             {
-
-                previousMonth = previousMonth.AddMonths(-2);
-
                 var generalLedgers = _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
                     .ThenInclude(ac => ac.ParentAccount) // Level 3
