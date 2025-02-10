@@ -82,10 +82,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(coa => coa.FinancialStatementType == nameof(FinancialStatementType.PnL))
                     .ToListAsync(cancellationToken);
 
+                var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
+                    .FirstOrDefaultAsync(m => m.Year == monthDate.Year &&
+                                              m.Month == monthDate.Month &&
+                                              m.Company == companyClaims, cancellationToken);
+
+                if (nibitForThePeriod == null)
+                {
+                    TempData["error"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
+                    return RedirectToAction(nameof(ProfitAndLossReport));
+                }
+
                 if (!generalLedgers.Any())
                 {
                     TempData["error"] = "No Record Found";
-                    return RedirectToAction(nameof(LevelOneReport));
+                    return RedirectToAction(nameof(ProfitAndLossReport));
                 }
 
                 using var package = new ExcelPackage();
@@ -224,11 +235,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row++;
 
                 }
-
-                var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
-                    .FirstOrDefaultAsync(i => i.Month == monthDate.Month &&
-                                              i.Year == monthDate.Year &&
-                                              i.Company == companyClaims, cancellationToken);
 
                 worksheet.Cells[row + 1, 1].Value = "NIBIT";
                 worksheet.Cells[row + 1, 6].Value = nibitForThePeriod.NetIncome;
@@ -677,10 +683,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(coa => coa.FinancialStatementType == nameof(FinancialStatementType.BalanceSheet))
                     .ToListAsync(cancellationToken);
 
+                var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
+                    .FirstOrDefaultAsync(m => m.Year == monthDate.Year &&
+                                              m.Month == monthDate.Month &&
+                                              m.Company == companyClaims, cancellationToken);
+
+                if (nibitForThePeriod == null)
+                {
+                    if (nibitForThePeriod == null)
+                    {
+                        TempData["error"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
+                        return RedirectToAction(nameof(BalanceSheetReport));
+                    }
+                }
+
                 if (!generalLedgers.Any())
                 {
                     TempData["error"] = "No Record Found";
-                    return RedirectToAction(nameof(LevelOneReport));
+                    return RedirectToAction(nameof(BalanceSheetReport));
                 }
 
                 using var package = new ExcelPackage();
@@ -690,7 +710,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region == Column Header ==
 
-                using (var range = worksheet.Cells[row, 1, row, 8])
+                using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
                     range.Value = "FILPRIDE RESOURCES INC.";
@@ -712,14 +732,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Row(row).Height = 80;
 
-                using (var range = worksheet.Cells[row, 1, row, 7])
+                using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
                 }
                 row++;
 
 
-                using (var range = worksheet.Cells[row, 1, row, 7])
+                using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
                     range.Value = "BALANCE SHEET";
@@ -728,7 +748,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 row++;
 
-                using (var range = worksheet.Cells[row, 1, row, 7])
+                using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
                     range.Value = "As of " + monthDate.ToString("MMM dd, yyyy");
@@ -736,7 +756,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 row++;
 
-                using (var range = worksheet.Cells[row, 1, row, 7])
+                using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -764,7 +784,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 1].Value = account.AccountName;
                     row++;
 
-                    foreach (var levelTwo in account.Children)
+                    foreach (var levelTwo in account.Children.OrderBy(l => l.AccountNumber))
                     {
                         decimal subTotal = 0;
                         worksheet.Cells[row, 2].Value = levelTwo.AccountName;
@@ -777,6 +797,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             foreach (var levelFour in levelThree.Children)
                             {
+                                if (levelFour.AccountName.Contains("Retained Earnings"))
+                                {
+                                    worksheet.Cells[row, 4].Value = "Retained Earnings Beg";
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.BeginningBalance != 0 ? nibitForThePeriod.BeginningBalance : 0;
+                                    row++;
+
+                                    worksheet.Cells[row, 4].Value = "Net Income for the Period";
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.NetIncome != 0 ? nibitForThePeriod.NetIncome : 0;
+
+                                    row++;
+                                    continue;
+
+                                }
+
+                                if (levelFour.AccountName.Contains("Prior Period"))
+                                {
+                                    worksheet.Cells[row, 4].Value = levelFour.AccountName;
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.PriorPeriodAdjustment != 0 ? nibitForThePeriod.PriorPeriodAdjustment : 0;
+                                    row++;
+
+                                    worksheet.Cells[row, 2].Value = "Retained Earnings End";
+                                    worksheet.Cells[row, 6].Value = nibitForThePeriod.EndingBalance != 0 ? nibitForThePeriod.EndingBalance : 0;
+
+                                    subTotal += nibitForThePeriod.EndingBalance;
+                                    row++;
+
+                                    continue;
+                                }
+
                                 worksheet.Cells[row, 4].Value = levelFour.AccountName;
                                 var levelFourBalance = generalLedgers
                                     .Where(gl =>
@@ -801,6 +850,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     row++;
                                 }
                             }
+                        }
+
+                        if (levelTwo.AccountName.Contains("Retained Earnings") ||
+                            levelTwo.AccountName.Contains("Prior Period"))
+                        {
+                            grandTotal += subTotal;
+                            continue;
                         }
 
                         worksheet.Cells[row, 2].Value = $"TOTAL {levelTwo.AccountName.ToUpper()}";
@@ -863,7 +919,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(ProfitAndLossReport));
+                return RedirectToAction(nameof(BalanceSheetReport));
             }
         }
 
@@ -887,9 +943,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                var companyClaims = await GetCompanyClaimAsync();
+
                 var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
                     .FirstOrDefaultAsync(m => m.Year == monthDate.Year &&
-                                              m.Month == monthDate.Month, cancellationToken);
+                                              m.Month == monthDate.Month &&
+                                              m.Company == companyClaims, cancellationToken);
 
                 if (nibitForThePeriod == null)
                 {
