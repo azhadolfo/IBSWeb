@@ -299,6 +299,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerOrderSlipId = exisitingRecord.CustomerOrderSlipId,
                     Date = exisitingRecord.Date,
                     CustomerId = exisitingRecord.CustomerId,
+                    CustomerAddress = exisitingRecord.Customer.CustomerAddress,
                     TinNo = exisitingRecord.Customer.CustomerTin,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                     HasCommission = exisitingRecord.HasCommission,
