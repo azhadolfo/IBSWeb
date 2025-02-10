@@ -194,7 +194,7 @@
                             if (data) {
 
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
-                                    //Remove the else condition in the future
+                                    @* TODO Remove the else condition in the future *@
                                     $('#haulerList').show();
                                     if (parseInt(cosId) > 748) {
                                         $('input[name="Freight"]').parent().show();
@@ -212,7 +212,7 @@
                                     $('input[name="Freight"]').parent().hide();
                                     $('input[name="Freight"]').val(data.freight);
                                     
-                                    //Remove the else condition in the future
+                                    @* TODO Remove the else condition in the future *@
                                     if (parseInt(cosId) > 748) {
                                         $('select[name="HaulerId"]').val(data.haulerId).change();
                                         console.log(data.haulerId);

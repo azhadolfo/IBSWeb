@@ -1456,7 +1456,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingCos.Status = nameof(CosStatus.ForApprovalOfOM);
                 }
 
-                ///PENDING
+                //TODO Remove this in the future
                 #region Remove this in the future
 
                 var existingDr = await _unitOfWork.FilprideDeliveryReceipt
