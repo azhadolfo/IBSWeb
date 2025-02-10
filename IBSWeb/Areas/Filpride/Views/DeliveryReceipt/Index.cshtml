@@ -57,6 +57,9 @@
                         Total Amount
                     </th>
                     <th>
+                        Created By
+                    </th>
+                    <th>
                         Status
                     </th>
                     <th>Actions</th>
@@ -121,6 +124,7 @@
                         return `<span class="text-end d-block">${amount}</span>`;
                     }
                 },
+                { "data": "createdBy" },
                 {
                     "data": "status",
                     "render": function(data, type, row) {
