@@ -9,20 +9,40 @@
 @{
     ViewData["Title"] = "Print Check Voucher";
     int supplierId = Model.Header.SupplierId == null ? Model.Supplier.SupplierId : 0;
+    
+    string? selectedCompany = string.Empty;
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+    }
 }
 
 <br />
 <div class="text-end">
-    <img src="~/img/Filpride.jpg" height="" width="130px" />
+    @if (selectedCompany == "Filpride")
+    {
+        <img src="~/img/Filpride.jpg" height="" width="130px" />
+    }
+    @if (selectedCompany == "Mobility")
+    {
+        <img src="~/img/usa88-logo.png" height="" width="130px" />
+    }
 </div>
 <div class="text-center">
-    <h2><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
-    <p style="line-height: 1; margin-top:-7px;">
-        57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
-        Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
-        VAT Reg. TIN: 000-216-589-00000
-    </p>
-
+    @if (selectedCompany == "Filpride")
+    {
+        <h2><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
+        <p style="line-height: 1; margin-top:-7px;">
+            57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
+            Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
+            VAT Reg. TIN: 000-216-589-00000
+        </p>
+    }
+    @if (selectedCompany == "Mobility")
+    {
+        <h2><u><b>&nbsp;MOBILITY&nbsp;</b></u></h2>
+    }
     <h3>
         <span style="display: inline-block;">
             <b>CHECK VOUCHER</b>

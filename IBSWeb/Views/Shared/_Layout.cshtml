@@ -36,7 +36,30 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-primary border-bottom box-shadow mb-3 fixed-top">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index"><img src="~/img/ibs.png" alt="IBSWeb" width="45" height="45" /></a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    @if (selectedCompany == "")
+                    {
+                        <img src="~/img/ibs.png" alt="IBSWeb" width="45" height="45"/>
+                    }
+                    @if (selectedCompany != "")
+                    {
+                        switch (selectedCompany)
+                        {
+                            case "Mobility":
+                                <img src="~/img/usa88-logo.png" class="glowfilter" alt="Mobility" width="135" height="45"/>
+                                break;
+                            case "Filpride":
+                                <img src="~/img/Filpride-logo.png" class="glowfilter" alt="Filpride" width="135" height="45"/>
+                                break;
+                            default:
+                                <div class="align-content-center">
+                                    <img src="~/img/ibs.png" alt="IBSWeb" width="45" height="45"/>
+                                    <span class="text-white me-4">: @selectedCompany</span>
+                                </div>
+                                break;
+                        }
+                    }
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -48,9 +71,10 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="User" asp-controller="Home" asp-action="Index">Home</a>
                             </li>
-                            @if (selectedCompany == "Mobility")
+                            
+                            @* old mobility nav bar
+                            @if (selectedCompany == "test") // @if(selectedCompany == "Mobility")
                             {
-
                                 @if (!User.IsInRole("Cashier"))
                                 {
                                     <li class="nav-item dropdown-layout">
@@ -160,248 +184,492 @@
                                     </li>
                                 }
                             }
-                            else
+                            *@
+                            
+                            @if(selectedCompany != "")
                             {
-                                <li class="nav-item dropdown-layout">
-                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
-                                        A. Receivable
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index">Customer Order Slip</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index">Delivery Receipt</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="SalesInvoice" asp-action="Index">Sales Invoice</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="ServiceInvoice" asp-action="Index">Service Invoice</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item dropend">
-                                            <a class="nav-link dropdown-toggle text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index">
-                                                Collection Receipt
-                                            </a>
-                                            <ul class="dropdown-menu">
-                                                <li class="nav-item">
-                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="CreateForService">For Service</a>
-                                                </li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li class="nav-item dropend">
-                                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        For Sales
-                                                    </a>
-                                                    <ul class="dropdown-menu">
-                                                        <li class="nav-item">
-                                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="SingleCollectionCreateForSales">
-                                                                Single Invoice
-                                                            </a>
-                                                        </li>
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li class="nav-item">
-                                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionCreateForSales">
-                                                                Multiple Invoice
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </li>
-                                            </ul>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="DebitMemo" asp-action="Index">Debit Memo</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CreditMemo" asp-action="Index">Credit Memo</a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li class="nav-item dropdown-layout">
-                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
-                                        A. Payable
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="AuthorityToLoad" asp-action="Index">Authority To Load</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="PurchaseOrder" asp-action="Index">Purchase Order</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Index">Receiving Report</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item dropend">
-                                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                Check Voucher
-                                            </a>
-                                            <ul class="dropdown-menu">
-                                                <li class="nav-item">
-                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index">Trade</a>
-                                                </li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li class="nav-item dropend">
-                                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        Non-Trade
-                                                    </a>
-                                                    <ul class="dropdown-menu">
-                                                        <li class="nav-item dropend">
-                                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Index">Invoice</a>
-                                                        </li>
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li class="nav-item dropend">
-                                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index">Payment</a>
-                                                        </li>
-                                                    </ul>
-                                                </li>
-                                            </ul>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index">Journal Voucher</a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                @* Waiting for the approval of showing this to the user *@
-                                <li class="nav-item dropdown-layout">
-                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
-                                        Treasury
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Disbursement" asp-action="Index">Disbursement</a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                @if (User.IsInRole("Admin"))
+                                if (selectedCompany == "Filpride" || selectedCompany == "Mobility")
                                 {
+                                    if(selectedCompany == "Mobility")
+                                    {
+                                        <li class="nav-item dropdown-layout">
+                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                                Inventory</a>
+                                            <ul class="dropdown-menu">
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Inventory" asp-action="BeginningInventory">Beginning Inventory</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Inventory" asp-action="GenerateInventoryCosting">Inventory Costing</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Inventory" asp-action="ActualSounding">Actual Sounding</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    }
+                                    
                                     <li class="nav-item dropdown-layout">
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
-                                            Master File
+                                            A. Receivable
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index">Customer Order Slip</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index">Delivery Receipt</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="SalesInvoice" asp-action="Index">Sales Invoice</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="ServiceInvoice" asp-action="Index">Service Invoice</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item dropend">
+                                                <a class="nav-link dropdown-toggle text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index">
+                                                    Collection Receipt
+                                                </a>
+                                                <ul class="dropdown-menu">
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="CreateForService">For Service</a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li class="nav-item dropend">
+                                                        <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            For Sales
+                                                        </a>
+                                                        <ul class="dropdown-menu">
+                                                            <li class="nav-item">
+                                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="SingleCollectionCreateForSales">
+                                                                    Single Invoice
+                                                                </a>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li class="nav-item">
+                                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionCreateForSales">
+                                                                    Multiple Invoice
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="DebitMemo" asp-action="Index">Debit Memo</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CreditMemo" asp-action="Index">Credit Memo</a>
+                                            </li>
+                                            
+                                            @if (selectedCompany == "Mobility")
+                                            {
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item dropend">
+                                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        Sales
+                                                    </a>
+                                                    <ul class="dropdown-menu">
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CashierReport" asp-action="Index">Cashier Report</a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CashierReport" asp-action="CustomerInvoicing">Customer Invoicing</a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index">Customer Order Slip</a>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                            }
+                                            
+                                        </ul>
+                                    </li>
+                                    <li class="nav-item dropdown-layout">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                            A. Payable
                                         </a>
                                         <ul class="dropdown-menu">
                                             <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Customer" asp-action="Index">Customer</a>
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="AuthorityToLoad" asp-action="Index">Authority To Load</a>
                                             </li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Supplier" asp-action="Index">Supplier</a>
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="PurchaseOrder" asp-action="Index">Purchase Order</a>
                                             </li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="BankAccount" asp-action="Index">Bank Account</a>
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Index">Receiving Report</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item dropend">
+                                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Check Voucher
+                                                </a>
+                                                <ul class="dropdown-menu">
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index">Trade</a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li class="nav-item dropend">
+                                                        <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            Non-Trade
+                                                        </a>
+                                                        <ul class="dropdown-menu">
+                                                            <li class="nav-item dropend">
+                                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Index">Invoice</a>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li class="nav-item dropend">
+                                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index">Payment</a>
+                                                            </li>
+                                                        </ul>
+                                                    </li>
+                                                </ul>
                                             </li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Service" asp-action="Index">Service</a>
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index">Journal Voucher</a>
+                                            </li>
+                                            
+                                            @if (selectedCompany == "Mobility")
+                                            {
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item dropend">
+                                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        Purchases
+                                                    </a>
+                                                    <ul class="dropdown-menu">
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Purchase" asp-action="Fuel">Fuel</a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Purchase" asp-action="Lube">Lube</a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="PurchaseOrder" asp-action="Index">PO</a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="ReceivingReport" asp-action="Index">RR</a>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                            }
+                                            
+                                        </ul>
+                                    </li>
+                                    
+                                    @* Waiting for the approval of showing this to the user *@
+                                    <li class="nav-item dropdown-layout">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                            Treasury
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Disbursement" asp-action="Index">Disbursement</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li class="nav-item dropdown-layout">
+                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                                Master File
+                                            </a>
+                                            <ul class="dropdown-menu">
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Customer" asp-action="Index">Customer</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Supplier" asp-action="Index">Supplier</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="BankAccount" asp-action="Index">Bank Account</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Service" asp-action="Index">Service</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    }
+                                    
+                                    <li class="nav-item dropdown-layout">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                            Report
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="GeneralLedgerBook">General Ledger</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="DisbursementBook">Cash Disbursement</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="ClearedDisbursementReport">Cleared Disbursement Report</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Inventory" asp-action="InventoryReport">Inventory</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="COSUnservedVolume">COS Unserved Volume</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="DispatchReport">Dispatch</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="SalesReport">Sales</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="PurchaseOrderReport">Purchase Order</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="PurchaseReport">Purchase</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="GmReport">Gross Margin</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="OtcFuelSalesReport">OTC Fuel Sales</a>
+                                            </li>
+                                            
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="PostedCollection">Collection</a>
+                                            </li>
+                                            @* <li><hr class="dropdown-divider"></li> *@
+                                            @* <li class="nav-item"> *@
+                                            @*     <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="TradePayableReport">Trade Payable</a> *@
+                                            @* </li> *@
+                                            @* <li><hr class="dropdown-divider"></li> *@
+                                            @* <li class="nav-item"> *@
+                                            @*     <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="ArPerCustomer">AR Per Customer</a> *@
+                                            @* </li> *@
+                                            @* <li><hr class="dropdown-divider"></li> *@
+                                            @* <li class="nav-item"> *@
+                                            @*     <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="AgingReport">Aging</a> *@
+                                            @* </li> *@
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item dropend">
+                                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Financial
+                                                </a>
+                                                <ul class="dropdown-menu">
+                                                    
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="LevelOneReport">Level One</a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="TrialBalanceReport">Trial Balance</a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="ProfitAndLossReport">PNL</a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="StatementOfRetainedEarningsReport">SRE</a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="BalanceSheetReport">Balance Sheet</a>
+                                                    </li>
+
+                                                </ul>
                                             </li>
                                         </ul>
                                     </li>
                                 }
-                                <li class="nav-item dropdown-layout">
-                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
-                                        Report
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="GeneralLedgerBook">General Ledger</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="DisbursementBook">Cash Disbursement</a>
-                                        </li>
-                                        @* <li><hr class="dropdown-divider"></li> *@
-                                        @* <li class="nav-item"> *@
-                                        @*     <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="ClearedDisbursementReport">Cleared Disbursement Report</a> *@
-                                        @* </li> *@
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Inventory" asp-action="InventoryReport">Inventory</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="COSUnservedVolume">COS Unserved Volume</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="DispatchReport">Dispatch</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="SalesReport">Sales</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="PurchaseOrderReport">Purchase Order</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="PurchaseReport">Purchase</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="GmReport">Gross Margin</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="OtcFuelSalesReport">OTC Fuel Sales</a>
-                                        </li>
-                                        @* <li><hr class="dropdown-divider"></li> *@
-                                        @* <li class="nav-item"> *@
-                                        @*     <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="PostedCollection">Collection</a> *@
-                                        @* </li> *@
-                                        @* <li><hr class="dropdown-divider"></li> *@
-                                        @* <li class="nav-item"> *@
-                                        @*     <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="TradePayableReport">Trade Payable</a> *@
-                                        @* </li> *@
-                                        @* <li><hr class="dropdown-divider"></li> *@
-                                        @* <li class="nav-item"> *@
-                                        @*     <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="ArPerCustomer">AR Per Customer</a> *@
-                                        @* </li> *@
-                                        @* <li><hr class="dropdown-divider"></li> *@
-                                        @* <li class="nav-item"> *@
-                                        @*     <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="AgingReport">Aging</a> *@
-                                        @* </li> *@
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item dropend">
-                                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                Financial
+                                
+                                if(selectedCompany == "Bienes")
+                                {
+                                    <li class="nav-item dropdown-layout">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                            A. Receivable
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li class="nav-item dropend">
+                                                <a class="nav-link dropdown-toggle text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index">
+                                                    Collection Receipt
+                                                </a>
+                                                <ul class="dropdown-menu">
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="CreateForService">For Service</a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li class="nav-item dropend">
+                                                        <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            For Sales
+                                                        </a>
+                                                        <ul class="dropdown-menu">
+                                                            <li class="nav-item">
+                                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="SingleCollectionCreateForSales">
+                                                                    Single Invoice
+                                                                </a>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li class="nav-item">
+                                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionCreateForSales">
+                                                                    Multiple Invoice
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="DebitMemo" asp-action="Index">Debit Memo</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CreditMemo" asp-action="Index">Credit Memo</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    
+                                    
+                                    <li class="nav-item dropdown-layout">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                            A. Payable
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li class="nav-item dropend">
+                                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Check Voucher
+                                                </a>
+                                                <ul class="dropdown-menu">
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index">Trade</a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li class="nav-item dropend">
+                                                        <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            Non-Trade
+                                                        </a>
+                                                        <ul class="dropdown-menu">
+                                                            <li class="nav-item dropend">
+                                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Index">Invoice</a>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li class="nav-item dropend">
+                                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index">Payment</a>
+                                                            </li>
+                                                        </ul>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index">Journal Voucher</a>
+                                            </li>
+                                            
+                                        </ul>
+                                    </li>
+                                    
+                                    <li class="nav-item dropdown-layout">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                            Report
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="GeneralLedgerBook">General Ledger</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="DisbursementBook">Cash Disbursement</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="ClearedDisbursementReport">Cleared Disbursement Report</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Report" asp-action="PostedCollection">Collection</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item dropend">
+                                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Financial
+                                                </a>
+                                                <ul class="dropdown-menu">
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="ProfitAndLossReport">PNL</a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="StatementOfRetainedEarningsReport">SRE</a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="BalanceSheetReport">Balance Sheet</a>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                }
+                                
+                                @if (User.IsInRole("Admin"))
+                                    {
+                                        <li class="nav-item dropdown-layout">
+                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                                Master File
                                             </a>
                                             <ul class="dropdown-menu">
                                                 <li class="nav-item">
-                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="LevelOneReport">Level One</a>
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Customer" asp-action="Index">Customer</a>
                                                 </li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li class="nav-item">
-                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="TrialBalanceReport">Trial Balance</a>
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Supplier" asp-action="Index">Supplier</a>
                                                 </li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li class="nav-item">
-                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="ProfitAndLossReport">PNL</a>
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="BankAccount" asp-action="Index">Bank Account</a>
                                                 </li>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li class="nav-item">
-                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="StatementOfRetainedEarningsReport">SRE</a>
-                                                </li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li class="nav-item">
-                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="FinancialReport" asp-action="BalanceSheetReport">Balance Sheet</a>
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Service" asp-action="Index">Service</a>
                                                 </li>
                                             </ul>
                                         </li>
-                                    </ul>
-                                </li>
+                                    }
                             }
-
-                            @if (User.IsInRole("Admin"))
+                            
+                            @if (User.IsInRole("Admin") && selectedCompany == "Filpride")
                             {
                                 <li class="nav-item dropdown-layout">
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">

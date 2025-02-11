@@ -5721,7 +5721,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var salesInvoice = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.PostedBy != null)
+                .Where(si => si.PostedBy != null && si.Company == companyClaims)
                 .Include(si => si.Product)
                 .Include(si => si.Customer)
                 .Include(si => si.DeliveryReceipt)
@@ -5941,7 +5941,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var salesInvoice = await _unitOfWork.FilprideSalesInvoice
-                        .GetAllAsync(si => si.PostedBy != null && si.AmountPaid == 0 && !si.IsPaid, cancellationToken);
+                        .GetAllAsync(si => si.PostedBy != null && si.AmountPaid == 0 && !si.IsPaid && si.Company == companyClaims, cancellationToken);
 
             if (!salesInvoice.Any())
             {

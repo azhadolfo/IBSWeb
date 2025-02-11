@@ -1,7 +1,9 @@
 ﻿@using IBS.Utility.Constants
 @using IBS.Utility.Enums
 @using IBS.Utility.Helpers
+@using Microsoft.AspNetCore.Identity
 @model FilprideSalesInvoice
+@inject SignInManager<IdentityUser> SignInManager
 
 @{
     ViewData["Title"] = "Print Sales Invoice";
@@ -10,22 +12,44 @@
     decimal vatAmount = Model.Customer.VatType == SD.VatType_Vatable ? netOfVatAmount * 0.12m : 0;
     decimal withHoldingTaxAmount = Model.Customer.WithHoldingTax ? (netDiscount / 1.12m) * 0.01m : 0;
     decimal withHoldingVatAmount = Model.Customer.WithHoldingVat ? (netDiscount / 1.12m) * 0.05m : 0;
+    
+    string? selectedCompany = string.Empty;
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+    }
+
 }
 
 <br class="br-top" />
 <table class="w-100">
     <tbody>
         <tr>
-            <td class="text-end" style="padding: 0 !important;"><img src="~/img/Filpride.jpg" width="130px" /></td>
+            @if (selectedCompany == "Filpride")
+            {
+                <td class="text-end" style="padding: 0 !important;"><img src="~/img/Filpride.jpg" width="130px" /></td>
+            }
+            @if (selectedCompany == "Mobility")
+            {
+                <td class="text-end" style="padding: 0 !important;"><img src="~/img/usa88-logo.png" width="130px" /></td>
+            }
         </tr>
         <tr style="margin: 0 !important;">
             <td class="text-center" style="padding: 0 !important;">
-                <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
-                <p style="margin: 0; padding: 0; line-height: 1;">
-                    57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
-                    Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
-                    VAT Reg. TIN: 000-216-589-00000
-                </p>
+                @if (selectedCompany == "Filpride")
+                {
+                    <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
+                    <p style="margin: 0; padding: 0; line-height: 1;">
+                        57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
+                        Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
+                        VAT Reg. TIN: 000-216-589-00000
+                    </p>
+                }
+                @if (selectedCompany == "Mobility")
+                {
+                    <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;MOBILITY&nbsp;</b></u></h2>
+                }
             </td>
         </tr>
         <tr>
