@@ -1,21 +1,46 @@
-﻿@model FilprideAuthorityToLoad
+﻿@using Microsoft.AspNetCore.Identity
+@model FilprideAuthorityToLoad
+@inject SignInManager<IdentityUser> SignInManager
 
 @{
     ViewData["Title"] = "Print ATL";
     var purchaseOrders = ViewData["PurchaseOrders"] as List<FilprideCOSAppointedSupplier>;
+        
+    string? selectedCompany = string.Empty;
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+    }
+
 }
 
 <div class="container mt-4">
     <div class="text-end">
-        <img src="~/img/Filpride.jpg" width="130px" />
+        @if (selectedCompany == "Filpride")
+        {
+            <img src="~/img/Filpride.jpg" width="130px" />
+        }
+        @if (selectedCompany == "Mobility")
+        {
+            <img src="~/img/usa88-logo.png" width="130px" />
+        }
+
     </div>
     <div class="text-center mb-4">
-        <h2><u><b>FILPRIDE RESOURCES INC.</b></u></h2>
-        <p>
-            57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan,<br />
-            Olongapo City, 2200 Zambales, Philippines<br />
-            VAT Reg. TIN: 000-216-589-00000
-        </p>
+        @if (selectedCompany == "Filpride")
+        {
+            <h2><u><b>FILPRIDE RESOURCES INC.</b></u></h2>
+            <p>
+                57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan,<br />
+                Olongapo City, 2200 Zambales, Philippines<br />
+                VAT Reg. TIN: 000-216-589-00000
+            </p>
+        }
+        @if (selectedCompany == "Mobility")
+        {
+            <h2><u><b>MOBILITY</b></u></h2>
+        }
         <h3><b>AUTHORITY TO LOAD</b></h3>
     </div>
     <div class="table-responsive">

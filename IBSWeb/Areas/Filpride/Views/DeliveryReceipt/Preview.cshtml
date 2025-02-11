@@ -2,25 +2,48 @@
 @using IBS.Utility
 @using IBS.Utility.Enums
 @model FilprideDeliveryReceipt
+@inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
 @{
-    ViewData["Title"] = "Preview Delivery Receipt";
+    ViewData["Title"] = "Preview Delivery Receipt";    
+    
+    string? selectedCompany = string.Empty;
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+    }
+
 }
 
 <table class="w-100">
     <tbody>
         <tr>
-            <td class="text-end" style="padding: 0 !important;"><img src="~/img/Filpride.jpg" width="130px" /></td>
+            @if (selectedCompany == "Filpride")
+            {
+                <td class="text-end" style="padding: 0 !important;"><img src="~/img/Filpride.jpg" width="130px" /></td>
+            }
+            @if (selectedCompany == "Mobility")
+            {
+                <td class="text-end" style="padding: 0 !important;"><img src="~/img/usa88-logo.png" width="130px" /></td>
+            }
         </tr>
         <tr style="margin: 0 !important;">
             <td class="text-center" style="padding: 0 !important;">
-                <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
-                <p style="margin: 0; padding: 0; line-height: 1;">
-                    57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
-                    Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
-                    VAT Reg. TIN: 000-216-589-00000
-                </p>
+                @if (selectedCompany == "Filpride")
+                {
+                    <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;FILPRIDE RESOURCES INC.&nbsp;</b></u></h2>
+                    <p style="margin: 0; padding: 0; line-height: 1;">
+                        57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone,<br />
+                        Kalaklan, Olongapo City, 2200 Zambales, Philippines<br />
+                        VAT Reg. TIN: 000-216-589-00000
+                    </p>
+                }
+                @if (selectedCompany == "Mobility")
+                {
+                    <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;MOBILITY&nbsp;</b></u></h2>
+                }
             </td>
         </tr>
         <tr>

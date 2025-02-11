@@ -261,7 +261,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(dr => dr.Company == company &&
                              dr.DeliveredDate >= dateFrom &&
                              dr.DeliveredDate <= dateTo &&
-                             dr.Status == nameof(DRStatus.ForInvoicing) || dr.Status == nameof(DRStatus.Invoiced))
+                             (dr.Status == nameof(DRStatus.ForInvoicing) || dr.Status == nameof(DRStatus.Invoiced)))
                 .Include(dr => dr.CustomerOrderSlip.Product)
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.PurchaseOrder)

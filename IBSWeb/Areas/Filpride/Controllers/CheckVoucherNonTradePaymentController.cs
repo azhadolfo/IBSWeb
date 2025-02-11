@@ -84,7 +84,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var checkVoucherDetails = await _dbContext.FilprideCheckVoucherDetails
-                                                        .Where(cvd => cvd.CheckVoucherHeader.CvType == nameof(CVType.Payment) && cvd.AccountName.StartsWith("Cash in Bank"))
+                                                        .Where(cvd => cvd.CheckVoucherHeader.Company == companyClaims && cvd.CheckVoucherHeader.CvType == nameof(CVType.Payment) && cvd.AccountName.StartsWith("Cash in Bank"))
                                                         .Include(cvd => cvd.CheckVoucherHeader)
                                                         .ThenInclude(cvh => cvh.Supplier)
                                                         .Include(cvd => cvd.Supplier)

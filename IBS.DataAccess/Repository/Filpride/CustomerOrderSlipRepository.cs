@@ -220,7 +220,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .SumAsync(dr => dr.TotalAmount, cancellationToken);
 
             var outstandingCos = await _db.FilprideCustomerOrderSlips
-                .Where(cos => cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.UtcNow) && cos.Status == nameof(CosStatus.ForDR))
+                .Where(cos => cos.CustomerId == customerId && cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.UtcNow) && cos.Status == nameof(CosStatus.ForDR))
                 .SumAsync(cos => cos.TotalAmount, cancellationToken);
 
             var availableCreditLimit = await _db.FilprideCustomers

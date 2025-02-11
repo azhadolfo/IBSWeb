@@ -533,3 +533,8 @@ table {
     table td {
         font-size: 0.80em; /* Adjust as needed */
     }
+    
+.glowfilter {
+    -webkit-filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.7));
+}
