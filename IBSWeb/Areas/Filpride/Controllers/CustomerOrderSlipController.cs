@@ -558,7 +558,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [Authorize(Roles = "OperationManager, Admin, HeadApprover")]
-        public async Task<IActionResult> ApproveByOperationManager(int? id, decimal grossMargin, string reason, CancellationToken cancellationToken)
+        public async Task<IActionResult> ApproveByOperationManager(int? id, decimal grossMargin, bool isGrossMarginChanged, string reason, CancellationToken cancellationToken)
         {
             if (id == null)
             {
@@ -577,6 +577,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                var oldPrice = existingRecord.DeliveredPrice;
 
                 if (existingRecord == null)
                 {
@@ -711,6 +713,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, grossMargin, cancellationToken);
+                }
+
+                if (isGrossMarginChanged)
+                {
+                    var userCreated = await _dbContext.ApplicationUsers
+                        .FirstOrDefaultAsync(a => a.UserName == existingRecord.CreatedBy, cancellationToken);
+
+                    var notification = $"The gross margin was manually adjusted by {existingRecord.FirstApprovedBy.ToUpper()} (OM). " +
+                                       $"The price was adjusted from {oldPrice:N4} to {existingRecord.DeliveredPrice:N4}.";
+
+                    await _unitOfWork.Notifications.AddNotificationAsync(userCreated.Id, notification);
+
+                    var hubConnections = await _dbContext.HubConnections
+                        .Where(h => h.UserName == userCreated.UserName)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var hubConnection in hubConnections)
+                    {
+                        await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                            .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                    }
                 }
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
