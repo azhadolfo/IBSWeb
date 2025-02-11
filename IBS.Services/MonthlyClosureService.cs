@@ -322,8 +322,8 @@ namespace IBS.Services
                     .Where(gl =>
                         gl.Date.Month == previousMonth.Month &&
                         gl.Date.Year == previousMonth.Year &&
-                        gl.AccountId != null &&  //Uncomment this if the GL is fixed
-                        gl.Company == "Filpride") //Make this dynamic later on
+                        gl.AccountId != null &&  // TODO Uncomment this if the GL is fixed
+                        gl.Company == "Filpride") // TODO Make this dynamic later on
                     .ToList();
 
                 var chartOfAccounts = _dbContext.FilprideChartOfAccounts
@@ -373,7 +373,7 @@ namespace IBS.Services
                 {
                     Month = previousMonth.Month,
                     Year = previousMonth.Year,
-                    Company = "Filpride", // Make this dynamic soon
+                    Company = "Filpride", // TODO Make this dynamic soon
                     NetIncome = nibit,
                     PriorPeriodAdjustment = generalLedgers
                         .Where(g => g.AccountTitle.Contains("Prior Period"))

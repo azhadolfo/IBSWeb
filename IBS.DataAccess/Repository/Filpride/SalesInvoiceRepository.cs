@@ -116,7 +116,6 @@ namespace IBS.DataAccess.Repository.Filpride
             FilprideSalesInvoice? lastSi = await _db
                 .FilprideSalesInvoices
                 .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
-                //.OrderBy(c => c.SalesInvoiceNo) -- Uncomment this later this is for skipping of invoice only
                 .OrderBy(c => c.SalesInvoiceNo)
                 .LastOrDefaultAsync(cancellationToken);
 

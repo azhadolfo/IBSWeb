@@ -123,6 +123,7 @@
                 <tr><td class="text-center">Freight Charge</td><td>@Html.DisplayFor(model => model.NetOfVatFreightCharge)</td></tr>
                 <tr><td class="text-center">Commission</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip.CommissionRate)</td></tr>
                 <tr><td class="text-center">Gross Margin</td><td><input type="text" id="grossMarginInput" value="@Html.DisplayFor(model => model.GrossMargin)" class="form-control" /></td></tr>
+                <input type="hidden" id="isGrossMarginChanged" name="isGrossMarginChanged" value="false" />
             </tbody>
         </table>
     </div>
@@ -149,7 +150,7 @@
     <script>
         document.getElementById('approveButton').addEventListener('click', function () {
             let grossMarginValue = document.getElementById('grossMarginInput').value;
-            console.log(grossMarginValue)
+            let isGrossMarginChanged = document.getElementById('isGrossMarginChanged').value;
 
             // Replace parentheses with a negative sign for backend processing
             if (grossMarginValue.includes('(') && grossMarginValue.includes(')')) {
@@ -174,7 +175,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const reason = result.value;
-                        var url = `@Url.Action("ApproveByOperationManager", "CustomerOrderSlip", new { area = "Filpride" })?id=${@Model.CustomerOrderSlip.CustomerOrderSlipId}&grossMargin=${grossMarginValue}&reason=${reason}`;
+                        var url = `@Url.Action("ApproveByOperationManager", "CustomerOrderSlip", new { area = "Filpride" })?id=${@Model.CustomerOrderSlip.CustomerOrderSlipId}&grossMargin=${grossMarginValue}&isGrossMarginChanged=${isGrossMarginChanged}&reason=${reason}`;
                         window.location.href = url;
                     }
                 });
@@ -190,7 +191,7 @@
                     cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        var url = `@Url.Action("ApproveByOperationManager", "CustomerOrderSlip", new { area = "Filpride" })?id=${@Model.CustomerOrderSlip.CustomerOrderSlipId}&grossMargin=${grossMarginValue}`;
+                        var url = `@Url.Action("ApproveByOperationManager", "CustomerOrderSlip", new { area = "Filpride" })?id=${@Model.CustomerOrderSlip.CustomerOrderSlipId}&grossMargin=${grossMarginValue}&isGrossMarginChanged=${isGrossMarginChanged}`;
                         window.location.href = url;
                     } else if (result.isDenied) {
                     window.location.href = '@Url.Action("Disapprove", "CustomerOrderSlip", new { area = "Filpride", id = Model.CustomerOrderSlip.CustomerOrderSlipId })';
@@ -202,6 +203,10 @@
     <script>
         $(document).ready(function () {
             $('[data-bs-toggle="popover"]').popover();
+        });
+
+        document.getElementById('grossMarginInput').addEventListener('input', function () {
+            document.getElementById('isGrossMarginChanged').value = 'true';
         });
     </script>
 }

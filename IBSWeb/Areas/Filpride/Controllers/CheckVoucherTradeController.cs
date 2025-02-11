@@ -460,7 +460,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (purchaseOrders != null && purchaseOrders.Any())
             {
-                var poList = purchaseOrders.Where(p => !p.IsReceived && !p.IsSubPo)
+                var poList = purchaseOrders.Where(p => !p.IsSubPo)
                                         .OrderBy(po => po.PurchaseOrderNo)
                                         .Select(po => new { Id = po.PurchaseOrderId, PONumber = po.PurchaseOrderNo })
                                         .ToList();
