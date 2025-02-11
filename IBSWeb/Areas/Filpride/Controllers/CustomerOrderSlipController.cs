@@ -720,8 +720,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var userCreated = await _dbContext.ApplicationUsers
                         .FirstOrDefaultAsync(a => a.UserName == existingRecord.CreatedBy, cancellationToken);
 
-                    var notification = $"Gross margin was manually adjusted by {existingRecord.FirstApprovedBy.ToUpper()} (OM). " +
-                                  $"Price adjusted from {oldPrice:N4} to {existingRecord.DeliveredPrice:N4}.";
+                    var notification = $"The gross margin was manually adjusted by {existingRecord.FirstApprovedBy.ToUpper()} (OM). " +
+                                       $"The price was adjusted from {oldPrice:N4} to {existingRecord.DeliveredPrice:N4}.";
 
                     await _unitOfWork.Notifications.AddNotificationAsync(userCreated.Id, notification);
 
