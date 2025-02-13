@@ -538,3 +538,13 @@ table {
     -webkit-filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
     filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.7));
 }
+
+.usa88-style {
+    font-family: 'Arial Black', Gadget, sans-serif; /* Assuming similar font */
+    color: #29608e !important; /* Blue color similar to USA 88 */
+    font-size: 24px; /* Adjust based on the image size */
+    -webkit-filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.7));
+    vertical-align: middle; /* To align with the image */
+    font-style: italic;
+}
