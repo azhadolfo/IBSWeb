@@ -35,9 +35,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(Level1.Where((c => c.Level == 1)).ToList());
         }
 
+        [HttpGet]
         public async Task<IActionResult> Create(int parentId, string accountName, CancellationToken cancellationToken)
         {
-
             try
             {
                 var parentAccount = await _dbContext.FilprideChartOfAccounts
@@ -49,6 +49,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .FirstOrDefaultAsync(cancellationToken)?.Result?.AccountNumber ?? parentAccount.AccountNumber);
 
                 var levelToCreate = parentAccount?.Level + 1;
+
                 FilprideChartOfAccount newAccount = new FilprideChartOfAccount()
                 {
                     IsMain = false,
@@ -62,6 +63,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Level = levelToCreate ?? 0,
                     FinancialStatementType = parentAccount?.FinancialStatementType ?? "",
                 };
+
                 switch (levelToCreate)
                 {
                     case 4:
@@ -76,6 +78,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Account Created Successfully";
+                return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride" }) });
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int accountId, string accountName, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var existingAccount = _dbContext.FilprideChartOfAccounts
+                    .FindAsync(accountId, cancellationToken);
+
+                existingAccount.Result.AccountName = accountName;
+                existingAccount.Result.EditedBy = User.Identity?.Name;
+                existingAccount.Result.EditedDate = DateTime.UtcNow;
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                TempData["success"] = "Account Edited Successfully";
                 return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride" }) });
             }
             catch (Exception ex)

@@ -25,123 +25,140 @@
         <div class="accordion" id="accordionExample1">
             @foreach (var L1 in Model)
             {
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#accordion-@Html.DisplayFor(model => L1.AccountNumber)"
-                                aria-expanded="false"
-                                aria-controls="accordion-@Html.DisplayFor(model => L1.AccountNumber)">
-                            L1: @Html.DisplayFor(obj => L1.AccountName) - @Html.DisplayFor(obj => L1.AccountNumber)
-                        </button>
-                    </h2>
-                    <div id="accordion-@Html.DisplayFor(model => L1.AccountNumber)"
-                         class="accordion-collapse collapse"
-                         data-bs-parent="#accordionExample1">
-                        <div class="accordion-body">
-                            
-                            <div class="accordion" id="LGroup-@L1.AccountNumber">
-                                @foreach (var L2 in L1.Children)
-                                {
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header">
-                                            <button class="accordion-button collapsed" type="button"
-                                                    data-bs-toggle="collapse"
-                                                    data-bs-target="#accordion-@Html.DisplayFor(model => L2.AccountNumber)"
-                                                    aria-expanded="false"
-                                                    aria-controls="accordion-@Html.DisplayFor(model => L2.AccountNumber)">
-                                                L2: @Html.DisplayFor(obj => L2.AccountName) - @Html.DisplayFor(obj => L2.AccountNumber)
-                                            </button>
-                                        </h2>
-                                        <div id="accordion-@Html.DisplayFor(model => L2.AccountNumber)"
-                                             class="accordion-collapse collapse"
-                                             data-bs-parent="#LGroup-@L1.AccountNumber">
-                                            <div class="accordion-body">
-                                                
-                                                <div class="accordion" id="LGroup-@L2.AccountNumber">
-                                                    @foreach (var L3 in L2.Children)
-                                                    {
-                                                        <div class="accordion-item">
-                                                            <h2 class="accordion-header">
-                                                                <button class="accordion-button collapsed" type="button"
-                                                                        data-bs-toggle="collapse"
-                                                                        data-bs-target="#accordion-@Html.DisplayFor(model => L3.AccountNumber)"
-                                                                        aria-expanded="false"
-                                                                        aria-controls="accordion-@Html.DisplayFor(model => L3.AccountNumber)">
-                                                                    L3: @Html.DisplayFor(obj => L3.AccountName) - @Html.DisplayFor(obj => L3.AccountNumber)
-                                                                </button>
-                                                            </h2>
-                                                            <div id="accordion-@Html.DisplayFor(model => L3.AccountNumber)"
-                                                                 class="accordion-collapse collapse"
-                                                                 data-bs-parent="#LGroup-@L2.AccountNumber">
-                                                                <div class="accordion-body">
+                <div class="row">
+                    <div class="accordion-item col-11 p-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#accordion-@Html.DisplayFor(model => L1.AccountNumber)"
+                                    aria-expanded="false"
+                                    aria-controls="accordion-@Html.DisplayFor(model => L1.AccountNumber)">
+                                L1: @Html.DisplayFor(obj => L1.AccountName) - @Html.DisplayFor(obj => L1.AccountNumber)
+                            </button>
+                        </h2>
+                        <div id="accordion-@Html.DisplayFor(model => L1.AccountNumber)"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#accordionExample1">
+                            <div class="accordion-body">
 
-                                                                    <button class="btn btn-primary mb-3 createAccount" data-accountid="@L3.AccountId">Create Level 4 Account</button>
+                                <div class="accordion" id="LGroup-@L1.AccountNumber">
+                                    @foreach (var L2 in L1.Children)
+                                    {
+                                        <div class="row">
+                                            <div class="accordion-item col-11 p-0">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button collapsed" type="button"
+                                                            data-bs-toggle="collapse"
+                                                            data-bs-target="#accordion-@Html.DisplayFor(model => L2.AccountNumber)"
+                                                            aria-expanded="false"
+                                                            aria-controls="accordion-@Html.DisplayFor(model => L2.AccountNumber)">
+                                                        L2: @Html.DisplayFor(obj => L2.AccountName) - @Html.DisplayFor(obj => L2.AccountNumber)
+                                                    </button>
+                                                </h2>
+                                                <div id="accordion-@Html.DisplayFor(model => L2.AccountNumber)"
+                                                     class="accordion-collapse collapse"
+                                                     data-bs-parent="#LGroup-@L1.AccountNumber">
+                                                    <div class="accordion-body">
 
-                                                                    <div class="accordion" id="LGroup-@L3.AccountNumber">
-                                                                        @foreach (var L4 in L3.Children)
-                                                                        {
-                                                                            <div class="accordion-item">
-                                                                                <h2 class="accordion-header">
-                                                                                    <button class="accordion-button collapsed" type="button"
-                                                                                            data-bs-toggle="collapse"
-                                                                                            data-bs-target="#accordion-@Html.DisplayFor(model => L4.AccountNumber)"
-                                                                                            aria-expanded="false"
-                                                                                            aria-controls="accordion-@Html.DisplayFor(model => L4.AccountNumber)">
-                                                                                        L4: @Html.DisplayFor(obj => L4.AccountName) - @Html.DisplayFor(obj => L4.AccountNumber)
-                                                                                    </button>
-                                                                                </h2>
-                                                                                <div id="accordion-@Html.DisplayFor(model => L4.AccountNumber)"
-                                                                                     class="accordion-collapse collapse"
-                                                                                     data-bs-parent="#LGroup-@L3.AccountNumber">
-                                                                                    <div class="accordion-body">
+                                                        <div class="accordion" id="LGroup-@L2.AccountNumber">
+                                                            @foreach (var L3 in L2.Children)
+                                                            {
+                                                                <div class="row">
+                                                                    <div class="accordion-item col-11 p-0">
+                                                                        <h2 class="accordion-header">
+                                                                            <button class="accordion-button collapsed" type="button"
+                                                                                    data-bs-toggle="collapse"
+                                                                                    data-bs-target="#accordion-@Html.DisplayFor(model => L3.AccountNumber)"
+                                                                                    aria-expanded="false"
+                                                                                    aria-controls="accordion-@Html.DisplayFor(model => L3.AccountNumber)">
+                                                                                L3: @Html.DisplayFor(obj => L3.AccountName) - @Html.DisplayFor(obj => L3.AccountNumber)
+                                                                            </button>
+                                                                        </h2>
+                                                                        <div id="accordion-@Html.DisplayFor(model => L3.AccountNumber)"
+                                                                             class="accordion-collapse collapse"
+                                                                             data-bs-parent="#LGroup-@L2.AccountNumber">
+                                                                            <div class="accordion-body">
 
-                                                                                        <button class="btn btn-primary mb-3 createAccount" data-accountid="@L4.AccountId">Create Level 5 Account</button>
+                                                                                <button class="btn btn-primary mb-3 createAccount" data-accountid="@L3.AccountId">Create Level 4 Account</button>
 
-                                                                                        <div class="accordion" id="LGroup-@L4.AccountNumber">
-                                                                                            @foreach (var L5 in L4.Children)
-                                                                                            {
-                                                                                                <div class="accordion-item">
-                                                                                                    <h2 class="accordion-header">
-                                                                                                        <button class="accordion-button collapsed" type="button"
-                                                                                                                data-bs-toggle="collapse"
-                                                                                                                data-bs-target="#accordion-@Html.DisplayFor(model => L5.AccountNumber)"
-                                                                                                                aria-expanded="false"
-                                                                                                                aria-controls="accordion-@Html.DisplayFor(model => L5.AccountNumber)">
-                                                                                                            L5: @Html.DisplayFor(obj => L5.AccountName) - @Html.DisplayFor(obj => L5.AccountNumber)
-                                                                                                        </button>
-                                                                                                    </h2>
-                                                                                                    <div id="accordion-@Html.DisplayFor(model => L5.AccountNumber)"
-                                                                                                         class="accordion-collapse collapse"
-                                                                                                         data-bs-parent="#LGroup-@L4.AccountNumber">
-                                                                                                        <div class="accordion-body">
-                                                                                                            No Children!
+                                                                                <div class="accordion" id="LGroup-@L3.AccountNumber">
+                                                                                    @foreach (var L4 in L3.Children)
+                                                                                    {
+                                                                                        <div class="row">
+                                                                                            <div class="accordion-item col-10 p-0">
+                                                                                                <h2 class="accordion-header">
+                                                                                                    <button class="accordion-button collapsed" type="button"
+                                                                                                            data-bs-toggle="collapse"
+                                                                                                            data-bs-target="#accordion-@Html.DisplayFor(model => L4.AccountNumber)"
+                                                                                                            aria-expanded="false"
+                                                                                                            aria-controls="accordion-@Html.DisplayFor(model => L4.AccountNumber)">
+                                                                                                        L4: @Html.DisplayFor(obj => L4.AccountName) - @Html.DisplayFor(obj => L4.AccountNumber)
+                                                                                                    </button>
+                                                                                                </h2>
+                                                                                                <div id="accordion-@Html.DisplayFor(model => L4.AccountNumber)"
+                                                                                                     class="accordion-collapse collapse"
+                                                                                                     data-bs-parent="#LGroup-@L3.AccountNumber">
+                                                                                                    <div class="accordion-body">
+
+                                                                                                        <button class="btn btn-primary mb-3 createAccount" data-accountid="@L4.AccountId">Create Level 5 Account</button>
+
+                                                                                                        <div class="accordion" id="LGroup-@L4.AccountNumber">
+                                                                                                            @foreach (var L5 in L4.Children)
+                                                                                                            {
+                                                                                                                <div class="row">
+                                                                                                                    <div class="accordion-item col-10 p-0">
+                                                                                                                        <h2 class="accordion-header">
+                                                                                                                            <button class="accordion-button collapsed" type="button"
+                                                                                                                                    data-bs-toggle="collapse"
+                                                                                                                                    data-bs-target="#accordion-@Html.DisplayFor(model => L5.AccountNumber)"
+                                                                                                                                    aria-expanded="false"
+                                                                                                                                    aria-controls="accordion-@Html.DisplayFor(model => L5.AccountNumber)">
+                                                                                                                                L5: @Html.DisplayFor(obj => L5.AccountName) - @Html.DisplayFor(obj => L5.AccountNumber)
+                                                                                                                            </button>
+                                                                                                                        </h2>
+                                                                                                                        <div id="accordion-@Html.DisplayFor(model => L5.AccountNumber)"
+                                                                                                                             class="accordion-collapse collapse"
+                                                                                                                             data-bs-parent="#LGroup-@L4.AccountNumber">
+                                                                                                                            <div class="accordion-body">
+                                                                                                                                No Children!
+                                                                                                                            </div>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="col-2 align-top align-text-top pt-2">
+                                                                                                                        <button class="btn btn-light mb-3 editAccount col-12" data-accountid="@L5.AccountId">Edit</button>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            }
                                                                                                         </div>
+
                                                                                                     </div>
                                                                                                 </div>
-                                                                                            }
+                                                                                            </div>
+                                                                                            <div class="col-2 align-top align-text-top text-center pt-2">
+                                                                                                <button class="btn btn-light mb-3 editAccount col-12" data-accountid="@L4.AccountId">Edit</button>
+                                                                                            </div>
                                                                                         </div>
-
-                                                                                    </div>
+                                                                                    }
                                                                                 </div>
+
                                                                             </div>
-                                                                        }
+                                                                        </div>
                                                                     </div>
-
                                                                 </div>
-                                                            </div>
+                                                            }
                                                         </div>
-                                                    }
-                                                </div>
 
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                }
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
             }
         </div>
         
@@ -191,8 +208,7 @@
                             Swal.showValidationMessage('Account name is required');
                         }
                         return accountName;
-                    },
-                    allowOutsideClick: () => !Swal.isLoading()
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         let accountName = result.value;
@@ -202,6 +218,51 @@
                             url: '@Url.Action("Create", "ChartOfAccount", new { area = "Filpride" })',
                             type: "GET",
                             data: { parentId: parentId, accountName: accountName },
+                            success: function (response) {
+                                if (response.redirectUrl) {
+                                    window.location.href = response.redirectUrl;
+                                } else {
+                                    console.log("Operation was successful but no redirect.");
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error("AJAX error:", error);
+                            }
+                        });
+                    }
+                });
+            });
+
+
+            $('.editAccount').on('click', function(e) {
+                e.preventDefault();
+                let accountId = $(this).data('accountid');
+                console.log(accountId);
+
+                Swal.fire({
+                    title: 'Edit Account Name',
+                    input: 'text',
+                    inputAttributes: {
+                        autocapitalize: 'off'
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: 'Save',
+                    showLoaderOnConfirm: true,
+                    preConfirm: (accountName) => {
+                        if (!accountName || accountName.trim() === '') {
+                            Swal.showValidationMessage('Account name cannot be blank');
+                        }
+                        return accountName;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        let accountName = result.value;
+                        console.log(accountName);
+
+                        $.ajax({
+                            url: '@Url.Action("Edit", "ChartOfAccount", new { area = "Filpride" })',
+                            type: "GET",
+                            data: { accountId: accountId, accountName: accountName },
                             success: function (response) {
                                 if (response.redirectUrl) {
                                     // If the response includes a redirect URL, redirect the browser
@@ -217,8 +278,6 @@
                         });
                     }
                 });
-                
-                // ... rest of your function ...
             });
         });
         
