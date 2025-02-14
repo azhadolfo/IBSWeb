@@ -154,6 +154,42 @@
         });
     </script>
     <script>
+        $(document).ready(function () {
+            // Store the form submit state
+            let isSubmitting = false;
+
+            $('form').on('submit', function (e) {
+                // If the form is already submitting, prevent additional submissions
+                if (isSubmitting) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // Get the submit button
+                const submitButton = $(this).find('button[type="submit"]');
+
+                // Set submitting state to true
+                isSubmitting = true;
+
+                // Disable the submit button and change text to show processing
+                submitButton.prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+
+                // Optional: Re-enable the button after 30 seconds in case of network issues
+                setTimeout(function() {
+                    submitButton.prop('disabled', false).html('Create');
+                    isSubmitting = false;
+                }, 30000);
+            });
+
+            // Optional: Reset form state when navigating away or if there's an error
+            $(window).on('beforeunload', function() {
+                isSubmitting = false;
+                $('button[type="submit"]').prop('disabled', false).html('Create');
+            });
+        });
+        
+        
         var suppliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Suppliers));
 
         function saveAccountingEntry(event) {
@@ -256,6 +292,7 @@
             $(button).closest("tr").remove();
             updateTotalDebitAndCredit();
         }
+    
     </script>
     <script>
         $("#AccountNo").change(function () {
