@@ -297,23 +297,12 @@ namespace IBS.DataAccess.Repository.Filpride
                 }
             }
 
-            // Create general ledger entries
-            var (salesAccountNo, salesAccountTitle) = GetSalesAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
-            var ledgers = CreateGeneralLedgerEntries(deliveryReceipt, inventory, salesAccountNo, salesAccountTitle);
-
-            // Validate and save changes
-            if (!IsJournalEntriesBalanced(ledgers))
-            {
-                throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-            }
-
             if (subsequentTransactions.Any())
             {
                 _db.FilprideInventories.UpdateRange(subsequentTransactions);
             }
 
             await _db.FilprideInventories.AddAsync(inventory, cancellationToken);
-            await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
         }
 
@@ -342,43 +331,6 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 _db.FilprideGeneralLedgerBooks.UpdateRange(journalEntries);
             }
-        }
-
-        private static List<FilprideGeneralLedgerBook> CreateGeneralLedgerEntries(
-            FilprideDeliveryReceipt deliveryReceipt,
-            FilprideInventory inventory,
-            string salesAccountNo,
-            string salesAccountTitle)
-        {
-            return new List<FilprideGeneralLedgerBook>
-            {
-                new()
-                {
-                    Date = (DateOnly)deliveryReceipt.DeliveredDate!,
-                    Reference = deliveryReceipt.DeliveryReceiptNo,
-                    Description = deliveryReceipt.CustomerOrderSlip.Product.ProductName,
-                    AccountNo = salesAccountNo,
-                    AccountTitle = salesAccountTitle,
-                    Debit = inventory.Total,
-                    Credit = 0,
-                    Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.CreatedBy,
-                    CreatedDate = deliveryReceipt.CreatedDate
-                },
-                new()
-                {
-                    Date = (DateOnly)deliveryReceipt.DeliveredDate!,
-                    Reference = deliveryReceipt.DeliveryReceiptNo,
-                    Description = deliveryReceipt.CustomerOrderSlip.Product.ProductName,
-                    AccountNo = salesAccountNo,
-                    AccountTitle = salesAccountTitle,
-                    Debit = 0,
-                    Credit = inventory.Total,
-                    Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.CreatedBy,
-                    CreatedDate = deliveryReceipt.CreatedDate
-                }
-            };
         }
 
         public async Task ChangePriceToInventoryAsync(PurchaseChangePriceViewModel viewModel, CancellationToken cancellationToken = default)
