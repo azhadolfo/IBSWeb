@@ -27,43 +27,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
             var Level1 = await _dbContext.FilprideChartOfAccounts
-                .Where(c => c.Level == 1)
+                .Include(c => c.Children.OrderBy(ch => ch.AccountNumber))
                 .OrderBy(c => c.AccountNumber)
                 .ToListAsync(cancellationToken);
-            foreach (var L1 in Level1)
-            {
-                L1.Children = await _dbContext.FilprideChartOfAccounts
-                    .Where(c => c.Level == 2)
-                    .Where(c => c.ParentAccountId == L1.AccountId)
-                    .OrderBy(c => c.AccountNumber)
-                    .ToListAsync(cancellationToken);
-                foreach (var L2 in L1.Children)
-                {
-                    L2.Children = await _dbContext.FilprideChartOfAccounts
-                        .Where(c => c.Level == 3)
-                        .Where(c => c.ParentAccountId == L2.AccountId)
-                        .OrderBy(c => c.AccountNumber)
-                        .ToListAsync(cancellationToken);
-                    foreach (var L3 in L2.Children)
-                    {
-                        L3.Children = await _dbContext.FilprideChartOfAccounts
-                            .Where(c => c.Level == 4)
-                            .Where(c => c.ParentAccountId == L3.AccountId)
-                            .OrderBy(c => c.AccountNumber)
-                            .ToListAsync(cancellationToken);
-                        foreach (var L4 in L3.Children)
-                        {
-                            L4.Children = await _dbContext.FilprideChartOfAccounts
-                                .Where(c => c.Level == 5)
-                                .Where(c => c.ParentAccountId == L4.AccountId)
-                                .OrderBy(c => c.AccountNumber)
-                                .ToListAsync(cancellationToken);
-                        }
-                    }
-                }
-            }
 
-            return View(Level1);
+            //
+            return View(Level1.Where((c => c.Level == 1)).ToList());
         }
 
         public async Task<IActionResult> Create(int parentId, string accountName, CancellationToken cancellationToken)
