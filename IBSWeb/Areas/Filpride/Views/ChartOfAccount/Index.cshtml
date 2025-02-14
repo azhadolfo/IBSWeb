@@ -79,7 +79,7 @@
                                                                              data-bs-parent="#LGroup-@L2.AccountNumber">
                                                                             <div class="accordion-body">
 
-                                                                                <button class="btn btn-primary mb-3 createAccount" data-accountid="@L3.AccountId">Create Level 4 Account</button>
+                                                                                <button class="btn btn-primary mb-3 createAccount" data-account-id="@L3.AccountId">Create Level 4 Account</button>
 
                                                                                 <div class="accordion" id="LGroup-@L3.AccountNumber">
                                                                                     @foreach (var L4 in L3.Children)
@@ -100,7 +100,7 @@
                                                                                                      data-bs-parent="#LGroup-@L3.AccountNumber">
                                                                                                     <div class="accordion-body">
 
-                                                                                                        <button class="btn btn-primary mb-3 createAccount" data-accountid="@L4.AccountId">Create Level 5 Account</button>
+                                                                                                        <button class="btn btn-primary mb-3 createAccount" data-account-id="@L4.AccountId">Create Level 5 Account</button>
 
                                                                                                         <div class="accordion" id="LGroup-@L4.AccountNumber">
                                                                                                             @foreach (var L5 in L4.Children)
@@ -125,7 +125,7 @@
                                                                                                                         </div>
                                                                                                                     </div>
                                                                                                                     <div class="col-2 align-top align-text-top pt-2">
-                                                                                                                        <button class="btn btn-light mb-3 editAccount col-12" data-accountid="@L5.AccountId">Edit</button>
+                                                                                                                        <button class="btn btn-light mb-3 editAccount col-12" data-account-id="@L5.AccountId" data-account-name="@L5.AccountName">Edit</button>
                                                                                                                     </div>
                                                                                                                 </div>
                                                                                                             }
@@ -135,7 +135,7 @@
                                                                                                 </div>
                                                                                             </div>
                                                                                             <div class="col-2 align-top align-text-top text-center pt-2">
-                                                                                                <button class="btn btn-light mb-3 editAccount col-12" data-accountid="@L4.AccountId">Edit</button>
+                                                                                                <button class="btn btn-light mb-3 editAccount col-12" data-account-id="@L4.AccountId" data-account-name="@L4.AccountName">Edit</button>
                                                                                             </div>
                                                                                         </div>
                                                                                     }
@@ -190,8 +190,7 @@
             
             $('.createAccount').on('click', function(e) {
                 e.preventDefault();
-                let parentId = $(this).data('accountid');
-                console.log(parentId);
+                let parentId = $(this).data('account-id');
 
                 Swal.fire({
                     title: 'Enter Account Name',
@@ -236,12 +235,13 @@
 
             $('.editAccount').on('click', function(e) {
                 e.preventDefault();
-                let accountId = $(this).data('accountid');
-                console.log(accountId);
+                let accountId = $(this).data('account-id');
+                let accountName = $(this).data('account-name');
 
                 Swal.fire({
                     title: 'Edit Account Name',
                     input: 'text',
+                    inputValue: accountName,
                     inputAttributes: {
                         autocapitalize: 'off'
                     },
