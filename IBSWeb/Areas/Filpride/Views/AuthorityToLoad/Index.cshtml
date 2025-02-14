@@ -4,46 +4,75 @@
     ViewData["Title"] = "Authority To Load";
 }
 
-<div class="card shadow border-0 mt-4">
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2">AUTHORITY TO LOAD</h2>
-            </div>
-        </div>
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">Authority to Load</h2>
+        <a asp-area="Filpride" asp-controller="AuthorityToLoad" asp-action="Create" class="btn btn-light">
+            <i class="bi bi-plus-circle"></i> Book
+        </a>
     </div>
-    <div class="card-body p-4 table-responsive">
-        <div class="row pb-3">
-            <div class="col-6">
-            </div>
-            <div class="col-6 text-end">
-                <a asp-area="Filpride" asp-controller="AuthorityToLoad" asp-action="Create" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create New
-                </a>
+
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="max-height: 70vh">
+                <table class="table table-hover mb-0" id="paginatedTable">
+                    <thead class="bg-light">
+                    <tr>
+                        <th>ATL#</th>
+                        <th>Date Booked</th>
+                        <th>Valid Until</th>
+                        <th>COS#</th>
+                        <th>Remarks</th>
+                        <th class="text-center" style="width: 100px;">Actions</th>
+                    </tr>
+                    </thead>
+                </table>
             </div>
         </div>
-        <table class="table table-bordered table-hover" id="paginatedTable">
-            <thead>
-            <tr class="text-nowrap table-secondary">
-                <th>
-                    ATL No
-                </th>
-                <th>
-                    Date Booked
-                </th>
-                <th>
-                    Valid Until
-                </th>
-                <th>
-                    COS No
-                </th>
-                <th>
-                    @Html.DisplayNameFor(m => m.Remarks)
-                </th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-        </table>
     </div>
 </div>
 
@@ -56,7 +85,11 @@
                 "stateSave": true,
                 "stateDuration": 86400,
                 "language": {
-                    "processing": "Loading data..."
+                    "processing": `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
                 },
                 "ajax": {
                     "url": "@Url.Action("GetAuthorityToLoads", "AuthorityToLoad", new { area = "Filpride" })",
@@ -76,6 +109,9 @@
                 },
                 "drawCallback": function(settings) {
                     $('#paginatedTable').removeClass('table-loading');
+
+                    // Initialize all tooltips
+                    $('[data-bs-toggle="tooltip"]').tooltip();
                 },
                 "columns": [
                     { "data": "authorityToLoadNo" },
@@ -83,14 +119,22 @@
                         "data": "dateBooked",
                         "render": function(data) {
                             var date = new Date(data);
-                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                            return date.toLocaleDateString('en-US', { 
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit' 
+                            });
                         }
                     },
                     {
                         "data": "validUntil",
                         "render": function(data) {
                             var date = new Date(data);
-                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+                            return date.toLocaleDateString('en-US', { 
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit' 
+                            });
                         }
                     },
                     { "data": "customerOrderSlip.customerOrderSlipNo" },
@@ -99,12 +143,15 @@
                         "data": "authorityToLoadId",
                         "orderable": false,
                         "render": function(data, type, row) {
-                            let actions = `<div class="dropdown">
-                                <button class="btn btn-light dropdown-toggle w-100" type="button" id="actionsDropdown_${data}" 
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                    Actions
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown_${data}">`;
+                            let actions = `
+                                <div class="dropdown actions-dropdown">
+                                    <button class="btn btn-light btn-sm dropdown-toggle w-100" 
+                                                        type="button" 
+                                                        data-bs-toggle="dropdown" 
+                                                        aria-expanded="false">
+                                                    <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">`;
 
                             // Add Print option
                             actions += `<li><a class="dropdown-item" href="@Url.Action("Print", "AuthorityToLoad", new { area = "Filpride" })/${data}">
