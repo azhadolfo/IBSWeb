@@ -140,8 +140,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CustomerOrderSlip.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
                         s.CustomerOrderSlip.Product.ProductName.ToLower().Contains(searchValue) ||
                         s.Status.ToLower().Contains(searchValue) ||
-                        s.Remarks.ToLower().Contains(searchValue) ||
-                        s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue)
+                        s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue) ||
+                        s.CreatedBy.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }

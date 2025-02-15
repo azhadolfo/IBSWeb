@@ -384,7 +384,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
             var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
             var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030200") ?? throw new ArgumentException("Account title '201030200' not found.");
-            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010100") ?? throw new ArgumentException("Account title '201010100' not found.");
+            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
+
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
@@ -417,6 +418,21 @@ namespace IBS.DataAccess.Repository.Filpride
                 });
             }
 
+            ledgers.Add(new FilprideGeneralLedgerBook
+            {
+                Date = model.Date,
+                Reference = model.ReceivingReportNo,
+                Description = "Receipt of Goods",
+                AccountNo = apTradeTitle.AccountNumber,
+                AccountTitle = apTradeTitle.AccountName,
+                Debit = 0,
+                Credit = netOfEwtAmount,
+                CreatedBy = model.CreatedBy,
+                CreatedDate = model.CreatedDate,
+                Company = model.Company,
+                SupplierId = model.PurchaseOrder.SupplierId
+            });
+
             if (ewtAmount > 0)
             {
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -433,20 +449,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = model.Company
                 });
             }
-
-            ledgers.Add(new FilprideGeneralLedgerBook
-            {
-                Date = model.Date,
-                Reference = model.ReceivingReportNo,
-                Description = "Receipt of Goods",
-                AccountNo = apTradeTitle.AccountNumber,
-                AccountTitle = apTradeTitle.AccountName,
-                Debit = 0,
-                Credit = netOfEwtAmount,
-                CreatedBy = model.CreatedBy,
-                CreatedDate = model.CreatedDate,
-                Company = model.Company
-            });
 
             if (!IsJournalEntriesBalanced(ledgers))
             {
