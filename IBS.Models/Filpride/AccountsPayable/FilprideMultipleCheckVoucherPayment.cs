@@ -8,11 +8,11 @@ namespace IBS.Models.Filpride.AccountsPayable
     {
         public Guid Id { get; set; }
 
-        [ForeignKey("CheckVoucherHeaderPaymentId")]
+        [ForeignKey(nameof(CheckVoucherHeaderPaymentId))]
         public FilprideCheckVoucherHeader? CheckVoucherHeaderPayment { get; set; } = null;
         public int CheckVoucherHeaderPaymentId{ get; set; }
 
-        [ForeignKey("CheckVoucherHeaderInvoiceId")]
+        [ForeignKey(nameof(CheckVoucherHeaderInvoiceId))]
         public FilprideCheckVoucherHeader? CheckVoucherHeaderInvoice { get; set; } = null;
         public int CheckVoucherHeaderInvoiceId { get; set; }
 

@@ -107,6 +107,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideBookAtlDetail> FilprideBookAtlDetails { get; set; }
 
+        public DbSet<FilprideMonthlyNibit> FilprideMonthlyNibits { get; set; }
+
         #region--Master File
 
         public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
@@ -161,6 +163,8 @@ namespace IBS.DataAccess.Data
         public DbSet<FilprideReceivingReport> FilprideReceivingReports { get; set; }
 
         public DbSet<FilprideMultipleCheckVoucherPayment> FilprideMultipleCheckVoucherPayments { get; set; }
+
+        public DbSet<FilprideCVTradePayment> FilprideCVTradePayments { get; set; }
 
         #endregion
 
@@ -513,6 +517,13 @@ namespace IBS.DataAccess.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+            builder.Entity<FilprideMonthlyNibit>(n =>
+            {
+                n.HasIndex(n => n.Company);
+                n.HasIndex(n => n.Month);
+                n.HasIndex(n => n.Year);
+            });
+
             #region-- Master File
 
             // FilprideCustomer
@@ -693,6 +704,28 @@ namespace IBS.DataAccess.Data
 
             #endregion -- Check Voucher --
 
+            #region -- Check Voucher Trade Payment --
+
+            builder.Entity<FilprideCVTradePayment>(cv =>
+            {
+                cv.HasOne(cv => cv.RR)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.DocumentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                cv.HasOne(cv => cv.DR)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.DocumentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                cv.HasOne(cv => cv.CV)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.CheckVoucherId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher Trade Payment --
+
             #region -- Journal Voucher Header --
 
             builder.Entity<FilprideJournalVoucherHeader>(jv =>
@@ -742,6 +775,16 @@ namespace IBS.DataAccess.Data
                 .WithMany()
                 .HasForeignKey(gl => gl.BankAccountId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+                gl.HasOne(gl => gl.Employee)
+                    .WithMany()
+                    .HasForeignKey(gl => gl.EmployeeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                gl.HasOne(gl => gl.Account)
+                    .WithMany()
+                    .HasForeignKey(gl => gl.AccountId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             #endregion

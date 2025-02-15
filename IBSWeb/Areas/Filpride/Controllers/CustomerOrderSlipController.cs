@@ -1035,7 +1035,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     COSVolume = existingRecord.Quantity,
                     SupplierId = (int)(existingRecord.Supplier?.SupplierId ?? existingRecord.PurchaseOrder.SupplierId),
                     DeliveryOption = existingRecord.DeliveryOption,
-                    Freight = (decimal)existingRecord.Freight,
+                    Freight = existingRecord.Freight ?? 0,
                     PickUpPointId = (int)existingRecord.PickUpPointId,
                     PickUpPoints = await _unitOfWork.FilpridePickUpPoint
                     .GetPickUpPointListBasedOnSupplier((int)(existingRecord.Supplier?.SupplierId ?? existingRecord.PurchaseOrder.SupplierId), cancellationToken),
@@ -1479,7 +1479,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingCos.Status = nameof(CosStatus.ForApprovalOfOM);
                 }
 
-                ///PENDING
+                //TODO Remove this in the future
                 #region Remove this in the future
 
                 var existingDr = await _unitOfWork.FilprideDeliveryReceipt

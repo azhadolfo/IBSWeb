@@ -15,11 +15,11 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         List<FilpridePurchaseBook> GetPurchaseBooks(DateOnly dateFrom, DateOnly dateTo, string? selectedFiltering, string company);
 
-        Task<List<FilprideReceivingReport>> GetReceivingReportAsync(DateOnly? dateFrom, DateOnly? dateTo, string? selectedFiltering, string company);
+        Task<List<FilprideReceivingReport>> GetReceivingReportAsync(DateOnly? dateFrom, DateOnly? dateTo, string? selectedFiltering, string company, CancellationToken cancellationToken = default);
 
         List<FilprideInventory> GetInventoryBooks(DateOnly dateFrom, DateOnly dateTo, string company);
 
-        List<FilprideGeneralLedgerBook> GetGeneralLedgerBooks(DateOnly dateFrom, DateOnly dateTo, string company);
+        Task<List<FilprideGeneralLedgerBook>> GetGeneralLedgerBooks(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default);
 
         List<FilprideDisbursementBook> GetDisbursementBooks(DateOnly dateFrom, DateOnly dateTo, string company);
 
@@ -29,18 +29,18 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task<List<FilprideCustomerOrderSlip>> GetCosUnservedVolume(DateOnly dateFrom, DateOnly dateTo, string company);
 
-        public List<FilprideSalesInvoice> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, string company);
+        public Task<List<SalesReportViewModel>> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default);
 
-        public List<FilpridePurchaseOrder> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string company);
+        public Task <List<FilpridePurchaseOrder>> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cacnellationToken = default);
 
-        public List<FilprideCheckVoucherHeader> GetClearedDisbursementReport(DateOnly dateFrom, DateOnly dateTo, string company);
+        public Task<List<FilprideCheckVoucherHeader>> GetClearedDisbursementReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default);
 
-        public List<FilprideReceivingReport> GetPurchaseReport(DateOnly dateFrom, DateOnly dateTo, string company);
+        public Task<List<FilprideReceivingReport>> GetPurchaseReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default);
 
-        public List<FilprideSalesInvoice> GetOtcFuelSalesReport (DateOnly dateFrom, DateOnly dateTo, string company);
+        public Task <List<FilprideSalesInvoice>> GetOtcFuelSalesReport (DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default);
 
-        public List<FilprideCollectionReceipt> GetCollectionReceiptReport (DateOnly dateFrom, DateOnly dateTo, string company);
+        public Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport (DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default);
 
-        public List<FilprideReceivingReport> GetTradePayableReport (DateOnly dateFrom, DateOnly dateTo, string company);
+        public Task<List<FilprideReceivingReport>> GetTradePayableReport (DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default);
     }
 }

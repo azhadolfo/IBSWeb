@@ -384,15 +384,17 @@ namespace IBS.DataAccess.Repository.Filpride
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
             var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
             var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030200") ?? throw new ArgumentException("Account title '201030200' not found.");
-            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010100") ?? throw new ArgumentException("Account title '201010100' not found.");
+            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
+            var inventoryTitle = accountTitlesDto.Find(c => c.AccountNumber == inventoryAcctNo) ?? throw new ArgumentException($"Account title '{inventoryAcctNo}' not found.");
 
             ledgers.Add(new FilprideGeneralLedgerBook
             {
                 Date = model.Date,
                 Reference = model.ReceivingReportNo,
                 Description = "Receipt of Goods",
-                AccountNo = inventoryAcctNo,
-                AccountTitle = inventoryAcctTitle,
+                AccountId = inventoryTitle.AccountId,
+                AccountNo = inventoryTitle.AccountNumber,
+                AccountTitle = inventoryTitle.AccountName,
                 Debit = netOfVatAmount,
                 Credit = 0,
                 CreatedBy = model.CreatedBy,
@@ -407,27 +409,11 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = model.Date,
                     Reference = model.ReceivingReportNo,
                     Description = "Receipt of Goods",
+                    AccountId = vatInputTitle.AccountId,
                     AccountNo = vatInputTitle.AccountNumber,
                     AccountTitle = vatInputTitle.AccountName,
                     Debit = vatAmount,
                     Credit = 0,
-                    CreatedBy = model.CreatedBy,
-                    CreatedDate = model.CreatedDate,
-                    Company = model.Company
-                });
-            }
-
-            if (ewtAmount > 0)
-            {
-                ledgers.Add(new FilprideGeneralLedgerBook
-                {
-                    Date = model.Date,
-                    Reference = model.ReceivingReportNo,
-                    Description = "Receipt of Goods",
-                    AccountNo = ewtTitle.AccountNumber,
-                    AccountTitle = ewtTitle.AccountName,
-                    Debit = 0,
-                    Credit = ewtAmount,
                     CreatedBy = model.CreatedBy,
                     CreatedDate = model.CreatedDate,
                     Company = model.Company
@@ -439,14 +425,34 @@ namespace IBS.DataAccess.Repository.Filpride
                 Date = model.Date,
                 Reference = model.ReceivingReportNo,
                 Description = "Receipt of Goods",
+                AccountId = apTradeTitle.AccountId,
                 AccountNo = apTradeTitle.AccountNumber,
                 AccountTitle = apTradeTitle.AccountName,
                 Debit = 0,
                 Credit = netOfEwtAmount,
                 CreatedBy = model.CreatedBy,
                 CreatedDate = model.CreatedDate,
-                Company = model.Company
+                Company = model.Company,
+                SupplierId = model.PurchaseOrder.SupplierId
             });
+
+            if (ewtAmount > 0)
+            {
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = model.Date,
+                    Reference = model.ReceivingReportNo,
+                    Description = "Receipt of Goods",
+                    AccountId = ewtTitle.AccountId,
+                    AccountNo = ewtTitle.AccountNumber,
+                    AccountTitle = ewtTitle.AccountName,
+                    Debit = 0,
+                    Credit = ewtAmount,
+                    CreatedBy = model.CreatedBy,
+                    CreatedDate = model.CreatedDate,
+                    Company = model.Company
+                });
+            }
 
             if (!IsJournalEntriesBalanced(ledgers))
             {

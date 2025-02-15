@@ -47,6 +47,10 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 return "IND0001";
             }
+            else if (customerType == nameof(CustomerType.Reseller))
+            {
+                return "RES0001";
+            }
             else
             {
                 return "GOV0001";

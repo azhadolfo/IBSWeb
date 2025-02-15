@@ -312,6 +312,7 @@ namespace IBS.DataAccess.Repository
                .Where(coa => coa.Level == 4 || coa.Level == 5)
                .Select(coa => new AccountTitleDto
                {
+                   AccountId = coa.AccountId,
                    AccountNumber = coa.AccountNumber,
                    AccountName = coa.AccountName
                })

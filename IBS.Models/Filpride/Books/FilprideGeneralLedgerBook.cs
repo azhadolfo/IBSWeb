@@ -62,7 +62,25 @@ namespace IBS.Models.Filpride.Books
 
         #endregion
 
-        #region
+        #region Chart Of Account Properties
+
+        public int? AccountId { get; set; }
+
+        [ForeignKey(nameof(AccountId))]
+        public FilprideChartOfAccount Account { get; set; }
+
+        #endregion
+
+        #region Employee Properties
+
+        public int? EmployeeId { get; set; }
+
+        [ForeignKey(nameof(EmployeeId))]
+        public FilprideEmployee Employee { get; set; }
+
+        #endregion
+
+        #region Customer Properties
 
         public int? CustomerId { get; set; }
 

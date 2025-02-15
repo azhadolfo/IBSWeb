@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride;
 using IBS.Models.Filpride.Books;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -40,6 +41,7 @@ namespace IBS.Services
                 await InTransit(previousMonth);
                 await CheckTheUntriggeredPurchaseOrders(previousMonth);
                 await AutoReversalForCvWithoutDcrDate(previousMonth);
+                await ComputeNibit(previousMonth);
                 _logger.LogInformation($"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
             }
             catch (Exception ex)
@@ -200,7 +202,7 @@ namespace IBS.Services
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
 
                 // Start of the current month
-                var startOfMonth = new DateTime(today.Year, today.AddMonths(-2).Month, 1);
+                var startOfMonth = new DateTime(today.Year, today.AddMonths(-1).Month, 1);
 
                 var endOfPreviousMonth = startOfMonth.AddDays(-1);
 
@@ -302,6 +304,102 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while processing the auto reversal for CV.");
+                await transaction.RollbackAsync();
+            }
+        }
+
+        private async Task ComputeNibit(DateTime previousMonth)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                var generalLedgers = _dbContext.FilprideGeneralLedgerBooks
+                    .Include(gl => gl.Account) // Level 4
+                    .ThenInclude(ac => ac.ParentAccount) // Level 3
+                    .ThenInclude(ac => ac.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac.ParentAccount) // Level 1
+                    .Where(gl =>
+                        gl.Date.Month == previousMonth.Month &&
+                        gl.Date.Year == previousMonth.Year &&
+                        gl.AccountId != null &&  // TODO Uncomment this if the GL is fixed
+                        gl.Company == "Filpride") // TODO Make this dynamic later on
+                    .ToList();
+
+                var chartOfAccounts = _dbContext.FilprideChartOfAccounts
+                    .Include(coa => coa.Children)
+                    .OrderBy(coa => coa.AccountNumber)
+                    .Where(coa => coa.FinancialStatementType == nameof(FinancialStatementType.PnL))
+                    .ToList();
+
+                if (!generalLedgers.Any())
+                {
+                    return;
+                }
+
+                var groupByLevelOne = generalLedgers
+                    .OrderBy(gl => gl.Account.AccountNumber)
+                    .Where(gl => gl.Account.FinancialStatementType == nameof(FinancialStatementType.PnL))
+                    .GroupBy(gl =>
+                    {
+                        // Traverse the account hierarchy to find the top-level parent account
+                        var currentAccount = gl.Account;
+                        while (currentAccount.ParentAccount != null)
+                        {
+                            currentAccount = currentAccount.ParentAccount;
+                        }
+                        // Return the top-level parent account (mother account)
+                        return new { currentAccount.AccountNumber, currentAccount.AccountName };
+                    });
+
+                decimal nibit = 0;
+                foreach (var account in groupByLevelOne)
+                {
+                    if (nibit == 0)
+                    {
+                        nibit += account.Sum(a => a.Account.NormalBalance == nameof(NormalBalance.Debit) ?
+                            a.Debit - a.Credit :
+                            a.Credit - a.Debit);
+
+                        continue;
+                    }
+
+                    nibit -= account.Sum(a => a.Account.NormalBalance == nameof(NormalBalance.Debit) ?
+                        a.Debit - a.Credit :
+                        a.Credit - a.Debit);
+                }
+
+                var nibitForThePeriod = new FilprideMonthlyNibit
+                {
+                    Month = previousMonth.Month,
+                    Year = previousMonth.Year,
+                    Company = "Filpride", // TODO Make this dynamic soon
+                    NetIncome = nibit,
+                    PriorPeriodAdjustment = generalLedgers
+                        .Where(g => g.AccountTitle.Contains("Prior Period"))
+                        .Sum(g => g.Debit - g.Credit),
+                };
+
+                var beginning = await _dbContext.FilprideMonthlyNibits
+                    .OrderByDescending(m => m.Year)
+                    .OrderByDescending(m => m.Month)
+                    .FirstOrDefaultAsync();
+
+                if (beginning != null)
+                {
+                    nibitForThePeriod.BeginningBalance = beginning.EndingBalance;
+                }
+
+                nibitForThePeriod.EndingBalance = nibitForThePeriod.BeginningBalance + nibitForThePeriod.NetIncome + nibitForThePeriod.PriorPeriodAdjustment;
+
+                await _dbContext.FilprideMonthlyNibits.AddAsync(nibitForThePeriod);
+                await _dbContext.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while computing the nibit for the month.");
                 await transaction.RollbackAsync();
             }
         }

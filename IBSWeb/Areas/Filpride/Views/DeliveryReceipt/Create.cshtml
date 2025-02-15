@@ -151,6 +151,41 @@
 
     <script>
         $(document).ready(function () {
+
+            // Store the form submit state
+            let isSubmitting = false;
+
+            $('form').on('submit', function (e) {
+                // If the form is already submitting, prevent additional submissions
+                if (isSubmitting) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // Get the submit button
+                const submitButton = $(this).find('button[type="submit"]');
+
+                // Set submitting state to true
+                isSubmitting = true;
+
+                // Disable the submit button and change text to show processing
+                submitButton.prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+
+                // Optional: Re-enable the button after 30 seconds in case of network issues
+                setTimeout(function() {
+                    submitButton.prop('disabled', false).html('Create');
+                    isSubmitting = false;
+                }, 30000);
+            });
+
+            // Optional: Reset form state when navigating away or if there's an error
+            $(window).on('beforeunload', function() {
+                isSubmitting = false;
+                $('button[type="submit"]').prop('disabled', false).html('Create');
+            });
+            
+            
             //Get customer
             $('select[name="CustomerId"]').on('change', function () {
                 var customerId = $(this).val();
@@ -194,7 +229,7 @@
                             if (data) {
 
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
-                                    //Remove the else condition in the future
+                                    @* TODO Remove the else condition in the future *@
                                     $('#haulerList').show();
                                     if (parseInt(cosId) > 748) {
                                         $('input[name="Freight"]').parent().show();
@@ -212,7 +247,7 @@
                                     $('input[name="Freight"]').parent().hide();
                                     $('input[name="Freight"]').val(data.freight);
                                     
-                                    //Remove the else condition in the future
+                                    @* TODO Remove the else condition in the future *@
                                     if (parseInt(cosId) > 748) {
                                         $('select[name="HaulerId"]').val(data.haulerId).change();
                                         console.log(data.haulerId);
@@ -312,5 +347,6 @@
                 }
             }
         });
+        
     </script>
 }

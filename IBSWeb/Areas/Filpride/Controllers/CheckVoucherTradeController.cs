@@ -17,6 +17,7 @@ using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -234,15 +235,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync(cancellationToken);
 
-                            viewModel.RR = await _dbContext.FilprideReceivingReports
-                                .Where(rr => rr.Company == companyClaims && viewModel.POSeries.Contains(rr.PONo) && !rr.IsPaid && rr.PostedBy != null)
-                                .Select(rr => new SelectListItem
-                                {
-                                    Value = rr.ReceivingReportNo.ToString(),
-                                    Text = rr.ReceivingReportNo
-                                })
-                                .ToListAsync(cancellationToken);
-
                             viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
                                 .Where(b => b.Company == companyClaims)
                                 .Select(ba => new SelectListItem
@@ -283,7 +275,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         CheckVoucherHeaderNo = generateCVNo,
                         Date = viewModel.TransactionDate,
-                        RRNo = viewModel.RRSeries,
                         PONo = viewModel.POSeries,
                         SupplierId = viewModel.SupplierId,
                         Particulars = viewModel.Particulars,
@@ -327,6 +318,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
 
                     #endregion --CV Details Entry
+
+                    #region -- Partial payment of RR's
+
+                    var cvTradePaymentModel = new List<FilprideCVTradePayment>();
+                    foreach (var item in viewModel.RRs)
+                    {
+                        var getReceivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.Id, cancellationToken);
+                        getReceivingReport.AmountPaid += item.Amount;
+
+                        cvTradePaymentModel.Add(
+                            new FilprideCVTradePayment
+                            {
+                                DocumentId = getReceivingReport.ReceivingReportId,
+                                DocumentType = "RR",
+                                CheckVoucherId = cvh.CheckVoucherHeaderId,
+                                AmountPaid = item.Amount
+                            });
+                    }
+
+                    await _dbContext.AddRangeAsync(cvTradePaymentModel);
+
+                    #endregion -- Partial payment of RR's
 
                     #region -- Uploading file --
 
@@ -381,15 +394,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync(cancellationToken);
 
-                    viewModel.RR = await _dbContext.FilprideReceivingReports
-                        .Where(rr => rr.Company == companyClaims && viewModel.POSeries.Contains(rr.PONo) && !rr.IsPaid && rr.PostedBy != null)
-                        .Select(rr => new SelectListItem
-                        {
-                            Value = rr.ReceivingReportNo.ToString(),
-                            Text = rr.ReceivingReportNo
-                        })
-                        .ToListAsync(cancellationToken);
-
                     viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
                         .Where(ba => ba.Company == companyClaims)
                         .Select(ba => new SelectListItem
@@ -431,15 +435,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            viewModel.RR = await _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims && viewModel.POSeries.Contains(rr.PONo) && !rr.IsPaid && rr.PostedBy != null)
-                .Select(rr => new SelectListItem
-                {
-                    Value = rr.ReceivingReportNo.ToString(),
-                    Text = rr.ReceivingReportNo
-                })
-                .ToListAsync(cancellationToken);
-
             viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
                 .Where(ba => ba.Company == companyClaims)
                 .Select(ba => new SelectListItem
@@ -475,46 +470,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var receivingReports = await _dbContext.FilprideReceivingReports
-            .Where(rr => rr.Company == companyClaims && poNumber.Contains(rr.PONo) && !rr.IsPaid && rr.PostedBy != null)
+            .Where(rr => rr.Company == companyClaims && poNumber.Contains(rr.PONo) && rr.PostedBy != null)
             .OrderBy(rr => rr.ReceivingReportNo)
+            .ThenBy(rr => rr.ReceivingReportId)
             .ThenBy(rr => criteria == "Transaction Date" ? rr.Date : rr.DueDate)
             .ToListAsync();
 
             if (receivingReports != null && receivingReports.Count > 0)
             {
-                var rrList = receivingReports.Select(rr => new { Id = rr.ReceivingReportId, RRNumber = rr.ReceivingReportNo }).ToList();
+                var rrList = receivingReports
+                    .Select(rr => new {
+                        Id = rr.ReceivingReportId,
+                        ReceivingReportNo = rr.ReceivingReportNo,
+                        GrossAmount = rr.Amount.ToString("N4"),
+                        AmountPaid = rr.AmountPaid.ToString("N4"),
+                    }).ToList();
                 return Json(rrList);
             }
 
-            return Json(null);
-        }
-
-        public async Task<IActionResult> RRBalance(string rrNo)
-        {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            var receivingReport = await _unitOfWork.FilprideReceivingReport
-                .GetAsync(rr => rr.Company == companyClaims && rr.ReceivingReportNo == rrNo);
-
-            if (receivingReport != null)
-            {
-                var amount = receivingReport.Amount;
-                var amountPaid = receivingReport.AmountPaid;
-                var netAmount = _unitOfWork.FilprideCheckVoucher.ComputeNetOfVat(amount);
-                var vatAmount = _unitOfWork.FilprideCheckVoucher.ComputeVatAmount(netAmount);
-                var ewtAmount = _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(netAmount, 0.01m);
-                var balance = amount - amountPaid;
-
-                return Json(new
-                {
-                    Amount = amount,
-                    AmountPaid = amountPaid,
-                    NetAmount = netAmount,
-                    VatAmount = vatAmount,
-                    EwtAmount = ewtAmount,
-                    Balance = balance
-                });
-            }
             return Json(null);
         }
 
@@ -567,22 +540,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var accountNumbers = existingDetailsModel.Select(model => model.AccountNo).ToArray();
-            var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
-            var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
-            var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
-            var poIds = _dbContext.FilpridePurchaseOrders.Where(model => model.Company == companyClaims && existingHeaderModel.PONo.Contains(model.PurchaseOrderNo)).Select(model => model.PurchaseOrderId).ToArray();
-            var rrIds = _dbContext.FilprideReceivingReports.Where(model => model.Company == companyClaims && existingHeaderModel.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
-
-            var coa = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
-
             CheckVoucherTradeViewModel model = new()
             {
                 SupplierId = existingHeaderModel.SupplierId ?? 0,
@@ -590,27 +547,49 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 SupplierAddress = existingHeaderModel.Supplier.SupplierAddress,
                 SupplierTinNo = existingHeaderModel.Supplier.SupplierTin,
                 Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
-                RRSeries = existingHeaderModel.RRNo,
-                RR = await _unitOfWork.FilprideReceivingReport.GetReceivingReportListAsync(existingHeaderModel.RRNo, companyClaims, cancellationToken),
                 POSeries = existingHeaderModel.PONo,
-                PONo = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncByCode(companyClaims, cancellationToken),
                 TransactionDate = existingHeaderModel.Date,
                 BankId = existingHeaderModel.BankId,
                 CheckNo = existingHeaderModel.CheckNo,
                 CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
                 Particulars = existingHeaderModel.Particulars,
-                Amount = existingHeaderModel.Amount,
-                AccountNumber = accountNumbers,
-                AccountTitle = accountTitles,
-                Debit = debit,
-                Credit = credit,
-                COA = coa,
                 CVId = existingHeaderModel.CheckVoucherHeaderId,
                 CVNo = existingHeaderModel.CheckVoucherHeaderNo,
                 CreatedBy = _userManager.GetUserName(this.User),
-                POId = poIds,
-                RRId = rrIds
+                RRs = new List<ReceivingReportList>()
             };
+
+            var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "RR")
+                .ToListAsync(cancellationToken);
+
+            foreach (var item in getCheckVoucherTradePayment)
+            {
+                model.RRs.Add(new ReceivingReportList
+                {
+                    Id = item.DocumentId,
+                    Amount = item.AmountPaid
+                });
+            }
+
+            model.COA = await _dbContext.FilprideChartOfAccounts
+                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
+
+            model.PONo = await _dbContext.FilpridePurchaseOrders
+                .Where(p => !p.IsSubPo)
+                .OrderBy(s => s.PurchaseOrderNo)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.PurchaseOrderNo,
+                    Text = s.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
 
             model.BankAccounts = await _dbContext.FilprideBankAccounts
                 .Where(b => b.Company == companyClaims)
@@ -630,30 +609,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
+                var companyClaims = await GetCompanyClaimAsync();
 
                 try
                 {
-                    var companyClaims = await GetCompanyClaimAsync();
-
-                    #region --Check if duplicate CheckNo
-
-                    var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
-
-                    if (viewModel.CheckNo != null && !viewModel.CheckNo.Contains("DM"))
-                    {
-                        var cv = await _unitOfWork
-                        .FilprideCheckVoucher
-                        .GetAllAsync(cv => cv.Company == companyClaims && cv.BankId == viewModel.BankId && cv.CheckNo == viewModel.CheckNo && !cv.CheckNo.Equals(existingHeaderModel.CheckNo), cancellationToken);
-
-                        if (cv.Any())
-                        {
-                            TempData["error"] = "Check No. Is already exist";
-                            return View(viewModel);
-                        }
-                    }
-
-                    #endregion --Check if duplicate CheckNo
-
                     #region --CV Details Entry
 
                     var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
@@ -683,47 +643,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --CV Details Entry
 
-                    #region -- Partial payment of RR's
-
-                    if (viewModel.Amount != null)
-                    {
-                        var receivingReport = new FilprideReceivingReport();
-                        for (int i = 0; i < viewModel.RRSeries.Length; i++)
-                        {
-                            var rrValue = viewModel.RRSeries[i];
-                            receivingReport = await _dbContext.FilprideReceivingReports
-                                        .FirstOrDefaultAsync(p => p.Company == companyClaims && p.ReceivingReportNo == rrValue);
-
-                            if (i < existingHeaderModel.Amount.Length)
-                            {
-                                var amount = Math.Round(viewModel.Amount[i] - existingHeaderModel.Amount[i], 4);
-                                receivingReport.AmountPaid += amount;
-                            }
-                            else
-                            {
-                                receivingReport.AmountPaid += viewModel.Amount[i];
-                            }
-
-                            if (receivingReport.Amount <= receivingReport.AmountPaid)
-                            {
-                                receivingReport.IsPaid = true;
-                                receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
-                            }
-                            else
-                            {
-                                receivingReport.IsPaid = false;
-                                receivingReport.PaidDate = DateTime.MaxValue;
-                            }
-                        }
-                    }
-
-                    #endregion -- Partial payment of RR's
-
                     #region --Saving the default entries
 
-                    existingHeaderModel.CheckVoucherHeaderNo = viewModel.CVNo;
                     existingHeaderModel.Date = viewModel.TransactionDate;
-                    existingHeaderModel.RRNo = viewModel.RRSeries;
                     existingHeaderModel.PONo = viewModel.POSeries;
                     existingHeaderModel.SupplierId = viewModel.SupplierId;
                     existingHeaderModel.Particulars = viewModel.Particulars;
@@ -738,6 +660,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     #endregion --Saving the default entries
+
+                    #region -- Partial payment of RR's
+
+                    var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                        .Where(cv => cv.CheckVoucherId == existingHeaderModel.CheckVoucherHeaderId && cv.DocumentType == "RR")
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var item in getCheckVoucherTradePayment)
+                    {
+                        var recevingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+
+                        recevingReport.AmountPaid -= item.AmountPaid;
+                    }
+
+                    _dbContext.RemoveRange(getCheckVoucherTradePayment);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    var cvTradePaymentModel = new List<FilprideCVTradePayment>();
+                    foreach (var item in viewModel.RRs)
+                    {
+                        var getReceivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.Id, cancellationToken);
+                        getReceivingReport.AmountPaid += item.Amount;
+
+                        cvTradePaymentModel.Add(
+                            new FilprideCVTradePayment
+                            {
+                                DocumentId = getReceivingReport.ReceivingReportId,
+                                DocumentType = "RR",
+                                CheckVoucherId = existingHeaderModel.CheckVoucherHeaderId,
+                                AmountPaid = item.Amount
+                            });
+                    }
+
+                    await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    #endregion -- Partial payment of RR's
 
                     #region -- Uploading file --
 
@@ -764,6 +723,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    viewModel.COA = await _dbContext.FilprideChartOfAccounts
+                        .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
+                        .Select(s => new SelectListItem
+                        {
+                            Value = s.AccountNumber,
+                            Text = s.AccountNumber + " " + s.AccountName
+                        })
+                        .ToListAsync(cancellationToken);
+
+                    viewModel.PONo = await _dbContext.FilpridePurchaseOrders
+                        .Where(p => !p.IsSubPo)
+                        .OrderBy(s => s.PurchaseOrderNo)
+                        .Select(s => new SelectListItem
+                        {
+                            Value = s.PurchaseOrderNo,
+                            Text = s.PurchaseOrderNo
+                        })
+                        .ToListAsync(cancellationToken);
+
+                    viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
+                        .Where(b => b.Company == companyClaims)
+                        .Select(ba => new SelectListItem
+                        {
+                            Value = ba.BankAccountId.ToString(),
+                            Text = ba.AccountNo + " " + ba.AccountName
+                        })
+                        .ToListAsync();
+
+                    viewModel.Suppliers =
+                        await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -865,26 +855,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         modelHeader.PostedBy = _userManager.GetUserName(this.User);
                         modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         modelHeader.Status = nameof(Status.Posted);
-
-                        #region -- Partial payment of RR's
-
-                        var receivingReport = new FilprideReceivingReport();
-                        for (int i = 0; i < modelHeader.RRNo.Length; i++)
-                        {
-                            var rrValue = modelHeader.RRNo[i];
-                            receivingReport = await _dbContext.FilprideReceivingReports
-                                        .FirstOrDefaultAsync(p => p.Company == modelHeader.Company && p.ReceivingReportNo == rrValue);
-
-                            receivingReport.AmountPaid += modelHeader.Amount[i];
-
-                            if (receivingReport.Amount <= receivingReport.AmountPaid)
-                            {
-                                receivingReport.IsPaid = true;
-                                receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
-                            }
-                        }
-
-                        #endregion -- Partial payment of RR's
 
                         #region --General Ledger Book Recording(CV)--
 

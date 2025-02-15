@@ -26,7 +26,7 @@ namespace IBS.DataAccess.Repository.Filpride
             model.AccountType = existingCoa.AccountType;
             model.NormalBalance = existingCoa.NormalBalance;
             model.Level = existingCoa.Level + 1;
-            model.Parent = existingCoa.AccountNumber;
+            model.ParentAccountId = existingCoa.AccountId;
             model.AccountNumber = await GenerateNumberAsync(thirdLevel, cancellationToken);
 
             return model;
@@ -49,7 +49,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
-                .Where(c => c.Parent == parentAcc)
+                //.Where(c => c.Parent == parentAcc)
                 .Select(c => new SelectListItem
                 {
                     Value = c.AccountNumber,
@@ -63,14 +63,13 @@ namespace IBS.DataAccess.Repository.Filpride
             var query = from c in _db.FilprideChartOfAccounts
                         join gl in _db.FilprideGeneralLedgerBooks on c.AccountNumber equals gl.AccountNo into glGroup
                         from gl in glGroup.DefaultIfEmpty()
-                        group new { c, gl } by new { c.Level, c.AccountNumber, c.AccountName, c.AccountType, c.Parent } into g
+                        group new { c, gl } by new { c.Level, c.AccountNumber, c.AccountName, c.AccountType, } into g
                         select new ChartOfAccountDto
                         {
                             Level = g.Key.Level,
                             AccountNumber = g.Key.AccountNumber,
                             AccountName = g.Key.AccountName,
                             AccountType = g.Key.AccountType,
-                            Parent = g.Key.Parent,
                             Debit = g.Sum(x => x.gl.Debit),
                             Credit = g.Sum(x => x.gl.Credit),
                             Balance = g.Sum(x => x.gl.Debit) - g.Sum(x => x.gl.Credit),
@@ -124,7 +123,8 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilprideChartOfAccount? lastAccount = await _db.FilprideChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
-                .LastOrDefaultAsync(coa => coa.Parent == parent, cancellationToken);
+                //.LastOrDefaultAsync(coa => coa.Parent == parent, cancellationToken);
+                .LastOrDefaultAsync(cancellationToken);
 
             if (lastAccount != null)
             {
