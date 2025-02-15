@@ -17,6 +17,7 @@ using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -139,8 +140,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CustomerOrderSlip.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
                         s.CustomerOrderSlip.Product.ProductName.ToLower().Contains(searchValue) ||
                         s.Status.ToLower().Contains(searchValue) ||
-                        s.Remarks.ToLower().Contains(searchValue) ||
-                        s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue)
+                        s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue) ||
+                        s.CreatedBy.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -678,7 +679,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetCustomerOrderSlipList(int customerId)
         {
-            var orderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListPerCustomerNotDeliveredAsync(customerId);
+            var orderSlips = await _dbContext.FilprideCustomerOrderSlips
+                .OrderBy(cos => cos.CustomerOrderSlipId)
+                .Where(cos => ((!cos.IsDelivered &&
+                                cos.Status == nameof(CosStatus.Completed)) ||
+                               cos.Status == nameof(CosStatus.ForDR)) &&
+                              cos.BalanceQuantity > 0 &&
+                              cos.CustomerId == customerId)
+                .Select(cos => new SelectListItem
+                {
+                    Value = cos.CustomerOrderSlipId.ToString(),
+                    Text = cos.CustomerOrderSlipNo
+                })
+                .ToListAsync();
 
             return Json(orderSlips);
         }

@@ -385,6 +385,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #endregion
 
+                        await _unitOfWork.FilprideSalesInvoice.PostAsync(model, cancellationToken);
+
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();

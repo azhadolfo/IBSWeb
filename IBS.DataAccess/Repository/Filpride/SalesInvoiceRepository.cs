@@ -4,6 +4,8 @@ using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Models.Filpride.Books;
+using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 
 namespace IBS.DataAccess.Repository.Filpride
@@ -97,6 +99,50 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 throw new ArgumentException("No record found.");
             }
+        }
+
+        public async Task PostAsync(FilprideSalesInvoice salesInvoice, CancellationToken cancellationToken = default)
+        {
+            #region --Sales Book Recording
+
+            var salesBook = new FilprideSalesBook();
+
+            salesBook.TransactionDate = salesInvoice.TransactionDate;
+            salesBook.SerialNo = salesInvoice.SalesInvoiceNo;
+            salesBook.SoldTo = salesInvoice.Customer.CustomerName;
+            salesBook.TinNo = salesInvoice.Customer.CustomerTin;
+            salesBook.Address = salesInvoice.Customer.CustomerAddress;
+            salesBook.Description = salesInvoice.Product.ProductName;
+            salesBook.Amount = salesInvoice.Amount - salesInvoice.Discount;
+
+            switch (salesInvoice.Customer.VatType)
+            {
+                case SD.VatType_Vatable:
+                    salesBook.VatableSales = ComputeNetOfVat(salesBook.Amount);
+                    salesBook.VatAmount = ComputeVatAmount(salesBook.VatableSales);
+                    salesBook.NetSales = salesBook.VatableSales - salesBook.Discount;
+                    break;
+                case SD.VatType_Exempt:
+                    salesBook.VatExemptSales = salesBook.Amount;
+                    salesBook.NetSales = salesBook.VatExemptSales - salesBook.Discount;
+                    break;
+                default:
+                    salesBook.ZeroRated = salesBook.Amount;
+                    salesBook.NetSales = salesBook.ZeroRated - salesBook.Discount;
+                    break;
+            }
+
+            salesBook.Discount = salesInvoice.Discount;
+            salesBook.CreatedBy = salesInvoice.CreatedBy;
+            salesBook.CreatedDate = salesInvoice.CreatedDate;
+            salesBook.DueDate = salesInvoice.DueDate;
+            salesBook.DocumentId = salesInvoice.SalesInvoiceId;
+            salesBook.Company = salesInvoice.Company;
+
+            await _db.FilprideSalesBooks.AddAsync(salesBook, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+
+            #endregion --Sales Book Recording
         }
 
         public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
