@@ -33,14 +33,9 @@ namespace IBS.Models.Filpride.ViewModels
         [Display(Name = "PO No.")]
         public string[]? POSeries { get; set; }
 
-        public List<SelectListItem>? RR { get; set; }
-
         public int[]? RRId { get; set; }
 
-        [Display(Name = "RR No.")]
-        public string[]? RRSeries { get; set; }
-
-        public decimal[] Amount { get; set; }
+        public decimal[]? Amount { get; set; }
 
         [Required]
         [Display(Name = "Transaction Date")]
@@ -79,5 +74,14 @@ namespace IBS.Models.Filpride.ViewModels
 
         //others
         public string? CreatedBy { get; set; }
+
+        public List<ReceivingReportList> RRs { get; set; }
+    }
+
+    public class ReceivingReportList
+    {
+        public int Id { get; set; }
+
+        public decimal Amount { get; set; }
     }
 }

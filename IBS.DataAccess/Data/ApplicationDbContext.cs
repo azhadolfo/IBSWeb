@@ -164,6 +164,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideMultipleCheckVoucherPayment> FilprideMultipleCheckVoucherPayments { get; set; }
 
+        public DbSet<FilprideCVTradePayment> FilprideCVTradePayments { get; set; }
+
         #endregion
 
         #region Books
@@ -701,6 +703,28 @@ namespace IBS.DataAccess.Data
             });
 
             #endregion -- Check Voucher --
+
+            #region -- Check Voucher Trade Payment --
+
+            builder.Entity<FilprideCVTradePayment>(cv =>
+            {
+                cv.HasOne(cv => cv.RR)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.DocumentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                cv.HasOne(cv => cv.DR)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.DocumentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                cv.HasOne(cv => cv.CV)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.CheckVoucherId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher Trade Payment --
 
             #region -- Journal Voucher Header --
 
