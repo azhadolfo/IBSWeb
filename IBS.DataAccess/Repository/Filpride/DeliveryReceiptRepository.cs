@@ -196,6 +196,11 @@ namespace IBS.DataAccess.Repository.Filpride
                 var (commissionAcctNo, commissionAcctTitle) = GetCommissionAccount(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
                 var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(deliveryReceipt.PurchaseOrder.Product.ProductCode);
                 var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
+                var salesTitle = accountTitlesDto.Find(c => c.AccountNumber == salesAcctNo) ?? throw new ArgumentException($"Account title '{salesAcctNo}' not found.");
+                var cogsTitle = accountTitlesDto.Find(c => c.AccountNumber == cogsAcctNo) ?? throw new ArgumentException($"Account title '{cogsAcctNo}' not found.");
+                var freightTitle = accountTitlesDto.Find(c => c.AccountNumber == freightAcctNo) ?? throw new ArgumentException($"Account title '{freightAcctNo}' not found.");
+                var commissionTitle = accountTitlesDto.Find(c => c.AccountNumber == commissionAcctNo) ?? throw new ArgumentException($"Account title '{commissionAcctNo}' not found.");
+                var inventoryTitle = accountTitlesDto.Find(c => c.AccountNumber == salesAcctNo) ?? throw new ArgumentException($"Account title '{inventoryAcctNo}' not found.");
                 var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
                 var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account title '101020100' not found.");
                 var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
@@ -221,6 +226,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
+                        AccountId = arTradeCwt.AccountId,
                         AccountNo = arTradeCwt.AccountNumber,
                         AccountTitle = arTradeCwt.AccountName,
                         Debit = arTradeCwtAmount,
@@ -238,6 +244,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
+                        AccountId = arTradeCwv.AccountId,
                         AccountNo = arTradeCwv.AccountNumber,
                         AccountTitle = arTradeCwv.AccountName,
                         Debit = arTradeCwvAmount,
@@ -253,6 +260,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = (DateOnly)deliveryReceipt.DeliveredDate,
                     Reference = deliveryReceipt.DeliveryReceiptNo,
                     Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
+                    AccountId = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountId : arTradeTitle.AccountId,
                     AccountNo = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountNumber : arTradeTitle.AccountNumber,
                     AccountTitle = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountName : arTradeTitle.AccountName,
                     Debit = netOfEwtAmount,
@@ -268,8 +276,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = (DateOnly)deliveryReceipt.DeliveredDate,
                     Reference = deliveryReceipt.DeliveryReceiptNo,
                     Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
-                    AccountNo = salesAcctNo,
-                    AccountTitle = salesAcctTitle,
+                    AccountId = salesTitle.AccountId,
+                    AccountNo = salesTitle.AccountNumber,
+                    AccountTitle = salesTitle.AccountName,
                     Debit = 0,
                     Credit = netOfVatAmount,
                     Company = deliveryReceipt.Company,
@@ -282,6 +291,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = (DateOnly)deliveryReceipt.DeliveredDate,
                     Reference = deliveryReceipt.DeliveryReceiptNo,
                     Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
+                    AccountId = vatOutputTitle.AccountId,
                     AccountNo = vatOutputTitle.AccountNumber,
                     AccountTitle = vatOutputTitle.AccountName,
                     Debit = 0,
@@ -298,8 +308,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = (DateOnly)deliveryReceipt.DeliveredDate,
                     Reference = deliveryReceipt.DeliveryReceiptNo,
                     Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
-                    AccountNo = cogsAcctNo,
-                    AccountTitle = cogsAcctTitle,
+                    AccountId = cogsTitle.AccountId,
+                    AccountNo = cogsTitle.AccountNumber,
+                    AccountTitle = cogsTitle.AccountName,
                     Debit = cogsGrossAmount,
                     Credit = 0,
                     Company = deliveryReceipt.Company,
@@ -312,8 +323,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = (DateOnly)deliveryReceipt.DeliveredDate,
                     Reference = deliveryReceipt.DeliveryReceiptNo,
                     Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
-                    AccountNo = inventoryAcctNo,
-                    AccountTitle = inventoryAcctTitle,
+                    AccountId = inventoryTitle.AccountId,
+                    AccountNo = inventoryTitle.AccountNumber,
+                    AccountTitle = inventoryTitle.AccountName,
                     Debit = 0,
                     Credit = cogsGrossAmount,
                     Company = deliveryReceipt.Company,
@@ -330,8 +342,9 @@ namespace IBS.DataAccess.Repository.Filpride
                             Date = (DateOnly)deliveryReceipt.DeliveredDate,
                             Reference = deliveryReceipt.DeliveryReceiptNo,
                             Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
-                            AccountNo = freightAcctNo,
-                            AccountTitle = freightAcctTitle,
+                            AccountId = freightTitle.AccountId,
+                            AccountNo = freightTitle.AccountNumber,
+                            AccountTitle = freightTitle.AccountName,
                             Debit = ComputeNetOfVat(deliveryReceipt.Freight * deliveryReceipt.Quantity),
                             Credit = 0,
                             Company = deliveryReceipt.Company,
@@ -344,6 +357,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Date = (DateOnly)deliveryReceipt.DeliveredDate,
                             Reference = deliveryReceipt.DeliveryReceiptNo,
                             Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for Freight",
+                            AccountId = vatInputTitle.AccountId,
                             AccountNo = vatInputTitle.AccountNumber,
                             AccountTitle = vatInputTitle.AccountName,
                             Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.Freight * deliveryReceipt.Quantity)),
@@ -361,8 +375,9 @@ namespace IBS.DataAccess.Repository.Filpride
                             Date = (DateOnly)deliveryReceipt.DeliveredDate,
                             Reference = deliveryReceipt.DeliveryReceiptNo,
                             Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for ECC",
-                            AccountNo = freightAcctNo,
-                            AccountTitle = freightAcctTitle,
+                            AccountId = freightTitle.AccountId,
+                            AccountNo = freightTitle.AccountNumber,
+                            AccountTitle = freightTitle.AccountName,
                             Debit = ComputeNetOfVat(deliveryReceipt.ECC * deliveryReceipt.Quantity),
                             Credit = 0,
                             Company = deliveryReceipt.Company,
@@ -375,6 +390,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Date = (DateOnly)deliveryReceipt.DeliveredDate,
                             Reference = deliveryReceipt.DeliveryReceiptNo,
                             Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"} for ECC",
+                            AccountId = vatInputTitle.AccountId,
                             AccountNo = vatInputTitle.AccountNumber,
                             AccountTitle = vatInputTitle.AccountName,
                             Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.ECC * deliveryReceipt.Quantity)),
@@ -396,6 +412,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
+                        AccountId = apHaulingPayableTitle.AccountId,
                         AccountNo = apHaulingPayableTitle.AccountNumber,
                         AccountTitle = apHaulingPayableTitle.AccountName,
                         Debit = 0,
@@ -411,6 +428,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}",
+                        AccountId = ewtTwoPercent.AccountId,
                         AccountNo = ewtTwoPercent.AccountNumber,
                         AccountTitle = ewtTwoPercent.AccountName,
                         Debit = 0,
@@ -434,8 +452,9 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
-                        AccountNo = commissionAcctNo,
-                        AccountTitle = commissionAcctTitle,
+                        AccountId = commissionTitle.AccountId,
+                        AccountNo = commissionTitle.AccountNumber,
+                        AccountTitle = commissionTitle.AccountName,
                         Debit = commissionGrossAmount,
                         Credit = 0,
                         Company = deliveryReceipt.Company,
@@ -448,6 +467,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = (DateOnly)deliveryReceipt.DeliveredDate,
                         Reference = deliveryReceipt.DeliveryReceiptNo,
                         Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
+                        AccountId = apCommissionPayableTitle.AccountId,
                         AccountNo = apCommissionPayableTitle.AccountNumber,
                         AccountTitle = apCommissionPayableTitle.AccountName,
                         Debit = 0,
@@ -465,6 +485,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Date = (DateOnly)deliveryReceipt.DeliveredDate,
                             Reference = deliveryReceipt.DeliveryReceiptNo,
                             Description = $"{deliveryReceipt.CustomerOrderSlip.DeliveryOption} by {deliveryReceipt.Hauler?.SupplierName ?? "Client"}.",
+                            AccountId = ewtFivePercent.AccountId,
                             AccountNo = ewtFivePercent.AccountNumber,
                             AccountTitle = ewtFivePercent.AccountName,
                             Debit = 0,
@@ -578,13 +599,10 @@ namespace IBS.DataAccess.Repository.Filpride
                 var journalBooks = new List<FilprideJournalBook>();
                 var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
                 var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(productCode);
+                var inventoryTitle = accountTitlesDto.Find(c => c.AccountNumber == inventoryAcctNo) ?? throw new ArgumentException($"Account title '{inventoryAcctNo}' not found.");
                 var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
                 var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
-                var apHaulingPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010300") ?? throw new ArgumentException("Account title '201010300' not found.");
-                var apCommissionPayableTitle = accountTitlesDto.Find(c => c.AccountNumber == "201010200") ?? throw new ArgumentException("Account title '201010200' not found.");
                 var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
-                var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
-                var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
 
                 #region In-Transit Entries
 
@@ -593,8 +611,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = DateOnly.FromDateTime(endOfPreviousMonth),
                     Reference = dr.DeliveryReceiptNo,
                     Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
-                    AccountNo = inventoryAcctNo,
-                    AccountTitle = inventoryAcctTitle,
+                    AccountId = inventoryTitle.AccountId,
+                    AccountNo = inventoryTitle.AccountNumber,
+                    AccountTitle = inventoryTitle.AccountName,
                     Debit = productCostNetOfVatAmount,
                     Credit = 0,
                     Company = dr.Company,
@@ -607,6 +626,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = DateOnly.FromDateTime(endOfPreviousMonth),
                     Reference = dr.DeliveryReceiptNo,
                     Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
+                    AccountId = vatInputTitle.AccountId,
                     AccountNo = vatInputTitle.AccountNumber,
                     AccountTitle = vatInputTitle.AccountName,
                     Debit = productCostVatAmount,
@@ -621,6 +641,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = DateOnly.FromDateTime(endOfPreviousMonth),
                     Reference = dr.DeliveryReceiptNo,
                     Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
+                    AccountId = apTradeTitle.AccountId,
                     AccountNo = apTradeTitle.AccountNumber,
                     AccountTitle = apTradeTitle.AccountName,
                     Debit = 0,
@@ -636,6 +657,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = DateOnly.FromDateTime(endOfPreviousMonth),
                     Reference = dr.DeliveryReceiptNo,
                     Description = $"In-Transit for the month of {endOfPreviousMonth:MMM yyyy}.",
+                    AccountId = ewtOnePercent.AccountId,
                     AccountNo = ewtOnePercent.AccountNumber,
                     AccountTitle = ewtOnePercent.AccountName,
                     Debit = 0,
@@ -654,8 +676,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = DateOnly.FromDateTime(startOfMonth),
                     Reference = dr.DeliveryReceiptNo,
                     Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
-                    AccountNo = inventoryAcctNo,
-                    AccountTitle = inventoryAcctTitle,
+                    AccountId = inventoryTitle.AccountId,
+                    AccountNo = inventoryTitle.AccountNumber,
+                    AccountTitle = inventoryTitle.AccountName,
                     Debit = 0,
                     Credit = productCostNetOfVatAmount,
                     Company = dr.Company,
@@ -681,6 +704,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = DateOnly.FromDateTime(startOfMonth),
                     Reference = dr.DeliveryReceiptNo,
                     Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
+                    AccountId = vatInputTitle.AccountId,
                     AccountNo = vatInputTitle.AccountNumber,
                     AccountTitle = vatInputTitle.AccountName,
                     Debit = 0,
@@ -708,6 +732,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = DateOnly.FromDateTime(startOfMonth),
                     Reference = dr.DeliveryReceiptNo,
                     Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
+                    AccountId = apTradeTitle.AccountId,
                     AccountNo = apTradeTitle.AccountNumber,
                     AccountTitle = apTradeTitle.AccountName,
                     Debit = productCostNetOfEwt,
@@ -736,6 +761,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = DateOnly.FromDateTime(startOfMonth),
                     Reference = dr.DeliveryReceiptNo,
                     Description = $"Auto reversal entries for the in-transit of {endOfPreviousMonth:MMM yyyy}.",
+                    AccountId = ewtOnePercent.AccountId,
                     AccountNo = ewtOnePercent.AccountNumber,
                     AccountTitle = ewtOnePercent.AccountName,
                     Debit = productCostEwtAmount,

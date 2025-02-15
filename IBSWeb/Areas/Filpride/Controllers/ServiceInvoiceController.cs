@@ -376,7 +376,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --General Ledger Book Recording
 
                         var ledgers = new List<FilprideGeneralLedgerBook>();
+                        var accountTitlesDto = await _unitOfWork.FilprideServiceInvoice.GetListOfAccountTitleDto(cancellationToken);
+                        var arNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020500") ?? throw new ArgumentException("Account title '101020500' not found.");
+                        var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
+                        var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
 
+                        //TODO waiting for Ma'am LSA journal entries
                         ledgers.Add(
                                 new FilprideGeneralLedgerBook
                                 {
