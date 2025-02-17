@@ -465,16 +465,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(null);
         }
 
-        public async Task<IActionResult> GetRRs(string[] poNumber, string? criteria)
+        public async Task<IActionResult> GetRRs(string[] poNumber, string? criteria, int? cvId)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var receivingReports = await _dbContext.FilprideReceivingReports
-            .Where(rr => rr.Company == companyClaims && poNumber.Contains(rr.PONo) && rr.PostedBy != null)
-            .OrderBy(rr => rr.ReceivingReportNo)
-            .ThenBy(rr => rr.ReceivingReportId)
-            .ThenBy(rr => criteria == "Transaction Date" ? rr.Date : rr.DueDate)
-            .ToListAsync();
+            var query = _dbContext.FilprideReceivingReports
+                .Where(rr => rr.Company == companyClaims
+                             && poNumber.Contains(rr.PONo)
+                             && rr.PostedBy != null);
+
+            if (cvId == 0 || cvId == null)
+            {
+                query = query.Where(rr => rr.Amount > rr.AmountPaid);
+            }
+
+            var receivingReports = await query
+                .OrderBy(rr => rr.ReceivingReportNo)
+                .ThenBy(rr => rr.ReceivingReportId)
+                .ThenBy(rr => criteria == "Transaction Date" ? rr.Date : rr.DueDate)
+                .ToListAsync();
 
             if (receivingReports != null && receivingReports.Count > 0)
             {
@@ -856,6 +865,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         modelHeader.Status = nameof(Status.Posted);
 
+                        #region -- Partial payment of RR's
+
+                        var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                            .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "RR")
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var item in getCheckVoucherTradePayment)
+                        {
+                            var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+
+                            if (receivingReport.Amount <= receivingReport.AmountPaid)
+                            {
+                                receivingReport.IsPaid = true;
+                                receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                            }
+                        }
+
+                        #endregion -- Partial payment of RR's
+
                         #region --General Ledger Book Recording(CV)--
 
                         var ledgers = new List<FilprideGeneralLedgerBook>();
@@ -958,6 +986,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
+                    #region -- Partial payment of RR's
+
+                    var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                        .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "RR")
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var item in getCheckVoucherTradePayment)
+                    {
+                        var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+
+                        if (receivingReport.Amount <= receivingReport.AmountPaid)
+                        {
+                            receivingReport.IsPaid = false;
+                            receivingReport.AmountPaid -= item.AmountPaid;
+                        }
+                    }
+
+                    #endregion -- Partial payment of RR's
+
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -981,26 +1028,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
 
-            #region -- Partial payment of RR's
-
-            var receivingReport = new FilprideReceivingReport();
-            for (int i = 0; i < model.RRNo.Length; i++)
-            {
-                var rrValue = model.RRNo[i];
-                receivingReport = await _dbContext.FilprideReceivingReports
-                            .FirstOrDefaultAsync(p => p.Company == model.Company && p.ReceivingReportNo == rrValue);
-
-                receivingReport.AmountPaid -= model.Amount[i];
-
-                if (receivingReport.IsPaid)
-                {
-                    receivingReport.IsPaid = false;
-                    receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
-                }
-            }
-
-            #endregion -- Partial payment of RR's
-
             if (model != null)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -1022,6 +1049,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo);
 
                         //re-compute amount paid in trade and payment voucher
+                        #region -- Partial payment of RR's
+
+                        var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                            .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "RR")
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var item in getCheckVoucherTradePayment)
+                        {
+                            var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+
+                            if (receivingReport.Amount <= receivingReport.AmountPaid)
+                            {
+                                receivingReport.IsPaid = false;
+                                receivingReport.AmountPaid -= item.AmountPaid;
+                            }
+                        }
+
+                        #endregion -- Partial payment of RR's
 
                         #region --Audit Trail Recording
 
