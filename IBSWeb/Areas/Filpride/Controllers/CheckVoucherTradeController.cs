@@ -465,16 +465,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(null);
         }
 
-        public async Task<IActionResult> GetRRs(string[] poNumber, string? criteria)
+        public async Task<IActionResult> GetRRs(string[] poNumber, string? criteria, int? cvId)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var receivingReports = await _dbContext.FilprideReceivingReports
-            .Where(rr => rr.Company == companyClaims && poNumber.Contains(rr.PONo) && rr.PostedBy != null)
-            .OrderBy(rr => rr.ReceivingReportNo)
-            .ThenBy(rr => rr.ReceivingReportId)
-            .ThenBy(rr => criteria == "Transaction Date" ? rr.Date : rr.DueDate)
-            .ToListAsync();
+            var query = _dbContext.FilprideReceivingReports
+                .Where(rr => rr.Company == companyClaims
+                             && poNumber.Contains(rr.PONo)
+                             && rr.PostedBy != null);
+
+            if (cvId == 0 || cvId == null)
+            {
+                query = query.Where(rr => rr.Amount > rr.AmountPaid);
+            }
+
+            var receivingReports = await query
+                .OrderBy(rr => rr.ReceivingReportNo)
+                .ThenBy(rr => rr.ReceivingReportId)
+                .ThenBy(rr => criteria == "Transaction Date" ? rr.Date : rr.DueDate)
+                .ToListAsync();
 
             if (receivingReports != null && receivingReports.Count > 0)
             {

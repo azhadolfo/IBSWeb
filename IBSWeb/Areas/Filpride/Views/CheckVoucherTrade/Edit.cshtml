@@ -419,13 +419,13 @@
             });
         });
 
-        displayRecords(@Html.Raw(Json.Serialize(Model.POSeries)), "");
+        displayRecords(@Html.Raw(Json.Serialize(Model.POSeries)), "", @Html.Raw(Json.Serialize(Model.CVId)));
 
-        function displayRecords(poNumber, criteria) {
+        function displayRecords(poNumber, criteria, cvId) {
             $.ajax({
                 url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
                 method: "GET",
-                data: { poNumber: poNumber, criteria: criteria }, // Pass PO numbers to controller
+                data: { poNumber: poNumber, criteria: criteria, cvId : cvId }, // Pass PO numbers to controller
                 traditional: true, // Ensure jQuery sends the array properly
                 success: function (data) {
                     const tbody = $('.rrAmount');
