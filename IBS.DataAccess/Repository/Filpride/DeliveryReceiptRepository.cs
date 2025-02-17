@@ -200,7 +200,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 var cogsTitle = accountTitlesDto.Find(c => c.AccountNumber == cogsAcctNo) ?? throw new ArgumentException($"Account title '{cogsAcctNo}' not found.");
                 var freightTitle = accountTitlesDto.Find(c => c.AccountNumber == freightAcctNo) ?? throw new ArgumentException($"Account title '{freightAcctNo}' not found.");
                 var commissionTitle = accountTitlesDto.Find(c => c.AccountNumber == commissionAcctNo) ?? throw new ArgumentException($"Account title '{commissionAcctNo}' not found.");
-                var inventoryTitle = accountTitlesDto.Find(c => c.AccountNumber == salesAcctNo) ?? throw new ArgumentException($"Account title '{inventoryAcctNo}' not found.");
+                var inventoryTitle = accountTitlesDto.Find(c => c.AccountNumber == inventoryAcctNo) ?? throw new ArgumentException($"Account title '{inventoryAcctNo}' not found.");
                 var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
                 var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account title '101020100' not found.");
                 var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
