@@ -481,39 +481,29 @@
             });
         }
 
-        let selectedRecords = new Set(); // Store selected records
-        let allRecordsSelected = false;  // Flag to check if "Select All" is toggled across all pages
+        let selectedRecords = []; // Store selected records
+        let allRecordsSelected = false;  // Flag to check if "Select All" is toggled
 
         function toggleSelectAll(selectAllCheckbox) {
-            const checkboxes = document.querySelectorAll('.selectCheckbox');
             const isChecked = selectAllCheckbox.checked;
+            selectedRecords = isChecked ? [] : []; // Reset selected records
 
-            checkboxes.forEach((checkbox, index) => {
-                const row = checkbox.closest('tr'); // Get the row
+            $('.selectCheckbox').each(function () {
+                const checkbox = $(this);
+                const row = checkbox.closest('tr');
+                const rrId = checkbox.val(); // Get checkbox value
 
                 if (isChecked) {
-                    checkbox.checked = true;
-                    selectedRecords.add(checkbox.value);
-
-                    if (row) {
-                        const inputField = $(row).find('.paymentAmount');
-                        const grossAmount = $(row).find('.grossAmount').text().trim();
-
-                        inputField.val(grossAmount).attr("name", `RRs[${index}].Amount`).addClass("inputAmount").show();
-                        $(checkbox).attr("name", `RRs[${index}].Id`);
-                        updateAmounts()
+                    if (!selectedRecords.includes(rrId)) {
+                        selectedRecords.push(rrId); // Add value
                     }
+                    checkbox.prop('checked', true);
                 } else {
-                    checkbox.checked = false;
-                    selectedRecords.delete(checkbox.value);
-
-                    if (row) {
-                        const inputField = $(row).find('.paymentAmount');
-                        inputField.removeAttr("name").hide().val(''); // Hide and clear input
-                        $(checkbox).removeAttr("name");
-                        updateAmounts()
-                    }
+                    selectedRecords = []; // Reset when deselecting all
+                    checkbox.prop('checked', false);
                 }
+
+                handleCheckboxChange(checkbox);
             });
 
             allRecordsSelected = isChecked;
@@ -541,18 +531,37 @@
             const row = checkbox.closest('tr');
             const inputField = row.find('.paymentAmount');
             const grossAmount = row.find('.grossAmount').text().trim();
+            const rrId = checkbox.val(); // Get checkbox value
 
             if (checkbox.is(':checked')) {
-                selectedRecords.add(checkbox.val());
-                inputField.val(grossAmount).attr("name", `RRs[${selectedRecords.size - 1}].Amount`).addClass("inputAmount").show();
-                row.find('.selectCheckbox').attr("name", `RRs[${selectedRecords.size - 1}].Id`);
+                if (!selectedRecords.includes(rrId)) {
+                    selectedRecords.push(rrId); // Add value
+                }
             } else {
-                selectedRecords.delete(checkbox.val());
-                inputField.removeAttr("name").hide().val('');
-                row.find('.selectCheckbox').removeAttr("name");
+                selectedRecords = selectedRecords.filter(id => id !== rrId); // Remove value
             }
+
+            // Recalculate and update name attributes
+            selectedRecords.forEach((id, index) => {
+                $(`.selectCheckbox[value="${id}"]`).attr("name", `RRs[${index}].Id`);
+                $(`.selectCheckbox[value="${id}"]`).closest('tr').find('.paymentAmount')
+                    .attr("name", `RRs[${index}].Amount`);
+            });
+
+            // Handle UI visibility for the input field
+            if (checkbox.is(':checked')) {
+                inputField.val(grossAmount).addClass("inputAmount").show();
+            } else {
+                inputField.removeAttr("name").hide().val('');
+            }
+
             updateAmounts();
         }
+
+        // "Select All" using event delegation
+        $(document).on('change', '#selectAllCheckbox', function () {
+            toggleSelectAll(this);
+        });
 
         $(document).on('input', '.inputAmount', function () {
             updateAmounts();
