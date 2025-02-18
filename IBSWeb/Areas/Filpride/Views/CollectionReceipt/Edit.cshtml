@@ -180,7 +180,14 @@ Balance:        <span id="balance"></span>
                     <button type="submit" class="btn btn-primary form-control">Save</button>
                 </div>
                 <div class="col-6 col-md-3">
-                    <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    @if (Model.SVNo != null)
+                    {
+                        <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="ServiceInvoiceIndex" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    }
+                    else
+                    {
+                        <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    }
                 </div>
             </div>
         </form>

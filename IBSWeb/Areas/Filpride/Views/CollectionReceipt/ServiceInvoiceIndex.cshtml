@@ -1,4 +1,4 @@
-﻿@model IEnumerable<FilprideCollectionReceipt>
+@model IEnumerable<FilprideCollectionReceipt>
 @using IBS.Utility.Enums
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
@@ -55,15 +55,11 @@
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">Collection Receipt for Sales Invoice</h2>
+        <h2 class="text-white m-0">Collection Receipt for Service Invoice</h2>
         <div class="d-flex gap-2">
-            <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="SingleCollectionCreateForSales"
+            <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="CreateForService"
                class="btn btn-light d-flex align-items-center gap-2">
-                <i class="bi bi-plus-circle"></i> Single Invoice
-            </a>
-            <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="MultipleCollectionCreateForSales"
-               class="btn btn-light d-flex align-items-center gap-2">
-                <i class="bi bi-plus-circle"></i> Multiple Invoice
+                <i class="bi bi-plus-circle"></i> Create
             </a>
         </div>
     </div>
@@ -180,9 +176,9 @@
                         "render": function (data, type, row) {
                             var date = new Date(data);
                             return date.toLocaleDateString('en-US', {
-                                year: 'numeric', 
+                                year: 'numeric',
                                 month: 'short',
-                                day: '2-digit' 
+                                day: '2-digit'
                             });
                         }
                     },
@@ -213,8 +209,8 @@
                         "data": "status",
                         "render": function(data, type, row) {
                             var statusClass = row.status == "@nameof(Status.Posted)" ? "bg-info" :
-                                              row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
-                                              row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
+                                row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
+                                    row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
 
                             return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                         }
@@ -223,7 +219,7 @@
                         "data": null,
                         "orderable": false,
                         "render": function (data, type, row) {
-                                let dropdownHtml = `
+                            let dropdownHtml = `
                                     <div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
                                         <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                                         type="button" 
@@ -233,40 +229,40 @@
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow-sm">`;
 
-                                if (row.postedBy == null) {
-                                    if (row.multipleSIId != null) {
-                                        dropdownHtml += `
+                            if (row.postedBy == null) {
+                                if (row.multipleSIId != null) {
+                                    dropdownHtml += `
                                         <li><a href="@Url.Action("MultipleCollectionEdit", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
                                         <li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
-                                    } else {
-                                        dropdownHtml += `
+                                } else {
+                                    dropdownHtml += `
                                         <li><a href="@Url.Action("Edit", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
                                         <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
-                                    }
-                                    dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.collectionReceiptId})">Cancel</a></li>`;
-                                } else {
-                                    if (row.multipleSIId != null) {
-                                        dropdownHtml += `
+                                }
+                                dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.collectionReceiptId})">Cancel</a></li>`;
+                            } else {
+                                if (row.multipleSIId != null) {
+                                    dropdownHtml += `
                                         <li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
 
-                                    } else {
-                                        dropdownHtml += `
+                                } else {
+                                    dropdownHtml += `
                                         <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
-                                    }
-                                    dropdownHtml += `<li><a class="dropdown-item" onclick="confirmVoid(${row.collectionReceiptId})">Void</a></li>`;
                                 }
+                                dropdownHtml += `<li><a class="dropdown-item" onclick="confirmVoid(${row.collectionReceiptId})">Void</a></li>`;
+                            }
 
-                                dropdownHtml += `</ul></div>`;
-                                return dropdownHtml;
+                            dropdownHtml += `</ul></div>`;
+                            return dropdownHtml;
                         }
                     }
 
-                        ],
+                ],
 
-                            "order": [[1, "asc"]],
-                            "pageLength": 10 // Default number of rows per page
-                        });
-                    });
+                "order": [[1, "asc"]],
+                "pageLength": 10 // Default number of rows per page
+            });
+        });
 
     </script>
 }
