@@ -314,6 +314,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             IsVatable = accountEntry.VatAmount > 0,
                             EwtPercent = accountEntry.TaxPercentage,
                             IsUserSelected = true,
+                            BankId = accountEntry.BankMasterFileId,
                         });
 
                         if (accountEntry.VatAmount > 0)
@@ -767,6 +768,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Amount = details.IsVatable ? Math.Round(details.Debit * 1.12m, 2) : Math.Round(details.Debit, 2),
                     Vatable = details.IsVatable,
                     TaxPercentage = details.EwtPercent,
+                    BankMasterFileId = details.BankId,
                 });
             }
 
@@ -882,6 +884,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             IsVatable = accountEntry.Vatable,
                             EwtPercent = accountEntry.TaxPercentage,
                             IsUserSelected = true,
+                            BankId = accountEntry.BankMasterFileId
                         });
 
                         if (accountEntry.Vatable)
@@ -1610,6 +1613,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
             return Json(null);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetBankAccounts()
+        {
+            // Replace this with your actual repository/service call
+            var bankAccounts = await _unitOfWork.FilprideBankAccount.GetAllAsync();
+
+            return Json(bankAccounts.Select(b => new {
+                id = b.BankAccountId,
+                accountName = b.AccountName,
+                accountNumber = b.AccountNo
+            }));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetBankAccountById(int bankId)
+        {
+            var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == bankId);
+            return Json(new
+            {
+                id = bankAccount.BankAccountId,
+                accountName = bankAccount.AccountName,
+                accountNumber = bankAccount.AccountNo
+            });
         }
     }
 }
