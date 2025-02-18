@@ -4451,9 +4451,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // calculate values, put in variables to be displayed per cell
                     var volume = pr.QuantityReceived;
-                    var costAmount = volume * (pr.PurchaseOrder?.Price ?? 0m); // purchase total
+                    var costAmount = pr.Amount; // purchase total
                     var cosAmount = (volume * (pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m)); // sales total
-                    var costPerLiter = (pr.PurchaseOrder?.Price ?? 0m); // purchase per liter
+                    var costPerLiter = costAmount / volume; // purchase per liter
                     var netPurchases = costAmount / 1.12m; // purchase total net
                     var vatAmount = costAmount * 0.12m; // purchase total vat
                     var whtAmount = netPurchases * 0.01m; // purchase wht

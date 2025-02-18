@@ -103,11 +103,11 @@
         @foreach (var rr in Model)
         {
             var volume = rr.QuantityReceived;
-            var costPerLiter = (rr.PurchaseOrder?.Price ?? 0m);
+            var costAmountGross = rr.Amount;
+            var costPerLiter = costAmountGross / volume;
             var cosPricePerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m);
             var freightChargePerLiter = (rr.DeliveryReceipt?.Freight ?? 0m);
             var commissionPerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m);
-            var costAmountGross = volume * costPerLiter;
             var costAmountNet = costAmountGross / 1.12m;
             var cosAmountGross = volume * cosPricePerLiter;
             var gmPerLiter = (cosPricePerLiter - costPerLiter);
