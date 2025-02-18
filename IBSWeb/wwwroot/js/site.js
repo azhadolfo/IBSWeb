@@ -104,15 +104,46 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".dropend .dropdown-toggle").forEach(function (btn) {
         btn.addEventListener("click", function (e) {
-            e.stopPropagation(); // Prevent the event from bubbling up and closing dropdown immediately
+            e.stopPropagation(); // Prevents immediate closing
 
             let dropend = this.closest(".dropend");
 
-            // Check if the parent .dropend has the 'show' class
-            if (dropend.classList.contains("show")) {
-                dropend.classList.remove("show"); // Close the dropdown if it's already open
+            // Close all other open dropdowns
+            document.querySelectorAll(".dropend.show").forEach(function (other) {
+                if (other !== dropend) {
+                    other.classList.remove("show");
+                    let menu = other.querySelector(".dropdown-menu");
+                    if (menu) {
+                        menu.classList.remove("show");
+                    }
+                }
+            });
+
+            // Toggle clicked dropdown
+            let dropdownMenu = dropend.querySelector(".dropdown-menu");
+            let isOpen = dropend.classList.contains("show");
+
+            if (!isOpen) {
+                dropend.classList.add("show");
+                if (dropdownMenu) {
+                    dropdownMenu.classList.add("show");
+                }
             } else {
-                dropend.classList.add("show"); // Open the dropdown if it's closed
+                dropend.classList.remove("show");
+                if (dropdownMenu) {
+                    dropdownMenu.classList.remove("show");
+                }
+            }
+        });
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener("click", function () {
+        document.querySelectorAll(".dropend.show").forEach(function (dropend) {
+            dropend.classList.remove("show");
+            let menu = dropend.querySelector(".dropdown-menu");
+            if (menu) {
+                menu.classList.remove("show");
             }
         });
     });
