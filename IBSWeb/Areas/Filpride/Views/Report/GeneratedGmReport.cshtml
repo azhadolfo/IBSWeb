@@ -108,9 +108,9 @@
         @foreach (var rr in Model)
         {
             var volume = rr.QuantityReceived;
-            var purchasePerLiter = (rr.PurchaseOrder?.Price ?? 0m);
+            var costAmountGross = rr.Amount;
+            var purchasePerLiter = costAmountGross / volume;
             var salePricePerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m);
-            var costAmountGross = volume * purchasePerLiter;
             var costAmountNet = costAmountGross / 1.12m;
             var costVatAmount = costAmountNet * 0.12m;
             var whtAmount = costAmountNet * 0.01m;

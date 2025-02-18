@@ -18,5 +18,7 @@ namespace IBS.Models.Filpride.ViewModels
         public decimal VatAmount { get; set; }
 
         public decimal TaxAmount { get; set; }
+
+        public int? BankMasterFileId { get; set; }
     }
 }
