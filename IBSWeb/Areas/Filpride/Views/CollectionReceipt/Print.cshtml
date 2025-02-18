@@ -487,7 +487,14 @@
     }
 
     <div class="col-6 col-md-3">
-        <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+        @if (Model.SVNo != null)
+        {
+            <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="ServiceInvoiceIndex" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+        }
+        else
+        {
+            <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+        }
     </div>
 </div>
 

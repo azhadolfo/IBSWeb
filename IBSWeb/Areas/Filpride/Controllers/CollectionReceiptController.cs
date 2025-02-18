@@ -61,6 +61,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
+        public async Task<IActionResult> ServiceInvoiceIndex(CancellationToken cancellationToken)
+        {
+            return View();
+        }
+
         [HttpPost]
         public async Task<IActionResult> GetCollectionReceipts([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
