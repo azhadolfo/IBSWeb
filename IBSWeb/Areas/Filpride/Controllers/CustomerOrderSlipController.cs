@@ -712,27 +712,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                     }
 
-                    await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, grossMargin, cancellationToken);
-                }
+                    await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, grossMargin, isGrossMarginChanged, cancellationToken);
 
-                if (isGrossMarginChanged)
-                {
-                    var userCreated = await _dbContext.ApplicationUsers
-                        .FirstOrDefaultAsync(a => a.UserName == existingRecord.CreatedBy, cancellationToken);
-
-                    var notification = $"The gross margin was manually adjusted by {existingRecord.FirstApprovedBy.ToUpper()} (OM). " +
-                                       $"The price was adjusted from {oldPrice:N4} to {existingRecord.DeliveredPrice:N4}.";
-
-                    await _unitOfWork.Notifications.AddNotificationAsync(userCreated.Id, notification);
-
-                    var hubConnections = await _dbContext.HubConnections
-                        .Where(h => h.UserName == userCreated.UserName)
-                        .ToListAsync(cancellationToken);
-
-                    foreach (var hubConnection in hubConnections)
+                    if (isGrossMarginChanged)
                     {
-                        await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                            .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                        var userCreated = await _dbContext.ApplicationUsers
+                            .FirstOrDefaultAsync(a => a.UserName == existingRecord.CreatedBy, cancellationToken);
+
+                        var notification = $"The gross margin was manually adjusted by {existingRecord.FirstApprovedBy.ToUpper()} (OM). " +
+                                           $"The price was adjusted from {oldPrice:N4} to {existingRecord.DeliveredPrice:N4}.";
+
+                        await _unitOfWork.Notifications.AddNotificationAsync(userCreated.Id, notification);
+
+                        var hubConnections = await _dbContext.HubConnections
+                            .Where(h => h.UserName == userCreated.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var hubConnection in hubConnections)
+                        {
+                            await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                        }
                     }
                 }
 
