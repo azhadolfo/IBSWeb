@@ -160,11 +160,14 @@ namespace IBS.DataAccess.Repository.Filpride
             return test;
         }
 
-        public async Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, decimal grossMargin, CancellationToken cancellationToken = default)
+        public async Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, decimal grossMargin, bool isGrossMarginChanged, CancellationToken cancellationToken = default)
         {
             customerOrderSlip.ExpirationDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
 
-            customerOrderSlip.DeliveredPrice = UpdateCosPrice(grossMargin, customerOrderSlip);
+            if (isGrossMarginChanged)
+            {
+                customerOrderSlip.DeliveredPrice = UpdateCosPrice(grossMargin, customerOrderSlip);
+            }
 
             customerOrderSlip.TotalAmount = customerOrderSlip.Quantity * customerOrderSlip.DeliveredPrice;
 
@@ -202,13 +205,9 @@ namespace IBS.DataAccess.Repository.Filpride
             var netOfVatFreightCharge = existingRecord.Freight / 1.12m;
             var existingGrossMargin = netOfVatCosPrice - netOfVatProductCost - netOfVatFreightCharge - existingRecord.CommissionRate;
 
-            if (Math.Round((decimal)existingGrossMargin, 4) != grossMargin)
-            {
-                decimal newNetOfVatCosPrice = grossMargin + (decimal)(existingRecord.CommissionRate + netOfVatFreightCharge + netOfVatProductCost);
-                return Math.Round((ComputeVatAmount(newNetOfVatCosPrice) + newNetOfVatCosPrice), 4);
-            }
-
-            return existingRecord.DeliveredPrice;
+            // Calculate new net cost price using the provided gross margin
+            decimal newNetOfVatCosPrice = grossMargin + (decimal)(existingRecord.CommissionRate + netOfVatFreightCharge + netOfVatProductCost);
+            return Math.Round(newNetOfVatCosPrice * 1.12m, 4);
         }
 
         public async Task<decimal> GetCustomerCreditBalance(int customerId, CancellationToken cancellationToken = default)
