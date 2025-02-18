@@ -82,8 +82,8 @@
                             {
                                 @if (!User.IsInRole("Cashier"))
                                 {
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             Purchases
                                         </a>
                                         <ul class="dropdown-menu">
@@ -104,8 +104,8 @@
                                             </li>
                                         </ul>
                                     </li>
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             Sales
                                         </a>
                                         <ul class="dropdown-menu">
@@ -122,8 +122,8 @@
                                             </li>
                                         </ul>
                                     </li>
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             Inventory
                                         </a>
                                         <ul class="dropdown-menu">
@@ -140,8 +140,8 @@
                                             </li>
                                         </ul>
                                     </li>
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             General Ledger
                                         </a>
                                         <ul class="dropdown-menu">
@@ -160,8 +160,8 @@
                                     </li>
                                     @if (User.IsInRole("Admin"))
                                     {
-                                        <li class="nav-item dropdown-layout">
-                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                        <li class="nav-item dropdown">
+                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                 Master File
                                             </a>
                                             <ul class="dropdown-menu">
@@ -182,8 +182,8 @@
                                 }
                                 else
                                 {
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link" asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link" asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             Customer Order Slip
                                         </a>
                                     </li>
@@ -197,8 +197,8 @@
                                 {
                                     if(selectedCompany == "Mobility")
                                     {
-                                        <li class="nav-item dropdown-layout">
-                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">Inventory</a>
+                                        <li class="nav-item dropdown">
+                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Inventory</a>
                                             <ul class="dropdown-menu">
                                                 <li class="nav-item">
                                                     <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Inventory" asp-action="BeginningInventory">Beginning Inventory</a>
@@ -215,8 +215,8 @@
                                         </li>
                                     }
                                     
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">A. Receivable</a>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">A. Receivable</a>
                                         <ul class="dropdown-menu">
                                             <li class="nav-item">
                                                 <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index">Customer Order Slip</a>
@@ -297,8 +297,8 @@
                                             
                                         </ul>
                                     </li>
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">A. Payable</a>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">A. Payable</a>
                                         <ul class="dropdown-menu">
                                             <li class="nav-item">
                                                 <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="AuthorityToLoad" asp-action="Index">Authority To Load</a>
@@ -373,16 +373,16 @@
                                     </li>
                                     
                                     @* Waiting for the approval of showing this to the user *@
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">Treasury</a>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Treasury</a>
                                         <ul class="dropdown-menu">
                                             <li class="nav-item">
                                                 <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Disbursement" asp-action="Index">Disbursement</a>
                                             </li>
                                         </ul>
                                     </li>
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">Report</a>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Report</a>
                                         <ul class="dropdown-menu">
                                             
                                             <li class="nav-item">
@@ -486,8 +486,8 @@
                                 
                                 if(selectedCompany == "Bienes")
                                 {
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">A. Receivable</a>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">A. Receivable</a>
                                         <ul class="dropdown-menu">
                                             <li class="nav-item dropend">
                                                 <a class="nav-link dropdown-toggle text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index">
@@ -530,8 +530,8 @@
                                     </li>
                                     
                                     
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">A. Payable</a>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">A. Payable</a>
                                         <ul class="dropdown-menu">
                                             <li class="nav-item dropend">
                                                 <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -566,8 +566,8 @@
                                         </ul>
                                     </li>
                                     
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">Report</a>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Report</a>
                                         <ul class="dropdown-menu">
                                             
                                             <li class="nav-item">
@@ -611,8 +611,8 @@
                                 
                                 @if (User.IsInRole("Admin"))
                                 {
-                                    <li class="nav-item dropdown-layout">
-                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">Master File</a>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Master File</a>
                                         <ul class="dropdown-menu">
                                             <li class="nav-item">
                                                 <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Customer" asp-action="Index">Customer</a>
@@ -640,8 +640,8 @@
                             
                             @if (User.IsInRole("Admin") && selectedCompany == "Filpride")
                             {
-                                <li class="nav-item dropdown-layout">
-                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">Export to AAS</a>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Export to AAS</a>
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" asp-area="Filpride" asp-controller="SalesInvoice" asp-action="Index" asp-route-view="@nameof(DynamicView.SalesInvoice)">Sales Invoice</a></li>
                                         <li><a class="dropdown-item" asp-area="Filpride" asp-controller="ServiceInvoice" asp-action="Index" asp-route-view="@nameof(DynamicView.ServiceInvoice)">Service Invoice</a></li>
@@ -659,8 +659,8 @@
                                         <li><a class="dropdown-item" asp-area="Filpride" asp-controller="BankAccount" asp-action="Index" asp-route-view="@nameof(DynamicView.BankAccount)">Bank Account Master File</a></li>
                                     </ul>
                                 </li>
-                                <li class="nav-item dropdown-layout">
-                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown-layout" aria-expanded="false">Admin Master File</a>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Admin Master File</a>
                                     <ul class="dropdown-menu">
                                         <li class="nav-item">
                                             <a class="dropdown-item text-dark" asp-area="User" asp-controller="Company" asp-action="Index">Company</a>
