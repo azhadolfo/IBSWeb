@@ -99,3 +99,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+//navigation bar dropend implementation
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".dropend .dropdown-toggle").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+            e.stopPropagation(); // Prevent the event from bubbling up and closing dropdown immediately
+
+            let dropend = this.closest(".dropend");
+
+            // Check if the parent .dropend has the 'show' class
+            if (dropend.classList.contains("show")) {
+                dropend.classList.remove("show"); // Close the dropdown if it's already open
+            } else {
+                dropend.classList.add("show"); // Open the dropdown if it's closed
+            }
+        });
+    });
+});
+

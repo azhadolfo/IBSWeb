@@ -481,27 +481,31 @@ bg-success {
     color: green;
 }
 
-/* For navbar dropdown */
+/* Start code for navbar dropdown */
 
-.dropdown-layout .dropdown-menu {
-    display: none;
+/*.dropdown-layout .dropdown-menu {*/
+/*    display: none;*/
+/*}*/
+
+/*.dropdown-layout:hover > .dropdown-menu, .dropend:hover > .dropdown-menu {*/
+/*    display: block;*/
+/*}*/
+
+/*@media screen and (min-width:992px) {*/
+/*    .dropend:hover > .dropdown-menu {*/
+/*        position: absolute;*/
+/*        top: 0;*/
+/*        left: 100%;*/
+/*    }*/
+
+/*    .dropend .dropdown-toggle {*/
+/*        margin-left: .5em;*/
+/*    }*/
+/*}*/
+.dropend .dropdown-toggle {
+    margin-left: .5em;
 }
-
-.dropdown-layout:hover > .dropdown-menu, .dropend:hover > .dropdown-menu {
-    display: block;
-}
-
-@media screen and (min-width:992px) {
-    .dropend:hover > .dropdown-menu {
-        position: absolute;
-        top: 0;
-        left: 100%;
-    }
-
-    .dropend .dropdown-toggle {
-        margin-left: .5em;
-    }
-}
+/* End code for navbar dropdown */
 
 input[readonly] {
     background-color: #f5f5f5; /* Light grey background */
