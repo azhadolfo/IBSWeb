@@ -65,14 +65,14 @@
                     <tr class="text-start">
                         <th>DR#</th>
                         <th>Manual Dr#</th>
-                        <th>Date</th>
+                        <th>Delivery Date</th>
+                        <th>Delivered Date</th>
                         <th>COS#</th>
                         <th>PO#</th>
                         <th>Depot</th>
                         <th>Customer</th>
                         <th>Product</th>
                         <th>Quantity</th>
-                        <th>Total Amount</th>
                         <th>Created By</th>
                         <th>Status</th>
                         <th class="text-center" style="width: 100px;">Actions</th>
@@ -131,6 +131,17 @@
                         day: '2-digit'
                     });
                 }},
+                { 
+                    "data": "deliveredDate", 
+                    "render": function (data) {
+                        if (!data) return '';
+                        var date = new Date(data);
+                        return date.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: '2-digit'
+                        });
+                }},
                 { "data": "customerOrderSlip.customerOrderSlipNo" },
                 { "data": "purchaseOrder.purchaseOrderNo" },
                 { "data": "customerOrderSlip.pickUpPoint.depot" },
@@ -138,13 +149,6 @@
                 { "data": "customerOrderSlip.product.productName" },
                 {
                     "data": "quantity",
-                    "render": function (data, type, row) {
-                        var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
-                        return `<span class="d-block fw-medium">${amount}</span>`;
-                    }
-                },
-                {
-                    "data": "totalAmount",
                     "render": function (data, type, row) {
                         var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
                         return `<span class="d-block fw-medium">${amount}</span>`;
