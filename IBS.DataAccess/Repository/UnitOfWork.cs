@@ -54,6 +54,7 @@ namespace IBS.DataAccess.Repository
         public IAuthorityToLoadRepository FilprideAuthorityToLoad { get; private set; }
         public Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; private set; }
         public IAuditTrailRepository FilprideAuditTrail { get; private set; }
+        public IEmployeeRepository FilprideEmployee { get; private set; }
 
         #endregion
 
@@ -135,6 +136,7 @@ namespace IBS.DataAccess.Repository
             FilprideAuthorityToLoad = new AuthorityToLoadRepository(_db);
             FilprideChartOfAccount = new Filpride.ChartOfAccountRepository(_db);
             FilprideAuditTrail = new AuditTrailRepository(_db);
+            FilprideEmployee = new EmployeeRepository(_db);
 
             #endregion
 

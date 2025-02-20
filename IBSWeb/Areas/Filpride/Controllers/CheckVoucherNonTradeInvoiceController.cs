@@ -315,6 +315,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             EwtPercent = accountEntry.TaxPercentage,
                             IsUserSelected = true,
                             BankId = accountEntry.BankMasterFileId,
+                            CompanyId = accountEntry.CompanyMasterFileId,
+                            EmployeeId = accountEntry.EmployeeMasterFileId,
                         });
 
                         if (accountEntry.VatAmount > 0)
@@ -769,6 +771,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Vatable = details.IsVatable,
                     TaxPercentage = details.EwtPercent,
                     BankMasterFileId = details.BankId,
+                    CompanyMasterFileId = details.CompanyId,
+                    EmployeeMasterFileId = details.EmployeeId,
                 });
             }
 
@@ -884,7 +888,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             IsVatable = accountEntry.Vatable,
                             EwtPercent = accountEntry.TaxPercentage,
                             IsUserSelected = true,
-                            BankId = accountEntry.BankMasterFileId
+                            BankId = accountEntry.BankMasterFileId,
+                            CompanyId = accountEntry.CompanyMasterFileId,
+                            EmployeeId = accountEntry.EmployeeMasterFileId,
                         });
 
                         if (accountEntry.Vatable)
@@ -1637,6 +1643,54 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 id = bankAccount.BankAccountId,
                 accountName = bankAccount.AccountName,
                 accountNumber = bankAccount.AccountNo
+            });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCompanies()
+        {
+            var companies = await _unitOfWork.Company.GetAllAsync();
+
+            return Json(companies.OrderBy(c => c.CompanyCode).Select(c => new {
+                id = c.CompanyId,
+                accountName = c.CompanyName,
+                accountNumber = c.CompanyCode
+            }));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCompanyById(int companyId)
+        {
+            var company = await _unitOfWork.Company.GetAsync(c => c.CompanyId == companyId);
+            return Json(new
+            {
+                id = company.CompanyId,
+                accountName = company.CompanyName,
+                accountNumber = company.CompanyCode
+            });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetEmployees()
+        {
+            var employees = await _unitOfWork.FilprideEmployee.GetAllAsync();
+
+            return Json(employees.OrderBy(e => e.EmployeeNumber).Select(e => new {
+                id = e.EmployeeId,
+                accountName = $"{e.FirstName} {e.LastName}",
+                accountNumber = e.EmployeeNumber
+            }));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetEmployeeById(int employeeId)
+        {
+            var employee = await _unitOfWork.FilprideEmployee.GetAsync(e => e.EmployeeId == employeeId);
+            return Json(new
+            {
+                id = employee.EmployeeId,
+                accountName = $"{employee.FirstName} {employee.LastName}",
+                accountNumber = employee.EmployeeNumber
             });
         }
     }

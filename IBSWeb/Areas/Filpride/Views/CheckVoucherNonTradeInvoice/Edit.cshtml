@@ -99,6 +99,8 @@
                                                 }
                                             </select>
                                             <input type="hidden" name="AccountingEntries[@i].BankMasterFileId" value="@Model.AccountingEntries[i].BankMasterFileId" class="bank-master-file-id" />
+                                            <input type="hidden" name="AccountingEntries[@i].CompanyMasterFileId" value="@Model.AccountingEntries[i].CompanyMasterFileId" class="company-master-file-id" />
+                                            <input type="hidden" name="AccountingEntries[@i].EmployeeMasterFileId" value="@Model.AccountingEntries[i].EmployeeMasterFileId" class="employee-master-file-id" />
                                         </td>
                                         <td>
                                             <input type="number" name="AccountingEntries[@i].Amount" value="@Model.AccountingEntries[i].Amount" class="form-control form-control-sm text-end amount" />
@@ -419,6 +421,8 @@
                     ${document.querySelector(".chart-of-accounts").innerHTML}
                 </select>
                 <input type="hidden" name="AccountingEntries[${rowCount}].BankMasterFileId" class="bank-master-file-id" />
+                <input type="hidden" name="AccountingEntries[${rowCount}].CompanyMasterFileId" class="company-master-file-id" />
+                <input type="hidden" name="AccountingEntries[${rowCount}].EmployeeMasterFileId" class="employee-master-file-id" />
             </td>
             <td class="px-2">
                 <input type="number" name="AccountingEntries[${rowCount}].Amount" class="form-control form-control-sm text-end amount" value="0" />
@@ -605,121 +609,34 @@
         
     </script>
 
+    <script src="~/js/masterFileSelector.js"></script>
     <script>
+        // Initialize the master file selector with URLs
         $(document).ready(function() {
-            // Event handler for account selection
-            $(document).on('change', '.chart-of-accounts', function() {
-                const selectedAccount = $(this).val();
-                const row = $(this).closest('tr');
-
-                // Check if the selected account is Cash in Bank
-                if (selectedAccount.startsWith('10101') || selectedAccount === '101010100 Cash in Bank') {
-                    // Show bank account selection modal
-                    showBankAccountModal(row);
-                }
+            const masterFileSelector = new MasterFileSelector({
+                getBankAccounts: '@Url.Action("GetBankAccounts", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
+                getCompanies: '@Url.Action("GetCompanies", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
+                getEmployees: '@Url.Action("GetEmployees", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })'
             });
 
-            function showBankAccountModal(row) {
-                // Create modal if it doesn't exist
-                if (!$('#bankAccountModal').length) {
-                    $('body').append(`
-                <div class="modal fade" id="bankAccountModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="bankAccountModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="bankAccountModalLabel">Select Bank Account</h5>
-                            </div>
-                            <div class="modal-body">
-                                <div class="form-group">
-                                    <label for="bankAccountSelect">Bank Account</label>
-                                    <select id="bankAccountSelect" class="form-select js-select2" style="width:100%">
-                                        <option value="">Loading accounts...</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-primary" id="selectBankAccountBtn">Select</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `);
-                }
+            // Handle selection button clicks
+            $(document).on('click', '.select-master-file', function() {
+                const typeId = $(this).data('type');
+                const type = masterFileSelector.masterFileTypes[typeId.toUpperCase()];
+                const select = $(`#${typeId}Select`);
+                const selectedId = select.val();
+                const selectedText = select.find('option:selected').text();
+                const row = $(`#${typeId}Modal`).data('row');
 
-                // Load bank accounts via AJAX
-                $.ajax({
-                    url: '@Url.Action("GetBankAccounts", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
-                    type: 'GET',
-                    success: function(data) {
-                        const select = $('#bankAccountSelect');
-                        select.empty();
+                masterFileSelector.handleSelection(type, row, selectedId, selectedText);
+            });
 
-                        if (data && data.length > 0) {
-                            data.forEach(account => {
-                                select.append(`<option value="${account.id}">${account.accountName} - ${account.accountNumber}</option>`);
-                            });
-                        } else {
-                            select.append('<option value="">No bank accounts found</option>');
-                        }
-
-                        // Initialize Select2 for the bank account dropdown
-                        $('#bankAccountSelect').select2({
-                            dropdownParent: $('#bankAccountModal'),
-                            placeholder: "Select a bank account",
-                            width: '100%'
-                        });
-                    },
-                    error: function() {
-                        $('#bankAccountSelect').html('<option value="">Error loading accounts</option>');
-                    }
-                });
-
-                // Store the current row for reference
-                $('#bankAccountModal').data('row', row);
-
-                // Show the modal
-                var modal = new bootstrap.Modal(document.getElementById('bankAccountModal'));
-                modal.show();
-            }
-
-            // Handle bank account selection
-            $(document).on('click', '#selectBankAccountBtn', function() {
-                const selectedBankId = $('#bankAccountSelect').val();
-                const selectedBankName = $('#bankAccountSelect option:selected').text();
-                const row = $('#bankAccountModal').data('row');
-
-                if (selectedBankId && row) {
-                    // Add hidden input for the master file ID if it doesn't exist
-                    let masterFileInput = row.find('.bank-master-file-id');
-                    if (!masterFileInput.length) {
-                        const index = row.index();
-                        row.append(`<input type="hidden" name="AccountingEntries[${index}].BankMasterFileId" class="bank-master-file-id" value="${selectedBankId}">`);
-                    } else {
-                        masterFileInput.val(selectedBankId);
-                    }
-
-                    // Update the account display to show the selected bank
-                    const accountSelect = row.find('.chart-of-accounts');
-                    const originalText = accountSelect.find('option:selected').text();
-
-                    // Store the original selection text in a data attribute if not already stored
-                    if (!accountSelect.data('original-text')) {
-                        accountSelect.data('original-text', originalText);
-                    }
-
-                    // Update the displayed text to include the bank account
-                    const bankInfo = selectedBankName.split(' - ')[0]; // Get just the bank name
-                    const updatedText = `${accountSelect.data('original-text')} (${bankInfo})`;
-
-                    // Find the selected option and update its text
-                    const selectedOption = accountSelect.find('option:selected');
-                    selectedOption.text(updatedText);
-
-                    // Close the modal
-                    bootstrap.Modal.getInstance(document.getElementById('bankAccountModal')).hide();
-                } else {
-                    alert('Please select a bank account');
-                }
+            // Initialize Select2 for all dropdowns
+            $('.js-select2').select2({
+                placeholder: "Select an option...",
+                allowClear: true,
+                width: 'resolve',
+                theme: 'classic'
             });
         });
     </script>
@@ -729,10 +646,11 @@
             // Find rows with bank master file IDs
             document.querySelectorAll('#accountTable tbody tr').forEach(row => {
                 const bankMasterFileId = row.querySelector('.bank-master-file-id')?.value;
+                const companyMasterFileId = row.querySelector('.company-master-file-id')?.value;
+                const employeeMasterFileId = row.querySelector('.employee-master-file-id')?.value;
                 const accountSelect = row.querySelector('.chart-of-accounts');
 
-                if (bankMasterFileId && accountSelect &&
-                    (accountSelect.value.startsWith('10101') || accountSelect.value === '101010100 Cash in Bank')) {
+                if (bankMasterFileId && accountSelect && accountSelect.value === '101010100 Cash in Bank') {
 
                     // Fetch bank account details for this ID
                     $.ajax({
@@ -746,7 +664,7 @@
                                 accountSelect.dataset.originalText = originalText;
 
                                 // Update display text to include bank account
-                                const bankInfo = data.accountName;
+                                const bankInfo = `${data.accountNumber} - ${data.accountName}`;
                                 const updatedText = `${originalText} (${bankInfo})`;
                                 accountSelect.options[accountSelect.selectedIndex].text = updatedText;
 
@@ -758,6 +676,59 @@
                             console.error('Error loading bank account details');
                         }
                     });
+                }
+                else if (companyMasterFileId && accountSelect && accountSelect.value === '101010400 Fund Transfer' || accountSelect.value === '101020600 AR-Exchange Check') {
+                    
+                    $.ajax({
+                        url: '@Url.Action("GetCompanyById", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
+                        type: 'GET',
+                        data: { companyId: companyMasterFileId },
+                        success: function(data) {
+                            if (data && data.accountName) {
+                                // Store original text
+                                const originalText = accountSelect.options[accountSelect.selectedIndex].text;
+                                accountSelect.dataset.originalText = originalText;
+
+                                // Update display text to include bank account
+                                const companyInfo = `${data.accountNumber} - ${data.accountName}`;
+                                const updatedText = `${originalText} (${companyInfo})`;
+                                accountSelect.options[accountSelect.selectedIndex].text = updatedText;
+
+                                // Recalculate to update the journal entries
+                                recalculateAllRows();
+                            }
+                        },
+                        error: function() {
+                            console.error('Error loading account details');
+                        }
+                    });
+                }
+                else if (employeeMasterFileId && accountSelect && accountSelect.value === '101020400 Advances from Officers and Employees') {
+                    
+                    $.ajax({
+                        url: '@Url.Action("GetEmployeeById", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
+                        type: 'GET',
+                        data: { employeeId: employeeMasterFileId },
+                        success: function(data) {
+                            if (data && data.accountName) {
+                                // Store original text
+                                const originalText = accountSelect.options[accountSelect.selectedIndex].text;
+                                accountSelect.dataset.originalText = originalText;
+
+                                // Update display text to include bank account
+                                const employeeName = `${data.accountNumber} - ${data.accountName}`;
+                                const updatedText = `${originalText} (${employeeName})`;
+                                accountSelect.options[accountSelect.selectedIndex].text = updatedText;
+
+                                // Recalculate to update the journal entries
+                                recalculateAllRows();
+                            }
+                        },
+                        error: function() {
+                            console.error('Error loading account details');
+                        }
+                    });
+                    
                 }
             });
         }
