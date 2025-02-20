@@ -375,26 +375,6 @@ namespace IBS.DataAccess.Repository.Filpride
             return receivingReports;
         }
 
-        public async Task<List<FilprideSalesInvoice>> GetOtcFuelSalesReport (DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
-        {
-            if (dateFrom > dateTo)
-            {
-                throw new ArgumentException("Date From must be greater than Date To !");
-            }
-
-            var receivingReports = await _db.FilprideSalesInvoices
-                .Where(si => si.Company == company && si.TransactionDate >= dateFrom && si.TransactionDate <= dateTo) // Filter by date and company
-                .Include(si => si.Customer)
-                .Include(si => si.CustomerOrderSlip)
-                .Include (si => si.DeliveryReceipt)
-                .Include(si => si.Product)
-                .OrderBy(si => si.Product.ProductName).ThenBy(si => si.Customer.CustomerName).ThenBy((si => si.TransactionDate))
-                .ThenBy(si => si.Customer.CustomerType) // Order by TransactionDate
-                .ToListAsync(cancellationToken);
-
-            return receivingReports;
-        }
-
         public async Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport (DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
