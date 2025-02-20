@@ -3693,7 +3693,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 // fetch sales report
-                var salesReport = await _unitOfWork.FilprideReport.GetOtcFuelSalesReport(model.DateFrom, model.DateTo, companyClaims);
+                var salesReport = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims);
 
                 // check if there is no record
                 if (salesReport.Count == 0)
@@ -3708,12 +3708,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region == Product worksheets ==
 
                 var groupedByProductReport = salesReport
-                    .OrderBy(sr => sr.Product?.ProductName)
-                    .GroupBy(sr => sr.Product?.ProductName);
+                    .OrderBy(sr => sr.DeliveryReceipt.CustomerOrderSlip?.Product?.ProductName)
+                    .GroupBy(sr => sr.DeliveryReceipt.CustomerOrderSlip?.Product?.ProductName);
 
                 foreach (var productReport in groupedByProductReport)
                 {
-                    var productName = productReport.First().Product?.ProductName;
+                    var productName = productReport.First().DeliveryReceipt.CustomerOrderSlip?.Product?.ProductName;
 
                     var worksheet = package.Workbook.Worksheets.Add(productName);
 
@@ -3765,13 +3765,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion
 
                     var groupedByCustomer = productReport
-                        .OrderBy(pr => pr.Customer?.CustomerName)
-                        .GroupBy(pr => pr.Customer?.CustomerName);
+                        .OrderBy(pr => pr.DeliveryReceipt.Customer?.CustomerName)
+                        .GroupBy(pr => pr.DeliveryReceipt.Customer?.CustomerName);
 
                     foreach (var customer in groupedByCustomer)
                     {
                         var sortedByDateCustomer = customer
-                            .OrderBy(c => c.TransactionDate)
+                            .OrderBy(c => c.DeliveryReceipt.DeliveredDate)
                             .ToList();
 
                         totalVolume = 0m;
@@ -3781,23 +3781,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             #region -- Assign Values to Cells --
 
-                            worksheet.Cells[row, 1].Value = transaction.TransactionDate; // Date
-                            worksheet.Cells[row, 2].Value = transaction.Customer?.CustomerName; // Account Name
-                            worksheet.Cells[row, 3].Value = transaction.Customer?.CustomerType; // Account Type
-                            worksheet.Cells[row, 4].Value = transaction.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
-                            worksheet.Cells[row, 5].Value = transaction.CustomerOrderSlip?.OldCosNo; // Old COS #
-                            worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt?.DeliveryReceiptNo; // New DR #
-                            worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt?.ManualDrNo; // Old DR #
-                            worksheet.Cells[row, 8].Value = transaction.Product?.ProductName; // Items
-                            worksheet.Cells[row, 9].Value = transaction.Quantity; // Volume
-                            worksheet.Cells[row, 10].Value = transaction.Amount; // Total
-                            worksheet.Cells[row, 11].Value = transaction.Remarks; // Remarks
+                            worksheet.Cells[row, 1].Value = transaction.DeliveryReceipt.DeliveredDate; // Date
+                            worksheet.Cells[row, 2].Value = transaction.DeliveryReceipt.Customer?.CustomerName; // Account Name
+                            worksheet.Cells[row, 3].Value = transaction.DeliveryReceipt.Customer?.CustomerType; // Account Type
+                            worksheet.Cells[row, 4].Value = transaction.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
+                            worksheet.Cells[row, 5].Value = transaction.DeliveryReceipt.CustomerOrderSlip?.OldCosNo; // Old COS #
+                            worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt.DeliveryReceiptNo; // New DR #
+                            worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt.ManualDrNo; // Old DR #
+                            worksheet.Cells[row, 8].Value = transaction.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName; // Items
+                            worksheet.Cells[row, 9].Value = transaction.DeliveryReceipt.Quantity; // Volume
+                            worksheet.Cells[row, 10].Value = transaction.DeliveryReceipt.TotalAmount; // Total
+                            worksheet.Cells[row, 11].Value = transaction.DeliveryReceipt.Remarks; // Remarks
 
                             #endregion -- Assign Values to Cells --
 
                             // increment totals and format it
-                            totalVolume += transaction.Quantity;
-                            totalAmount += transaction.Amount;
+                            totalVolume += transaction.DeliveryReceipt.Quantity;
+                            totalAmount += transaction.DeliveryReceipt.TotalAmount;
 
                             // format cells with number
                             worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
@@ -3944,10 +3944,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion
 
                     groupedByProductReport = salesReport
-                        .OrderBy(sr => sr.Product?.ProductName)
-                        .ThenBy(sr => sr.Customer.CustomerName)
-                        .ThenBy(sr => sr.TransactionDate)
-                        .GroupBy(sr => sr.Product?.ProductName);
+                        .OrderBy(sr => sr.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName)
+                        .ThenBy(sr => sr.DeliveryReceipt.Customer.CustomerName)
+                        .ThenBy(sr => sr.DeliveryReceipt.DeliveredDate)
+                        .GroupBy(sr => sr.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName);
 
                     // shows by product
                     foreach (var product in groupedByProductReport)
@@ -3959,23 +3959,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             #region -- Assign Values to Cells --
 
-                            worksheet.Cells[row, 1].Value = transaction.TransactionDate; // Date
-                            worksheet.Cells[row, 2].Value = transaction.Customer?.CustomerName; // Account Name
-                            worksheet.Cells[row, 3].Value = transaction.Customer?.CustomerType; // Account Type
-                            worksheet.Cells[row, 4].Value = transaction.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
-                            worksheet.Cells[row, 5].Value = transaction.CustomerOrderSlip?.OldCosNo; // Old COS #
+                            worksheet.Cells[row, 1].Value = transaction.DeliveryReceipt.DeliveredDate; // Date
+                            worksheet.Cells[row, 2].Value = transaction.DeliveryReceipt.Customer?.CustomerName; // Account Name
+                            worksheet.Cells[row, 3].Value = transaction.DeliveryReceipt.Customer?.CustomerType; // Account Type
+                            worksheet.Cells[row, 4].Value = transaction.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo; // New COS #
+                            worksheet.Cells[row, 5].Value = transaction.DeliveryReceipt.CustomerOrderSlip?.OldCosNo; // Old COS #
                             worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt?.DeliveryReceiptNo; // New DR #
                             worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt?.ManualDrNo; // Old DR #
-                            worksheet.Cells[row, 8].Value = transaction.Product?.ProductName; // Items
-                            worksheet.Cells[row, 9].Value = transaction.Quantity; // Volume
-                            worksheet.Cells[row, 10].Value = transaction.Amount; // Total
-                            worksheet.Cells[row, 11].Value = transaction.Remarks; // Remarks
+                            worksheet.Cells[row, 8].Value = transaction.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName; // Items
+                            worksheet.Cells[row, 9].Value = transaction.DeliveryReceipt.Quantity; // Volume
+                            worksheet.Cells[row, 10].Value = transaction.DeliveryReceipt.TotalAmount; // Total
+                            worksheet.Cells[row, 11].Value = transaction.DeliveryReceipt.Remarks; // Remarks
 
                             #endregion -- Assign Values to Cells --
 
                             // increment totals
-                            totalVolume += transaction.Quantity;
-                            totalAmount += transaction.Amount;
+                            totalVolume += transaction.DeliveryReceipt.Quantity;
+                            totalAmount += transaction.DeliveryReceipt.TotalAmount;
 
                             // format cells with number
                             worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
@@ -4083,8 +4083,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     bool isStation = true;
 
                     var groupByCustomerType = salesReport
-                        .OrderBy(sr => sr.Customer?.CustomerType)
-                        .GroupBy(sr => sr.Customer?.CustomerType)
+                        .OrderBy(sr => sr.DeliveryReceipt.Customer?.CustomerType)
+                        .GroupBy(sr => sr.DeliveryReceipt.Customer?.CustomerType)
                         .OrderBy(g => g.Key != "Retail")
                         .ThenBy(g => g.Key);
 
@@ -4092,7 +4092,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var ct in groupByCustomerType)
                     {
-                        worksheet.Cells[row, 1].Value = ct.First().Customer?.CustomerType;
+                        worksheet.Cells[row, 1].Value = ct.First().DeliveryReceipt.Customer?.CustomerType;
                         worksheet.Cells[row, 1].Style.Font.Bold = true;
                         worksheet.Cells[row, 1].Style.Font.Italic = true;
                         worksheet.Cells[row, 1].Style.Font.Size = 18;
@@ -4122,36 +4122,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         row++;
 
                         var groupByCustomerName = ct
-                            .OrderBy(sr => sr.Customer?.CustomerName)
-                            .GroupBy(sr => sr.Customer?.CustomerName);
+                            .OrderBy(sr => sr.DeliveryReceipt.Customer?.CustomerName)
+                            .GroupBy(sr => sr.DeliveryReceipt.Customer?.CustomerName);
 
                         foreach (var customerGroup in groupByCustomerName)
                         {
-                            worksheet.Cells[row, 1].Value = customerGroup.First().Customer?.CustomerName;
+                            worksheet.Cells[row, 1].Value = customerGroup.First().DeliveryReceipt.Customer?.CustomerName;
                             worksheet.Cells[row, 1].Style.Font.Bold = true;
 
                             worksheet.Cells[row, 2].Value = customerGroup
-                                .Where(cg => cg.Product?.ProductName == "BIODIESEL")
-                                .Sum(cg => cg.Quantity);
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL")
+                                .Sum(cg => cg.DeliveryReceipt.Quantity);
                             worksheet.Cells[row, 3].Value = customerGroup
-                                .Where(cg => cg.Product?.ProductName == "BIODIESEL")
-                                .Sum(cg => cg.Amount);
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL")
+                                .Sum(cg => cg.DeliveryReceipt.TotalAmount);
                             worksheet.Cells[row, 4].Value = customerGroup
-                                .Where(cg => cg.Product?.ProductName == "ECONOGAS")
-                                .Sum(cg => cg.Quantity);
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS")
+                                .Sum(cg => cg.DeliveryReceipt.Quantity);
                             worksheet.Cells[row, 5].Value = customerGroup
-                                .Where(cg => cg.Product?.ProductName == "ECONOGAS")
-                                .Sum(cg => cg.Amount);
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS")
+                                .Sum(cg => cg.DeliveryReceipt.TotalAmount);
                             worksheet.Cells[row, 6].Value = customerGroup
-                                .Where(cg => cg.Product?.ProductName == "ENVIROGAS")
-                                .Sum(cg => cg.Quantity);
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS")
+                                .Sum(cg => cg.DeliveryReceipt.Quantity);
                             worksheet.Cells[row, 7].Value = customerGroup
-                                .Where(cg => cg.Product?.ProductName == "ENVIROGAS")
-                                .Sum(cg => cg.Amount);
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS")
+                                .Sum(cg => cg.DeliveryReceipt.TotalAmount);
                             worksheet.Cells[row, 8].Value = customerGroup
-                                .Sum(cg => cg.Quantity);
+                                .Sum(cg => cg.DeliveryReceipt.Quantity);
                             worksheet.Cells[row, 9].Value = customerGroup
-                                .Sum(cg => cg.Amount);
+                                .Sum(cg => cg.DeliveryReceipt.TotalAmount);
 
                             worksheet.Cells[row, 2, row, 9].Style.Numberformat.Format = "#,##0.00";
 
@@ -4160,27 +4160,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         worksheet.Cells[row, 1].Value = "Total";
                         worksheet.Cells[row, 2].Value = ct
-                            .Where(si => si.Product.ProductName == "BIODIESEL")
-                            .Sum(si => si.Quantity); // Total Volume
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "BIODIESEL")
+                            .Sum(si => si.DeliveryReceipt.Quantity); // Total Volume
                         worksheet.Cells[row, 3].Value = ct
-                            .Where(si => si.Product.ProductName == "BIODIESEL")
-                            .Sum(si => si.Amount); // Total Amount
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "BIODIESEL")
+                            .Sum(si => si.DeliveryReceipt.TotalAmount); // Total Amount
                         worksheet.Cells[row, 4].Value = ct
-                            .Where(si => si.Product.ProductName == "ECONOGAS")
-                            .Sum(si => si.Quantity); // Total Volume
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "ECONOGAS")
+                            .Sum(si => si.DeliveryReceipt.Quantity); // Total Volume
                         worksheet.Cells[row, 5].Value = ct
-                            .Where(si => si.Product.ProductName == "ECONOGAS")
-                            .Sum(si => si.Amount); // Total Amount
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "ECONOGAS")
+                            .Sum(si => si.DeliveryReceipt.TotalAmount); // Total Amount
                         worksheet.Cells[row, 6].Value = ct
-                            .Where(si => si.Product.ProductName == "ENVIROGAS")
-                            .Sum(si => si.Quantity); // Total Volume
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "ENVIROGAS")
+                            .Sum(si => si.DeliveryReceipt.Quantity); // Total Volume
                         worksheet.Cells[row, 7].Value = ct
-                            .Where(si => si.Product.ProductName == "ENVIROGAS")
-                            .Sum(si => si.Amount); // Total Amount
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "ENVIROGAS")
+                            .Sum(si => si.DeliveryReceipt.TotalAmount); // Total Amount
                         worksheet.Cells[row, 8].Value = ct
-                            .Sum(si => si.Quantity); // Total Volume
+                            .Sum(si => si.DeliveryReceipt.Quantity); // Total Volume
                         worksheet.Cells[row, 9].Value = ct
-                            .Sum(si => si.Amount); // Total Amount
+                            .Sum(si => si.DeliveryReceipt.TotalAmount); // Total Amount
 
                         var tillRowToResize = row;
                         worksheet.Cells[rowToResize, 1, tillRowToResize, 9].Style.Font.Size = 10;
@@ -4202,27 +4202,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     worksheet.Cells[row, 1].Value = "Grand Total";
                     worksheet.Cells[row, 2].Value = salesReport
-                        .Where(si => si.Product?.ProductName == "BIODIESEL")
-                        .Sum(si => si.Quantity);
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL")
+                        .Sum(si => si.DeliveryReceipt.Quantity);
                     worksheet.Cells[row, 3].Value = salesReport
-                        .Where(si => si.Product?.ProductName == "BIODIESEL")
-                        .Sum(si => si.Amount);
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL")
+                        .Sum(si => si.DeliveryReceipt.TotalAmount);
                     worksheet.Cells[row, 4].Value = salesReport
-                        .Where(si => si.Product?.ProductName == "ECONOGAS")
-                        .Sum(si => si.Quantity);
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS")
+                        .Sum(si => si.DeliveryReceipt.Quantity);
                     worksheet.Cells[row, 5].Value = salesReport
-                        .Where(si => si.Product?.ProductName == "ECONOGAS")
-                        .Sum(si => si.Amount);
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS")
+                        .Sum(si => si.DeliveryReceipt.TotalAmount);
                     worksheet.Cells[row, 6].Value = salesReport
-                        .Where(si => si.Product?.ProductName == "ENVIROGAS")
-                        .Sum(si => si.Quantity);
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS")
+                        .Sum(si => si.DeliveryReceipt.Quantity);
                     worksheet.Cells[row, 7].Value = salesReport
-                        .Where(si => si.Product?.ProductName == "ENVIROGAS")
-                        .Sum(si => si.Amount);
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS")
+                        .Sum(si => si.DeliveryReceipt.TotalAmount);
                     worksheet.Cells[row, 8].Value = salesReport
-                        .Sum(si => si.Quantity);
+                        .Sum(si => si.DeliveryReceipt.Quantity);
                     worksheet.Cells[row, 9].Value = salesReport
-                        .Sum(si => si.Amount);
+                        .Sum(si => si.DeliveryReceipt.TotalAmount);
 
                     using (var range = worksheet.Cells[row, 1, row, 9])
                     {
@@ -4258,20 +4258,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // summary values
                     foreach (var typeGroup in groupByCustomerType)
                     {
-                        worksheet.Cells[row, 1].Value = typeGroup.First().Customer?.CustomerType;
+                        worksheet.Cells[row, 1].Value = typeGroup.First().DeliveryReceipt.Customer?.CustomerType;
                         worksheet.Cells[row, 1].Style.Font.Italic = true;
                         worksheet.Cells[row, 1].Style.Font.Bold = true;
                         worksheet.Cells[row, 2].Value = typeGroup
-                            .Where(tg => tg.Product?.ProductName == "BIODIESEL")
-                            .Sum(tg => tg.Quantity);
+                            .Where(tg => tg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL")
+                            .Sum(tg => tg.DeliveryReceipt.Quantity);
                         worksheet.Cells[row, 3].Value = typeGroup
-                            .Where(tg => tg.Product?.ProductName == "ECONOGAS")
-                            .Sum(tg => tg.Quantity);
+                            .Where(tg => tg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS")
+                            .Sum(tg => tg.DeliveryReceipt.Quantity);
                         worksheet.Cells[row, 4].Value = typeGroup
-                            .Where(tg => tg.Product?.ProductName == "ENVIROGAS")
-                            .Sum(tg => tg.Quantity);
+                            .Where(tg => tg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS")
+                            .Sum(tg => tg.DeliveryReceipt.Quantity);
                         worksheet.Cells[row, 5].Value = typeGroup
-                            .Sum(tg => tg.Quantity);
+                            .Sum(tg => tg.DeliveryReceipt.Quantity);
                         row++;
                     }
 
@@ -4285,7 +4285,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     // styling total value
-                    worksheet.Cells[row, 5].Value = salesReport.Sum(si => si.Quantity);
+                    worksheet.Cells[row, 5].Value = salesReport.Sum(si => si.DeliveryReceipt.Quantity);
                     worksheet.Cells[row, 5].Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                     worksheet.Cells[row, 5].Style.Fill.PatternType = ExcelFillStyle.Solid;
                     worksheet.Cells[row, 5].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204,156,252));
