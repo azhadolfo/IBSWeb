@@ -29,15 +29,15 @@ class MasterFileSelector {
                 formatOption: (item) => `${item.accountNumber} - ${item.accountName}`,
                 inputName: 'EmployeeMasterFileId'
             },
-            ///TODO need to change the actual trigger account
+            ///TODO change to actual trigger account
             CUSTOMER: {
                 id: 'customer',
                 title: 'Customer',
                 url: urls.getCustomers,
-                triggerAccount: '101030100 Investment -  Restricted - Current',
+                triggerAccount: '101020500 AR-Non Trade Receivable',
                 placeholder: 'Select a customer',
                 formatOption: (item) => `${item.accountNumber} - ${item.accountName}`,
-                inputName: 'EmployeeMasterFileId'
+                inputName: 'CustomerMasterFileId'
             }
         };
 
@@ -84,13 +84,19 @@ class MasterFileSelector {
     handleAccountChange(selectedAccount, row) {
         let matchFound = false;
 
-        Object.values(this.masterFileTypes).forEach(type => {
-            const triggers = type.triggerAccounts || [type.triggerAccount];
-            if (triggers.includes(selectedAccount)) {
-                this.showMasterFileModal(type, row);
-                matchFound = true;
-            }
-        });
+        // Special handling for AR - Non Trade Receivable
+        if (selectedAccount === '101020500 AR-Non Trade Receivable') {
+            this.showMasterFileTypeSelector(row);
+            matchFound = true;
+        } else {
+            Object.values(this.masterFileTypes).forEach(type => {
+                const triggers = type.triggerAccounts || [type.triggerAccount];
+                if (triggers.includes(selectedAccount)) {
+                    this.showMasterFileModal(type, row);
+                    matchFound = true;
+                }
+            });
+        }
 
         // If no matching master file type is found, ensure the row is clean
         if (!matchFound) {
@@ -98,16 +104,76 @@ class MasterFileSelector {
         }
     }
 
+    showMasterFileTypeSelector(row) {
+        const modalHTML = `
+            <div class="modal fade" id="masterFileTypeModal" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Select Master File Type</h5>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="form-label">Choose Master File Type</label>
+                                <select id="masterFileTypeSelect" class="form-select">
+                                    <option value="">Select type...</option>
+                                    <option value="BANK">Bank Account</option>
+                                    <option value="COMPANY">Company</option>
+                                    <option value="EMPLOYEE">Employee</option>
+                                    <option value="CUSTOMER">Customer</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" id="confirmMasterFileType">
+                                Continue
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+        // Remove existing modal if any
+        $('#masterFileTypeModal').remove();
+
+        // Add new modal
+        $('body').append(modalHTML);
+
+        const modal = new bootstrap.Modal(document.getElementById('masterFileTypeModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        // Handle type selection
+        $('#confirmMasterFileType').on('click', () => {
+            const selectedType = $('#masterFileTypeSelect').val();
+            if (!selectedType) {
+                Swal.fire({
+                    title: 'Required',
+                    text: 'Please select a master file type',
+                    icon: 'warning'
+                });
+                return;
+            }
+
+            modal.hide();
+            this.showMasterFileModal(this.masterFileTypes[selectedType], row);
+        });
+
+        modal.show();
+    }
+
     createModal(type) {
         const modalId = `${type.id}Modal`;
         if ($(`#${modalId}`).length) return;
 
         const modalHTML = `
-            <div class="modal fade" id="${modalId}" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal fade" id="${modalId}" tabindex="-1" style="z-index: 1060;">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Select ${type.title}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="form-group">
@@ -118,6 +184,7 @@ class MasterFileSelector {
                             </div>
                         </div>
                         <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="button" class="btn btn-primary select-master-file" data-type="${type.id}">
                                 Select
                             </button>
@@ -133,8 +200,24 @@ class MasterFileSelector {
             dropdownParent: $(`#${modalId}`),
             placeholder: type.placeholder,
             width: '100%',
-            theme: 'classic'
+            theme: 'classic',
+            dropdownCssClass: 'select2-dropdown-above-modal'
         });
+
+        // Add CSS for the higher z-index dropdown
+        if (!document.getElementById('select2-modal-styles')) {
+            const styleSheet = document.createElement('style');
+            styleSheet.id = 'select2-modal-styles';
+            styleSheet.textContent = `
+                .select2-dropdown-above-modal {
+                    z-index: 1061 !important;
+                }
+                .select2-container--open {
+                    z-index: 1061 !important;
+                }
+            `;
+            document.head.appendChild(styleSheet);
+        }
 
         // Handle modal dismiss
         $(`#${modalId}`).on('hidden.bs.modal', () => {
@@ -151,10 +234,7 @@ class MasterFileSelector {
     async showMasterFileModal(type, row) {
         this.createModal(type);
         const modalId = `${type.id}Modal`;
-        const modal = new bootstrap.Modal(document.getElementById(modalId), {
-            backdrop: 'static',
-            keyboard: false
-        });
+        const modal = new bootstrap.Modal(document.getElementById(modalId));
 
         try {
             const response = await $.ajax({
@@ -208,13 +288,14 @@ class MasterFileSelector {
         this.clearAllMasterFileIds(row);
 
         // Add the new master file ID
+        row.find(`input[name$="${type.inputName}"]`).remove();
         row.append(`<input type="hidden" name="${inputName}" value="${selectedId}">`);
 
         // Update account display
         const accountSelect = row.find('.chart-of-accounts');
-        const originalText = accountSelect.find('option:selected').text();
-        accountSelect.data('original-text', originalText);
-        accountSelect.find('option:selected').text(`${originalText} (${selectedText})`);
+        accountSelect.find('option:selected').text(
+            `${accountSelect.find('option:selected').text().split('(')[0].trim()} (${selectedText})`
+        );
 
         // Close modal
         bootstrap.Modal.getInstance(document.getElementById(`${type.id}Modal`)).hide();

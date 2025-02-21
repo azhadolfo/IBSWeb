@@ -101,6 +101,7 @@
                                             <input type="hidden" name="AccountingEntries[@i].BankMasterFileId" value="@Model.AccountingEntries[i].BankMasterFileId" class="bank-master-file-id" />
                                             <input type="hidden" name="AccountingEntries[@i].CompanyMasterFileId" value="@Model.AccountingEntries[i].CompanyMasterFileId" class="company-master-file-id" />
                                             <input type="hidden" name="AccountingEntries[@i].EmployeeMasterFileId" value="@Model.AccountingEntries[i].EmployeeMasterFileId" class="employee-master-file-id" />
+                                            <input type="hidden" name="AccountingEntries[@i].EmployeeMasterFileId" value="@Model.AccountingEntries[i].CustomerMasterFileId" class="customer-master-file-id" />
                                         </td>
                                         <td>
                                             <input type="number" name="AccountingEntries[@i].Amount" value="@Model.AccountingEntries[i].Amount" class="form-control form-control-sm text-end amount" />
@@ -423,6 +424,7 @@
                 <input type="hidden" name="AccountingEntries[${rowCount}].BankMasterFileId" class="bank-master-file-id" />
                 <input type="hidden" name="AccountingEntries[${rowCount}].CompanyMasterFileId" class="company-master-file-id" />
                 <input type="hidden" name="AccountingEntries[${rowCount}].EmployeeMasterFileId" class="employee-master-file-id" />
+                <input type="hidden" name="AccountingEntries[${rowCount}].CustomerMasterFileId" class="customer-master-file-id" />
             </td>
             <td class="px-2">
                 <input type="number" name="AccountingEntries[${rowCount}].Amount" class="form-control form-control-sm text-end amount" value="0" />
@@ -616,7 +618,8 @@
             const masterFileSelector = new MasterFileSelector({
                 getBankAccounts: '@Url.Action("GetBankAccounts", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
                 getCompanies: '@Url.Action("GetCompanies", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
-                getEmployees: '@Url.Action("GetEmployees", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })'
+                getEmployees: '@Url.Action("GetEmployees", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
+                getCustomers: '@Url.Action("GetCustomers", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })'
             });
 
             // Handle selection button clicks
@@ -648,9 +651,10 @@
                 const bankMasterFileId = row.querySelector('.bank-master-file-id')?.value;
                 const companyMasterFileId = row.querySelector('.company-master-file-id')?.value;
                 const employeeMasterFileId = row.querySelector('.employee-master-file-id')?.value;
+                const customerMasterFileId = row.querySelector('.customer-master-file-id')?.value;
                 const accountSelect = row.querySelector('.chart-of-accounts');
 
-                if (bankMasterFileId && accountSelect && accountSelect.value === '101010100 Cash in Bank') {
+                if (bankMasterFileId && accountSelect && (accountSelect.value === '101010100 Cash in Bank' || accountSelect.value === '101020500 AR-Non Trade Receivable')) {
 
                     // Fetch bank account details for this ID
                     $.ajax({
@@ -677,7 +681,8 @@
                         }
                     });
                 }
-                else if (companyMasterFileId && accountSelect && accountSelect.value === '101010400 Fund Transfer' || accountSelect.value === '101020600 AR-Exchange Check') {
+                else if (companyMasterFileId && (accountSelect && accountSelect.value === '101010400 Fund Transfer' ||
+                    accountSelect.value === '101020600 AR-Exchange Check' || accountSelect.value === '101020500 AR-Non Trade Receivable')) {
                     
                     $.ajax({
                         url: '@Url.Action("GetCompanyById", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
@@ -703,7 +708,7 @@
                         }
                     });
                 }
-                else if (employeeMasterFileId && accountSelect && accountSelect.value === '101020400 Advances from Officers and Employees') {
+                else if (employeeMasterFileId && (accountSelect && accountSelect.value === '101020400 Advances from Officers and Employees' || accountSelect.value === '101020500 AR-Non Trade Receivable')) {
                     
                     $.ajax({
                         url: '@Url.Action("GetEmployeeById", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
@@ -730,6 +735,34 @@
                     });
                     
                 }
+                else if (customerMasterFileId && accountSelect.value === '101020500 AR-Non Trade Receivable') {
+
+                    $.ajax({
+                        url: '@Url.Action("GetCustomerById", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
+                        type: 'GET',
+                        data: { customerId: customerMasterFileId },
+                        success: function(data) {
+                            if (data && data.accountName) {
+                                // Store original text
+                                const originalText = accountSelect.options[accountSelect.selectedIndex].text;
+                                accountSelect.dataset.originalText = originalText;
+
+                                // Update display text to include bank account
+                                const employeeName = `${data.accountNumber} - ${data.accountName}`;
+                                const updatedText = `${originalText} (${employeeName})`;
+                                accountSelect.options[accountSelect.selectedIndex].text = updatedText;
+
+                                // Recalculate to update the journal entries
+                                recalculateAllRows();
+                            }
+                        },
+                        error: function() {
+                            console.error('Error loading account details');
+                        }
+                    });
+
+                }
+                
             });
         }
     </script>

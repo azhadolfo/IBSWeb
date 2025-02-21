@@ -317,6 +317,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             BankId = accountEntry.BankMasterFileId,
                             CompanyId = accountEntry.CompanyMasterFileId,
                             EmployeeId = accountEntry.EmployeeMasterFileId,
+                            CustomerId = accountEntry.CustomerMasterFileId,
                         });
 
                         if (accountEntry.VatAmount > 0)
@@ -370,6 +371,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
                             Credit = apNontradeAmount,
+                            SupplierId = checkVoucherHeader.SupplierId
                         });
                     }
 
@@ -773,6 +775,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     BankMasterFileId = details.BankId,
                     CompanyMasterFileId = details.CompanyId,
                     EmployeeMasterFileId = details.EmployeeId,
+                    CustomerMasterFileId = details.CustomerId,
                 });
             }
 
@@ -891,6 +894,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             BankId = accountEntry.BankMasterFileId,
                             CompanyId = accountEntry.CompanyMasterFileId,
                             EmployeeId = accountEntry.EmployeeMasterFileId,
+                            CustomerId = accountEntry.CustomerMasterFileId,
                         });
 
                         if (accountEntry.Vatable)
@@ -943,7 +947,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             TransactionNo = existingModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = 0,
-                            Credit = apNontradeAmount
+                            Credit = apNontradeAmount,
+                            SupplierId = existingModel.SupplierId
                         });
                     }
 
