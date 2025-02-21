@@ -1693,5 +1693,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 accountNumber = employee.EmployeeNumber
             });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCustomers()
+        {
+            var employees = await _unitOfWork.FilprideCustomer.GetAllAsync();
+
+            return Json(employees.OrderBy(c => c.CustomerCode).Select(c => new {
+                id = c.CustomerId,
+                accountName = c.CustomerName,
+                accountNumber = c.CustomerCode
+            }));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCustomerById(int customerId)
+        {
+            var customer = await _unitOfWork.FilprideCustomer.GetAsync(e => e.CustomerId == customerId);
+            return Json(new
+            {
+                id = customer.CustomerId,
+                accountName = customer.CustomerName,
+                accountNumber = customer.CustomerCode
+            });
+        }
     }
 }

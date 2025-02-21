@@ -28,6 +28,16 @@ class MasterFileSelector {
                 placeholder: 'Select an employee',
                 formatOption: (item) => `${item.accountNumber} - ${item.accountName}`,
                 inputName: 'EmployeeMasterFileId'
+            },
+            ///TODO need to change the actual trigger account
+            CUSTOMER: {
+                id: 'customer',
+                title: 'Customer',
+                url: urls.getCustomers,
+                triggerAccount: '101030100 Investment -  Restricted - Current',
+                placeholder: 'Select a customer',
+                formatOption: (item) => `${item.accountNumber} - ${item.accountName}`,
+                inputName: 'EmployeeMasterFileId'
             }
         };
 
