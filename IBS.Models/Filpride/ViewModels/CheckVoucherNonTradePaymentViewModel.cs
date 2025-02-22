@@ -62,5 +62,7 @@ namespace IBS.Models.Filpride.ViewModels
         public int CvPaymentId { get; set; }
 
         public decimal[]? AmountPaid { get; set; }
+
     }
+
 }
