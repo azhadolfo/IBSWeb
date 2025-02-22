@@ -1607,29 +1607,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Check if duplicate record
 
-                    #region --Retrieve Supplier
-
-                    var supplier = await _dbContext
-                                .FilprideSuppliers
-                                .FirstOrDefaultAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
-
-                    #endregion --Retrieve Supplier
-
                     #region -- Get PO --
 
-                    // var getPurchaseOrder = await _dbContext.FilpridePurchaseOrders
-                    //                                 .Where(po => viewModel.POSeries.Contains(po.PurchaseOrderNo))
-                    //                                 .FirstOrDefaultAsync();
+                    var getDeliveryReceipt = await _dbContext.FilprideDeliveryReceipts
+                        .Where(dr => dr.DeliveryReceiptId == viewModel.DRs.Select(dr => dr.Id).FirstOrDefault())
+                        .Include(dr => dr.PurchaseOrder)
+                        .FirstOrDefaultAsync();
 
                     #endregion -- Get PO --
 
                     #region --Saving the default entries
 
-                    // var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getPurchaseOrder.Type, cancellationToken);
+                    var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getDeliveryReceipt.PurchaseOrder.Type, cancellationToken);
                     var cashInBank = viewModel.Credit[2];
                     var cvh = new FilprideCheckVoucherHeader
                     {
-                        CheckVoucherHeaderNo = "generateCVNo",
+                        CheckVoucherHeaderNo = generateCVNo,
                         Date = viewModel.TransactionDate,
                         SupplierId = viewModel.SupplierId,
                         Particulars = viewModel.Particulars,
@@ -1639,10 +1632,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Payee = viewModel.Payee,
                         CheckDate = viewModel.CheckDate,
                         Total = cashInBank,
-                        Amount = viewModel.Amount,
                         CreatedBy = _userManager.GetUserName(this.User),
                         Company = companyClaims,
-                        Type = "getPurchaseOrder.Type",
+                        Type = getDeliveryReceipt.PurchaseOrder.Type,
                     };
 
                     await _dbContext.FilprideCheckVoucherHeaders.AddAsync(cvh, cancellationToken);
@@ -1674,27 +1666,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --CV Details Entry
 
-                    #region -- Partial payment of RR's
+                    #region -- Partial payment of DR's
 
-                    // var cvTradePaymentModel = new List<FilprideCVTradePayment>();
-                    // foreach (var item in viewModel.RRs)
-                    // {
-                    //     var getReceivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.Id, cancellationToken);
-                    //     getReceivingReport.AmountPaid += item.Amount;
-                    //
-                    //     cvTradePaymentModel.Add(
-                    //         new FilprideCVTradePayment
-                    //         {
-                    //             DocumentId = getReceivingReport.ReceivingReportId,
-                    //             DocumentType = "RR",
-                    //             CheckVoucherId = cvh.CheckVoucherHeaderId,
-                    //             AmountPaid = item.Amount
-                    //         });
-                    // }
-                    //
-                    // await _dbContext.AddRangeAsync(cvTradePaymentModel);
+                    var cVTradePaymentModel = new List<FilprideCVTradePayment>();
+                    foreach (var item in viewModel.DRs)
+                    {
+                        var getDeliveryReceipts = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.Id, cancellationToken);
+                        getDeliveryReceipts.CommissionAmountPaid += item.Amount;
 
-                    #endregion -- Partial payment of RR's
+                        cVTradePaymentModel.Add(
+                            new FilprideCVTradePayment
+                            {
+                                DocumentId = getDeliveryReceipts.DeliveryReceiptId,
+                                DocumentType = "DR",
+                                CheckVoucherId = cvh.CheckVoucherHeaderId,
+                                AmountPaid = item.Amount
+                            });
+                    }
+
+                    await _dbContext.AddRangeAsync(cVTradePaymentModel);
+
+                    #endregion -- Partial payment of DR's
 
                     #region -- Uploading file --
 

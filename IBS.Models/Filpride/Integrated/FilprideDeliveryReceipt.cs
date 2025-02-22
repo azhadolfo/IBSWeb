@@ -118,6 +118,7 @@ namespace IBS.Models.Filpride.Integrated
 
         public bool IsHaulerPaid { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
         public decimal CommissionAmount { get; set; }
     }
 }

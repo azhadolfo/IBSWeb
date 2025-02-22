@@ -5,10 +5,6 @@ namespace IBS.Models.Filpride.ViewModels
 {
     public class CommissionPaymentViewModel
     {
-        public int CVId { get; set; }
-
-        public string? CVNo { get; set; }
-
         public List<SelectListItem>? Suppliers { get; set; }
 
         [Required]
@@ -25,10 +21,6 @@ namespace IBS.Models.Filpride.ViewModels
         [Required]
         [Display(Name = "Supplier No")]
         public int SupplierId { get; set; }
-
-        public int[]? DRId { get; set; }
-
-        public decimal[]? Amount { get; set; }
 
         [Required]
         [Display(Name = "Transaction Date")]

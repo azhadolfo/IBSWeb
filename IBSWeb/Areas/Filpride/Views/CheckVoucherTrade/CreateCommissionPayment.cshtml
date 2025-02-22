@@ -343,9 +343,9 @@
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox"></td>
                                             <td>${dr.deliveryReceiptNo}</td>
                                             <td><input type="text" class="paymentAmount" style="display: none"></td>
-                                            <td class="text-end grossAmount">${formatNumber(dr.grossAmount)}</td>
+                                            <td class="text-end">${formatNumber(dr.grossAmount)}</td>
                                             <td class="text-end">${formatNumber(dr.amountPaid)}</td>
-                                            <td class="text-end">${formatNumber(balance)}</td>
+                                            <td class="text-end balance">${formatNumber(balance)}</td>
                                         </tr>
                                     `);
                         tbody.append(tr);
@@ -392,9 +392,9 @@
 
                     if (row) {
                         const inputField = $(row).find('.paymentAmount');
-                        const grossAmount = $(row).find('.grossAmount').text().trim();
+                        const balance = $(row).find('.balance').text().trim();
 
-                        inputField.val(grossAmount).attr("name", `DRs[${index}].Amount`).addClass("inputAmount").show();
+                        inputField.val(balance).attr("name", `DRs[${index}].Amount`).addClass("inputAmount").show();
                         $(checkbox).attr("name", `DRs[${index}].Id`);
                         updateAmounts()
                     }
@@ -418,11 +418,11 @@
         $(document).on('change', '.selectCheckbox', function () {
             const row = $(this).closest('tr');
             const inputField = row.find('.paymentAmount');
-            const grossAmount = row.find('.grossAmount').text().trim();
+            const balance = row.find('.balance').text().trim();
 
             if (this.checked) {
                 selectedRecords.add(this.value);
-                inputField.val(grossAmount).attr("name", `DRs[${selectedRecords.size - 1}].Amount`).addClass("inputAmount").show();
+                inputField.val(balance).attr("name", `DRs[${selectedRecords.size - 1}].Amount`).addClass("inputAmount").show();
                 row.find('.selectCheckbox').attr("name", `DRs[${selectedRecords.size - 1}].Id`);
                 updateAmounts()
             } else {
