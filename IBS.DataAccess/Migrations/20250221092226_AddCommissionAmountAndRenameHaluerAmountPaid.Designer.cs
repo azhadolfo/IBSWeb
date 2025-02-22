@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250221092226_AddCommissionAmountAndRenameHaluerAmountPaid")]
+    partial class AddCommissionAmountAndRenameHaluerAmountPaid
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3379,14 +3382,16 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EmployeeId"));
 
                     b.Property<string>("Address")
+                        .IsRequired()
                         .HasColumnType("varchar(255)")
                         .HasColumnName("address");
 
-                    b.Property<DateOnly?>("BirthDate")
+                    b.Property<DateOnly>("BirthDate")
                         .HasColumnType("date")
                         .HasColumnName("birth_date");
 
                     b.Property<string>("Company")
+                        .IsRequired()
                         .HasColumnType("varchar(20)")
                         .HasColumnName("company");
 
@@ -3399,6 +3404,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("date_resigned");
 
                     b.Property<string>("Depatment")
+                        .IsRequired()
                         .HasColumnType("varchar(20)")
                         .HasColumnName("depatment");
 
@@ -3413,6 +3419,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("first_name");
 
                     b.Property<string>("Initial")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("initial");
 
@@ -3430,18 +3437,22 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("last_name");
 
                     b.Property<string>("MiddleName")
+                        .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("middle_name");
 
                     b.Property<string>("PagibigNo")
+                        .IsRequired()
                         .HasColumnType("varchar(20)")
                         .HasColumnName("pagibig_no");
 
                     b.Property<string>("Paygrade")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("paygrade");
 
                     b.Property<string>("PhilhealthNo")
+                        .IsRequired()
                         .HasColumnType("varchar(20)")
                         .HasColumnName("philhealth_no");
 
@@ -3455,7 +3466,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("salary");
 
                     b.Property<string>("SssNo")
-                        .HasColumnType("text")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("sss_no");
 
                     b.Property<string>("Status")
@@ -3464,6 +3476,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("status");
 
                     b.Property<string>("Suffix")
+                        .IsRequired()
                         .HasColumnType("varchar(5)")
                         .HasColumnName("suffix");
 
@@ -3473,10 +3486,12 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("supervisor");
 
                     b.Property<string>("TelNo")
-                        .HasColumnType("text")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("tel_no");
 
                     b.Property<string>("TinNo")
+                        .IsRequired()
                         .HasColumnType("varchar(20)")
                         .HasColumnName("tin_no");
 

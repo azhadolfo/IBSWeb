@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace IBS.Models.Filpride.ViewModels
 {
-    public class CheckVoucherTradeViewModel
+    public class CommissionPaymentViewModel
     {
         public int CVId { get; set; }
 
@@ -26,10 +26,9 @@ namespace IBS.Models.Filpride.ViewModels
         [Display(Name = "Supplier No")]
         public int SupplierId { get; set; }
 
-        public List<SelectListItem>? PONo { get; set; }
+        public int[]? DRId { get; set; }
 
-        [Display(Name = "PO No.")]
-        public string[]? POSeries { get; set; }
+        public decimal[]? Amount { get; set; }
 
         [Required]
         [Display(Name = "Transaction Date")]
@@ -69,10 +68,10 @@ namespace IBS.Models.Filpride.ViewModels
         //others
         public string? CreatedBy { get; set; }
 
-        public List<ReceivingReportList> RRs { get; set; }
+        public List<DeliveryReceiptList> DRs { get; set; }
     }
 
-    public class ReceivingReportList
+    public class DeliveryReceiptList
     {
         public int Id { get; set; }
 
