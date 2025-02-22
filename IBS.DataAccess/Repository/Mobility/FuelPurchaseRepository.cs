@@ -6,6 +6,7 @@ using IBS.Models.Mobility;
 using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using IBS.Models.Mobility.ViewModels;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
@@ -237,6 +238,35 @@ namespace IBS.DataAccess.Repository.Mobility
         public async Task<int> ProcessFuelDelivery(string file, CancellationToken cancellationToken = default)
         {
             using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+            using var reader = new StreamReader(stream);
+            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HeaderValidated = null,
+                MissingFieldFound = null,
+            });
+
+            var records = csv.GetRecords<MobilityFuelDelivery>();
+            var existingRecords = await _db.Set<MobilityFuelDelivery>().ToListAsync(cancellationToken);
+            var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
+                existingRecord.pagenumber == record.pagenumber && existingRecord.shiftnumber == record.shiftnumber && existingRecord.shiftdate == record.shiftdate && existingRecord.stncode == record.stncode && existingRecord.productcode == record.productcode)).ToList();
+
+            if (recordsToInsert.Count != 0)
+            {
+                await _db.AddRangeAsync(recordsToInsert, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+                await RecordTheDeliveryToPurchase(recordsToInsert, cancellationToken);
+
+                return recordsToInsert.Count;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        public async Task<int> ProcessFuelDeliveryGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
+        {
+            using var stream = new MemoryStream(file.FileContent);
             using var reader = new StreamReader(stream);
             using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {

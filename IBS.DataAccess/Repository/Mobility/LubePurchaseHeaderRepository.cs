@@ -7,6 +7,7 @@ using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq.Expressions;
+using IBS.Models.Mobility.ViewModels;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
@@ -235,6 +236,35 @@ namespace IBS.DataAccess.Repository.Mobility
         public async Task<int> ProcessLubeDelivery(string file, CancellationToken cancellationToken = default)
         {
             using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+            using var reader = new StreamReader(stream);
+            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HeaderValidated = null,
+                MissingFieldFound = null,
+            });
+
+            var records = csv.GetRecords<LubeDelivery>();
+            var existingRecords = await _db.Set<LubeDelivery>().ToListAsync(cancellationToken);
+            var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
+                existingRecord.shiftdate == record.shiftdate && existingRecord.pagenumber == record.pagenumber && existingRecord.stncode == record.stncode && existingRecord.shiftnumber == record.shiftnumber)).ToList();
+
+            if (recordsToInsert.Count != 0)
+            {
+                await _db.AddRangeAsync(recordsToInsert, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+                await RecordTheDeliveryToPurchase(recordsToInsert, cancellationToken);
+
+                return recordsToInsert.Count;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        public async Task<int> ProcessLubeDeliveryGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
+        {
+            using var stream = new MemoryStream(file.FileContent);
             using var reader = new StreamReader(stream);
             using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {

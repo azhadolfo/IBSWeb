@@ -17,9 +17,15 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 
         Task<(int fuelCount, bool hasPoSales)> ProcessFuel(string file, CancellationToken cancellationToken = default);
 
+        Task<(int fuelCount, bool hasPoSales)> ProcessFuelGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default);
+
         Task<(int lubeCount, bool hasPoSales)> ProcessLube(string file, CancellationToken cancellationToken = default);
 
+        Task<(int lubeCount, bool hasPoSales)> ProcessLubeGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default);
+
         Task<int> ProcessSafeDrop(string file, CancellationToken cancellationToken = default);
+
+        Task<int> ProcessSafeDropGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetPostedDsrList(CancellationToken cancellationToken = default);
 
