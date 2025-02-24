@@ -259,12 +259,13 @@
 
                                 // Add CV balance rows and create payment details
                                 if (data.cvBalances && data.cvBalances.length > 0) {
-                                    data.cvBalances.forEach(function(cv) {
+                                    data.cvBalances.forEach(function(cv, index) {
                                         // Add row to table
                                         var cvRow = `<tr>
                                                         <td class="text-center">${cv.cvNumber}</td>
                                                         <td class="text-center">${formatNumber(cv.balance)}</td>
-                                                        <input type="hidden" name="AmountPaid" value="${cv.balance}" />
+                                                        <input type="hidden" name="PaymentDetails[${index}].CVId" value="${cv.cvId}" />
+                                                        <input type="hidden" name="PaymentDetails[${index}].AmountPaid" value="${cv.balance}" />
                                                     </tr>`;
                                         $(".cvAmountList").append(cvRow);
                                     });

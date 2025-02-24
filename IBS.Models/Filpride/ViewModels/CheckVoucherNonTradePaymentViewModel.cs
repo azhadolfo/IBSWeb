@@ -63,6 +63,15 @@ namespace IBS.Models.Filpride.ViewModels
 
         public decimal[]? AmountPaid { get; set; }
 
+        public List<PaymentDetail> PaymentDetails { get; set; } = [];
+
+    }
+
+    public class PaymentDetail
+    {
+        public int CVId { get; set; }
+
+        public decimal AmountPaid { get; set; }
     }
 
 }
