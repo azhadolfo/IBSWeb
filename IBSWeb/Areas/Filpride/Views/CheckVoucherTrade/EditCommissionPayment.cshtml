@@ -345,14 +345,14 @@
 
                     tbody.empty();
 
-                    data.forEach((dr, index) => {
-                        const drAmount = modelDRs.get(dr.id) || 0;
-                        let amountPaid = parseNumber(dr.amountPaid) - drAmount;
-                        let balance = parseNumber(dr.grossAmount) - amountPaid;
-                        console.log(dr.id)
+                    if (data){
+                        data.forEach((dr, index) => {
+                            const drAmount = modelDRs.get(dr.id) || 0;
+                            let amountPaid = parseNumber(dr.amountPaid) - drAmount;
+                            let balance = parseNumber(dr.grossAmount) - amountPaid;
 
-                        const isChecked = modelDRs.has(dr.id) ? 'checked' : '';
-                        const tr = $(`
+                            const isChecked = modelDRs.has(dr.id) ? 'checked' : '';
+                            const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${dr.deliveryReceiptNo}</td>
@@ -362,12 +362,13 @@
                                             <td class="text-end balance">${formatNumber(balance)}</td>
                                         </tr>
                                     `);
-                        tbody.append(tr);
+                            tbody.append(tr);
 
-                        totalGross += parseNumber(dr.grossAmount);
-                        totalAmountPaid += parseNumber(dr.amountPaid);
-                        totalBalance += balance;
-                    });
+                            totalGross += parseNumber(dr.grossAmount);
+                            totalAmountPaid += parseNumber(dr.amountPaid);
+                            totalBalance += balance;
+                        });
+                    }
 
                     // Append Grand Total Rows
                     const totalRow = $(`

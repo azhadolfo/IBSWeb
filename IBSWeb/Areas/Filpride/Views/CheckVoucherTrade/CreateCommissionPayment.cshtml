@@ -336,9 +336,10 @@
 
                     tbody.empty();
 
-                    data.forEach((dr, index) => {
-                        let balance = parseNumber(dr.grossAmount) - parseNumber(dr.amountPaid);
-                        const tr = $(`
+                    if (data){
+                        data.forEach((dr, index) => {
+                            let balance = parseNumber(dr.grossAmount) - parseNumber(dr.amountPaid);
+                            const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox"></td>
                                             <td>${dr.deliveryReceiptNo}</td>
@@ -348,12 +349,13 @@
                                             <td class="text-end balance">${formatNumber(balance)}</td>
                                         </tr>
                                     `);
-                        tbody.append(tr);
+                            tbody.append(tr);
 
-                        totalGross += parseNumber(dr.grossAmount);
-                        totalAmountPaid += parseNumber(dr.amountPaid);
-                        totalBalance += balance;
-                    });
+                            totalGross += parseNumber(dr.grossAmount);
+                            totalAmountPaid += parseNumber(dr.amountPaid);
+                            totalBalance += balance;
+                        });
+                    }
 
                     // Append Grand Total Rows
                     const totalRow = $(`

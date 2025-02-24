@@ -1,7 +1,7 @@
-@model HaulerPaymentViewModel
+@model CommissionPaymentViewModel
 
 @{
-    ViewData["Title"] = "Create Hauler Payment";
+    ViewData["Title"] = "Edit Hauler Payment";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -9,7 +9,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Create Hauler Payment</h2>
+                <h2 class="text-white py-2">Edit Hauler Payment</h2>
             </div>
         </div>
     </div>
@@ -18,6 +18,7 @@
             <div class="row">
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="CvId"/>
                     <div class="form-group mb-3">
                         <label asp-for="SupplierId" class="control-label"></label><span class="required">*</span>
                         <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 GetDRList supplier" style="width:100%">
@@ -112,8 +113,8 @@
                         </thead>
                         <tbody id="accountingEntriesBody">
                         <tr>
-                            <td><input type="text" name="AccountNumber" value="201010300" class="w-100" style='border:none' readonly /></td>
-                            <td><input type='text' name="AccountTitle" value='AP - Hauling Payable' class="w-100" style='border:none' readonly /></td>
+                            <td><input type="text" name="AccountNumber" value="201010200" class="w-100" style='border:none' readonly /></td>
+                            <td><input type='text' name="AccountTitle" value='AP - Commision Payable' class="w-100" style='border:none' readonly /></td>
                             <td><input type='text' name="Debit" value='0.000' class="w-100 apTradePayable" style='border:none' readonly /></td>
                             <td><input type='text' name="Credit" value='0.000' class="w-100" style='border:none' readonly /></td>
                             <td></td>
@@ -146,7 +147,7 @@
                 <br />
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Create</button>
+                        <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
@@ -286,10 +287,16 @@
     </script>
     <script>
         $(function () {
+            $(".supplier").each(function () {
+                var suppId = $(this).val();
+                var cvId = $("#CvId").val();
+                displayRecords(suppId, cvId);
+            });
             $(".supplier").change(function () {
                 var suppId = $(this).val();
+                var cvId = $("#CvId").val();
                 supplierDetails(suppId);
-                displayRecords(suppId);
+                displayRecords(suppId, cvId);
             });
 
             function supplierDetails(suppId) {
@@ -322,30 +329,36 @@
             }
         });
 
-        function displayRecords(haulerId) {
+        function displayRecords(haulerId, cvId) {
             $.ajax({
                 url: "@Url.Action("GetHaulerDRs", "CheckVoucherTrade")",
                 method: "GET",
-                data: { haulerId: haulerId }, // Pass PO numbers to controller
+                data: { haulerId: haulerId, cvId: cvId }, // Pass PO numbers to controller
                 traditional: true, // Ensure jQuery sends the array properly
                 success: function (data) {
                     const tbody = $('.drList');
                     let totalGross = 0;
                     let totalAmountPaid = 0;
                     let totalBalance = 0;
+                    const modelDRs = new Map(@Html.Raw(Json.Serialize(Model.DRs.Select(dr => new { dr.Id, dr.Amount})))
+                        .map(dr => [dr.id, dr.amount]));
 
                     tbody.empty();
 
                     if (data){
                         data.forEach((dr, index) => {
-                            let balance = parseNumber(dr.grossAmount) - parseNumber(dr.amountPaid);
+                            const drAmount = modelDRs.get(dr.id) || 0;
+                            let amountPaid = parseNumber(dr.amountPaid) - drAmount;
+                            let balance = parseNumber(dr.grossAmount) - amountPaid;
+
+                            const isChecked = modelDRs.has(dr.id) ? 'checked' : '';
                             const tr = $(`
                                         <tr>
-                                            <td><input type="checkbox" value="${dr.id}" class="selectCheckbox"></td>
+                                            <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${dr.deliveryReceiptNo}</td>
                                             <td><input type="text" class="paymentAmount" data-balance="${balance}" style="display: none"></td>
                                             <td class="text-end">${formatNumber(dr.grossAmount)}</td>
-                                            <td class="text-end">${formatNumber(dr.amountPaid)}</td>
+                                            <td class="text-end">${formatNumber(amountPaid)}</td>
                                             <td class="text-end balance">${formatNumber(balance)}</td>
                                         </tr>
                                     `);
@@ -371,6 +384,9 @@
                 </tr>
             `);
                     tbody.append(totalRow);
+
+                    // Ensure checkbox state is processed AFTER records are loaded
+                    initializeCheckedCheckboxes();
                 },
                 error: function (xhr, status, error) {
                     console.error('Error fetching DRs:', error);
@@ -378,61 +394,89 @@
             });
         }
 
-        let selectedRecords = new Set(); // Store selected records
-        let allRecordsSelected = false;  // Flag to check if "Select All" is toggled across all pages
+        let selectedRecords = []; // Store selected records
+        let allRecordsSelected = false;  // Flag to check if "Select All" is toggled
 
         function toggleSelectAll(selectAllCheckbox) {
-            const checkboxes = document.querySelectorAll('.selectCheckbox');
             const isChecked = selectAllCheckbox.checked;
+            selectedRecords = isChecked ? [] : []; // Reset selected records
 
-            checkboxes.forEach((checkbox, index) => {
-                const row = checkbox.closest('tr'); // Get the row
+            $('.selectCheckbox').each(function () {
+                const checkbox = $(this);
+                const row = checkbox.closest('tr');
+                const drId = checkbox.val(); // Get checkbox value
 
                 if (isChecked) {
-                    checkbox.checked = true;
-                    selectedRecords.add(checkbox.value);
-
-                    if (row) {
-                        const inputField = $(row).find('.paymentAmount');
-                        const balance = parseNumber($(row).find('.balance').text().trim());
-
-                        inputField.val(balance).attr("name", `DRs[${index}].Amount`).addClass("inputAmount").show();
-                        $(checkbox).attr("name", `DRs[${index}].Id`);
-                        updateAmounts()
+                    if (!selectedRecords.includes(drId)) {
+                        selectedRecords.push(drId); // Add value
                     }
+                    checkbox.prop('checked', true);
                 } else {
-                    checkbox.checked = false;
-                    selectedRecords.delete(checkbox.value);
-
-                    if (row) {
-                        const inputField = $(row).find('.paymentAmount');
-                        inputField.removeAttr("name").hide().val(''); // Hide and clear input
-                        $(checkbox).removeAttr("name");
-                        updateAmounts()
-                    }
+                    selectedRecords = []; // Reset when deselecting all
+                    checkbox.prop('checked', false);
                 }
+
+                handleCheckboxChange(checkbox);
             });
 
             allRecordsSelected = isChecked;
         }
 
         // Event listener to show/hide input field on checkbox toggle
-        $(document).on('change', '.selectCheckbox', function () {
-            const row = $(this).closest('tr');
-            const inputField = row.find('.paymentAmount');
-            const balance = parseNumber(row.find('.balance').text().trim());
+        $(document).ready(function () {
+            checkBox();
+            initializeCheckedCheckboxes(); // Call this on page load
+        });
 
-            if (this.checked) {
-                selectedRecords.add(this.value);
-                inputField.val(balance).attr("name", `DRs[${selectedRecords.size - 1}].Amount`).addClass("inputAmount").show();
-                row.find('.selectCheckbox').attr("name", `DRs[${selectedRecords.size - 1}].Id`);
-                updateAmounts()
+        function checkBox() {
+            $(document).on('change', '.selectCheckbox', function () {
+                handleCheckboxChange($(this));
+            });
+        }
+
+        function initializeCheckedCheckboxes() {
+            $('.selectCheckbox:checked').each(function () {
+                handleCheckboxChange($(this));
+            });
+        }
+
+        function handleCheckboxChange(checkboxElement) {
+            const $checkbox = $(checkboxElement);
+            const $row = $checkbox.closest('tr');
+            const $inputField = $row.find('.paymentAmount');
+            const drId = $checkbox.val(); // Get checkbox value
+
+            if ($checkbox.is(':checked')) {
+                if (!selectedRecords.includes(drId)) {
+                    selectedRecords.push(drId); // Add value
+                }
             } else {
-                selectedRecords.delete(this.value);
-                inputField.removeAttr("name").hide().val('');
-                row.find('.selectCheckbox').removeAttr("name");
-                updateAmounts()
+                selectedRecords = selectedRecords.filter(id => id !== drId); // Remove value
             }
+
+            // Recalculate and update name attributes
+            selectedRecords.forEach((id, index) => {
+                const $checkboxRow = $(`.selectCheckbox[value="${id}"]`).closest('tr');
+                $checkboxRow.find('.selectCheckbox').attr("name", `DRs[${index}].Id`);
+                $checkboxRow.find('.paymentAmount').attr("name", `DRs[${index}].Amount`);
+            });
+
+            // Retrieve and apply the correct amount
+            const amountPaid = @Html.Raw(Json.Serialize(Model.DRs.ToDictionary(r => r.Id, r => r.Amount)));
+
+            if ($checkbox.is(':checked')) {
+                const amount = amountPaid[drId] || ''; // Get amount by ID, fallback to ''
+                $inputField.val(amount).addClass("inputAmount").show();
+            } else {
+                $inputField.removeAttr("name").hide().val('');
+            }
+
+            updateAmounts();
+        }
+
+        // "Select All" using event delegation
+        $(document).on('change', '#selectAllCheckbox', function () {
+            toggleSelectAll(this);
         });
 
         $(document).on('input', '.inputAmount', function () {

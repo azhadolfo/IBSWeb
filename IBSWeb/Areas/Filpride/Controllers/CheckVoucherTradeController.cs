@@ -2209,5 +2209,86 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return View(model);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> EditHaulerPayment(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
+
+            var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
+                .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                .ToListAsync(cancellationToken);
+
+            if (existingHeaderModel == null || existingDetailsModel == null)
+            {
+                return NotFound();
+            }
+
+            CommissionPaymentViewModel model = new()
+            {
+                CvId = existingHeaderModel.CheckVoucherHeaderId,
+                SupplierId = existingHeaderModel.SupplierId ?? 0,
+                Payee = existingHeaderModel.Payee,
+                SupplierAddress = existingHeaderModel.Supplier.SupplierAddress,
+                SupplierTinNo = existingHeaderModel.Supplier.SupplierTin,
+                TransactionDate = existingHeaderModel.Date,
+                BankId = existingHeaderModel.BankId,
+                CheckNo = existingHeaderModel.CheckNo,
+                CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
+                Particulars = existingHeaderModel.Particulars,
+                CreatedBy = _userManager.GetUserName(this.User),
+                DRs = new List<DRDetailsViewModel>()
+            };
+
+            model.Suppliers = await _dbContext.FilprideSuppliers
+                .Where(supp => supp.Company == companyClaims && supp.Category == "Hauler")
+                .Select(sup => new SelectListItem
+                {
+                    Value = sup.SupplierId.ToString(),
+                    Text = sup.SupplierName
+                })
+                .ToListAsync();
+
+            var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "DR")
+                .ToListAsync(cancellationToken);
+
+            foreach (var item in getCheckVoucherTradePayment)
+            {
+                model.DRs.Add(new DRDetailsViewModel
+                {
+                    Id = item.DocumentId,
+                    Amount = item.AmountPaid
+                });
+            }
+
+            model.COA = await _dbContext.FilprideChartOfAccounts
+                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
+
+            model.BankAccounts = await _dbContext.FilprideBankAccounts
+                .Where(b => b.Company == companyClaims)
+                .Select(ba => new SelectListItem
+                {
+                    Value = ba.BankAccountId.ToString(),
+                    Text = ba.AccountNo + " " + ba.AccountName
+                })
+                .ToListAsync();
+
+            return View(model);
+        }
     }
 }
