@@ -527,6 +527,10 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 cos.Status = nameof(CosStatus.Completed);
             }
+            else if (cos.BalanceQuantity >= 0 && cos.Status == nameof(CosStatus.Completed))
+            {
+                cos.Status = nameof(CosStatus.ForDR);
+            }
         }
 
         public async Task DeductTheVolumeToCos(int cosId, decimal drVolume, CancellationToken cancellationToken = default)

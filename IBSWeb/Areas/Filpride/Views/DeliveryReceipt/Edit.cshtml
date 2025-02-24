@@ -360,10 +360,7 @@
             function validateVolume() {
                 var remainingVolume = parseNumber($("#RemainingVolume").val());
                 var volume = parseNumber($("#Volume").val());
-                // Add current volume for validation when editing
-                if (initialCosId === $('select[name="CustomerOrderSlipId"]').val()) {
-                    remainingVolume += currentVolume;
-                }
+
                 if (volume > remainingVolume) {
                     alert("Volume cannot exceed the remaining volume.");
                     $("#Volume").val(remainingVolume);
