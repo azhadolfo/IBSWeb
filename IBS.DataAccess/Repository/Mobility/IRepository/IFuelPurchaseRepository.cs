@@ -1,5 +1,6 @@
 ﻿using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Mobility;
+using IBS.Models.Mobility.ViewModels;
 
 namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
@@ -8,6 +9,8 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
         Task RecordTheDeliveryToPurchase(IEnumerable<MobilityFuelDelivery> fuelDeliveries, CancellationToken cancellationToken = default);
 
         Task<int> ProcessFuelDelivery(string file, CancellationToken cancellationToken = default);
+
+        Task<int> ProcessFuelDeliveryGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default);
 
         Task PostAsync(string id, string postedBy, string stationCode, CancellationToken cancellationToken = default);
 
