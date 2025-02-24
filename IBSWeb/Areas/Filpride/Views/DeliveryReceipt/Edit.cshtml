@@ -18,7 +18,7 @@
         <form method="post" class="row">
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
-                <input asp-for="DeliverReceiptId" type="hidden" />
+                <input asp-for="DeliveryReceiptId" type="hidden" />
                 <input type="hidden" asp-for="IsECCEdited" />
                 <div class="form-floating col-12">
                     <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" />
@@ -161,6 +161,8 @@
         $(document).ready(function () {
             // Initial load for editing
             var initialCustomerId = $('select[name="CustomerId"]').val();
+            var deliveryReceiptId = $("#DeliveryReceiptId").val();
+            console.log(deliveryReceiptId);
             var initialCosId = $('select[name="CustomerOrderSlipId"]').val();
             var currentVolume = parseNumber($('input[name="Volume"]').val());
             
@@ -172,11 +174,11 @@
 
             // Load customer details if CustomerId exists
             if (initialCustomerId) {
-                loadCustomerDetails(initialCustomerId);
+                loadCustomerDetails(initialCustomerId, deliveryReceiptId);
             }
 
             // Function to load customer details
-            function loadCustomerDetails(customerId) {
+            function loadCustomerDetails(customerId, deliveryReceiptId) {
                 if (customerId) {
                     $.ajax({
                         url: '@Url.Action("GetCustomerDetails", "DeliveryReceipt", new { area = "Filpride" })',
@@ -191,7 +193,7 @@
                                 $('input[name="CustomerTin"]').val('');
                             }
                             // Update COS list and then load COS details
-                            updateCustomerOrderSlips(customerId, function() {
+                            updateCustomerOrderSlips(customerId, deliveryReceiptId, function() {
                                 if (initialCosId) {
                                     $('select[name="CustomerOrderSlipId"]').val(initialCosId);
                                     loadCosDetails(initialCosId, true);
@@ -309,12 +311,12 @@
             });
 
             // Update COS list based on customer
-            function updateCustomerOrderSlips(customerId, callback) {
+            function updateCustomerOrderSlips(customerId, deliveryReceiptId, callback) {
                 if (customerId) {
                     $.ajax({
                         url: '@Url.Action("GetCustomerOrderSlipList", "DeliveryReceipt", new { area = "Filpride" })',
                         type: "GET",
-                        data: { customerId: customerId },
+                        data: { customerId: customerId, deliveryReceiptId: deliveryReceiptId },
                         success: function (data) {
                             var $cosSelect = $('select[name="CustomerOrderSlipId"]');
                             $cosSelect.empty();
