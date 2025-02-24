@@ -60,13 +60,6 @@ namespace IBS.Models.Filpride.ViewModels
         //others
         public string? CreatedBy { get; set; }
 
-        public List<DeliveryReceiptList> DRs { get; set; }
-    }
-
-    public class DeliveryReceiptList
-    {
-        public int Id { get; set; }
-
-        public decimal Amount { get; set; }
+        public List<DRDetailsViewModel> DRs { get; set; }
     }
 }

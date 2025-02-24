@@ -1938,7 +1938,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     foreach (var item in viewModel.DRs)
                     {
                         var getDeliveryReceipts = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.Id, cancellationToken);
-                        getDeliveryReceipts.CommissionAmountPaid += item.Amount;
+                        getDeliveryReceipts.FreightAmountPaid += item.Amount;
 
                         cVTradePaymentModel.Add(
                             new FilprideCVTradePayment
@@ -2043,21 +2043,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> GetCommissioneeDRs(int? commissioneeId, int? cvId)
+        public async Task<IActionResult> GetCommissioneeDRs(int? commissioneeId, int? cvId, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => dr.Company == companyClaims
+                             && dr.CommissioneeId == commissioneeId
+                             && dr.CommissionAmount > dr.CommissionAmountPaid
                              && dr.PostedBy != null);
 
-            if (cvId == 0 || cvId == null)
+            if (cvId != null)
             {
-                query = query.Where(dr => dr.CommissioneeId == commissioneeId && dr.CommissionAmount > dr.CommissionAmountPaid);
-            }
-            else
-            {
-                query = query.Where(dr => (dr.CommissioneeId == commissioneeId && dr.CommissionAmount == dr.CommissionAmountPaid) || dr.CommissionAmount > dr.CommissionAmountPaid);
+                var drIds = await _dbContext.FilprideCVTradePayments
+                    .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
+                    .Select(cvp => cvp.DocumentId)
+                    .ToListAsync(cancellationToken);
+
+                query = query.Union(_dbContext.FilprideDeliveryReceipts
+                    .Where(dr => dr.CommissioneeId == commissioneeId && drIds.Contains(dr.DeliveryReceiptId)));
             }
 
             var deliverReceipt = await query
@@ -2081,21 +2085,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(null);
         }
 
-        public async Task<IActionResult> GetHaulerDRs(int? haulerId, int? cvId)
+        public async Task<IActionResult> GetHaulerDRs(int? haulerId, int? cvId, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => dr.Company == companyClaims
+                             && dr.HaulerId == haulerId
+                             && dr.FreightAmount > dr.FreightAmountPaid
                              && dr.PostedBy != null);
 
-            if (cvId == 0 || cvId == null)
+            if (cvId != null)
             {
-                query = query.Where(dr => dr.HaulerId == haulerId && dr.FreightAmount > dr.FreightAmountPaid);
-            }
-            else
-            {
-                query = query.Where(dr => dr.HaulerId == haulerId);
+                var drIds = await _dbContext.FilprideCVTradePayments
+                    .Where(cvp => cvp.CheckVoucherId == cvId && cvp.DocumentType == "DR")
+                    .Select(cvp => cvp.DocumentId)
+                    .ToListAsync(cancellationToken);
+
+                query = query.Union(_dbContext.FilprideDeliveryReceipts
+                    .Where(dr => dr.HaulerId == haulerId && drIds.Contains(dr.DeliveryReceiptId)));
             }
 
             var deliverReceipt = await query
