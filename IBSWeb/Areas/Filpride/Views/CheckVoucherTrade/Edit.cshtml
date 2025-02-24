@@ -14,7 +14,7 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" id="paymentForm">
             <div class="row">
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -449,7 +449,7 @@
                                         <tr>
                                             <td><input type="checkbox" value="${rr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${rr.receivingReportNo}</td>
-                                            <td><input type="text" class="paymentAmount" style="display: none"></td>
+                                            <td><input type="text" class="paymentAmount" data-balance="${balance}" style="display: none"></td>
                                             <td class="text-end">${formatNumber(rr.grossAmount)}</td>
                                             <td class="text-end">${formatNumber(amountPaid)}</td>
                                             <td class="text-end balance">${formatNumber(balance)}</td>
@@ -624,5 +624,26 @@
 
             return true; // Allow form submission
         }
+    </script>
+    <script>
+        // Validate before form submission
+        $('#paymentForm').on('submit', function(event) {
+            let isValid = true;
+
+            $('.paymentAmount').each(function() {
+                let paymentValue = parseFloat($(this).val()) || 0;
+                let maxBalance = parseFloat($(this).data('balance')) || 0;
+
+                if (paymentValue > maxBalance) {
+                    alert(`Payment amount cannot exceed balance for one or more entries.`);
+                    isValid = false;
+                    return false; // Break loop
+                }
+            });
+
+            if (!isValid) {
+                event.preventDefault(); // Prevent form submission
+            }
+});
     </script>
 }

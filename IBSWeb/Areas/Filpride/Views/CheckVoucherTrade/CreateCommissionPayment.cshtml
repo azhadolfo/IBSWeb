@@ -14,7 +14,7 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" id="paymentForm">
             <div class="row">
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -342,7 +342,7 @@
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox"></td>
                                             <td>${dr.deliveryReceiptNo}</td>
-                                            <td><input type="text" class="paymentAmount" style="display: none"></td>
+                                            <td><input type="text" class="paymentAmount" data-balance="${balance}" style="display: none"></td>
                                             <td class="text-end">${formatNumber(dr.grossAmount)}</td>
                                             <td class="text-end">${formatNumber(dr.amountPaid)}</td>
                                             <td class="text-end balance">${formatNumber(balance)}</td>
@@ -392,7 +392,7 @@
 
                     if (row) {
                         const inputField = $(row).find('.paymentAmount');
-                        const balance = $(row).find('.balance').text().trim();
+                        const balance = parseNumber($(row).find('.balance').text().trim());
 
                         inputField.val(balance).attr("name", `DRs[${index}].Amount`).addClass("inputAmount").show();
                         $(checkbox).attr("name", `DRs[${index}].Id`);
@@ -418,7 +418,7 @@
         $(document).on('change', '.selectCheckbox', function () {
             const row = $(this).closest('tr');
             const inputField = row.find('.paymentAmount');
-            const balance = row.find('.balance').text().trim();
+            const balance = parseNumber(row.find('.balance').text().trim());
 
             if (this.checked) {
                 selectedRecords.add(this.value);
@@ -484,5 +484,26 @@
 
             return true; // Allow form submission
         }
+    </script>
+    <script>
+        // Validate before form submission
+        $('#paymentForm').on('submit', function(event) {
+            let isValid = true;
+
+            $('.paymentAmount').each(function() {
+                let paymentValue = $(this).val();
+                let maxBalance = $(this).data('balance');
+
+                if (paymentValue > maxBalance) {
+                    alert(`Payment amount cannot exceed balance for one or more entries.`);
+                    isValid = false;
+                    return false; // Break loop
+                }
+            });
+
+            if (!isValid) {
+                event.preventDefault(); // Prevent form submission
+            }
+});
     </script>
 }
