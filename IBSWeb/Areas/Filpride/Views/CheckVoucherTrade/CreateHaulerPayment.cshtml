@@ -1,4 +1,4 @@
-@model CheckVoucherTradeViewModel
+@model HaulerPaymentViewModel
 
 @{
     ViewData["Title"] = "Create Hauler Payment";
@@ -324,7 +324,7 @@
 
         function displayRecords(haulerId) {
             $.ajax({
-                url: "@Url.Action("GetDRs", "CheckVoucherTrade")",
+                url: "@Url.Action("GetHaulerDRs", "CheckVoucherTrade")",
                 method: "GET",
                 data: { haulerId: haulerId }, // Pass PO numbers to controller
                 traditional: true, // Ensure jQuery sends the array properly

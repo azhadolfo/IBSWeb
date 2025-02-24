@@ -376,6 +376,7 @@
 
             $(".GetRRList").change(function () {
                 var poNumber = $(this).val(); // Get all selected POIds
+                let cvId = $("#CVId").val(); // Get all selected POIds
                 if (poNumber && poNumber.length > 0) {
 
                     if (!criteria) {
@@ -396,7 +397,7 @@
                             if (result.isConfirmed) {
                                 criteria = result.value; // Store the selected criteria
                                 if (criteria) {
-                                    displayRecords(poNumber, criteria); // Pass criteria and PO numbers to displayRecords function
+                                    displayRecords(poNumber, criteria, cvId); // Pass criteria and PO numbers to displayRecords function
                                 } else {
                                     console.error('Invalid display criteria');
                                 }
@@ -407,7 +408,7 @@
                         });
                     } else {
                         if (poNumber && poNumber.length > 0) {
-                            displayRecords(poNumber, criteria); // Pass PO number and criteria to displayRecords function
+                            displayRecords(poNumber, criteria, cvId); // Pass PO number and criteria to displayRecords function
                         } else {
                             console.error('No PO number selected');
                         }
@@ -432,46 +433,49 @@
                     let totalGross = 0;
                     let totalAmountPaid = 0;
                     let totalBalance = 0;
-                    const modelRR = new Map(@Html.Raw(Json.Serialize(Model.RRs.Select(r => new { r.Id, r.Amount})))
+                    const modelRRs = new Map(@Html.Raw(Json.Serialize(Model.RRs.Select(r => new { r.Id, r.Amount})))
                         .map(r => [r.id, r.amount]));
 
                     tbody.empty();
 
-                    data.forEach((rr) => {
-                        let balance = parseNumber(rr.grossAmount) - parseNumber(rr.amountPaid);
-                        const rrAmount = modelRR.get(rr.id) || 0;
-                        const isChecked = modelRR.has(rr.id) ? 'checked' : '';
-
-                        const tr = $(`
-                                    <tr>
-                                        <td><input type="checkbox" value="${rr.id}" class="selectCheckbox" ${isChecked}></td>
-                                        <td>${rr.receivingReportNo}</td>
-                                        <td><input type="text" class="paymentAmount" style="display: none"></td>
-                                        <td class="text-end">${formatNumber(rr.grossAmount)}</td>
-                                        <td class="text-end">${formatNumber(rr.amountPaid - rrAmount)}</td>
-                                        <td class="text-end">${formatNumber(balance)}</td>
-                                    </tr>
-                                `);
+                    if (data){
+                        data.forEach((rr, index) => {
+                            const rrAmount = modelRRs.get(rr.id) || 0;
+                            let amountPaid = parseNumber(rr.amountPaid) - rrAmount;
+                            let balance = parseNumber(rr.grossAmount) - amountPaid;
+                            
+                            const isChecked = modelRRs.has(rr.id) ? 'checked' : '';
+                            const tr = $(`
+                                        <tr>
+                                            <td><input type="checkbox" value="${rr.id}" class="selectCheckbox" ${isChecked}></td>
+                                            <td>${rr.receivingReportNo}</td>
+                                            <td><input type="text" class="paymentAmount" style="display: none"></td>
+                                            <td class="text-end">${formatNumber(rr.grossAmount)}</td>
+                                            <td class="text-end">${formatNumber(amountPaid)}</td>
+                                            <td class="text-end balance">${formatNumber(balance)}</td>
+                                        </tr>
+                                    `);
                             tbody.append(tr);
 
                             totalGross += parseNumber(rr.grossAmount);
                             totalAmountPaid += parseNumber(rr.amountPaid);
                             totalBalance += balance;
                         });
+                    }
 
                     // Append Grand Total Rows
                     const totalRow = $(`
-                        <tr style="border-bottom:double;" class="sticky-lg-bottom">
-                            <td colspan="7" class="pt-1"></td>
-                        </tr>
-                        <tr class="sticky-bottom bg-white">
-                            <td colspan="2"></td>
-                            <td class="fw-bold text-end p-2">Grand Total:</td>
-                            <td class="text-end" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>
-                            <td class="text-end" id="grandTotalNetAmount">${formatNumber(totalAmountPaid)}</td>
-                            <td class="text-end" id="grandTotalNetOfEWT">${formatNumber(totalBalance)}</td>
-                        </tr>
-                    `);
+                <tr style="border-bottom:double;" class="sticky-lg-bottom">
+                    <td colspan="7" class="pt-1"></td>
+                </tr>
+                <tr class="sticky-bottom bg-white">
+                    <td colspan="2"></td>
+                    <td class="fw-bold text-end p-2">Grand Total:</td>
+                    <td class="text-end" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>
+                    <td class="text-end" id="grandTotalNetAmount">${formatNumber(totalAmountPaid)}</td>
+                    <td class="text-end" id="grandTotalNetOfEWT">${formatNumber(totalBalance)}</td>
+                </tr>
+            `);
                     tbody.append(totalRow);
 
                     // Ensure checkbox state is processed AFTER records are loaded

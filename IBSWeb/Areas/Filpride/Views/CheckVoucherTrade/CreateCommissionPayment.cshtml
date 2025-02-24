@@ -324,7 +324,7 @@
 
         function displayRecords(commissioneeId) {
             $.ajax({
-                url: "@Url.Action("GetDRs", "CheckVoucherTrade")",
+                url: "@Url.Action("GetCommissioneeDRs", "CheckVoucherTrade")",
                 method: "GET",
                 data: { commissioneeId: commissioneeId }, // Pass PO numbers to controller
                 traditional: true, // Ensure jQuery sends the array properly
