@@ -210,7 +210,13 @@
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                                 ${row.postedBy == null ? `
-                                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherTrade", new { area = "Filpride" })/${data}">Edit</a></li>
+                                                    ${row.cvType === 'Commission' ? `
+                                                        <li><a class="dropdown-item" href="@Url.Action("EditCommissionPayment", "CheckVoucherTrade", new { area = "Filpride" })/${data}">Edit</a></li>
+                                                    ` : row.cvType === 'Hauler' ? `
+                                                        <li><a class="dropdown-item" href="@Url.Action("EditHaulerPayment", "CheckVoucherTrade", new { area = "Filpride" })/${data}">Edit</a></li>
+                                                    ` : `
+                                                        <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherTrade", new { area = "Filpride" })/${data}">Edit</a></li>
+                                                    `}
                                                     <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherTrade", new { area = "Filpride" })/${data}">Preview</a></li>
                                                     <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${data})">Cancel</a></li>
                                                 ` : `
