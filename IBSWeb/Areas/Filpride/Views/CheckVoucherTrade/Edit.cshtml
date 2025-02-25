@@ -538,6 +538,7 @@
             const $row = $checkbox.closest('tr');
             const $inputField = $row.find('.paymentAmount');
             const rrId = $checkbox.val(); // Get checkbox value
+            const $balanceField = $row.find('.balance').text();
 
             if ($checkbox.is(':checked')) {
                 if (!selectedRecords.includes(rrId)) {
@@ -558,8 +559,12 @@
             const amountPaid = @Html.Raw(Json.Serialize(Model.RRs.ToDictionary(r => r.Id, r => r.Amount)));
 
             if ($checkbox.is(':checked')) {
-                const amount = amountPaid[rrId] || ''; // Get amount by ID, fallback to ''
-                $inputField.val(amount).addClass("inputAmount").show();
+                const amount = amountPaid[rrId]; // Get amount by ID, fallback to ''
+                if (amount === undefined){
+                    $inputField.val(parseNumber($balanceField)).addClass("inputAmount").show();
+                }else{
+                    $inputField.val(amount).addClass("inputAmount").show();
+                }
             } else {
                 $inputField.removeAttr("name").hide().val('');
             }

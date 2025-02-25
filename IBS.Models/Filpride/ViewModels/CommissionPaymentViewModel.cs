@@ -5,7 +5,7 @@ namespace IBS.Models.Filpride.ViewModels
 {
     public class CommissionPaymentViewModel
     {
-        public int? CvId { get; set; }
+        public int CvId { get; set; }
         public List<SelectListItem>? Suppliers { get; set; }
 
         [Required]
