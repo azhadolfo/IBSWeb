@@ -6,7 +6,6 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
-using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -16,7 +15,6 @@ using Quartz;
 
 namespace IBS.Services
 {
-
     public interface IGoogleDriveImportService
     {
         Task<List<GoogleDriveFile>> GetFileFromDriveAsync(string folderId);
@@ -68,19 +66,26 @@ namespace IBS.Services
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+            await using var transaction = await db.Database.BeginTransactionAsync();
+
             try
             {
-                ImportSales();
-                ImportPurchases();
+                await ImportSales();
+                await ImportPurchases();
 
-                LogMessage logMessage = new("Information", "GDriveImportService", $"Importing service testing {DateTime.Now}.");
+                LogMessage logMessage = new("Information", "GDriveImportService",
+                    $"Importing service testing {DateTime.Now}.");
 
                 await db.LogMessages.AddAsync(logMessage);
                 await db.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
             catch (Exception ex)
             {
-                LogMessage logMessage = new("Warning", "GDriveImportService", $"Importing service exception {DateTime.Now}.");
+                await transaction.RollbackAsync();
+
+                LogMessage logMessage = new("Warning", "GDriveImportService",
+                    $"Importing service exception {DateTime.Now}.");
                 _logger.LogInformation("=====Exception: " + ex.Message + ".=====");
 
                 await db.LogMessages.AddAsync(logMessage);
@@ -92,7 +97,7 @@ namespace IBS.Services
         {
             // get credential
             var serviceCredential = _googleCredential.CreateScoped(DriveService.ScopeConstants.Drive);
-            var service = new DriveService(new BaseClientService.Initializer()
+            var service = new DriveService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = serviceCredential,
                 ApplicationName = "IBS Application"
@@ -115,7 +120,7 @@ namespace IBS.Services
                         FileLink = file.WebViewLink
                     };
 
-                    using (var stream = new System.IO.MemoryStream())
+                    using (var stream = new MemoryStream())
                     {
                         var downloadRequest = service.Files.Get(file.Id);
                         await downloadRequest.DownloadAsync(stream);
@@ -154,8 +159,6 @@ namespace IBS.Services
                 {
                     var fileList = await GetFileFromDriveAsync(station.FolderPath);
 
-                    await using var transaction = await db.Database.BeginTransactionAsync();
-
                     try
                     {
                         var currentYear = DateTime.UtcNow.ToString("yyyy");
@@ -176,7 +179,6 @@ namespace IBS.Services
 
                             await db.LogMessages.AddAsync(logMessage);
                             await db.SaveChangesAsync();
-                            await transaction.CommitAsync();
 
                             continue;
                         }
@@ -256,22 +258,20 @@ namespace IBS.Services
                             await db.LogMessages.AddAsync(logMessage);
                             await db.SaveChangesAsync();
                         }
-
-                        await transaction.CommitAsync();
                     }
                     catch (Exception ex)
                     {
-                        await transaction.RollbackAsync();
-
                         LogMessage logMessage = new("Error", "ImportSales",
                             $"Error: {ex.Message} in '{station.StationName}'.");
-                        _logger.LogInformation("=====EXCEPTION: " + ex.Message + " " + station.StationName +" PURCHASES=====");
+                        _logger.LogInformation("=====EXCEPTION: " + ex.Message + " " + station.StationName +
+                                               " PURCHASES=====");
 
                         await db.LogMessages.AddAsync(logMessage);
                         await db.SaveChangesAsync();
                     }
                 }
             }
+
             _logger.LogInformation($"=====SALES IMPORT COMPLETED=====");
         }
 
@@ -286,6 +286,7 @@ namespace IBS.Services
                 !string.IsNullOrEmpty(s.FolderPath))
                 .Where(s => s.StationCode == "S19")
                 .ToListAsync();
+
             int fuelsCount;
             int lubesCount;
             int poSalesCount;
@@ -294,10 +295,7 @@ namespace IBS.Services
             {
                 if (station.FolderPath != "No Salestext")
                 {
-                    var importFolder = Path.Combine(station.FolderPath);
                     var fileList = await GetFileFromDriveAsync(station.FolderPath);
-
-                    await using var transaction = await db.Database.BeginTransactionAsync();
 
                     try
                     {
@@ -313,12 +311,11 @@ namespace IBS.Services
                             // Import this message to your message box
                             _logger.LogWarning($"NO CSV FILES IN '{station.StationName}' FOR IMPORT PURCHASE.");
 
-                            LogMessage logMessage = new("Warning", "ImportPurchases", $"No csv files found in station '{station.StationName}'.");
+                            LogMessage logMessage = new("Warning", "ImportPurchases",
+                                $"No csv files found in station '{station.StationName}'.");
 
                             await db.LogMessages.AddAsync(logMessage);
                             await db.SaveChangesAsync();
-
-                            await transaction.CommitAsync();
 
                             continue;
                         }
@@ -401,16 +398,13 @@ namespace IBS.Services
                             await db.LogMessages.AddAsync(logMessage);
                             await db.SaveChangesAsync();
                         }
-
-                        await transaction.CommitAsync();
                     }
                     catch (Exception ex)
                     {
-                        await transaction.RollbackAsync();
-
                         LogMessage logMessage = new("Error", "ImportPurchase",
                             $"Error: {ex.Message} in '{station.StationName}'.");
-                        _logger.LogInformation("=====Exception: " + ex.Message + " " + station.StationName +" Purchases=====");
+                        _logger.LogInformation("=====Exception: " + ex.Message + " " + station.StationName +
+                                               " Purchases=====");
 
                         await db.LogMessages.AddAsync(logMessage);
                         await db.SaveChangesAsync();
