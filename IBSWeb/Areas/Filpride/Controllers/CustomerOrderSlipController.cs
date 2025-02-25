@@ -96,8 +96,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
                 var filterTypeClaim = await GetCurrentFilterType();
 
-                var cosList = await _unitOfWork.FilprideCustomerOrderSlip
-                    .GetAllAsync(cos => cos.Company == companyClaims, cancellationToken);
+                // var cosList = await _unitOfWork.FilprideCustomerOrderSlip
+                //     .GetAllAsync(cos => cos.Company == companyClaims, cancellationToken);
+
+                var query = _dbContext.FilprideCustomerOrderSlips
+                    .Include(cos => cos.Customer)
+                    .Include(cos => cos.Hauler)
+                    .Include(cos => cos.Product)
+                    .Include(cos => cos.Supplier)
+                    .Include(cos => cos.PickUpPoint)
+                    .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
+                    .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                    .Include(cos => cos.AppointedSuppliers)
+                    .Where(cos => cos.Company == companyClaims);
 
                 // Apply status filter based on filterType
                 if (!string.IsNullOrEmpty(filterTypeClaim))
@@ -105,29 +116,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     switch (filterTypeClaim)
                     {
                         case "ForAppointSupplier":
-                            cosList = cosList.Where(cos =>
+                            query = query.Where(cos =>
                                 cos.Status == nameof(CosStatus.HaulerAppointed) ||
                                 cos.Status == nameof(CosStatus.Created));
                             break;
                         case "ForAppointHauler":
-                            cosList = cosList.Where(cos =>
+                            query = query.Where(cos =>
                                 cos.Status == nameof(CosStatus.SupplierAppointed) ||
                                 cos.Status == nameof(CosStatus.Created));
                             break;
                         case "ForATLBooking":
-                            cosList = cosList.Where(cos =>
+                            query = query.Where(cos =>
                                 cos.Status == nameof(CosStatus.ForAtlBooking));
                             break;
                         case "ForOMApproval":
-                            cosList = cosList.Where(cos =>
+                            query = query.Where(cos =>
                                 cos.Status == nameof(CosStatus.ForApprovalOfOM));
                             break;
                         case "ForFMApproval":
-                            cosList = cosList.Where(cos =>
+                            query = query.Where(cos =>
                                 cos.Status == nameof(CosStatus.ForApprovalOfFM));
                             break;
                         case "ForDR":
-                            cosList = cosList.Where(cos =>
+                            query = query.Where(cos =>
                                 cos.Status == nameof(CosStatus.ForDR));
                             break;
                         // Add other cases as needed
@@ -139,19 +150,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
-                    cosList = cosList
-                    .Where(s =>
+                    // Try to parse the searchValue into a DateOnly
+                    bool isDateSearch = DateOnly.TryParse(searchValue, out var searchDate);
+
+                    query = query.Where(s =>
                         s.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
                         s.OldCosNo.ToLower().Contains(searchValue) ||
-                        s.PurchaseOrder?.PurchaseOrderNo.ToLower().Contains(searchValue) == true ||
-                        s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
-                        s.Customer.CustomerName?.ToLower().Contains(searchValue) == true ||
+                        (s.PurchaseOrder != null && s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue)) ||
+                        (s.Customer != null && s.Customer.CustomerName.ToLower().Contains(searchValue)) ||
+                        (isDateSearch && s.Date == searchDate) ||
+                        (s.PickUpPoint != null && s.PickUpPoint.Depot.ToLower().Contains(searchValue)) ||
+                        s.Product.ProductName.ToLower().Contains(searchValue) ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.TotalAmount.ToString().Contains(searchValue) ||
-                        s.Status.ToLower().Contains(searchValue) ||
-                        s.Remarks.ToLower().Contains(searchValue)
-                        )
-                    .ToList();
+                        s.Status.ToLower().Contains(searchValue));
                 }
 
                 // Sorting
@@ -161,18 +173,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var columnName = parameters.Columns[orderColumn.Column].Data;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
-                    cosList = cosList
-                        .AsQueryable()
-                        .OrderBy($"{columnName} {sortDirection}")
-                        .ToList();
+                    query = query.OrderBy($"{columnName} {sortDirection}");
                 }
 
-                var totalRecords = cosList.Count();
+                var totalRecords = query.Count();
 
-                var pagedData = cosList
+                // Apply pagination and project to a lighter DTO
+                var pagedData = await query
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
-                    .ToList();
+                    .Select(cos => new {
+                        cos.CustomerOrderSlipId,
+                        cos.CustomerOrderSlipNo,
+                        cos.OldCosNo,
+                        cos.PurchaseOrderId,
+                        cos.PurchaseOrder.PurchaseOrderNo,
+                        cos.PickUpPoint.Depot,
+                        cos.PickUpPointId,
+                        cos.Date,
+                        cos.Customer.CustomerName,
+                        cos.Product.ProductName,
+                        cos.Quantity,
+                        cos.TotalAmount,
+                        cos.Status,
+                        // Extract only PurchaseOrderNos from AppointedSuppliers
+                        AppointedSupplierPOs = cos.AppointedSuppliers
+                            .Select(a => a.PurchaseOrder.PurchaseOrderNo)
+                            .ToList(),
+                    })
+                    .ToListAsync(cancellationToken);
 
                 return Json(new
                 {
