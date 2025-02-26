@@ -708,16 +708,6 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<FilprideCVTradePayment>(cv =>
             {
-                cv.HasOne(cv => cv.RR)
-                    .WithMany()
-                    .HasForeignKey(cv => cv.DocumentId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                cv.HasOne(cv => cv.DR)
-                    .WithMany()
-                    .HasForeignKey(cv => cv.DocumentId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
                 cv.HasOne(cv => cv.CV)
                     .WithMany()
                     .HasForeignKey(cv => cv.CheckVoucherId)
