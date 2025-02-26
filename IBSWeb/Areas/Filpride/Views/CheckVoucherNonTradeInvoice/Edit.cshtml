@@ -102,6 +102,7 @@
                                             <input type="hidden" name="AccountingEntries[@i].CompanyMasterFileId" value="@Model.AccountingEntries[i].CompanyMasterFileId" class="company-master-file-id" />
                                             <input type="hidden" name="AccountingEntries[@i].EmployeeMasterFileId" value="@Model.AccountingEntries[i].EmployeeMasterFileId" class="employee-master-file-id" />
                                             <input type="hidden" name="AccountingEntries[@i].EmployeeMasterFileId" value="@Model.AccountingEntries[i].CustomerMasterFileId" class="customer-master-file-id" />
+                                            <input type="hidden" name="AccountingEntries[@i].EmployeeMasterFileId" value="@Model.AccountingEntries[i].SupplierMasterFileId" class="supplier-master-file-id" />
                                         </td>
                                         <td>
                                             <input type="number" name="AccountingEntries[@i].Amount" value="@Model.AccountingEntries[i].Amount" class="form-control form-control-sm text-end amount" />
@@ -267,6 +268,14 @@
 
             // Update display once after all calculations
             displayAccumulatedEntries();
+
+            // Reinitialize Select2 for all js-select2 dropdowns
+            $('.js-select2').select2({
+                placeholder: "Select an option...",
+                allowClear: true,
+                width: 'resolve',
+                theme: 'classic'
+            });
         }
 
         // Calculate tax and VAT for a single row
@@ -425,6 +434,7 @@
                 <input type="hidden" name="AccountingEntries[${rowCount}].CompanyMasterFileId" class="company-master-file-id" />
                 <input type="hidden" name="AccountingEntries[${rowCount}].EmployeeMasterFileId" class="employee-master-file-id" />
                 <input type="hidden" name="AccountingEntries[${rowCount}].CustomerMasterFileId" class="customer-master-file-id" />
+                <input type="hidden" name="AccountingEntries[${rowCount}].SupplierMasterFileId" class="supplier-master-file-id" />
             </td>
             <td class="px-2">
                 <input type="number" name="AccountingEntries[${rowCount}].Amount" class="form-control form-control-sm text-end amount" value="0" />
@@ -462,14 +472,19 @@
             tableBody.insertAdjacentHTML("beforeend", newRowHTML);
             const newRow = tableBody.lastElementChild;
 
-            // Initialize Select2
-            $(newRow).find('.js-select2').select2({
+            // Reinitialize Select2 for all js-select2 dropdowns
+            $('.js-select2').select2({
                 placeholder: "Select an option...",
                 allowClear: true,
                 width: 'resolve',
                 theme: 'classic'
             });
+            
+            console.log(newRow.querySelector('.chart-of-accounts'));
 
+            // Clear the selection of the Chart of Accounts dropdown in the new row using Select2's val method
+            $(newRow).find('.chart-of-accounts').val(null).trigger('change');
+            
             // Initialize event listeners
             initializeRowEventListeners(newRow);
 
@@ -619,7 +634,8 @@
                 getBankAccounts: '@Url.Action("GetBankAccounts", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
                 getCompanies: '@Url.Action("GetCompanies", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
                 getEmployees: '@Url.Action("GetEmployees", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
-                getCustomers: '@Url.Action("GetCustomers", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })'
+                getCustomers: '@Url.Action("GetCustomers", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
+                getSupplier: '@Url.Action("GetSuppliers", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
             });
 
             // Handle selection button clicks
@@ -648,121 +664,57 @@
         function initializeBankAccountDisplay() {
             // Find rows with bank master file IDs
             document.querySelectorAll('#accountTable tbody tr').forEach(row => {
-                const bankMasterFileId = row.querySelector('.bank-master-file-id')?.value;
-                const companyMasterFileId = row.querySelector('.company-master-file-id')?.value;
-                const employeeMasterFileId = row.querySelector('.employee-master-file-id')?.value;
-                const customerMasterFileId = row.querySelector('.customer-master-file-id')?.value;
+                const masterFileIds = {
+                    bankId: row.querySelector('.bank-master-file-id')?.value,
+                    companyId: row.querySelector('.company-master-file-id')?.value,
+                    employeeId: row.querySelector('.employee-master-file-id')?.value,
+                    customerId: row.querySelector('.customer-master-file-id')?.value,
+                    supplierId: row.querySelector('.supplier-master-file-id')?.value
+                };
+
                 const accountSelect = row.querySelector('.chart-of-accounts');
+                if (!accountSelect) return;
 
-                if (bankMasterFileId && accountSelect && (accountSelect.value === '101010100 Cash in Bank' || accountSelect.value === '101020500 AR-Non Trade Receivable')) {
+                // Mapping of accounts to their respective API endpoints
+                const accountMappings = [
+                    { key: 'bankId', accounts: ['101010100 Cash in Bank', '101020500 AR-Non Trade Receivable'], url: 'GetBankAccountById' },
+                    { key: 'companyId', accounts: ['101010400 Fund Transfer', '101020600 AR-Exchange Check', '101020500 AR-Non Trade Receivable'], url: 'GetCompanyById' },
+                    { key: 'employeeId', accounts: ['101020400 Advances from Officers and Employees', '101020500 AR-Non Trade Receivable'], url: 'GetEmployeeById' },
+                    { key: 'customerId', accounts: ['101020500 AR-Non Trade Receivable'], url: 'GetCustomerById' },
+                    { key: 'supplierId', accounts: ['101020500 AR-Non Trade Receivable'], url: 'GetSupplierById' }
+                ];
 
-                    // Fetch bank account details for this ID
-                    $.ajax({
-                        url: '@Url.Action("GetBankAccountById", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
-                        type: 'GET',
-                        data: { bankId: bankMasterFileId },
-                        success: function(data) {
-                            if (data && data.accountName) {
-                                // Store original text
-                                const originalText = accountSelect.options[accountSelect.selectedIndex].text;
-                                accountSelect.dataset.originalText = originalText;
-
-                                // Update display text to include bank account
-                                const bankInfo = `${data.accountNumber} - ${data.accountName}`;
-                                const updatedText = `${originalText} (${bankInfo})`;
-                                accountSelect.options[accountSelect.selectedIndex].text = updatedText;
-
-                                // Recalculate to update the journal entries
-                                recalculateAllRows();
-                            }
-                        },
-                        error: function() {
-                            console.error('Error loading bank account details');
-                        }
-                    });
+                for (const { key, accounts, url } of accountMappings) {
+                    if (masterFileIds[key] && accounts.includes(accountSelect.value)) {
+                        fetchAccountDetails(url, key, masterFileIds[key], accountSelect);
+                        break; // Exit loop once a match is found
+                    }
                 }
-                else if (companyMasterFileId && (accountSelect && accountSelect.value === '101010400 Fund Transfer' ||
-                    accountSelect.value === '101020600 AR-Exchange Check' || accountSelect.value === '101020500 AR-Non Trade Receivable')) {
-                    
-                    $.ajax({
-                        url: '@Url.Action("GetCompanyById", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
-                        type: 'GET',
-                        data: { companyId: companyMasterFileId },
-                        success: function(data) {
-                            if (data && data.accountName) {
-                                // Store original text
-                                const originalText = accountSelect.options[accountSelect.selectedIndex].text;
-                                accountSelect.dataset.originalText = originalText;
+            });
+        }
 
-                                // Update display text to include bank account
-                                const companyInfo = `${data.accountNumber} - ${data.accountName}`;
-                                const updatedText = `${originalText} (${companyInfo})`;
-                                accountSelect.options[accountSelect.selectedIndex].text = updatedText;
+        function fetchAccountDetails(action, paramKey, paramValue, accountSelect) {
+            let url = '@Url.Action("PLACEHOLDER", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })';
+            url = url.replace("PLACEHOLDER", action);
+            
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: { [paramKey]: paramValue },
+                success: function(data) {
+                    if (data && data.accountName) {
+                        const originalText = accountSelect.options[accountSelect.selectedIndex].text;
+                        accountSelect.dataset.originalText = originalText; // Store original text
 
-                                // Recalculate to update the journal entries
-                                recalculateAllRows();
-                            }
-                        },
-                        error: function() {
-                            console.error('Error loading account details');
-                        }
-                    });
+                        const updatedText = `${originalText} (${data.accountNumber} - ${data.accountName})`;
+                        accountSelect.options[accountSelect.selectedIndex].text = updatedText;
+
+                        recalculateAllRows();
+                    }
+                },
+                error: function() {
+                    console.error(`Error loading details for ${paramKey}`);
                 }
-                else if (employeeMasterFileId && (accountSelect && accountSelect.value === '101020400 Advances from Officers and Employees' || accountSelect.value === '101020500 AR-Non Trade Receivable')) {
-                    
-                    $.ajax({
-                        url: '@Url.Action("GetEmployeeById", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
-                        type: 'GET',
-                        data: { employeeId: employeeMasterFileId },
-                        success: function(data) {
-                            if (data && data.accountName) {
-                                // Store original text
-                                const originalText = accountSelect.options[accountSelect.selectedIndex].text;
-                                accountSelect.dataset.originalText = originalText;
-
-                                // Update display text to include bank account
-                                const employeeName = `${data.accountNumber} - ${data.accountName}`;
-                                const updatedText = `${originalText} (${employeeName})`;
-                                accountSelect.options[accountSelect.selectedIndex].text = updatedText;
-
-                                // Recalculate to update the journal entries
-                                recalculateAllRows();
-                            }
-                        },
-                        error: function() {
-                            console.error('Error loading account details');
-                        }
-                    });
-                    
-                }
-                else if (customerMasterFileId && accountSelect.value === '101020500 AR-Non Trade Receivable') {
-
-                    $.ajax({
-                        url: '@Url.Action("GetCustomerById", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
-                        type: 'GET',
-                        data: { customerId: customerMasterFileId },
-                        success: function(data) {
-                            if (data && data.accountName) {
-                                // Store original text
-                                const originalText = accountSelect.options[accountSelect.selectedIndex].text;
-                                accountSelect.dataset.originalText = originalText;
-
-                                // Update display text to include bank account
-                                const employeeName = `${data.accountNumber} - ${data.accountName}`;
-                                const updatedText = `${originalText} (${employeeName})`;
-                                accountSelect.options[accountSelect.selectedIndex].text = updatedText;
-
-                                // Recalculate to update the journal entries
-                                recalculateAllRows();
-                            }
-                        },
-                        error: function() {
-                            console.error('Error loading account details');
-                        }
-                    });
-
-                }
-                
             });
         }
     </script>

@@ -38,7 +38,16 @@ class MasterFileSelector {
                 placeholder: 'Select a customer',
                 formatOption: (item) => `${item.accountNumber} - ${item.accountName}`,
                 inputName: 'CustomerMasterFileId'
-            }
+            },
+            SUPPLIER: {
+                id: 'supplier',
+                title: 'Supplier',
+                url: urls.getSuppliers,
+                triggerAccount: '101020500 AR-Non Trade Receivable',
+                placeholder: 'Select a supplier',
+                formatOption: (item) => `${item.accountNumber} - ${item.accountName}`,
+                inputName: 'SupplierMasterFileId'
+            },
         };
 
         this.initializeEventListeners();
@@ -121,6 +130,7 @@ class MasterFileSelector {
                                     <option value="COMPANY">Company</option>
                                     <option value="EMPLOYEE">Employee</option>
                                     <option value="CUSTOMER">Customer</option>
+                                    <option value="SUPPLIER">Supplier</option>
                                 </select>
                             </div>
                         </div>
@@ -165,7 +175,7 @@ class MasterFileSelector {
 
     createModal(type) {
         const modalId = `${type.id}Modal`;
-        if ($(`#${modalId}`).length) return;
+        $(`#${modalId}`).remove();
 
         const modalHTML = `
             <div class="modal fade" id="${modalId}" tabindex="-1" style="z-index: 1060;">
@@ -254,6 +264,14 @@ class MasterFileSelector {
             } else {
                 select.append('<option value="">No records found</option>');
             }
+
+            // Reinitialize select2
+            select.select2({
+                dropdownParent: $(`#${modalId}`),
+                placeholder: type.placeholder,
+                width: '100%',
+                theme: 'classic'
+            });
 
             $(`#${modalId}`).data('row', row);
             modal.show();
