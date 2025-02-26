@@ -310,7 +310,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = viewModel.Debit[i],
                                 Credit = viewModel.Credit[i],
                                 TransactionNo = cvh.CheckVoucherHeaderNo,
-                                CheckVoucherHeaderId = cvh.CheckVoucherHeaderId
+                                CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                                SupplierId = i == 0 ? viewModel.SupplierId : null,
+                                BankId = i == 2 ? viewModel.BankId : null,
                             });
                         }
                     }
@@ -649,7 +651,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = viewModel.Debit[i],
                             Credit = viewModel.Credit[i],
                             TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = viewModel.CVId
+                            CheckVoucherHeaderId = viewModel.CVId,
+                            SupplierId = i == 0 ? viewModel.SupplierId : null,
+                            BankId = i == 2 ? viewModel.BankId : null,
                         });
                     }
 
@@ -1663,7 +1667,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = viewModel.Debit[i],
                                 Credit = viewModel.Credit[i],
                                 TransactionNo = cvh.CheckVoucherHeaderNo,
-                                CheckVoucherHeaderId = cvh.CheckVoucherHeaderId
+                                CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                                SupplierId = i == 0 ? viewModel.SupplierId : null,
+                                BankId = i == 2 ? viewModel.BankId : null,
                             });
                         }
                     }
@@ -1925,7 +1931,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = viewModel.Debit[i],
                                 Credit = viewModel.Credit[i],
                                 TransactionNo = cvh.CheckVoucherHeaderNo,
-                                CheckVoucherHeaderId = cvh.CheckVoucherHeaderId
+                                CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                                SupplierId = i == 0 ? viewModel.SupplierId : null,
+                                BankId = i == 2 ? viewModel.BankId : null,
                             });
                         }
                     }
@@ -2242,7 +2250,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = viewModel.Debit[i],
                             Credit = viewModel.Credit[i],
                             TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = viewModel.CvId
+                            CheckVoucherHeaderId = viewModel.CvId,
+                            SupplierId = i == 0 ? viewModel.SupplierId : null,
+                            BankId = i == 2 ? viewModel.BankId : null,
                         });
                     }
 
@@ -2266,7 +2276,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Saving the default entries
 
-                    #region -- Partial payment of RR's
+                    #region -- Partial payment
 
                     var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
                         .Where(cv => cv.CheckVoucherId == existingHeaderModel.CheckVoucherHeaderId && cv.DocumentType == "DR")
@@ -2472,7 +2482,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Debit = viewModel.Debit[i],
                             Credit = viewModel.Credit[i],
                             TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = viewModel.CvId
+                            CheckVoucherHeaderId = viewModel.CvId,
+                            SupplierId = i == 0 ? viewModel.SupplierId : null,
+                            BankId = i == 2 ? viewModel.BankId : null,
                         });
                     }
 
@@ -2496,7 +2508,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Saving the default entries
 
-                    #region -- Partial payment of RR's
+                    #region -- Partial payment
 
                     var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
                         .Where(cv => cv.CheckVoucherId == existingHeaderModel.CheckVoucherHeaderId && cv.DocumentType == "DR")
