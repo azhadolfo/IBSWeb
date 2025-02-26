@@ -293,6 +293,14 @@
 
             // Update display once after all calculations
             displayAccumulatedEntries();
+
+            // Reinitialize Select2 for all js-select2 dropdowns
+            $('.js-select2').select2({
+                placeholder: "Select an option...",
+                allowClear: true,
+                width: 'resolve',
+                theme: 'classic'
+            });
         }
 
         // Modified calculate function to optionally skip display update
@@ -656,7 +664,8 @@
                 getBankAccounts: '@Url.Action("GetBankAccounts", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
                 getCompanies: '@Url.Action("GetCompanies", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
                 getEmployees: '@Url.Action("GetEmployees", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
-                getCustomers: '@Url.Action("GetCustomers", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })'
+                getCustomers: '@Url.Action("GetCustomers", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
+                getSupplier: '@Url.Action("GetSuppliers", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })',
             });
 
             // Handle selection button clicks

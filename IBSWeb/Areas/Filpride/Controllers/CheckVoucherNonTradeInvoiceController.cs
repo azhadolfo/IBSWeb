@@ -318,6 +318,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CompanyId = accountEntry.CompanyMasterFileId,
                             EmployeeId = accountEntry.EmployeeMasterFileId,
                             CustomerId = accountEntry.CustomerMasterFileId,
+                            SupplierId = accountEntry.SupplierMasterFileId,
                         });
 
                         if (accountEntry.VatAmount > 0)
@@ -1720,6 +1721,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 id = customer.CustomerId,
                 accountName = customer.CustomerName,
                 accountNumber = customer.CustomerCode
+            });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetSuppliers()
+        {
+            var suppliers = await _unitOfWork.FilprideSupplier.GetAllAsync();
+
+            return Json(suppliers.OrderBy(c => c.SupplierCode).Select(c => new {
+                id = c.SupplierId,
+                accountName = c.SupplierName,
+                accountNumber = c.SupplierCode
+            }));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetSupplierById(int supplierId)
+        {
+            var customer = await _unitOfWork.FilprideSupplier.GetAsync(e => e.SupplierId == supplierId);
+            return Json(new
+            {
+                id = customer.SupplierId,
+                accountName = customer.SupplierName,
+                accountNumber = customer.SupplierCode
             });
         }
     }
