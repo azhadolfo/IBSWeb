@@ -5,7 +5,7 @@ namespace IBS.Models.Filpride.ViewModels
 {
     public class DeliveryReceiptViewModel
     {
-        public int DeliverReceiptId { get; set; }
+        public int DeliveryReceiptId { get; set; }
 
         public DateOnly Date { get; set; }
 

@@ -1,6 +1,7 @@
 ﻿using IBS.Models.Filpride.MasterFile;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.MasterFile;
 using IBS.Utility;
 using IBS.Utility.Helpers;
 
@@ -86,6 +87,15 @@ namespace IBS.Models.Filpride.Books
 
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
+
+        #endregion
+
+        #region Customer Properties
+
+        public int? CompanyId { get; set; }
+
+        [ForeignKey(nameof(CompanyId))]
+        public Company? CompanyModel { get; set; }
 
         #endregion
     }

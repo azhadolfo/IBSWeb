@@ -27,15 +27,19 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             try
             {
+                // ALREADY SHOW PROBLEMS HERE: THROWS EXCEPTION
                 var fuelSales = await _db.FuelSalesViews
+                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.Now.Year)
                     .ToListAsync(cancellationToken);
 
                 var lubeSales = await _db.MobilityLubes
                     .Where(l => !l.IsProcessed)
+                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.Now.Year)
                     .ToListAsync(cancellationToken);
 
                 var safeDropDeposits = await _db.MobilitySafeDrops
                     .Where(s => !s.IsProcessed)
+                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.Now.Year)
                     .ToListAsync(cancellationToken);
 
                 var fuelPoSales = Enumerable.Empty<MobilityFuel>();
@@ -726,6 +730,13 @@ namespace IBS.DataAccess.Repository.Mobility
             return (newRecords.Count, hasPoSales);
         }
 
+        public async Task<(int fuelCount, bool hasPoSales)> ProcessFuelGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
+        {
+            var records = ReadFuelRecordsGoogleDrive(file.FileContent);
+            var (newRecords, hasPoSales) = await AddNewFuelRecords(records, cancellationToken);
+            return (newRecords.Count, hasPoSales);
+        }
+
         private List<MobilityFuel> ReadFuelRecords(string file)
         {
             using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
@@ -736,6 +747,23 @@ namespace IBS.DataAccess.Repository.Mobility
                 MissingFieldFound = null,
             });
 
+            return csv.GetRecords<MobilityFuel>()
+                .OrderBy(r => r.INV_DATE)
+                .ThenBy(r => r.ItemCode)
+                .ThenBy(r => r.xPUMP)
+                .ThenBy(r => r.Opening)
+                .ToList();
+        }
+
+        private List<MobilityFuel> ReadFuelRecordsGoogleDrive(byte[] fileContent)
+        {
+            using var stream = new MemoryStream(fileContent);
+            using var reader = new StreamReader(stream);
+            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HeaderValidated = null,
+                MissingFieldFound = null,
+            });
             return csv.GetRecords<MobilityFuel>()
                 .OrderBy(r => r.INV_DATE)
                 .ThenBy(r => r.ItemCode)
@@ -813,9 +841,29 @@ namespace IBS.DataAccess.Repository.Mobility
             return (newRecords.Count, hasPoSales);
         }
 
+        public async Task<(int lubeCount, bool hasPoSales)> ProcessLubeGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
+        {
+            var records = ReadLubeRecordsGoogleDrive(file.FileContent);
+            var (newRecords, hasPoSales) = await AddNewLubeRecords(records, cancellationToken);
+            return (newRecords.Count, hasPoSales);
+        }
+
         private List<MobilityLube> ReadLubeRecords(string file)
         {
             using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+            using var reader = new StreamReader(stream);
+            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HeaderValidated = null,
+                MissingFieldFound = null,
+            });
+
+            return csv.GetRecords<MobilityLube>().ToList();
+        }
+
+        private List<MobilityLube> ReadLubeRecordsGoogleDrive(byte[] fileContent)
+        {
+            using var stream = new MemoryStream(fileContent);
             using var reader = new StreamReader(stream);
             using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
@@ -866,9 +914,29 @@ namespace IBS.DataAccess.Repository.Mobility
             return newRecords.Count;
         }
 
+        public async Task<int> ProcessSafeDropGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
+        {
+            var records = ReadSafeDropRecordsGoogleDrive(file.FileContent);
+            var newRecords = await AddNewSafeDropRecords(records, cancellationToken);
+            return newRecords.Count;
+        }
+
         private List<MobilitySafeDrop> ReadSafeDropRecords(string file)
         {
             using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+            using var reader = new StreamReader(stream);
+            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HeaderValidated = null,
+                MissingFieldFound = null,
+            });
+
+            return csv.GetRecords<MobilitySafeDrop>().ToList();
+        }
+
+        private List<MobilitySafeDrop> ReadSafeDropRecordsGoogleDrive(byte[] file)
+        {
+            using var stream = new MemoryStream(file);
             using var reader = new StreamReader(stream);
             using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {

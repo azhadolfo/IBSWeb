@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250224064843_AddCompanyIdInGeneralLedger")]
+    partial class AddCompanyIdInGeneralLedger
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2881,22 +2884,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnName("cancellation_remarks");
 
-                    b.Property<decimal>("CommissionAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("commission_amount");
-
-                    b.Property<decimal>("CommissionAmountPaid")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("commission_amount_paid");
-
-                    b.Property<decimal>("CommissionRate")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("commission_rate");
-
-                    b.Property<int>("CommissioneeId")
-                        .HasColumnType("integer")
-                        .HasColumnName("commissionee_id");
-
                     b.Property<string>("Company")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2951,14 +2938,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("freight");
 
-                    b.Property<decimal>("FreightAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("freight_amount");
-
-                    b.Property<decimal>("FreightAmountPaid")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("freight_amount_paid");
-
                     b.Property<bool>("HasAlreadyInvoiced")
                         .HasColumnType("boolean")
                         .HasColumnName("has_already_invoiced");
@@ -2966,14 +2945,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("HaulerId")
                         .HasColumnType("integer")
                         .HasColumnName("hauler_id");
-
-                    b.Property<bool>("IsCommissionPaid")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_commission_paid");
-
-                    b.Property<bool>("IsHaulerPaid")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_hauler_paid");
 
                     b.Property<bool>("IsPrinted")
                         .HasColumnType("boolean")

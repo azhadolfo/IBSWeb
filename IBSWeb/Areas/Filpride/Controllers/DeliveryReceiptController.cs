@@ -405,7 +405,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 DeliveryReceiptViewModel viewModel = new()
                 {
-                    DeliverReceiptId = existingRecord.DeliveryReceiptId,
+                    DeliveryReceiptId = existingRecord.DeliveryReceiptId,
                     Date = existingRecord.Date,
                     CustomerId = existingRecord.Customer.CustomerId,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
@@ -456,7 +456,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     viewModel.CurrentUser = _userManager.GetUserName(User);
 
                     var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
-                            .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
+                            .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
 
                     if (viewModel.IsECCEdited)
                     {
@@ -677,9 +677,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             });
         }
 
-        public async Task<IActionResult> GetCustomerOrderSlipList(int customerId)
+        public async Task<IActionResult> GetCustomerOrderSlipList(int customerId, int? deliveryReceiptId, CancellationToken cancellationToken)
         {
-            var orderSlips = await _dbContext.FilprideCustomerOrderSlips
+            var orderSlips = _dbContext.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
                 .Where(cos => ((!cos.IsDelivered &&
                                 cos.Status == nameof(CosStatus.Completed)) ||
@@ -690,10 +690,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
                     Text = cos.CustomerOrderSlipNo
-                })
-                .ToListAsync();
+                });
 
-            return Json(orderSlips);
+            if (deliveryReceiptId != null)
+            {
+                var existingCos = _dbContext.FilprideDeliveryReceipts
+                    .Include(dr => dr.CustomerOrderSlip)
+                    .Where(dr => dr.DeliveryReceiptId == deliveryReceiptId)
+                    .Select(dr => new SelectListItem
+                    {
+                        Value = dr.CustomerOrderSlipId.ToString(),
+                        Text = dr.CustomerOrderSlip.CustomerOrderSlipNo
+                    });
+
+                orderSlips = orderSlips.Union(existingCos);
+            }
+
+            var result = await orderSlips.ToListAsync(cancellationToken);
+
+
+            return Json(result);
         }
 
         public async Task<IActionResult> GetCosDetails(int? id)

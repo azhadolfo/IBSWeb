@@ -62,17 +62,17 @@
             <div class="table-responsive" style="max-height: 70vh">
                 <table class="table table-hover mb-0" id="paginatedTable">
                     <thead class="bg-light">
-                    <tr class="text-start">
-                        <th>COS#</th>
-                        <th>OTC COS#</th>
-                        <th>PO#</th>
-                        <th>Depot</th>
-                        <th>@Html.DisplayNameFor(m => m.Date)</th>
-                        <th>Customer</th>
-                        <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Total Amount</th>
-                        <th>Status</th>
+                    <tr>
+                        <th class="text-start">COS#</th>
+                        <th class="text-start">OTC COS#</th>
+                        <th class="text-start">PO#</th>
+                        <th class="text-start">Depot</th>
+                        <th class="text-start">@Html.DisplayNameFor(m => m.Date)</th>
+                        <th class="text-start">Customer</th>
+                        <th class="text-start">Product</th>
+                        <th class="text-start">Quantity</th>
+                        <th class="text-start">Total Amount</th>
+                        <th class="text-start">Status</th>
                         <th class="text-center" style="width: 100px;">Actions</th>
                     </tr>
                     </thead>
@@ -123,8 +123,25 @@
                 "columns": [
                     { "data": "customerOrderSlipNo" },
                     { "data": "oldCosNo" },
-                    { "data": "purchaseOrder.purchaseOrderNo" },
-                    { "data": "pickUpPoint.depot" },
+                    {
+                        "data": "purchaseOrderId",
+                        "render": function(data, type, row) {
+                            if (!row.appointedSupplierPOs || row.appointedSupplierPOs.length === 0) {
+                                return `<span>${row.purchaseOrderNo ? row.purchaseOrderNo : ""}</span>`;
+                            }
+
+                            // For multiple PO numbers
+                            return `<span data-bs-toggle="tooltip" title="${row.appointedSupplierPOs.join(', ')}">
+                                        ${row.appointedSupplierPOs.length} POs
+                                    </span>`;
+                        },
+                    },
+                    { 
+                        "data": "pickUpPointId",
+                        "render": function (data, type, row){
+                            return row.depot
+                        },
+                    },
                     {
                         "data": "date",
                         "render": function (data) {
@@ -136,8 +153,8 @@
                             });
                         }
                     },
-                    { "data": "customer.customerName" },
-                    { "data": "product.productName" },
+                    { "data": "customerName" },
+                    { "data": "productName" },
                     {
                         "data": "quantity",
                         "render": function (data, type, row) {

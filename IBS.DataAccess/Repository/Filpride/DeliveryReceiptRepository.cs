@@ -77,7 +77,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task UpdateAsync(DeliveryReceiptViewModel viewModel, CancellationToken cancellationToken = default)
         {
-            var existingRecord = await GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliverReceiptId, cancellationToken);
+            var existingRecord = await GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
 
             var customerOrderSlip = await _db.FilprideCustomerOrderSlips
                 .FirstOrDefaultAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
@@ -526,6 +526,10 @@ namespace IBS.DataAccess.Repository.Filpride
             if (cos.BalanceQuantity <= 0)
             {
                 cos.Status = nameof(CosStatus.Completed);
+            }
+            else if (cos.BalanceQuantity >= 0 && cos.Status == nameof(CosStatus.Completed))
+            {
+                cos.Status = nameof(CosStatus.ForDR);
             }
         }
 
