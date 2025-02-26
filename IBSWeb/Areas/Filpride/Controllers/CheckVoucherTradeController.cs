@@ -873,24 +873,46 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         modelHeader.Status = nameof(Status.Posted);
 
-                        #region -- Partial payment of RR's
+                        #region -- Recalculate payment of RR's or DR's
 
                         var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
-                            .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "RR")
+                            .Where(cv => cv.CheckVoucherId == id)
+                            .Include(cv => cv.CV)
                             .ToListAsync(cancellationToken);
 
                         foreach (var item in getCheckVoucherTradePayment)
                         {
-                            var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
-
-                            if (receivingReport.Amount <= receivingReport.AmountPaid)
+                            if (item.DocumentType == "RR")
                             {
-                                receivingReport.IsPaid = true;
-                                receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                                var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+
+                                if (receivingReport.Amount <= receivingReport.AmountPaid)
+                                {
+                                    receivingReport.IsPaid = true;
+                                    receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                                }
+                            }
+                            if (item.DocumentType == "DR")
+                            {
+                                var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                                if (item.CV.CvType == "Commission")
+                                {
+                                    if (deliveryReceipt.CommissionAmount <= deliveryReceipt.CommissionAmountPaid)
+                                    {
+                                        deliveryReceipt.IsCommissionPaid = true;
+                                    }
+                                }
+                                if (item.CV.CvType == "Hauler")
+                                {
+                                    if (deliveryReceipt.FreightAmount <= deliveryReceipt.FreightAmountPaid)
+                                    {
+                                        deliveryReceipt.IsFreightPaid = true;
+                                    }
+                                }
                             }
                         }
 
-                        #endregion -- Partial payment of RR's
+                        #endregion -- Recalculate payment of RR's or DR's
 
                         #region --General Ledger Book Recording(CV)--
 
@@ -994,24 +1016,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Status = nameof(Status.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
 
-                    #region -- Partial payment of RR's
+                    #region -- Recalculate payment of RR's or DR's
 
                     var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
-                        .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "RR")
+                        .Where(cv => cv.CheckVoucherId == id)
+                        .Include(cv => cv.CV)
                         .ToListAsync(cancellationToken);
 
                     foreach (var item in getCheckVoucherTradePayment)
                     {
-                        var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
-
-                        if (receivingReport.Amount <= receivingReport.AmountPaid)
+                        if (item.DocumentType == "RR")
                         {
+                            var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+
                             receivingReport.IsPaid = false;
                             receivingReport.AmountPaid -= item.AmountPaid;
                         }
+                        if (item.DocumentType == "DR")
+                        {
+                            var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                            if (item.CV.CvType == "Commission")
+                            {
+                                deliveryReceipt.IsCommissionPaid = false;
+                                deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                            }
+                            if (item.CV.CvType == "Hauler")
+                            {
+                                deliveryReceipt.IsFreightPaid = false;
+                                deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                            }
+                        }
                     }
 
-                    #endregion -- Partial payment of RR's
+                    #endregion -- Recalculate payment of RR's or DR's
 
                     #region --Audit Trail Recording
 
@@ -1057,24 +1094,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo);
 
                         //re-compute amount paid in trade and payment voucher
-                        #region -- Partial payment of RR's
+                        #region -- Recalculate payment of RR's or DR's
 
                         var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
-                            .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "RR")
+                            .Where(cv => cv.CheckVoucherId == id)
+                            .Include(cv => cv.CV)
                             .ToListAsync(cancellationToken);
 
                         foreach (var item in getCheckVoucherTradePayment)
                         {
-                            var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
-
-                            if (receivingReport.Amount <= receivingReport.AmountPaid)
+                            if (item.DocumentType == "RR")
                             {
+                                var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+
                                 receivingReport.IsPaid = false;
                                 receivingReport.AmountPaid -= item.AmountPaid;
                             }
+                            if (item.DocumentType == "DR")
+                            {
+                                var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                                if (item.CV.CvType == "Commission")
+                                {
+                                    deliveryReceipt.IsCommissionPaid = false;
+                                    deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                                }
+                                if (item.CV.CvType == "Hauler")
+                                {
+                                    deliveryReceipt.IsFreightPaid = false;
+                                    deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                                }
+                            }
                         }
 
-                        #endregion -- Partial payment of RR's
+                        #endregion -- Recalculate payment of RR's or DR's
 
                         #region --Audit Trail Recording
 

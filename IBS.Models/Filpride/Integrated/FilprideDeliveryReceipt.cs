@@ -103,7 +103,10 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "numeric(18,4)")]
         public decimal FreightAmount { get; set; }
 
-        public int CommissioneeId { get; set; }
+        public int? CommissioneeId { get; set; }
+
+        [ForeignKey(nameof(CommissioneeId))]
+        public FilprideSupplier? Commissionee { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal CommissionRate { get; set; }
@@ -116,7 +119,7 @@ namespace IBS.Models.Filpride.Integrated
 
         public bool IsCommissionPaid { get; set; }
 
-        public bool IsHaulerPaid { get; set; }
+        public bool IsFreightPaid { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal CommissionAmount { get; set; }
