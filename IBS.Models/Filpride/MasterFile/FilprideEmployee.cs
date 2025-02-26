@@ -40,17 +40,13 @@ namespace IBS.Models.Filpride.MasterFile
         [Column(TypeName = "varchar(20)")]
         public string? TinNo { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
         public string? PhilhealthNo { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
         public string? PagibigNo { get; set; } = string.Empty;
 
-        [Column(TypeName = "varchar(20)")]
         public string? Company { get; set; } = string.Empty;
 
-        [Column(TypeName = "varchar(20)")]
-        public string? Depatment { get; set; } = string.Empty;
+        public string? Department { get; set; } = string.Empty;
 
         [Column(TypeName = "date")]
         public DateOnly DateHired { get; set; }
@@ -58,7 +54,6 @@ namespace IBS.Models.Filpride.MasterFile
         [Column(TypeName = "date")]
         public DateOnly? DateResigned { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
         public string Position { get; set; }
 
         public bool IsManagerial { get; set; }

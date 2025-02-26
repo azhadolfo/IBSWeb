@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250226012859_RenameTheDepartment")]
+    partial class RenameTheDepartment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3394,7 +3397,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("birth_date");
 
                     b.Property<string>("Company")
-                        .HasColumnType("text")
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("company");
 
                     b.Property<DateOnly>("DateHired")
@@ -3406,7 +3409,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("date_resigned");
 
                     b.Property<string>("Department")
-                        .HasColumnType("text")
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("department");
 
                     b.Property<string>("EmployeeNumber")
@@ -3441,7 +3444,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("middle_name");
 
                     b.Property<string>("PagibigNo")
-                        .HasColumnType("text")
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("pagibig_no");
 
                     b.Property<string>("Paygrade")
@@ -3449,12 +3452,12 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("paygrade");
 
                     b.Property<string>("PhilhealthNo")
-                        .HasColumnType("text")
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("philhealth_no");
 
                     b.Property<string>("Position")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("varchar(20)")
                         .HasColumnName("position");
 
                     b.Property<decimal>("Salary")
