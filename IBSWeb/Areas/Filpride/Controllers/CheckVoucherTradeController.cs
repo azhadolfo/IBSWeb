@@ -2053,13 +2053,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> GetCommissioneeDRs(int[]? commissioneeId, int? cvId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCommissioneeDRs(int? commissioneeId, int? cvId, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideDeliveryReceipts
                 .Where(dr => dr.Company == companyClaims
-                             && commissioneeId.Contains(dr.CommissioneeId)
+                             && commissioneeId == dr.CommissioneeId
                              && dr.CommissionAmount > dr.CommissionAmountPaid
                              && dr.PostedBy != null);
 
@@ -2071,7 +2071,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToListAsync(cancellationToken);
 
                 query = query.Union(_dbContext.FilprideDeliveryReceipts
-                    .Where(dr => commissioneeId.Contains(dr.CommissioneeId) && drIds.Contains(dr.DeliveryReceiptId)));
+                    .Where(dr => commissioneeId ==dr.CommissioneeId && drIds.Contains(dr.DeliveryReceiptId)));
             }
 
             var deliverReceipt = await query
