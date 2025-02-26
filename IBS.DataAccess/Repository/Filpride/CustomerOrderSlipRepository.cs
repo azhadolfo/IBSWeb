@@ -21,10 +21,11 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
         {
             FilprideCustomerOrderSlip? lastCos = await _db
                 .FilprideCustomerOrderSlips
+                .Where(c => c.Company == companyClaims)
                 .OrderBy(c => c.CustomerOrderSlipNo)
                 .LastOrDefaultAsync(cancellationToken);
 

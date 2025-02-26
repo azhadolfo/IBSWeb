@@ -247,7 +247,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     FilprideCustomerOrderSlip model = new()
                     {
-                        CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(cancellationToken),
+                        CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(companyClaims, cancellationToken),
                         Date = viewModel.Date,
                         CustomerId = viewModel.CustomerId,
                         CustomerPoNo = viewModel.CustomerPoNo,
