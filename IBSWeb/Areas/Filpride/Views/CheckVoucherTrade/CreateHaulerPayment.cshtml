@@ -1,7 +1,7 @@
-﻿@model CheckVoucherTradeViewModel
+@model HaulerPaymentViewModel
 
 @{
-    ViewData["Title"] = "Edit Trade";
+    ViewData["Title"] = "Create Hauler Payment";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -9,7 +9,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Edit Trade</h2>
+                <h2 class="text-white py-2">Create Hauler Payment</h2>
             </div>
         </div>
     </div>
@@ -18,10 +18,9 @@
             <div class="row">
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <input type="hidden" asp-for="CVId"/>
                     <div class="form-group mb-3">
                         <label asp-for="SupplierId" class="control-label"></label><span class="required">*</span>
-                        <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 GetPOList supplier" style="width:100%">
+                        <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 GetDRList supplier" style="width:100%">
                             <option></option>
                         </select>
                         <span asp-validation-for="SupplierId" class="text-danger"></span>
@@ -44,32 +43,25 @@
                         <table >
                             <thead class="sticky-top bg-white">
                             <tr>
-                                <th colspan="7" class="text-center py-4">RR LIST</th>
+                                <th colspan="7" class="text-center py-4">DR LIST</th>
                             </tr>
                             <tr>
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
-                                <th>RR No's</th>
+                                <th>DR No's</th>
                                 <th>Payment</th>
                                 <th class="text-end">Gross</th>
                                 <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
                             </tr>
                             </thead>
-                            <tbody class="rrAmount">
+                            <tbody class="drList">
                             </tbody>
                         </table>
                     </div>
                 </div>
                 <div class="form-group mb-3">
-                        <label asp-for="POSeries" class="control-label">Suppliers PO No.</label>
-                        <select asp-for="POSeries" asp-items="@Model.PONo" class="form-select js-multiple GetRRList" multiple="multiple" style="width:100%" required>
-                            <option></option>
-                        </select>
-                        <span asp-validation-for="POSeries" class="text-danger"></span>
-                    </div>
-                <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="TransactionDate" type="Date" class="form-control" />
+                    <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
 
@@ -87,7 +79,7 @@
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="CheckDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="CheckDate" type="date" class="form-control" />
+                    <input asp-for="CheckDate" type="date" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" class="form-control" />
                     <span asp-validation-for="CheckDate" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
@@ -120,8 +112,8 @@
                         </thead>
                         <tbody id="accountingEntriesBody">
                         <tr>
-                            <td><input type="text" name="AccountNumber" value="202010100" class="w-100" style='border:none' readonly /></td>
-                            <td><input type='text' name="AccountTitle" value='AP-Trade Payable' class="w-100" style='border:none' readonly /></td>
+                            <td><input type="text" name="AccountNumber" value="201010300" class="w-100" style='border:none' readonly /></td>
+                            <td><input type='text' name="AccountTitle" value='AP - Hauling Payable' class="w-100" style='border:none' readonly /></td>
                             <td><input type='text' name="Debit" value='0.000' class="w-100 apTradePayable" style='border:none' readonly /></td>
                             <td><input type='text' name="Credit" value='0.000' class="w-100" style='border:none' readonly /></td>
                             <td></td>
@@ -154,7 +146,7 @@
                 <br />
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Save</button>
+                        <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Create</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
@@ -293,172 +285,74 @@
         }
     </script>
     <script>
-        $(document).ready(function () {
-            $(".supplier").each(function () {
-                var suppId = $(this).val();
-                computeDefaultEntry(suppId)
-            });
+        $(function () {
             $(".supplier").change(function () {
                 var suppId = $(this).val();
-                computeDefaultEntry(suppId)
+                supplierDetails(suppId);
+                displayRecords(suppId);
             });
-        });
-        
-        function computeDefaultEntry(suppId) {
-            if (suppId !== "") {
-                // Make an AJAX request to get the TaxType based on the selected SupplierId
-                $.ajax({
-                    url: "@Url.Action("GetSupplierDetails", "CheckVoucherTrade")",
-                    method: "GET",
-                    data: { supplierId: suppId },
-                    success: function (data) {
-                        if (data.address !== null || data.tinNo !== null) {
-                            $("#SupplierAddress").val(data.address);
-                            $("#SupplierTinNo").val(data.tinNo);
-                            $(".supplierName").val(data.name);
-                        } else {
-                            $("#SupplierAddress").val("");
-                            $("#SupplierTinNo").val("");
-                            $(".supplierName").val("");
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching TaxType:', error);
-                    }
-                });
-            } else {
-                $("#SupplierAddress").val("");
-                $("#SupplierTinNo").val("");
-                $(".supplierName").val("");
-            }
-        }
-        
 
-        $(function () {
-            $(".GetPOList").change(function () {
-                var suppId = $(this).val();
+            function supplierDetails(suppId) {
                 if (suppId !== "") {
-                    // Make an AJAX request to get the POs based on the selected SupplierId
+                    // Make an AJAX request to get the TaxType based on the selected SupplierId
                     $.ajax({
-                        url: "@Url.Action("GetPOs", "CheckVoucherTrade")",
+                        url: "@Url.Action("GetSupplierDetails", "CheckVoucherTrade")",
                         method: "GET",
-                        data: { supplierId: suppId }, // Corrected parameter name
+                        data: { supplierId: suppId },
                         success: function (data) {
-                            if (data) {
-                                // Clear existing options
-                                $("#POSeries").empty();
-                                // Add new options based on the fetched data
-                                $.each(data, function (index, po) {
-                                    if (po && po.poNumber) { // Adjust property name to poNumber
-                                        $('#POSeries').append('<option value="' + po.poNumber + '">' + po.poNumber + '</option>'); // Adjust property names
-                                    } else {
-                                        console.error("Invalid PO object:", po);
-                                    }
-                                });
+                            if (data.address !== null || data.tinNo !== null) {
+                                $("#SupplierAddress").val(data.address);
+                                $("#SupplierTinNo").val(data.tinNo);
+                                $(".supplierName").val(data.name);
                             } else {
-                                // Clear the fields if no POs are found
-                                $("#POSeries").empty();
+                                $("#SupplierAddress").val("");
+                                $("#SupplierTinNo").val("");
+                                $(".supplierName").val("");
                             }
                         },
                         error: function (xhr, status, error) {
-                            console.error('Error fetching POs:', error);
+                            console.error('Error fetching TaxType:', error);
                         }
                     });
                 } else {
-                    // Clear the fields if no supplier is selected
-                    $("#POSeries").empty();
+                    $("#SupplierAddress").val("");
+                    $("#SupplierTinNo").val("");
+                    $(".supplierName").val("");
                 }
-            });
+            }
         });
 
-        $(function criteria() {
-            var criteria; // Variable to store the selected criteria
-
-            $(".GetRRList").change(function () {
-                var poNumber = $(this).val(); // Get all selected POIds
-                let cvId = $("#CVId").val(); // Get all selected POIds
-                if (poNumber && poNumber.length > 0) {
-
-                    if (!criteria) {
-                        Swal.fire({
-                            title: 'Choose Criteria',
-                            text: 'Do you want to display records based on Due Date or Transaction Date?',
-                            input: 'select',
-                            inputOptions: {
-                                'Due Date': 'Due Date',
-                                'Transaction Date': 'Transaction Date'
-                            },
-                            inputPlaceholder: 'Select display criteria',
-                            allowOutsideClick: false, // Prevent closing on outside click
-                            allowEscapeKey: false,  // Prevent closing with Esc key
-                            showCancelButton: true,
-                            confirmButtonText: 'OK'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                criteria = result.value; // Store the selected criteria
-                                if (criteria) {
-                                    displayRecords(poNumber, criteria, cvId); // Pass criteria and PO numbers to displayRecords function
-                                } else {
-                                    console.error('Invalid display criteria');
-                                }
-                            } else {
-                                criteria();
-                                console.log('User canceled');
-                            }
-                        });
-                    } else {
-                        if (poNumber && poNumber.length > 0) {
-                            displayRecords(poNumber, criteria, cvId); // Pass PO number and criteria to displayRecords function
-                        } else {
-                            console.error('No PO number selected');
-                        }
-                    }
-                } else {
-                    // Clear the fields if no POs are selected
-                    $("#RRSeries").empty();
-                }
-            });
-        });
-
-        displayRecords(@Html.Raw(Json.Serialize(Model.POSeries)), "", @Html.Raw(Json.Serialize(Model.CVId)));
-
-        function displayRecords(poNumber, criteria, cvId) {
+        function displayRecords(haulerId) {
             $.ajax({
-                url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
+                url: "@Url.Action("GetHaulerDRs", "CheckVoucherTrade")",
                 method: "GET",
-                data: { poNumber: poNumber, criteria: criteria, cvId : cvId }, // Pass PO numbers to controller
+                data: { haulerId: haulerId }, // Pass PO numbers to controller
                 traditional: true, // Ensure jQuery sends the array properly
                 success: function (data) {
-                    const tbody = $('.rrAmount');
+                    const tbody = $('.drList');
                     let totalGross = 0;
                     let totalAmountPaid = 0;
                     let totalBalance = 0;
-                    const modelRRs = new Map(@Html.Raw(Json.Serialize(Model.RRs.Select(r => new { r.Id, r.Amount})))
-                        .map(r => [r.id, r.amount]));
 
                     tbody.empty();
 
                     if (data){
-                        data.forEach((rr, index) => {
-                            const rrAmount = modelRRs.get(rr.id) || 0;
-                            let amountPaid = parseNumber(rr.amountPaid) - rrAmount;
-                            let balance = parseNumber(rr.grossAmount) - amountPaid;
-                            
-                            const isChecked = modelRRs.has(rr.id) ? 'checked' : '';
+                        data.forEach((dr, index) => {
+                            let balance = parseNumber(dr.grossAmount) - parseNumber(dr.amountPaid);
                             const tr = $(`
                                         <tr>
-                                            <td><input type="checkbox" value="${rr.id}" class="selectCheckbox" ${isChecked}></td>
-                                            <td>${rr.receivingReportNo}</td>
+                                            <td><input type="checkbox" value="${dr.id}" class="selectCheckbox"></td>
+                                            <td>${dr.deliveryReceiptNo}</td>
                                             <td><input type="text" class="paymentAmount" data-balance="${balance}" style="display: none"></td>
-                                            <td class="text-end">${formatNumber(rr.grossAmount)}</td>
-                                            <td class="text-end">${formatNumber(amountPaid)}</td>
+                                            <td class="text-end">${formatNumber(dr.grossAmount)}</td>
+                                            <td class="text-end">${formatNumber(dr.amountPaid)}</td>
                                             <td class="text-end balance">${formatNumber(balance)}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
 
-                            totalGross += parseNumber(rr.grossAmount);
-                            totalAmountPaid += parseNumber(rr.amountPaid);
+                            totalGross += parseNumber(dr.grossAmount);
+                            totalAmountPaid += parseNumber(dr.amountPaid);
                             totalBalance += balance;
                         });
                     }
@@ -477,104 +371,68 @@
                 </tr>
             `);
                     tbody.append(totalRow);
-
-                    // Ensure checkbox state is processed AFTER records are loaded
-                    initializeCheckedCheckboxes();
                 },
                 error: function (xhr, status, error) {
-                    console.error('Error fetching RRs:', error);
+                    console.error('Error fetching DRs:', error);
                 }
             });
         }
 
-        let selectedRecords = []; // Store selected records
-        let allRecordsSelected = false;  // Flag to check if "Select All" is toggled
+        let selectedRecords = new Set(); // Store selected records
+        let allRecordsSelected = false;  // Flag to check if "Select All" is toggled across all pages
 
         function toggleSelectAll(selectAllCheckbox) {
+            const checkboxes = document.querySelectorAll('.selectCheckbox');
             const isChecked = selectAllCheckbox.checked;
-            selectedRecords = isChecked ? [] : []; // Reset selected records
 
-            $('.selectCheckbox').each(function () {
-                const checkbox = $(this);
-                const row = checkbox.closest('tr');
-                const rrId = checkbox.val(); // Get checkbox value
+            checkboxes.forEach((checkbox, index) => {
+                const row = checkbox.closest('tr'); // Get the row
 
                 if (isChecked) {
-                    if (!selectedRecords.includes(rrId)) {
-                        selectedRecords.push(rrId); // Add value
-                    }
-                    checkbox.prop('checked', true);
-                } else {
-                    selectedRecords = []; // Reset when deselecting all
-                    checkbox.prop('checked', false);
-                }
+                    checkbox.checked = true;
+                    selectedRecords.add(checkbox.value);
 
-                handleCheckboxChange(checkbox);
+                    if (row) {
+                        const inputField = $(row).find('.paymentAmount');
+                        const balance = parseNumber($(row).find('.balance').text().trim());
+
+                        inputField.val(balance).attr("name", `DRs[${index}].Amount`).addClass("inputAmount").show();
+                        $(checkbox).attr("name", `DRs[${index}].Id`);
+                        updateAmounts()
+                    }
+                } else {
+                    checkbox.checked = false;
+                    selectedRecords.delete(checkbox.value);
+
+                    if (row) {
+                        const inputField = $(row).find('.paymentAmount');
+                        inputField.removeAttr("name").hide().val(''); // Hide and clear input
+                        $(checkbox).removeAttr("name");
+                        updateAmounts()
+                    }
+                }
             });
 
             allRecordsSelected = isChecked;
         }
 
         // Event listener to show/hide input field on checkbox toggle
-        $(document).ready(function () {
-            checkBox();
-            initializeCheckedCheckboxes(); // Call this on page load
-        });
+        $(document).on('change', '.selectCheckbox', function () {
+            const row = $(this).closest('tr');
+            const inputField = row.find('.paymentAmount');
+            const balance = parseNumber(row.find('.balance').text().trim());
 
-        function checkBox() {
-            $(document).on('change', '.selectCheckbox', function () {
-                handleCheckboxChange($(this));
-            });
-        }
-
-        function initializeCheckedCheckboxes() {
-            $('.selectCheckbox:checked').each(function () {
-                handleCheckboxChange($(this));
-            });
-        }
-
-        function handleCheckboxChange(checkboxElement) {
-            const $checkbox = $(checkboxElement);
-            const $row = $checkbox.closest('tr');
-            const $inputField = $row.find('.paymentAmount');
-            const rrId = $checkbox.val(); // Get checkbox value
-            const $balanceField = $row.find('.balance').text();
-
-            if ($checkbox.is(':checked')) {
-                if (!selectedRecords.includes(rrId)) {
-                    selectedRecords.push(rrId); // Add value
-                }
+            if (this.checked) {
+                selectedRecords.add(this.value);
+                inputField.val(balance).attr("name", `DRs[${selectedRecords.size - 1}].Amount`).addClass("inputAmount").show();
+                row.find('.selectCheckbox').attr("name", `DRs[${selectedRecords.size - 1}].Id`);
+                updateAmounts()
             } else {
-                selectedRecords = selectedRecords.filter(id => id !== rrId); // Remove value
+                selectedRecords.delete(this.value);
+                inputField.removeAttr("name").hide().val('');
+                row.find('.selectCheckbox').removeAttr("name");
+                updateAmounts()
             }
-
-            // Recalculate and update name attributes
-            selectedRecords.forEach((id, index) => {
-                const $checkboxRow = $(`.selectCheckbox[value="${id}"]`).closest('tr');
-                $checkboxRow.find('.selectCheckbox').attr("name", `RRs[${index}].Id`);
-                $checkboxRow.find('.paymentAmount').attr("name", `RRs[${index}].Amount`);
-            });
-
-            // Retrieve and apply the correct amount
-            const amountPaid = @Html.Raw(Json.Serialize(Model.RRs.ToDictionary(r => r.Id, r => r.Amount)));
-
-            if ($checkbox.is(':checked')) {
-                const amount = amountPaid[rrId]; // Get amount by ID, fallback to ''
-                if (amount === undefined){
-                    $inputField.val(parseNumber($balanceField)).addClass("inputAmount").show();
-                }else{
-                    $inputField.val(amount).addClass("inputAmount").show();
-                }
-            } else {
-                $inputField.removeAttr("name").hide().val('');
-            }
-
-            updateAmounts();
-        }
-
-        // "Select All" using event delegation
-        $(document).on('change', '#selectAllCheckbox', function () {
-            toggleSelectAll(this);
         });
 
         $(document).on('input', '.inputAmount', function () {
@@ -602,7 +460,6 @@
             $(".apTradePayable").val(formatNumber(apTradePayable));
             updateTotalDebitAndCredit();
         }
-
     </script>
     <script>
         function validateDebitAndCredit(event) {
@@ -636,8 +493,8 @@
             let isValid = true;
 
             $('.paymentAmount').each(function() {
-                let paymentValue = parseFloat($(this).val()) || 0;
-                let maxBalance = parseFloat($(this).data('balance')) || 0;
+                let paymentValue = $(this).val();
+                let maxBalance = $(this).data('balance');
 
                 if (paymentValue > maxBalance) {
                     alert(`Payment amount cannot exceed balance for one or more entries.`);

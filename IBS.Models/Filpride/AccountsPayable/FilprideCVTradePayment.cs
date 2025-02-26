@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis;
 
 namespace IBS.Models.Filpride.AccountsPayable
 {
-    public class FilprideCVTradePayment : IEnumerable
+    public class FilprideCVTradePayment
     {
         [Key]
         public int Id { get; set; }
@@ -27,10 +27,5 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal AmountPaid { get; set; }
-
-        public IEnumerator GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

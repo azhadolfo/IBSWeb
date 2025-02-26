@@ -99,5 +99,26 @@ namespace IBS.Models.Filpride.Integrated
 
         [ForeignKey(nameof(PurchaseOrderId))]
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal FreightAmount { get; set; }
+
+        public int CommissioneeId { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal CommissionRate { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal CommissionAmountPaid { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal FreightAmountPaid { get; set; }
+
+        public bool IsCommissionPaid { get; set; }
+
+        public bool IsHaulerPaid { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal CommissionAmount { get; set; }
     }
 }

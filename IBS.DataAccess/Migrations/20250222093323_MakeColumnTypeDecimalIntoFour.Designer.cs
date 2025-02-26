@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250222093323_MakeColumnTypeDecimalIntoFour")]
+    partial class MakeColumnTypeDecimalIntoFour
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1727,10 +1730,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("company");
 
-                    b.Property<int?>("CompanyId")
-                        .HasColumnType("integer")
-                        .HasColumnName("company_id");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
                         .HasColumnName("created_by");
@@ -1785,9 +1784,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("BankAccountId")
                         .HasDatabaseName("ix_filpride_general_ledger_books_bank_account_id");
-
-                    b.HasIndex("CompanyId")
-                        .HasDatabaseName("ix_filpride_general_ledger_books_company_id");
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_filpride_general_ledger_books_customer_id");
@@ -7356,12 +7352,6 @@ namespace IBS.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_filpride_general_ledger_books_filpride_bank_accounts_bank_a");
 
-                    b.HasOne("IBS.Models.MasterFile.Company", "CompanyModel")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_general_ledger_books_companies_company_id");
-
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
@@ -7383,8 +7373,6 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Account");
 
                     b.Navigation("BankAccount");
-
-                    b.Navigation("CompanyModel");
 
                     b.Navigation("Customer");
 

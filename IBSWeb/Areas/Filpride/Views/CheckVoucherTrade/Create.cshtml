@@ -1,7 +1,7 @@
 ﻿@model CheckVoucherTradeViewModel
 
 @{
-    ViewData["Title"] = "Create Trade";
+    ViewData["Title"] = "Create Supplier/Purchase Payment";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -9,12 +9,12 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Create Trade</h2>
+                <h2 class="text-white py-2">Create Supplier/Purchase Payment</h2>
             </div>
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" id="paymentForm">
             <div class="row">
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -466,24 +466,26 @@
                     
                     tbody.empty();
 
-                    data.forEach((rr, index) => {
-                        let balance = parseNumber(rr.grossAmount) - parseNumber(rr.amountPaid);
-                        const tr = $(`
+                    if (data){
+                        data.forEach((rr, index) => {
+                            let balance = parseNumber(rr.grossAmount) - parseNumber(rr.amountPaid);
+                            const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${rr.id}" class="selectCheckbox"></td>
                                             <td>${rr.receivingReportNo}</td>
-                                            <td><input type="text" class="paymentAmount" style="display: none"></td>
-                                            <td class="text-end grossAmount">${formatNumber(rr.grossAmount)}</td>
+                                            <td><input type="text" class="paymentAmount" data-balance="${balance}" style="display: none"></td>
+                                            <td class="text-end">${formatNumber(rr.grossAmount)}</td>
                                             <td class="text-end">${formatNumber(rr.amountPaid)}</td>
-                                            <td class="text-end">${formatNumber(balance)}</td>
+                                            <td class="text-end balance">${formatNumber(balance)}</td>
                                         </tr>
                                     `);
-                        tbody.append(tr);
+                            tbody.append(tr);
 
-                        totalGross += parseNumber(rr.grossAmount);
-                        totalAmountPaid += parseNumber(rr.amountPaid);
-                        totalBalance += balance;
-                    });
+                            totalGross += parseNumber(rr.grossAmount);
+                            totalAmountPaid += parseNumber(rr.amountPaid);
+                            totalBalance += balance;
+                        });
+                    }
 
                     // Append Grand Total Rows
                     const totalRow = $(`
@@ -522,9 +524,9 @@
 
                     if (row) {
                         const inputField = $(row).find('.paymentAmount');
-                        const grossAmount = $(row).find('.grossAmount').text().trim();
+                        const balance = parseNumber($(row).find('.balance').text().trim());
 
-                        inputField.val(grossAmount).attr("name", `RRs[${index}].Amount`).addClass("inputAmount").show();
+                        inputField.val(balance).attr("name", `RRs[${index}].Amount`).addClass("inputAmount").show();
                         $(checkbox).attr("name", `RRs[${index}].Id`);
                         updateAmounts()
                     }
@@ -548,11 +550,11 @@
         $(document).on('change', '.selectCheckbox', function () {
             const row = $(this).closest('tr');
             const inputField = row.find('.paymentAmount');
-            const grossAmount = row.find('.grossAmount').text().trim();
+            const balance = parseNumber(row.find('.balance').text().trim());
 
             if (this.checked) {
                 selectedRecords.add(this.value);
-                inputField.val(grossAmount).attr("name", `RRs[${selectedRecords.size - 1}].Amount`).addClass("inputAmount").show();
+                inputField.val(balance).attr("name", `RRs[${selectedRecords.size - 1}].Amount`).addClass("inputAmount").show();
                 row.find('.selectCheckbox').attr("name", `RRs[${selectedRecords.size - 1}].Id`);
                 updateAmounts()
             } else {
@@ -615,5 +617,27 @@
 
             return true; // Allow form submission
         }
+    </script>
+    <script>
+        $('#paymentForm').on('submit', function(event) {
+            let isValid = true;
+
+            $('.paymentAmount:visible').each(function() { // Only validate visible inputs
+                let paymentValue = $(this).val();
+                let maxBalance = $(this).data('balance');
+                console.log(paymentValue);
+                console.log(maxBalance);
+
+                if (paymentValue > maxBalance) {
+                    alert(`Payment amount cannot exceed balance for one or more entries.`);
+                    isValid = false;
+                    return false; // Break loop
+                }
+            });
+
+            if (!isValid) {
+                event.preventDefault(); // Prevent form submission
+            }
+});
     </script>
 }
