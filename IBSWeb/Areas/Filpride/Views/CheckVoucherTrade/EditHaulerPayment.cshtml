@@ -346,7 +346,7 @@
                     tbody.empty();
 
                     if (data){
-                        data.forEach((dr, index) => {
+                        data.forEach((dr) => {
                             const drAmount = modelDRs.get(dr.id) || 0;
                             let amountPaid = parseNumber(dr.amountPaid) - drAmount;
                             let balance = parseNumber(dr.grossAmount) - amountPaid;
@@ -403,7 +403,6 @@
 
             $('.selectCheckbox').each(function () {
                 const checkbox = $(this);
-                const row = checkbox.closest('tr');
                 const drId = checkbox.val(); // Get checkbox value
 
                 if (isChecked) {
@@ -495,14 +494,13 @@
             var apTradePayable = 0;
             amountInputs.forEach(function (input) {
                 var rawValue = input.value;
-                var rrAmount = parseNumber(rawValue);
-                var netOfVat = rrAmount / 1.12;
-                var vat = netOfVat * 0.12;
+                var drAmount = parseNumber(rawValue);
+                var netOfVat = drAmount / 1.12;
                 var ewt = netOfVat * 0.01;
-                var rrAmountNetOfEWT = rrAmount - ewt;
-                totalNetOfEWT += rrAmountNetOfEWT;
+                var drAmountNetOfEWT = drAmount - ewt;
+                totalNetOfEWT += drAmountNetOfEWT;
                 totalEWT += ewt;
-                apTradePayable += rrAmount;
+                apTradePayable += drAmount;
             });
             $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
             $(".totalEWT").val(formatNumber(totalEWT));

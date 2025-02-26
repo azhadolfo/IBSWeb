@@ -337,7 +337,7 @@
                     tbody.empty();
 
                     if (data){
-                        data.forEach((dr, index) => {
+                        data.forEach((dr) => {
                             let balance = parseNumber(dr.grossAmount) - parseNumber(dr.amountPaid);
                             const tr = $(`
                                         <tr>
@@ -446,14 +446,13 @@
             var apTradePayable = 0;
             amountInputs.forEach(function (input) {
                 var rawValue = input.value;
-                var rrAmount = parseNumber(rawValue);
-                var netOfVat = rrAmount / 1.12;
-                var vat = netOfVat * 0.12;
+                var drAmount = parseNumber(rawValue);
+                var netOfVat = drAmount / 1.12;
                 var ewt = netOfVat * 0.01;
-                var rrAmountNetOfEWT = rrAmount - ewt;
-                totalNetOfEWT += rrAmountNetOfEWT;
+                var drAmountNetOfEWT = drAmount - ewt;
+                totalNetOfEWT += drAmountNetOfEWT;
                 totalEWT += ewt;
-                apTradePayable += rrAmount;
+                apTradePayable += drAmount;
             });
             $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
             $(".totalEWT").val(formatNumber(totalEWT));
