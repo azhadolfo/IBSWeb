@@ -13,11 +13,6 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public int DocumentId { get; set; }
 
-        [ForeignKey(nameof(DocumentId))]
-        public FilprideReceivingReport RR { get; set; }
-        [ForeignKey(nameof(DocumentId))]
-        public FilprideDeliveryReceipt DR { get; set; }
-
         public string DocumentType { get; set; }
 
         public int CheckVoucherId { get; set; }
