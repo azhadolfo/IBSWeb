@@ -1170,7 +1170,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Company = modelHeader.Company,
                                         CreatedBy = modelHeader.CreatedBy,
                                         CreatedDate = modelHeader.CreatedDate,
-                                        BankAccountId = modelHeader.BankId
+                                        BankAccountId = details.BankId,
+                                        SupplierId = details.SupplierId,
+                                        CustomerId = details.CustomerId,
+                                        CompanyId = details.CompanyId,
+                                        EmployeeId = details.EmployeeId,
                                     }
                                 );
                         }
