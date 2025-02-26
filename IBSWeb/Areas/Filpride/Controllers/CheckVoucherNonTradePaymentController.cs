@@ -305,52 +305,58 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
+            var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
 
-            FilprideCheckVoucherDetail getPaymentDetails = new();
-            FilprideCheckVoucherHeader getInvoicingReference = new();
-            FilprideCheckVoucherDetail getInvoicingDetails = new();
-
-            getPaymentDetails = await _dbContext.FilprideCheckVoucherDetails
-                                        .Where(cvd => cvd.SupplierId == model.SupplierId && cvd.CheckVoucherHeaderId == id)
-                                        .FirstOrDefaultAsync(cancellationToken);
-
-            getInvoicingReference = await _dbContext.FilprideCheckVoucherHeaders
-                                    .Where(cvh => cvh.CheckVoucherHeaderNo == model.Reference)
-                                    .FirstOrDefaultAsync(cancellationToken);
-
-            if (model != null)
+            if (existingHeaderModel != null)
             {
-                if (model.CanceledBy == null)
+                existingHeaderModel.CanceledBy = _userManager.GetUserName(this.User);
+                existingHeaderModel.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Canceled);
+                existingHeaderModel.CancellationRemarks = cancellationRemarks;
+
+                var IsForTheBir = existingHeaderModel.SupplierId == 133; //BIR
+
+                var getCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
+                    .Where(cvp => cvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
+                    .Include(cvp => cvp.CheckVoucherHeaderInvoice)
+                    .Include(cvp => cvp.CheckVoucherHeaderPayment)
+                    .ToListAsync(cancellationToken);
+
+                if (IsForTheBir)
                 {
-                    model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = nameof(CheckVoucherPaymentStatus.Canceled);
-                    model.CancellationRemarks = cancellationRemarks;
-
-                    if (model.CvType == nameof(CVType.Payment) && getPaymentDetails != null)
+                    foreach (var cv in getCVs)
                     {
-                        getPaymentDetails.AmountPaid -= model.Total;
-                        getInvoicingDetails.AmountPaid -= model.Total;
+                        var existingDetails = await _dbContext.FilprideCheckVoucherDetails
+                            .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
+                                        d.SupplierId == existingHeaderModel.SupplierId)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var existingDetail in existingDetails)
+                        {
+                            existingDetail.AmountPaid = 0;
+                        }
+
                     }
-                    getInvoicingReference.AmountPaid -= model.Total;
-
-                    if (getInvoicingReference.IsPaid)
-                    {
-                        getInvoicingReference.IsPaid = false;
-                    }
-
-                    #region --Audit Trail Recording
-
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Check Voucher has been Cancelled.";
                 }
+                else
+                {
+                    foreach (var cv in getCVs)
+                    {
+                        cv.CheckVoucherHeaderInvoice.AmountPaid -= cv.AmountPaid;
+                        cv.CheckVoucherHeaderInvoice.IsPaid = false;
+                    }
+                }
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.CanceledBy, $"Canceled check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, existingHeaderModel.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                TempData["success"] = "Check Voucher has been Cancelled.";
 
                 return RedirectToAction(nameof(Index));
             }
@@ -361,81 +367,71 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
+            var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
 
-            FilprideCheckVoucherDetail getPaymentDetails = new();
-            FilprideCheckVoucherHeader getInvoicingReference = new();
-            FilprideCheckVoucherDetail getInvoicingDetails = new();
-
-            getPaymentDetails = await _dbContext.FilprideCheckVoucherDetails
-                                        .Where(cvd => cvd.SupplierId != null && cvd.CheckVoucherHeaderId == id)
-                                        .FirstOrDefaultAsync(cancellationToken);
-
-            getInvoicingReference = await _dbContext.FilprideCheckVoucherHeaders
-                                    .Where(cvh => cvh.CheckVoucherHeaderNo == model.Reference)
-                                    .FirstOrDefaultAsync(cancellationToken);
-
-            if (model.SupplierId != null)
-            {
-                getInvoicingDetails = await _dbContext.FilprideCheckVoucherDetails
-                                    .Where(cvd => cvd.SupplierId != null && cvd.AccountNo == "202010200" && cvd.CheckVoucherHeaderId == getInvoicingReference.CheckVoucherHeaderId)
-                                    .FirstOrDefaultAsync(cancellationToken);
-            }
-            else
-            {
-                getInvoicingDetails = await _dbContext.FilprideCheckVoucherDetails
-                                    .Where(cvd => cvd.SupplierId == getPaymentDetails.SupplierId && cvd.CheckVoucherHeaderId == getInvoicingReference.CheckVoucherHeaderId)
-                                    .FirstOrDefaultAsync(cancellationToken);
-            }
-
-            if (model != null)
+            if (existingHeaderModel != null)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 try
                 {
-                    if (model.VoidedBy == null)
+                    var IsForTheBir = existingHeaderModel.SupplierId == 133; //BIR
+
+                    var getCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
+                        .Where(cvp => cvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
+                        .Include(cvp => cvp.CheckVoucherHeaderInvoice)
+                        .Include(cvp => cvp.CheckVoucherHeaderPayment)
+                        .ToListAsync(cancellationToken);
+
+                    if (IsForTheBir)
                     {
-                        if (model.PostedBy != null)
+                        foreach (var cv in getCVs)
                         {
-                            model.PostedBy = null;
+                            var existingDetails = await _dbContext.FilprideCheckVoucherDetails
+                                .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
+                                            d.SupplierId == existingHeaderModel.SupplierId)
+                                .ToListAsync(cancellationToken);
+
+                            foreach (var existingDetail in existingDetails)
+                            {
+                                existingDetail.AmountPaid = 0;
+                            }
+
                         }
-
-                        model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(CheckVoucherPaymentStatus.Voided);
-
-                        if (model.CvType == nameof(CVType.Payment) && getPaymentDetails != null)
-                        {
-                            getPaymentDetails.AmountPaid -= model.Total;
-                            getInvoicingDetails.AmountPaid -= model.Total;
-                        }
-
-                        getInvoicingReference.AmountPaid -= model.Total;
-
-                        if (getInvoicingReference.IsPaid)
-                        {
-                            getInvoicingReference.IsPaid = false;
-                        }
-
-                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo);
-                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo);
-
-                        //re-compute amount paid in trade and payment voucher
-                        #region --Audit Trail Recording
-
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Check Voucher has been Voided.";
-
-                        return RedirectToAction(nameof(Index));
                     }
+                    else
+                    {
+                        foreach (var cv in getCVs)
+                        {
+                            cv.CheckVoucherHeaderInvoice.AmountPaid -= cv.AmountPaid;
+                            cv.CheckVoucherHeaderInvoice.IsPaid = false;
+                            cv.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
+                        }
+                    }
+
+                    existingHeaderModel.PostedBy = null;
+                    existingHeaderModel.VoidedBy = _userManager.GetUserName(this.User);
+                    existingHeaderModel.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Voided);
+
+
+                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == existingHeaderModel.CheckVoucherHeaderNo);
+                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == existingHeaderModel.CheckVoucherHeaderNo);
+
+                    //re-compute amount paid in trade and payment voucher
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.VoidedBy, $"Voided check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, existingHeaderModel.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Check Voucher has been Voided.";
+
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
