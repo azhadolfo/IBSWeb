@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250226043922_RenameIsHaulerPaidIntoIsFeightPaidInDR")]
+    partial class RenameIsHaulerPaidIntoIsFeightPaidInDR
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2890,7 +2893,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("commission_rate");
 
-                    b.Property<int?>("CommissioneeId")
+                    b.Property<int>("CommissioneeId")
                         .HasColumnType("integer")
                         .HasColumnName("commissionee_id");
 
@@ -3025,9 +3028,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("DeliveryReceiptId")
                         .HasName("pk_filpride_delivery_receipts");
-
-                    b.HasIndex("CommissioneeId")
-                        .HasDatabaseName("ix_filpride_delivery_receipts_commissionee_id");
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_filpride_delivery_receipts_customer_id");
@@ -7563,12 +7563,6 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideDeliveryReceipt", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Commissionee")
-                        .WithMany()
-                        .HasForeignKey("CommissioneeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_delivery_receipts_filpride_suppliers_commissionee_");
-
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
@@ -7593,8 +7587,6 @@ namespace IBS.DataAccess.Migrations
                         .WithMany()
                         .HasForeignKey("PurchaseOrderId")
                         .HasConstraintName("fk_filpride_delivery_receipts_filpride_purchase_orders_purchas");
-
-                    b.Navigation("Commissionee");
 
                     b.Navigation("Customer");
 
