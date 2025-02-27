@@ -238,11 +238,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CreatedBy = _userManager.GetUserName(User),
                         ManualDrNo = viewModel.ManualDrNo,
                         Freight = viewModel.Freight,
+                        FreightAmount = viewModel.Volume * (viewModel.Freight + viewModel.ECC),
                         ECC = viewModel.ECC,
                         Driver = viewModel.Driver,
                         PlateNo = viewModel.PlateNo,
                         HaulerId = viewModel.HaulerId ?? customerOrderSlip.HaulerId,
-                        AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo
+                        AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo,
+                        CommissioneeId = customerOrderSlip.CommissioneeId,
+                        CommissionRate = customerOrderSlip.CommissionRate,
+                        CommissionAmount = viewModel.Volume * customerOrderSlip.CommissionRate,
                     };
 
                     customerOrderSlip.DeliveredQuantity += model.Quantity;
