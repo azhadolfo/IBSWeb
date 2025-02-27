@@ -191,11 +191,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cos.PickUpPoint.Depot,
                         cos.PickUpPointId,
                         cos.Date,
+                        cos.Driver,
                         cos.Customer.CustomerName,
+                        cos.PlateNo,
                         cos.Product.ProductName,
                         cos.Quantity,
                         cos.TotalAmount,
                         cos.Status,
+                        cos.SupplierId,
                         // Extract only PurchaseOrderNos from AppointedSuppliers
                         AppointedSupplierPOs = cos.AppointedSuppliers
                             .Select(a => a.PurchaseOrder.PurchaseOrderNo)
@@ -912,11 +915,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 COSVolume = existingRecord.Quantity
             };
 
-            if (existingRecord.Status == nameof(CosStatus.SupplierAppointed))
+            if (existingRecord.Status == nameof(CosStatus.SupplierAppointed) || existingRecord.Status == nameof(CosStatus.ForAtlBooking))
             {
                 viewModel.SupplierId = (int)existingRecord.SupplierId;
                 viewModel.DeliveryOption = existingRecord.DeliveryOption;
-                viewModel.Freight = (decimal)existingRecord.Freight;
+                viewModel.Freight = existingRecord.Freight ?? 0m;
                 viewModel.PickUpPointId = (int)existingRecord.PickUpPointId;
                 viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint
                 .GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
