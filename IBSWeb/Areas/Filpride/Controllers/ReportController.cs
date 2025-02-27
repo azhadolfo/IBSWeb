@@ -807,7 +807,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(g => g.Customer)
                 .Where(g =>
                     g.Date >= dateFrom && g.Date <= dateTo &&
-                    (model.AccountNo == null || g.AccountNo == model.AccountNo))
+                    (model.AccountNo == null || g.AccountNo == model.AccountNo) &&
+                    g.Company == companyClaims)
                 .ToListAsync(cancellationToken);
 
             if (generalLedgerByAccountNo.Count == 0)
