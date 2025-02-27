@@ -1743,12 +1743,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSupplierById(int supplierId)
         {
-            var customer = await _unitOfWork.FilprideSupplier.GetAsync(e => e.SupplierId == supplierId);
+            var supplier = await _unitOfWork.FilprideSupplier.GetAsync(e => e.SupplierId == supplierId);
             return Json(new
             {
-                id = customer.SupplierId,
-                accountName = customer.SupplierName,
-                accountNumber = customer.SupplierCode
+                id = supplier.SupplierId,
+                accountName = supplier.SupplierName,
+                accountNumber = supplier.SupplierCode
             });
         }
     }
