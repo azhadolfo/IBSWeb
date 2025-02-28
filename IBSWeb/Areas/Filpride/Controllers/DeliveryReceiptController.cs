@@ -988,7 +988,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming the template has one sheet
 
                 worksheet.Cells["H2"].Value = deliveryReceipt.AuthorityToLoadNo;
-                worksheet.Cells["H7"].Value = receivingReport?.ReceivingReportNo;
+                worksheet.Cells["H7"].Value = receivingReport.OldRRNo ?? receivingReport.ReceivingReportNo;
                 worksheet.Cells["H9"].Value = deliveryReceipt.ManualDrNo;
                 worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
                 worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip.OldCosNo;

@@ -112,5 +112,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string? Type { get; set; }
 
         public bool IsCostUpdated { get; set; }
+
+        public string? OldRRNo { get; set; }
     }
 }
