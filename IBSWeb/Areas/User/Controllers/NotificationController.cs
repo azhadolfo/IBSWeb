@@ -99,8 +99,15 @@ namespace IBSWeb.Areas.User.Controllers
                         return NotFound($"Notification with ID {userNotificationId} not found.");
                     }
 
-                    userNotification.RequiresResponse = false;
-                    userNotification.IsRead = true;
+                    var relatedUserNotifications = await _dbContext.UserNotifications
+                        .Where(un => un.NotificationId == userNotification.NotificationId)
+                        .ToListAsync();
+
+                    foreach (var notification in relatedUserNotifications)
+                    {
+                        notification.RequiresResponse = false;
+                        notification.IsRead = true;
+                    }
 
                     await _unitOfWork.FilprideDeliveryReceipt.AutoReversalEntryForInTransit();
 
