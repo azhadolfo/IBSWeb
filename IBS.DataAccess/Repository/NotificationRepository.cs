@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository
@@ -19,10 +20,10 @@ namespace IBS.DataAccess.Repository
             var notification = new Notification
             {
                 Message = message,
-                CreatedDate = DateTime.Now
+                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
             };
 
-            _db.Notifications.Add(notification);
+            await _db.Notifications.AddAsync(notification);
             await _db.SaveChangesAsync();
 
             var userNotification = new UserNotification
@@ -33,7 +34,7 @@ namespace IBS.DataAccess.Repository
                 RequiresResponse = requiresResponse
             };
 
-            _db.UserNotifications.Add(userNotification);
+            await _db.UserNotifications.AddAsync(userNotification);
             await _db.SaveChangesAsync();
         }
 

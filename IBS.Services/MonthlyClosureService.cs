@@ -67,12 +67,9 @@ namespace IBS.Services
 
             try
             {
-                var logisticUsers = await _dbContext.ApplicationUsers
-                    .Where(u => u.Department == SD.Department_Logistics)
-                    .ToListAsync();
-
-                var managementAccountingUsers = await _dbContext.ApplicationUsers
-                    .Where(u => u.Department == SD.Department_ManagementAccounting)
+                var users = await _dbContext.ApplicationUsers
+                    .Where(u => u.Department == SD.Department_Logistics ||
+                                u.Department == SD.Department_ManagementAccounting)
                     .ToListAsync();
 
                 var link = "<a href='/Filpride/Report/DispatchReport' target='_blank'>Dispatch Report</a>";
@@ -81,17 +78,25 @@ namespace IBS.Services
                               $"{DateTime.UtcNow:MMM yyyy}.";
                 var ccMessage = "CC: Management Accounting";
 
-                // Send notifications to Logistics
-                foreach (var user in logisticUsers)
+                var notification = new Notification
                 {
-                    await _unitOfWork.Notifications.AddNotificationAsync(user.Id, $"{message} {ccMessage}", true);
-                }
+                    Message = message,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
+                };
 
-                // Send notifications to Management Accounting
-                foreach (var user in managementAccountingUsers)
+                await _dbContext.Notifications.AddAsync(notification);
+                await _dbContext.SaveChangesAsync();
+
+                var userNotifications = users.Select(user => new UserNotification
                 {
-                    await _unitOfWork.Notifications.AddNotificationAsync(user.Id, $"{message} {ccMessage}", true);
-                }
+                    UserId = user.Id,
+                    NotificationId = notification.NotificationId,
+                    IsRead = false,
+                    RequiresResponse = true,
+                }).ToList();
+
+                await _dbContext.UserNotifications.AddRangeAsync(userNotifications);
+                await _dbContext.SaveChangesAsync();
 
                 var lockCreationOfDr = await _dbContext.AppSettings
                     .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfDr);
@@ -136,12 +141,9 @@ namespace IBS.Services
 
             try
             {
-                var tnsUsers = await _dbContext.ApplicationUsers
-                    .Where(u => u.Department == SD.Department_TradeAndSupply)
-                    .ToListAsync();
-
-                var managementAccountingUsers = await _dbContext.ApplicationUsers
-                    .Where(u => u.Department == SD.Department_ManagementAccounting)
+                var users = await _dbContext.ApplicationUsers
+                    .Where(u => u.Department == SD.Department_TradeAndSupply ||
+                                u.Department == SD.Department_ManagementAccounting)
                     .ToListAsync();
 
                 var purchaseOrderNosList = string.Join(", ", purchaseOrders);
@@ -150,17 +152,25 @@ namespace IBS.Services
                               $"{DateTime.UtcNow:MMM yyyy}.";
                 var ccMessage = "CC: Management Accounting";
 
-                // Send notifications to Logistics
-                foreach (var user in tnsUsers)
+                var notification = new Notification
                 {
-                    await _unitOfWork.Notifications.AddNotificationAsync(user.Id, $"{message} {ccMessage}");
-                }
+                    Message = message,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
+                };
 
-                // Send notifications to Management Accounting
-                foreach (var user in managementAccountingUsers)
+                await _dbContext.Notifications.AddAsync(notification);
+                await _dbContext.SaveChangesAsync();
+
+                var userNotifications = users.Select(user => new UserNotification
                 {
-                    await _unitOfWork.Notifications.AddNotificationAsync(user.Id, $"{message} {ccMessage}");
-                }
+                    UserId = user.Id,
+                    NotificationId = notification.NotificationId,
+                    IsRead = false,
+                    RequiresResponse = true,
+                }).ToList();
+
+                await _dbContext.UserNotifications.AddRangeAsync(userNotifications);
+                await _dbContext.SaveChangesAsync();
 
                 var lockCreationOfPo = await _dbContext.AppSettings
                     .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfPo);
