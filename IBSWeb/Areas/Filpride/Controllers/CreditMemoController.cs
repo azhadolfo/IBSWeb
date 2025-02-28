@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsReceivable;
@@ -466,7 +466,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.Description = model.SalesInvoice.Product.ProductName;
                                 sales.Amount = model.CreditAmount;
                                 sales.VatableSales = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.Amount))) * -1;
-                                sales.VatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.VatableSales))) * -1;
+                                sales.VatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(sales.VatableSales))) * -1;
                                 //sales.Discount = model.Discount;
                                 sales.NetSales = sales.VatableSales;
                                 sales.CreatedBy = model.CreatedBy;
@@ -742,7 +742,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.Description = model.ServiceInvoice.Service.Name;
                                 sales.Amount = viewModelDMCM.Total;
                                 sales.VatableSales = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.Amount))) * -1;
-                                sales.VatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.VatableSales))) * -1;
+                                sales.VatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(sales.VatableSales))) * -1;
                                 //sales.Discount = model.Discount;
                                 sales.NetSales = viewModelDMCM.NetAmount;
                                 sales.CreatedBy = model.CreatedBy;
