@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride;
@@ -682,7 +682,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
                                         AccountNo = "101020200",
-                                        AccountTitle = "Deferred Withholding Tax",
+                                        AccountTitle = "AR-Trade Receivable - Creditable Withholding Tax",
                                         Debit = viewModelDMCM.WithholdingTaxAmount,
                                         Credit = 0,
                                         Company = model.Company,

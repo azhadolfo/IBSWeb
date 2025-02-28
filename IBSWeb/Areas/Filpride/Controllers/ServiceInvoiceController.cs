@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsReceivable;
@@ -266,23 +266,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Posted);
 
-                        #region --Retrieval of Services
-
-                        var services = await _dbContext.FilprideServices.FindAsync(model.ServiceId, cancellationToken);
-
-                        #endregion --Retrieval of Services
-
-                        #region --Retrieval of Customer
-
-                        var customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
-
-                        #endregion --Retrieval of Customer
-
-                        #region --SV Computation--
+                        #region --SV Date Computation--
 
                         var postedDate = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
-                        #endregion --SV Computation--
+                        #endregion --SV Date Computation--
 
                         #region --Sales Book Recording
 
@@ -380,6 +368,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var arNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020500") ?? throw new ArgumentException("Account title '101020500' not found.");
                         var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
                         var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
+                        var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
 
                         //TODO waiting for Ma'am LSA journal entries
                         ledgers.Add(
@@ -388,8 +377,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
-                                    AccountNo = "101020500",
-                                    AccountTitle = "AR-Non Trade Receivable",
+                                    AccountNo = arNonTradeTitle.AccountNumber,
+                                    AccountTitle = arNonTradeTitle.AccountName,
                                     Debit = Math.Round(model.Total - (withHoldingTaxAmount + withHoldingVatAmount), 4),
                                     Credit = 0,
                                     Company = model.Company,
@@ -405,8 +394,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
-                                    AccountNo = "101020200",
-                                    AccountTitle = "AR-Trade Receivable - Creditable Withholding Tax",
+                                    AccountNo = arTradeCwt.AccountNumber,
+                                    AccountTitle = arTradeCwt.AccountName,
                                     Debit = withHoldingTaxAmount,
                                     Credit = 0,
                                     Company = model.Company,
@@ -423,8 +412,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
-                                    AccountNo = "101020300",
-                                    AccountTitle = "AR-Trade Receivable - Creditable Withholding Vat",
+                                    AccountNo = arTradeCwv.AccountNumber,
+                                    AccountTitle = arTradeCwv.AccountName,
                                     Debit = withHoldingVatAmount,
                                     Credit = 0,
                                     Company = model.Company,
@@ -458,8 +447,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
-                                    AccountNo = "201030100",
-                                    AccountTitle = "Vat Output",
+                                    AccountNo = vatOutputTitle.AccountNumber,
+                                    AccountTitle = vatOutputTitle.AccountName,
                                     Debit = 0,
                                     Credit = Math.Round((vatAmount), 4),
                                     Company = model.Company,
