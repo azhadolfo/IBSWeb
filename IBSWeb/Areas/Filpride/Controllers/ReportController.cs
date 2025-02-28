@@ -3345,12 +3345,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["Z7"].Value = "OTC COS#.";
                     purchaseReportWorksheet.Cells["AA7"].Value = "OTC DR#.";
                     purchaseReportWorksheet.Cells["AB7"].Value = "IS PO#";
+                    purchaseReportWorksheet.Cells["AC7"].Value = "IS RR#";
 
                     #endregion
 
                     #region -- Apply styling to the header row --
 
-                    using (var range = purchaseReportWorksheet.Cells["A7:AB7"])
+                    using (var range = purchaseReportWorksheet.Cells["A7:AC7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -3416,9 +3417,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, 23].Value = netPurchases; // Purchase total net ======== move to third last
                         purchaseReportWorksheet.Cells[row, 24].Value = netFreight; // freight n vat ============
                         purchaseReportWorksheet.Cells[row, 25].Value = commission; // commission =========
-                        purchaseReportWorksheet.Cells[row, 26].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.OldCosNo; // commission =========
-                        purchaseReportWorksheet.Cells[row, 27].Value = pr.DeliveryReceipt?.ManualDrNo; // commission =========
-                        purchaseReportWorksheet.Cells[row, 28].Value = pr.PurchaseOrder?.OldPoNo; // commission =========
+                        purchaseReportWorksheet.Cells[row, 26].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.OldCosNo; // OTC COS =========
+                        purchaseReportWorksheet.Cells[row, 27].Value = pr.DeliveryReceipt?.ManualDrNo; // OTC DR =========
+                        purchaseReportWorksheet.Cells[row, 28].Value = pr.PurchaseOrder?.OldPoNo; // IS PO =========
+                        purchaseReportWorksheet.Cells[row, 29].Value = pr.OldRRNo; // IS RR =========
 
                         #endregion -- Assign Values to Cells --
 
