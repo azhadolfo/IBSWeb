@@ -514,8 +514,6 @@
             $('.paymentAmount:visible').each(function() { // Only validate visible inputs
                 let paymentValue = $(this).val();
                 let maxBalance = $(this).data('balance');
-                console.log(paymentValue);
-                console.log(maxBalance);
 
                 if (paymentValue > maxBalance) {
                     alert(`Payment amount cannot exceed balance for one or more entries.`);
