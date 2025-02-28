@@ -6,7 +6,7 @@ class MasterFileSelector {
                 id: 'bank',
                 title: 'Bank Account',
                 url: urls.getBankAccounts,
-                triggerAccount: '101010100 Cash in Bank',
+                triggerAccounts: ['101010400 Fund Transfer', '101010100 Cash in Bank'],
                 placeholder: 'Select a bank account',
                 formatOption: (item) => `${item.accountName} - ${item.accountNumber}`,
                 inputName: 'BankMasterFileId'
@@ -15,7 +15,7 @@ class MasterFileSelector {
                 id: 'company',
                 title: 'Company',
                 url: urls.getCompanies,
-                triggerAccounts: ['101010400 Fund Transfer', '101020600 AR-Exchange Check'],
+                triggerAccount: '101020600 AR-Exchange Check',
                 placeholder: 'Select a company',
                 formatOption: (item) => `${item.accountNumber} - ${item.accountName}`,
                 inputName: 'CompanyMasterFileId'
