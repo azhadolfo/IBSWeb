@@ -270,7 +270,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Saving the default entries
 
                     var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getPurchaseOrder.Type, cancellationToken);
-                    var cashInBank = viewModel.Credit[2];
+                    var cashInBank = viewModel.Credit[1];
                     var cvh = new FilprideCheckVoucherHeader
                     {
                         CheckVoucherHeaderNo = generateCVNo,
@@ -642,7 +642,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var cashInBank = 0m;
                     for (int i = 0; i < viewModel.AccountTitle.Length; i++)
                     {
-                        cashInBank = viewModel.Credit[2];
+                        cashInBank = viewModel.Credit[1];
 
                         details.Add(new FilprideCheckVoucherDetail
                         {
@@ -1680,7 +1680,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Saving the default entries
 
                     var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getDeliveryReceipt.PurchaseOrder.Type, cancellationToken);
-                    var cashInBank = viewModel.Credit[2];
+                    var cashInBank = viewModel.Credit[1];
                     var cvh = new FilprideCheckVoucherHeader
                     {
                         CheckVoucherHeaderNo = generateCVNo,
@@ -1944,7 +1944,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Saving the default entries
 
                     var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getDeliveryReceipt.PurchaseOrder.Type, cancellationToken);
-                    var cashInBank = viewModel.Credit[2];
+                    var cashInBank = viewModel.Credit[1];
                     var cvh = new FilprideCheckVoucherHeader
                     {
                         CheckVoucherHeaderNo = generateCVNo,
@@ -2293,7 +2293,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var cashInBank = 0m;
                     for (int i = 0; i < viewModel.AccountTitle.Length; i++)
                     {
-                        cashInBank = viewModel.Credit[2];
+                        cashInBank = viewModel.Credit[1];
 
                         details.Add(new FilprideCheckVoucherDetail
                         {
@@ -2525,7 +2525,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var cashInBank = 0m;
                     for (int i = 0; i < viewModel.AccountTitle.Length; i++)
                     {
-                        cashInBank = viewModel.Credit[2];
+                        cashInBank = viewModel.Credit[1];
 
                         details.Add(new FilprideCheckVoucherDetail
                         {
