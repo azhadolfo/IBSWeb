@@ -114,11 +114,11 @@
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="accountingEntriesBody">
                             <tr>
                                 <td><input type="text" name="AccountNumber" value="202010100" class="w-100" style='border:none' readonly /></td>
                                 <td><input type='text' name="AccountTitle" value='AP-Trade Payable' class="w-100" style='border:none' readonly /></td>
-                                <td><input type='text' name="Debit" value='0.000' class="w-100 apTradePayable" style='border:none' readonly /></td>
+                                <td><input type='text' name="Debit" value='0.000' class="w-100 totalNetOfEWT" style='border:none' readonly /></td>
                                 <td><input type='text' name="Credit" value='0.000' class="w-100" style='border:none' readonly /></td>
                                 <td></td>
                             </tr>
@@ -445,19 +445,13 @@
         function updateAmounts() {
             var amountInputs = document.querySelectorAll('.inputAmount');
             var totalNetOfEWT = 0;
-            var apTradePayable = 0;
             amountInputs.forEach(function (input) {
                 var rawValue = input.value;
                 var rrAmount = parseNumber(rawValue);
-                var netOfVat = rrAmount / 1.12;
-                var vat = netOfVat * 0.12;
-                var ewt = netOfVat * 0.01;
-                var rrAmountNetOfEWT = rrAmount - ewt;
-                totalNetOfEWT += rrAmountNetOfEWT;
-                apTradePayable += rrAmount;
+
+                totalNetOfEWT += rrAmount;
             });
             $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
-            $(".apTradePayable").val(formatNumber(apTradePayable));
             updateTotalDebitAndCredit();
         }
         
