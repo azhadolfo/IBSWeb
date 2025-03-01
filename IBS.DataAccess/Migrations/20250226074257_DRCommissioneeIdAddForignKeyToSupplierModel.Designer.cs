@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250226074257_DRCommissioneeIdAddForignKeyToSupplierModel")]
+    partial class DRCommissioneeIdAddForignKeyToSupplierModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -734,10 +737,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsPrinted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
-
-                    b.Property<string>("OldRRNo")
-                        .HasColumnType("text")
-                        .HasColumnName("old_rr_no");
 
                     b.Property<int>("POId")
                         .HasColumnType("integer")
@@ -2833,6 +2832,7 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_customer_order_slips_customer_id");
 
                     b.HasIndex("CustomerOrderSlipNo")
+                        .IsUnique()
                         .HasDatabaseName("ix_filpride_customer_order_slips_customer_order_slip_no");
 
                     b.HasIndex("Date")
@@ -3042,6 +3042,7 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_delivery_receipts_date");
 
                     b.HasIndex("DeliveryReceiptNo")
+                        .IsUnique()
                         .HasDatabaseName("ix_filpride_delivery_receipts_delivery_receipt_no");
 
                     b.HasIndex("HaulerId")

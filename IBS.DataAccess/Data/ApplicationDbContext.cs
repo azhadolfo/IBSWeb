@@ -464,6 +464,11 @@ namespace IBS.DataAccess.Data
                     .HasForeignKey(dr => dr.CustomerOrderSlipId)
                     .OnDelete(DeleteBehavior.Restrict);
 
+                dr.HasOne(dr => dr.Commissionee)
+                    .WithMany()
+                    .HasForeignKey(dr => dr.CommissioneeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
                 dr.HasOne(dr => dr.Customer)
                     .WithMany()
                     .HasForeignKey(dr => dr.CustomerId)

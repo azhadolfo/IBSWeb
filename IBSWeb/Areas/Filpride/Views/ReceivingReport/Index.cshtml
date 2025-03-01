@@ -63,16 +63,17 @@
                 <table class="table table-hover mb-0" id="paginatedTable">
                     <thead class="bg-light">
                     <tr>
-                        <th>RR#</th>
-                        <th>Date</th>
-                        <th>PO#</th>
-                        <th>IS PO#</th>
-                        <th>DR#</th>
-                        <th>Customer</th>
-                        <th>Product</th>
-                        <th>Received</th>
-                        <th>Created By</th>
-                        <th class="text-center" style="width: 100px;">Actions</th>
+                        <th class="text-start">RR#</th>
+                        <th class="text-start">Date</th>
+                        <th class="text-start">PO#</th>
+                        <th class="text-start">IS PO#</th>
+                        <th class="text-start">IS RR#</th>
+                        <th class="text-start">DR#</th>
+                        <th class="text-start">Customer</th>
+                        <th class="text-start">Product</th>
+                        <th class="text-start">Quantity</th>
+                        <th class="text-start">Created By</th>
+                        <th class="text-start" style="width: 100px;">Actions</th>
                     </tr>
                     </thead>
                 </table>
@@ -180,8 +181,19 @@
                     },
                     { "data": "purchaseOrder.purchaseOrderNo" },
                     { "data": "purchaseOrder.oldPoNo" },
-                    { "data": data => data.deliveryReceipt ? data.deliveryReceipt.deliveryReceiptNo : "" },
-                    { "data": data => data.deliveryReceipt ? data.deliveryReceipt.customer.customerName : "" },
+                    { "data": "oldRRNo" },
+                    { 
+                        "data": "deliveryReceiptId",
+                        "render" : function (data, type, row){
+                            return row.deliveryReceipt ? row.deliveryReceipt.deliveryReceiptNo : "" ;
+                        }
+                    },
+                    {
+                        "data": "deliveryReceiptId",
+                        "render" : function (data, type, row){
+                            return row.deliveryReceipt ? row.deliveryReceipt.customer.customerName : "" ;
+                        }
+                    },
                     { "data": "purchaseOrder.product.productName" },
                     {
                         "data": "quantityReceived",

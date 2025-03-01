@@ -238,11 +238,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CreatedBy = _userManager.GetUserName(User),
                         ManualDrNo = viewModel.ManualDrNo,
                         Freight = viewModel.Freight,
+                        FreightAmount = viewModel.Volume * (viewModel.Freight + viewModel.ECC),
                         ECC = viewModel.ECC,
                         Driver = viewModel.Driver,
                         PlateNo = viewModel.PlateNo,
                         HaulerId = viewModel.HaulerId ?? customerOrderSlip.HaulerId,
-                        AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo
+                        AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo,
+                        CommissioneeId = customerOrderSlip.CommissioneeId,
+                        CommissionRate = customerOrderSlip.CommissionRate,
+                        CommissionAmount = viewModel.Volume * customerOrderSlip.CommissionRate,
                     };
 
                     customerOrderSlip.DeliveredQuantity += model.Quantity;
@@ -984,7 +988,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming the template has one sheet
 
                 worksheet.Cells["H2"].Value = deliveryReceipt.AuthorityToLoadNo;
-                worksheet.Cells["H7"].Value = receivingReport?.ReceivingReportNo;
+                worksheet.Cells["H7"].Value = receivingReport?.OldRRNo ?? receivingReport?.ReceivingReportNo;
                 worksheet.Cells["H9"].Value = deliveryReceipt.ManualDrNo;
                 worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
                 worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip.OldCosNo;

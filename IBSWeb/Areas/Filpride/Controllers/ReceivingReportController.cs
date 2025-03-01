@@ -317,6 +317,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
+                    existingModel.OldRRNo = model.OldRRNo;
+
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();

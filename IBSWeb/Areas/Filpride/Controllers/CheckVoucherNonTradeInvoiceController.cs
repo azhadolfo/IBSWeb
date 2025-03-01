@@ -318,6 +318,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CompanyId = accountEntry.CompanyMasterFileId,
                             EmployeeId = accountEntry.EmployeeMasterFileId,
                             CustomerId = accountEntry.CustomerMasterFileId,
+                            SupplierId = accountEntry.SupplierMasterFileId,
                         });
 
                         if (accountEntry.VatAmount > 0)
@@ -1169,7 +1170,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Company = modelHeader.Company,
                                         CreatedBy = modelHeader.CreatedBy,
                                         CreatedDate = modelHeader.CreatedDate,
-                                        BankAccountId = modelHeader.BankId
+                                        BankAccountId = details.BankId,
+                                        SupplierId = details.SupplierId,
+                                        CustomerId = details.CustomerId,
+                                        CompanyId = details.CompanyId,
+                                        EmployeeId = details.EmployeeId,
                                     }
                                 );
                         }
@@ -1720,6 +1725,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 id = customer.CustomerId,
                 accountName = customer.CustomerName,
                 accountNumber = customer.CustomerCode
+            });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetSuppliers()
+        {
+            var suppliers = await _unitOfWork.FilprideSupplier.GetAllAsync();
+
+            return Json(suppliers.OrderBy(c => c.SupplierCode).Select(c => new {
+                id = c.SupplierId,
+                accountName = c.SupplierName,
+                accountNumber = c.SupplierCode
+            }));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetSupplierById(int supplierId)
+        {
+            var supplier = await _unitOfWork.FilprideSupplier.GetAsync(e => e.SupplierId == supplierId);
+            return Json(new
+            {
+                id = supplier.SupplierId,
+                accountName = supplier.SupplierName,
+                accountNumber = supplier.SupplierCode
             });
         }
     }

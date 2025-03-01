@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250226070408_RemoveFieldCommissioneeIdInDRModel")]
+    partial class RemoveFieldCommissioneeIdInDRModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -734,10 +737,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsPrinted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
-
-                    b.Property<string>("OldRRNo")
-                        .HasColumnType("text")
-                        .HasColumnName("old_rr_no");
 
                     b.Property<int>("POId")
                         .HasColumnType("integer")
@@ -2833,6 +2832,7 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_customer_order_slips_customer_id");
 
                     b.HasIndex("CustomerOrderSlipNo")
+                        .IsUnique()
                         .HasDatabaseName("ix_filpride_customer_order_slips_customer_order_slip_no");
 
                     b.HasIndex("Date")
@@ -2892,10 +2892,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("CommissionRate")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("commission_rate");
-
-                    b.Property<int?>("CommissioneeId")
-                        .HasColumnType("integer")
-                        .HasColumnName("commissionee_id");
 
                     b.Property<string>("Company")
                         .IsRequired()
@@ -3029,9 +3025,6 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("DeliveryReceiptId")
                         .HasName("pk_filpride_delivery_receipts");
 
-                    b.HasIndex("CommissioneeId")
-                        .HasDatabaseName("ix_filpride_delivery_receipts_commissionee_id");
-
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_filpride_delivery_receipts_customer_id");
 
@@ -3042,6 +3035,7 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_filpride_delivery_receipts_date");
 
                     b.HasIndex("DeliveryReceiptNo")
+                        .IsUnique()
                         .HasDatabaseName("ix_filpride_delivery_receipts_delivery_receipt_no");
 
                     b.HasIndex("HaulerId")
@@ -7565,12 +7559,6 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideDeliveryReceipt", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Commissionee")
-                        .WithMany()
-                        .HasForeignKey("CommissioneeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_delivery_receipts_filpride_suppliers_commissionee_");
-
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
@@ -7595,8 +7583,6 @@ namespace IBS.DataAccess.Migrations
                         .WithMany()
                         .HasForeignKey("PurchaseOrderId")
                         .HasConstraintName("fk_filpride_delivery_receipts_filpride_purchase_orders_purchas");
-
-                    b.Navigation("Commissionee");
 
                     b.Navigation("Customer");
 

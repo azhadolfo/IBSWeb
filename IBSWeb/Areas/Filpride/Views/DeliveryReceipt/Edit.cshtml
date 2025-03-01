@@ -325,6 +325,11 @@
                                 $.each(data, function (index, item) {
                                     $cosSelect.append('<option value="' + item.value + '">' + item.text + '</option>');
                                 });
+
+                                // Set the first COS as selected visually without triggering events
+                                if (data.length > 0) {
+                                    $cosSelect.val(data[0].value); // No trigger('change')
+                                }
                             } else {
                                 $cosSelect.append('<option value="">No cos available</option>');
                             }

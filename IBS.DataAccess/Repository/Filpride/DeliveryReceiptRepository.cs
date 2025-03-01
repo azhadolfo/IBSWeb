@@ -122,7 +122,11 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.HaulerId = viewModel.HaulerId ?? customerOrderSlip.HaulerId;
             existingRecord.ECC = viewModel.ECC;
             existingRecord.Freight = viewModel.Freight;
+            existingRecord.FreightAmount = existingRecord.Quantity * (existingRecord.Freight + existingRecord.ECC);
             existingRecord.AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo;
+            existingRecord.CommissioneeId = customerOrderSlip.CommissioneeId;
+            existingRecord.CommissionRate = customerOrderSlip.CommissionRate;
+            existingRecord.CommissionAmount = existingRecord.Quantity * existingRecord.CommissionRate;
 
             if (!customerOrderSlip.HasMultiplePO && existingRecord.CustomerOrderSlipId != customerOrderSlip.CustomerOrderSlipId)
             {
@@ -402,7 +406,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         });
                     }
 
-                    var totalFreightGrossAmount = (deliveryReceipt.Freight + deliveryReceipt.ECC) * deliveryReceipt.Quantity;
+                    var totalFreightGrossAmount = deliveryReceipt.FreightAmount;
                     var totalFreightNetOfVat = ComputeNetOfVat(totalFreightGrossAmount);
                     var totalFreightEwtAmount = ComputeEwtAmount(totalFreightNetOfVat, 0.02m);
                     var totalFreightNetOfEwt = ComputeNetOfEwt(totalFreightGrossAmount, totalFreightEwtAmount);
@@ -440,12 +444,12 @@ namespace IBS.DataAccess.Repository.Filpride
                     });
                 }
 
-                if (deliveryReceipt.CustomerOrderSlip.CommissionRate > 0)
+                if (deliveryReceipt.CommissionRate > 0)
                 {
-                    var commissionGrossAmount = deliveryReceipt.CustomerOrderSlip.CommissionRate * deliveryReceipt.Quantity;
-                    var commissionEwtAmount = deliveryReceipt.CustomerOrderSlip.Commissionee.TaxType == SD.TaxType_WithTax ?
+                    var commissionGrossAmount = deliveryReceipt.CommissionAmount;
+                    var commissionEwtAmount = deliveryReceipt.Commissionee.TaxType == SD.TaxType_WithTax ?
                         ComputeEwtAmount(commissionGrossAmount, 0.05m) : 0;
-                    var commissionNetOfEwt = deliveryReceipt.CustomerOrderSlip.Commissionee.TaxType == SD.TaxType_WithTax ?
+                    var commissionNetOfEwt = deliveryReceipt.Commissionee.TaxType == SD.TaxType_WithTax ?
                         ComputeNetOfEwt(commissionGrossAmount, commissionEwtAmount) : commissionGrossAmount;
 
                     ledgers.Add(new FilprideGeneralLedgerBook
@@ -476,7 +480,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.CreatedBy,
                         CreatedDate = deliveryReceipt.CreatedDate,
-                        SupplierId = deliveryReceipt.CustomerOrderSlip.CommissioneeId
+                        SupplierId = deliveryReceipt.CommissioneeId
                     });
 
                     if (commissionEwtAmount > 0)
