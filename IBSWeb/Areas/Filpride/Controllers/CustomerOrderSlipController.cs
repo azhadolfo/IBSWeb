@@ -915,11 +915,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 COSVolume = existingRecord.Quantity
             };
 
-            if (existingRecord.Status == nameof(CosStatus.SupplierAppointed) || existingRecord.Status == nameof(CosStatus.ForAtlBooking))
+            if (existingRecord.Status == nameof(CosStatus.SupplierAppointed))
             {
                 viewModel.SupplierId = (int)existingRecord.SupplierId;
                 viewModel.DeliveryOption = existingRecord.DeliveryOption;
-                viewModel.Freight = existingRecord.Freight ?? 0m;
+                viewModel.Freight = (decimal)existingRecord.Freight;
                 viewModel.PickUpPointId = (int)existingRecord.PickUpPointId;
                 viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint
                 .GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
