@@ -191,14 +191,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cos.PickUpPoint.Depot,
                         cos.PickUpPointId,
                         cos.Date,
-                        cos.Driver,
                         cos.Customer.CustomerName,
-                        cos.PlateNo,
                         cos.Product.ProductName,
                         cos.Quantity,
                         cos.TotalAmount,
                         cos.Status,
                         cos.SupplierId,
+                        cos.Driver,
+                        cos.PlateNo,
                         // Extract only PurchaseOrderNos from AppointedSuppliers
                         AppointedSupplierPOs = cos.AppointedSuppliers
                             .Select(a => a.PurchaseOrder.PurchaseOrderNo)
