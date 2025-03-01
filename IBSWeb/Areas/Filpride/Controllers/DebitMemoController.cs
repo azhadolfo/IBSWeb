@@ -317,6 +317,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Posted);
 
+                        var accountTitlesDto = await _unitOfWork.FilprideServiceInvoice.GetListOfAccountTitleDto(cancellationToken);
+                        var arTradeReceivableTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account title '101020100' not found.");
+                        var arNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020500") ?? throw new ArgumentException("Account title '101020500' not found.");
+                        var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
+                        var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
+                        var (salesAcctNo, salesAcctTitle) = _unitOfWork.FilprideSalesInvoice.GetSalesAccountTitle(model.SalesInvoice.Product.ProductCode);
+                        var salesTitle = accountTitlesDto.Find(c => c.AccountNumber == salesAcctNo) ?? throw new ArgumentException($"Account title '{salesAcctNo}' not found.");
+                        var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
+
+
                         if (model.SalesInvoiceId != null)
                         {
                             #region --Retrieval of SI
@@ -427,13 +437,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = model.TransactionDate,
                                     Reference = model.DebitMemoNo,
                                     Description = model.SalesInvoice.Product.ProductName,
-                                    AccountNo = "101020100",
-                                    AccountTitle = "AR-Trade Receivable",
+                                    AccountId = arTradeReceivableTitle.AccountId,
+                                    AccountNo = arTradeReceivableTitle.AccountNumber,
+                                    AccountTitle = arTradeReceivableTitle.AccountName,
                                     Debit = model.DebitAmount - (withHoldingTaxAmount + withHoldingVatAmount),
                                     Credit = 0,
                                     Company = model.Company,
                                     CreatedBy = model.CreatedBy,
-                                    CreatedDate = model.CreatedDate
+                                    CreatedDate = model.CreatedDate,
+                                    CustomerId = model.SalesInvoice.CustomerId
                                 }
                             );
 
@@ -445,8 +457,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "101020200",
-                                        AccountTitle = "AR-Trade Receivable - Creditable Withholding Tax",
+                                        AccountId = arTradeCwt.AccountId,
+                                        AccountNo = arTradeCwt.AccountNumber,
+                                        AccountTitle = arTradeCwt.AccountName,
                                         Debit = withHoldingTaxAmount,
                                         Credit = 0,
                                         Company = model.Company,
@@ -463,8 +476,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "101020300",
-                                        AccountTitle = "AR-Trade Receivable - Creditable Withholding Vat",
+                                        AccountId = arTradeCwv.AccountId,
+                                        AccountNo = arTradeCwv.AccountNumber,
+                                        AccountTitle = arTradeCwv.AccountName,
                                         Debit = withHoldingVatAmount,
                                         Credit = 0,
                                         Company = model.Company,
@@ -473,60 +487,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     }
                                 );
                             }
-                            if (model.SalesInvoice.Product.ProductName == "BIODIESEL")
-                            {
-                                ledgers.Add(
-                                    new FilprideGeneralLedgerBook
-                                    {
-                                        Date = model.TransactionDate,
-                                        Reference = model.DebitMemoNo,
-                                        Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "401010100",
-                                        AccountTitle = "Sales - Biodiesel",
-                                        Debit = 0,
-                                        Company = model.Company,
-                                        CreatedBy = model.CreatedBy,
-                                        Credit = netOfVatAmount,
-                                        CreatedDate = model.CreatedDate
-                                    }
-                                );
-                            }
-                            else if (model.SalesInvoice.Product.ProductName == "ECONOGAS")
-                            {
-                                ledgers.Add(
-                                    new FilprideGeneralLedgerBook
-                                    {
-                                        Date = model.TransactionDate,
-                                        Reference = model.DebitMemoNo,
-                                        Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "401010200",
-                                        AccountTitle = "Sales - Econogas",
-                                        Debit = 0,
-                                        Company = model.Company,
-                                        CreatedBy = model.CreatedBy,
-                                        Credit = netOfVatAmount,
-                                        CreatedDate = model.CreatedDate
-                                    }
-                                );
-                            }
-                            else if (model.SalesInvoice.Product.ProductName == "ENVIROGAS")
-                            {
-                                ledgers.Add(
-                                    new FilprideGeneralLedgerBook
-                                    {
-                                        Date = model.TransactionDate,
-                                        Reference = model.DebitMemoNo,
-                                        Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "401010300",
-                                        AccountTitle = "Sales - Envirogas",
-                                        Debit = 0,
-                                        Company = model.Company,
-                                        CreatedBy = model.CreatedBy,
-                                        Credit = netOfVatAmount,
-                                        CreatedDate = model.CreatedDate
-                                    }
-                                );
-                            }
+
+                            ledgers.Add(
+                                new FilprideGeneralLedgerBook
+                                {
+                                    Date = model.TransactionDate,
+                                    Reference = model.DebitMemoNo,
+                                    Description = model.SalesInvoice.Product.ProductName,
+                                    AccountId = salesTitle.AccountId,
+                                    AccountNo = salesTitle.AccountNumber,
+                                    AccountTitle = salesTitle.AccountName,
+                                    Debit = 0,
+                                    Company = model.Company,
+                                    CreatedBy = model.CreatedBy,
+                                    Credit = netOfVatAmount,
+                                    CreatedDate = model.CreatedDate
+                                }
+                            );
 
                             if (vatAmount > 0)
                             {
@@ -536,8 +513,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.SalesInvoice.Product.ProductName,
-                                        AccountNo = "201030100",
-                                        AccountTitle = "Vat Output",
+                                        AccountId = vatOutputTitle.AccountId,
+                                        AccountNo = vatOutputTitle.AccountNumber,
+                                        AccountTitle = vatOutputTitle.AccountName,
                                         Debit = 0,
                                         Credit = vatAmount,
                                         Company = model.Company,
@@ -661,16 +639,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             ledgers.Add(
                                     new FilprideGeneralLedgerBook
                                     {
-                                        Date = viewModelDMCM.Period,
+                                        Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
-                                        AccountNo = "101020500",
-                                        AccountTitle = "AR-Non Trade Receivable",
+                                        AccountId = arNonTradeTitle.AccountId,
+                                        AccountNo = arNonTradeTitle.AccountNumber,
+                                        AccountTitle = arNonTradeTitle.AccountName,
                                         Debit = viewModelDMCM.Total - (viewModelDMCM.WithholdingTaxAmount + viewModelDMCM.WithholdingVatAmount),
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
-                                        CreatedDate = model.CreatedDate
+                                        CreatedDate = model.CreatedDate,
+                                        CustomerId = model.ServiceInvoice.CustomerId
                                     }
                                 );
                             if (viewModelDMCM.WithholdingTaxAmount > 0)
@@ -678,11 +658,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
                                     {
-                                        Date = viewModelDMCM.Period,
+                                        Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
-                                        AccountNo = "101020200",
-                                        AccountTitle = "AR-Trade Receivable - Creditable Withholding Tax",
+                                        AccountId = arTradeCwt.AccountId,
+                                        AccountNo = arTradeCwt.AccountNumber,
+                                        AccountTitle = arTradeCwt.AccountName,
                                         Debit = viewModelDMCM.WithholdingTaxAmount,
                                         Credit = 0,
                                         Company = model.Company,
@@ -696,11 +677,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
                                     {
-                                        Date = viewModelDMCM.Period,
+                                        Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
-                                        AccountNo = "101020300",
-                                        AccountTitle = "AR-Trade Receivable - Creditable Withholding Vat",
+                                        AccountId = arTradeCwv.AccountId,
+                                        AccountNo = arTradeCwv.AccountNumber,
+                                        AccountTitle = arTradeCwv.AccountName,
                                         Debit = viewModelDMCM.WithholdingVatAmount,
                                         Credit = 0,
                                         Company = model.Company,
@@ -714,7 +696,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 ledgers.Add(new FilprideGeneralLedgerBook
                                 {
-                                    Date = viewModelDMCM.Period,
+                                    Date = model.TransactionDate,
                                     Reference = model.DebitMemoNo,
                                     Description = model.ServiceInvoice.Service.Name,
                                     AccountNo = model.ServiceInvoice.Service.CurrentAndPreviousNo,
@@ -732,11 +714,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
                                     {
-                                        Date = viewModelDMCM.Period,
+                                        Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo,
                                         Description = model.ServiceInvoice.Service.Name,
-                                        AccountNo = "201030100",
-                                        AccountTitle = "Vat Output",
+                                        AccountId = vatOutputTitle.AccountId,
+                                        AccountNo = vatOutputTitle.AccountNumber,
+                                        AccountTitle = vatOutputTitle.AccountName,
                                         Debit = 0,
                                         Credit = viewModelDMCM.VatAmount,
                                         Company = model.Company,
