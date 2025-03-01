@@ -155,7 +155,8 @@
                     "type": "POST",
                     "data": function (d) {
                         return $.extend({}, d, {
-                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+                            crType: "Sales",
                         });
                     },
                     "error": function (xhr, error, thrown) {

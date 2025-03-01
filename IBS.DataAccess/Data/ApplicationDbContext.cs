@@ -435,7 +435,7 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<FilprideCustomerOrderSlip>(cos =>
             {
-                cos.HasIndex(cos => cos.CustomerOrderSlipNo).IsUnique();
+                cos.HasIndex(cos => cos.CustomerOrderSlipNo);
                 cos.HasIndex(cos => cos.Date);
 
                 cos.HasOne(cos => cos.PurchaseOrder)
@@ -456,7 +456,7 @@ namespace IBS.DataAccess.Data
 
             builder.Entity<FilprideDeliveryReceipt>(dr =>
             {
-                dr.HasIndex(dr => dr.DeliveryReceiptNo).IsUnique();
+                dr.HasIndex(dr => dr.DeliveryReceiptNo);
                 dr.HasIndex(dr => dr.Date);
 
                 dr.HasOne(dr => dr.CustomerOrderSlip)

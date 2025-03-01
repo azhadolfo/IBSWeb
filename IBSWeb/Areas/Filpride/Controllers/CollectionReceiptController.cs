@@ -55,7 +55,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
                     .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
 
-                return View("ExportIndex", collectionReceipts);
+                return View("ExportIndex", collectionReceipts.Where(cr => cr.ServiceInvoiceId != null));
             }
 
             return View();
@@ -67,7 +67,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetCollectionReceipts([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCollectionReceipts([FromForm] DataTablesParameters parameters, string crType, CancellationToken cancellationToken)
         {
             try
             {
@@ -75,6 +75,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
                     .GetAllAsync(sv => sv.Company == companyClaims, cancellationToken);
+
+                if (crType == "Sales")
+                {
+                    collectionReceipts = collectionReceipts.Where(cr => cr.SalesInvoiceId != null);
+                }
+                else
+                {
+                    collectionReceipts = collectionReceipts.Where(cr => cr.ServiceInvoiceId != null);
+                }
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
