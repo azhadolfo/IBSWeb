@@ -7,7 +7,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface ICustomerOrderSlipRepository : IRepository<FilprideCustomerOrderSlip>
     {
-        Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default);
 
         Task UpdateAsync(CustomerOrderSlipViewModel viewModel, CancellationToken cancellationToken = default);
 

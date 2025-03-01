@@ -250,7 +250,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     FilprideCustomerOrderSlip model = new()
                     {
-                        CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(cancellationToken),
+                        CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(companyClaims, cancellationToken),
                         Date = viewModel.Date,
                         CustomerId = viewModel.CustomerId,
                         CustomerPoNo = viewModel.CustomerPoNo,
@@ -915,11 +915,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 COSVolume = existingRecord.Quantity
             };
 
-            if (existingRecord.Status == nameof(CosStatus.SupplierAppointed))
+            if (existingRecord.Status == nameof(CosStatus.SupplierAppointed) || existingRecord.Status == nameof(CosStatus.ForAtlBooking))
             {
                 viewModel.SupplierId = (int)existingRecord.SupplierId;
                 viewModel.DeliveryOption = existingRecord.DeliveryOption;
-                viewModel.Freight = (decimal)existingRecord.Freight;
+                viewModel.Freight = existingRecord.Freight ?? 0m;
                 viewModel.PickUpPointId = (int)existingRecord.PickUpPointId;
                 viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint
                 .GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
