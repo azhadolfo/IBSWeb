@@ -1154,17 +1154,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region --General Ledger Book Recording(CV)--
 
+                        var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
                         var ledgers = new List<FilprideGeneralLedgerBook>();
                         foreach (var details in modelDetails)
                         {
+                            var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
                             ledgers.Add(
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = modelHeader.Date,
                                         Reference = modelHeader.CheckVoucherHeaderNo,
                                         Description = modelHeader.Particulars,
-                                        AccountNo = details.AccountNo,
-                                        AccountTitle = details.AccountName,
+                                        AccountId = account.AccountId,
+                                        AccountNo = account.AccountNumber,
+                                        AccountTitle = account.AccountName,
                                         Debit = details.Debit,
                                         Credit = details.Credit,
                                         Company = modelHeader.Company,
