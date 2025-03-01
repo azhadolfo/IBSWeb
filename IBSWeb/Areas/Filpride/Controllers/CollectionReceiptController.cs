@@ -949,7 +949,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Collection receipt created successfully.";
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(ServiceInvoiceIndex));
                 }
                 catch (Exception ex)
                 {
