@@ -3188,20 +3188,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var cd in clearedDisbursementReport)
             {
-                var getCheckVoucherInvoiceHeader = await _dbContext.FilprideCheckVoucherHeaders
-                    .Where(inv => inv.CheckVoucherHeaderNo == cd.Reference)
-                    .FirstOrDefaultAsync(cancellationToken);
 
-                var getCheckVoucherInvoiceDetails = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(invd =>
-                        invd.TransactionNo == getCheckVoucherInvoiceHeader.CheckVoucherHeaderNo)
-                    .ToListAsync(cancellationToken);
+                var details = await _dbContext.FilprideCheckVoucherDetails
+                        .Where(d => d.CheckVoucherHeaderId == cd.CheckVoucherHeaderId)
+                        .ToListAsync(cancellationToken);
 
-                var invoiceDebit = getCheckVoucherInvoiceDetails
-                    .FirstOrDefault(inv => inv.Debit > 0);
-
-                var invoiceCredit = getCheckVoucherInvoiceDetails
-                    .FirstOrDefault(inv => inv.Credit > 0);
+                var invoiceDebit = details
+                    .FirstOrDefault(d => d.Debit > 0);
 
                 var getCategoryInChartOfAccount = await _dbContext.FilprideChartOfAccounts
                     .Include(coa => coa.ParentAccount) // Level 3
@@ -3214,7 +3207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[row, 1].Value = $"{levelOneAccount.AccountNumber} " +
                                                 $"{levelOneAccount.AccountName}";
-                worksheet.Cells[row, 2].Value = $"{invoiceCredit.AccountNo} {invoiceCredit.AccountName}";
+                worksheet.Cells[row, 2].Value = $"{invoiceDebit.AccountNo} {invoiceDebit.AccountName}";
                 worksheet.Cells[row, 3].Value = cd.Payee;
                 worksheet.Cells[row, 4].Value = cd.Date;
                 worksheet.Cells[row, 5].Value = cd.CheckVoucherHeaderNo;

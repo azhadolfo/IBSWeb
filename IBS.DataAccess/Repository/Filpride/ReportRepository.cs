@@ -320,8 +320,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderBy(cd => cd.Date)
                 .ToList();
 
-
-
             return checkVoucherHeader;
         }
 
