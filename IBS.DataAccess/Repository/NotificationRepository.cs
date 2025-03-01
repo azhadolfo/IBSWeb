@@ -38,6 +38,29 @@ namespace IBS.DataAccess.Repository
             await _db.SaveChangesAsync();
         }
 
+        public async Task AddNotificationToMultipleUsersAsync(List<string> userIds, string message, bool requiresResponse = false)
+        {
+            var notification = new Notification
+            {
+                Message = message,
+                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
+            };
+
+            await _db.Notifications.AddAsync(notification);
+            await _db.SaveChangesAsync();
+
+            var userNotifications = userIds.Select(userId => new UserNotification
+            {
+                UserId = userId,
+                NotificationId = notification.NotificationId,
+                IsRead = false,
+                RequiresResponse = requiresResponse
+            }).ToList();
+
+            await _db.UserNotifications.AddRangeAsync(userNotifications);
+            await _db.SaveChangesAsync();
+        }
+
         public async Task ArchiveAsync(Guid userNotificationId)
         {
             var userNotification = await _db.UserNotifications.FindAsync(userNotificationId);

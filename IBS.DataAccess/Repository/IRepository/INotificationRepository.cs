@@ -6,6 +6,8 @@ namespace IBS.DataAccess.Repository.IRepository
     {
         Task AddNotificationAsync(string userId, string message, bool requiresResponse = false);
 
+        Task AddNotificationToMultipleUsersAsync(List<string> userIds, string message, bool requiresResponse = false);
+
         Task<List<UserNotification>> GetUserNotificationsAsync(string userId);
 
         Task MarkAsReadAsync(Guid userNotificationId);
