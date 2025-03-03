@@ -53,9 +53,11 @@ builder.Services.AddQuartz(q =>
 
     // Register the job
     var monthlyClosureKey = JobKey.Create(nameof(MonthlyClosureService));
+    var googleDriveImportKey = JobKey.Create(nameof(GoogleDriveImportService));
     ///TODO Register the job for COS Expiration and Google Drive function
 
     q.AddJob<MonthlyClosureService>(options => options.WithIdentity(monthlyClosureKey));
+    q.AddJob<GoogleDriveImportService>(options => options.WithIdentity(googleDriveImportKey));
 
     // Add the first trigger
     // Format (sec, min, hour, day, month, year)
@@ -66,6 +68,11 @@ builder.Services.AddQuartz(q =>
             x => x.InTimeZone(
                 TimeZoneInfo
                     .FindSystemTimeZoneById("Asia/Manila")))); // Run at midnight on the first day of every month
+    q.AddTrigger(opts => opts
+        .ForJob(googleDriveImportKey)
+        .WithIdentity("DailyTrigger")
+        .WithCronSchedule("0 30 * * * ?",
+            x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"))));
 });
 
 
