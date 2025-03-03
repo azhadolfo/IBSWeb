@@ -50,7 +50,7 @@
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
                                 <th>RR No's</th>
                                 <th>Payment</th>
-                                <th class="text-end">Gross</th>
+                                <th class="text-end">Amount</th>
                                 <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
                             </tr>
@@ -313,24 +313,21 @@
 
                     if (data){
                         data.forEach((rr, index) => {
-                            const rrAmount = modelRRs.get(rr.id) || 0;
-                            let amountPaid = parseNumber(rr.amountPaid) - rrAmount;
-                            let balance = parseNumber(rr.grossAmount) - amountPaid;
-                            
+                            let balance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
                             const isChecked = modelRRs.has(rr.id) ? 'checked' : '';
                             const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${rr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${rr.receivingReportNo}</td>
-                                            <td><input type="text" class="paymentAmount" data-balance="${balance}" style="display: none"></td>
-                                            <td class="text-end">${formatNumber(rr.grossAmount)}</td>
-                                            <td class="text-end">${formatNumber(amountPaid)}</td>
+                                            <td><input type="text" class="paymentAmount" data-balance="${formatNumber(balance)}" style="display: none"></td>
+                                            <td class="text-end">${formatNumber(rr.netOfEwtAmount)}</td>
+                                            <td class="text-end">${formatNumber(rr.amountPaid)}</td>
                                             <td class="text-end balance">${formatNumber(balance)}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
 
-                            totalGross += parseNumber(rr.grossAmount);
+                            totalGross += parseNumber(rr.netOfEwtAmount);
                             totalAmountPaid += parseNumber(rr.amountPaid);
                             totalBalance += balance;
                         });
@@ -528,7 +525,7 @@
                 let paymentValue = parseFloat($(this).val()) || 0;
                 let maxBalance = parseFloat($(this).data('balance')) || 0;
 
-                if (paymentValue > maxBalance) {
+                if (paymentValue > parseNumber(maxBalance)) {
                     alert(`Payment amount cannot exceed balance for one or more entries.`);
                     isValid = false;
                     return false; // Break loop

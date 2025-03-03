@@ -473,7 +473,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var query = _dbContext.FilprideReceivingReports
                 .Where(rr => rr.Company == companyClaims
-                             && rr.Amount > rr.AmountPaid
+                             && !rr.IsPaid
                              && poNumber.Contains(rr.PONo)
                              && rr.PostedBy != null);
 
@@ -489,17 +489,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var receivingReports = await query
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(rr => rr.Supplier)
                 .OrderBy(rr => criteria == "Transaction Date" ? rr.Date : rr.DueDate)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
-            if (receivingReports != null && receivingReports.Count > 0)
+            if (receivingReports.Any())
             {
                 var rrList = receivingReports
-                    .Select(rr => new {
-                        Id = rr.ReceivingReportId,
-                        ReceivingReportNo = rr.ReceivingReportNo,
-                        GrossAmount = rr.Amount.ToString("N4"),
-                        AmountPaid = rr.AmountPaid.ToString("N4"),
+                    .Select(rr => {
+                        var netOfVatAmount = rr.PurchaseOrder?.Supplier?.VatType == SD.VatType_Vatable
+                            ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(rr.Amount)
+                            : rr.Amount;
+
+                        var ewtAmount = _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.01m);
+
+                        var netOfEwtAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(rr.Amount, ewtAmount);
+
+                        return new {
+                            Id = rr.ReceivingReportId,
+                            ReceivingReportNo = rr.ReceivingReportNo,
+                            AmountPaid = rr.AmountPaid.ToString("N4"),
+                            NetOfEwtAmount = netOfEwtAmount.ToString("N4")
+                        };
                     }).ToList();
                 return Json(rrList);
             }
@@ -886,28 +898,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
 
-                                if (receivingReport.Amount <= receivingReport.AmountPaid)
-                                {
-                                    receivingReport.IsPaid = true;
-                                    receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
-                                }
+                                receivingReport.IsPaid = true;
+                                receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
                             }
                             if (item.DocumentType == "DR")
                             {
                                 var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
                                 if (item.CV.CvType == "Commission")
                                 {
-                                    if (deliveryReceipt.CommissionAmount <= deliveryReceipt.CommissionAmountPaid)
-                                    {
-                                        deliveryReceipt.IsCommissionPaid = true;
-                                    }
+                                    deliveryReceipt.IsCommissionPaid = true;
                                 }
                                 if (item.CV.CvType == "Hauler")
                                 {
-                                    if (deliveryReceipt.FreightAmount <= deliveryReceipt.FreightAmountPaid)
-                                    {
-                                        deliveryReceipt.IsFreightPaid = true;
-                                    }
+                                    deliveryReceipt.IsFreightPaid = true;
                                 }
                             }
                         }
