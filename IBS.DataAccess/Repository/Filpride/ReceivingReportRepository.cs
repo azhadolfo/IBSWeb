@@ -287,6 +287,9 @@ namespace IBS.DataAccess.Repository.Filpride
                                             "Please contact the TNS department to verify the appointed supplier.");
             }
 
+            var freight = deliveryReceipt.CustomerOrderSlip.DeliveryOption == SD.DeliveryOption_DirectDelivery
+                ? deliveryReceipt.Freight
+                : 0;
             model.ReceivedDate = model.Date;
             model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type, cancellationToken);
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
@@ -310,19 +313,19 @@ namespace IBS.DataAccess.Repository.Filpride
                     if (availableQuantity > 0)
                     {
                         var applicableQuantity = Math.Min(remainingQuantity, availableQuantity);
-                        totalAmount += applicableQuantity * poActualPrice.TriggeredPrice;
+                        totalAmount += applicableQuantity * (poActualPrice.TriggeredPrice + freight);
                         poActualPrice.AppliedVolume += applicableQuantity;
                         remainingQuantity -= applicableQuantity;
                     }
                 }
 
                 // Compute the remaining using the default price
-                totalAmount += remainingQuantity * deliveryReceipt.PurchaseOrder.Price;
+                totalAmount += remainingQuantity * (deliveryReceipt.PurchaseOrder.Price + freight);
                 model.Amount = totalAmount;
             }
             else
             {
-                model.Amount = model.QuantityReceived * deliveryReceipt.PurchaseOrder.Price;
+                model.Amount = model.QuantityReceived * (deliveryReceipt.PurchaseOrder.Price + freight);
             }
 
             #region --Audit Trail Recording

@@ -196,6 +196,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cos.Quantity,
                         cos.TotalAmount,
                         cos.Status,
+                        cos.SupplierId,
+                        cos.Driver,
+                        cos.PlateNo,
                         // Extract only PurchaseOrderNos from AppointedSuppliers
                         AppointedSupplierPOs = cos.AppointedSuppliers
                             .Select(a => a.PurchaseOrder.PurchaseOrderNo)
@@ -247,7 +250,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     FilprideCustomerOrderSlip model = new()
                     {
-                        CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(cancellationToken),
+                        CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(companyClaims, cancellationToken),
                         Date = viewModel.Date,
                         CustomerId = viewModel.CustomerId,
                         CustomerPoNo = viewModel.CustomerPoNo,
@@ -444,22 +447,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
 
-                    if (existingRecord.AuthorityToLoadNo != null)
+                    if (existingRecord.AuthorityToLoadNo != null && changes.Count > 0)
                     {
                         var tnsAndLogisticUsers = await _dbContext.ApplicationUsers
                             .Where(a => a.Department == SD.Department_TradeAndSupply || a.Department == SD.Department_Logistics)
+                            .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        foreach (var user in tnsAndLogisticUsers)
+                        var message = $"{viewModel.CurrentUser.ToUpper()} has modified {existingRecord.CustomerOrderSlipNo}. Updates include:\n{string.Join("\n", changes)}";
+                        message += $"\nKindly reappoint the supplier/hauler, if necessary.";
+
+                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(tnsAndLogisticUsers, message);
+
+                        var usernames = await _dbContext.ApplicationUsers
+                            .Where(a => tnsAndLogisticUsers.Contains(a.Id))
+                            .Select(u => u.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var username in usernames)
                         {
-                            var message = $"{viewModel.CurrentUser.ToUpper()} has modified {existingRecord.CustomerOrderSlipNo}. Updates include:\n{string.Join("\n", changes)}";
-                            message += $"\nKindly reappoint the {(user.Department == SD.Department_TradeAndSupply ? "supplier" : "hauler")}, if necessary.";
-
-                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
-
                             var hubConnections = await _dbContext.HubConnections
-                            .Where(h => h.UserName == user.UserName)
-                            .ToListAsync(cancellationToken);
+                                .Where(h => h.UserName == username)
+                                .ToListAsync(cancellationToken);
 
                             foreach (var hubConnection in hubConnections)
                             {
@@ -643,7 +652,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Terms = existingPo.Terms,
                                 Quantity = existingRecord.Quantity,
                                 Price = (decimal)existingRecord.Freight,
-                                Remarks = $"{existingRecord.SubPORemarks}\n Please note: The values in this purchase order are for the freight charge.",
+                                Remarks = $"{existingRecord.SubPORemarks} \nPlease note: The values in this purchase order are for the freight charge.",
                                 Company = existingPo.Company,
                                 IsSubPo = true,
                                 CustomerId = existingRecord.CustomerId,
@@ -1119,18 +1128,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (existingCos.DeliveryOption != viewModel.DeliveryOption && existingCos.Status != nameof(CosStatus.SupplierAppointed))
                     {
-                        var logisticUser = await _dbContext.ApplicationUsers
-                            .Where(u => u.Department == SD.Department_Logistics.ToString())
+                        var logisticUsers = await _dbContext.ApplicationUsers
+                            .Where(a => a.Department == SD.Department_Logistics)
+                            .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        foreach (var user in logisticUser)
+                        var message = $"{viewModel.CurrentUser.ToUpper()} has updated the delivery option of {existingCos.CustomerOrderSlipNo} from {existingCos.DeliveryOption} to {viewModel.DeliveryOption}. " +
+                                      $"Please reappoint your hauler if necessary.";
+
+                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(logisticUsers, message);
+
+                        var usernames = await _dbContext.ApplicationUsers
+                            .Where(a => logisticUsers.Contains(a.Id))
+                            .Select(u => u.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var username in usernames)
                         {
-                            var message = $"{viewModel.CurrentUser.ToUpper()} has updated the delivery option of {existingCos.CustomerOrderSlipNo} from {existingCos.DeliveryOption} to {viewModel.DeliveryOption}. Please reappoint your hauler if necessary.";
-                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
-
                             var hubConnections = await _dbContext.HubConnections
-                            .Where(h => h.UserName == user.UserName)
-                            .ToListAsync(cancellationToken);
+                                .Where(h => h.UserName == username)
+                                .ToListAsync(cancellationToken);
 
                             foreach (var hubConnection in hubConnections)
                             {
@@ -1468,75 +1485,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
-        }
-
-        public async Task<IActionResult> BookAuthorityToLoad(int id, string? supplierAtlNo, DateOnly bookedDate, CancellationToken cancellationToken)
-        {
-            if (id == 0)
-            {
-                return NotFound();
-            }
-            var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
-                .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
-
-            if (existingCos == null)
-            {
-                return NotFound();
-            }
-
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                FilprideAuthorityToLoad model = new()
-                {
-                    AuthorityToLoadNo = await _unitOfWork.FilprideAuthorityToLoad.GenerateAtlNo(cancellationToken),
-                    CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
-                    DateBooked = bookedDate,
-                    ValidUntil = bookedDate.AddDays(5),
-                    UppiAtlNo = supplierAtlNo,
-                    Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
-                    CreatedBy = _userManager.GetUserName(User),
-                    CreatedDate = DateTime.Now,
-                };
-                await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
-                existingCos.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                //existingCos.Status = nameof(CosStatus.ForApprovalOfOM); --should be the code for status
-
-                if (existingCos.Status != nameof(CosStatus.ForDR) && existingCos.Status != nameof(CosStatus.Completed))
-                {
-                    existingCos.Status = nameof(CosStatus.ForApprovalOfOM);
-                }
-
-                //TODO Remove this in the future
-                #region Remove this in the future
-
-                var existingDr = await _unitOfWork.FilprideDeliveryReceipt
-                    .GetAllAsync(dr => dr.CustomerOrderSlipId == id, cancellationToken);
-
-                foreach (var dr in existingDr)
-                {
-                    dr.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                    dr.Status = nameof(DRStatus.PendingDelivery);
-                }
-
-                #endregion
-
-
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
-                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-                TempData["success"] = "ATL booked successfully";
-                await _unitOfWork.SaveAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                return RedirectToAction(nameof(AuthorityToLoadController.Print), "AuthorityToLoad", new { area = nameof(Filpride), id = model.AuthorityToLoadId });
-            }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-                await transaction.RollbackAsync(cancellationToken);
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-            }
         }
 
         [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]

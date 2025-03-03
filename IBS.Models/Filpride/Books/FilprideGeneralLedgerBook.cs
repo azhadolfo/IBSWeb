@@ -90,7 +90,7 @@ namespace IBS.Models.Filpride.Books
 
         #endregion
 
-        #region Customer Properties
+        #region Company Properties
 
         public int? CompanyId { get; set; }
 

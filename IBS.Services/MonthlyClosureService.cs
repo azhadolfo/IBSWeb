@@ -68,35 +68,19 @@ namespace IBS.Services
             try
             {
                 var users = await _dbContext.ApplicationUsers
-                    .Where(u => u.Department == SD.Department_Logistics ||
+                    .Where(u => u.Department == SD.Department_TradeAndSupply ||
                                 u.Department == SD.Department_ManagementAccounting)
+                    .Select(u => u.Id)
                     .ToListAsync();
+
 
                 var link = "<a href='/Filpride/Report/DispatchReport' target='_blank'>Dispatch Report</a>";
                 var message = $"Is the in-transit report final? Kindly generate the {link} and " +
                               $"answer this question to enable the creation of DR for the month of " +
-                              $"{DateTime.UtcNow:MMM yyyy}.";
-                var ccMessage = "CC: Management Accounting";
+                              $"{DateTime.UtcNow:MMM yyyy}. \n" +
+                              $"CC: Management Accounting";
 
-                var notification = new Notification
-                {
-                    Message = message,
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
-                };
-
-                await _dbContext.Notifications.AddAsync(notification);
-                await _dbContext.SaveChangesAsync();
-
-                var userNotifications = users.Select(user => new UserNotification
-                {
-                    UserId = user.Id,
-                    NotificationId = notification.NotificationId,
-                    IsRead = false,
-                    RequiresResponse = true,
-                }).ToList();
-
-                await _dbContext.UserNotifications.AddRangeAsync(userNotifications);
-                await _dbContext.SaveChangesAsync();
+                await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
 
                 var lockCreationOfDr = await _dbContext.AppSettings
                     .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfDr);
@@ -144,33 +128,18 @@ namespace IBS.Services
                 var users = await _dbContext.ApplicationUsers
                     .Where(u => u.Department == SD.Department_TradeAndSupply ||
                                 u.Department == SD.Department_ManagementAccounting)
+                    .Select(u => u.Id)
                     .ToListAsync();
+
 
                 var purchaseOrderNosList = string.Join(", ", purchaseOrders);
                 var message = $"Kindly trigger the following purchase orders: {purchaseOrderNosList}. " +
                               $"To enable the creation of purchase order for the month of " +
-                              $"{DateTime.UtcNow:MMM yyyy}.";
-                var ccMessage = "CC: Management Accounting";
+                              $"{DateTime.UtcNow:MMM yyyy}. \n" +
+                              $"CC: Management Accounting";
 
-                var notification = new Notification
-                {
-                    Message = message,
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
-                };
+                await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
 
-                await _dbContext.Notifications.AddAsync(notification);
-                await _dbContext.SaveChangesAsync();
-
-                var userNotifications = users.Select(user => new UserNotification
-                {
-                    UserId = user.Id,
-                    NotificationId = notification.NotificationId,
-                    IsRead = false,
-                    RequiresResponse = true,
-                }).ToList();
-
-                await _dbContext.UserNotifications.AddRangeAsync(userNotifications);
-                await _dbContext.SaveChangesAsync();
 
                 var lockCreationOfPo = await _dbContext.AppSettings
                     .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfPo);

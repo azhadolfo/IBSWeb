@@ -377,13 +377,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
+                                    AccountId = arNonTradeTitle.AccountId,
                                     AccountNo = arNonTradeTitle.AccountNumber,
                                     AccountTitle = arNonTradeTitle.AccountName,
                                     Debit = Math.Round(model.Total - (withHoldingTaxAmount + withHoldingVatAmount), 4),
                                     Credit = 0,
                                     Company = model.Company,
                                     CreatedBy = model.CreatedBy,
-                                    CreatedDate = model.CreatedDate
+                                    CreatedDate = model.CreatedDate,
+                                    CustomerId = model.CustomerId
                                 }
                             );
                         if (withHoldingTaxAmount > 0)
@@ -394,6 +396,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
+                                    AccountId = arTradeCwt.AccountId,
                                     AccountNo = arTradeCwt.AccountNumber,
                                     AccountTitle = arTradeCwt.AccountName,
                                     Debit = withHoldingTaxAmount,
@@ -412,6 +415,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
+                                    AccountId = arTradeCwv.AccountId,
                                     AccountNo = arTradeCwv.AccountNumber,
                                     AccountTitle = arTradeCwv.AccountName,
                                     Debit = withHoldingVatAmount,
@@ -447,6 +451,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Date = postedDate,
                                     Reference = model.ServiceInvoiceNo,
                                     Description = model.Service.Name,
+                                    AccountId = vatOutputTitle.AccountId,
                                     AccountNo = vatOutputTitle.AccountNumber,
                                     AccountTitle = vatOutputTitle.AccountName,
                                     Debit = 0,

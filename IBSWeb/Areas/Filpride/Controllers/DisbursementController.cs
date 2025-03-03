@@ -52,7 +52,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var disbursements = await _unitOfWork.FilprideCheckVoucher
                     .GetAllAsync(d =>
                         d.CvType != nameof(CVType.Invoicing) &&
-                        d.PostedBy != null, cancellationToken);
+                        d.PostedBy != null &&
+                        d.Company == companyClaims, cancellationToken);
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -70,6 +71,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.DcpDate?.ToString().Contains(searchValue) == true ||
                         s.DcrDate?.ToString().Contains(searchValue) == true
                         )
+                    .Where(cv => cv.Company == companyClaims)
                     .ToList();
                 }
 

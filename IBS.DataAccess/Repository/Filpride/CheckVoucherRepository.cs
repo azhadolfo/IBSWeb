@@ -208,7 +208,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
             else
             {
-                return "PYT000000001";
+                return "CVN000000001";
             }
         }
 

@@ -227,7 +227,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     FilprideDeliveryReceipt model = new()
                     {
-                        DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(cancellationToken),
+                        DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(companyClaims, cancellationToken),
                         Date = viewModel.Date,
                         CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
                         CustomerId = viewModel.CustomerId,
@@ -266,16 +266,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideDeliveryReceipt.AssignNewPurchaseOrderAsync(viewModel, model);
                     }
 
-                    //TODO Remove this in the future
-                    #region Remove this in the future
-
-                    if (string.IsNullOrEmpty(viewModel.ATLNo))
-                    {
-                        model.Status = "Draft";
-                    }
-
-                    #endregion
-
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -286,16 +276,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var operationManager = await _dbContext.ApplicationUsers
                             .Where(a => a.Position == SD.Position_OperationManager)
+                            .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        foreach (var user in operationManager)
+                        var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy.ToUpper()}. " +
+                                      $"Please review and approve.";
+
+                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
+
+                        var usernames = await _dbContext.ApplicationUsers
+                            .Where(a => operationManager.Contains(a.Id))
+                            .Select(u => u.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var username in usernames)
                         {
-                            var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy.ToUpper()}. Please review and approve.";
-
-                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
-
                             var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == user.UserName)
+                                .Where(h => h.UserName == username)
                                 .ToListAsync(cancellationToken);
 
                             foreach (var hubConnection in hubConnections)
@@ -310,19 +307,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if ((viewModel.Driver != customerOrderSlip.Driver || viewModel.PlateNo != customerOrderSlip.PlateNo) && !string.IsNullOrEmpty(viewModel.ATLNo))
                     {
-                        var tnsUser = await _dbContext.ApplicationUsers
+                        var tnsUsers = await _dbContext.ApplicationUsers
                             .Where(a => a.Department == SD.Department_TradeAndSupply)
+                            .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        foreach (var user in tnsUser)
+                        var message = $"Please be informed that {model.CreatedBy.ToUpper()} has updated the 'Driver' and 'Plate#' for {model.DeliveryReceiptNo}.";
+
+                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(tnsUsers, message);
+
+                        var usernames = await _dbContext.ApplicationUsers
+                            .Where(a => tnsUsers.Contains(a.Id))
+                            .Select(u => u.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var username in usernames)
                         {
-                            var message = $"Please be informed that {model.CreatedBy.ToUpper()} has updated the 'Driver' and 'Plate#' for {model.DeliveryReceiptNo}.";
-
-                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
-
                             var hubConnections = await _dbContext.HubConnections
-                           .Where(h => h.UserName == user.UserName)
-                           .ToListAsync(cancellationToken);
+                                .Where(h => h.UserName == username)
+                                .ToListAsync(cancellationToken);
 
                             foreach (var hubConnection in hubConnections)
                             {
@@ -336,21 +339,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var operationManager = await _dbContext.ApplicationUsers
                             .Where(a => a.Position == SD.Position_OperationManager)
+                            .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
                         var hauler = await _unitOfWork.FilprideSupplier
-                            .GetAsync(h => h.SupplierId == customerOrderSlip.HaulerId, cancellationToken);
+                            .GetAsync(h => h.SupplierId == viewModel.HaulerId, cancellationToken);
 
-                        foreach (var user in operationManager)
+                        var message = $"{model.DeliveryReceiptNo} has been generated and the Hauler/Freight has been modified by {model.CreatedBy.ToUpper()}." +
+                                      $" Please review and approve the changes from '{customerOrderSlip.Hauler.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
+                                      $" to '{hauler.SupplierName}' with a freight cost of '{model.Freight:N4}'.";
+
+                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
+
+                        var usernames = await _dbContext.ApplicationUsers
+                            .Where(a => operationManager.Contains(a.Id))
+                            .Select(u => u.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var username in usernames)
                         {
-                            var message = $"{model.DeliveryReceiptNo} has been generated and the Hauler/Freight has been modified by {model.CreatedBy.ToUpper()}." +
-                                          $" Please review and approve the changes from '{customerOrderSlip.Hauler.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
-                                          $" to '{hauler.SupplierName}' with a freight cost of '{model.Freight:N4}'.";
-
-                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
-
                             var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == user.UserName)
+                                .Where(h => h.UserName == username)
                                 .ToListAsync(cancellationToken);
 
                             foreach (var hubConnection in hubConnections)
@@ -466,16 +475,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var operationManager = await _dbContext.ApplicationUsers
                             .Where(a => a.Position == SD.Position_OperationManager)
+                            .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        foreach (var user in operationManager)
+                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser.ToUpper()}. " +
+                                      $"Please review and approve.";
+
+                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
+
+                        var usernames = await _dbContext.ApplicationUsers
+                            .Where(a => operationManager.Contains(a.Id))
+                            .Select(u => u.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var username in usernames)
                         {
-                            var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser.ToUpper()}. Please review and approve.";
-
-                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
-
                             var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == user.UserName)
+                                .Where(h => h.UserName == username)
                                 .ToListAsync(cancellationToken);
 
                             foreach (var hubConnection in hubConnections)
@@ -490,19 +506,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (viewModel.Driver != existingRecord.Driver || viewModel.PlateNo != existingRecord.PlateNo)
                     {
-                        var tnsUser = await _dbContext.ApplicationUsers
+                        var tnsUsers = await _dbContext.ApplicationUsers
                             .Where(a => a.Department == SD.Department_TradeAndSupply)
+                            .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        foreach (var user in tnsUser)
+                        var message = $"Please be informed that {viewModel.CurrentUser.ToUpper()} has updated the 'Driver' and 'Plate#' for {existingRecord.DeliveryReceiptNo}.";
+
+                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(tnsUsers, message);
+
+                        var usernames = await _dbContext.ApplicationUsers
+                            .Where(a => tnsUsers.Contains(a.Id))
+                            .Select(u => u.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var username in usernames)
                         {
-                            var message = $"Please be informed that {viewModel.CurrentUser.ToUpper()} has updated the 'Driver' and 'Plate#' for {existingRecord.DeliveryReceiptNo}.";
-
-                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
-
                             var hubConnections = await _dbContext.HubConnections
-                           .Where(h => h.UserName == user.UserName)
-                           .ToListAsync(cancellationToken);
+                                .Where(h => h.UserName == username)
+                                .ToListAsync(cancellationToken);
 
                             foreach (var hubConnection in hubConnections)
                             {
@@ -516,21 +538,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var operationManager = await _dbContext.ApplicationUsers
                             .Where(a => a.Position == SD.Position_OperationManager)
+                            .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
                         var hauler = await _unitOfWork.FilprideSupplier
                             .GetAsync(h => h.SupplierId == viewModel.HaulerId, cancellationToken);
 
-                        foreach (var user in operationManager)
+                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified by {viewModel.CurrentUser.ToUpper()} to update the Hauler/Freight." +
+                                      $" Please review and approve the changes from '{existingRecord.Hauler.SupplierName}' with a freight cost of '{existingRecord.Freight:N4}'" +
+                                      $" to '{hauler.SupplierName}' with a freight cost of '{viewModel.Freight:N4}'.";
+
+                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
+
+                        var usernames = await _dbContext.ApplicationUsers
+                            .Where(a => operationManager.Contains(a.Id))
+                            .Select(u => u.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var username in usernames)
                         {
-                            var message = $"{existingRecord.DeliveryReceiptNo} has been modified by {viewModel.CurrentUser.ToUpper()} to update the Hauler/Freight." +
-                                          $" Please review and approve the changes from '{existingRecord.Hauler.SupplierName}' with a freight cost of '{existingRecord.Freight:N4}'" +
-                                          $" to '{hauler.SupplierName}' with a freight cost of '{viewModel.Freight:N4}'.";
-
-                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
-
                             var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == user.UserName)
+                                .Where(h => h.UserName == username)
                                 .ToListAsync(cancellationToken);
 
                             foreach (var hubConnection in hubConnections)
@@ -913,59 +941,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return BadRequest();
-        }
-
-        public async Task<IActionResult> BookAuthorityToLoad(int id, string? supplierAtlNo, DateOnly bookedDate, CancellationToken cancellationToken)
-        {
-            if (id == 0)
-            {
-                return NotFound();
-            }
-
-            var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
-                .GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
-
-            if (existingRecord == null)
-            {
-                return NotFound();
-            }
-
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                FilprideAuthorityToLoad model = new()
-                {
-                    AuthorityToLoadNo = await _unitOfWork.FilprideAuthorityToLoad.GenerateAtlNo(cancellationToken),
-                    DeliveryReceiptId = existingRecord.DeliveryReceiptId,
-                    DateBooked = bookedDate,
-                    ValidUntil = bookedDate.AddDays(5),
-                    UppiAtlNo = supplierAtlNo,
-                    Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
-                    CreatedBy = _userManager.GetUserName(User),
-                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
-                };
-
-                await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
-
-                existingRecord.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                existingRecord.Status = nameof(DRStatus.PendingDelivery);
-
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Book ATL for delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
-                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                TempData["success"] = "ATL booked successfully";
-                await _unitOfWork.SaveAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                return RedirectToAction(nameof(AuthorityToLoadController.Print), "AuthorityToLoad", new { area = nameof(Filpride), id = model.AuthorityToLoadId });
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-            }
         }
 
         public async Task<IActionResult> GenerateExcel(int id)

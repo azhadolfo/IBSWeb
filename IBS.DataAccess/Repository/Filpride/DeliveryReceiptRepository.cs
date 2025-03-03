@@ -22,10 +22,11 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
         {
             FilprideDeliveryReceipt? lastDr = await _db
                 .FilprideDeliveryReceipts
+                .Where(c => c.Company  == companyClaims)
                 .OrderBy(c => c.DeliveryReceiptNo)
                 .LastOrDefaultAsync(cancellationToken);
 

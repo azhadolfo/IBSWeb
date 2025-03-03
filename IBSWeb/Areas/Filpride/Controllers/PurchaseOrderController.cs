@@ -662,18 +662,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 };
 
                 #region Notification
+
                 var operationManager = await _dbContext.ApplicationUsers
-                                    .Where(a => a.Position == SD.Position_OperationManager)
-                                    .ToListAsync(cancellationToken);
+                    .Where(a => a.Position == SD.Position_OperationManager)
+                    .Select(u => u.Id)
+                    .ToListAsync(cancellationToken);
 
-                foreach (var user in operationManager)
+                var message = $"The cost for Purchase Order {existingRecord.PurchaseOrderNo} has been updated by {currentUser}, affecting a volume of {volume:N4}L from {existingRecord.Price:N4} to {price:N4} (gross of VAT). " +
+                              $"Please review and approve.";
+
+                await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
+
+                var usernames = await _dbContext.ApplicationUsers
+                    .Where(a => operationManager.Contains(a.Id))
+                    .Select(u => u.UserName)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var username in usernames)
                 {
-                    var message = $"The cost for Purchase Order {existingRecord.PurchaseOrderNo} has been updated by {currentUser}, affecting a volume of {volume:N4}L from {existingRecord.Price:N4} to {price:N4} (gross of VAT). Please review and approve.";
-
-                    await _unitOfWork.Notifications.AddNotificationAsync(user.Id, message);
-
                     var hubConnections = await _dbContext.HubConnections
-                        .Where(h => h.UserName == user.UserName)
+                        .Where(h => h.UserName == username)
                         .ToListAsync(cancellationToken);
 
                     foreach (var hubConnection in hubConnections)
@@ -755,18 +763,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var users = await _dbContext.ApplicationUsers
                             .Where(u => u.Department == SD.Department_TradeAndSupply ||
                                         u.Department == SD.Department_ManagementAccounting)
+                            .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        var message = "Please be informed that all un-triggered POs have now been triggered completely. The creation of POs is now available.";
-                        var ccMessage = "CC: Management Accounting";
+                        var message = "Please be informed that all un-triggered POs have now been triggered completely. The creation of POs is now available. \n" +
+                                      "CC: Management Accounting";
 
-                        // Send notifications to Logistics
-                        foreach (var user in users)
+                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
+
+                        var usernames = await _dbContext.ApplicationUsers
+                            .Where(a => users.Contains(a.Id))
+                            .Select(u => u.UserName)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var username in usernames)
                         {
-                            await _unitOfWork.Notifications.AddNotificationAsync(user.Id, $"{message} {ccMessage}");
-
                             var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == user.UserName)
+                                .Where(h => h.UserName == username)
                                 .ToListAsync(cancellationToken);
 
                             foreach (var hubConnection in hubConnections)
