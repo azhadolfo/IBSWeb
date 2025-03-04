@@ -260,10 +260,15 @@
             // Get today's date in yyyy-MM-dd format
             let today = new Date().toISOString().split('T')[0];
 
+            // Get the last day of the current month
+            let currentDate = new Date();
+            let lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
+
             Swal.fire({
                 title: "Please Confirm the Delivery Date",
-                html:
-                    `<input id='deliveredDate' type='date' class='swal2-input' value='${today}'>`,
+                html: `
+            <input type="date" id="deliveredDate" class="swal2-input" value="${today}" max="${lastDayOfMonth}" required>
+        `,
                 focusConfirm: false,
                 allowEscapeKey: false,
                 allowOutsideClick: false,
@@ -271,10 +276,30 @@
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes'
+                confirmButtonText: 'Yes',
+                preConfirm: () => {
+                    let deliveredDate = document.getElementById('deliveredDate').value;
+
+                    // Validate the selected date
+                    if (!deliveredDate) {
+                        Swal.showValidationMessage('Please select a delivery date.');
+                        return false; // Prevent submission
+                    }
+
+                    // Check if the selected date exceeds the last day of the current month
+                    let selectedDate = new Date(deliveredDate);
+                    let maxDate = new Date(lastDayOfMonth);
+
+                    if (selectedDate > maxDate) {
+                        Swal.showValidationMessage('The selected date cannot exceed the current month.');
+                        return false; // Prevent submission
+                    }
+
+                    return deliveredDate; // Allow submission
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    let deliveredDate = document.getElementById('deliveredDate').value;
+                    let deliveredDate = result.value;
                     // Redirect to the delivered action with the id and date as parameters
                     let url = `@Url.Action("Delivered", "DeliveryReceipt", new { area = "Filpride" })/${id}?deliveredDate=${encodeURIComponent(deliveredDate)}`;
                     window.location.href = url;
