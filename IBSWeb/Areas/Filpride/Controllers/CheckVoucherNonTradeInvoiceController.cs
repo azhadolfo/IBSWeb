@@ -234,6 +234,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Total = viewModel.Total
                     };
 
+                    await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
                     #endregion -- Saving the default entries --
 
                     #region -- cv invoiving details entry --
@@ -529,6 +532,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Type = viewModel.Type,
                         InvoiceAmount = viewModel.Total
                     };
+
+                    await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
 
                     #endregion -- Saving the default entries -
 
