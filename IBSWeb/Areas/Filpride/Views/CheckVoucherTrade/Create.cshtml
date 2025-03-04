@@ -276,60 +276,17 @@
                 }
             });
         });
-
-        $(function criteria() {
-            var criteria; // Variable to store the selected criteria
-
-            $(".GetRRList").change(function () {
-                var poNumber = $(this).val(); // Get all selected POIds
-                if (poNumber && poNumber.length > 0) {
-
-                    if (!criteria) {
-                        Swal.fire({
-                            title: 'Choose Criteria',
-                            text: 'Do you want to display records based on Due Date or Transaction Date?',
-                            input: 'select',
-                            inputOptions: {
-                                'Due Date': 'Due Date',
-                                'Transaction Date': 'Transaction Date'
-                            },
-                            inputPlaceholder: 'Select display criteria',
-                            allowOutsideClick: false, // Prevent closing on outside click
-                            allowEscapeKey: false,  // Prevent closing with Esc key
-                            showCancelButton: true,
-                            confirmButtonText: 'OK'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                criteria = result.value; // Store the selected criteria
-                                if (criteria) {
-                                    displayRecords(poNumber, criteria); // Pass criteria and PO numbers to displayRecords function
-                                } else {
-                                    console.error('Invalid display criteria');
-                                }
-                            } else {
-                                criteria();
-                                console.log('User canceled');
-                            }
-                        });
-                    } else {
-                        if (poNumber && poNumber.length > 0) {
-                            displayRecords(poNumber, criteria); // Pass PO number and criteria to displayRecords function
-                        } else {
-                            console.error('No PO number selected');
-                        }
-                    }
-                } else {
-                    // Clear the fields if no POs are selected
-                    $("#RRSeries").empty();
-                }
-            });
+        
+        $(".GetRRList").change(function () {
+            var poNumber = $(this).val(); // Get all selected POIds
+            displayRecords(poNumber)
         });
 
-        function displayRecords(poNumber, criteria) {
+        function displayRecords(poNumber) {
             $.ajax({
                 url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
                 method: "GET",
-                data: { poNumber: poNumber, criteria: criteria }, // Pass PO numbers to controller
+                data: { poNumber: poNumber }, // Pass PO numbers to controller
                 traditional: true, // Ensure jQuery sends the array properly
                 success: function (data) {
                     const tbody = $('.rrAmount');
@@ -515,7 +472,7 @@
                 let paymentValue = $(this).val();
                 let maxBalance = parseNumber($(this).data('balance'));
 
-                if (paymentValue > maxBalance) {
+                if (paymentValue > parseNumber(maxBalance)) {
                     alert(`Payment amount cannot exceed balance for one or more entries.`);
                     isValid = false;
                     return false; // Break loop

@@ -220,24 +220,25 @@
 
                     if (data){
                         data.forEach((dr) => {
+                            let balance = parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid);
                             const drAmount = modelDRs.get(dr.id) || 0;
                             let amountPaid = parseNumber(dr.amountPaid) - drAmount;
-                            let balance = parseNumber(dr.grossAmount) - amountPaid;
+                            let checkingBalance = parseNumber(dr.netOfEwtAmount) - amountPaid;
 
                             const isChecked = modelDRs.has(dr.id) ? 'checked' : '';
                             const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${dr.deliveryReceiptNo}</td>
-                                            <td><input type="text" class="paymentAmount" data-balance="${balance}" style="display: none"></td>
-                                            <td class="text-end">${formatNumber(dr.grossAmount)}</td>
-                                            <td class="text-end">${formatNumber(amountPaid)}</td>
+                                            <td><input type="text" class="paymentAmount" data-balance="${formatNumber(checkingBalance)}" readonly style="display: none"></td>
+                                            <td class="text-end">${formatNumber(dr.netOfEwtAmount)}</td>
+                                            <td class="text-end">${formatNumber(dr.amountPaid)}</td>
                                             <td class="text-end balance">${formatNumber(balance)}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
 
-                            totalGross += parseNumber(dr.grossAmount);
+                            totalGross += parseNumber(dr.netOfEwtAmount);
                             totalAmountPaid += parseNumber(dr.amountPaid);
                             totalBalance += balance;
                         });
@@ -434,7 +435,7 @@
                 let paymentValue = parseFloat($(this).val()) || 0;
                 let maxBalance = parseFloat($(this).data('balance')) || 0;
 
-                if (paymentValue > maxBalance) {
+                if (paymentValue > parseNumber(maxBalance)) {
                     alert(`Payment amount cannot exceed balance for one or more entries.`);
                     isValid = false;
                     return false; // Break loop
