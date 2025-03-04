@@ -131,44 +131,44 @@
     <tbody>
         <tr>
             <td class="text-center">Fuel</td>
-            <td class="text-end">@Html.DisplayFor(model => Model.FuelSalesTotalAmount)</td>
+            <td class="text-end">@String.Format("{0:N2}", Model.FuelSalesTotalAmount)</td>
         </tr>
         <tr>
             <td class="text-center">Lubes</td>
-            <td class="text-end">@Html.DisplayFor(model => Model.LubesTotalAmount)</td>
+            <td class="text-end">@String.Format("{0:N2}", Model.LubesTotalAmount)</td>
         </tr>
         @if (Model.POSalesTotalAmount > 0)
         {
             <tr>
                 <td class="text-center">PO Sales</td>
-                <td class="text-end">@Html.DisplayFor(model => Model.POSalesTotalAmount)</td>
+                <td class="text-end">@String.Format("{0:N2}", Model.POSalesTotalAmount)</td>
             </tr>
         }
         <tr>
             <td class="text-center">Total Cash Sales</td>
-            <td class="text-end" style="border-top: double">@Html.DisplayFor(model => Model.TotalSales)</td>
+            <td class="text-end" style="border-top: double">@String.Format("{0:N2}", Model.TotalSales)</td>
         </tr>
         @if (Model.ActualCashOnHand > 0)
         {
             <tr>
                 <td class="text-center">Cash on Hand (Total Drops)</td>
-                <td class="text-end">@Html.DisplayFor(model => Model.SafeDropTotalAmount)</td>
+                <td class="text-end">@String.Format("{0:N2}", Model.SafeDropTotalAmount)</td>
             </tr>
             <tr>
                 <td class="text-center">Actual Cash on Hand (Audit)</td>
-                <td class="text-end">@Html.DisplayFor(model => Model.ActualCashOnHand)</td>
+                <td class="text-end">@String.Format("{0:N2}", Model.ActualCashOnHand)</td>
             </tr>
         }
         else
         {
             <tr>
                 <td class="text-center">Cash on Hand (Total Drops)</td>
-                <td class="text-end">@Html.DisplayFor(model => Model.SafeDropTotalAmount)</td>
+                <td class="text-end">@String.Format("{0:N2}", Model.SafeDropTotalAmount)</td>
             </tr>
         }
         <tr>
             <td class="text-center">Over (Short) / Handling</td>
-            <td class="text-end" style="border-top: double">@string.Format("{0:#,0.0000;(#,0.0000)}", Model.GainOrLoss)</td>
+            <td class="text-end" style="border-top: double">@string.Format("{0:#,0.00;(#,0.00)}", Model.GainOrLoss)</td>
         </tr>
     </tbody>
 </table>
