@@ -131,39 +131,39 @@
     <tbody>
         <tr>
             <td class="text-center">Fuel</td>
-            <td class="text-end">@String.Format("{0:N2}", Model.FuelSalesTotalAmount)</td>
+            <td class="text-end">@Model.FuelSalesTotalAmount.ToString("N2")</td>
         </tr>
         <tr>
             <td class="text-center">Lubes</td>
-            <td class="text-end">@String.Format("{0:N2}", Model.LubesTotalAmount)</td>
+            <td class="text-end">@Model.LubesTotalAmount.ToString("N2")</td>
         </tr>
         @if (Model.POSalesTotalAmount > 0)
         {
             <tr>
                 <td class="text-center">PO Sales</td>
-                <td class="text-end">@String.Format("{0:N2}", Model.POSalesTotalAmount)</td>
+                <td class="text-end">@Model.POSalesTotalAmount.ToString("N2")</td>
             </tr>
         }
         <tr>
             <td class="text-center">Total Cash Sales</td>
-            <td class="text-end" style="border-top: double">@String.Format("{0:N2}", Model.TotalSales)</td>
+            <td class="text-end" style="border-top: double">@Model.TotalSales.ToString("N2")</td>
         </tr>
         @if (Model.ActualCashOnHand > 0)
         {
             <tr>
                 <td class="text-center">Cash on Hand (Total Drops)</td>
-                <td class="text-end">@String.Format("{0:N2}", Model.SafeDropTotalAmount)</td>
+                <td class="text-end">@Model.SafeDropTotalAmount.ToString("N2")</td>
             </tr>
             <tr>
                 <td class="text-center">Actual Cash on Hand (Audit)</td>
-                <td class="text-end">@String.Format("{0:N2}", Model.ActualCashOnHand)</td>
+                <td class="text-end">@Model.ActualCashOnHand.ToString("N2")</td>
             </tr>
         }
         else
         {
             <tr>
                 <td class="text-center">Cash on Hand (Total Drops)</td>
-                <td class="text-end">@String.Format("{0:N2}", Model.SafeDropTotalAmount)</td>
+                <td class="text-end">@Model.SafeDropTotalAmount.ToString("N2")</td>
             </tr>
         }
         <tr>
