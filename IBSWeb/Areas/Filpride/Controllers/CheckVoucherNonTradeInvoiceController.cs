@@ -236,48 +236,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion -- Saving the default entries --
 
-                    #region -- Get Supplier --
-
-                    var supplier = await _dbContext.FilprideSuppliers
-                        .Where(s => s.SupplierId == viewModel.SupplierId)
-                        .FirstOrDefaultAsync(cancellationToken);
-
-                    #endregion -- Get Supplier --
-
-                    #region -- Automatic entry --
-
-                    if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
-                    {
-                        checkVoucherHeader.StartDate = viewModel.StartDate;
-                        checkVoucherHeader.EndDate = checkVoucherHeader.StartDate.Value.AddYears(viewModel.NumberOfYears);
-                        checkVoucherHeader.NumberOfMonths = (viewModel.NumberOfYears * 12);
-
-                        // Identify the account with a number that starts with '10201'
-                        decimal? amount = null;
-                        for (int i = 0; i < viewModel.AccountNumber.Length; i++)
-                        {
-                            if (supplier.TaxType == "Exempt" && (i == 2 || i == 3))
-                            {
-                                continue;
-                            }
-
-                            if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
-                            {
-                                amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
-                            }
-                        }
-
-                        if (amount.HasValue)
-                        {
-                            checkVoucherHeader.AmountPerMonth = (amount.Value / viewModel.NumberOfYears) / 12;
-                        }
-                    }
-
-                    await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    #endregion -- Automatic entry --
-
                     #region -- cv invoiving details entry --
 
                     List<FilprideCheckVoucherDetail> checkVoucherDetails = new();
@@ -572,49 +530,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         InvoiceAmount = viewModel.Total
                     };
 
-                    #endregion -- Saving the default entries --
-
-                    #region -- Get Supplier --
-
-                    var supplier = await _dbContext.FilprideSuppliers
-                        .Where(s => s.SupplierId == viewModel.SupplierId)
-                        .FirstOrDefaultAsync(cancellationToken);
-
-                    #endregion -- Get Supplier --
-
-                    #region -- Automatic entry --
-
-                    if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
-                    {
-                        checkVoucherHeader.StartDate = viewModel.StartDate;
-                        checkVoucherHeader.EndDate = checkVoucherHeader.StartDate.Value.AddYears(viewModel.NumberOfYears);
-                        checkVoucherHeader.NumberOfMonths = (viewModel.NumberOfYears * 12);
-
-                        // Identify the account with a number that starts with '10201'
-                        decimal? amount = null;
-                        for (int i = 0; i < viewModel.AccountNumber.Length; i++)
-                        {
-                            if (supplier.TaxType == "Exempt" && (i == 2 || i == 3))
-                            {
-                                continue;
-                            }
-
-                            if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
-                            {
-                                amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
-                            }
-                        }
-
-                        if (amount.HasValue)
-                        {
-                            checkVoucherHeader.AmountPerMonth = (amount.Value / viewModel.NumberOfYears) / 12;
-                        }
-                    }
-
-                    await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    #endregion -- Automatic entry --
+                    #endregion -- Saving the default entries -
 
                     #region -- cv invoiving details entry --
 
