@@ -1,4 +1,6 @@
-﻿@model JournalVoucherVM
+﻿@using IBS.Utility.Enums
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model JournalVoucherVM
 
 @{
     ViewData["Title"] = "Create Journal Voucher";
@@ -18,8 +20,18 @@
             <div class="row">
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-
+                    
+                    <div class="form-group mb-3">
+                        <label class="control-label">Type<span class="required">*</span></label>
+                        <select asp-for="Header.Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                            <option value="" selected disabled>Select SI type</option>
+                            @foreach (DocumentType journalVoucherType in Enum.GetValues<DocumentType>())
+                            {
+                                <option value="@journalVoucherType">@journalVoucherType.ToString()</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Header.Type" class="text-danger"></span>
+                    </div>
                     <div class="form-group mb-3">
                         <label asp-for="Header.Date" class="control-label"></label><span class="required">*</span>
                         <input asp-for="Header.Date" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />

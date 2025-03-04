@@ -3,6 +3,7 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Utility.Enums;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -15,11 +16,23 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string company, string? type, CancellationToken cancellationToken = default)
+        {
+            if (type == nameof(DocumentType.Documented))
+            {
+                return await GenerateCodeForDocumented(company, cancellationToken);
+            }
+            else
+            {
+                return await GenerateCodeForUnDocumented(company, cancellationToken);
+            }
+        }
+
+        public async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
             FilprideJournalVoucherHeader? lastJv = await _db
                 .FilprideJournalVoucherHeaders
-                .Where(c => c.Company == company)
+                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.JournalVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -34,6 +47,28 @@ namespace IBS.DataAccess.Repository.Filpride
             else
             {
                 return "JV0000000001";
+            }
+        }
+
+        public async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
+        {
+            FilprideJournalVoucherHeader? lastJv = await _db
+                .FilprideJournalVoucherHeaders
+                .Where(c => c.Company == company && c.Type == nameof(DocumentType.Undocumented))
+                .OrderBy(c => c.JournalVoucherHeaderNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastJv != null)
+            {
+                string lastSeries = lastJv.JournalVoucherHeaderNo;
+                string numericPart = lastSeries.Substring(3);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+            }
+            else
+            {
+                return "JVU000000001";
             }
         }
 

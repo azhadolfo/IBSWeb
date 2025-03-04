@@ -362,7 +362,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     #region -- Inventory Entry --
 
                     var _journalVoucherRepo = new JournalVoucherRepository(_db);
-                    var generateJVNo = await _journalVoucherRepo.GenerateCodeAsync(previousInventory.Company, cancellationToken);
+                    var generateJVNo = await _journalVoucherRepo.GenerateCodeAsync(previousInventory.Company, existingPO?.Type, cancellationToken);
                     FilprideInventory inventory = new()
                     {
                         Date = DateOnly.FromDateTime(DateTime.UtcNow),

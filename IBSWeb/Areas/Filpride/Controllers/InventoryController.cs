@@ -377,9 +377,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region -- Journal Voucher entry --
 
+                    var findJournalVoucher = await _dbContext.FilprideJournalVoucherHeaders
+                        .Where(jv => jv.JournalVoucherHeaderNo == inventory.Reference)
+                        .FirstOrDefaultAsync(cancellationToken);
+
                     var header = new FilprideJournalVoucherHeader
                     {
-                        JournalVoucherHeaderNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(inventory.Company, cancellationToken),
+                        JournalVoucherHeaderNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(inventory.Company, findJournalVoucher?.Type, cancellationToken),
                         JVReason = "Actual Inventory",
                         Particulars = inventory.Particular,
                         Date = inventory.Date,

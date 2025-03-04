@@ -190,7 +190,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region --CV Details Entry
 
-                    var generateJVNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, cancellationToken);
+                    var generateJVNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, model.Header.Type, cancellationToken);
                     var cvDetails = new List<FilprideJournalVoucherDetail>();
 
                     var totalDebit = 0m;
@@ -623,7 +623,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Value = s.AccountNumber,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
-                .ToListAsync(cancellationToken)
+                .ToListAsync(cancellationToken),
+                Type = existingHeaderModel.Type
             };
 
             return View(model);
@@ -632,6 +633,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(JournalVoucherViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -715,6 +717,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.JVReason = viewModel.JVReason;
                     existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
                     existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingHeaderModel.Type = viewModel.Type;
 
                     #endregion --Saving the default entries
 
