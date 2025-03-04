@@ -71,7 +71,7 @@ builder.Services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(googleDriveImportKey)
         .WithIdentity("DailyTrigger")
-        .WithCronSchedule("0 30 * * * ?",
+        .WithCronSchedule("0 30 8 * * ?",
             x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"))));
 });
 

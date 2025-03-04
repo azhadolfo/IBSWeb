@@ -39,7 +39,7 @@ namespace IBS.Services
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
                 var previousMonth = today.AddMonths(-1);
                 await InTransit(previousMonth);
-                await CheckTheUntriggeredPurchaseOrders(previousMonth);
+                await CheckTheUntriggeredPurchaseOrders();
                 await AutoReversalForCvWithoutDcrDate(previousMonth);
                 await ComputeNibit(previousMonth);
                 _logger.LogInformation($"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
@@ -110,7 +110,7 @@ namespace IBS.Services
             }
         }
 
-        private async Task CheckTheUntriggeredPurchaseOrders(DateTime previousMonth)
+        private async Task CheckTheUntriggeredPurchaseOrders()
         {
 
             var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder

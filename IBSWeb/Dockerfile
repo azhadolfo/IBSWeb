@@ -17,6 +17,7 @@ COPY ["IBS.DataAccess/IBS.DataAccess.csproj", "IBS.DataAccess/"]
 COPY ["IBS.DTOs/IBS.DTOs.csproj", "IBS.DTOs/"]
 COPY ["IBS.Models/IBS.Models.csproj", "IBS.Models/"]
 COPY ["IBS.Utility/IBS.Utility.csproj", "IBS.Utility/"]
+COPY ["IBS.Services/IBS.Services.csproj", "IBS.Services/"]
 RUN dotnet restore "./IBSWeb/IBSWeb.csproj"
 COPY . .
 WORKDIR "/src/IBSWeb"
