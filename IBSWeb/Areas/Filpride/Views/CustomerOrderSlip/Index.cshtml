@@ -71,6 +71,7 @@
                         <th class="text-start">Customer</th>
                         <th class="text-start">Product</th>
                         <th class="text-start">Quantity</th>
+                        <th class="text-start">Balance</th>
                         <th class="text-start">Total Amount</th>
                         <th class="text-start">Status</th>
                         <th class="text-center" style="width: 100px;">Actions</th>
@@ -157,6 +158,13 @@
                     { "data": "productName" },
                     {
                         "data": "quantity",
+                        "render": function (data, type, row) {
+                            var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                            return `<span class="d-block fw-medium">${amount}</span>`;
+                        }
+                    },
+                    {
+                        "data": "balanceQuantity",
                         "render": function (data, type, row) {
                             var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
                             return `<span class="d-block fw-medium">${amount}</span>`;
