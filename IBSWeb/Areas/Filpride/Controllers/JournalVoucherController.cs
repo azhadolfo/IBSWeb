@@ -146,7 +146,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Header.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
-                .Where(c => c.Company == companyClaims)
+                .Where(c => c.Company == companyClaims && c.CvType == nameof(CVType.Payment)) ///TODO in the future show only the cleared payment
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.CheckVoucherHeaderId.ToString(),
@@ -212,7 +212,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Saving the default entries
 
-                    await _dbContext.AddAsync(model.Header, cancellationToken);  // Add CheckVoucherHeader to the context
+                    await _dbContext.AddAsync(model.Header, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                     for (int i = 0; i < accountNumber.Length; i++)
@@ -347,22 +347,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var details = await _dbContext.FilprideJournalVoucherDetails
                 .Where(jvd => jvd.JournalVoucherHeaderId == header.JournalVoucherHeaderId)
                 .ToListAsync(cancellationToken);
-
-            //if (header.Category == "Trade")
-            //{
-            //    var siArray = new string[header.RRNo.Length];
-            //    for (int i = 0; i < header.RRNo.Length; i++)
-            //    {
-            //        var rrValue = header.RRNo[i];
-
-            //        var rr = await _dbContext.FilprideReceivingReports
-            //                    .FirstOrDefaultAsync(p => p.RRNo == rrValue);
-
-            //        siArray[i] = rr.SupplierInvoiceNumber;
-            //    }
-
-            //    ViewBag.SINoArray = siArray;
-            //}
 
             var viewModel = new JournalVoucherVM
             {
@@ -606,15 +590,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 AccountTitle = accountTitles,
                 Debit = debit,
                 Credit = credit,
+
                 CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
-                .Where(c => c.Company == companyClaims)
+                .Where(c => c.Company == companyClaims && c.CvType == nameof(CVType.Payment))
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.CheckVoucherHeaderId.ToString(),
                     Text = cvh.CheckVoucherHeaderNo
                 })
                 .ToListAsync(cancellationToken),
+
                 COA = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .OrderBy(coa => coa.AccountId)
@@ -623,8 +609,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Value = s.AccountNumber,
                     Text = s.AccountNumber + " " + s.AccountName
                 })
-                .ToListAsync(cancellationToken),
-                Type = existingHeaderModel.Type
+                .ToListAsync(cancellationToken)
             };
 
             return View(model);
@@ -717,7 +702,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.JVReason = viewModel.JVReason;
                     existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
                     existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingHeaderModel.Type = viewModel.Type;
 
                     #endregion --Saving the default entries
 
