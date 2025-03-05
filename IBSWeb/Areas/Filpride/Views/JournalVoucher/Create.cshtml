@@ -25,7 +25,7 @@
                         <label class="control-label">Type<span class="required">*</span></label>
                         <select asp-for="Header.Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
                             <option value="" selected disabled>Select SI type</option>
-                            @foreach (DocumentType journalVoucherType in Enum.GetValues<DocumentType>())
+                            @foreach (DocumentType journalVoucherType in Enum.GetValues<DocumentType>().OrderByDescending(e => e.ToString()))
                             {
                                 <option value="@journalVoucherType">@journalVoucherType.ToString()</option>
                             }
