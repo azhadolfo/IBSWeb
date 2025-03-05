@@ -566,17 +566,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
             var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
             var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
-            var poIds = _dbContext.FilpridePurchaseOrders.Where(model => model.Company == companyClaims && existingHeaderModel.CheckVoucherHeader.PONo.Contains(model.PurchaseOrderNo)).Select(model => model.PurchaseOrderId).ToArray();
-            var rrIds = _dbContext.FilprideReceivingReports.Where(model => model.Company == companyClaims && existingHeaderModel.CheckVoucherHeader.RRNo.Contains(model.ReceivingReportNo)).Select(model => model.ReceivingReportId).ToArray();
-
-            var coa = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
 
             JournalVoucherViewModel model = new()
             {
@@ -592,29 +581,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 AccountTitle = accountTitles,
                 Debit = debit,
                 Credit = credit,
-
                 CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
-                .OrderBy(c => c.CheckVoucherHeaderId)
-                .Where(c => c.Company == companyClaims &&
-                            c.CvType == nameof(CVType.Payment) &&
-                            c.PostedBy != null)
-                .Select(cvh => new SelectListItem
-                {
-                    Value = cvh.CheckVoucherHeaderId.ToString(),
-                    Text = cvh.CheckVoucherHeaderNo
-                })
-                .ToListAsync(cancellationToken),
-
+                    .OrderBy(c => c.CheckVoucherHeaderId)
+                    .Where(c => c.Company == companyClaims &&
+                                c.CvType == nameof(CVType.Payment) &&
+                                c.PostedBy != null)
+                    .Select(cvh => new SelectListItem
+                    {
+                        Value = cvh.CheckVoucherHeaderId.ToString(),
+                        Text = cvh.CheckVoucherHeaderNo
+                    })
+                    .ToListAsync(cancellationToken),
                 COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken)
+                    .Where(coa => coa.Level == 4 || coa.Level == 5)
+                    .OrderBy(coa => coa.AccountId)
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.AccountNumber,
+                        Text = s.AccountNumber + " " + s.AccountName
+                    })
+                    .ToListAsync(cancellationToken)
             };
+
 
             return View(model);
         }
