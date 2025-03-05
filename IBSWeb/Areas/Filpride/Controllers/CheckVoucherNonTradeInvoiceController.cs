@@ -34,17 +34,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ICloudStorageService _cloudStorageService;
 
+        private readonly ILogger<CheckVoucherNonTradeInvoiceController> _logger;
+
         public CheckVoucherNonTradeInvoiceController(IUnitOfWork unitOfWork,
             UserManager<IdentityUser> userManager,
             ApplicationDbContext dbContext,
             IWebHostEnvironment webHostEnvironment,
-            ICloudStorageService cloudStorageService)
+            ICloudStorageService cloudStorageService,
+            ILogger<CheckVoucherNonTradeInvoiceController> logger)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
             _webHostEnvironment = webHostEnvironment;
             _cloudStorageService = cloudStorageService;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -145,6 +149,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get invoice check vouchers.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -426,6 +431,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create check voucher. Created by: {UserName}", _userManager.GetUserName(User));
                     viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !coa.HasChildren)
                         .OrderBy(coa => coa.AccountNumber)
@@ -590,6 +596,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create payroll invoice. Created by: {UserName}", _userManager.GetUserName(User));
                     viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !coa.HasChildren)
                         .OrderBy(coa => coa.AccountNumber)
@@ -964,6 +971,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to edit check voucher. Edited by: {UserName}", _userManager.GetUserName(User));
                     viewModel.Suppliers = await _dbContext.FilprideSuppliers
                     .Where(sup => sup.Company == companyClaims)
                     .Select(sup => new SelectListItem
@@ -1160,6 +1168,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to post check voucher. Posted by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
 
                     TempData["error"] = ex.Message;
@@ -1174,27 +1183,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
 
-            if (model != null)
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
             {
-                if (model.CanceledBy == null)
+                if (model != null)
                 {
-                    model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = nameof(CheckVoucherInvoiceStatus.Canceled);
-                    model.CancellationRemarks = cancellationRemarks;
+                    if (model.CanceledBy == null)
+                    {
+                        model.CanceledBy = _userManager.GetUserName(this.User);
+                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        model.Status = nameof(CheckVoucherInvoiceStatus.Canceled);
+                        model.CancellationRemarks = cancellationRemarks;
 
-                    #region --Audit Trail Recording
+                        #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
-                    #endregion --Audit Trail Recording
+                        #endregion --Audit Trail Recording
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Check Voucher has been Cancelled.";
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
+                        TempData["success"] = "Check Voucher has been Cancelled.";
+                    }
+
+                    return RedirectToAction(nameof(Index));
                 }
-
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to cancel check voucher. Canceled by: {UserName}", _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -1245,6 +1267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to void check voucher. Voided by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -1480,6 +1503,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to edit payroll invoice. Edited by: {UserName}", _userManager.GetUserName(User));
                     viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !coa.HasChildren)
                         .OrderBy(coa => coa.AccountNumber)

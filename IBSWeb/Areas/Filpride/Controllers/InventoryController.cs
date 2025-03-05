@@ -21,11 +21,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        public InventoryController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+        private readonly ILogger<InventoryController> _logger;
+
+        public InventoryController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<InventoryController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -90,6 +93,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create beginning inventory. Created by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.ToString();
                     return View();
@@ -313,6 +317,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create actual inventory. Created by: {UserName}", _userManager.GetUserName(User));
                     viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
                     viewModel.PO = await _dbContext.FilpridePurchaseOrders
