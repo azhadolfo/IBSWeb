@@ -6,6 +6,6 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface IPickUpPointRepository : IRepository<FilpridePickUpPoint>
     {
-        Task<List<SelectListItem>> GetPickUpPointListBasedOnSupplier(int supplierId, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetPickUpPointListBasedOnSupplier(CancellationToken cancellationToken = default);
     }
 }

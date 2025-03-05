@@ -929,7 +929,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 viewModel.Freight = (decimal)existingRecord.Freight;
                 viewModel.PickUpPointId = (int)existingRecord.PickUpPointId;
                 viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                .GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
+                .GetPickUpPointListBasedOnSupplier(cancellationToken);
 
                 if (!existingRecord.HasMultiplePO)
                 {
@@ -1037,7 +1037,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
+                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -1077,7 +1077,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Freight = existingRecord.Freight ?? 0,
                     PickUpPointId = (int)existingRecord.PickUpPointId,
                     PickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                    .GetPickUpPointListBasedOnSupplier((int)(existingRecord.Supplier?.SupplierId ?? existingRecord.PurchaseOrder.SupplierId), cancellationToken),
+                    .GetPickUpPointListBasedOnSupplier(cancellationToken),
                     SubPoRemarks = existingRecord.SubPORemarks
                 };
 
@@ -1251,7 +1251,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(viewModel.SupplierId, cancellationToken);
+                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -1294,7 +1294,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var pickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                .GetPickUpPointListBasedOnSupplier((int)supplierId, cancellationToken);
+                .GetPickUpPointListBasedOnSupplier(cancellationToken);
 
             return Json(pickUpPoints);
         }

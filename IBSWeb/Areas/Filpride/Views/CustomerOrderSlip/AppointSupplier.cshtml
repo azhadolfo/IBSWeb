@@ -164,7 +164,7 @@
                     var cosVolume = @Model.COSVolume;
 
                     // Set the first PO's balance as default quantity
-                    var defaultQuantity = index === 0 ? availableBalance : '';
+                    var defaultQuantity;
 
                     if (index === 0 && availableBalance >= cosVolume) {
                         defaultQuantity = cosVolume;
