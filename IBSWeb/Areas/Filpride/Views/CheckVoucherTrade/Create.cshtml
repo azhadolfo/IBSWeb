@@ -49,7 +49,7 @@
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
                                 <th>RR No's</th>
                                 <th>Payment</th>
-                                <th class="text-end">Gross</th>
+                                <th class="text-end">Amount</th>
                                 <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
                             </tr>
@@ -276,60 +276,17 @@
                 }
             });
         });
-
-        $(function criteria() {
-            var criteria; // Variable to store the selected criteria
-
-            $(".GetRRList").change(function () {
-                var poNumber = $(this).val(); // Get all selected POIds
-                if (poNumber && poNumber.length > 0) {
-
-                    if (!criteria) {
-                        Swal.fire({
-                            title: 'Choose Criteria',
-                            text: 'Do you want to display records based on Due Date or Transaction Date?',
-                            input: 'select',
-                            inputOptions: {
-                                'Due Date': 'Due Date',
-                                'Transaction Date': 'Transaction Date'
-                            },
-                            inputPlaceholder: 'Select display criteria',
-                            allowOutsideClick: false, // Prevent closing on outside click
-                            allowEscapeKey: false,  // Prevent closing with Esc key
-                            showCancelButton: true,
-                            confirmButtonText: 'OK'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                criteria = result.value; // Store the selected criteria
-                                if (criteria) {
-                                    displayRecords(poNumber, criteria); // Pass criteria and PO numbers to displayRecords function
-                                } else {
-                                    console.error('Invalid display criteria');
-                                }
-                            } else {
-                                criteria();
-                                console.log('User canceled');
-                            }
-                        });
-                    } else {
-                        if (poNumber && poNumber.length > 0) {
-                            displayRecords(poNumber, criteria); // Pass PO number and criteria to displayRecords function
-                        } else {
-                            console.error('No PO number selected');
-                        }
-                    }
-                } else {
-                    // Clear the fields if no POs are selected
-                    $("#RRSeries").empty();
-                }
-            });
+        
+        $(".GetRRList").change(function () {
+            var poNumber = $(this).val(); // Get all selected POIds
+            displayRecords(poNumber)
         });
 
-        function displayRecords(poNumber, criteria) {
+        function displayRecords(poNumber) {
             $.ajax({
                 url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
                 method: "GET",
-                data: { poNumber: poNumber, criteria: criteria }, // Pass PO numbers to controller
+                data: { poNumber: poNumber }, // Pass PO numbers to controller
                 traditional: true, // Ensure jQuery sends the array properly
                 success: function (data) {
                     const tbody = $('.rrAmount');
@@ -341,20 +298,20 @@
 
                     if (data){
                         data.forEach((rr, index) => {
-                            let balance = parseNumber(rr.grossAmount) - parseNumber(rr.amountPaid);
+                            let balance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
                             const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${rr.id}" class="selectCheckbox"></td>
                                             <td>${rr.receivingReportNo}</td>
-                                            <td><input type="text" class="paymentAmount" data-balance="${balance}" style="display: none"></td>
-                                            <td class="text-end">${formatNumber(rr.grossAmount)}</td>
+                                            <td><input type="text" class="paymentAmount" data-balance="${formatNumber(balance)}" readonly style="display: none"></td>
+                                            <td class="text-end">${formatNumber(rr.netOfEwtAmount)}</td>
                                             <td class="text-end">${formatNumber(rr.amountPaid)}</td>
                                             <td class="text-end balance">${formatNumber(balance)}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
 
-                            totalGross += parseNumber(rr.grossAmount);
+                            totalGross += parseNumber(rr.netOfEwtAmount);
                             totalAmountPaid += parseNumber(rr.amountPaid);
                             totalBalance += balance;
                         });
@@ -513,9 +470,9 @@
 
             $('.paymentAmount:visible').each(function() { // Only validate visible inputs
                 let paymentValue = $(this).val();
-                let maxBalance = $(this).data('balance');
+                let maxBalance = parseNumber($(this).data('balance'));
 
-                if (paymentValue > maxBalance) {
+                if (paymentValue > parseNumber(maxBalance)) {
                     alert(`Payment amount cannot exceed balance for one or more entries.`);
                     isValid = false;
                     return false; // Break loop

@@ -66,7 +66,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
                                         var header = new FilprideJournalVoucherHeader
                                         {
-                                            JournalVoucherHeaderNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(cv.Company, _cancellationTokenSource.Token),
+                                            JournalVoucherHeaderNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(cv.Company, "", _cancellationTokenSource.Token),
                                             CVId = cv.CheckVoucherHeaderId,
                                             JVReason = "Depreciation",
                                             Particulars = $"Depreciation of : CV Particulars {cv.Particulars} for the month of {DateTime.UtcNow:MMMM yyyy}.",
@@ -116,7 +116,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
                                         var header = new FilprideJournalVoucherHeader
                                         {
-                                            JournalVoucherHeaderNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(cv.Company, _cancellationTokenSource.Token),
+                                            JournalVoucherHeaderNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(cv.Company, "", _cancellationTokenSource.Token),
                                             CVId = cv.CheckVoucherHeaderId,
                                             JVReason = "Prepaid",
                                             Particulars = $"Prepaid: CV Particulars {cv.Particulars} for the month of {DateTime.UtcNow:MMMM yyyy}.",

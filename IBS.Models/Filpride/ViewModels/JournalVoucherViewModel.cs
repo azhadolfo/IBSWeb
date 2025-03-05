@@ -50,5 +50,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         [Required]
         public decimal[] Credit { get; set; }
+
+        public string Type { get; set; }
     }
 }

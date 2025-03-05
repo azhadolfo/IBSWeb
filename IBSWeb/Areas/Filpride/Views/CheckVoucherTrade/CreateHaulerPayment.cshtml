@@ -49,7 +49,7 @@
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
                                 <th>DR No's</th>
                                 <th>Payment</th>
-                                <th class="text-end">Gross</th>
+                                <th class="text-end">Amount</th>
                                 <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
                             </tr>
@@ -211,20 +211,20 @@
 
                     if (data){
                         data.forEach((dr) => {
-                            let balance = parseNumber(dr.grossAmount) - parseNumber(dr.amountPaid);
+                            let balance = parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid);
                             const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox"></td>
                                             <td>${dr.deliveryReceiptNo}</td>
-                                            <td><input type="text" class="paymentAmount" data-balance="${balance}" style="display: none"></td>
-                                            <td class="text-end">${formatNumber(dr.grossAmount)}</td>
+                                            <td><input type="text" class="paymentAmount" data-balance="${formatNumber(balance)}" readonly style="display: none"></td>
+                                            <td class="text-end">${formatNumber(dr.netOfEwtAmount)}</td>
                                             <td class="text-end">${formatNumber(dr.amountPaid)}</td>
                                             <td class="text-end balance">${formatNumber(balance)}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
 
-                            totalGross += parseNumber(dr.grossAmount);
+                            totalGross += parseNumber(dr.netOfEwtAmount);
                             totalAmountPaid += parseNumber(dr.amountPaid);
                             totalBalance += balance;
                         });
@@ -386,7 +386,7 @@
                 let paymentValue = $(this).val();
                 let maxBalance = $(this).data('balance');
 
-                if (paymentValue > maxBalance) {
+                if (paymentValue > parseNumber(maxBalance)) {
                     alert(`Payment amount cannot exceed balance for one or more entries.`);
                     isValid = false;
                     return false; // Break loop
