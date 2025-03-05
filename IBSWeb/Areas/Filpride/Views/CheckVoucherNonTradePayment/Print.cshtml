@@ -5,6 +5,7 @@
 @using Humanizer
 @using IBS.Utility.Constants
 @using IBS.Utility.Enums
+@using IBS.Utility.Helpers
 
 @{
     ViewData["Title"] = "Print Check Voucher";
@@ -322,7 +323,7 @@
                 <br />
                 <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
                 <br />
-                <strong>Date & Time Printed :</strong> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+                <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTime().ToString("MM/dd/yyyy hh:mm tt")
             </em>
         </p>
     </div>

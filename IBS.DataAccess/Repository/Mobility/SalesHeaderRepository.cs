@@ -29,17 +29,17 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 // ALREADY SHOW PROBLEMS HERE: THROWS EXCEPTION
                 var fuelSales = await _db.FuelSalesViews
-                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.Now.Year)
+                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.UtcNow.Year)
                     .ToListAsync(cancellationToken);
 
                 var lubeSales = await _db.MobilityLubes
                     .Where(l => !l.IsProcessed)
-                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.Now.Year)
+                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.UtcNow.Year)
                     .ToListAsync(cancellationToken);
 
                 var safeDropDeposits = await _db.MobilitySafeDrops
                     .Where(s => !s.IsProcessed)
-                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.Now.Year)
+                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.UtcNow.Year)
                     .ToListAsync(cancellationToken);
 
                 var fuelPoSales = Enumerable.Empty<MobilityFuel>();

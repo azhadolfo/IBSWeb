@@ -539,7 +539,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 }
 
                 model.VoidedBy = currentUser;
-                model.VoidedDate = DateTime.Now;
+                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Voided);
 
                 await RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);

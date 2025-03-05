@@ -592,7 +592,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     worksheet.Row(1).Height = 20;
 
                     worksheet.Cells[2, 1].Value = "Date Exported:";
-                    worksheet.Cells[2, 2].Value = DateOnly.FromDateTime(DateTime.Now);
+                    worksheet.Cells[2, 2].Value = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime());
                     worksheet.Cells[3, 1].Value = "Exported by:";
                     worksheet.Cells[3, 2].Value = findUser?.Name;
 
@@ -660,7 +660,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     worksheet.Cells.AutoFitColumns();
 
                     var excelBytes = package.GetAsByteArray();
-                    var fileName = $"Mobility_Customer_Order_Slip_{DateTime.Now.ToString("yyyyMMddhhmm")}.xlsx";
+                    var fileName = $"Mobility_Customer_Order_Slip_{DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyyMMddhhmm")}.xlsx";
 
                     var contentDisposition = new System.Net.Mime.ContentDisposition
                     {

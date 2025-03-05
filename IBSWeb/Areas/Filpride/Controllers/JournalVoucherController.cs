@@ -146,7 +146,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Header.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
-                .Where(c => c.Company == companyClaims && c.CvType == nameof(CVType.Payment)) ///TODO in the future show only the cleared payment
+                .Where(c => c.Company == companyClaims &&
+                            c.CvType == nameof(CVType.Payment) &&
+                            c.PostedBy != null) ///TODO in the future show only the cleared payment
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.CheckVoucherHeaderId.ToString(),
@@ -593,7 +595,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
-                .Where(c => c.Company == companyClaims && c.CvType == nameof(CVType.Payment))
+                .Where(c => c.Company == companyClaims &&
+                            c.CvType == nameof(CVType.Payment) &&
+                            c.PostedBy != null)
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.CheckVoucherHeaderId.ToString(),
@@ -616,7 +620,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(JournalVoucherViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(JournalVoucherViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
@@ -696,7 +700,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.JournalVoucherHeaderNo = viewModel.JVNo;
                     existingHeaderModel.Date = viewModel.TransactionDate;
                     existingHeaderModel.References = viewModel.References;
-                    //existingHeaderModel.CVId = viewModel.CVId;
+                    existingHeaderModel.CVId = viewModel.CVId;
                     existingHeaderModel.Particulars = viewModel.Particulars;
                     existingHeaderModel.CRNo = viewModel.CRNo;
                     existingHeaderModel.JVReason = viewModel.JVReason;

@@ -150,7 +150,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     UppiAtlNo = viewModel.UPPIAtlNo,
                     Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
                     CreatedBy = _userManager.GetUserName(User),
-                    CreatedDate = DateTime.Now,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 };
 
                 await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);

@@ -6,6 +6,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
+using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -74,7 +75,7 @@ namespace IBS.Services
                 await ImportPurchases();
 
                 LogMessage logMessage = new("Information", "GDriveImportService",
-                    $"Importing service testing {DateTime.Now}.");
+                    $"Importing service testing {DateTimeHelper.GetCurrentPhilippineTime()}.");
 
                 await db.LogMessages.AddAsync(logMessage);
                 await db.SaveChangesAsync();
@@ -85,7 +86,7 @@ namespace IBS.Services
                 await transaction.RollbackAsync();
 
                 LogMessage logMessage = new("Warning", "GDriveImportService",
-                    $"Importing service exception {DateTime.Now}.");
+                    $"Importing service exception {DateTimeHelper.GetCurrentPhilippineTime()}.");
                 _logger.LogInformation("=====Exception: " + ex.Message + ".=====");
 
                 await db.LogMessages.AddAsync(logMessage);

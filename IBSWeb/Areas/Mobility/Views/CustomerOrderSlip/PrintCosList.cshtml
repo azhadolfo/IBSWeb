@@ -1,4 +1,5 @@
 @using IBS.Utility
+@using IBS.Utility.Helpers
 @using Microsoft.AspNetCore.Identity
 @model IEnumerable<MobilityCustomerOrderSlip>
 @using Microsoft.AspNetCore.Identity
@@ -81,7 +82,7 @@
             <br />
             <b>Printed By :</b> @UserManager.GetUserName(User).ToUpper()
             <br />
-            <b>Date & Time Printed :</b> @DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
+            <b>Date & Time Printed :</b> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
         </em>
     </p>
 

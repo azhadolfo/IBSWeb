@@ -54,7 +54,8 @@ builder.Services.AddQuartz(q =>
     // Register the job
     var monthlyClosureKey = JobKey.Create(nameof(MonthlyClosureService));
     var googleDriveImportKey = JobKey.Create(nameof(GoogleDriveImportService));
-    ///TODO Register the job for COS Expiration and Google Drive function
+
+    ///TODO Register the job for COS Expiration
 
     q.AddJob<MonthlyClosureService>(options => options.WithIdentity(monthlyClosureKey));
     q.AddJob<GoogleDriveImportService>(options => options.WithIdentity(googleDriveImportKey));

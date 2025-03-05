@@ -47,7 +47,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             try
             {
-                LogMessage logMessage = new("Information", "ImportService", $"Importing service is starting in {DateTime.Now}.");
+                LogMessage logMessage = new("Information", "ImportService", $"Importing service is starting in {DateTimeHelper.GetCurrentPhilippineTime()}.");
 
                 await db.LogMessages.AddAsync(logMessage);
                 await db.SaveChangesAsync();

@@ -1499,7 +1499,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"Software Name: {CS.AAS}");
                     fileContent.AppendLine($"Version: {CS.Version}");
                     fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
-                    fileContent.AppendLine($"Date & Time Extracted: {@DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}");
+                    fileContent.AppendLine($"Date & Time Extracted: {DateTimeHelper.GetCurrentPhilippineTime().ToString("MM/dd/yyyy hh:mm tt")}");
 
                     // Convert the content to a byte array
                     var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());
