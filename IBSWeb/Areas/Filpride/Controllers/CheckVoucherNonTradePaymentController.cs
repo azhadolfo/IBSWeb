@@ -35,17 +35,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ICloudStorageService _cloudStorageService;
 
+        private readonly ILogger<CheckVoucherNonTradePaymentController> _logger;
+
         public CheckVoucherNonTradePaymentController(IUnitOfWork unitOfWork,
             UserManager<IdentityUser> userManager,
             ApplicationDbContext dbContext,
             IWebHostEnvironment webHostEnvironment,
-            ICloudStorageService cloudStorageService)
+            ICloudStorageService cloudStorageService,
+            ILogger<CheckVoucherNonTradePaymentController> logger)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
             _webHostEnvironment = webHostEnvironment;
             _cloudStorageService = cloudStorageService;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -141,6 +145,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get check voucher payment.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -296,6 +301,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to post check voucher. Posted by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
 
                     TempData["error"] = ex.Message;
@@ -310,12 +316,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
 
-            if (existingHeaderModel != null)
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
             {
-                existingHeaderModel.CanceledBy = _userManager.GetUserName(this.User);
-                existingHeaderModel.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Canceled);
-                existingHeaderModel.CancellationRemarks = cancellationRemarks;
+                if (existingHeaderModel != null)
+                {
+                    existingHeaderModel.CanceledBy = _userManager.GetUserName(this.User);
+                    existingHeaderModel.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Canceled);
+                    existingHeaderModel.CancellationRemarks = cancellationRemarks;
 
                 var IsForTheBir = existingHeaderModel.SupplierId == 133; //BIR
 
@@ -359,8 +369,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion --Audit Trail Recording
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Check Voucher has been Cancelled.";
 
+                return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to cancel check voucher. Canceled by: {UserName}", _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -438,6 +457,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to void check voucher. Voided by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -740,6 +760,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to edit check voucher. Edited by: {UserName}", _userManager.GetUserName(User));
                     viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !coa.HasChildren)
                         .Select(s => new SelectListItem
@@ -1116,6 +1137,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create check voucher. Created by: {UserName}", _userManager.GetUserName(User));
                     viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !coa.HasChildren)
                         .Select(s => new SelectListItem
@@ -1241,6 +1263,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get check voucher.");
                 // Log the exception here
                 return StatusCode(500, "An error occurred while processing your request.");
             }

@@ -21,13 +21,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
+        private readonly ILogger<DisbursementController> _logger;
+
         public DisbursementController(ApplicationDbContext dbContext,
             UserManager<IdentityUser> userManager,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            ILogger<DisbursementController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -138,6 +142,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get disbursements.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

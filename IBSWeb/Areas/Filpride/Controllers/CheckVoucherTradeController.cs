@@ -36,17 +36,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ICloudStorageService _cloudStorageService;
 
+        private readonly ILogger<CheckVoucherTradeController> _logger;
+
         public CheckVoucherTradeController(IUnitOfWork unitOfWork,
             UserManager<IdentityUser> userManager,
             ApplicationDbContext dbContext,
             IWebHostEnvironment webHostEnvironment,
-            ICloudStorageService cloudStorageService)
+            ICloudStorageService cloudStorageService,
+            ILogger<CheckVoucherTradeController> logger)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
             _webHostEnvironment = webHostEnvironment;
             _cloudStorageService = cloudStorageService;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -146,6 +150,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get check vouchers.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -370,6 +375,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create check voucher. Created by: {UserName}", _userManager.GetUserName(User));
                     viewModel.COA = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
                         .Select(s => new SelectListItem
@@ -764,6 +770,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to edit check voucher. Edited by: {UserName}", _userManager.GetUserName(User));
                     viewModel.COA = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
                         .Select(s => new SelectListItem
@@ -1011,6 +1018,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to post check voucher. Posted by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
 
                     TempData["error"] = ex.Message;
@@ -1025,61 +1033,75 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
 
-            if (model != null)
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
             {
-                if (model.CanceledBy == null)
+                if (model != null)
                 {
-                    model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = nameof(Status.Canceled);
-                    model.CancellationRemarks = cancellationRemarks;
-
-                    #region -- Recalculate payment of RR's or DR's
-
-                    var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
-                        .Where(cv => cv.CheckVoucherId == id)
-                        .Include(cv => cv.CV)
-                        .ToListAsync(cancellationToken);
-
-                    foreach (var item in getCheckVoucherTradePayment)
+                    if (model.CanceledBy == null)
                     {
-                        if (item.DocumentType == "RR")
-                        {
-                            var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+                        model.CanceledBy = _userManager.GetUserName(this.User);
+                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        model.Status = nameof(Status.Canceled);
+                        model.CancellationRemarks = cancellationRemarks;
 
-                            receivingReport.IsPaid = false;
-                            receivingReport.AmountPaid -= item.AmountPaid;
-                        }
-                        if (item.DocumentType == "DR")
+                        #region -- Recalculate payment of RR's or DR's
+
+                        var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                            .Where(cv => cv.CheckVoucherId == id)
+                            .Include(cv => cv.CV)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var item in getCheckVoucherTradePayment)
                         {
-                            var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
-                            if (item.CV.CvType == "Commission")
+                            if (item.DocumentType == "RR")
                             {
-                                deliveryReceipt.IsCommissionPaid = false;
-                                deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                                var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+
+                                receivingReport.IsPaid = false;
+                                receivingReport.AmountPaid -= item.AmountPaid;
                             }
-                            if (item.CV.CvType == "Hauler")
+                            if (item.DocumentType == "DR")
                             {
-                                deliveryReceipt.IsFreightPaid = false;
-                                deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                                var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                                if (item.CV.CvType == "Commission")
+                                {
+                                    deliveryReceipt.IsCommissionPaid = false;
+                                    deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                                }
+                                if (item.CV.CvType == "Hauler")
+                                {
+                                    deliveryReceipt.IsFreightPaid = false;
+                                    deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                                }
                             }
                         }
+
+                        #endregion -- Recalculate payment of RR's or DR's
+
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
+
+                        TempData["success"] = "Check Voucher has been Cancelled.";
                     }
 
-                    #endregion -- Recalculate payment of RR's or DR's
-
-                    #region --Audit Trail Recording
-
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Check Voucher has been Cancelled.";
+                    return RedirectToAction(nameof(Index));
                 }
-
+}
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to cancel check voucher. Canceled by: {UserName}", _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -1163,6 +1185,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to void check voucher. Voided by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -1577,6 +1600,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to export check voucher. Exported by: {UserName}", _userManager.GetUserName(User));
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -1797,6 +1821,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create commission payment. Created by: {UserName}", _userManager.GetUserName(User));
                     viewModel.COA = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
                         .Select(s => new SelectListItem
@@ -2062,6 +2087,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create hauler payment. Created by: {UserName}", _userManager.GetUserName(User));
                     viewModel.COA = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
                         .Select(s => new SelectListItem
@@ -2433,6 +2459,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to edit commission payment. Edited by: {UserName}", _userManager.GetUserName(User));
                     viewModel.COA = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
                         .Select(s => new SelectListItem
@@ -2666,6 +2693,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to edit hauler payment. Edited by: {UserName}", _userManager.GetUserName(User));
                     viewModel.COA = await _dbContext.FilprideChartOfAccounts
                         .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
                         .Select(s => new SelectListItem
