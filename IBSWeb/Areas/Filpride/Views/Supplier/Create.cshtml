@@ -187,6 +187,7 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script src="~/js/submit-blocker.js"></script>
     <script>
         function toggleExemptionFields(selectElement) {
             const exemptionFields = document.getElementById("exemptionFields");
