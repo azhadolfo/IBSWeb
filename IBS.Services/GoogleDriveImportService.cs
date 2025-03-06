@@ -71,8 +71,21 @@ namespace IBS.Services
 
             try
             {
+                _logger.LogInformation($"==========Import process started in {DateTimeHelper.GetCurrentPhilippineTime()}==========");
+                LogMessage logMessage = new("Information", "GDriveImportService",
+                    $"Import process started in {DateTimeHelper.GetCurrentPhilippineTime()}.");
+                await db.LogMessages.AddAsync(logMessage);
+
                 await ImportSales();
                 await ImportPurchases();
+
+                _logger.LogInformation($"==========Import process finished in {DateTimeHelper.GetCurrentPhilippineTime()}==========");
+                logMessage = new("Information", "GDriveImportService",
+                    $"Import process finished in {DateTimeHelper.GetCurrentPhilippineTime()}.");
+                await db.LogMessages.AddAsync(logMessage);
+
+                await db.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
             catch (Exception ex)
             {
@@ -267,7 +280,7 @@ namespace IBS.Services
                 }
             }
 
-            _logger.LogInformation($"===============SALES IMPORT COMPLETED===============");
+            _logger.LogInformation($"==========SALES IMPORT COMPLETED==========");
         }
 
         public async Task ImportPurchases()
@@ -410,7 +423,7 @@ namespace IBS.Services
                 }
             }
 
-            _logger.LogInformation($"===============PURCHASE IMPORT COMPLETE===============");
+            _logger.LogInformation($"==========PURCHASE IMPORT COMPLETE==========");
         }
     }
 }
