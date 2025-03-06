@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.MasterFile;
 
 namespace IBS.Models.Filpride.Integrated
 {
@@ -16,11 +17,6 @@ namespace IBS.Models.Filpride.Integrated
 
         [ForeignKey(nameof(CustomerOrderSlipId))]
         public FilprideCustomerOrderSlip? CustomerOrderSlip { get; set; }
-
-        public int? DeliveryReceiptId { get; set; }
-
-        [ForeignKey(nameof(DeliveryReceiptId))]
-        public FilprideDeliveryReceipt? DeliveryReceipt { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         [Column(TypeName = "date")]
@@ -42,5 +38,10 @@ namespace IBS.Models.Filpride.Integrated
         public DateTime CreatedDate { get; set; }
 
         public ICollection<FilprideBookAtlDetail> Details { get; set; }
+
+        public int SupplierId { get; set; }
+
+        [ForeignKey(nameof(SupplierId))]
+        public FilprideSupplier? Supplier { get; set; }
     }
 }

@@ -69,8 +69,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.ValidUntil.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.UppiAtlNo?.ToLower().Contains(searchValue) == true ||
                         s.CustomerOrderSlip.CustomerOrderSlipNo.ToLower().Contains(searchValue) == true ||
-                        s.Remarks.ToLower().Contains(searchValue) ||
-                        s.DeliveryReceipt?.DeliveryReceiptNo?.ToLower().Contains(searchValue) == true
+                        s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -151,6 +150,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
                     CreatedBy = _userManager.GetUserName(User),
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    SupplierId = viewModel.SupplierId
                 };
 
                 await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
@@ -159,12 +159,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var cos in viewModel.CosIds)
                 {
-                    var existingCos = await _dbContext.FilprideCustomerOrderSlips
-                        .FirstOrDefaultAsync(c => c.CustomerOrderSlipId ==cos, cancellationToken);
+                    var existingCos = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Include(c => c.CustomerOrderSlip)
+                        .FirstOrDefaultAsync(c => c.CustomerOrderSlipId == cos && c.SupplierId == viewModel.SupplierId, cancellationToken);
 
-                    existingCos.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                    existingCos.Status = nameof(CosStatus.ForApprovalOfOM);
-
+                    existingCos.AtlNo = model.AuthorityToLoadNo;
+                    existingCos.CustomerOrderSlip.Status = nameof(CosStatus.ForApprovalOfOM);
 
                     bookDetails.Add(new FilprideBookAtlDetail
                     {
@@ -224,15 +224,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSupplierCOS(int supplierId)
         {
-            // Query your database to get COS list for the supplier
-            var cosList = await _dbContext.FilprideCustomerOrderSlips
-                .Where(cos => cos.SupplierId == supplierId && cos.Status == nameof(CosStatus.ForAtlBooking))
-                .Select(cos => new SelectListItem
+            var cosList = await _dbContext.FilprideCOSAppointedSuppliers
+                .Include(a => a.CustomerOrderSlip)
+                .Where(a => a.SupplierId == supplierId && a.CustomerOrderSlip.Status == nameof(CosStatus.ForAtlBooking))
+                .Select(a => new SelectListItem
                 {
-                    Value = cos.CustomerOrderSlipId.ToString(),
-                    Text = cos.CustomerOrderSlipNo
+                    Value = a.CustomerOrderSlipId.ToString(),
+                    Text = a.CustomerOrderSlip.CustomerOrderSlipNo
                 })
-                .ToListAsync();;
+                .ToListAsync();
 
             return Json(new { cosList });
         }

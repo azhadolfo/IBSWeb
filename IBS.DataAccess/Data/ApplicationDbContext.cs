@@ -527,6 +527,14 @@ namespace IBS.DataAccess.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+            builder.Entity<FilprideAuthorityToLoad>(b =>
+            {
+                b.HasOne(b => b.Supplier)
+                    .WithMany()
+                    .HasForeignKey(b => b.SupplierId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
             builder.Entity<FilprideMonthlyNibit>(n =>
             {
                 n.HasIndex(n => n.Company);

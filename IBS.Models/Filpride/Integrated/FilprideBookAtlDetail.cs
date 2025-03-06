@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.MasterFile;
 
 namespace IBS.Models.Filpride.Integrated
 {
@@ -18,5 +19,6 @@ namespace IBS.Models.Filpride.Integrated
 
         [ForeignKey(nameof(CustomerOrderSlipId))]
         public FilprideCustomerOrderSlip? CustomerOrderSlip { get; set; }
+
     }
 }

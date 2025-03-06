@@ -13,6 +13,8 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
 
+    decimal freight = (decimal)Model.CustomerOrderSlip.Freight;
+
 }
 
 <div class="container mt-4">
@@ -47,8 +49,8 @@
         <table class="table table-borderless">
             <tbody>
                 <tr>
-                    <td><b>Supplier:</b> @(Model.CustomerOrderSlip.Supplier?.SupplierName ?? Model.CustomerOrderSlip.PurchaseOrder.Supplier.SupplierName)</td>
-                    <td class="text-end"><b>Freight:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.Freight)</td>
+                    <td><b>Supplier:</b> @(Model.Supplier?.SupplierName)</td>
+                    <td class="text-end"><b>Freight:</b> @freight.ToString("N2")</td>
                 </tr>
                 <tr>
                     <td><b>Date Booked:</b> @Html.DisplayFor(model => model.DateBooked)</td>
@@ -97,28 +99,20 @@
                         <td>
                             @cos.CustomerOrderSlip.Product.ProductName
                         </td>
-                        <td class="text-end">
-                            @cos.CustomerOrderSlip.Quantity.ToString("N4")
+                        <td>
+                            @{
+                                var quantity = cos.CustomerOrderSlip.AppointedSuppliers
+                                    .Where(a => a.SupplierId == Model.SupplierId)
+                                    .Select(a => a.Quantity)
+                                    .FirstOrDefault();
+                            }
+                            @quantity.ToString("N2")
                         </td>
                         <td>
-                            @if (cos.CustomerOrderSlip.AppointedSuppliers.Count > 0)
-                            {
-                                @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers.Select(x => x.PurchaseOrder.SupplierSalesOrderNo))
-                            }
-                            else
-                            {
-                                @cos.CustomerOrderSlip.PurchaseOrder.SupplierSalesOrderNo
-                            }
+                            @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers.Select(x => x.PurchaseOrder.SupplierSalesOrderNo))
                         </td>
                         <td>
-                            @if (cos.CustomerOrderSlip.AppointedSuppliers.Count > 0)
-                            {
-                                @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers.Select(x => x.PurchaseOrder.PurchaseOrderNo))
-                            }
-                            else
-                            {
-                                @cos.CustomerOrderSlip.PurchaseOrder.PurchaseOrderNo
-                            }
+                            @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers.Select(x => x.PurchaseOrder.PurchaseOrderNo))
                         </td>
                         <td>
                             @cos.CustomerOrderSlip.CustomerPoNo
