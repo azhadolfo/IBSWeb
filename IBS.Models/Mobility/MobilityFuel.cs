@@ -56,9 +56,9 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(32)")]
         public string Particulars { get; set; }
 
-        public decimal Opening { get; set; }
+        public decimal? Opening { get; set; }
 
-        public decimal Closing { get; set; }
+        public decimal? Closing { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string nozdown { get; set; }
@@ -70,7 +70,7 @@ namespace IBS.Models.Mobility
         public TimeOnly? OutTime { get; set; }
 
         //Liters = FirstDsrOpeningBefore - FirstDsrClosing
-        public decimal Liters { get; set; }
+        public decimal? Liters { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string? xOID { get; set; }

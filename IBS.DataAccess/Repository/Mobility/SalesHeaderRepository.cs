@@ -723,36 +723,11 @@ namespace IBS.DataAccess.Repository.Mobility
             await _db.MobilitySalesDetails.AddAsync(salesDetails, cancellationToken);
         }
 
-        public async Task<(int fuelCount, bool hasPoSales)> ProcessFuel(string file, CancellationToken cancellationToken = default)
-        {
-            var records = ReadFuelRecords(file);
-            var (newRecords, hasPoSales) = await AddNewFuelRecords(records, cancellationToken);
-            return (newRecords.Count, hasPoSales);
-        }
-
         public async Task<(int fuelCount, bool hasPoSales)> ProcessFuelGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
         {
             var records = ReadFuelRecordsGoogleDrive(file.FileContent);
             var (newRecords, hasPoSales) = await AddNewFuelRecords(records, cancellationToken);
             return (newRecords.Count, hasPoSales);
-        }
-
-        private List<MobilityFuel> ReadFuelRecords(string file)
-        {
-            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
-            using var reader = new StreamReader(stream);
-            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HeaderValidated = null,
-                MissingFieldFound = null,
-            });
-
-            return csv.GetRecords<MobilityFuel>()
-                .OrderBy(r => r.INV_DATE)
-                .ThenBy(r => r.ItemCode)
-                .ThenBy(r => r.xPUMP)
-                .ThenBy(r => r.Opening)
-                .ToList();
         }
 
         private List<MobilityFuel> ReadFuelRecordsGoogleDrive(byte[] fileContent)
@@ -765,6 +740,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 MissingFieldFound = null,
             });
             return csv.GetRecords<MobilityFuel>()
+                .Where(r => r.Opening.HasValue && r.Closing.HasValue)
                 .OrderBy(r => r.INV_DATE)
                 .ThenBy(r => r.ItemCode)
                 .ThenBy(r => r.xPUMP)
@@ -834,31 +810,11 @@ namespace IBS.DataAccess.Repository.Mobility
             return (newRecords, hasPoSales);
         }
 
-        public async Task<(int lubeCount, bool hasPoSales)> ProcessLube(string file, CancellationToken cancellationToken = default)
-        {
-            var records = ReadLubeRecords(file);
-            var (newRecords, hasPoSales) = await AddNewLubeRecords(records, cancellationToken);
-            return (newRecords.Count, hasPoSales);
-        }
-
         public async Task<(int lubeCount, bool hasPoSales)> ProcessLubeGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
         {
             var records = ReadLubeRecordsGoogleDrive(file.FileContent);
             var (newRecords, hasPoSales) = await AddNewLubeRecords(records, cancellationToken);
             return (newRecords.Count, hasPoSales);
-        }
-
-        private List<MobilityLube> ReadLubeRecords(string file)
-        {
-            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
-            using var reader = new StreamReader(stream);
-            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HeaderValidated = null,
-                MissingFieldFound = null,
-            });
-
-            return csv.GetRecords<MobilityLube>().ToList();
         }
 
         private List<MobilityLube> ReadLubeRecordsGoogleDrive(byte[] fileContent)
@@ -907,31 +863,11 @@ namespace IBS.DataAccess.Repository.Mobility
             return (newRecords, hasPoSales);
         }
 
-        public async Task<int> ProcessSafeDrop(string file, CancellationToken cancellationToken = default)
-        {
-            var records = ReadSafeDropRecords(file);
-            var newRecords = await AddNewSafeDropRecords(records, cancellationToken);
-            return newRecords.Count;
-        }
-
         public async Task<int> ProcessSafeDropGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
         {
             var records = ReadSafeDropRecordsGoogleDrive(file.FileContent);
             var newRecords = await AddNewSafeDropRecords(records, cancellationToken);
             return newRecords.Count;
-        }
-
-        private List<MobilitySafeDrop> ReadSafeDropRecords(string file)
-        {
-            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
-            using var reader = new StreamReader(stream);
-            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HeaderValidated = null,
-                MissingFieldFound = null,
-            });
-
-            return csv.GetRecords<MobilitySafeDrop>().ToList();
         }
 
         private List<MobilitySafeDrop> ReadSafeDropRecordsGoogleDrive(byte[] file)
