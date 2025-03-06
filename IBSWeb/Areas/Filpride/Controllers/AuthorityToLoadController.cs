@@ -28,11 +28,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        public AuthorityToLoadController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        private readonly ILogger<AuthorityToLoadController> _logger;
+
+        public AuthorityToLoadController(IUnitOfWork unitOfWork,
+            UserManager<IdentityUser> userManager,
+            ApplicationDbContext dbContext,
+            ILogger<AuthorityToLoadController> logger)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -105,6 +111,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to get authority to loads.");
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -189,6 +196,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to book ATL. Created by: {UserName}", _userManager.GetUserName(User));
                 return View(viewModel);
             }
 
@@ -217,6 +225,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to print ATL. Printed by: {UserName}", _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -281,6 +290,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to update the validity date of ATL. Updated by: {UserName}", _userManager.GetUserName(User));
                 return Json(new { success = false });
             }
         }
