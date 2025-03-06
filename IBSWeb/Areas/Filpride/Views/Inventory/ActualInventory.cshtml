@@ -140,7 +140,7 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
+    <script src="~/js/submit-blocker.js"></script>
     <script>
         // Get the current date in the format "YYYY-MM-DD" (required for the date input)
         var currentDate = new Date().toISOString().slice(0, 10);
