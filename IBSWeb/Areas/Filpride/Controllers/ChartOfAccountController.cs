@@ -15,13 +15,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public readonly ApplicationDbContext _dbContext;
         public readonly UserManager<IdentityUser> _userManager;
         public readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<ChartOfAccountController> _logger;
 
         public ChartOfAccountController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork, ILogger<ChartOfAccountController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -31,7 +33,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderBy(c => c.AccountNumber)
                 .ToListAsync(cancellationToken);
 
-            //
             return View(Level1.Where((c => c.Level == 1)).ToList());
         }
 
@@ -82,6 +83,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to create chart of account. Created by: {UserName}", _userManager.GetUserName(User));
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -106,6 +108,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to edit chart of account. Edited by: {UserName}", _userManager.GetUserName(User));
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
