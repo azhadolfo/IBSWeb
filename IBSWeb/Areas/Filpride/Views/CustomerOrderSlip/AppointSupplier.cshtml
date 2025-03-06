@@ -133,7 +133,6 @@
                                 .data('supplier-id', po.supplierId)
                             );
                         });
-
                         
                         // Reinitialize Select2 to reflect new options
                         $poSelect.trigger('change');
@@ -147,12 +146,19 @@
 
         // Separate function for handling PO selection changes
         function handlePOSelectionChange() {
-            var selectedPOs = $(this).val() || [];
+            console.log('Handling PO selection change...');
+
+            // Explicitly reference the dropdown by ID
+            var selectedPOs = $('#PurchaseOrderIds').val();
+            if (!selectedPOs) {
+                selectedPOs = []; // Default to an empty array
+            }
+            
             $('#poQuantities').empty();
 
             if (selectedPOs.length > 0) {
                 $.each(selectedPOs, function (index, po) {
-                    var selectedOption = $('#PurchaseOrderIds option[value="' + po + '"]');
+                    var selectedOption = $('#PurchaseOrderIds option[value="' + po + '"]');``
                     var selectedText = selectedOption.text();
                     var availableBalance = selectedOption.data('available-balance');
                     var supplierId = selectedOption.data('supplier-id');
@@ -185,7 +191,10 @@
         });
 
         // Attach PO change handler separately
-        $('#PurchaseOrderIds').on('change', handlePOSelectionChange);
+        $('#PurchaseOrderIds').on('change', function() {
+            console.log('PurchaseOrderIds changed');
+            handlePOSelectionChange();
+        });
 
 
         $('form').on('submit', function (event) {
