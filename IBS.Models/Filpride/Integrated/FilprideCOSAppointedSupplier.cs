@@ -34,5 +34,7 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
+        public string? AtlNo { get; set; }
+
     }
 }

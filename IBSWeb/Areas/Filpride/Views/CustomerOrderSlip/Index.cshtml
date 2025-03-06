@@ -238,7 +238,7 @@
 
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
 
-                                    if (row.supplierId != null ) {
+                                    if (row.pickUpPointId != null ) {
                                         actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
                                     } else {
                                         actions += `<li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>`;

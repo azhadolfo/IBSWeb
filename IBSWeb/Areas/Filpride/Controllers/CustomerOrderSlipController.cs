@@ -17,6 +17,7 @@ using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -917,14 +918,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                 ProductId = existingRecord.ProductId,
-                Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
+
+                Suppliers = await _dbContext.FilprideSuppliers
+                    .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
+                    .OrderBy(supp => supp.SupplierCode)
+                    .Select(sup => new SelectListItem
+                    {
+                        Value = sup.SupplierId.ToString(),
+                        Text = sup.SupplierName
+                    })
+                    .ToListAsync(cancellationToken),
+
                 PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
-                COSVolume = existingRecord.Quantity
+                COSVolume = existingRecord.Quantity,
+                PickUpPoints = await _unitOfWork.FilpridePickUpPoint
+                    .GetPickUpPointListBasedOnSupplier(cancellationToken),
             };
 
             if (existingRecord.Status == nameof(CosStatus.SupplierAppointed))
             {
-                viewModel.SupplierId = (int)existingRecord.SupplierId;
                 viewModel.DeliveryOption = existingRecord.DeliveryOption;
                 viewModel.Freight = (decimal)existingRecord.Freight;
                 viewModel.PickUpPointId = (int)existingRecord.PickUpPointId;
@@ -943,8 +955,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var appoint in appointedSuppliers)
                     {
+                        viewModel.SupplierIds.Add(appoint.SupplierId);
                         viewModel.PurchaseOrderIds.Add(appoint.PurchaseOrderId);
-                        viewModel.PurchaseOrderQuantities.Add(appoint.PurchaseOrderId, appoint.Quantity);
+                        //viewModel.PurchaseOrderQuantities.Add(appoint.PurchaseOrderId, appoint.Quantity);
                     }
                 }
             }
@@ -983,8 +996,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingCos.Status = nameof(CosStatus.SupplierAppointed);
                     }
 
-                    existingCos.SupplierId = viewModel.SupplierId;
-
                     switch (viewModel.DeliveryOption)
                     {
                         case SD.DeliveryOption_DirectDelivery:
@@ -1005,14 +1016,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var appointedSuppliers = new List<FilprideCOSAppointedSupplier>();
 
-                        foreach (var po in viewModel.PurchaseOrderIds)
+                        foreach (var po in viewModel.PurchaseOrderQuantities)
                         {
                             appointedSuppliers.Add(new FilprideCOSAppointedSupplier
                             {
+                                SupplierId = po.SupplierId,
                                 CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
-                                PurchaseOrderId = po,
-                                Quantity = viewModel.PurchaseOrderQuantities[po],
-                                UnservedQuantity = viewModel.PurchaseOrderQuantities[po]
+                                PurchaseOrderId = po.PurchaseOrderId,
+                                Quantity = po.Quantity,
+                                UnservedQuantity = po.Quantity,
                             });
                         }
 
@@ -1020,6 +1032,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     else
                     {
+                        existingCos.SupplierId = viewModel.SupplierIds.FirstOrDefault();
                         existingCos.PurchaseOrderId = viewModel.PurchaseOrderIds.FirstOrDefault();
                     }
 
@@ -1035,7 +1048,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await _dbContext.FilprideSuppliers
+                        .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
+                        .OrderBy(supp => supp.SupplierCode)
+                        .Select(sup => new SelectListItem
+                        {
+                            Value = sup.SupplierId.ToString(),
+                            Text = sup.SupplierName
+                        })
+                        .ToListAsync(cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
                     viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
@@ -1043,7 +1064,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(viewModel);
                 }
             }
-            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.Suppliers = await _dbContext.FilprideSuppliers
+                .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
+                .OrderBy(supp => supp.SupplierCode)
+                .Select(sup => new SelectListItem
+                {
+                    Value = sup.SupplierId.ToString(),
+                    Text = sup.SupplierName
+                })
+                .ToListAsync(cancellationToken);
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
@@ -1069,21 +1098,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                     ProductId = existingRecord.ProductId,
-                    Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken),
+                    Suppliers = await _dbContext.FilprideSuppliers
+                        .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
+                        .OrderBy(supp => supp.SupplierCode)
+                        .Select(sup => new SelectListItem
+                        {
+                            Value = sup.SupplierId.ToString(),
+                            Text = sup.SupplierName
+                        })
+                        .ToListAsync(cancellationToken),
                     PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
                     COSVolume = existingRecord.Quantity,
-                    SupplierId = (int)(existingRecord.Supplier?.SupplierId ?? existingRecord.PurchaseOrder.SupplierId),
                     DeliveryOption = existingRecord.DeliveryOption,
                     Freight = existingRecord.Freight ?? 0,
                     PickUpPointId = (int)existingRecord.PickUpPointId,
                     PickUpPoints = await _unitOfWork.FilpridePickUpPoint
                     .GetPickUpPointListBasedOnSupplier(cancellationToken),
-                    SubPoRemarks = existingRecord.SubPORemarks
+                    SubPoRemarks = existingRecord.SubPORemarks,
+
                 };
 
                 if (!existingRecord.HasMultiplePO)
                 {
                     viewModel.PurchaseOrderIds.Add((int)existingRecord.PurchaseOrderId);
+                    viewModel.SupplierIds.Add((int)existingRecord.SupplierId);
+
+                    // Add single PO quantity
+                    viewModel.PurchaseOrderQuantities.Add(new PurchaseOrderQuantityInfo
+                    {
+                        PurchaseOrderId = (int)existingRecord.PurchaseOrderId,
+                        SupplierId = (int)existingRecord.SupplierId,
+                        Quantity = existingRecord.Quantity
+                    });
                 }
                 else
                 {
@@ -1093,8 +1139,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var appoint in appointedSuppliers)
                     {
+                        viewModel.SupplierIds.Add(appoint.SupplierId);
                         viewModel.PurchaseOrderIds.Add(appoint.PurchaseOrderId);
-                        viewModel.PurchaseOrderQuantities[appoint.PurchaseOrderId] = appoint.Quantity;
+
+                        // Add PO quantity details
+                        viewModel.PurchaseOrderQuantities.Add(new PurchaseOrderQuantityInfo
+                        {
+                            PurchaseOrderId = appoint.PurchaseOrderId,
+                            SupplierId = appoint.SupplierId,
+                            Quantity = appoint.Quantity
+                        });
                     }
                 }
 
@@ -1159,7 +1213,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
-                    existingCos.SupplierId = viewModel.SupplierId;
 
                     switch (viewModel.DeliveryOption)
                     {
@@ -1183,14 +1236,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             var appointedSuppliers = new List<FilprideCOSAppointedSupplier>();
 
-                            foreach (var po in viewModel.PurchaseOrderIds)
+                            foreach (var po in viewModel.PurchaseOrderQuantities)
                             {
                                 appointedSuppliers.Add(new FilprideCOSAppointedSupplier
                                 {
+                                    SupplierId = po.SupplierId,
                                     CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
-                                    PurchaseOrderId = po,
-                                    Quantity = viewModel.PurchaseOrderQuantities[po],
-                                    UnservedQuantity = viewModel.PurchaseOrderQuantities[po]
+                                    PurchaseOrderId = po.PurchaseOrderId,
+                                    Quantity = po.Quantity,
+                                    UnservedQuantity = po.Quantity
                                 });
                             }
 
@@ -1207,14 +1261,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             var appointedSuppliers = new List<FilprideCOSAppointedSupplier>();
 
-                            foreach (var po in viewModel.PurchaseOrderIds)
+                            foreach (var po in viewModel.PurchaseOrderQuantities)
                             {
                                 appointedSuppliers.Add(new FilprideCOSAppointedSupplier
                                 {
+                                    SupplierId = po.SupplierId,
                                     CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
-                                    PurchaseOrderId = po,
-                                    Quantity = viewModel.PurchaseOrderQuantities[po],
-                                    UnservedQuantity = viewModel.PurchaseOrderQuantities[po]
+                                    PurchaseOrderId = po.PurchaseOrderId,
+                                    Quantity = po.Quantity,
+                                    UnservedQuantity = po.Quantity,
                                 });
                             }
 
@@ -1235,6 +1290,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         existingCos.HasMultiplePO = false;
                         existingCos.PurchaseOrderId = viewModel.PurchaseOrderIds.FirstOrDefault();
+                        existingCos.SupplierId = viewModel.SupplierIds.FirstOrDefault();
                     }
 
                     TempData["success"] = "Reappointed supplier successfully.";
@@ -1249,7 +1305,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await _dbContext.FilprideSuppliers
+                        .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
+                        .OrderBy(supp => supp.SupplierCode)
+                        .Select(sup => new SelectListItem
+                        {
+                            Value = sup.SupplierId.ToString(),
+                            Text = sup.SupplierName
+                        })
+                        .ToListAsync(cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
                     viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
@@ -1257,46 +1321,66 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(viewModel);
                 }
             }
-            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.Suppliers = await _dbContext.FilprideSuppliers
+                .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
+                .OrderBy(supp => supp.SupplierCode)
+                .Select(sup => new SelectListItem
+                {
+                    Value = sup.SupplierId.ToString(),
+                    Text = sup.SupplierName
+                })
+                .ToListAsync(cancellationToken);
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 
-        public async Task<IActionResult> GetPurchaseOrders(int? supplierId, int? productId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetPurchaseOrders(string supplierIds, int? productId, int? cosId, CancellationToken cancellationToken)
         {
-            if (supplierId == null || productId == null)
+            if (string.IsNullOrEmpty(supplierIds) || productId == null)
             {
                 return NotFound();
             }
 
-            var purchaseOrderList = await _dbContext.FilpridePurchaseOrders
-                .Where(p =>
-                    p.SupplierId == supplierId &&
-                    p.ProductId == productId &&
-                    !p.IsReceived && !p.IsSubPo &&
-                    p.Status == nameof(Status.Posted))
-                .Select(p => new
-                {
-                    Value = p.PurchaseOrderId,
-                    Text = p.PurchaseOrderNo,
-                    AvailableBalance = p.Quantity - p.QuantityReceived
-                }).ToListAsync(cancellationToken);
+            var supplierIdList = supplierIds.Split(',')
+                .Select(id => int.Parse(id.Trim()))
+                .ToList();
+
+            var previouslyAppointedPOs = cosId.HasValue
+                ? await _dbContext.FilprideCOSAppointedSuppliers
+                    .Where(a => a.CustomerOrderSlipId == cosId.Value)
+                    .Select(a => new PurchaseOrderQuantityInfo()
+                    {
+                        PurchaseOrderId = a.PurchaseOrderId,
+                        SupplierId = a.SupplierId,
+                        Quantity = a.Quantity
+                    })
+                    .ToListAsync(cancellationToken)
+                : new List<PurchaseOrderQuantityInfo>();
+
+
+            var purchaseOrders = await _dbContext.FilpridePurchaseOrders
+                .Where(p => supplierIdList.Contains(p.SupplierId) &&
+                            p.ProductId == productId &&
+                            !p.IsReceived && !p.IsSubPo &&
+                            p.Status == nameof(Status.Posted))
+                .ToListAsync(cancellationToken);
+
+
+            var purchaseOrderList = purchaseOrders.OrderBy(p => p.PurchaseOrderNo).Select(p => new
+            {
+                Value = p.PurchaseOrderId,
+                Text = p.PurchaseOrderNo,
+                AvailableBalance = p.Quantity - p.QuantityReceived,
+                p.SupplierId,
+                PreviousQuantity = previouslyAppointedPOs
+                    .FirstOrDefault(x => x.PurchaseOrderId == p.PurchaseOrderId)?.Quantity ?? 0, // Now safe
+                IsPreSelected = previouslyAppointedPOs
+                    .Any(x => x.PurchaseOrderId == p.PurchaseOrderId)
+            }).ToList();
 
             return Json(purchaseOrderList);
-        }
 
-        public async Task<IActionResult> GetPickUpPoints(int? supplierId, CancellationToken cancellationToken)
-        {
-            if (supplierId == null)
-            {
-                return NotFound();
-            }
-
-            var pickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                .GetPickUpPointListBasedOnSupplier(cancellationToken);
-
-            return Json(pickUpPoints);
         }
 
         public async Task<IActionResult> CheckCustomerBalance(int? customerId, CancellationToken cancellationToken)

@@ -10,7 +10,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<SelectListItem>? Suppliers { get; set; }
 
-        public int SupplierId { get; set; } = 0;
+        public List<int> SupplierIds { get; set; } = [];
 
         public List<int> PurchaseOrderIds { get; set; } = [];
 
@@ -30,6 +30,15 @@ namespace IBS.Models.Filpride.ViewModels
 
         public int ProductId { get; set; }
 
-        public Dictionary<int, decimal> PurchaseOrderQuantities { get; set; } = new Dictionary<int, decimal>();
+        public List<PurchaseOrderQuantityInfo> PurchaseOrderQuantities { get; set; } = new();
+    }
+
+    public class PurchaseOrderQuantityInfo
+    {
+        public int PurchaseOrderId { get; set; }
+
+        public int SupplierId { get; set; }
+
+        public decimal Quantity { get; set; }
     }
 }
