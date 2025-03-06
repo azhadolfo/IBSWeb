@@ -190,11 +190,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 try
                 {
-                    _dbContext.Update(services);
+                    var existingModel = await _dbContext.FilprideServices.FindAsync(id, cancellationToken);
+                    if (existingModel != null)
+                    {
+                        existingModel.Name = services.Name;
+                        existingModel.Percent = services.Percent;
+                        TempData["success"] = "Services updated successfully";
 
-                    TempData["success"] = "Services updated successfully";
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                    }
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
