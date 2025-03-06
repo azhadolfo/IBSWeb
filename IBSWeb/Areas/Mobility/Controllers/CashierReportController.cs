@@ -119,7 +119,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var sales = await _dbContext.MobilitySalesHeaders
                 .Include(s => s.SalesDetails)
-                .FirstOrDefaultAsync(s => s.SalesNo == id, cancellationToken);
+                .FirstOrDefaultAsync(s => s.SalesNo == id && s.StationCode == stationCode, cancellationToken);
 
             if (sales == null)
             {
@@ -160,7 +160,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            var sales = await _unitOfWork.MobilitySalesHeader.GetAsync(s => s.SalesNo == id, cancellationToken);
+            var sales = await _unitOfWork.MobilitySalesHeader.GetAsync(s => s.SalesNo == id && s.StationCode == stationCode, cancellationToken);
 
             if (sales == null)
             {
