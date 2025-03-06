@@ -890,17 +890,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                 ProductId = existingRecord.ProductId,
-
-                Suppliers = await _dbContext.FilprideSuppliers
-                    .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
-                    .OrderBy(supp => supp.SupplierCode)
-                    .Select(sup => new SelectListItem
-                    {
-                        Value = sup.SupplierId.ToString(),
-                        Text = sup.SupplierName
-                    })
-                    .ToListAsync(cancellationToken),
-
+                Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
                 PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
                 COSVolume = existingRecord.Quantity,
                 PickUpPoints = await _unitOfWork.FilpridePickUpPoint
@@ -1000,15 +990,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(viewModel);
                 }
             }
-            viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
-                .OrderBy(supp => supp.SupplierCode)
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.SupplierId.ToString(),
-                    Text = sup.SupplierName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
@@ -1034,15 +1016,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                     ProductId = existingRecord.ProductId,
-                    Suppliers = await _dbContext.FilprideSuppliers
-                        .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
-                        .OrderBy(supp => supp.SupplierCode)
-                        .Select(sup => new SelectListItem
-                        {
-                            Value = sup.SupplierId.ToString(),
-                            Text = sup.SupplierName
-                        })
-                        .ToListAsync(cancellationToken),
+                    Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
                     PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
                     COSVolume = existingRecord.Quantity,
                     DeliveryOption = existingRecord.DeliveryOption,
@@ -1077,6 +1051,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch appointed supplier.");
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -1183,15 +1158,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                        .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
-                        .OrderBy(supp => supp.SupplierCode)
-                        .Select(sup => new SelectListItem
-                        {
-                            Value = sup.SupplierId.ToString(),
-                            Text = sup.SupplierName
-                        })
-                        .ToListAsync(cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
                     viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
@@ -1200,15 +1167,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(viewModel);
                 }
             }
-            viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
-                .OrderBy(supp => supp.SupplierCode)
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.SupplierId.ToString(),
-                    Text = sup.SupplierName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
