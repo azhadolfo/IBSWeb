@@ -33,7 +33,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderBy(c => c.AccountNumber)
                 .ToListAsync(cancellationToken);
 
-            //
             return View(Level1.Where((c => c.Level == 1)).ToList());
         }
 
