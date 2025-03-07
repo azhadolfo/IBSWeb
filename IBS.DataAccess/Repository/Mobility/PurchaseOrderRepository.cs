@@ -22,6 +22,7 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             MobilityPurchaseOrder? lastPo = await _db
                 .MobilityPurchaseOrders
+                .Where(s => s.StationCode == stationCode)
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
