@@ -967,17 +967,33 @@ namespace IBS.DataAccess.Repository.Mobility
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetUnpostedDsrList(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetUnpostedDsrList(string stationCode, CancellationToken cancellationToken = default)
         {
-            return await _db.MobilitySalesHeaders
-                .OrderBy(dsr => dsr.SalesHeaderId)
+            var query = await _db.MobilitySalesHeaders
                 .Where(dsr => dsr.PostedBy == null)
-                .Select(c => new SelectListItem
-                {
-                    Value = c.SalesHeaderId.ToString(),
-                    Text = c.SalesNo
-                })
+                .OrderBy(dsr => dsr.SalesHeaderId)
                 .ToListAsync(cancellationToken);
+
+            if (stationCode != "ALL")
+            {
+                return query
+                    .Where(dsr => dsr.StationCode == stationCode)
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.SalesHeaderId.ToString()
+                    })
+                    .ToList();
+            }
+            else
+            {
+                return query
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.SalesHeaderId.ToString(),
+                        Text = c.SalesNo + " " + c.StationCode
+                    })
+                    .ToList();
+            }
         }
 
         public async Task ProcessCustomerInvoicing(CustomerInvoicingViewModel viewModel, CancellationToken cancellationToken)
