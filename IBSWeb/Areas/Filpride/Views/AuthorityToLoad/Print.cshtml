@@ -109,10 +109,14 @@
                             @quantity.ToString("N2")
                         </td>
                         <td>
-                            @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers.Select(x => x.PurchaseOrder.SupplierSalesOrderNo))
+                            @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers
+                                .Where(a => a.SupplierId == Model.SupplierId)
+                                .Select(a => a.PurchaseOrder.SupplierSalesOrderNo))
                         </td>
                         <td>
-                            @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers.Select(x => x.PurchaseOrder.PurchaseOrderNo))
+                            @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers
+                                .Where(a => a.SupplierId == Model.SupplierId)
+                                .Select(x => x.PurchaseOrder.PurchaseOrderNo))
                         </td>
                         <td>
                             @cos.CustomerOrderSlip.CustomerPoNo

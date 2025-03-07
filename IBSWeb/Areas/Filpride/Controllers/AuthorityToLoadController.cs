@@ -60,6 +60,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
+
                 var atlList = await _unitOfWork.FilprideAuthorityToLoad
                     .GetAllAsync(null, cancellationToken);
 
@@ -164,20 +165,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var bookDetails = new List<FilprideBookAtlDetail>();
 
-                foreach (var cos in viewModel.CosIds)
+                foreach (var cosId in viewModel.CosIds)
                 {
-                    var existingCos = await _dbContext.FilprideCOSAppointedSuppliers
+                    // Get all appointed suppliers for this COS in a single query
+                    var appointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
                         .Include(c => c.CustomerOrderSlip)
-                        .FirstOrDefaultAsync(c => c.CustomerOrderSlipId == cos && c.SupplierId == viewModel.SupplierId, cancellationToken);
+                        .Where(c => c.CustomerOrderSlipId == cosId)
+                        .ToListAsync(cancellationToken);
 
-                    existingCos.AtlNo = model.AuthorityToLoadNo;
-                    existingCos.CustomerOrderSlip.Status = nameof(CosStatus.ForApprovalOfOM);
+                    if (appointedSuppliers.Count == 0)
+                    {
+                        continue;
+                    }
 
+                    var matchingSuppliers = appointedSuppliers.Where(c => c.SupplierId == viewModel.SupplierId).ToList();
+
+                    // Update AtlNo for matching suppliers
+                    foreach (var supplier in matchingSuppliers)
+                    {
+                        supplier.AtlNo = model.AuthorityToLoadNo;
+                    }
+
+                    // Add new book details
                     bookDetails.Add(new FilprideBookAtlDetail
                     {
                         AuthorityToLoadId = model.AuthorityToLoadId,
-                        CustomerOrderSlipId = cos,
+                        CustomerOrderSlipId = cosId,
                     });
+
+                    var allHaveAtlNo = appointedSuppliers.All(e => e.AtlNo != null);
+
+                    if (allHaveAtlNo)
+                    {
+                        appointedSuppliers.First().CustomerOrderSlip.Status = nameof(CosStatus.ForApprovalOfOM);
+                    }
                 }
 
                 await _dbContext.FilprideBookAtlDetails.AddRangeAsync(bookDetails, cancellationToken);
@@ -235,16 +256,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var cosList = await _dbContext.FilprideCOSAppointedSuppliers
                 .Include(a => a.CustomerOrderSlip)
-                .Where(a => a.SupplierId == supplierId && a.CustomerOrderSlip.Status == nameof(CosStatus.ForAtlBooking))
-                .Select(a => new SelectListItem
+                .Where(a => a.SupplierId == supplierId &&
+                            a.CustomerOrderSlip.Status == nameof(CosStatus.ForAtlBooking) &&
+                            a.AtlNo == null)
+                .GroupBy(a => new { a.CustomerOrderSlipId, a.CustomerOrderSlip.CustomerOrderSlipNo })
+                .Select(g => new SelectListItem
                 {
-                    Value = a.CustomerOrderSlipId.ToString(),
-                    Text = a.CustomerOrderSlip.CustomerOrderSlipNo
+                    Value = g.Key.CustomerOrderSlipId.ToString(),
+                    Text = g.Key.CustomerOrderSlipNo
                 })
                 .ToListAsync();
 
             return Json(new { cosList });
         }
+
 
         [HttpGet]
         public async Task<IActionResult> GetHaulerDetails(int cosId)
