@@ -980,7 +980,8 @@ namespace IBS.DataAccess.Repository.Mobility
                     .Where(dsr => dsr.StationCode == stationCode)
                     .Select(c => new SelectListItem
                     {
-                        Value = c.SalesHeaderId.ToString()
+                        Value = c.SalesHeaderId.ToString(),
+                        Text = c.SalesNo
                     })
                     .ToList();
             }
