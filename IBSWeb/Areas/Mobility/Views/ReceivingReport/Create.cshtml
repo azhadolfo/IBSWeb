@@ -28,6 +28,20 @@
                     </select>
                     <span asp-validation-for="DeliveryReceiptId" class="text-danger"></span>
                 </div>
+                @if (ViewBag.stationCode == "ALL")
+                {
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Stations List<span class="required">*</span></label>
+                        <select asp-for="StationCode" asp-items="@Model.Stations" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected>Select station</option>
+                        </select>
+                        <span asp-validation-for="StationCode" class="text-danger"></span>
+                    </div>
+                }
+                else
+                {
+                    <input asp-for="StationCode" value="@ViewBag.stationCode" style="display: none"></input>
+                }
                 <div class="form-floating py-2 col-12">
                     <input asp-for="Driver" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="Driver">Driver<span class="required">*</span></label>
