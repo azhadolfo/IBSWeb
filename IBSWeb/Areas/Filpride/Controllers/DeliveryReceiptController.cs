@@ -38,13 +38,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private const string FilterTypeClaimType = "DeliveryReceipt.FilterType";
 
-        public DeliveryReceiptController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment, IHubContext<NotificationHub> hubContext)
+        private readonly ILogger<DeliveryReceiptController> _logger;
+
+        public DeliveryReceiptController(IUnitOfWork unitOfWork,
+            UserManager<IdentityUser> userManager,
+            ApplicationDbContext dbContext,
+            IWebHostEnvironment webHostEnvironment,
+            IHubContext<NotificationHub> hubContext,
+            ILogger<DeliveryReceiptController> logger)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
             _webHostEnvironment = webHostEnvironment;
             _hubContext = hubContext;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -177,6 +185,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to get delivery receipts.");
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -377,6 +386,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
+                    _logger.LogError(ex, "Failed to create delviery receipt. Created by: {UserName}", _userManager.GetUserName(User));
                     return View(viewModel);
                 }
             }
@@ -456,6 +466,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch delivery receipts.");
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -589,6 +600,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
+                    _logger.LogError(ex, "Failed to edit customer order slip. Edited by: {UserName}", _userManager.GetUserName(User));
                     return View(viewModel);
                 }
             }
@@ -621,6 +633,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to preview the delivery receipt. Previewed by: {UserName}", _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -653,6 +666,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to print the delivery receipt. Printed by: {UserName}", _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }
@@ -689,6 +703,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to post the delivery receipt. Posted by: {UserName}", _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }
@@ -864,6 +879,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to mark the delivery receipt. Marked by: {UserName}", _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -964,6 +980,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
+                    _logger.LogError(ex, "Failed to void the delivery receipt. Voided by: {UserName}", _userManager.GetUserName(User));
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }
