@@ -200,7 +200,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             DeliveryReceiptViewModel viewModel = new()
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
-                CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
                 Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
             };
 
@@ -243,7 +242,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Driver = viewModel.Driver,
                         PlateNo = viewModel.PlateNo,
                         HaulerId = viewModel.HaulerId ?? customerOrderSlip.HaulerId,
-                        AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo,
+                        AuthorityToLoadNo = viewModel.ATLNo,
                         CommissioneeId = customerOrderSlip.CommissioneeId,
                         CommissionRate = customerOrderSlip.CommissionRate,
                         CommissionAmount = viewModel.Volume * customerOrderSlip.CommissionRate,
@@ -257,14 +256,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         customerOrderSlip.Status = nameof(CosStatus.Completed);
                     }
 
-                    if (!customerOrderSlip.HasMultiplePO)
-                    {
-                        model.PurchaseOrderId = customerOrderSlip.PurchaseOrderId;
-                    }
-                    else
-                    {
-                        await _unitOfWork.FilprideDeliveryReceipt.AssignNewPurchaseOrderAsync(viewModel, model);
-                    }
+                    await _unitOfWork.FilprideDeliveryReceipt.AssignNewPurchaseOrderAsync(viewModel, model);
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
 
@@ -416,6 +408,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                var purchaseOrders = await _dbContext.FilprideCOSAppointedSuppliers
+                    .Include(a => a.PurchaseOrder)
+                    .Include(a => a.Supplier)
+                    .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                    .Select(a => new SelectListItem
+                    {
+                        Value = a.PurchaseOrderId.ToString(),
+                        Text = $"{a.PurchaseOrder.PurchaseOrderNo} - {a.Supplier.SupplierName} (Unserved: {a.UnservedQuantity})"
+                    })
+                    .ToListAsync();
+
                 DeliveryReceiptViewModel viewModel = new()
                 {
                     DeliveryReceiptId = existingRecord.DeliveryReceiptId,
@@ -426,6 +429,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerTin = existingRecord.Customer.CustomerTin,
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                     CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
+                    PurchaseOrderId = (int)existingRecord.PurchaseOrderId,
+                    PurchaseOrders = purchaseOrders,
                     Product = existingRecord.CustomerOrderSlip.Product.ProductName,
                     CosVolume = existingRecord.CustomerOrderSlip.Quantity,
                     RemainingVolume = existingRecord.CustomerOrderSlip.BalanceQuantity + existingRecord.Quantity,
@@ -744,18 +749,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(result);
         }
 
-        public async Task<IActionResult> GetCosDetails(int? id)
+        public async Task<IActionResult> GetCosDetails(int? id, int? initialPoId, decimal? currentVolume)
         {
             if (id == null)
             {
                 return Json(null);
             }
 
-            var cos = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == id);
+            var cos = await _dbContext.FilprideCustomerOrderSlips
+                .Include(cos => cos.Product)
+                .Include(cos => cos.AppointedSuppliers)
+                .ThenInclude(a => a.Supplier)
+                .Include(cos => cos.AppointedSuppliers)
+                .ThenInclude(a => a.PurchaseOrder)
+                .FirstOrDefaultAsync(cos => cos.CustomerOrderSlipId == id);
 
             if (cos == null)
             {
                 return Json(null);
+            }
+
+            if (initialPoId != null && currentVolume != null)
+            {
+                var existingSelection = cos.AppointedSuppliers.FirstOrDefault(sp => sp.PurchaseOrderId == initialPoId);
+                existingSelection.UnservedQuantity += (decimal)currentVolume;
             }
 
             return Json(new
@@ -769,7 +786,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 cos.HaulerId,
                 cos.Driver,
                 cos.PlateNo,
-                cos.Freight
+                cos.Freight,
+                PurchaseOrders = cos.AppointedSuppliers
+                    .Where(a => a.UnservedQuantity > 0 || (initialPoId.HasValue && a.PurchaseOrderId == initialPoId))
+                    .Select(a => new
+                    {
+                        a.PurchaseOrderId,
+                        a.PurchaseOrder.PurchaseOrderNo,
+                        a.Supplier.SupplierName,
+                        a.UnservedQuantity,
+                        a.AtlNo,
+                        IsCurrentlySelected = initialPoId.HasValue && a.PurchaseOrderId == initialPoId
+                    })
             });
         }
 

@@ -97,16 +97,10 @@ namespace IBS.DataAccess.Repository.Filpride
 
             #endregion
 
-            #region--Update Multiple PO
+            #region--Update Appointed PO
 
-            if (existingRecord.CustomerOrderSlip.HasMultiplePO)
-            {
-                if (viewModel.Volume != existingRecord.Quantity)
-                {
-                    await UpdatePreviousAppointedSupplierAsync(existingRecord);
-                    await AssignNewPurchaseOrderAsync(viewModel, existingRecord);
-                }
-            }
+            await UpdatePreviousAppointedSupplierAsync(existingRecord);
+            await AssignNewPurchaseOrderAsync(viewModel, existingRecord);
 
             #endregion
 
@@ -123,23 +117,10 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.ECC = viewModel.ECC;
             existingRecord.Freight = viewModel.Freight;
             existingRecord.FreightAmount = existingRecord.Quantity * (existingRecord.Freight + existingRecord.ECC);
-            existingRecord.AuthorityToLoadNo = customerOrderSlip.AuthorityToLoadNo;
+            existingRecord.AuthorityToLoadNo = viewModel.ATLNo;
             existingRecord.CommissioneeId = customerOrderSlip.CommissioneeId;
             existingRecord.CommissionRate = customerOrderSlip.CommissionRate;
             existingRecord.CommissionAmount = existingRecord.Quantity * existingRecord.CommissionRate;
-
-            if (!customerOrderSlip.HasMultiplePO && existingRecord.CustomerOrderSlipId != customerOrderSlip.CustomerOrderSlipId)
-            {
-                existingRecord.PurchaseOrderId = customerOrderSlip.PurchaseOrderId;
-            }
-            else if (customerOrderSlip.HasMultiplePO && existingRecord.CustomerOrderSlipId != customerOrderSlip.CustomerOrderSlipId)
-            {
-                var selectedPo = await _db.FilprideCOSAppointedSuppliers
-                    .OrderBy(s => s.PurchaseOrderId)
-                    .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId && !s.IsAssignedToDR);
-
-                existingRecord.PurchaseOrderId = selectedPo.PurchaseOrderId;
-            }
 
             if (_db.ChangeTracker.HasChanges())
             {
@@ -562,23 +543,21 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new InvalidOperationException("Previous appointed supplier not found.");
 
             previousAppointedSupplier.UnservedQuantity += model.Quantity;
-            previousAppointedSupplier.IsAssignedToDR = false;
         }
 
         public async Task AssignNewPurchaseOrderAsync(DeliveryReceiptViewModel viewModel, FilprideDeliveryReceipt model)
         {
             var newAppointedSupplier = await _db.FilprideCOSAppointedSuppliers
                 .OrderBy(s => s.PurchaseOrderId)
-                .FirstOrDefaultAsync(s => s.CustomerOrderSlipId == viewModel.CustomerOrderSlipId &&
-                                           !s.IsAssignedToDR &&
-                                           s.Quantity == viewModel.Volume)
+                .FirstOrDefaultAsync(s =>
+                    s.CustomerOrderSlipId == viewModel.CustomerOrderSlipId &&
+                    s.PurchaseOrderId == viewModel.PurchaseOrderId)
                 ?? throw new InvalidOperationException($"Purchase Order not found for this volume ({viewModel.Volume:N2}), contact the TNS.");
 
             model.PurchaseOrderId = newAppointedSupplier.PurchaseOrderId;
             model.Quantity = viewModel.Volume;
 
             newAppointedSupplier.UnservedQuantity -= model.Quantity;
-            newAppointedSupplier.IsAssignedToDR = true;
         }
 
         public async Task AutoReversalEntryForInTransit(CancellationToken cancellationToken = default)

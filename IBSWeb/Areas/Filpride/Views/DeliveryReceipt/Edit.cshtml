@@ -20,6 +20,7 @@
                 <div asp-validation-summary="ModelOnly"></div>
                 <input asp-for="DeliveryReceiptId" type="hidden" />
                 <input type="hidden" asp-for="IsECCEdited" />
+                <input type="hidden" asp-for="ATLNo" />
                 <div class="form-floating col-12">
                     <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
@@ -57,6 +58,13 @@
                         <label class="control-label">COS List<span class="required">*</span></label>
                         <select asp-for="CustomerOrderSlipId" asp-items="@Model.CustomerOrderSlips" class="form-select js-select2 border-0 shadow" style="width:100%">
                             <option value="" selected>Select cos</option>
+                        </select>
+                        <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Appointed POs<span class="required">*</span></label>
+                        <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected>Select po</option>
                         </select>
                         <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
                     </div>
@@ -162,11 +170,9 @@
             // Initial load for editing
             var initialCustomerId = $('select[name="CustomerId"]').val();
             var deliveryReceiptId = $("#DeliveryReceiptId").val();
-            console.log(deliveryReceiptId);
             var initialCosId = $('select[name="CustomerOrderSlipId"]').val();
             var currentVolume = parseNumber($('input[name="Volume"]').val());
-            
-            console.log(currentVolume);
+            var initialPoId = $('select[name="PurchaseOrderId"]').val();
 
             // Store initial hauler and freight values
             var initialHaulerId = $('select[name="HaulerId"]').val();
@@ -213,7 +219,11 @@
                     $.ajax({
                         url: '@Url.Action("GetCosDetails", "DeliveryReceipt", new { area = "Filpride" })',
                         type: "GET",
-                        data: { id: cosId },
+                        data: { 
+                            id: cosId,
+                            initialPoId: initialPoId, 
+                            currentVolume: currentVolume
+                        },
                         success: function (data) {
                             if (data) {
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
@@ -259,8 +269,7 @@
                                     $('input[name="Freight"]').parent().hide();
                                     $('#haulerList').hide();
                                 }
-
-                                $('input[name="ATLNo"]').val($('input[name="ATLNo"]').val() ? $('input[name="ATLNo"]').val() : data.atlNo);
+                                
                                 $('input[name="Driver"]').val($('input[name="Driver"]').val() ? $('input[name="Driver"]').val() : data.driver);
                                 $('input[name="PlateNo"]').val($('input[name="PlateNo"]').val() ? $('input[name="PlateNo"]').val() : data.plateNo);
                                 $('input[name="Product"]').val($('input[name="Product"]').val() ? $('input[name="Product"]').val() : data.product);
@@ -269,10 +278,11 @@
                                 // Handle remaining volume calculation
                                 var remainingVolume = data.remainingVolume;
                                 if (isInitialLoad && currentVolume) {
-                                    remainingVolume = parseNumber(data.remainingVolume) + parseNumber(currentVolume);
+                                    remainingVolume = data.remainingVolume + currentVolume;
                                 }
+                                
 
-                                $('input[name="RemainingVolume"]').val(formatNumber(remainingVolume));
+                                $('input[name="RemainingVolume"]').val(remainingVolume);
 
                                 if (isInitialLoad && currentVolume) {
                                     $('input[name="Volume"]').val(currentVolume);
@@ -282,6 +292,31 @@
 
                                 $('input[name="DeliveryOption"]').val(data.deliveryOption);
                                 $('input[name="Price"]').val(formatNumber(data.price));
+
+                                // Populate Purchase Orders dropdown
+                                var $poSelect = $('select[name="PurchaseOrderId"]');
+                                $poSelect.empty();
+                                
+                                if (data.purchaseOrders && data.purchaseOrders.length > 0) {
+                                    $poSelect.append('<option value="">Select po</option>');
+                                    $.each(data.purchaseOrders, function(index, item) {
+                                        var option = $('<option value="' + item.purchaseOrderId + '" ' +
+                                            'data-unserved="' + item.unservedQuantity + '" ' +
+                                            'data-atl-no="' + (item.atlNo || '') + '">' +
+                                            item.purchaseOrderNo + ' - ' + item.supplierName +
+                                            ' (Unserved: ' + formatNumber(item.unservedQuantity) + ')</option>');
+                                        
+                                        if (item.isCurrentlySelected){
+                                            option.prop('selected', true);
+                                        }
+
+                                        $poSelect.append(option);
+                                        
+                                    });
+                                } else {
+                                    $poSelect.append('<option value="">No purchase orders available</option>');
+                                }
+                                
                                 calculateTotalAmount();
                             }
                         },
@@ -299,6 +334,7 @@
                     currentVolume = 0;
                     initialHaulerId = null;
                     initialFreight = null;
+                    initialPoId = null;
                 }
                 loadCustomerDetails(customerId);
             });
@@ -308,6 +344,24 @@
                 var cosId = $(this).val();
                 var isInitialLoad = (cosId === initialCosId);
                 loadCosDetails(cosId, isInitialLoad);
+            });
+
+            // When Purchase Order selection changes, set max volume
+            $('select[name="PurchaseOrderId"]').on('change', function() {
+                var $selectedOption = $(this).find('option:selected');
+                var unservedQuantity = parseFloat($selectedOption.data('unserved')) || 0;
+                var atlNo = $selectedOption.data('atl-no') || '';
+                
+                console.log($selectedOption);
+
+                $('input[name="ATLNo"]').val(atlNo);
+
+                // Set max volume to unserved quantity
+                if (unservedQuantity > 0) {
+                    $('input[name="Volume"]').attr('max', unservedQuantity);
+                    $('input[name="Volume"]').val(unservedQuantity);
+                    calculateTotalAmount();
+                }
             });
 
             // Update COS list based on customer
@@ -365,10 +419,14 @@
             function validateVolume() {
                 var remainingVolume = parseNumber($("#RemainingVolume").val());
                 var volume = parseNumber($("#Volume").val());
+                var maxUnserved = parseFloat($('select[name="PurchaseOrderId"] option:selected').data('unserved')) || remainingVolume;
 
-                if (volume > remainingVolume) {
-                    alert("Volume cannot exceed the remaining volume.");
-                    $("#Volume").val(remainingVolume);
+                // Use the smaller of remaining volume or unserved quantity as max
+                var maxVolume = Math.min(remainingVolume, maxUnserved);
+
+                if (volume > maxVolume) {
+                    alert("Volume cannot exceed " + formatNumber(maxVolume));
+                    $("#Volume").val(maxVolume);
                 }
             }
         });

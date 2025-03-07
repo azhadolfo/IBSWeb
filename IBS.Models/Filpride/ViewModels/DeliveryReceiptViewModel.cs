@@ -57,10 +57,10 @@ namespace IBS.Models.Filpride.ViewModels
         public string ManualDrNo { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        public decimal Freight { get; set; } = 0;
+        public decimal Freight { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        public decimal ECC { get; set; } = 0;
+        public decimal ECC { get; set; }
 
         public string? ATLNo { get; set; }
 
@@ -72,6 +72,15 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string PlateNo { get; set; }
 
-        public bool IsECCEdited => ECC > 0; // True if ECC is greater than zero
+        public bool IsECCEdited => ECC > 0;
+
+        #region Purchase Order
+
+        [Required(ErrorMessage = "Customer field is required.")]
+        public int PurchaseOrderId { get; set; }
+
+        public List<SelectListItem>? PurchaseOrders { get; set; }
+
+        #endregion
     }
 }
