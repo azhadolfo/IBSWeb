@@ -62,7 +62,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 try
                 {
-                    var stationCodeClaim = viewModel.StationCode;
+                    var stationCodeClaim = await GetStationCodeClaim();
 
                     MobilityReceivingReport model = new()
                     {
