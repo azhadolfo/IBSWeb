@@ -23,7 +23,7 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 
         Task<List<SelectListItem>> GetPostedDsrList(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetUnpostedDsrList(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetUnpostedDsrList(string stationCode, CancellationToken cancellationToken = default);
 
         Task ProcessCustomerInvoicing(CustomerInvoicingViewModel viewModel, CancellationToken cancellationToken);
     }

@@ -22,6 +22,7 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             MobilityReceivingReport? lastRr = await _db
                 .MobilityReceivingReports
+                .Where(r => r.StationCode == stationCode)
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
