@@ -28,11 +28,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        public AuthorityToLoadController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        private readonly ILogger<AuthorityToLoadController> _logger;
+
+        public AuthorityToLoadController(IUnitOfWork unitOfWork,
+            UserManager<IdentityUser> userManager,
+            ApplicationDbContext dbContext,
+            ILogger<AuthorityToLoadController> logger)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -54,6 +60,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
+
                 var atlList = await _unitOfWork.FilprideAuthorityToLoad
                     .GetAllAsync(null, cancellationToken);
 
@@ -69,8 +76,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.ValidUntil.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.UppiAtlNo?.ToLower().Contains(searchValue) == true ||
                         s.CustomerOrderSlip.CustomerOrderSlipNo.ToLower().Contains(searchValue) == true ||
-                        s.Remarks.ToLower().Contains(searchValue) ||
-                        s.DeliveryReceipt?.DeliveryReceiptNo?.ToLower().Contains(searchValue) == true
+                        s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -106,6 +112,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to get authority to loads.");
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -151,26 +158,47 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
                     CreatedBy = _userManager.GetUserName(User),
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    SupplierId = viewModel.SupplierId
                 };
 
                 await _unitOfWork.FilprideAuthorityToLoad.AddAsync(model, cancellationToken);
 
                 var bookDetails = new List<FilprideBookAtlDetail>();
 
-                foreach (var cos in viewModel.CosIds)
+                foreach (var cosId in viewModel.CosIds)
                 {
-                    var existingCos = await _dbContext.FilprideCustomerOrderSlips
-                        .FirstOrDefaultAsync(c => c.CustomerOrderSlipId ==cos, cancellationToken);
+                    // Get all appointed suppliers for this COS in a single query
+                    var appointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Include(c => c.CustomerOrderSlip)
+                        .Where(c => c.CustomerOrderSlipId == cosId)
+                        .ToListAsync(cancellationToken);
 
-                    existingCos.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                    existingCos.Status = nameof(CosStatus.ForApprovalOfOM);
+                    if (appointedSuppliers.Count == 0)
+                    {
+                        continue;
+                    }
 
+                    var matchingSuppliers = appointedSuppliers.Where(c => c.SupplierId == viewModel.SupplierId).ToList();
 
+                    // Update AtlNo for matching suppliers
+                    foreach (var supplier in matchingSuppliers)
+                    {
+                        supplier.AtlNo = model.AuthorityToLoadNo;
+                    }
+
+                    // Add new book details
                     bookDetails.Add(new FilprideBookAtlDetail
                     {
                         AuthorityToLoadId = model.AuthorityToLoadId,
-                        CustomerOrderSlipId = cos,
+                        CustomerOrderSlipId = cosId,
                     });
+
+                    var allHaveAtlNo = appointedSuppliers.All(e => e.AtlNo != null);
+
+                    if (allHaveAtlNo)
+                    {
+                        appointedSuppliers.First().CustomerOrderSlip.Status = nameof(CosStatus.ForApprovalOfOM);
+                    }
                 }
 
                 await _dbContext.FilprideBookAtlDetails.AddRangeAsync(bookDetails, cancellationToken);
@@ -189,6 +217,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to book ATL. Created by: {UserName}", _userManager.GetUserName(User));
                 return View(viewModel);
             }
 
@@ -217,6 +246,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to print ATL. Printed by: {UserName}", _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -224,18 +254,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSupplierCOS(int supplierId)
         {
-            // Query your database to get COS list for the supplier
-            var cosList = await _dbContext.FilprideCustomerOrderSlips
-                .Where(cos => cos.SupplierId == supplierId && cos.Status == nameof(CosStatus.ForAtlBooking))
-                .Select(cos => new SelectListItem
+            var cosList = await _dbContext.FilprideCOSAppointedSuppliers
+                .Include(a => a.CustomerOrderSlip)
+                .Where(a => a.SupplierId == supplierId &&
+                            a.CustomerOrderSlip.Status == nameof(CosStatus.ForAtlBooking) &&
+                            a.AtlNo == null)
+                .GroupBy(a => new { a.CustomerOrderSlipId, a.CustomerOrderSlip.CustomerOrderSlipNo })
+                .Select(g => new SelectListItem
                 {
-                    Value = cos.CustomerOrderSlipId.ToString(),
-                    Text = cos.CustomerOrderSlipNo
+                    Value = g.Key.CustomerOrderSlipId.ToString(),
+                    Text = g.Key.CustomerOrderSlipNo
                 })
-                .ToListAsync();;
+                .ToListAsync();
 
             return Json(new { cosList });
         }
+
 
         [HttpGet]
         public async Task<IActionResult> GetHaulerDetails(int cosId)
@@ -281,6 +315,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to update the validity date of ATL. Updated by: {UserName}", _userManager.GetUserName(User));
                 return Json(new { success = false });
             }
         }

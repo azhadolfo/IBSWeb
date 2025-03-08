@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250305022127_RemoveSupplierIdInPickUpPointTable")]
+    partial class RemoveSupplierIdInPickUpPointTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2521,14 +2524,14 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("date_booked");
 
+                    b.Property<int?>("DeliveryReceiptId")
+                        .HasColumnType("integer")
+                        .HasColumnName("delivery_receipt_id");
+
                     b.Property<string>("Remarks")
                         .IsRequired()
                         .HasColumnType("varchar(255)")
                         .HasColumnName("remarks");
-
-                    b.Property<int>("SupplierId")
-                        .HasColumnType("integer")
-                        .HasColumnName("supplier_id");
 
                     b.Property<string>("UppiAtlNo")
                         .HasColumnType("varchar(20)")
@@ -2544,8 +2547,8 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("CustomerOrderSlipId")
                         .HasDatabaseName("ix_filpride_authority_to_loads_customer_order_slip_id");
 
-                    b.HasIndex("SupplierId")
-                        .HasDatabaseName("ix_filpride_authority_to_loads_supplier_id");
+                    b.HasIndex("DeliveryReceiptId")
+                        .HasDatabaseName("ix_filpride_authority_to_loads_delivery_receipt_id");
 
                     b.ToTable("filpride_authority_to_loads", (string)null);
                 });
@@ -2586,10 +2589,6 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SequenceId"));
 
-                    b.Property<string>("AtlNo")
-                        .HasColumnType("text")
-                        .HasColumnName("atl_no");
-
                     b.Property<int>("CustomerOrderSlipId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_order_slip_id");
@@ -2606,10 +2605,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("quantity");
 
-                    b.Property<int>("SupplierId")
-                        .HasColumnType("integer")
-                        .HasColumnName("supplier_id");
-
                     b.Property<decimal>("UnservedQuantity")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("unserved_quantity");
@@ -2622,9 +2617,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("PurchaseOrderId")
                         .HasDatabaseName("ix_filpride_cos_appointed_suppliers_purchase_order_id");
-
-                    b.HasIndex("SupplierId")
-                        .HasDatabaseName("ix_filpride_cos_appointed_suppliers_supplier_id");
 
                     b.ToTable("filpride_cos_appointed_suppliers", (string)null);
                 });
@@ -4384,7 +4376,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnName("cancellation_remarks");
 
-                    b.Property<decimal?>("Closing")
+                    b.Property<decimal>("Closing")
                         .HasColumnType("numeric")
                         .HasColumnName("closing");
 
@@ -4429,11 +4421,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(16)")
                         .HasColumnName("item_code");
 
-                    b.Property<decimal?>("Liters")
+                    b.Property<decimal>("Liters")
                         .HasColumnType("numeric")
                         .HasColumnName("liters");
 
-                    b.Property<decimal?>("Opening")
+                    b.Property<decimal>("Opening")
                         .HasColumnType("numeric")
                         .HasColumnName("opening");
 
@@ -7457,16 +7449,14 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("CustomerOrderSlipId")
                         .HasConstraintName("fk_filpride_authority_to_loads_filpride_customer_order_slips_c");
 
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
+                    b.HasOne("IBS.Models.Filpride.Integrated.FilprideDeliveryReceipt", "DeliveryReceipt")
                         .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_authority_to_loads_filpride_suppliers_supplier_id");
+                        .HasForeignKey("DeliveryReceiptId")
+                        .HasConstraintName("fk_filpride_authority_to_loads_filpride_delivery_receipts_deli");
 
                     b.Navigation("CustomerOrderSlip");
 
-                    b.Navigation("Supplier");
+                    b.Navigation("DeliveryReceipt");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideBookAtlDetail", b =>
@@ -7506,18 +7496,9 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_cos_appointed_suppliers_filpride_purchase_orders_p");
 
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_cos_appointed_suppliers_filpride_suppliers_supplie");
-
                     b.Navigation("CustomerOrderSlip");
 
                     b.Navigation("PurchaseOrder");
-
-                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", b =>

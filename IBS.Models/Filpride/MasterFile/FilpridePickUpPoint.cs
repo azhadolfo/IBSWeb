@@ -16,11 +16,6 @@ namespace IBS.Models.Filpride.MasterFile
         [Column(TypeName = "varchar(50)")]
         public string Depot { get; set; }
 
-        public int SupplierId { get; set; }
-
-        [ForeignKey(nameof(SupplierId))]
-        public FilprideSupplier? Supplier { get; set; }
-
         [Column(TypeName = "varchar(50)")]
         public string CreatedBy { get; set; } = string.Empty;
 

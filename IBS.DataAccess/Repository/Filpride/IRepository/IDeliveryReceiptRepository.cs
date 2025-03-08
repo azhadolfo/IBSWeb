@@ -24,5 +24,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task AssignNewPurchaseOrderAsync(DeliveryReceiptViewModel viewModel, FilprideDeliveryReceipt model);
 
         Task AutoReversalEntryForInTransit(CancellationToken cancellationToken = default);
+
+        Task<bool> CheckIfManualDrNoExists(string manualDrNo);
     }
 }

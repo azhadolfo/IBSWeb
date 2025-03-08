@@ -491,6 +491,11 @@ namespace IBS.DataAccess.Data
                     .WithMany(cos => cos.AppointedSuppliers)
                     .HasForeignKey(a => a.CustomerOrderSlipId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                a.HasOne(a => a.Supplier)
+                    .WithMany()
+                    .HasForeignKey(a => a.SupplierId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<FilpridePOActualPrice>(p =>
@@ -519,6 +524,14 @@ namespace IBS.DataAccess.Data
                 b.HasOne(b => b.CustomerOrderSlip)
                     .WithMany()
                     .HasForeignKey(b => b.CustomerOrderSlipId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideAuthorityToLoad>(b =>
+            {
+                b.HasOne(b => b.Supplier)
+                    .WithMany()
+                    .HasForeignKey(b => b.SupplierId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

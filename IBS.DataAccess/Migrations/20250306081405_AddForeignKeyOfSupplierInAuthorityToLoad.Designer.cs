@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250306081405_AddForeignKeyOfSupplierInAuthorityToLoad")]
+    partial class AddForeignKeyOfSupplierInAuthorityToLoad
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4384,7 +4387,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnName("cancellation_remarks");
 
-                    b.Property<decimal?>("Closing")
+                    b.Property<decimal>("Closing")
                         .HasColumnType("numeric")
                         .HasColumnName("closing");
 
@@ -4429,11 +4432,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(16)")
                         .HasColumnName("item_code");
 
-                    b.Property<decimal?>("Liters")
+                    b.Property<decimal>("Liters")
                         .HasColumnType("numeric")
                         .HasColumnName("liters");
 
-                    b.Property<decimal?>("Opening")
+                    b.Property<decimal>("Opening")
                         .HasColumnType("numeric")
                         .HasColumnName("opening");
 

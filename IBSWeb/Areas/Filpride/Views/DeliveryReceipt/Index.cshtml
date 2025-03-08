@@ -180,27 +180,21 @@
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">`;
 
-                        if (row.authorityToLoadNo != null) {
-                            if (row.status != "@DRStatus.ForApprovalOfOM") {
-                                if (!row.deliveredDate) {
-                                    actions += `
+                        if (row.status != "@DRStatus.ForApprovalOfOM") {
+                            if (!row.deliveredDate) {
+                                actions += `
                                     <li><a class="dropdown-item" href="@Url.Action("Edit", "DeliveryReceipt", new { area = "Filpride" })/${data}">Edit</a></li>
                                     <li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Preview</a></li>
                                     <li><a class="dropdown-item" href="#" onclick="confirmCancel(${data})">Cancel</a></li>
                                     <li><a class="dropdown-item" href="#" onclick="markAsDelivered(${data})">Mark As Delivered</a></li>`;
-                                } else {
-                                    actions += `
+                            } else {
+                                actions += `
                                     <li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Print</a></li>
                                     <li><a class="dropdown-item" onclick="confirmVoid(${data})">Void</a></li>`;
-                                }
-                            }
-                            else {
-                                actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Preview</a></li>`;
                             }
                         }
-                        else{
-                            actions += `<li><a class="dropdown-item BookATL" href="#" onclick="bookAuthorityToLoad('${row.customerOrderSlipId}', '${row.customerOrderSlip.supplier.supplierName}')">Book ATL</a></li>
-                              <li><a class="dropdown-item" href="@Url.Action("Edit", "DeliveryReceipt", new { area = "Filpride" })/${data}">Edit</a></li>`;
+                        else {
+                            actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Preview</a></li>`;
                         }
 
                         actions += `</ul></div>`;

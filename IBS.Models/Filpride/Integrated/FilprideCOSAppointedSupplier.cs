@@ -1,6 +1,7 @@
 ﻿using IBS.Models.Filpride.AccountsPayable;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.MasterFile;
 
 namespace IBS.Models.Filpride.Integrated
 {
@@ -27,6 +28,13 @@ namespace IBS.Models.Filpride.Integrated
         public decimal UnservedQuantity { get; set; }
 
         public bool IsAssignedToDR { get; set; }
+
+        public int SupplierId { get; set; }
+
+        [ForeignKey(nameof(SupplierId))]
+        public FilprideSupplier? Supplier { get; set; }
+
+        public string? AtlNo { get; set; }
 
     }
 }

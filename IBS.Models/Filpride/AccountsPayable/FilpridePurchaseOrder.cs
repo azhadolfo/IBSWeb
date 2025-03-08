@@ -59,7 +59,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "varchar(200)")]
         public string Remarks { get; set; }
 
-        [Column(TypeName = "varchar(5)")]
+        [Column(TypeName = "varchar(10)")]
         public string Terms { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]

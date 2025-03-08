@@ -21,14 +21,19 @@
                 <input asp-for="ProductId" type="hidden" />
                 <div class="form-group py-2 col-12">
                     <label class="control-label">Supplier List<span class="required">*</span></label>
-                    <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select supplier</option>
+                    <select asp-for="SupplierIds" asp-items="@Model.Suppliers"
+                            class="form-select js-multiple border-0 shadow" 
+                            style="width:100%"
+                            multiple="multiple">
                     </select>
-                    <span asp-validation-for="SupplierId" class="text-danger"></span>
+                    <span asp-validation-for="SupplierIds" class="text-danger"></span>
                 </div>
                 <div class="form-group py-2 col-12">
                     <label class="control-label">PO List<span class="required">*</span></label>
-                    <select asp-for="PurchaseOrderIds" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <select asp-for="PurchaseOrderIds" asp-items="@Model.PurchaseOrders" 
+                            class="form-select js-multiple border-0 shadow"
+                            style="width:100%"
+                            multiple="multiple">
                     </select>
                     <span asp-validation-for="PurchaseOrderIds" class="text-danger"></span>
                 </div>
@@ -103,85 +108,74 @@
             }
         });
 
-        $('#SupplierId').change(function () {
-            var supplierId = $(this).val();
+        // Function to fetch Purchase Orders based on selected suppliers
+        function fetchPurchaseOrders() {
+            var supplierIds = $('#SupplierIds').val();
             var productId = $('#ProductId').val();
             var $poSelect = $('#PurchaseOrderIds');
-            var $pickUpSelect = $('#PickUpPointId');
 
             // Clear existing options
             $poSelect.empty();
 
-            if (supplierId) {
+            if (supplierIds && supplierIds.length > 0) {
                 $.ajax({
                     url: '@Url.Action("GetPurchaseOrders", "CustomerOrderSlip")',
                     type: 'GET',
-                    data: { supplierId: supplierId, productId: productId },
+                    data: {
+                        supplierIds: supplierIds.join(','),
+                        productId: productId
+                    },
                     success: function (data) {
                         $.each(data, function (index, po) {
                             $poSelect.append($('<option></option>')
                                 .val(po.value)
-                                .text(po.text)
-                                .data('available-balance', po.availableBalance));
+                                .text(po.text + ' (Balance: ' + formatNumber(po.availableBalance) + ')')
+                                .data('available-balance', po.availableBalance)
+                                .data('supplier-id', po.supplierId)
+                            );
                         });
+                        
+                        // Reinitialize Select2 to reflect new options
+                        $poSelect.trigger('change');
                     },
                     error: function () {
                         alert('Failed to retrieve POs');
                     }
                 });
             }
+        }
 
-            // Clear existing options
-            $pickUpSelect.empty();
+        // Separate function for handling PO selection changes
+        function handlePOSelectionChange() {
+            console.log('Handling PO selection change...');
 
-            if (supplierId) {
-                $.ajax({
-                    url: '@Url.Action("GetPickUpPoints", "CustomerOrderSlip")',
-                    type: 'GET',
-                    data: { supplierId: supplierId },
-                    success: function (data) {
-                        $.each(data, function (index, pickUpPoint) {
-                            $pickUpSelect.append($('<option></option>').val(pickUpPoint.value).text(pickUpPoint.text));
-                        });
-                    },
-                    error: function () {
-                        alert('Failed to retrieve Pick Up Points');
-                    }
-                });
+            // Explicitly reference the dropdown by ID
+            var selectedPOs = $('#PurchaseOrderIds').val();
+            if (!selectedPOs) {
+                selectedPOs = []; // Default to an empty array
             }
-
-        });
-
-        $('#PurchaseOrderIds').change(function () {
-            var selectedPOs = $(this).val();
-
+            
             $('#poQuantities').empty();
 
             if (selectedPOs.length > 0) {
                 $.each(selectedPOs, function (index, po) {
-                    var selectedOption = $('#PurchaseOrderIds option[value="' + po + '"]');
+                    var selectedOption = $('#PurchaseOrderIds option[value="' + po + '"]');``
                     var selectedText = selectedOption.text();
                     var availableBalance = selectedOption.data('available-balance');
+                    var supplierId = selectedOption.data('supplier-id');
                     var cosVolume = @Model.COSVolume;
-
-                    // Set the first PO's balance as default quantity
-                    var defaultQuantity = index === 0 ? availableBalance : '';
-
-                    if (index === 0 && availableBalance >= cosVolume) {
-                        defaultQuantity = cosVolume;
-                    }
-                    else if (index === 0 && availableBalance < cosVolume) {
-                        defaultQuantity = availableBalance;
-                    }
-                    else {
-                        defaultQuantity = '';
-                    }
 
                     $('#poQuantities').append(
                         `<div class="form-group py-2">
-                            <label for="quantity_${po}">Enter Quantity for ${selectedText}</label>
-                            <input type="number" name="PurchaseOrderQuantities[${po}]" class="form-control" id="quantity_${po}" min="0" max="${availableBalance}" placeholder="Quantity (max: ${availableBalance})" value="${defaultQuantity}" required/>
-                        </div>`
+                        <input type="hidden" name="PurchaseOrderQuantities[${index}].PurchaseOrderId" value="${po}" />
+                        <input type="hidden" name="PurchaseOrderQuantities[${index}].SupplierId" value="${supplierId}" />
+                        <label for="quantity_${po}">Enter Quantity for ${selectedText}</label>
+                        <input type="number" name="PurchaseOrderQuantities[${index}].Quantity" class="form-control" id="quantity_${index}" 
+                               min="0" max="${availableBalance}" 
+                               placeholder="Quantity (max: ${availableBalance})" 
+                               value="${index === 0 ? Math.min(cosVolume, availableBalance) : ''}" 
+                               required/>
+                    </div>`
                     );
                 });
 
@@ -189,6 +183,18 @@
             } else {
                 $('#poQuantitySection').hide();
             }
+        }
+
+        // Only attach to specific events that should trigger refresh
+        $('#SupplierIds').on('change', function() {
+            // Use setTimeout to avoid race conditions with select2 internal events
+            setTimeout(fetchPurchaseOrders, 50);
+        });
+
+        // Attach PO change handler separately
+        $('#PurchaseOrderIds').on('change', function() {
+            console.log('PurchaseOrderIds changed');
+            handlePOSelectionChange();
         });
 
 
