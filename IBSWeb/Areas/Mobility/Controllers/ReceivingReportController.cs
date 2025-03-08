@@ -38,6 +38,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 receivingReports = receivingReports.Where(po => po.StationCode == GetStationCodeClaimAsync().Result);
             }
+            ViewData["StationCode"] = GetStationCodeClaimAsync().Result;
 
             return View(receivingReports);
         }
@@ -50,7 +51,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
-            ViewBag.stationCode = await GetStationCodeClaimAsync();
 
             return View(viewModel);
         }

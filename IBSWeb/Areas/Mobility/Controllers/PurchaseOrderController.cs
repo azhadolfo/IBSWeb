@@ -38,6 +38,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 purchaseOrders = purchaseOrders.Where(po => po.StationCode == GetStationCodeClaimAsync().Result);
             }
+            ViewData["StationCode"] = GetStationCodeClaimAsync().Result;
 
             return View(purchaseOrders);
         }
@@ -51,8 +52,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 Suppliers = await _unitOfWork.GetMobilitySupplierListAsyncById(cancellationToken),
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
-
-            ViewBag.stationCode = GetStationCodeClaimAsync().Result;
 
             return View(viewModel);
         }
