@@ -790,7 +790,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<bool> CheckIfManualDrNoExists(string manualDrNo)
         {
             return await _db.FilprideDeliveryReceipts
-                .Where(dr => dr.CanceledBy != null && dr.VoidedBy != null)
+                .Where(dr => dr.CanceledBy == null && dr.VoidedBy == null)
                 .AnyAsync(dr => dr.ManualDrNo == manualDrNo);
         }
     }
