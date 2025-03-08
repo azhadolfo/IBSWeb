@@ -22,7 +22,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _userManager = userManager;
         }
 
-        public async Task<string> GetStationClaimAsync()
+        public async Task<string> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
@@ -34,9 +34,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var receivingReports = await _unitOfWork.MobilityReceivingReport
                 .GetAllAsync(null, cancellationToken);
 
-            if (GetStationClaimAsync().Result != "ALL")
+            if (GetStationCodeClaimAsync().Result != "ALL")
             {
-                receivingReports = receivingReports.Where(po => po.StationCode == GetStationClaimAsync().Result);
+                receivingReports = receivingReports.Where(po => po.StationCode == GetStationCodeClaimAsync().Result);
             }
 
             return View(receivingReports);
@@ -50,7 +50,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
-            ViewBag.stationCode = await GetStationClaimAsync();
+            ViewBag.stationCode = await GetStationCodeClaimAsync();
 
             return View(viewModel);
         }
@@ -62,7 +62,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 try
                 {
-                    var stationCodeClaim = await GetStationCodeClaim();
+                    var stationCodeClaim = await GetStationCodeClaimAsync();
 
                     MobilityReceivingReport model = new()
                     {

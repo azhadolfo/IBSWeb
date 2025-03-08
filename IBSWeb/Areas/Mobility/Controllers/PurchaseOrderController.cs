@@ -22,7 +22,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _userManager = userManager;
         }
 
-        public async Task<string> GetStationClaimAsync()
+        public async Task<string> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
@@ -34,9 +34,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var purchaseOrders = await _unitOfWork.MobilityPurchaseOrder
                 .GetAllAsync(null, cancellationToken);
 
-            if (GetStationClaimAsync().Result != "ALL")
+            if (GetStationCodeClaimAsync().Result != "ALL")
             {
-                purchaseOrders = purchaseOrders.Where(po => po.StationCode == GetStationClaimAsync().Result);
+                purchaseOrders = purchaseOrders.Where(po => po.StationCode == GetStationCodeClaimAsync().Result);
             }
 
             return View(purchaseOrders);
@@ -52,7 +52,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
 
-            ViewBag.stationCode = GetStationClaimAsync().Result;
+            ViewBag.stationCode = GetStationCodeClaimAsync().Result;
 
             return View(viewModel);
         }
@@ -64,7 +64,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 try
                 {
-                    var stationCodeClaim = await GetStationCodeClaim();
+                    var stationCodeClaim = await GetStationCodeClaimAsync();
 
                     MobilityPurchaseOrder model = new()
                     {

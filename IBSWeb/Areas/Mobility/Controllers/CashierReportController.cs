@@ -32,7 +32,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _dbContext = dbContext;
         }
 
-        public async Task<string> GetStationCodeClaim()
+        public async Task<string> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            ViewData["StationCodeClaim"] = await GetStationCodeClaim();
+            ViewData["StationCodeClaim"] = await GetStationCodeClaimAsync();
             return View();
         }
 
@@ -51,7 +51,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             try
             {
-                var stationCodeClaim = await GetStationCodeClaim();
+                var stationCodeClaim = await GetStationCodeClaimAsync();
 
                 Expression<Func<MobilitySalesHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
 
@@ -200,7 +200,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var model = new AdjustReportViewModel
             {
-                OfflineList = await _unitOfWork.MobilityOffline.GetOfflineListAsync(GetStationCodeClaim().Result, cancellationToken)
+                OfflineList = await _unitOfWork.MobilityOffline.GetOfflineListAsync(GetStationCodeClaimAsync().Result, cancellationToken)
             };
 
             return View(model);
@@ -258,7 +258,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var model = new CustomerInvoicingViewModel
             {
-                DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(GetStationCodeClaim().Result,cancellationToken),
+                DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(GetStationCodeClaimAsync().Result,cancellationToken),
                 Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken),
                 Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken),
             };
@@ -280,7 +280,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(GetStationCodeClaim().Result, cancellationToken);
+                    viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(GetStationCodeClaimAsync().Result, cancellationToken);
                     viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken);
                     viewModel.Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
@@ -288,7 +288,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
             }
 
-            viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(GetStationCodeClaim().Result, cancellationToken);
+            viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(GetStationCodeClaimAsync().Result, cancellationToken);
             viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken);
             viewModel.Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
