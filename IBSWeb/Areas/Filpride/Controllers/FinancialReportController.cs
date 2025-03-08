@@ -24,15 +24,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
+        private readonly ILogger<FinancialReportController> _logger;
+
         public FinancialReportController(ApplicationDbContext dbContext,
             UserManager<IdentityUser> userManager,
             IUnitOfWork unitOfWork,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            ILogger<FinancialReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
             _webHostEnvironment = webHostEnvironment;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -259,6 +263,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to generate profit and loss report.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(ProfitAndLossReport));
             }
@@ -433,6 +438,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to generate level one report.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(LevelOneReport));
             }
@@ -637,6 +643,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to generate trial balance report.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(TrialBalanceReport));
@@ -921,6 +928,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to generate balance sheet report.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(BalanceSheetReport));
             }
@@ -1078,6 +1086,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to generate statement of retained Earnings report.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(StatementOfRetainedEarningsReport));
             }

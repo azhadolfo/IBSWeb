@@ -21,11 +21,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        public BankAccountController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<IdentityUser> userManager)
+        private readonly ILogger<BankAccountController> _logger;
+
+        public BankAccountController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, ILogger<BankAccountController> logger)
         {
             _unitOfWork = unitOfWork;
             _dbContext = dbContext;
             _userManager = userManager;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -53,6 +56,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred in Index.");
                 TempData["error"] = ex.Message;
                 return View();
             }
@@ -101,6 +105,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create bank account. Created by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
@@ -147,6 +152,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to edit bank account. Edited by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(existingModel);

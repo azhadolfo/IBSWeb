@@ -28,11 +28,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        public ReceivingReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+        private readonly ILogger<ReceivingReportController> _logger;
+
+        public ReceivingReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<ReceivingReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -127,6 +130,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get receiving reports.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -208,6 +212,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create receiving report. Created by: {UserName}", _userManager.GetUserName(User));
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -334,6 +339,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to edit receiving report. Edited by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
@@ -401,6 +407,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to post receiving report. Posted by: {UserName}", _userManager.GetUserName(User));
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
                 }
@@ -469,6 +476,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     catch (Exception ex)
                     {
+                        _logger.LogError(ex, "Failed to void receiving report. Voided by: {UserName}", _userManager.GetUserName(User));
                         await transaction.RollbackAsync(cancellationToken);
                         TempData["error"] = ex.Message;
                         return RedirectToAction(nameof(Index));
@@ -484,29 +492,42 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _dbContext.FilprideReceivingReports.FindAsync(id, cancellationToken);
 
-            if (model != null)
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
             {
-                if (model.CanceledBy == null)
+                if (model != null)
                 {
-                    model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.CanceledQuantity = model.QuantityDelivered < model.QuantityReceived ? model.QuantityDelivered : model.QuantityReceived;
-                    model.QuantityDelivered = 0;
-                    model.QuantityReceived = 0;
-                    model.Status = nameof(Status.Canceled);
-                    model.CancellationRemarks = cancellationRemarks;
+                    if (model.CanceledBy == null)
+                    {
+                        model.CanceledBy = _userManager.GetUserName(this.User);
+                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        model.CanceledQuantity = model.QuantityDelivered < model.QuantityReceived ? model.QuantityDelivered : model.QuantityReceived;
+                        model.QuantityDelivered = 0;
+                        model.QuantityReceived = 0;
+                        model.Status = nameof(Status.Canceled);
+                        model.CancellationRemarks = cancellationRemarks;
 
-                    #region --Audit Trail Recording
+                        #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
-                    #endregion --Audit Trail Recording
+                        #endregion --Audit Trail Recording
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Receiving Report has been Cancelled.";
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
+                        TempData["success"] = "Receiving Report has been Cancelled.";
+                    }
+                    return RedirectToAction(nameof(Index));
                 }
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to cancel receiving report. Canceled by: {UserName}", _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
 

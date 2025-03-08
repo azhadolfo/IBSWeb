@@ -21,11 +21,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        public ServiceController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+        private readonly ILogger<ServiceController> _logger;
+
+        public ServiceController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<ServiceController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -104,40 +107,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                if (await _unitOfWork.FilprideService.IsServicesExist(services.Name, companyClaims, cancellationToken))
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                try
                 {
-                    ModelState.AddModelError("Name", "Services already exist!");
+                    if (await _unitOfWork.FilprideService.IsServicesExist(services.Name, companyClaims, cancellationToken))
+                    {
+                        ModelState.AddModelError("Name", "Services already exist!");
+                        return View(services);
+                    }
+                    if (services.Percent == 0)
+                    {
+                        ModelState.AddModelError("Percent", "Please input percent!");
+                        return View(services);
+                    }
+
+                    var currentAndPrevious = await _dbContext.FilprideChartOfAccounts
+                        .FindAsync(services.CurrentAndPreviousId, cancellationToken);
+
+                    var unearned = await _dbContext.FilprideChartOfAccounts
+                        .FindAsync(services.UnearnedId, cancellationToken);
+
+                    services.CurrentAndPreviousNo = currentAndPrevious.AccountNumber;
+                    services.CurrentAndPreviousTitle = currentAndPrevious.AccountName;
+
+                    services.UnearnedNo = unearned.AccountNumber;
+                    services.UnearnedTitle = unearned.AccountName;
+
+                    services.Company = companyClaims;
+
+                    services.CreatedBy = _userManager.GetUserName(this.User).ToUpper();
+
+                    services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(companyClaims, cancellationToken);
+
+                    TempData["success"] = "Services created successfully";
+
+                    await _dbContext.AddAsync(services, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    _logger.LogError(ex, "Failed to create service master file. Created by: {UserName}", _userManager.GetUserName(User));
+                    TempData["error"] = $"Error: '{ex.Message}'";
                     return View(services);
                 }
-                if (services.Percent == 0)
-                {
-                    ModelState.AddModelError("Percent", "Please input percent!");
-                    return View(services);
-                }
-
-                var currentAndPrevious = await _dbContext.FilprideChartOfAccounts
-                    .FindAsync(services.CurrentAndPreviousId, cancellationToken);
-
-                var unearned = await _dbContext.FilprideChartOfAccounts
-                    .FindAsync(services.UnearnedId, cancellationToken);
-
-                services.CurrentAndPreviousNo = currentAndPrevious.AccountNumber;
-                services.CurrentAndPreviousTitle = currentAndPrevious.AccountName;
-
-                services.UnearnedNo = unearned.AccountNumber;
-                services.UnearnedTitle = unearned.AccountName;
-
-                services.Company = companyClaims;
-
-                services.CreatedBy = _userManager.GetUserName(this.User).ToUpper();
-
-                services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(companyClaims, cancellationToken);
-
-                TempData["success"] = "Services created successfully";
-
-                await _dbContext.AddAsync(services, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                return RedirectToAction(nameof(Index));
             }
             return View(services);
         }
@@ -175,14 +190,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 try
                 {
-                    _dbContext.Update(services);
+                    var existingModel = await _dbContext.FilprideServices.FindAsync(id, cancellationToken);
+                    if (existingModel != null)
+                    {
+                        existingModel.Name = services.Name;
+                        existingModel.Percent = services.Percent;
+                        TempData["success"] = "Services updated successfully";
 
-                    TempData["success"] = "Services updated successfully";
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                    }
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogError(ex, "Failed to edit service master file. Edited by: {UserName}", _userManager.GetUserName(User));
                     if (!ServicesExists(services.ServiceId))
                     {
                         return NotFound();

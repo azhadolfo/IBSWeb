@@ -71,13 +71,19 @@ namespace IBS.Services
 
             try
             {
+                _logger.LogInformation($"==========Import process started in {DateTimeHelper.GetCurrentPhilippineTime()}==========");
+                LogMessage logMessage = new("Information", "GDriveImportService",
+                    $"Import process started in {DateTimeHelper.GetCurrentPhilippineTime()}.");
+                await db.LogMessages.AddAsync(logMessage);
+
                 await ImportSales();
                 await ImportPurchases();
 
-                LogMessage logMessage = new("Information", "GDriveImportService",
-                    $"Importing service testing {DateTimeHelper.GetCurrentPhilippineTime()}.");
-
+                _logger.LogInformation($"==========Import process finished in {DateTimeHelper.GetCurrentPhilippineTime()}==========");
+                logMessage = new("Information", "GDriveImportService",
+                    $"Import process finished in {DateTimeHelper.GetCurrentPhilippineTime()}.");
                 await db.LogMessages.AddAsync(logMessage);
+
                 await db.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
@@ -87,7 +93,7 @@ namespace IBS.Services
 
                 LogMessage logMessage = new("Warning", "GDriveImportService",
                     $"Importing service exception {DateTimeHelper.GetCurrentPhilippineTime()}.");
-                _logger.LogInformation("=====Exception: " + ex.Message + ".=====");
+                _logger.LogInformation("==========GoogleDriveImportService.Execute - EXCEPTION: " + ex.Message + "==========");
 
                 await db.LogMessages.AddAsync(logMessage);
                 await db.SaveChangesAsync();
@@ -139,7 +145,7 @@ namespace IBS.Services
 
         public async Task ImportSales()
         {
-            _logger.LogInformation("=====IMPORTING SALES=====");
+            _logger.LogInformation("==========IMPORTING SALES==========");
             using var scope = _scopeFactory.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -150,8 +156,7 @@ namespace IBS.Services
             bool hasPoSales = false;
 
             var stations = await db.MobilityStations
-                .Where(s => !string.IsNullOrEmpty(s.FolderPath))
-                .Where(s => s.StationCode == "S19")
+                .Where(s => !string.IsNullOrEmpty(s.FolderPath) && s.StationCode == "S19")
                 .ToListAsync();
 
             foreach (var station in stations)
@@ -173,7 +178,7 @@ namespace IBS.Services
 
                         if (!files.Any())
                         {
-                            _logger.LogWarning($"=====NO CSV FILES IN '{station.StationName}' FOR IMPORT SALES.=====");
+                            _logger.LogWarning($"==========NO CSV FILES IN '{station.StationName}' FOR IMPORT SALES.==========");
 
                             LogMessage logMessage = new("Warning", "ImportSales",
                                 $"No csv files found in station '{station.StationName}'.");
@@ -191,7 +196,7 @@ namespace IBS.Services
 
                         foreach (var file in files)
                         {
-                            _logger.LogInformation($"=====IMPORTING {station.StationName} SALES FROM: {file.FileName}=====");
+                            _logger.LogInformation($"==========IMPORTING {station.StationName} SALES FROM: {file.FileName}==========");
                             var fileName = file.FileName;
                             bool fileOpened = false;
                             int retryCount = 0;
@@ -228,7 +233,7 @@ namespace IBS.Services
                             if (!fileOpened)
                             {
                                 // Log a warning or handle the situation where the file could not be opened after retrying
-                                _logger.LogWarning($"=====Failed to open file '{file.FileName}' after multiple retries.=====");
+                                _logger.LogWarning($"==========Failed to open file '{file.FileName}' after multiple retries.==========");
 
                                 LogMessage logMessage = new("Warning", "ImportSales",
                                     $"Failed to open file '{file.FileName}' after multiple retries.");
@@ -245,13 +250,15 @@ namespace IBS.Services
                             LogMessage logMessage = new("Information", "ImportSales",
                                 $"Imported successfully in the station '{station.StationName}', Fuels: '{fuelsCount}' record(s), Lubes: '{lubesCount}' record(s), Safe drops: '{safedropsCount}' record(s).");
 
+                            _logger.LogInformation("==========" + station.StationName + " SALES IMPORTED==========");
+
                             await db.LogMessages.AddAsync(logMessage);
                             await db.SaveChangesAsync();
                         }
                         else
                         {
                             // Import this message to your message box
-                            _logger.LogInformation("=====You're up to date.=====");
+                            _logger.LogInformation("==========You're up to date.==========");
 
                             LogMessage logMessage = new("Information", "ImportSales",
                                 $"No new record found in the station '{station.StationName}'.");
@@ -264,8 +271,8 @@ namespace IBS.Services
                     {
                         LogMessage logMessage = new("Error", "ImportSales",
                             $"Error: {ex.Message} in '{station.StationName}'.");
-                        _logger.LogInformation("=====EXCEPTION: " + ex.Message + " " + station.StationName +
-                                               " PURCHASES=====");
+                        _logger.LogInformation("==========GoogleDriveImportService.ImportSales - EXCEPTION: " + ex.Message + " " + station.StationName +
+                                               " SALES==========");
 
                         await db.LogMessages.AddAsync(logMessage);
                         await db.SaveChangesAsync();
@@ -273,19 +280,18 @@ namespace IBS.Services
                 }
             }
 
-            _logger.LogInformation($"=====SALES IMPORT COMPLETED=====");
+            _logger.LogInformation($"==========SALES IMPORT COMPLETED==========");
         }
 
         public async Task ImportPurchases()
         {
-            _logger.LogInformation("=====IMPORTING PURCHASES=====");
+            _logger.LogInformation("==========IMPORTING PURCHASES==========");
             using var scope = _scopeFactory.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             var stations = await db.MobilityStations.Where(s =>
-                !string.IsNullOrEmpty(s.FolderPath))
-                .Where(s => s.StationCode == "S19")
+                !string.IsNullOrEmpty(s.FolderPath) && s.StationCode == "S19")
                 .ToListAsync();
 
             int fuelsCount;
@@ -327,7 +333,7 @@ namespace IBS.Services
 
                         foreach (var file in files)
                         {
-                            _logger.LogInformation($"=====IMPORTING {station.StationName} PURCHASES FROM: {file.FileName}=====");
+                            _logger.LogInformation($"==========IMPORTING {station.StationName} PURCHASES FROM: {file.FileName}==========");
                             string fileName = Path.GetFileName(file.FileName).ToLower();
 
                             bool fileOpened = false;
@@ -368,7 +374,7 @@ namespace IBS.Services
                             {
                                 // Log a warning or handle the situation where the file could not be opened after retrying
                                 _logger.LogWarning(
-                                    $"=====Failed to open file '{file.FileName}' after multiple retries.=====");
+                                    $"==========Failed to open file '{file.FileName}' after multiple retries.==========");
 
                                 LogMessage logMessage = new("Warning", "ImportPurchases",
                                     $"Failed to open file '{file.FileName}' after multiple retries.");
@@ -385,13 +391,15 @@ namespace IBS.Services
                             LogMessage logMessage = new("Information", "ImportPurchases",
                                 $"Imported successfully in the station '{station.StationName}', Fuel Delivery: '{fuelsCount}' record(s), Lubes Delivery: '{lubesCount}' record(s), PO Sales: '{poSalesCount}' record(s).");
 
+                            _logger.LogInformation($"Imported successfully in the station '{station.StationName}', Fuel Delivery: '{fuelsCount}' record(s), Lubes Delivery: '{lubesCount}' record(s), PO Sales: '{poSalesCount}' record(s).");
+
                             await db.LogMessages.AddAsync(logMessage);
                             await db.SaveChangesAsync();
                         }
                         else
                         {
                             // Import this message to your message box
-                            _logger.LogInformation("=====You're up to date.=====");
+                            _logger.LogInformation("==========You're up to date.==========");
 
                             LogMessage logMessage = new("Information", "ImportPurchases",
                                 $"No new record found in the station '{station.StationName}'.");
@@ -404,18 +412,18 @@ namespace IBS.Services
                     {
                         LogMessage logMessage = new("Error", "ImportPurchase",
                             $"Error: {ex.Message} in '{station.StationName}'.");
-                        _logger.LogInformation("=====Exception: " + ex.Message + " " + station.StationName +
-                                               " Purchases=====");
+                        _logger.LogInformation("==========GoogleDriveImportService.Purchases - EXCEPTION: " + ex.Message + " " + station.StationName +
+                                               " SALES==========");
 
                         await db.LogMessages.AddAsync(logMessage);
                         await db.SaveChangesAsync();
                     }
 
-                    _logger.LogInformation("=====PURCHASE FOR " + station.StationName + " IMPORTED=====");
+                    _logger.LogInformation("==========" + station.StationName + " PURCHASES IMPORTED==========");
                 }
             }
 
-            _logger.LogInformation($"===== PURCHASE IMPORT COMPLETED=====");
+            _logger.LogInformation($"==========PURCHASE IMPORT COMPLETE==========");
         }
     }
 }

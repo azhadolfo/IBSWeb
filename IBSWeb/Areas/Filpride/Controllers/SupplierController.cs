@@ -158,8 +158,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create supplier master file. Created by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
-                    _logger.LogError(ex, "Error on creating supplier.");
                     TempData["error"] = $"Error: '{ex.Message}'";
                     return View(model);
                 }
@@ -238,7 +238,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync(cancellationToken);
-                    _logger.LogError(ex, "Error in updating supplier.");
+                    _logger.LogError(ex, "Failed to edit supplier master file. Edited by: {UserName}", _userManager.GetUserName(User));
                     TempData["error"] = $"Error: '{ex.Message}'";
                     return View(model);
                 }
