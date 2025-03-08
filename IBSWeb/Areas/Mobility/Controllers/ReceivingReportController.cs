@@ -51,7 +51,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
-            ViewBag.stationCode = await GetStationCodeClaimAsync();
 
             return View(viewModel);
         }
