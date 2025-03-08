@@ -1026,5 +1026,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{deliveryReceipt.DeliveryReceiptNo}.xlsx");
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> CheckManualDrNoExists(string manualDrNo, int? drId)
+        {
+            if (drId.HasValue)
+            {
+                var existingManualDrNo = await _dbContext.FilprideDeliveryReceipts
+                    .Where(dr => dr.DeliveryReceiptId == drId)
+                    .Select(dr => dr.ManualDrNo)
+                    .FirstOrDefaultAsync();
+
+                if (manualDrNo == existingManualDrNo)
+                {
+                    return Json(false);
+                }
+            }
+
+            var exists = await _unitOfWork.FilprideDeliveryReceipt.CheckIfManualDrNoExists(manualDrNo);
+            return Json(exists);
+        }
+
     }
 }

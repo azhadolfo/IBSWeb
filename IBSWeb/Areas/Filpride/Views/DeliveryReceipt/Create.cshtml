@@ -390,6 +390,46 @@
                     $("#Volume").val(maxVolume);
                 }
             }
+
+            // Add event for checking if ManualDrNo exists
+            $('input[name="ManualDrNo"]').on('blur', function() {
+                var manualDrNo = $(this).val();
+                if (manualDrNo) {
+                    $.ajax({
+                        url: '@Url.Action("CheckManualDrNoExists", "DeliveryReceipt", new { area = "Filpride" })',
+                        type: "GET",
+                        data: { manualDrNo: manualDrNo },
+                        success: function(exists) {
+
+                            const submitButton = $('button[type="submit"]');
+                            
+                            if (exists) {
+                                // Display error message if the ManualDrNo already exists
+                                alert("Manual DR# already exists. Please enter a different number.");
+                                $('input[name="ManualDrNo"]').addClass('is-invalid');
+
+                                // Optional: Add error message near the field
+                                if ($('input[name="ManualDrNo"]').next('.text-danger.manual-dr-exists').length === 0) {
+                                    $('input[name="ManualDrNo"]').after('<span class="text-danger manual-dr-exists">Manual DR# already exists</span>');
+                                }
+
+                                // Disable the submit button
+                                submitButton.prop('disabled', true);
+                                
+                            } else {
+                                // Clear any error styling/messages
+                                $('input[name="ManualDrNo"]').removeClass('is-invalid');
+                                $('.manual-dr-exists').remove();
+
+                                submitButton.prop('disabled', false);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.log("Error checking ManualDrNo: " + error);
+                        }
+                    });
+                }
+            });
         });
         
     </script>
