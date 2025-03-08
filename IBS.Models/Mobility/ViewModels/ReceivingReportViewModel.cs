@@ -20,6 +20,10 @@ namespace IBS.Models.Mobility.ViewModels
 
         public List<SelectListItem>? DrList { get; set; }
 
+        public string StationCode { get; set; }
+
+        public List<SelectListItem>? Stations { get; set; }
+
         public decimal InvoiceQuantity { get; set; }
 
         public string Product { get; set; }

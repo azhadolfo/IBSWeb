@@ -22,10 +22,22 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _userManager = userManager;
         }
 
+        public async Task<string> GetStationClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? "ALL";
+        }
+
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
             var purchaseOrders = await _unitOfWork.MobilityPurchaseOrder
                 .GetAllAsync(null, cancellationToken);
+
+            if (GetStationClaimAsync().Result != "ALL")
+            {
+                purchaseOrders = purchaseOrders.Where(po => po.StationCode == GetStationClaimAsync().Result);
+            }
 
             return View(purchaseOrders);
         }
@@ -36,8 +48,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             PurchaseOrderViewModel viewModel = new()
             {
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
-                Suppliers = await _unitOfWork.GetMobilitySupplierListAsyncById(cancellationToken)
+                Suppliers = await _unitOfWork.GetMobilitySupplierListAsyncById(cancellationToken),
+                Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
+
+            ViewBag.stationCode = GetStationClaimAsync().Result;
 
             return View(viewModel);
         }
@@ -49,9 +64,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 try
                 {
-                    var user = await _userManager.GetUserAsync(User);
-                    var claims = await _userManager.GetClaimsAsync(user);
-                    var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? "ALL";
+                    var stationCodeClaim = await GetStationCodeClaim();
 
                     MobilityPurchaseOrder model = new()
                     {

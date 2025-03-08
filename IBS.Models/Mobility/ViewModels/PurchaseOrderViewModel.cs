@@ -20,6 +20,11 @@ namespace IBS.Models.Mobility.ViewModels
 
         public List<SelectListItem>? Products { get; set; }
 
+        [Required(ErrorMessage = "Station field is required.")]
+        public string StationCode { get; set; }
+
+        public List<SelectListItem>? Stations { get; set; }
+
         [Required]
         [Range(1, double.MaxValue, ErrorMessage = "The quantity should be greater than zero.")]
         public decimal Quantity { get; set; }
