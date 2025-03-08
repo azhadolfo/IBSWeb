@@ -53,8 +53,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
 
-            ViewBag.stationCode = GetStationCodeClaimAsync().Result;
-
             return View(viewModel);
         }
 
