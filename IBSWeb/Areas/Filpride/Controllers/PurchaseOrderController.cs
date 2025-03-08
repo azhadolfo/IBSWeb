@@ -636,7 +636,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (actualPrices != null)
                     {
                         actualPrices.ApprovedBy = _userManager.GetUserName(this.User);
-                        actualPrices.ApprovedDate = DateTime.UtcNow;
+                        actualPrices.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         actualPrices.IsApproved = true;
 
                         await _unitOfWork.FilpridePurchaseOrder.UpdateActualCostOnSalesAndReceiptsAsync(actualPrices, cancellationToken);
