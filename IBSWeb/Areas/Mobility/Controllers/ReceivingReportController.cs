@@ -38,6 +38,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 receivingReports = receivingReports.Where(po => po.StationCode == GetStationCodeClaimAsync().Result);
             }
+            ViewData["StationCode"] = GetStationCodeClaimAsync().Result;
 
             return View(receivingReports);
         }
