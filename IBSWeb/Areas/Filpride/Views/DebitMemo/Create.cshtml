@@ -4,7 +4,10 @@
     ViewData["Title"] = "Create Debit Memo";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
@@ -105,7 +108,6 @@
         // Get the current date in the format "YYYY-MM-DD" (required for the date input)
         let currentDate = new Date().toISOString().slice(0, 10);
     </script>
-    <script src="~/js/submit-blocker.js"></script>
     <script>
         window.onload = function () {
             let inlineRadio1 = document.getElementById('inlineRadio1');
