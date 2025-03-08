@@ -1,24 +1,49 @@
 $(document).ready(function () {
+    const spinnerWrapper = $('.loader-container');
     let isSubmitting = sessionStorage.getItem('isSubmitting') === 'true';
 
-    if (isSubmitting) {
-        $('button[type="submit"]').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+    // Move spinner to body if not already there
+    if (!spinnerWrapper.parent().is('body')) {
+        $('body').append(spinnerWrapper);
     }
 
-    $('form').on('submit', function () {
+    // If page was loaded during submission, show loader
+    if (isSubmitting) {
+        // Clear the flag immediately on the new page
+        sessionStorage.removeItem('isSubmitting');
+        spinnerWrapper.hide();
+        $('body').removeClass('loading');
+    } else {
+        // Initially hide the spinner
+        spinnerWrapper.hide();
+    }
+
+    $('form').on('submit', function (e) {
+        // Get the submit button
+        const submitButton = $(this).find('button[type="submit"], input[type="submit"]');
+
+        // Check if form is already being submitted
+        if (submitButton.prop('disabled')) {
+            e.preventDefault();
+            return false; // Prevent duplicate submission
+        }
+
         $(this).validate();
         if (!$(this).valid()) {
             return false; // Stop execution if invalid
         }
 
-        const submitButton = $(this).find('button[type="submit"]');
+        // Disable the submit button to prevent double clicks
+        submitButton.prop('disabled', true);
 
-        isSubmitting = true;
+        // Show the spinner wrapper when submitting
+        spinnerWrapper.show();
+        $('body').addClass('loading'); // Optional: prevent scrolling
+
+        // Set flag for submission in progress
         sessionStorage.setItem('isSubmitting', 'true');
-        submitButton.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
-    });
 
-    $(window).on('beforeunload', function () {
-        sessionStorage.removeItem('isSubmitting');
+        // Let the form submit naturally - the spinner will show until the new page loads
+        return true;
     });
 });
