@@ -9,7 +9,6 @@
 
 @{
     ViewData["Title"] = "Print Check Voucher";
-    int supplierId = Model.Header.SupplierId == null ? Model.Supplier.SupplierId : 0;
     
     string? selectedCompany = string.Empty;
 
@@ -65,14 +64,7 @@
         <tbody>
             <tr>
                 <td style="width:10%; padding-left:20px;">Name :</td>
-                @if (Model.Header.SupplierId != null)
-                {
-                    <td>@Html.DisplayFor(model => model.Header.Supplier.SupplierName)</td>
-                }
-                else
-                {
-                    <td>@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
-                }
+                <td>@Html.DisplayFor(model => model.Header.Payee)</td>
                 <td style="width:50%;" colspan="2" class="text-nowrap">Other References</td>
             </tr>
             <tr>
@@ -81,9 +73,9 @@
                 {
                     <td>@Html.DisplayFor(model => model.Header.Supplier.SupplierAddress)</td>
                 }
-                else
+                else if (Model.Header.Employee != null)
                 {
-                    <td>@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
+                    <td>@Html.DisplayFor(model => model.Header.Employee.Address)</td>
                 }
                 <td style="width:5%;">PO # :</td>
 
@@ -110,9 +102,9 @@
                 {
                     <td>@Html.DisplayFor(model => model.Header.Supplier.SupplierTin)</td>
                 }
-                else
+                else if (Model.Header.Employee != null)
                 {
-                    <td>@Html.DisplayFor(model => model.Supplier.SupplierTin)</td>
+                    <td>@Html.DisplayFor(model => model.Header.Employee.TinNo)</td>
                 }
                 <td>SI # :</td>
                 <td>
@@ -148,22 +140,8 @@
         <tbody>
             <tr>
                 <td style="width:20%; padding-left:20px;">Payee :</td>
-                @if (Model.Header.SupplierId != null)
-                {
-                    <td>@Html.DisplayFor(model => model.Header.Payee)</td>
-                }
-                else
-                {
-                    <td>@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
-                }
-                @if (Model.Header.Total != 0)
-                {
-                    <td class="text-end">@Model.Header.Total.ToString("N4")</td>
-                }
-                else
-                {
-                    <td></td>
-                }
+                <td>@Html.DisplayFor(model => model.Header.Payee)</td>
+                <td class="text-end">@Model.Header.Total.ToString("N4")</td>
             </tr>
             <tr>
                 <td style="padding-left:20px;">Amount in Words :</td>
@@ -353,7 +331,7 @@
         else
         {
             <div class="col-6 col-md-3">
-                <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Printed" asp-route-id="@Model.Header.CheckVoucherHeaderId" asp-route-supplierId="@supplierId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Printed" asp-route-id="@Model.Header.CheckVoucherHeaderId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
             </div>
         }
     }
@@ -439,7 +417,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Properly encode the parameters to prevent any issues with special characters
-                    var url = `@Url.Action("Post", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${encodeURIComponent(id)}&supplierId=${encodeURIComponent(@supplierId)}`;
+                    var url = `@Url.Action("Post", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${encodeURIComponent(id)}`;
                     window.location.href = url;
                 }
             })

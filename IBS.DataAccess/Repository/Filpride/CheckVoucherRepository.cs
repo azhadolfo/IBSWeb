@@ -105,6 +105,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<FilprideCheckVoucherHeader> GetAsync(Expression<Func<FilprideCheckVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
+                .Include(x => x.Employee)
                 .Include(x => x.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
         }
@@ -112,6 +113,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<IEnumerable<FilprideCheckVoucherHeader>> GetAllAsync(Expression<Func<FilprideCheckVoucherHeader, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<FilprideCheckVoucherHeader> query = dbSet
+                .Include(x => x.Employee)
                .Include(c => c.Supplier);
 
             if (filter != null)

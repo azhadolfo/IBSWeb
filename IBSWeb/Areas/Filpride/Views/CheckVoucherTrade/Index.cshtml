@@ -242,13 +242,13 @@
         document.getElementById("newPaymentBtn").addEventListener("click", function () {
             Swal.fire({
                 title: 'Select Payment Type',
-                input: 'select',
-                inputOptions: {
-                    'supplier': 'Supplier/Purchase',
-                    'commission': 'Commission',
-                    'hauler': 'Hauler'
-                },
-                inputPlaceholder: 'Select a payment type',
+                html: `
+                    <select id="paymentSelect" class="swal2-select">
+                        <option value="supplier">Supplier</option>
+                        <option value="commission">Commission</option>
+                        <option value="hauler">Hauler</option>
+                    </select>
+                `,
                 showCancelButton: true,
                 confirmButtonText: 'Proceed',
                 preConfirm: (selectedKey) => {

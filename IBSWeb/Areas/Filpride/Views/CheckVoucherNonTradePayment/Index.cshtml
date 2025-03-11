@@ -55,9 +55,14 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
         <h2 class="text-white m-0">Check Voucher Non-Trade Payment</h2>
-        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Create" class="btn btn-light">
-            <i class="bi bi-plus-circle"></i> New Payment
-        </a>
+        <div class="d-flex gap-2">
+            <button id="newAdvancesBtn" class="btn btn-light">
+                <i class="bi bi-plus-circle"></i> New Advances
+            </button>
+            <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Create" class="btn btn-light">
+                <i class="bi bi-plus-circle"></i> New Payment
+            </a>
+        </div>
     </div>
 
     <div class="card shadow border-0 mt-3">
@@ -68,7 +73,7 @@
                     <tr>
                         <th class="text-start">CVN#</th>
                         <th class="text-start">Date</th>
-                        <th class="text-start">Supplier</th>
+                        <th class="text-start">Payee</th>
                         <th class="text-start">INV#</th>
                         <th class="text-start">Total</th>
                         <th class="text-start">Status</th>
@@ -191,7 +196,7 @@
                             });
                         }
                     },
-                    { "data": data => data.supplier ? data.supplier.supplierName : data.checkVoucherHeader.supplier.supplierName },
+                    { "data": "checkVoucherHeader.payee" },
                     { "data": data => data.checkVoucherHeader ? data.checkVoucherHeader.reference : "" },
                     {
                         "data": "amount",
@@ -230,14 +235,26 @@
                                                     <i class="bi bi-three-dots"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                                ${row.checkVoucherHeader.postedBy == null ? `
-                                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherNonTradePayment", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
-                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Preview</a></li>
-                                                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
-                                                ` : `
-                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Print</a></li>
-                                                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a></li>
-                                                `}
+                                              ${row.checkVoucherHeader.postedBy == null ?
+                                                                            `<li>
+                                                   <a class="dropdown-item" href="${row.checkVoucherHeader.isAdvances ?
+                                                                                '@Url.Action("EditAdvancesToEmployee", "CheckVoucherNonTradePayment", new { area = "Filpride" })/' :
+                                                                                '@Url.Action("Edit", "CheckVoucherNonTradePayment", new { area = "Filpride" })/'
+                                                                            }${row.checkVoucherHeaderId}">Edit</a>
+                                                 </li>
+                                                 <li>
+                                                   <a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}">Preview</a>
+                                                 </li>
+                                                 <li>
+                                                   <a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a>
+                                                 </li>` :
+                                                                            `<li>
+                                                   <a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}">Print</a>
+                                                 </li>
+                                                 <li>
+                                                   <a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a>
+                                                 </li>`
+                                                                        }
                                             </ul>
                                         </div>`;
                         }
@@ -257,6 +274,39 @@
 
                     // Update footer with totals
                     $(this.api().column(4).footer()).html(formatNumber(totalAmount));
+                }
+            });
+        });
+    </script>
+    <script>
+        document.getElementById("newAdvancesBtn").addEventListener("click", function () {
+            Swal.fire({
+                title: 'Select Advances',
+                html: `
+                    <select id="advancesSelect" class="swal2-select">
+                        <option value="employee">Officers and Employee</option>
+                        <option value="supplier" disabled>Supplier/Others (Coming Soon)</option>
+                    </select>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Proceed',
+                preConfirm: () => {
+                    let selectedKey = document.getElementById("advancesSelect").value;
+                    if (selectedKey) {
+                        let routes = {
+                            'employee': '@Url.Action("CreateAdvancesToEmployee", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
+                            'supplier': '' // Keep empty since it's disabled
+                        };
+
+                        if (selectedKey === 'supplier') {
+                            Swal.showValidationMessage('Supplier selection is temporarily unavailable.');
+                            return false;
+                        }
+
+                        window.location.href = routes[selectedKey];
+                    } else {
+                        Swal.showValidationMessage('You need to select an advances');
+                    }
                 }
             });
         });

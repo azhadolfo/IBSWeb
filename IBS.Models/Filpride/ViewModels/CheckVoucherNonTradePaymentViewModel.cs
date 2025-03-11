@@ -8,7 +8,6 @@ namespace IBS.Models.Filpride.ViewModels
     {
         public List<SelectListItem>? CheckVouchers { get; set; }
 
-        [Required(ErrorMessage = "The CV No is required.")]
         public int CvId { get; set; }
 
         [Required(ErrorMessage = "The CV No is required.")]
@@ -56,7 +55,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         public int? MultipleSupplierId { get; set; }
 
-        [NotMapped]
         public List<SelectListItem>? Suppliers { get; set; }
 
         public int CvPaymentId { get; set; }

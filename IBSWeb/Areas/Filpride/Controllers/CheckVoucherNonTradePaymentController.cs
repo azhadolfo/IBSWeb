@@ -152,7 +152,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Print(int? id, int? supplierId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
             {
@@ -171,26 +171,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(cvd => cvd.CheckVoucherHeaderId == header.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
 
-            var getSupplier = await _dbContext.FilprideSuppliers
-                .FindAsync(supplierId, cancellationToken);
-
             var companyClaims = await GetCompanyClaimAsync();
 
             var viewModel = new CheckVoucherVM
             {
                 Header = header,
-                Details = details,
-                Supplier = getSupplier
+                Details = details
             };
 
             return View(viewModel);
         }
 
-        public async Task<IActionResult> Post(int id, int? supplierId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync();
-            var supplierName = await _dbContext.FilprideSuppliers.Where(s => s.SupplierId == supplierId).Select(s => s.SupplierName).FirstOrDefaultAsync(cancellationToken);
 
             if (modelHeader != null)
             {
@@ -252,12 +247,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         Date = modelHeader.Date,
                                         CVNo = modelHeader.CheckVoucherHeaderNo,
-                                        Payee = modelHeader.Payee != null ? modelHeader.Payee : supplierName,
+                                        Payee = modelHeader.Payee,
                                         Amount = modelHeader.Total,
                                         Particulars = modelHeader.Particulars,
                                         Bank = bank != null ? bank.Branch : "N/A",
-                                        CheckNo = !string.IsNullOrEmpty(modelHeader.CheckNo) ? modelHeader.CheckNo : "N/A",
-                                        CheckDate = modelHeader.CheckDate != null ? modelHeader.CheckDate?.ToString("MM/dd/yyyy") : "N/A",
+                                        CheckNo = modelHeader.CheckNo,
+                                        CheckDate = modelHeader.CheckDate?.ToString("MM/dd/yyyy"),
                                         ChartOfAccount = details.AccountNo + " " + details.AccountName,
                                         Debit = details.Debit,
                                         Credit = details.Credit,
@@ -297,7 +292,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Check Voucher has been Posted.";
 
-                    return RedirectToAction(nameof(Print), new { id, supplierId });
+                    return RedirectToAction(nameof(Print), new { id });
                 }
                 catch (Exception ex)
                 {
@@ -479,6 +474,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(cvh => cvh.Supplier)
                 .FirstOrDefaultAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
 
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
+
             var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
                 .Include(cvd => cvd.Supplier)
@@ -569,6 +569,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders
                         .Include(cv => cv.Supplier)
                         .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == viewModel.CvId, cancellationToken);
+
+                    if (existingHeaderModel == null)
+                    {
+                        return NotFound();
+                    }
 
                     var getCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
                         .Where(cvp => cvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
@@ -1336,5 +1341,416 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CvBalances = cvBalances
             });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> CreateAdvancesToEmployee(CancellationToken cancellationToken)
+        {
+            var viewModel = new AdvancesToEmployeeViewModel();
+            var companyClaims = await GetCompanyClaimAsync();
+
+            viewModel.Employees = await _dbContext.FilprideEmployees
+                .Where(e => e.IsActive)
+                .Select(e => new SelectListItem
+                {
+                    Value = e.EmployeeId.ToString(),
+                    Text = $"{e.EmployeeNumber} - {e.FirstName} {e.LastName}"
+                })
+                .ToListAsync(cancellationToken);
+
+            viewModel.Banks = await _dbContext.FilprideBankAccounts
+                .Where(ba => ba.Company == companyClaims)
+                .Select(ba => new SelectListItem
+                {
+                    Value = ba.BankAccountId.ToString(),
+                    Text = ba.Bank + " " + ba.AccountNo + " " + ba.AccountName
+                })
+                .ToListAsync(cancellationToken);
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateAdvancesToEmployee(AdvancesToEmployeeViewModel viewModel, CancellationToken cancellationToken)
+        {
+           var companyClaims = await GetCompanyClaimAsync();
+
+           if (ModelState.IsValid)
+           {
+               await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+               try
+               {
+                   #region Save Record
+
+                   #region Header
+
+                   FilprideCheckVoucherHeader checkVoucherHeader = new()
+                   {
+                       CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultiplePaymentAsync(companyClaims, viewModel.DocumentType, cancellationToken),
+                       Date = viewModel.TransactionDate,
+                       Particulars = viewModel.Particulars,
+                       PONo = [],
+                       SINo = [],
+                       Total = viewModel.Total,
+                       CreatedBy = _userManager.GetUserName(this.User),
+                       Category = "Non-Trade",
+                       CvType = nameof(CVType.Payment),
+                       BankId = viewModel.BankId,
+                       Payee = viewModel.Payee,
+                       CheckNo = viewModel.CheckNo,
+                       CheckDate = viewModel.CheckDate,
+                       CheckAmount = viewModel.Total,
+                       Company = companyClaims,
+                       Type = viewModel.DocumentType,
+                       IsAdvances = true,
+                       EmployeeId = viewModel.EmployeeId,
+                   };
+
+                   await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
+                   await _dbContext.SaveChangesAsync(cancellationToken);
+
+                   #endregion
+
+                   #region Details
+
+                   var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                   var advancesToOfficerTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020400") ?? throw new ArgumentException($"Account title '101020400' not found.");
+                   var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException($"Account title '101010100' not found.");
+
+                   var checkVoucherDetails = new List<FilprideCheckVoucherDetail>
+                   {
+                       new()
+                       {
+                           AccountNo = advancesToOfficerTitle.AccountNumber,
+                           AccountName = advancesToOfficerTitle.AccountName,
+                           TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                           CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                           Debit = viewModel.Total,
+                           Credit = 0,
+                           EmployeeId = viewModel.EmployeeId,
+                       },
+
+                       new()
+                       {
+                           AccountNo = cashInBankTitle.AccountNumber,
+                           AccountName = cashInBankTitle.AccountName,
+                           TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                           CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                           Debit = 0,
+                           Credit = viewModel.Total,
+                           BankId = viewModel.BankId,
+                       },
+                   };
+
+                   await _dbContext.AddRangeAsync(checkVoucherDetails, cancellationToken);
+
+                   #endregion
+
+                   #endregion
+
+                   #region Uploading File
+
+                   if (viewModel.SupportingFile != null && viewModel.SupportingFile.Length > 0)
+                   {
+                       checkVoucherHeader.SupportingFileSavedFileName = GenerateFileNameToSave(viewModel.SupportingFile.FileName);
+                       checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(viewModel.SupportingFile, checkVoucherHeader.SupportingFileSavedFileName);
+                   }
+
+                   #endregion Uploading File
+
+                   #region --Audit Trail Recording
+
+                   var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                   FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, checkVoucherHeader.Company);
+                   await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                   #endregion --Audit Trail Recording
+
+                   await _dbContext.SaveChangesAsync(cancellationToken);
+                   await transaction.CommitAsync(cancellationToken);
+                   TempData["success"] = "Check voucher payment created successfully";
+                   return RedirectToAction(nameof(Index));
+               }
+               catch (Exception ex)
+               {
+                   _logger.LogError(ex, "Failed to create advances to employee. Created by: {UserName}", _userManager.GetUserName(User));
+                   TempData["Error"] = ex.Message;
+                   await transaction.RollbackAsync(cancellationToken);
+
+                   viewModel.Employees = await _dbContext.FilprideEmployees
+                       .Where(e => e.IsActive)
+                       .Select(e => new SelectListItem
+                       {
+                           Value = e.EmployeeId.ToString(),
+                           Text = $"{e.EmployeeNumber} - {e.FirstName} {e.LastName}"
+                       })
+                       .ToListAsync(cancellationToken);
+
+                   viewModel.Banks = await _dbContext.FilprideBankAccounts
+                       .Where(ba => ba.Company == companyClaims)
+                       .Select(ba => new SelectListItem
+                       {
+                           Value = ba.BankAccountId.ToString(),
+                           Text = ba.Bank + " " + ba.AccountNo + " " + ba.AccountName
+                       })
+                       .ToListAsync(cancellationToken);
+
+                   return View(viewModel);
+               }
+           }
+
+           TempData["error"] = "The information provided was invalid.";
+
+           viewModel.Employees = await _dbContext.FilprideEmployees
+               .Where(e => e.IsActive)
+               .Select(e => new SelectListItem
+               {
+                   Value = e.EmployeeId.ToString(),
+                   Text = $"{e.EmployeeNumber} - {e.FirstName} {e.LastName}"
+               })
+               .ToListAsync(cancellationToken);
+
+           viewModel.Banks = await _dbContext.FilprideBankAccounts
+               .Where(ba => ba.Company == companyClaims)
+               .Select(ba => new SelectListItem
+               {
+                   Value = ba.BankAccountId.ToString(),
+                   Text = ba.Bank + " " + ba.AccountNo + " " + ba.AccountName
+               })
+               .ToListAsync(cancellationToken);
+
+           return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditAdvancesToEmployee(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders
+                .Include(cvh => cvh.Employee)
+                .FirstOrDefaultAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var employees = await _dbContext.FilprideEmployees
+                .Where(e => e.IsActive)
+                .Select(e => new SelectListItem
+                {
+                    Value = e.EmployeeId.ToString(),
+                    Text = $"{e.EmployeeNumber} - {e.FirstName} {e.LastName}"
+                })
+                .ToListAsync(cancellationToken);
+
+            var bankAccounts = await _dbContext.FilprideBankAccounts
+                .Where(ba => ba.Company == companyClaims)
+                .Select(ba => new SelectListItem
+                {
+                    Value = ba.BankAccountId.ToString(),
+                    Text = ba.Bank + " " + ba.AccountNo + " " + ba.AccountName
+                })
+                .ToListAsync();
+
+            AdvancesToEmployeeViewModel model = new()
+            {
+                CvId = existingHeaderModel.CheckVoucherHeaderId,
+                TransactionDate = existingHeaderModel.Date,
+                EmployeeId = existingHeaderModel.EmployeeId ?? 0,
+                Employees = employees,
+                Payee = existingHeaderModel.Payee,
+                PayeeAddress = existingHeaderModel.Employee.Address,
+                PayeeTin = existingHeaderModel.Employee.TinNo,
+                Total = existingHeaderModel.Total,
+                BankId = existingHeaderModel.BankId ?? 0,
+                Banks = bankAccounts,
+                CheckNo = existingHeaderModel.CheckNo,
+                CheckDate = existingHeaderModel.CheckDate ?? default,
+                Particulars = existingHeaderModel.Particulars
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditAdvancesToEmployee(AdvancesToEmployeeViewModel viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (ModelState.IsValid)
+            {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+                try
+                {
+                    var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders
+                        .FindAsync(viewModel.CvId, cancellationToken);
+
+                    if (existingHeaderModel == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #region Update Record
+
+                    #region Header
+
+                    existingHeaderModel.Date = viewModel.TransactionDate;
+                    existingHeaderModel.Particulars = viewModel.Particulars;
+                    existingHeaderModel.Total = viewModel.Total;
+                    existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
+                    existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingHeaderModel.BankId = viewModel.BankId;
+                    existingHeaderModel.Payee = viewModel.Payee;
+                    existingHeaderModel.CheckNo = viewModel.CheckNo;
+                    existingHeaderModel.CheckDate = viewModel.CheckDate;
+                    existingHeaderModel.CheckAmount = viewModel.Total;
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    #endregion Header
+
+                    #region Details
+
+                    var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
+                        .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                        .ToListAsync(cancellationToken);
+
+                    _dbContext.RemoveRange(existingDetailsModel);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    var details = new List<FilprideCheckVoucherDetail>();
+
+                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                    var advancesToOfficerTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020400") ?? throw new ArgumentException($"Account title '101020400' not found.");
+                    var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException($"Account title '101010100' not found.");
+
+                    var checkVoucherDetails = new List<FilprideCheckVoucherDetail>
+                    {
+                        new()
+                        {
+                            AccountNo = advancesToOfficerTitle.AccountNumber,
+                            AccountName = advancesToOfficerTitle.AccountName,
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                            Debit = viewModel.Total,
+                            Credit = 0,
+                            EmployeeId = viewModel.EmployeeId,
+                        },
+
+                        new()
+                        {
+                            AccountNo = cashInBankTitle.AccountNumber,
+                            AccountName = cashInBankTitle.AccountName,
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                            Debit = 0,
+                            Credit = viewModel.Total,
+                            BankId = viewModel.BankId,
+                        },
+                    };
+
+                    await _dbContext.AddRangeAsync(checkVoucherDetails, cancellationToken);
+
+                    #endregion Details
+
+                    #endregion Update Record
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, existingHeaderModel.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Check voucher payment edited successfully";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to edit check voucher. Edited by: {UserName}", _userManager.GetUserName(User));
+
+                    viewModel.Employees = await _dbContext.FilprideEmployees
+                        .Where(e => e.IsActive)
+                        .Select(e => new SelectListItem
+                        {
+                            Value = e.EmployeeId.ToString(),
+                            Text = $"{e.EmployeeNumber} - {e.FirstName} {e.LastName}"
+                        })
+                        .ToListAsync(cancellationToken);
+
+                    viewModel.Banks = await _dbContext.FilprideBankAccounts
+                        .Where(ba => ba.Company == companyClaims)
+                        .Select(ba => new SelectListItem
+                        {
+                            Value = ba.BankAccountId.ToString(),
+                            Text = ba.AccountNo + " " + ba.AccountName
+                        })
+                        .ToListAsync();
+
+                    await transaction.RollbackAsync(cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return View(viewModel);
+                }
+            }
+
+            viewModel.Employees = await _dbContext.FilprideEmployees
+                .Where(e => e.IsActive)
+                .Select(e => new SelectListItem
+                {
+                    Value = e.EmployeeId.ToString(),
+                    Text = $"{e.EmployeeNumber} - {e.FirstName} {e.LastName}"
+                })
+                .ToListAsync(cancellationToken);
+
+
+            viewModel.Banks = await _dbContext.FilprideBankAccounts
+                .Where(ba => ba.Company == companyClaims)
+                .Select(ba => new SelectListItem
+                {
+                    Value = ba.BankAccountId.ToString(),
+                    Text = ba.AccountNo + " " + ba.AccountName
+                })
+                .ToListAsync();
+
+            TempData["error"] = "The information provided was invalid.";
+            return View(viewModel);
+        }
+
+
+        public async Task<IActionResult> GetEmployeeDetails(int? employeeId)
+        {
+            if (employeeId == null)
+            {
+                return Json(null);
+            }
+
+            var employee = await _dbContext.FilprideEmployees
+                .FindAsync(employeeId);
+
+            if (employee == null)
+            {
+                return Json(null);
+            }
+
+            return Json(new
+            {
+                Name = $"{employee.FirstName} {employee.LastName}",
+                Address = employee.Address,
+                TinNo = employee.TinNo,
+            });
+
+        }
+
     }
 }

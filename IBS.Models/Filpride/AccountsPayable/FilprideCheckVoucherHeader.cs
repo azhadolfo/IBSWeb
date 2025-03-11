@@ -137,5 +137,12 @@ namespace IBS.Models.Filpride.AccountsPayable
         public DateOnly? DcpDate { get; set; }
 
         public DateOnly? DcrDate { get; set; }
+
+        public bool IsAdvances { get; set; }
+
+        public int? EmployeeId { get; set; }
+
+        [ForeignKey("EmployeeId")]
+        public FilprideEmployee? Employee { get; set; }
     }
 }
