@@ -97,7 +97,7 @@
                 <td>
                     @if (Model.Header.CheckVoucherHeader != null)
                     {
-                        @Html.DisplayFor(model => model.Header.CheckVoucherHeader.Total)
+                        @Model.Header.CheckVoucherHeader.Total.ToString(SD.Two_Decimal_Format)
                     }
                 </td>
             </tr>
@@ -155,9 +155,9 @@
             @foreach (var jvd in Model.Details)
             {
                 <tr>
-                    <td style="width:60%; padding-left:20px;">@Html.DisplayFor(model => jvd.AccountNo)&nbsp;@Html.DisplayFor(model => jvd.AccountName)</td>
-                    <td class="text-end" style="width:7%;">@Html.DisplayFor(model => jvd.Debit)</td>
-                    <td class="text-end" style="width:7%;">@Html.DisplayFor(model => jvd.Credit)</td>
+                    <td style="width:60%; padding-left:20px;">@jvd.AccountNo&nbsp;@jvd.AccountName</td>
+                    <td class="text-end" style="width:7%;">@jvd.Debit.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end" style="width:7%;">@jvd.Credit.ToString(SD.Two_Decimal_Format)</td>
                 </tr>
                 totalDebit += jvd.Debit;
                 totalCredit += jvd.Credit;
@@ -165,8 +165,8 @@
             <tr style="border-bottom:double;"></tr>
             <tr>
                 <th class="text-end">TOTAL</th>
-                <th class="text-end">@totalDebit</th>
-                <th class="text-end">@totalCredit</th>
+                <th class="text-end">@totalDebit.ToString(SD.Two_Decimal_Format)</th>
+                <th class="text-end">@totalCredit.ToString(SD.Two_Decimal_Format)</th>
             </tr>
         </tbody>
     </table>

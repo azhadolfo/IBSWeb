@@ -1,5 +1,7 @@
 @model IEnumerable<FilprideReceivingReport>
+@using IBS.Utility.Constants
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @{
@@ -126,13 +128,13 @@
                 <td class="px-3"> @rr.WithdrawalCertificate </td> @* Supplier WC *@
                 <td class="px-3"> @rr.DeliveryReceipt?.Customer?.CustomerName </td> @* Customer Name *@
                 <td class="px-3"> @rr.PurchaseOrder?.Product?.ProductName </td> @* Product *@
-                <td class="px-3"> @volume.ToString("N4") </td> @* Volume *@
-                <td class="px-3"> @costPerLiter.ToString("N4")) </td> @* Cost/Liter *@
-                <td class="px-3"> @((costAmountGross).ToString("N4")) </td> @* Cost Amount *@
-                <td class="px-3"> @((costAmountNet * 0.12m).ToString("N4")) </td> @* VAT Amount??? *@
+                <td class="px-3"> @volume.ToString(SD.Two_Decimal_Format) </td> @* Volume *@
+                <td class="px-3"> @costPerLiter.ToString(SD.Four_Decimal_Format)) </td> @* Cost/Liter *@
+                <td class="px-3"> @((costAmountGross).ToString(SD.Two_Decimal_Format)) </td> @* Cost Amount *@
+                <td class="px-3"> @((costAmountNet * 0.12m).ToString(SD.Two_Decimal_Format)) </td> @* VAT Amount??? *@
                 <td class="px-3"></td> @* Def VAT Amount *@
-                <td class="px-3"> @((costAmountNet * 0.01m).ToString("N4")) </td> @* WHT Amount??? *@
-                <td class="px-3"> @(costAmountNet.ToString("N4")) </td> @* Net Purchases *@
+                <td class="px-3"> @((costAmountNet * 0.01m).ToString(SD.Two_Decimal_Format)) </td> @* WHT Amount??? *@
+                <td class="px-3"> @(costAmountNet.ToString(SD.Two_Decimal_Format)) </td> @* Net Purchases *@
                 <td class="px-3"> @rr.DeliveryReceipt?.Hauler?.SupplierName </td> @* Hauler Name *@
             </tr>
             
@@ -169,13 +171,13 @@
             <td></td>
             <td></td>
             <td class="text-start px-3"><b>TOTAL:</b></td>
-            <td class="text-start px-3">@totalVolume.ToString("N4")</td>
-            <td class="text-start px-3">@totalCostPerLiter.ToString("N4")</td>
-            <td class="text-start px-3">@totalCostAmount.ToString("N4")</td>
-            <td class="text-start px-3">@totalVatAmount.ToString("N4")</td>
+            <td class="text-start px-3">@totalVolume.ToString(SD.Two_Decimal_Format)</td>
+            <td class="text-start px-3">@totalCostPerLiter.ToString(SD.Four_Decimal_Format)</td>
+            <td class="text-start px-3">@totalCostAmount.ToString(SD.Two_Decimal_Format)</td>
+            <td class="text-start px-3">@totalVatAmount.ToString(SD.Two_Decimal_Format)</td>
             <td></td>
-            <td class="text-start px-3">@totalWHTAmount.ToString("N4")</td>
-            <td class="text-start px-3">@totalNetPurchases.ToString("N4")</td>
+            <td class="text-start px-3">@totalWHTAmount.ToString(SD.Two_Decimal_Format)</td>
+            <td class="text-start px-3">@totalNetPurchases.ToString(SD.Two_Decimal_Format)</td>
             <td></td>
         </tr>
         </tbody>

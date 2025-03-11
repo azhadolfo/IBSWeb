@@ -18,6 +18,8 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
 
+    var customerType = Model.SalesInvoice?.Customer?.CustomerType ?? Model.ServiceInvoice.Customer.CustomerType;
+    var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
 <br />
@@ -97,7 +99,7 @@
                     <td>@Model.SalesInvoice.TransactionDate.ToString("MM/dd/yyyy")</td>
                     <td>@Html.DisplayFor(model => model.SalesInvoice.Product.ProductName)</td>
                     <td>@Html.DisplayFor(model => model.Description)</td>
-                    <td>@Math.Abs(Model.CreditAmount).ToString("N4")</td>
+                    <td>@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
                 </tr>
             </tbody>
         </table>
@@ -117,7 +119,7 @@
                                         <td class="w-50"><p style="height: 9px; margin-left:8%;"><b>Vatable Sales: </b></p></td>
                                         @if (netOfVatAmount != 0)
                                         {
-                                            <td class="text-end">@Math.Abs(netOfVatAmount).ToString("N4")</td>
+                                            <td class="text-end">@Math.Abs(netOfVatAmount).ToString(decimalFormat)</td>
                                         }
                                         else
                                         {
@@ -128,7 +130,7 @@
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
                                         @if (Model.SalesInvoice.Customer.VatType == "Zero Rated")
                                         {
-                                            <td class="text-end">@Math.Abs(Model.CreditAmount).ToString("N4")</td>
+                                            <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
                                         }
                                         else
                                         {
@@ -140,7 +142,7 @@
 
                                         @if (Model.SalesInvoice.Customer.VatType == "Exempt")
                                         {
-                                            <td class="text-end">@Math.Abs(Model.CreditAmount)</td>
+                                            <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
                                         }
                                         else
                                         {
@@ -152,7 +154,7 @@
 
                                         @if (vatAmount != 0)
                                         {
-                                            <td class="text-end">@Math.Abs(vatAmount).ToString("N4")</td>
+                                            <td class="text-end">@Math.Abs(vatAmount).ToString(decimalFormat)</td>
                                         }
                                         else
                                         {
@@ -161,7 +163,7 @@
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>TOTAL SALES: </b></p></td>
-                                        <td class="text-end">@Math.Abs(Model.CreditAmount).ToString("N4")</td>
+                                        <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -224,7 +226,7 @@ else if (Model.Source == "Service Invoice")
                     <td>@Html.DisplayFor(model => model.Description)</td>
                     <td class="pt-2">
                         <p style="line-height:15px">
-                            @Math.Abs(Model.Amount ?? 0)
+                            @Math.Abs(Model.Amount ?? 0).ToString(decimalFormat)
                         </p>
                     </td>
                 </tr>
@@ -246,7 +248,7 @@ else if (Model.Source == "Service Invoice")
                                         <td class="w-50"><p style="height: 9px; margin-left:8%;"><b>Vatable Sales: </b></p></td>
                                         @if (netOfVatAmount != 0)
                                         {
-                                            <td class="text-end">@Math.Abs(netOfVatAmount).ToString("N4")</td>
+                                            <td class="text-end">@Math.Abs(netOfVatAmount).ToString(decimalFormat)</td>
                                         }
                                         else
                                         {
@@ -257,7 +259,7 @@ else if (Model.Source == "Service Invoice")
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
                                         @if (Model.ServiceInvoice.Customer.VatType == "Zero Rated")
                                         {
-                                            <td class="text-end">@Math.Abs(Model.CreditAmount)</td>
+                                            <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
                                         }
                                         else
                                         {
@@ -269,7 +271,7 @@ else if (Model.Source == "Service Invoice")
 
                                         @if (Model.ServiceInvoice.Customer.VatType == "Exempt")
                                         {
-                                            <td class="text-end">@Math.Abs(Model.CreditAmount)</td>
+                                            <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
                                         }
                                         else
                                         {
@@ -281,7 +283,7 @@ else if (Model.Source == "Service Invoice")
 
                                         @if (vatAmount != 0)
                                         {
-                                            <td class="text-end">@Math.Abs(vatAmount).ToString("N4")</td>
+                                            <td class="text-end">@Math.Abs(vatAmount).ToString(decimalFormat)</td>
                                         }
                                         else
                                         {
@@ -290,7 +292,7 @@ else if (Model.Source == "Service Invoice")
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>TOTAL SALES: </b></p></td>
-                                        <td class="text-end">@Math.Abs(Model.CreditAmount)</td>
+                                        <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
                                     </tr>
                                 </tbody>
                             </table>

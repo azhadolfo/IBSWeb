@@ -1,4 +1,6 @@
-﻿@model IEnumerable<FilprideCustomerOrderSlip>
+﻿@using IBS.Utility.Constants
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model IEnumerable<FilprideCustomerOrderSlip>
 
 @{
     ViewData["Title"] = "COS Unserved Volume";
@@ -77,17 +79,17 @@
                     <td>@item.Product.ProductName</td>
                     <td>@item.CustomerPoNo</td>
                     <td>@item.CustomerOrderSlipNo</td>
-                    <td class="text-end">@item.DeliveredPrice.ToString("N4")</td>
-                    <td class="text-end">@((item.Quantity - item.DeliveredQuantity).ToString("N4"))</td>
-                    <td class="text-end">@item.TotalAmount.ToString("N4")</td>
+                    <td class="text-end">@item.DeliveredPrice.ToString(SD.Four_Decimal_Format)</td>
+                    <td class="text-end">@((item.Quantity - item.DeliveredQuantity).ToString(SD.Two_Decimal_Format))</td>
+                    <td class="text-end">@item.TotalAmount.ToString(SD.Two_Decimal_Format)</td>
                     <td>APPROVED</td>
                     <td class="text-center">@item.ExpirationDate</td>
                 </tr>
             }
             <tr>
                 <td colspan="7">TOTAL</td>
-                <td class="text-end custom-content">@Model.Sum(cos => (cos.Quantity - cos.DeliveredQuantity)).ToString("N4")</td>
-                <td class="text-end custom-content">@Model.Sum(cos => cos.TotalAmount).ToString("N4")</td>
+                <td class="text-end custom-content">@Model.Sum(cos => (cos.Quantity - cos.DeliveredQuantity)).ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end custom-content">@Model.Sum(cos => cos.TotalAmount).ToString(SD.Two_Decimal_Format)</td>
                 <td colspan="2"></td>
             </tr>
         </tbody>

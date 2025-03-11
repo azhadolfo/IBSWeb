@@ -1,4 +1,5 @@
 ﻿@using IBS.Dtos
+@using IBS.Utility.Constants
 @model IEnumerable<ChartOfAccountDto>
 @{
     ViewData["Title"] = "Chart of Accounts Summary";
@@ -27,9 +28,9 @@
                         @firstLevel.AccountNumber - @firstLevel.AccountName
                     </span>
                 </td>
-                <td>@firstLevel.Debit.ToString("N4")</td>
-                <td>@firstLevel.Credit.ToString("N4")</td>
-                <td>@firstLevel.Balance.ToString("N4")</td>
+                <td>@firstLevel.Debit.ToString(SD.Two_Decimal_Format)</td>
+                <td>@firstLevel.Credit.ToString(SD.Two_Decimal_Format)</td>
+                <td>@firstLevel.Balance.ToString(SD.Two_Decimal_Format)</td>
             </tr>
             @if (firstLevel.Children.Any(c => c.Balance != 0))
             {
@@ -41,9 +42,9 @@
                                 <i class="bi bi-arrow-return-right"></i> @secondLevel.AccountNumber - @secondLevel.AccountName
                             </span>
                         </td>
-                        <td>@secondLevel.Debit.ToString("N4")</td>
-                        <td>@secondLevel.Credit.ToString("N4")</td>
-                        <td>@secondLevel.Balance.ToString("N4")</td>
+                        <td>@secondLevel.Debit.ToString(SD.Two_Decimal_Format)</td>
+                        <td>@secondLevel.Credit.ToString(SD.Two_Decimal_Format)</td>
+                        <td>@secondLevel.Balance.ToString(SD.Two_Decimal_Format)</td>
                     </tr>
                     if (secondLevel.Children.Any(c => c.Balance != 0))
                     {
@@ -55,9 +56,9 @@
                                         <i class="bi bi-arrow-return-right"></i> @thirdLevel.AccountNumber - @thirdLevel.AccountName
                                     </span>
                                 </td>
-                                <td>@thirdLevel.Debit.ToString("N4")</td>
-                                <td>@thirdLevel.Credit.ToString("N4")</td>
-                                <td>@thirdLevel.Balance.ToString("N4")</td>
+                                <td>@thirdLevel.Debit.ToString(SD.Two_Decimal_Format)</td>
+                                <td>@thirdLevel.Credit.ToString(SD.Two_Decimal_Format)</td>
+                                <td>@thirdLevel.Balance.ToString(SD.Two_Decimal_Format)</td>
                             </tr>
                             if (thirdLevel.Children.Any(c => c.Balance != 0))
                             {
@@ -69,9 +70,9 @@
                                                 <i class="bi bi-arrow-return-right"></i> @fourthLevel.AccountNumber - @fourthLevel.AccountName
                                             </span>
                                         </td>
-                                        <td>@fourthLevel.Debit.ToString("N4")</td>
-                                        <td>@fourthLevel.Credit.ToString("N4")</td>
-                                        <td>@fourthLevel.Balance.ToString("N4")</td>
+                                        <td>@fourthLevel.Debit.ToString(SD.Two_Decimal_Format)</td>
+                                        <td>@fourthLevel.Credit.ToString(SD.Two_Decimal_Format)</td>
+                                        <td>@fourthLevel.Balance.ToString(SD.Two_Decimal_Format)</td>
                                     </tr>
                                 }
                             }
@@ -84,9 +85,9 @@
     <tfoot>
         <tr>
             <td><b>Grand Total</b></td>
-            <td><b>@totalDebit.ToString("N4")</b></td>
-            <td><b>@totalCredit.ToString("N4")</b></td>
-            <td><b>@totalBalance.ToString("N4")</b></td>
+            <td><b>@totalDebit.ToString(SD.Two_Decimal_Format)</b></td>
+            <td><b>@totalCredit.ToString(SD.Two_Decimal_Format)</b></td>
+            <td><b>@totalBalance.ToString(SD.Two_Decimal_Format)</b></td>
         </tr>
     </tfoot>
 </table>
