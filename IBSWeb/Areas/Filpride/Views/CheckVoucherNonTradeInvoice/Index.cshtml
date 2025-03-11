@@ -205,11 +205,11 @@
                         "data": "invoiceAmount",
                         "render": function (data, type, row) {
                             if (row.amount > 0) {
-                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.amount);
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.amount);
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                             else{
-                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.checkVoucherHeader.invoiceAmount);
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.checkVoucherHeader.invoiceAmount);
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                         }
@@ -218,11 +218,11 @@
                         "data": "amountPaid",
                         "render": function (data, type, row) {
                             if (row.amount > 0) {
-                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.amountPaid);
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.amountPaid);
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                             else{
-                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.checkVoucherHeader.amountPaid);
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.checkVoucherHeader.amountPaid);
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                         }
@@ -231,11 +231,11 @@
                         "data": null,
                         "render": function (data, type, row) {
                             if (row.amount > 0) {
-                                var amount = $.fn.dataTable.render.number(',', '.', 4).display((row.amount - row.amountPaid));
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display((row.amount - row.amountPaid));
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                             else{
-                                var amount = $.fn.dataTable.render.number(',', '.', 4).display((row.checkVoucherHeader.invoiceAmount - row.checkVoucherHeader.amountPaid));
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display((row.checkVoucherHeader.invoiceAmount - row.checkVoucherHeader.amountPaid));
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                         }

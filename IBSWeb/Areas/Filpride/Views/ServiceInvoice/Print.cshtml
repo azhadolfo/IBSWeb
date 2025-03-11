@@ -1,7 +1,9 @@
 ﻿@model FilprideServiceInvoice
 @using IBS.Utility.Constants
+@using IBS.Utility.Enums
 @using IBS.Utility.Helpers
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
@@ -14,7 +16,8 @@
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
-
+    
+    var decimalFormat = Model.Customer.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
 <table class="w-100">
@@ -105,7 +108,7 @@
                 </td>
                 <td class="pt-2">
                     <p style="line-height:15px">
-                        @Html.DisplayFor(model => model.Amount)
+                        @Model.Amount.ToString(decimalFormat)
                     </p>
                 </td>
             </tr>
@@ -132,7 +135,7 @@
                                 <td class="text-end">
                                     @if (Model.Customer.VatType == "Vatable")
                                     {
-                                        <p class="mb-0">@((Model.Total / 1.12m).ToString("N4"))</p>
+                                        <p class="mb-0">@((Model.Total / 1.12m).ToString(decimalFormat))</p>
                                     }
                                 </td>
                             </tr>
@@ -144,11 +147,11 @@
                                     {
                                         if (Model.Discount > 0)
                                         {
-                                            <p class="mb-0">@((Model.Total - Model.Discount).ToString("N4"))</p>
+                                            <p class="mb-0">@((Model.Total - Model.Discount).ToString(decimalFormat))</p>
                                         }
                                         else
                                         {
-                                            <p class="mb-0">@Html.DisplayFor(model => model.Total)</p>
+                                            <p class="mb-0">@Model.Total.ToString(decimalFormat)</p>
                                         }
 
                                     }
@@ -162,11 +165,11 @@
                                     {
                                         if (Model.Discount > 0)
                                         {
-                                            <p class="mb-0">@((Model.Total - Model.Discount).ToString("N4"))</p>
+                                            <p class="mb-0">@((Model.Total - Model.Discount).ToString(decimalFormat))</p>
                                         }
                                         else
                                         {
-                                            <p class="mb-0">@Html.DisplayFor(model => model.Total)</p>
+                                            <p class="mb-0">@Model.Total.ToString(decimalFormat)</p>
                                         }
                                     }
                                 </td>
@@ -177,7 +180,7 @@
                                 <td class="text-end">
                                     @if (Model.Customer.VatType == "Vatable")
                                     {
-                                        <p class="mb-0">@(((Model.Total / 1.12m) * 0.12m).ToString("N4"))</p>
+                                        <p class="mb-0">@(((Model.Total / 1.12m) * 0.12m).ToString(decimalFormat))</p>
                                     }
                                 </td>
                             </tr>
@@ -187,13 +190,13 @@
 
                                     @if (Model.Discount > 0)
                                     {
-                                        <p class="mb-0">@Html.DisplayFor(model => model.Discount)</p>
+                                        <p class="mb-0">@Model.Discount.ToString(decimalFormat)</p>
                                     }
                                 </td>
                             </tr>
                             <tr>
                                 <td><p style="margin-left:8%;" class="mb-0"><b>TOTAL SALES: </b></p></td>
-                                <td class="text-end"><p class="mb-0">@Html.DisplayFor(model => model.Total)</p></td>
+                                <td class="text-end"><p class="mb-0">@Model.Total.ToString(decimalFormat)</p></td>
                             </tr>
                         </tbody>
                     </table>

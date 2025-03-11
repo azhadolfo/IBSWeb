@@ -518,8 +518,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return new {
                             Id = rr.ReceivingReportId,
                             ReceivingReportNo = rr.ReceivingReportNo,
-                            AmountPaid = rr.AmountPaid.ToString("N4"),
-                            NetOfEwtAmount = netOfEwtAmount.ToString("N4")
+                            AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
+                            NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
                         };
                     }).ToList();
                 return Json(rrList);
@@ -2193,8 +2193,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return new {
                             Id = dr.DeliveryReceiptId,
                             DeliveryReceiptNo = dr.DeliveryReceiptNo,
-                            AmountPaid = dr.CommissionAmountPaid.ToString("N4"),
-                            NetOfEwtAmount = netOfEwtAmount.ToString("N4")
+                            AmountPaid = dr.CommissionAmountPaid.ToString(SD.Two_Decimal_Format),
+                            NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
                         };
                     }).ToList();
                 return Json(drList);
@@ -2247,8 +2247,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return new {
                             Id = dr.DeliveryReceiptId,
                             DeliveryReceiptNo = dr.DeliveryReceiptNo,
-                            AmountPaid = dr.FreightAmountPaid.ToString("N4"),
-                            NetOfEwtAmount = netOfEwtAmount.ToString("N4")
+                            AmountPaid = dr.FreightAmountPaid.ToString(SD.Two_Decimal_Format),
+                            NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
                         };
                     }).ToList();
                 return Json(drList);

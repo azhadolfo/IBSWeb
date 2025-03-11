@@ -1,5 +1,7 @@
 @model IEnumerable<FilprideCheckVoucherHeader>
+@using IBS.Utility.Constants
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @{
@@ -83,7 +85,7 @@
                     <td>@Html.DisplayFor(model => cleared.BankAccount.AccountName)</td>
                     <td>@Html.DisplayFor(model => cleared.CheckNo)</td>
                     <td>@Html.DisplayFor(model => cleared.Particulars)</td>
-                    <td class="text-end">@Html.DisplayFor(model => cleared.Total)</td>
+                    <td class="text-end">@cleared.Total.ToString(SD.Two_Decimal_Format)</td>
                 </tr>
             }
             </tbody>
@@ -98,7 +100,7 @@
                 <td></td>
                 <td></td>
                 <td class="text-end">Totals:</td>
-                <td class="text-end">@totalAmt.ToString("N2")</td>
+                <td class="text-end">@totalAmt.ToString(SD.Two_Decimal_Format)</td>
             </tr>
             </tfoot>
         </table>

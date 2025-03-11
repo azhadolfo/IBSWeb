@@ -86,13 +86,13 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
                         @Html.DisplayFor(model => inventory.Product.ProductUnit)
                     </td>
                     <td class="text-end" style="padding: 10px 30px 10px 30px;">
-                        @Html.DisplayFor(model => inventory.Quantity)
+                        @inventory.Quantity.ToString(SD.Two_Decimal_Format)
                     </td>
                     <td class="text-end" style="padding: 10px 30px 10px 30px;">
-                        @Html.DisplayFor(model => inventory.Cost)
+                        @inventory.Cost.ToString(SD.Four_Decimal_Format)
                     </td>
                     <td class="text-end" style="padding: 10px 30px 10px 30px;">
-                        @Html.DisplayFor(model => inventory.Total)
+                        @inventory.Total.ToString(SD.Two_Decimal_Format)
                     </td>
                 </tr>
                 if (inventory.Particular == "Sales" || inventory.Particular == "Actual Inventory(Loss)")
@@ -121,9 +121,9 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
                     <td></td>
                     <td></td>
                     <td class="text-center"><b>TOTAL:</b></td>
-                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalQuantity.ToString("N4")</td>
-                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalPriceUnitAmount.ToString("N4")</td>
-                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalAmount.ToString("N4")</td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalQuantity.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalPriceUnitAmount.ToString(SD.Four_Decimal_Format)</td>
+                    <td class="text-end" style="padding: 10px 30px 10px 30px;">@totalAmount.ToString(SD.Two_Decimal_Format)</td>
                 }
             </tr>
         </tbody>
@@ -257,7 +257,7 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
 
         // Replace the placeholder in the HTML with the actual number of records
         resultPre.innerHTML = resultPre.innerHTML.replace('@numberOfRecords', (allTrElements.length - 1));
-        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount.ToString("N4")");
+        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount.ToString(SD.Two_Decimal_Format)");
     </script>
 
 }

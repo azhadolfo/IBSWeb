@@ -1,4 +1,5 @@
 @model IEnumerable<FilprideReceivingReport>
+@using IBS.Utility.Constants
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
@@ -132,24 +133,24 @@
                 <td> @rr.DeliveryReceipt?.DeliveryReceiptNo</td>
                 <td> @rr.DeliveryReceipt?.Customer?.CustomerName</td>
                 <td> @rr.PurchaseOrder?.Product?.ProductName</td>
-                <td class="text-end p-3"> @volume.ToString("N4")</td>
-                <td class="text-end p-3"> @purchasePerLiter.ToString("N4")</td>
-                <td class="text-end p-3"> @costAmountGross.ToString("N4")</td>
-                <td class="text-end p-3"> @costVatAmount.ToString("N4")</td>
+                <td class="text-end p-3"> @volume.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end p-3"> @purchasePerLiter.ToString(SD.Four_Decimal_Format)</td>
+                <td class="text-end p-3"> @costAmountGross.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end p-3"> @costVatAmount.ToString(SD.Two_Decimal_Format)</td>
                 <td> </td>
-                <td class="text-end p-3"> @costAmountNet.ToString("N4") </td>
+                <td class="text-end p-3"> @costAmountNet.ToString(SD.Two_Decimal_Format) </td>
                 <td> @rr.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist </td>
-                <td class="text-end p-3"> @salePricePerLiter.ToString("N4") </td>
-                <td class="text-end p-3"> @saleAmountGross.ToString("N4") </td>
-                <td class="text-end p-3"> @gmPerLiter.ToString("N4") </td>
-                <td class="text-end p-3"> @gmAmount.ToString("N4") </td>
+                <td class="text-end p-3"> @salePricePerLiter.ToString(SD.Four_Decimal_Format) </td>
+                <td class="text-end p-3"> @saleAmountGross.ToString(SD.Two_Decimal_Format) </td>
+                <td class="text-end p-3"> @gmPerLiter.ToString(SD.Four_Decimal_Format) </td>
+                <td class="text-end p-3"> @gmAmount.ToString(SD.Two_Decimal_Format) </td>
                 <td> @rr.DeliveryReceipt?.CustomerOrderSlip?.Hauler?.SupplierName </td>
-                <td class="text-end p-3"> @freightChargePerLiter.ToString("N4") </td>
-                <td class="text-end p-3"> @freightChargeAmount.ToString("N4") </td>
-                <td class="text-end p-3"> @commissionPerLiter.ToString("N4") </td>
-                <td class="text-end p-3"> @commissionAmount.ToString("N4") </td>
-                <td class="text-end p-3"> @netMarginPerLiter.ToString("N4") </td>
-                <td class="text-end p-3"> @netMarginAmount.ToString("N4") </td>
+                <td class="text-end p-3"> @freightChargePerLiter.ToString(SD.Four_Decimal_Format) </td>
+                <td class="text-end p-3"> @freightChargeAmount.ToString(SD.Two_Decimal_Format) </td>
+                <td class="text-end p-3"> @commissionPerLiter.ToString(SD.Four_Decimal_Format) </td>
+                <td class="text-end p-3"> @commissionAmount.ToString(SD.Two_Decimal_Format) </td>
+                <td class="text-end p-3"> @netMarginPerLiter.ToString(SD.Four_Decimal_Format) </td>
+                <td class="text-end p-3"> @netMarginAmount.ToString(SD.Two_Decimal_Format) </td>
             </tr>
 
             @* Add values to total variables *@
@@ -185,24 +186,24 @@
             <td></td>
             <td></td>
             <td class="text-end p-3">Total:</td>
-            <td class="text-end p-3">@totalVolume.ToString("N4")</td>
-            <td class="text-end p-3">@averagePurchasePrice.ToString("N4")</td>
-            <td class="text-end p-3">@totalPurchaseAmountGross.ToString("N4")</td>
-            <td class="text-end p-3">@totalVatAmount.ToString("N4")</td>
+            <td class="text-end p-3">@totalVolume.ToString(SD.Two_Decimal_Format)</td>
+            <td class="text-end p-3">@averagePurchasePrice.ToString(SD.Four_Decimal_Format)</td>
+            <td class="text-end p-3">@totalPurchaseAmountGross.ToString(SD.Two_Decimal_Format)</td>
+            <td class="text-end p-3">@totalVatAmount.ToString(SD.Two_Decimal_Format)</td>
             <td></td>
-            <td class="text-end p-3">@totalPurchaseAmountNet.ToString("N4")</td>
+            <td class="text-end p-3">@totalPurchaseAmountNet.ToString(SD.Two_Decimal_Format)</td>
             <td></td>
-            <td class="text-end p-3">@averageSalePrice.ToString("N4")</td>
-            <td class="text-end p-3">@totalSaleAmount.ToString("N4")</td>
-            <td class="text-end p-3">@totalGMPerLiter.ToString("N4")</td>
-            <td class="text-end p-3">@totalGMAmount.ToString("N4")</td>
+            <td class="text-end p-3">@averageSalePrice.ToString(SD.Four_Decimal_Format)</td>
+            <td class="text-end p-3">@totalSaleAmount.ToString(SD.Two_Decimal_Format)</td>
+            <td class="text-end p-3">@totalGMPerLiter.ToString(SD.Four_Decimal_Format)</td>
+            <td class="text-end p-3">@totalGMAmount.ToString(SD.Two_Decimal_Format)</td>
             <td></td>
-            <td class="text-end p-3">@totalFreightCharge.ToString("N4")</td>
-            <td class="text-end p-3">@totalFCAmount.ToString("N4")</td>
-            <td class="text-end p-3">@totalCommissionPerLiter.ToString("N4")</td>
-            <td class="text-end p-3">@totalCommissionAmount.ToString("N4")</td>
-            <td class="text-end p-3">@totalNetMarginPerLiter.ToString("N4")</td>
-            <td class="text-end p-3">@totalNetMarginAmount.ToString("N4")</td>
+            <td class="text-end p-3">@totalFreightCharge.ToString(SD.Four_Decimal_Format)</td>
+            <td class="text-end p-3">@totalFCAmount.ToString(SD.Two_Decimal_Format)</td>
+            <td class="text-end p-3">@totalCommissionPerLiter.ToString(SD.Four_Decimal_Format)</td>
+            <td class="text-end p-3">@totalCommissionAmount.ToString(SD.Two_Decimal_Format)</td>
+            <td class="text-end p-3">@totalNetMarginPerLiter.ToString(SD.Four_Decimal_Format)</td>
+            <td class="text-end p-3">@totalNetMarginAmount.ToString(SD.Two_Decimal_Format)</td>
         </tr>
         </tbody>
     </table>
