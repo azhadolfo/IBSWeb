@@ -23,28 +23,10 @@
                 <input asp-for="CustomerOrderSlipId" type="hidden" />
                 <input asp-for="ProductId" type="hidden" />
                 <div class="form-group py-2 col-12">
-                    <label class="control-label">Supplier List<span class="required">*</span></label>
-                    <select asp-for="SupplierIds" asp-items="@Model.Suppliers"
-                            class="form-select js-select2 border-0 shadow"
-                            style="width:100%"
-                            multiple="multiple">
+                    <label class="control-label">Port List<span class="required">*</span></label>
+                    <select asp-for="PickUpPointId" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
                     </select>
-                    <span asp-validation-for="SupplierIds" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">PO List<span class="required">*</span></label>
-                    <select asp-for="PurchaseOrderIds" asp-items="@Model.PurchaseOrders" 
-                            class="form-select js-select2 border-0 shadow" 
-                            style="width:100%"
-                            multiple="multiple">
-                    </select>
-                    <span asp-validation-for="PurchaseOrderIds" class="text-danger"></span>
-                </div>
-                <div id="poQuantitySection" style="display:none;">
-                    <div class="form-group py-2 col-12">
-                        <label class="control-label">Enter Quantities for Selected POs</label>
-                        <div id="poQuantities"></div>
-                    </div>
+                    <span asp-validation-for="PickUpPointId" class="text-danger"></span>
                 </div>
                 <div class="form-group py-2 col-12">
                     <label class="control-label">Delivery Option<span class="required">*</span></label><br />
@@ -76,10 +58,28 @@
                     </div>
                 </div>
                 <div class="form-group py-2 col-12">
-                    <label class="control-label">Port List<span class="required">*</span></label>
-                    <select asp-for="PickUpPointId" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <label class="control-label">Supplier List<span class="required">*</span></label>
+                    <select asp-for="SupplierIds" asp-items="@Model.Suppliers"
+                            class="form-select js-select2 border-0 shadow"
+                            style="width:100%"
+                            multiple="multiple">
                     </select>
-                    <span asp-validation-for="PickUpPointId" class="text-danger"></span>
+                    <span asp-validation-for="SupplierIds" class="text-danger"></span>
+                </div>
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">PO List<span class="required">*</span></label>
+                    <select asp-for="PurchaseOrderIds" asp-items="@Model.PurchaseOrders" 
+                            class="form-select js-select2 border-0 shadow" 
+                            style="width:100%"
+                            multiple="multiple">
+                    </select>
+                    <span asp-validation-for="PurchaseOrderIds" class="text-danger"></span>
+                </div>
+                <div id="poQuantitySection" style="display:none;">
+                    <div class="form-group py-2 col-12">
+                        <label class="control-label">Enter Quantities for Selected POs</label>
+                        <div id="poQuantities"></div>
+                    </div>
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
