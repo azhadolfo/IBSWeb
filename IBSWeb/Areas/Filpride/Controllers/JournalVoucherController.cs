@@ -277,6 +277,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> GetCV(int id)
         {
             var header = _dbContext.FilprideCheckVoucherHeaders
+                .Include(s => s.Employee)
                 .Include(s => s.Supplier)
                 .FirstOrDefault(cvh => cvh.CheckVoucherHeaderId == id);
 
@@ -299,9 +300,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var cvNo = viewModel.Header.CheckVoucherHeaderNo;
                 var date = viewModel.Header.Date;
-                var name = viewModel.Header.Supplier.SupplierName;
-                var address = viewModel.Header.Supplier.SupplierAddress;
-                var tinNo = viewModel.Header.Supplier.SupplierTin;
+                var name = viewModel.Header.Payee;
+                var address = viewModel.Header.Supplier?.SupplierAddress ?? viewModel.Header.Employee.Address;
+                var tinNo = viewModel.Header.Supplier?.SupplierTin ?? viewModel.Header.Employee.TinNo;
                 var poNo = viewModel.Header.PONo;
                 var siNo = viewModel.Header.SINo;
                 var payee = viewModel.Header.Payee;

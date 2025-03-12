@@ -115,11 +115,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ModelState.AddModelError("Name", "Services already exist!");
                         return View(services);
                     }
-                    if (services.Percent == 0)
-                    {
-                        ModelState.AddModelError("Percent", "Please input percent!");
-                        return View(services);
-                    }
 
                     var currentAndPrevious = await _dbContext.FilprideChartOfAccounts
                         .FindAsync(services.CurrentAndPreviousId, cancellationToken);
@@ -183,11 +178,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (ModelState.IsValid)
             {
-                if (services.Percent == 0)
-                {
-                    ModelState.AddModelError("Percent", "Please input percent!");
-                    return View(services);
-                }
                 try
                 {
                     var existingModel = await _dbContext.FilprideServices.FindAsync(id, cancellationToken);
