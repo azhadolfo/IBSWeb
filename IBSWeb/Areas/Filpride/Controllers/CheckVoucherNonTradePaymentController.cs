@@ -102,15 +102,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     checkVoucherDetails = checkVoucherDetails
                     .Where(s =>
                         s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.Supplier?.SupplierId.ToString().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Total.ToString().Contains(searchValue) == true ||
-                        s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
+                        s.CheckVoucherHeader?.Payee.ToLower().Contains(searchValue) == true ||
+                        s.CheckVoucherHeader?.Date.ToString("MMM dd, yyyy").Contains(searchValue) == true ||
                         s.Amount.ToString().Contains(searchValue) ||
                         s.AmountPaid.ToString().Contains(searchValue) ||
-                        s.CheckVoucherHeaderId.ToString().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Reference?.ToLower().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.CreatedDate.ToString().Contains(searchValue) == true
+                        s.CheckVoucherHeader.Status.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
