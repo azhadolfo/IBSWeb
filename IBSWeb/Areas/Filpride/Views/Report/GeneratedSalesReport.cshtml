@@ -123,12 +123,12 @@
                     <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.PurchaseOrder.OldPoNo)</td>
                     <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.DeliveryOption)</td>
                     <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.Product.ProductName)</td>
-                    <td class="text-end">@quantity.ToString(SD.Four_Decimal_Format)</td>
-                    <td class="text-end">@freight.ToString(SD.Four_Decimal_Format)</td>
-                    <td class="text-end">@viewModel.DeliveryReceipt.TotalAmount.ToString(SD.Four_Decimal_Format)</td>
-                    <td class="text-end">@vat.ToString(SD.Four_Decimal_Format)</td>
-                    <td class="text-end">@salesNetOfVat.ToString(SD.Four_Decimal_Format)</td>
-                    <td class="text-end">@freightNetOfVat.ToString(SD.Four_Decimal_Format)</td>
+                    <td class="text-end">@quantity.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@freight.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@viewModel.DeliveryReceipt.TotalAmount.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@vat.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@salesNetOfVat.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@freightNetOfVat.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@viewModel.DeliveryReceipt.CustomerOrderSlip.CommissionRate.ToString(SD.Four_Decimal_Format)</td>
                     <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.Remarks)</td>
                 </tr>
@@ -155,12 +155,12 @@
                 <td></td>
                 <td></td>
                 <td class="text-center"><b>TOTAL:</b></td>
-                <td class="text-end">@totalQuantity.ToString(SD.Four_Decimal_Format)</td>
-                <td class="text-end">@totalFreight.ToString(SD.Four_Decimal_Format)</td>
-                <td class="text-end">@totalAmount.ToString(SD.Four_Decimal_Format)</td>
-                <td class="text-end">@totalVat.ToString(SD.Four_Decimal_Format)</td>
-                <td class="text-end">@totalSalesNetOfVat.ToString(SD.Four_Decimal_Format)</td>
-                <td class="text-end">@totalFreightNetOfVat.ToString(SD.Four_Decimal_Format)</td>
+                <td class="text-end">@totalQuantity.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalFreight.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalVat.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalSalesNetOfVat.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalFreightNetOfVat.ToString(SD.Two_Decimal_Format)</td>
                 <td class="text-end">@totalCommissionRate.ToString(SD.Four_Decimal_Format)</td>
                 <td></td>
             </tr>
