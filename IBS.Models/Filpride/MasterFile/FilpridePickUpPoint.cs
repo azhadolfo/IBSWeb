@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.MasterFile
 {
@@ -29,5 +30,8 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Column(TypeName = "varchar(50)")]
         public string Company { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Suppliers { get; set; }
     }
 }
