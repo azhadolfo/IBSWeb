@@ -84,9 +84,9 @@
                 <td class="text-center p-lg-4">@Html.DisplayFor(model => model.SupplierInvoiceNumber)</td>
                 <td class="text-center p-lg-4">@Html.DisplayFor(model => model.TruckOrVessels)</td>
                 <td class="text-center p-lg-4">@Html.DisplayFor(model => model.PurchaseOrder.Product.ProductName)</td>
-                <td class="text-center p-lg-4">@Html.DisplayFor(model => model.QuantityDelivered)</td>
-                <td class="text-center p-lg-4">@Html.DisplayFor(model => model.QuantityReceived)</td>
-                <td class="text-center p-lg-4">@Html.DisplayFor(model => model.GainOrLoss)</td>
+                <td class="text-center p-lg-4">@Model.QuantityDelivered.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-center p-lg-4">@Model.QuantityReceived.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-center p-lg-4">@Model.GainOrLoss.ToString(SD.Two_Decimal_Format)</td>
             </tr>
         </tbody>
     </table>

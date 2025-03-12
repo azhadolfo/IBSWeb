@@ -1,6 +1,8 @@
 ﻿@model IEnumerable<FilprideReceivingReport>
+@using IBS.Utility.Constants
 @using IBS.Utility.Helpers
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @{
@@ -154,22 +156,22 @@ Date Issued: @* @CS.DateIssued *@
                                 @Html.DisplayFor(model => po.PurchaseOrder.Product.ProductName)
                             </td>
                             <td class="text-end">
-                                @quantity.ToString("N4")
+                                @quantity.ToString(SD.Two_Decimal_Format)
                             </td>
                             <td class="text-end">
-                                @Html.DisplayFor(model => po.Amount)
+                                @po.Amount.ToString(SD.Two_Decimal_Format)
                             </td>
                             <td class="text-end">
-                                @(Math.Round((po.Amount / 1.12m) * 0.12m, 4))
+                                @(Math.Round((po.Amount / 1.12m) * 0.12m).ToString(SD.Two_Decimal_Format))
                             </td>
                             <td class="text-end">
-                                0.000
+                                0.00
                             </td>
                             <td class="text-end">
-                                @(Math.Round((po.Amount / 1.12m) * 0.01m, 4))
+                                @(Math.Round((po.Amount / 1.12m) * 0.01m).ToString(SD.Two_Decimal_Format))
                             </td>
                             <td class="text-end">
-                                @(Math.Round(po.Amount / 1.12m, 4))
+                                @(Math.Round(po.Amount / 1.12m).ToString(SD.Two_Decimal_Format))
                             </td>
                         </tr>
                     }
@@ -183,12 +185,12 @@ Date Issued: @* @CS.DateIssued *@
                             <td></td>
                             <td></td>
                             <td class="text-center"><b>SUB TOTAL:</b></td>
-                            <td class="text-end">@subTotalQTY.ToString("N4")</td>
-                            <td class="text-end">@amount.ToString("N4")</td>
-                            <td class="text-end">@vatableAmount.ToString("N4")</td>
-                            <td class="text-end">@totalDefAmount.ToString("N4")</td>
-                            <td class="text-end">@wthAmount.ToString("N4")</td>
-                            <td class="text-end">@netPurchases.ToString("N4")</td>
+                            <td class="text-end">@subTotalQTY.ToString(SD.Two_Decimal_Format)</td>
+                            <td class="text-end">@amount.ToString(SD.Two_Decimal_Format)</td>
+                            <td class="text-end">@vatableAmount.ToString(SD.Two_Decimal_Format)</td>
+                            <td class="text-end">@totalDefAmount.ToString(SD.Two_Decimal_Format)</td>
+                            <td class="text-end">@wthAmount.ToString(SD.Two_Decimal_Format)</td>
+                            <td class="text-end">@netPurchases.ToString(SD.Two_Decimal_Format)</td>
                         </tr>
                     }
                 }
@@ -201,12 +203,12 @@ Date Issued: @* @CS.DateIssued *@
                 <td></td>
                 <td></td>
                 <td class="text-center"><b>GRAND TOTAL:</b></td>
-                <td class="text-end">@totalQuantity.ToString("N4")</td>
-                <td class="text-end">@totalAmount.ToString("N4")</td>
-                <td class="text-end">@totalVatableAmount.ToString("N4")</td>
-                <td class="text-end">@totalDefAmount.ToString("N4")</td>
-                <td class="text-end">@totalWthAmount.ToString("N4")</td>
-                <td class="text-end">@totalNetPurchases.ToString("N4")</td>
+                <td class="text-end">@totalQuantity.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalVatableAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalDefAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalWthAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalNetPurchases.ToString(SD.Two_Decimal_Format)</td>
             </tr>
         </tbody>
     </table>

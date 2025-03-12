@@ -214,7 +214,7 @@
                 {
                     "data": "quantity",
                     "render": function (data, type, row) {
-                        var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                        var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
                         return `<span class="d-block fw-medium">${amount}</span>`;
                     }
                 },
@@ -231,7 +231,7 @@
                 {
                     "data": "amount",
                     "render": function (data, type, row) {
-                        var amount = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                        var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
                         return `<span class="d-block fw-medium">${amount}</span>`;
                     }
                 },

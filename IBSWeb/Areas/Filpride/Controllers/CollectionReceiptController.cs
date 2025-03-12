@@ -1047,12 +1047,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 return Json(new
                 {
-                    Amount = netDiscount.ToString("N4"),
-                    AmountPaid = si.AmountPaid.ToString("N4"),
-                    Balance = si.Balance.ToString("N4"),
-                    Ewt = withHoldingTaxAmount.ToString("N4"),
-                    Wvat = withHoldingVatAmount.ToString("N4"),
-                    Total = (netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)).ToString("N4")
+                    Amount = netDiscount.ToString(SD.Two_Decimal_Format),
+                    AmountPaid = si.AmountPaid.ToString(SD.Two_Decimal_Format),
+                    Balance = si.Balance.ToString(SD.Two_Decimal_Format),
+                    Ewt = withHoldingTaxAmount.ToString(SD.Two_Decimal_Format),
+                    Wvat = withHoldingVatAmount.ToString(SD.Two_Decimal_Format),
+                    Total = (netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)).ToString(SD.Two_Decimal_Format)
                 });
             }
             else if (isServices && !isSales)
@@ -1065,12 +1065,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 return Json(new
                 {
-                    Amount = sv.Total.ToString("N4"),
-                    AmountPaid = sv.AmountPaid.ToString("N4"),
-                    Balance = sv.Balance.ToString("N4"),
-                    Ewt = withHoldingTaxAmount.ToString("N4"),
-                    Wvat = withHoldingVatAmount.ToString("N4"),
-                    Total = (sv.Total - (withHoldingTaxAmount + withHoldingVatAmount)).ToString("N4")
+                    Amount = sv.Total.ToString(SD.Two_Decimal_Format),
+                    AmountPaid = sv.AmountPaid.ToString(SD.Two_Decimal_Format),
+                    Balance = sv.Balance.ToString(SD.Two_Decimal_Format),
+                    Ewt = withHoldingTaxAmount.ToString(SD.Two_Decimal_Format),
+                    Wvat = withHoldingVatAmount.ToString(SD.Two_Decimal_Format),
+                    Total = (sv.Total - (withHoldingTaxAmount + withHoldingVatAmount)).ToString(SD.Two_Decimal_Format)
                 });
             }
             return Json(null);
@@ -1804,7 +1804,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         worksheet.Cells[row, 24].Value = string.Join(", ", item.MultipleSI.Select(si => si.ToString()));
                         worksheet.Cells[row, 25].Value = string.Join(", ", item.MultipleSIId.Select(siId => siId.ToString()));
-                        worksheet.Cells[row, 26].Value = string.Join(" ", item.SIMultipleAmount.Select(multipleSI => multipleSI.ToString("N4")));
+                        worksheet.Cells[row, 26].Value = string.Join(" ", item.SIMultipleAmount.Select(multipleSI => multipleSI.ToString(SD.Two_Decimal_Format)));
                         worksheet.Cells[row, 27].Value = string.Join(", ", item.MultipleTransactionDate.Select(multipleTransactionDate => multipleTransactionDate.ToString("yyyy-MM-dd")));
                     }
                     worksheet.Cells[row, 28].Value = item.CustomerId;

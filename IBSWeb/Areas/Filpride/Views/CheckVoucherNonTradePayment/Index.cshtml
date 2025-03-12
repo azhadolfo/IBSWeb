@@ -202,11 +202,11 @@
                         "data": "amount",
                         "render": function (data, type, row) {
                             if (row.amount > 0) {
-                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.amount);
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.amount);
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                             else {
-                                var amount = $.fn.dataTable.render.number(',', '.', 4).display(row.checkVoucherHeader.total);
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.checkVoucherHeader.total);
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                             

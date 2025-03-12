@@ -71,7 +71,7 @@ Date Issued: @* @CS.DateIssued *@
                     <td>@sales.CreatedDate.ToString("MM/dd/yyyy")</td>
                     <td>@sales.SerialNo</td>
                     <td>@sales.TransactionDate</td>
-                    <td>@sales.Amount</td>
+                    <td>@sales.Amount.ToString(SD.Two_Decimal_Format)</td>
                 </tr>
 
                 total += sales.Amount;
@@ -80,7 +80,7 @@ Date Issued: @* @CS.DateIssued *@
                 <td></td>
                 <td></td>
                 <td class="text-end">TOTAL:</td>
-                <td>@total.ToString("N4")</td>
+                <td>@total.ToString(SD.Two_Decimal_Format)</td>
             </tr>
         </tbody>
     </table>
