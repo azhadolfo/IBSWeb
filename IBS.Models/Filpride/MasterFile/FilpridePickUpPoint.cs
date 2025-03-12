@@ -21,5 +21,13 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; }
+
+        public int SupplierId { get; set; }
+
+        [ForeignKey("SupplierId")]
+        public FilprideSupplier? Supplier { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string Company { get; set; }
     }
 }

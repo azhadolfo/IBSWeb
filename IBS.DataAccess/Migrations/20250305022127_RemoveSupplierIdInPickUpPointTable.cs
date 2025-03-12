@@ -10,17 +10,7 @@ namespace IBS.DataAccess.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "fk_filpride_pick_up_points_filpride_suppliers_supplier_id",
-                table: "filpride_pick_up_points");
 
-            migrationBuilder.DropIndex(
-                name: "ix_filpride_pick_up_points_supplier_id",
-                table: "filpride_pick_up_points");
-
-            migrationBuilder.DropColumn(
-                name: "supplier_id",
-                table: "filpride_pick_up_points");
         }
 
         /// <inheritdoc />

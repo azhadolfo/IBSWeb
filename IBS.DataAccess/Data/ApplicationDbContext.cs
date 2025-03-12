@@ -558,9 +558,16 @@ namespace IBS.DataAccess.Data
                 s.HasIndex(s => s.SupplierName);
             });
 
+            // FilprideEmployee
             builder.Entity<FilprideEmployee>(c =>
             {
                 c.HasIndex(c => c.EmployeeNumber);
+            });
+
+            // FilpridePickUpPoint
+            builder.Entity<FilpridePickUpPoint>(p =>
+            {
+                p.HasIndex(p => p.Company);
             });
 
             #endregion
