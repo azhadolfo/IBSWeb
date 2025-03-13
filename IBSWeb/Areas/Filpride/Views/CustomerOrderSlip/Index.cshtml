@@ -127,8 +127,13 @@
                     {
                         "data": "purchaseOrderId",
                         "render": function(data, type, row) {
+
                             if (!row.appointedSupplierPOs || row.appointedSupplierPOs.length === 0) {
-                                return `<span>${row.purchaseOrderNo ? row.purchaseOrderNo : ""}</span>`;
+                                return ""; // Blank if zero POs
+                            }
+                            
+                            if (row.appointedSupplierPOs.length === 1) {
+                                return `<span>${row.appointedSupplierPOs[0]}</span>`;
                             }
 
                             // For multiple PO numbers

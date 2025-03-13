@@ -27,7 +27,7 @@ namespace IBS.DataAccess.Migrations
                 table: "filpride_authority_to_loads",
                 type: "integer",
                 nullable: false,
-                defaultValue: 19);
+                defaultValue: 0);
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_authority_to_loads_supplier_id",

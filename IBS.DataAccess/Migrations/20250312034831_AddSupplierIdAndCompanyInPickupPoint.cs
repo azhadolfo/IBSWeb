@@ -15,7 +15,7 @@ namespace IBS.DataAccess.Migrations
                 table: "filpride_pick_up_points",
                 type: "varchar(50)",
                 nullable: false,
-                defaultValue: "Filpride"); //Change the value to ""
+                defaultValue: "");
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_pick_up_points_company",

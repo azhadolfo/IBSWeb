@@ -15,7 +15,7 @@ namespace IBS.DataAccess.Migrations
                 table: "filpride_cos_appointed_suppliers",
                 type: "integer",
                 nullable: false,
-                defaultValue: 19);
+                defaultValue: 0);
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_cos_appointed_suppliers_supplier_id",
