@@ -4,6 +4,10 @@
 @{
     ViewData["Title"] = "COS - Appoint Supplier";
 }
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
@@ -189,16 +193,20 @@
             setTimeout(fetchPurchaseOrders, 50);
         });
 
+        $('#PickUpPointId').on('change', function() {
+            let supplierSelect = $('#SupplierIds');
+            supplierSelect.val(null).trigger('change');
+        });
+
         // Attach PO change handler separately
         $('#PurchaseOrderIds').on('change', function() {
             handlePOSelectionChange();
         });
 
-        $('form').on('submit', function (event) {
+        $(document).on('blur', '#poQuantities input[type="number"]', function() {
             var totalQuantity = 0;
             var cosVolume = @Model.COSVolume;
             var selectedPO = $('#PurchaseOrderIds').val();
-            var isValid = true;
 
             if (selectedPO.length > 0) {
                 $('#poQuantities input[type="number"]').each(function () {
@@ -207,7 +215,6 @@
 
                     if (enteredQuantity > maxQuantity) {
                         alert(`Quantity exceeds the available balance for this PO (max: ${maxQuantity}).`);
-                        isValid = false;
                         return false;
                     }
 
@@ -216,25 +223,19 @@
 
                 if (totalQuantity !== cosVolume) {
                     alert(`Total quantity (${totalQuantity}) must equal the available COS quantity of ${cosVolume}.`);
-                    isValid = false;
                 }
             }
 
             var totalAvailableBalance = 0;
+
             $('#PurchaseOrderIds option:selected').each(function () {
                 totalAvailableBalance += parseFloat($(this).data('available-balance')) || 0;
             });
 
             if (totalQuantity > totalAvailableBalance) {
                 alert(`Total quantity (${totalQuantity}) exceeds the total available balance of the selected POs (${totalAvailableBalance}).`);
-                isValid = false;
-            }
-
-            if (!isValid) {
-                event.preventDefault();
             }
         });
-
     });
 </script>
 
