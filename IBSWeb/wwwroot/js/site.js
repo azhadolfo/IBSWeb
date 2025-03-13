@@ -106,17 +106,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
 //navigation bar dropend implementation
 document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".dropend .dropdown-toggle").forEach(function (btn) {
-        btn.addEventListener("click", function (e) {
-            e.stopPropagation(); // Prevent the event from bubbling up and closing dropdown immediately
+    // Get all dropend elements
+    const dropends = document.querySelectorAll(".dropend");
 
-            let dropend = this.closest(".dropend");
+    // Track the currently open dropend
+    let openDropend = null;
 
-            // Check if the parent .dropend has the 'show' class
-            if (dropend.classList.contains("show")) {
-                dropend.classList.remove("show"); // Close the dropdown if it's already open
-            } else {
-                dropend.classList.add("show"); // Open the dropdown if it's closed
+    dropends.forEach(function (dropend) {
+        dropend.addEventListener("click", function (event) {
+            // Stop event from bubbling up
+            event.stopPropagation();
+
+            const clickedMenu = this.querySelector(".dropdown-menu");
+
+            // If we click on an already open dropend, do nothing
+            // This prevents the double-click issue
+            if (openDropend === this) {
+                return;
+            }
+
+            // Close the currently open dropend if there is one
+            if (openDropend) {
+                const openMenu = openDropend.querySelector(".dropdown-menu");
+                if (openMenu) {
+                    openMenu.classList.remove("show");
+                }
+            }
+
+            // Open the clicked dropend
+            if (clickedMenu) {
+                clickedMenu.classList.add("show");
+                openDropend = this;
             }
         });
     });
