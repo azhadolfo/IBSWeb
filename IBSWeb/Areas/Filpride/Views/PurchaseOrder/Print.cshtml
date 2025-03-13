@@ -141,9 +141,9 @@
         <tbody>
             <tr>
                 <td class="w-25">@Html.DisplayFor(model => model.Product.ProductName)</td>
-                <td class="w-25">@Model.Quantity.ToString("N4")</td>
-                <td class="w-25">@Html.DisplayFor(model => model.Price)</td>
-                <td class="w-25">@Html.DisplayFor(model => model.Amount)</td>
+                <td class="w-25">@Model.Quantity.ToString(SD.Two_Decimal_Format)</td>
+                <td class="w-25">@Model.Price.ToString(SD.Four_Decimal_Format)</td>
+                <td class="w-25">@Model.Amount.ToString(SD.Two_Decimal_Format)</td>
             </tr>
         </tbody>
     </table>
@@ -241,8 +241,8 @@
                 @foreach (var updatedPrice in Model.ActualPrices)
                 {
                     <tr>
-                        <td class="text-end">@updatedPrice.TriggeredVolume.ToString("N4")</td>
-                        <td class="text-end">@updatedPrice.TriggeredPrice.ToString("N4")</td>
+                        <td class="text-end">@updatedPrice.TriggeredVolume.ToString(SD.Four_Decimal_Format)</td>
+                        <td class="text-end">@updatedPrice.TriggeredPrice.ToString(SD.Four_Decimal_Format)</td>
                         <td>@DateTimeHelper.GetCurrentPhilippineTimeFormatted(updatedPrice.TriggeredDate)</td>
                         <td>@(updatedPrice.ApprovedDate != null ? DateTimeHelper.GetCurrentPhilippineTimeFormatted((DateTime)updatedPrice.ApprovedDate) : "" )</td>
                     </tr>

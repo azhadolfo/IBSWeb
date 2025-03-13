@@ -1,4 +1,5 @@
-﻿@model IEnumerable<FilprideInventory>
+﻿@using IBS.Utility.Constants
+@model IEnumerable<FilprideInventory>
 
 @{
     ViewData["Title"] = "Inventory Report";
@@ -58,12 +59,12 @@
                                     <td>@inventory.Date.ToString("MM/dd/yyyy")</td>
                                     <td>@Html.DisplayFor(model => inventory.Particular)</td>
                                     <td>@Html.DisplayFor(model => inventory.Reference)</td>
-                                    <td class="text-end">@Html.DisplayFor(model => inventory.Quantity)</td>
-                                    <td class="text-end">@Html.DisplayFor(model => inventory.Cost)</td>
-                                    <td class="text-end">@Html.DisplayFor(model => inventory.Total)</td>
-                                    <td class="text-end">@totalQty.ToString("N4")</td>
-                                    <td class="text-end">@totalPrice.ToString("N4")</td>
-                                    <td class="text-end">@totalAmount.ToString("N4")</td>
+                                    <td class="text-end">@inventory.Quantity.ToString(SD.Two_Decimal_Format)</td>
+                                    <td class="text-end">@inventory.Cost.ToString(SD.Four_Decimal_Format)</td>
+                                    <td class="text-end">@inventory.Total.ToString(SD.Two_Decimal_Format)</td>
+                                    <td class="text-end">@totalQty.ToString(SD.Two_Decimal_Format)</td>
+                                    <td class="text-end">@totalPrice.ToString(SD.Four_Decimal_Format)</td>
+                                    <td class="text-end">@totalAmount.ToString(SD.Two_Decimal_Format)</td>
                                     <td>
                                         @if (inventory.IsValidated)
                                         {
@@ -89,12 +90,12 @@
                                     <td>@inventory.Date.ToString("MM/dd/yyyy")</td>
                                     <td>@Html.DisplayFor(model => inventory.Particular)</td>
                                     <td>@Html.DisplayFor(model => inventory.Reference)</td>
-                                    <td class="text-end">@Html.DisplayFor(model => inventory.Quantity)</td>
-                                    <td class="text-end">@Html.DisplayFor(model => inventory.Cost)</td>
-                                    <td class="text-end">@Html.DisplayFor(model => inventory.Total)</td>
-                                    <td class="text-end">@totalQty.ToString("N4")</td>
-                                    <td class="text-end">@totalPrice.ToString("N4")</td>
-                                    <td class="text-end">@totalAmount.ToString("N4")</td>
+                                    <td class="text-end">@inventory.Quantity.ToString(SD.Two_Decimal_Format)</td>
+                                    <td class="text-end">@inventory.Cost.ToString(SD.Four_Decimal_Format)</td>
+                                    <td class="text-end">@inventory.Total.ToString(SD.Two_Decimal_Format)</td>
+                                    <td class="text-end">@totalQty.ToString(SD.Two_Decimal_Format)</td>
+                                    <td class="text-end">@totalPrice.ToString(SD.Four_Decimal_Format)</td>
+                                    <td class="text-end">@totalAmount.ToString(SD.Two_Decimal_Format)</td>
                                     <td>
                                         @if (inventory.IsValidated)
                                         {

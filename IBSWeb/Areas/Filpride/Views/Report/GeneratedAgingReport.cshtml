@@ -8,9 +8,6 @@
 @{
     ViewData["Title"] = "Aging Report";
 
-    string currencyFormat = "N4";
-    string currencyFormatTwoDecimal = "N2";
-
     var totalGrossAmount = 0m;
     var totalAmountPaid = 0m;
     var totalAdjustedGross = 0m;
@@ -133,20 +130,20 @@
                     <td>@Html.DisplayFor(model => invoice.DueDate)</td>
                     <td>@Html.DisplayFor(model => invoice.SalesInvoiceNo)</td>
                     <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.DeliveryReceiptNo)</td>
-                    <td class="text-end">@gross</td>
-                    <td class="text-end">@invoice.AmountPaid</td>
-                    <td class="text-end">@adjustedGross</td>
-                    <td class="text-end">@withHoldingTaxAmount.ToString(currencyFormat)</td>
-                    <td class="text-end">@netOfVatAmount.ToString(currencyFormat)</td>
-                    <td class="text-end">@vcfAmount</td>
-                    <td class="text-end">@retentionAmount.ToString(currencyFormat)</td>
-                    <td class="text-end">@adjustedNet</td>
-                    <td class="text-end">@daysDue</td>
-                    <td class="text-end">@current</td>
-                    <td class="text-end">@oneToThirtyDays</td>
-                    <td class="text-end">@thirtyOneToSixtyDays</td>
-                    <td class="text-end">@sixtyOneToNinetyDays</td>
-                    <td class="text-end">@overNinetyDays</td>
+                    <td class="text-end">@gross.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@invoice.AmountPaid.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@adjustedGross.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@withHoldingTaxAmount.ToString(SD.Four_Decimal_Format)</td>
+                    <td class="text-end">@netOfVatAmount.ToString(SD.Four_Decimal_Format)</td>
+                    <td class="text-end">@vcfAmount.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@retentionAmount.ToString(SD.Four_Decimal_Format)</td>
+                    <td class="text-end">@adjustedNet.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@daysDue.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@current.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@oneToThirtyDays.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@thirtyOneToSixtyDays.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@sixtyOneToNinetyDays.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@overNinetyDays.ToString(SD.Two_Decimal_Format)</td>
                 </tr>
 
                 totalGrossAmount += invoice.Amount;
@@ -173,20 +170,20 @@
                 <td></td>
                 <td></td>
                 <td class="text-center"><b>TOTAL:</b></td>
-                <td class="text-end">@totalGrossAmount.ToString(currencyFormat)</td>
-                <td class="text-end">@totalAmountPaid.ToString(currencyFormat)</td>
-                <td class="text-end">@totalAdjustedGross.ToString(currencyFormat)</td>
-                <td class="text-end">@totalWithHoldingTaxAmount.ToString(currencyFormat)</td>
-                <td class="text-end">@totalNetOfVatAmount.ToString(currencyFormat)</td>
-                <td class="text-end">@totalVcfAmount.ToString(currencyFormat)</td>
-                <td class="text-end">@totalRetentionAmount.ToString(currencyFormat)</td>
-                <td class="text-end">@totalAdjustedNet.ToString(currencyFormat)</td>
+                <td class="text-end">@totalGrossAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalAmountPaid.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalAdjustedGross.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalWithHoldingTaxAmount.ToString(SD.Four_Decimal_Format)</td>
+                <td class="text-end">@totalNetOfVatAmount.ToString(SD.Four_Decimal_Format)</td>
+                <td class="text-end">@totalVcfAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalRetentionAmount.ToString(SD.Four_Decimal_Format)</td>
+                <td class="text-end">@totalAdjustedNet.ToString(SD.Two_Decimal_Format)</td>
                 <td class="text-end"></td>
-                <td class="text-end">@totalCurrent.ToString(currencyFormat)</td>
-                <td class="text-end">@totalOneToThirtyDays.ToString(currencyFormat)</td>
-                <td class="text-end">@totalThirtyOneToSixtyDays.ToString(currencyFormat)</td>
-                <td class="text-end">@totalSixtyOneToNinetyDays.ToString(currencyFormat)</td>
-                <td class="text-end">@totalOverNinetyDays.ToString(currencyFormat)</td>
+                <td class="text-end">@totalCurrent.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalOneToThirtyDays.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalThirtyOneToSixtyDays.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalSixtyOneToNinetyDays.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalOverNinetyDays.ToString(SD.Two_Decimal_Format)</td>
             </tr>
             </tbody>
         </table>

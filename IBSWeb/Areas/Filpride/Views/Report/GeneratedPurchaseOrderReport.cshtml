@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<FilpridePurchaseOrder>
+@using IBS.Utility.Constants
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
@@ -79,10 +80,10 @@
                         <td>@Html.DisplayFor(model => purchase.Date)</td>
                         <td>@Html.DisplayFor(model => purchase.Supplier.SupplierName)</td>
                         <td>@Html.DisplayFor(model => purchase.Product.ProductName)</td>
-                        <td class="text-end">@Html.DisplayFor(model => purchase.Quantity)</td>
+                        <td class="text-end">@purchase.Quantity.ToString(SD.Two_Decimal_Format)</td>
                         <td>@Html.DisplayFor(model => purchase.Product.ProductUnit)</td>
-                        <td class="text-end">@Html.DisplayFor(model => purchase.Price)</td>
-                        <td class="text-end">@Html.DisplayFor(model => purchase.Amount)</td>
+                        <td class="text-end">@purchase.Price.ToString(SD.Four_Decimal_Format)</td>
+                        <td class="text-end">@purchase.Amount.ToString(SD.Two_Decimal_Format)</td>
                         <td>@Html.DisplayFor(model => purchase.Remarks)</td>
                     </tr>
                 }

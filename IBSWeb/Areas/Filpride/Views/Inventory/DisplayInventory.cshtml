@@ -1,4 +1,6 @@
-﻿@model IEnumerable<FilprideInventory>
+﻿@using IBS.Utility.Constants
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model IEnumerable<FilprideInventory>
 
 @{
     ViewData["Title"] = "Inventory Report";
@@ -35,12 +37,12 @@
                         <td>@obj.Date.ToString("MM/dd/yyyy")</td>
                         <td>@Html.DisplayFor(model => obj.Particular)</td>
                         <td>@Html.DisplayFor(model => obj.Reference)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Cost)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Total)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.InventoryBalance)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.AverageCost)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.TotalBalance)</td>
+                        <td class="text-end">@obj.Quantity.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@obj.Cost.ToString(SD.Four_Decimal_Format)</td>
+                        <td class="text-end">@obj.Total.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@obj.InventoryBalance.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@obj.AverageCost.ToString(SD.Four_Decimal_Format)</td>
+                        <td class="text-end">@obj.TotalBalance.ToString(SD.Two_Decimal_Format)</td>
                         <td>
                             @if (obj.IsValidated)
                             {
@@ -65,12 +67,12 @@
                         <td>@obj.Date.ToString("MM/dd/yyyy")</td>
                         <td>@Html.DisplayFor(model => obj.Particular)</td>
                         <td>@Html.DisplayFor(model => obj.Reference)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Cost)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.Total)</td>
-                        <td class="text-end">@totalQty.ToString("N4")</td>
-                        <td class="text-end">@totalPrice.ToString("N4")</td>
-                        <td class="text-end">@totalAmount.ToString("N4")</td>
+                        <td class="text-end">@obj.Quantity.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@obj.Cost.ToString(SD.Four_Decimal_Format)</td>
+                        <td class="text-end">@obj.Total.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@totalQty.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@totalPrice.ToString(SD.Four_Decimal_Format)</td>
+                        <td class="text-end">@totalAmount.ToString(SD.Two_Decimal_Format)</td>
                         <td>
                             @if (obj.IsValidated)
                             {
@@ -94,12 +96,12 @@
                             <td>@obj.Date.ToString("MM/dd/yyyy")</td>
                             <td>@Html.DisplayFor(model => obj.Particular)</td>
                             <td>@Html.DisplayFor(model => obj.Reference)</td>
-                            <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
-                            <td class="text-end">@Html.DisplayFor(model => obj.Cost)</td>
-                            <td class="text-end">@Html.DisplayFor(model => obj.Total)</td>
-                            <td class="text-end">@totalQty.ToString("N4")</td>
-                            <td class="text-end">@totalPrice.ToString("N4")</td>
-                            <td class="text-end">@totalAmount.ToString("N4")</td>
+                            <td class="text-end">@obj.Quantity.ToString(SD.Two_Decimal_Format)</td>
+                            <td class="text-end">@obj.Cost.ToString(SD.Four_Decimal_Format)</td>
+                            <td class="text-end">@obj.Total.ToString(SD.Two_Decimal_Format)</td>
+                            <td class="text-end">@totalQty.ToString(SD.Two_Decimal_Format)</td>
+                            <td class="text-end">@totalPrice.ToString(SD.Four_Decimal_Format)</td>
+                            <td class="text-end">@totalAmount.ToString(SD.Two_Decimal_Format)</td>
                             <td>
                                 @if (obj.IsValidated)
                                 {
@@ -121,12 +123,12 @@
                             <td>@obj.Date.ToString("MM/dd/yyyy")</td>
                             <td>@Html.DisplayFor(model => obj.Particular)</td>
                             <td>@Html.DisplayFor(model => obj.Reference)</td>
-                            <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
-                            <td class="text-end">@Html.DisplayFor(model => obj.Cost)</td>
-                            <td class="text-end">@Html.DisplayFor(model => obj.Total)</td>
-                            <td class="text-end">@totalQty.ToString("N4")</td>
-                            <td class="text-end">@totalPrice.ToString("N4")</td>
-                            <td class="text-end">@totalAmount.ToString("N4")</td>
+                            <td class="text-end">@obj.Quantity.ToString(SD.Two_Decimal_Format)</td>
+                            <td class="text-end">@obj.Cost.ToString(SD.Four_Decimal_Format)</td>
+                            <td class="text-end">@obj.Total.ToString(SD.Two_Decimal_Format)</td>
+                            <td class="text-end">@totalQty.ToString(SD.Two_Decimal_Format)</td>
+                            <td class="text-end">@totalPrice.ToString(SD.Four_Decimal_Format)</td>
+                            <td class="text-end">@totalAmount.ToString(SD.Two_Decimal_Format)</td>
                             <td>
                                 @if (obj.IsValidated)
                                 {

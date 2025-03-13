@@ -152,25 +152,25 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
                         @Html.DisplayFor(model => invoice.Description)
                     </td>
                     <td class="text-end" style="padding: 10px 20px 10px 20px;">
-                        @Html.DisplayFor(model => invoice.Amount)
+                        @invoice.Amount.ToString(SD.Two_Decimal_Format)
                     </td>
                     <td class="text-end" style="padding: 10px 20px 10px 20px;">
-                        @Html.DisplayFor(model => invoice.VatAmount)
+                        @invoice.VatAmount.ToString(SD.Two_Decimal_Format)
                     </td>
                     <td class="text-end" style="padding: 10px 20px 10px 20px;">
-                        @Html.DisplayFor(model => invoice.VatableSales)
+                        @invoice.VatableSales.ToString(SD.Two_Decimal_Format)
                     </td>
                     <td class="text-end" style="padding: 10px 20px 10px 20px;">
-                        @Html.DisplayFor(model => invoice.VatExemptSales)
+                        @invoice.VatExemptSales.ToString(SD.Two_Decimal_Format)
                     </td>
                     <td class="text-end" style="padding: 10px 20px 10px 20px;">
-                        @Html.DisplayFor(model => invoice.ZeroRated)
+                        @invoice.ZeroRated.ToString(SD.Two_Decimal_Format)
                     </td>
                     <td class="text-end" style="padding: 10px 20px 10px 20px;">
-                        @Html.DisplayFor(model => invoice.Discount)
+                        @invoice.Discount.ToString(SD.Two_Decimal_Format)
                     </td>
                     <td class="text-end" style="padding: 10px 20px 10px 20px;">
-                        @Html.DisplayFor(model => invoice.NetSales)
+                        @invoice.NetSales.ToString(SD.Two_Decimal_Format)
                     </td>
 
                 </tr>
@@ -190,13 +190,13 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
                 <td></td>
                 <td></td>
                 <td class="text-center"><b>TOTAL:</b></td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalAmount.ToString("N4")</td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalVatableAmount.ToString("N4")</td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalVatableSales.ToString("N4")</td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalExempted.ToString("N4")</td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalZeroRated.ToString("N4")</div></td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalDiscount.ToString("N4")</div></td>
-                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalNetSales.ToString("N4")</div></td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalVatableAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalVatableSales.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;">@totalExempted.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalZeroRated.ToString(SD.Two_Decimal_Format)</div></td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalDiscount.ToString(SD.Two_Decimal_Format)</div></td>
+                <td class="text-end" style="padding: 10px 20px 10px 20px;"><div>@totalNetSales.ToString(SD.Two_Decimal_Format)</div></td>
             </tr>
         </tbody>
     </table>
@@ -377,7 +377,7 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
 
         // Replace the placeholder in the HTML with the actual number of records
         resultPre.innerHTML = resultPre.innerHTML.replace('@numberOfRecords', (allTrElements.length - 1));
-        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount.ToString("N4")");
+        resultPre.innerHTML = resultPre.innerHTML.replace('@amountFieldControlTotal', "@totalAmount.ToString(SD.Two_Decimal_Format)");
 
     </script>
 

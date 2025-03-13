@@ -2696,7 +2696,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             string currencyFormat = "#,##0.0000";
             string currencyFormatTwoDecimal = "#,##0.00";
 
-            var totalFreight = 0m;
+            var totalFreightAmount = 0m;
             var totalSalesNetOfVat = 0m;
             var totalFreightNetOfVat = 0m;
             var totalCommissionRate = 0m;
@@ -2704,11 +2704,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             foreach (var dr in salesReport)
             {
                 var quantity = dr.DeliveryReceipt.Quantity;
-                var freight = (dr.DeliveryReceipt?.Freight ?? 0m) * quantity;
+                var freightAmount = (dr.DeliveryReceipt?.Freight ?? 0m) * quantity;
                 var segment = dr.DeliveryReceipt.TotalAmount;
                 var salesNetOfVat = segment != 0 ? segment / 1.12m : 0;
                 var vat = salesNetOfVat * .12m;
-                var freightNetOfVat = freight / 1.12m;
+                var freightNetOfVat = freightAmount / 1.12m;
 
                 worksheet.Cells[row, 1].Value = dr.DeliveryReceipt.DeliveredDate;
                 worksheet.Cells[row, 2].Value = dr.DeliveryReceipt.Customer?.CustomerName;
@@ -2724,7 +2724,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 12].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
                 worksheet.Cells[row, 13].Value = dr.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName;
                 worksheet.Cells[row, 14].Value = dr.DeliveryReceipt.Quantity;
-                worksheet.Cells[row, 15].Value = freight;
+                worksheet.Cells[row, 15].Value = freightAmount;
                 worksheet.Cells[row, 16].Value = segment;
                 worksheet.Cells[row, 17].Value = vat;
                 worksheet.Cells[row, 18].Value = salesNetOfVat;
@@ -2733,17 +2733,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 21].Value = dr.DeliveryReceipt.Remarks;
 
                 worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
 
                 row++;
 
-                totalFreight += freight;
+                totalFreightAmount += freightAmount;
                 totalVat += vat;
                 totalSalesNetOfVat += salesNetOfVat;
                 totalFreightNetOfVat += freightNetOfVat;
@@ -2752,19 +2752,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             worksheet.Cells[row, 13].Value = "Total ";
             worksheet.Cells[row, 14].Value = totalQuantity;
-            worksheet.Cells[row, 15].Value = totalFreight;
+            worksheet.Cells[row, 15].Value = totalFreightAmount;
             worksheet.Cells[row, 16].Value = totalAmount;
             worksheet.Cells[row, 17].Value = totalVat;
             worksheet.Cells[row, 18].Value = totalSalesNetOfVat;
             worksheet.Cells[row, 19].Value = totalFreightNetOfVat;
             worksheet.Cells[row, 20].Value = totalCommissionRate;
 
-            worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
             worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
 
             // Apply style to subtotal row
@@ -3088,7 +3088,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Populate the data rows
             int row = 8;
-            string currencyFormat = "#,##0.0000";
+            string currencyFormat = "#,##0.00";
 
             foreach (var po in PurchaseOrderReport)
             {
@@ -3363,7 +3363,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     int row = 8; // starting row
                     string currencyFormat = "#,##0.0000"; // numbers format
                     string currencyFormat2 = "#,##0.00"; // numbers format
-                    string currencyFormat0 = "#,##0"; // numbers format
 
                     #region -- Populate data rows --
 
@@ -3432,7 +3431,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region -- Add format number cells from Assign Values to Cells --
 
                         purchaseReportWorksheet.Cells[row, 1, row, 2].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat0;
+                        purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat2;
                         purchaseReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
                         purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat2;
                         purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat2;
@@ -3467,14 +3466,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells[row, 24].Value = totalNetFreight;
                     purchaseReportWorksheet.Cells[row, 25].Value = totalCommission;
 
-                    purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat0;
+                    purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat2;
                     purchaseReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat2;
                     purchaseReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat2;
 
                     #endregion -- Assign values of other totals and formatting of total cells --
 
@@ -3592,9 +3591,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 purchaseReportWorksheet.Cells[row, startingColumn + 1].Value = grandTotalVolume;
                                 purchaseReportWorksheet.Cells[row, startingColumn + 2].Value = grandTotalPurchaseNet;
                                 purchaseReportWorksheet.Cells[row, startingColumn + 3].Value = (grandTotalVolume != 0m ? grandTotalPurchaseNet / grandTotalVolume : 0m); // Gross Margin Per Liter
-                                var debugValue = (grandTotalVolume != 0m ? grandTotalPurchaseNet / grandTotalVolume : 0m);
                                 purchaseReportWorksheet.Cells[row, startingColumn+1, row, startingColumn + 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                                purchaseReportWorksheet.Cells[row, startingColumn + 1].Style.Numberformat.Format = currencyFormat0;
+                                purchaseReportWorksheet.Cells[row, startingColumn + 1].Style.Numberformat.Format = currencyFormat2;
                                 purchaseReportWorksheet.Cells[row, startingColumn + 2].Style.Numberformat.Format = currencyFormat2;
                                 purchaseReportWorksheet.Cells[row, startingColumn + 3].Style.Numberformat.Format = currencyFormat;
                             }
@@ -3616,7 +3614,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, i + 3].Formula = $"={purchaseReportWorksheet.Cells[row, i + 2].Address}/{purchaseReportWorksheet.Cells[row, i + 1].Address}";
 
 
-                        purchaseReportWorksheet.Cells[row, i+1].Style.Numberformat.Format = currencyFormat0;
+                        purchaseReportWorksheet.Cells[row, i+1].Style.Numberformat.Format = currencyFormat2;
                         purchaseReportWorksheet.Cells[row, i+2].Style.Numberformat.Format = currencyFormat2;
                         purchaseReportWorksheet.Cells[row, i+3].Style.Numberformat.Format = currencyFormat;
 
@@ -4058,7 +4056,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (true)
                 {
-                    string currencyFormat = "#,##0.00";
                     var worksheet = package.Workbook.Worksheets.Add("MONTH TO DATE SALES REPORT");
 
                     #region == Header Contents and Formatting ==
@@ -4438,6 +4435,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Populate the data row
                 int row = 8; // starting row
                 string currencyFormat = "#,##0.0000"; // numbers format
+                string currencyFormatTwoDecimal = "#,##0.00"; // numbers format
 
                 #region -- Populate data rows --
 
@@ -4515,23 +4513,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     totalFCNet += freightChargeNet;
 
                     gmReportWorksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    gmReportWorksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                    gmReportWorksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+                    gmReportWorksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                    gmReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                    gmReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+                    gmReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
+                    gmReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormat;
+                    gmReportWorksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                     #endregion -- Add the values to total and format number cells --
 
@@ -4568,23 +4566,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 gmReportWorksheet.Cells[row, 26].Value = totalNetMarginPerLiter; // Net Margin Per Liter
                 gmReportWorksheet.Cells[row, 27].Value = totalNetMarginAmount; // Net Margin Amount
 
-                gmReportWorksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                 #endregion -- Assign values of other totals and formatting of total cells --
 
@@ -4675,7 +4673,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .GroupBy(rr => rr.PurchaseOrder.Supplier.SupplierName);
 
                 startingSummaryTableRow = row;
-
                 foreach (var rrSupplier in rrBySupplier)
                 {
                     int startingColumn = 2;
@@ -5492,7 +5489,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             int row = 8;
             string currencyFormat = "#,##0.0000";
             string currencyFormatTwoDecimal = "#,##0.00";
-            string currencyFormatNoDecimal = "#,##0";
 
             var totalQuantity = 0m;
             var totalUnitPrice = 0m;
@@ -5546,18 +5542,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[row, 5].Style.Numberformat.Format = "MMM/dd/yyyy";
                 worksheet.Cells[row, 6].Style.Numberformat.Format = "MMM/dd/yyyy";
-                worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatNoDecimal;
+                worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                 row++;
 
@@ -5589,18 +5585,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells[row, 24].Value = totalEwtAmountPaid;
             worksheet.Cells[row, 25].Value = totalewtBalance;
 
-            worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatNoDecimal;
+            worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
             worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
             worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
+            worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+            worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
             // Apply style to subtotal row
             using (var range = worksheet.Cells[row, 1, row, 25])
@@ -5705,8 +5701,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Populate the data rows
             int row = 8;
-            string currencyFormat = "#,##0.0000";
-            string currencyFormatTwoDecimal = "#,##0.00";
+            string currencyFormat = "#,##0.00";
 
             var totalGrossAmount = 0m;
             var totalAmountPaid = 0m;
@@ -5880,7 +5875,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Define table headers
                     var headers = new[]
                     {
-                        "COS Date", "Date of Del", "Customer", "Product", "P.O. No.",
+                        "COS Date", "Customer", "Product", "P.O. No.",
                         "COS No.", "Price", "Unserved Volume", "Amount", "COS Status", "Exp of COS", "OTC COS No."
                     };
 
@@ -5895,32 +5890,45 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // Populate data rows
                     int row = 4;
+                    string currencyFormat = "#,##0.0000";
+                    string currencyFormatTwoDecimal = "#,##0.00";
+
+                    var totalUnservedVolume = 0m;
+                    var totalAmount = 0m;
+
                     foreach (var item in cosSummary)
                     {
-                        worksheet.Cells[row, 1].Value = item.Date;
-                        worksheet.Cells[row, 2].Value = item.Date;
-                        worksheet.Cells[row, 3].Value = item.Customer.CustomerName;
-                        worksheet.Cells[row, 4].Value = item.Product.ProductName;
-                        worksheet.Cells[row, 5].Value = item.CustomerPoNo;
-                        worksheet.Cells[row, 6].Value = item.CustomerOrderSlipNo;
-                        worksheet.Cells[row, 7].Value = item.DeliveredPrice;
-                        worksheet.Cells[row, 8].Value = item.Quantity - item.DeliveredQuantity;
-                        worksheet.Cells[row, 9].Value = item.TotalAmount;
-                        worksheet.Cells[row, 10].Value = "APPROVED";
-                        worksheet.Cells[row, 11].Value = item.ExpirationDate?.ToString("dd-MMM-yyyy");
-                        worksheet.Cells[row, 12].Value = item.OldCosNo;
+                        var unservedVolume = item.Quantity - item.DeliveredQuantity;
 
-                        worksheet.Cells[row, 1, row, 2].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        worksheet.Cells[row, 7, row, 9].Style.Numberformat.Format = "#,##0.0000";
+                        worksheet.Cells[row, 1].Value = item.Date;
+                        worksheet.Cells[row, 2].Value = item.Customer.CustomerName;
+                        worksheet.Cells[row, 3].Value = item.Product.ProductName;
+                        worksheet.Cells[row, 4].Value = item.CustomerPoNo;
+                        worksheet.Cells[row, 5].Value = item.CustomerOrderSlipNo;
+                        worksheet.Cells[row, 6].Value = item.DeliveredPrice;
+                        worksheet.Cells[row, 7].Value = unservedVolume;
+                        worksheet.Cells[row, 8].Value = item.TotalAmount;
+                        worksheet.Cells[row, 9].Value = "APPROVED";
+                        worksheet.Cells[row, 10].Value = item.ExpirationDate?.ToString("dd-MMM-yyyy");
+                        worksheet.Cells[row, 11].Value = item.OldCosNo;
+
+                        worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
                         row++;
+
+                        totalUnservedVolume += unservedVolume;
+                        totalAmount += item.TotalAmount;
                     }
 
                     // Add total row
-                    worksheet.Cells[row, 7].Value = "TOTAL";
-                    worksheet.Cells[row, 8].Formula = $"SUM(H4:H{row - 1})";
-                    worksheet.Cells[row, 9].Formula = $"SUM(I4:I{row - 1})";
-                    worksheet.Cells[row, 7, row, 9].Style.Font.Bold = true;
-                    worksheet.Cells[row, 8, row, 9].Style.Numberformat.Format = "#,##0.0000";
+                    worksheet.Cells[row, 6].Value = "TOTAL";
+                    worksheet.Cells[row, 7].Value = totalUnservedVolume;
+                    worksheet.Cells[row, 8].Value = totalAmount;
+                    worksheet.Cells[row, 6, row, 8].Style.Font.Bold = true;
+                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                     // Auto-fit columns for readability
                     worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
@@ -5978,25 +5986,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 picture.SetPosition(0, 0, 0, 0); // Adjust position as needed
                 picture.SetSize(200, 60); // Adjust size as needed
 
-                worksheet.Cells["A5"].Value = "OPERATION - LOGISTICS";
-                worksheet.Cells["A6"].Value = $"DISPATCH REPORT AS OF {lastDayOfMonth:dd MMM, yyyy}";
-                worksheet.Cells["A7"].Value = viewModel.ReportType == "AllDeliveries" ? "ALL DELIVERIES" : "IN TRANSIT DELIVERIES";
+                var mergedCellsA5 = worksheet.Cells["A5:B5"];
+                mergedCellsA5.Merge = true;
+                mergedCellsA5.Value = "OPERATION - LOGISTICS";
 
-                // Add column headers
-                var headers = new[]
-                {
-                    "DR DATE", "CUSTOMER NAME", "TYPE", "DR NO.", "PRODUCTS", "QTY.", "AMOUNT", "PICK-UP POINT",
-                    "PO #", "ATL#/SO#", "COS NO.", "HAULER NAME", "SUPPLIER", "COST", "FREIGHT", "ECC", "TOTAL FREIGHT"
-                };
+                var mergedCellsA6 = worksheet.Cells["A6:B6"];
+                mergedCellsA6.Merge = true;
+                mergedCellsA6.Value = $"DISPATCH REPORT AS OF {lastDayOfMonth:dd MMM, yyyy}";
 
-                if (viewModel.ReportType == "AllDeliveries")
-                {
-                    headers = headers.Concat(new[] { "DELIVERY DATE", "STATUS" }).ToArray();
-                }
+                var mergedCellsA7 = worksheet.Cells["A7:B7"];
+                mergedCellsA7.Merge = true;
+                mergedCellsA7.Value = viewModel.ReportType == "AllDeliveries" ? "ALL DELIVERIES" : "IN TRANSIT DELIVERIES";
 
                 // Table headers
                 worksheet.Cells["A9"].Value = "DR DATE";
-                worksheet.Cells["A9"].AutoFitColumns();
                 worksheet.Cells["B9"].Value = "CUSTOMER NAME";
                 worksheet.Cells["C9"].Value = "TYPE";
                 worksheet.Cells["D9"].Value = "DR NO.";
@@ -6109,12 +6112,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[currentRow, 16].Value = sumOfECC;
                     worksheet.Cells[currentRow, 17].Value = sumOfTotalFreight;
 
-                    using (var subtotalRowRange = worksheet.Cells[currentRow, 1, currentRow, 17]) // Adjust range as needed
+                    using (var subtotalRowRange = worksheet.Cells[currentRow, 1, currentRow, 21]) // Adjust range as needed
                     {
                         subtotalRowRange.Style.Font.Bold = true; // Make text bold
                         subtotalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                         subtotalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                        subtotalRowRange.Style.Numberformat.Format = "#,##0.0000"; // Optional: Format numbers
                     }
 
                     grandSumOfCost += sumOfCost;
@@ -6137,30 +6139,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[currentRow, 17].Value = grandSumOfTotalFreight;
 
                 // Adding borders and bold styling to the total row
-                using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, 17]) // Whole row
+                using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, 21]) // Whole row
                 {
                     totalRowRange.Style.Font.Bold = true; // Make text bold
                     totalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     totalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                    totalRowRange.Style.Numberformat.Format = "#,##0.0000"; // Optional: Format numbers
                 }
 
                 // Generated by, checked by, received by footer
+                worksheet.Cells[currentRow + 3, 1, currentRow + 3, 2].Merge = true;
                 worksheet.Cells[currentRow + 3, 1].Value = "Generated by:";
                 worksheet.Cells[currentRow + 3, 4].Value = "Noted & Checked by:";
                 worksheet.Cells[currentRow + 3, 8].Value = "Received by:";
 
+                worksheet.Cells[currentRow + 4, 1, currentRow + 4, 2].Merge = true;
                 worksheet.Cells[currentRow + 4, 1].Value = currentUser.ToUpper();
                 worksheet.Cells[currentRow + 4, 4].Value = "JOEYLITO M. CAILAN";
                 worksheet.Cells[currentRow + 4, 8].Value = "IVY PAGKATIPUNAN";
 
+                worksheet.Cells[currentRow + 5, 1, currentRow + 5, 2].Merge = true;
                 worksheet.Cells[currentRow + 5, 1].Value = $"Date & Time: {today:MM/dd/yyyy - hh:mm tt}";
                 worksheet.Cells[currentRow + 5, 4].Value = "LOGISTICS SUPERVISOR";
                 worksheet.Cells[currentRow + 5, 8].Value = "CNC SUPERVISOR";
 
                 // Styling and formatting (optional)
-                worksheet.Cells["B:T"].AutoFitColumns();
-                worksheet.Cells["F,G,N:Q"].Style.Numberformat.Format = "#,##0.0000";
+                worksheet.Cells["N"].Style.Numberformat.Format = "#,##0.0000";
+                worksheet.Cells["F,G,O:Q"].Style.Numberformat.Format = "#,##0.00";
 
                 using (var range = worksheet.Cells[$"A9:{headerColumn}"])
                 {
@@ -6172,6 +6176,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
                 }
 
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(10, 1);
                 // Return Excel file as response
                 var stream = new MemoryStream();
                 package.SaveAs(stream);

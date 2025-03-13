@@ -1,13 +1,12 @@
 @model IEnumerable<FilprideSalesInvoice>
+@using IBS.Utility.Constants
 @using IBS.Utility.Enums
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @{
     ViewData["Title"] = "AR Per Customer Report";
-
-    string currencyFormat = "N4";
-    string currencyFormatTwoDecimal = "N2";
     
     decimal totalQuantity = 0m;
     decimal totalUnitPrice = 0m;
@@ -127,19 +126,19 @@
                     <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.CustomerOrderSlip.CustomerOrderSlipNo)</td>
                     <td>@Html.DisplayFor(model => invoice.Remarks)</td>
                     <td>@Html.DisplayFor(model => invoice.Product.ProductName)</td>
-                    <td>@invoice.Quantity.ToString("N0")</td>
+                    <td>@invoice.Quantity.ToString(SD.Two_Decimal_Format)</td>
                     <td>@Html.DisplayFor(model => invoice.Product.ProductUnit)</td>
-                    <td class="text-end">@invoice.UnitPrice.ToString(currencyFormat)</td>
-                    <td class="text-end">@(freight?.ToString(currencyFormat) ?? "0.0000")</td>
-                    <td class="text-end">@(invoice.DeliveryReceipt?.Freight.ToString(currencyFormat) ?? "0.0000")</td>
-                    <td>@vatPerLiter.ToString(currencyFormat)</td>
-                    <td>@vatAmount.ToString(currencyFormat)</td>
-                    <td>@grossAmount.ToString(currencyFormat)</td>
-                    <td>@invoice.AmountPaid.ToString(currencyFormat)</td>
-                    <td class="text-end">@invoice.Balance.ToString(currencyFormat)</td>
-                    <td>@ewtAmount.ToString(currencyFormat)</td>
-                    <td>@isEwtAmountPaid.ToString(currencyFormat)</td>
-                    <td>@ewtBalance.ToString(currencyFormat)</td>
+                    <td class="text-end">@invoice.UnitPrice.ToString(SD.Four_Decimal_Format)</td>
+                    <td class="text-end">@(freight?.ToString(SD.Two_Decimal_Format) ?? "0.0000")</td>
+                    <td class="text-end">@(invoice.DeliveryReceipt?.Freight.ToString(SD.Four_Decimal_Format) ?? "0.0000")</td>
+                    <td>@vatPerLiter.ToString(SD.Two_Decimal_Format)</td>
+                    <td>@vatAmount.ToString(SD.Two_Decimal_Format)</td>
+                    <td>@grossAmount.ToString(SD.Two_Decimal_Format)</td>
+                    <td>@invoice.AmountPaid.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@invoice.Balance.ToString(SD.Two_Decimal_Format)</td>
+                    <td>@ewtAmount.ToString(SD.Two_Decimal_Format)</td>
+                    <td>@isEwtAmountPaid.ToString(SD.Two_Decimal_Format)</td>
+                    <td>@ewtBalance.ToString(SD.Two_Decimal_Format)</td>
                 </tr>
 
                 totalQuantity += invoice.Quantity;
@@ -167,24 +166,24 @@
                 <td></td>
                 <td></td>
                 <td class="text-center"><b>TOTAL:</b></td>
-                <td class="text-end">@totalQuantity.ToString("N0")</td>
+                <td class="text-end">@totalQuantity.ToString(SD.Two_Decimal_Format)</td>
                 <td></td>
                 <td class="text-end">
                     @{
                         var unitPrice = totalGrossAmount / totalQuantity;
                     }
-                    @unitPrice.ToString(currencyFormat)
+                    @unitPrice.ToString(SD.Four_Decimal_Format)
                 </td>
-                <td class="text-end">@totalFreight.ToString(currencyFormat)</td>
-                <td class="text-end">@totalFreightPerLiter.ToString(currencyFormat)</td>
-                <td class="text-end">@totalVatPerLiter.ToString(currencyFormat)</td>
-                <td class="text-end">@totalVatAmount.ToString(currencyFormat)</td>
-                <td class="text-end">@totalGrossAmount.ToString(currencyFormat)</td>
-                <td class="text-end">@totalAmountPaid.ToString(currencyFormat)</td>
-                <td class="text-end">@totalBalance.ToString(currencyFormat)</td>
-                <td class="text-end">@totalEwtAmount.ToString(currencyFormat)</td>
-                <td class="text-end">@totalEwtAmountPaid.ToString(currencyFormat)</td>
-                <td class="text-end">@totalewtBalance.ToString(currencyFormat)</td>
+                <td class="text-end">@totalFreight.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalFreightPerLiter.ToString(SD.Four_Decimal_Format)</td>
+                <td class="text-end">@totalVatPerLiter.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalVatAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalGrossAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalAmountPaid.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalBalance.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalEwtAmount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalEwtAmountPaid.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@totalewtBalance.ToString(SD.Two_Decimal_Format)</td>
             </tr>
             </tbody>
         </table>

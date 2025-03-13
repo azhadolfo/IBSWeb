@@ -564,7 +564,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new
                 {
                     poNo = po.PurchaseOrderNo,
-                    poQuantity = po.Quantity.ToString("N4"),
+                    poQuantity = po.Quantity.ToString(SD.Two_Decimal_Format),
                     rrList = rr,
                     rrListPostedOnly = rrPostedOnly,
                     rrListNotPosted = rrNotPosted,
