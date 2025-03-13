@@ -75,7 +75,7 @@
 
                     <td class="w-25 text-nowrap">
 
-                        <b>Date :</b> @Html.DisplayFor(model => model.TransactionDate)
+                        <b>Date :</b> @Model.TransactionDate.ToString(SD.Date_Format)
                     </td>
                 </tr>
             </tbody>
@@ -96,7 +96,7 @@
             <tbody>
                 <tr style="height:80px;">
                     <td>@Html.DisplayFor(model => model.SalesInvoice.SalesInvoiceNo)</td>
-                    <td>@Model.SalesInvoice.TransactionDate.ToString("MM/dd/yyyy")</td>
+                    <td>@Model.SalesInvoice.TransactionDate.ToString(SD.Date_Format)</td>
                     <td>@Html.DisplayFor(model => model.SalesInvoice.Product.ProductName)</td>
                     <td>@Html.DisplayFor(model => model.Description)</td>
                     <td>@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
@@ -196,7 +196,7 @@ else if (Model.Source == "Service Invoice")
 
                     <td class="w-25 text-nowrap">
 
-                        <b>Date :</b> @Model.TransactionDate.ToString("MM/dd/yyyy")
+                        <b>Date :</b> @Model.TransactionDate.ToString(SD.Date_Format)
                     </td>
                 </tr>
             </tbody>

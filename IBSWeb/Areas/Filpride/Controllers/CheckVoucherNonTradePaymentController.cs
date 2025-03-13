@@ -104,7 +104,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Total.ToString().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Payee.ToLower().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.Date.ToString("MMM dd, yyyy").Contains(searchValue) == true ||
+                        s.CheckVoucherHeader?.Date.ToString(SD.Date_Format).Contains(searchValue) == true ||
                         s.Amount.ToString().Contains(searchValue) ||
                         s.AmountPaid.ToString().Contains(searchValue) ||
                         s.CheckVoucherHeader?.Reference?.ToLower().Contains(searchValue) == true ||

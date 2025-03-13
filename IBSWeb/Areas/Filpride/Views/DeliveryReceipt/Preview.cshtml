@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using IBS.Utility
+@using IBS.Utility.Constants
 @using IBS.Utility.Enums
 @model FilprideDeliveryReceipt
 @inject SignInManager<IdentityUser> SignInManager
@@ -60,7 +61,7 @@
         <tbody>
             <tr>
                 <td class="w-75"><b>Sold To:</b> &nbsp;@Model.CustomerOrderSlip.Customer?.CustomerName.ToUpper()</td>
-                <td class="w-25 text-end"><b>Date:</b> &nbsp;@Model.Date.ToString("MMM dd, yyyy")</td>
+                <td class="w-25 text-end"><b>Date:</b> &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr>
                 <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerOrderSlip.Customer?.CustomerAddress.ToUpper()</td>

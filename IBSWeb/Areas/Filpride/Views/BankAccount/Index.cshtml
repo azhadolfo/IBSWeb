@@ -1,4 +1,6 @@
-﻿@model IEnumerable<FilprideBankAccount>
+﻿@using IBS.Utility.Constants
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model IEnumerable<FilprideBankAccount>
 
 @{
     ViewData["Title"] = "Bank Account";
@@ -67,7 +69,7 @@
                             @Html.DisplayFor(modelItem => data.CreatedBy)
                         </td>
                         <td>
-                            @data.CreatedDate.ToString("MM/dd/yyyy")
+                            @data.CreatedDate.ToString(SD.Date_Format)
                         </td>
                         <td>
                             <div class="w-100 btn-group" role="group">

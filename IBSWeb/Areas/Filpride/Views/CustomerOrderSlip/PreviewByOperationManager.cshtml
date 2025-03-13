@@ -1,4 +1,5 @@
-﻿@using IBS.Utility.Enums
+﻿@using IBS.Utility.Constants
+@using IBS.Utility.Enums
 @using Microsoft.AspNetCore.Identity
 @model CustomerOrderSlipForApprovalViewModel
 @inject SignInManager<IdentityUser> SignInManager
@@ -56,11 +57,11 @@
             <tbody>
                 <tr>
                     <td><b>Customer No:</b> @Model.CustomerOrderSlip.Customer?.CustomerCode</td>
-                    <td class="text-end"><b>Date:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.Date)</td>
+                    <td class="text-end"><b>Date:</b> @Model.CustomerOrderSlip.Date.ToString(SD.Date_Format)</td>
                 </tr>
                 <tr>
                     <td><b>Customer Name:</b> @Model.CustomerOrderSlip.Customer?.CustomerName</td>
-                    <td class="text-end"><b>Exp Date:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.ExpirationDate)</td>
+                    <td class="text-end"><b>Exp Date:</b> @Model.CustomerOrderSlip.ExpirationDate?.ToString(SD.Date_Format)</td>
                 </tr>
                 <tr>
                     <td><b>Terms:</b> @Model.CustomerOrderSlip.Customer?.CustomerTerms</td>

@@ -55,7 +55,7 @@
 
 <div class="w-100 text-end" style="margin-top:-20px; padding-bottom:10px;">
     <span><b>Date:</b></span>
-    <span class="underline" style="display: inline-block; width: 20%; text-align:center;">@Html.DisplayFor(model => model.TransactionDate)</span><br />
+    <span class="underline" style="display: inline-block; width: 20%; text-align:center;">@Model.TransactionDate.ToString(SD.Date_Format)</span><br />
 </div>
 
 <div>
@@ -190,11 +190,11 @@
                 <td style="width:33%">
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Model.SalesInvoice?.TransactionDate.ToString("MM/dd/yyyy")
+                        @Model.SalesInvoice?.TransactionDate.ToString(SD.Date_Format)
                     }
                     else
                     {
-                        @Model.ServiceInvoice?.CreatedDate.ToString("MM/dd/yyyy")
+                        @Model.ServiceInvoice?.CreatedDate.ToString(SD.Date_Format)
                     }
                 </td>
                 <td style="width:33%">
@@ -325,7 +325,7 @@
                 <td class="text-center">
                     @if (Model.ManagerCheckDate != null)
                     {
-                        <p style="height: 9px;">@Model.ManagerCheckDate?.ToString("MM/dd/yyyy")</p>
+                        <p style="height: 9px;">@Model.ManagerCheckDate?.ToString(SD.Date_Format)</p>
                     }
                     else
                     {

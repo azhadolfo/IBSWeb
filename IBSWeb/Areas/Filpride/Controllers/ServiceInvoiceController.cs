@@ -82,7 +82,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
                             s.Service.ServiceNo.ToLower().Contains(searchValue) ||
                             s.Service.Name.ToLower().Contains(searchValue) ||
-                            s.Period.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
+                            s.Period.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                             s.Amount.ToString().Contains(searchValue) ||
                             s.Instructions?.ToLower().Contains(searchValue) == true ||
                             s.CreatedBy.ToLower().Contains(searchValue)

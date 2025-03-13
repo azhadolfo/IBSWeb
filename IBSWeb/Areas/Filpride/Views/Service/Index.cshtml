@@ -1,4 +1,5 @@
-﻿@model IEnumerable<FilprideService>
+﻿@using IBS.Utility.Constants
+@model IEnumerable<FilprideService>
 
 @{
     ViewData["Title"] = "Service";
@@ -61,7 +62,7 @@
                             @Html.DisplayFor(modelItem => item.CreatedBy)
                         </td>
                         <td>
-                            @item.CreatedDate.ToString("MM/dd/yyyy")
+                            @item.CreatedDate.ToString(SD.Date_Format)
                         </td>
                         <td>
                             <div class="w-100 btn-group" role="group">
