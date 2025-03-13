@@ -694,7 +694,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 PostedBy = existingRecord.FirstApprovedBy,
                                 PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 Status = nameof(Status.Posted),
-                                OldPoNo = existingPo.OldPoNo
+                                OldPoNo = existingPo.OldPoNo,
+                                PickUpPointId = existingPo.PickUpPointId,
                             };
 
                             poNumbers.Add(subPoModel.PurchaseOrderNo);
