@@ -55,7 +55,7 @@
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="w-25 text-end">Date : @Html.DisplayFor(model => model.Header.Date)</td>
+                <td class="w-25 text-end">Date : @Model.Header.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr>
                 <td>CATEGORY : </td>
@@ -106,14 +106,14 @@
                 <td>
                     @if (Model.Header.CheckVoucherHeader != null)
                     {
-                        @Model.Header.CheckVoucherHeader.Date.ToString("MM/dd/yyyy")
+                        @Model.Header.CheckVoucherHeader.Date.ToString(SD.Date_Format)
                     }
                 </td>
                 <td>DATE :</td>
                 <td>
                     @if (Model.Header.CheckVoucherHeader != null)
                     {
-                        @Model.Header.CheckVoucherHeader.CheckDate?.ToString("MM/dd/yyyy")
+                        @Model.Header.CheckVoucherHeader.CheckDate?.ToString(SD.Date_Format)
                     }
                 </td>
             </tr>

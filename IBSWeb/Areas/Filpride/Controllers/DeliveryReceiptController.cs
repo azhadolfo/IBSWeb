@@ -140,7 +140,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     drList = drList
                     .Where(s =>
                         s.DeliveryReceiptNo.ToLower().Contains(searchValue) ||
-                        s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
+                        s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.Customer.CustomerName?.ToLower().Contains(searchValue) == true ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.TotalAmount.ToString().Contains(searchValue) ||

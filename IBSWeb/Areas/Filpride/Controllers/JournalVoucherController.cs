@@ -80,7 +80,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     journalVoucherHeader = journalVoucherHeader
                     .Where(s =>
                         s.JournalVoucherHeaderNo.ToLower().Contains(searchValue) ||
-                        s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
+                        s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.References?.Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.CheckVoucherHeaderNo.Contains(searchValue) == true ||
                         s.Particulars.ToLower().Contains(searchValue) == true ||

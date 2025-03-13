@@ -79,10 +79,10 @@
                 <td class="w-25 text-nowrap">
 
                     <b>Invoice Date:</b>
-                    &nbsp; <span id="soaDate">@Model.CreatedDate.ToString("MMM/dd/yyyy")</span>
+                    &nbsp; <span id="soaDate">@Model.CreatedDate.ToString(SD.Date_Format)</span>
                     <br />
                     <b>Terms:</b>&nbsp;<span id="terms"></span>&nbsp;<br />
-                    <b>Due Date:</b>&nbsp; <span id="dueDate">@Html.DisplayFor(model => model.DueDate)</span><br />
+                    <b>Due Date:</b>&nbsp; <span id="dueDate">@Model.DueDate.ToString(SD.Date_Format)</span><br />
                 </td>
             </tr>
         </tbody>
