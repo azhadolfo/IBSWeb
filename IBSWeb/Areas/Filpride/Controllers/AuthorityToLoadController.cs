@@ -72,8 +72,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     atlList = atlList
                     .Where(s =>
                         s.AuthorityToLoadNo.ToLower().Contains(searchValue) ||
-                        s.DateBooked.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
-                        s.ValidUntil.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
+                        s.DateBooked.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                        s.ValidUntil.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.UppiAtlNo?.ToLower().Contains(searchValue) == true ||
                         s.CustomerOrderSlip.CustomerOrderSlipNo.ToLower().Contains(searchValue) == true ||
                         s.Remarks.ToLower().Contains(searchValue)

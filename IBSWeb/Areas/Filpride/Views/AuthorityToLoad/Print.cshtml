@@ -55,7 +55,7 @@
                     <td class="text-end"><b>Freight:</b> @freight.ToString(SD.Four_Decimal_Format)</td>
                 </tr>
                 <tr>
-                    <td><b>Date Booked:</b> @Html.DisplayFor(model => model.DateBooked)</td>
+                    <td><b>Date Booked:</b> @Model.DateBooked.ToString(SD.Date_Format)</td>
                     <td class="text-end"><b>Load Port:</b> @Model.CustomerOrderSlip.PickUpPoint.Depot</td>
                 </tr>
                 <tr>

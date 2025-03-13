@@ -58,7 +58,7 @@
         <thead>
             <tr style="border: 1px solid black;">
                 <th colspan="2" style="padding-left:20px;">I. PAYEE DETAILS</th>
-                <td colspan="2" class="text-end"><b>Date : </b>@Html.DisplayFor(model => model.Header.Date)</td>
+                <td colspan="2" class="text-end"><b>Date : </b>@Model.Header.Date.ToString(SD.Date_Format)</td>
             </tr>
         </thead>
         <tbody>
@@ -208,7 +208,7 @@
                 <td>
                     @if (Model.Header.AccruedType != "Invoicing")
                     {
-                        @Model.Header.CheckDate?.ToString("MM/dd/yyyy")
+                        @Model.Header.CheckDate?.ToString(SD.Date_Format)
                     }
                 </td>
                 <td></td>

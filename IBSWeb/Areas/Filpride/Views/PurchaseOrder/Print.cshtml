@@ -114,7 +114,7 @@
         <tbody>
             <tr style="padding-left:10px;">
                 <td class="w-75">Supplier: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
-                <td class="w-25 text-end">Date: &nbsp;@Html.DisplayFor(model => model.Date)</td>
+                <td class="w-25 text-end">Date: &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr style="padding-left:10px;">
                 <td>Address: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
