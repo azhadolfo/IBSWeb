@@ -1199,6 +1199,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var purchaseOrders = await _dbContext.FilpridePurchaseOrders
                 .Include(p => p.PickUpPoint)
+                .Include(p => p.Supplier)
                 .Where(p => supplierIdList.Contains(p.SupplierId) &&
                             p.PickUpPoint.Depot == depot &&
                             p.ProductId == productId &&
@@ -1213,6 +1214,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Text = p.PurchaseOrderNo,
                 AvailableBalance = p.Quantity - p.QuantityReceived,
                 p.SupplierId,
+                p.Supplier.SupplierName,
                 PreviousQuantity = previouslyAppointedPOs
                     .FirstOrDefault(x => x.PurchaseOrderId == p.PurchaseOrderId)?.Quantity ?? 0, // Now safe
                 IsPreSelected = previouslyAppointedPOs

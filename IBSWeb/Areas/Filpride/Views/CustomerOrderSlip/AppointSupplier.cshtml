@@ -4,10 +4,12 @@
 @{
     ViewData["Title"] = "COS - Appoint Supplier";
 }
+
 <div class="loader-container">
     <div class="loader"></div>
     <div class="loader-text">Loading...</div>
 </div>
+
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
@@ -17,77 +19,124 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" class="row">
+        <form method="post" id="appointSupplierForm">
             <div class="border-2 p-3">
-                <div asp-validation-summary="ModelOnly"></div>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                 <input asp-for="CustomerOrderSlipId" type="hidden" />
                 <input asp-for="ProductId" type="hidden" />
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Port List<span class="required">*</span></label>
-                    <select asp-for="PickUpPointId" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select pick up point</option>
-                    </select>
-                    <span asp-validation-for="PickUpPointId" class="text-danger"></span>
+
+                <!-- Progress indicator -->
+                <div class="progress mb-4">
+                    <div id="formProgress" class="progress-bar bg-primary" role="progressbar" style="width: 20%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">Step 1 of 4</div>
                 </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Delivery Option<span class="required">*</span></label><br />
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByHauler" id="DeliveryType_ForPickUpByHauler" />
-                        <label class="form-check-label" for="DeliveryType_ForPickUpByHauler">@SD.DeliveryOption_ForPickUpByHauler</label>
+
+                <!-- Step 1: Pick-up Point -->
+                <div class="form-step" id="step1">
+                    <h4 class="mb-3">Step 1: Select Pick-up Point</h4>
+                    <div class="form-group py-2">
+                        <label class="control-label mb-2">Pick-up Point<span class="required">*</span></label>
+                        <select asp-for="PickUpPointId" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected>Select pick up point</option>
+                        </select>
+                        <span asp-validation-for="PickUpPointId" class="text-danger"></span>
                     </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByClient" id="DeliveryType_ForPickUpByClient" />
-                        <label class="form-check-label" for="DeliveryType_ForPickUpByClient">@SD.DeliveryOption_ForPickUpByClient</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_DirectDelivery" id="DeliveryType_DirectDelivery" />
-                        <label class="form-check-label" for="DeliveryType_DirectDelivery">@SD.DeliveryOption_DirectDelivery</label>
-                    </div>
-                    <span asp-validation-for="DeliveryOption" class="text-danger"></span>
-                </div>
-                <!-- Freight and SubPoRemarks fields -->
-                <div id="freightRemarksSection" style="display:none;">
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" required min="0.01" />
-                        <label asp-for="Freight" class="ms-2">Freight<span class="required">*</span></label>
-                        <span asp-validation-for="Freight" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 col-12">
-                        <textarea asp-for="SubPoRemarks" class="form-control border-0 shadow" placeholder="Add description." style="height: 100px" required></textarea>
-                        <label asp-for="SubPoRemarks" class="control-label">Sub PO Remarks<span class="required">*</span></label>
-                        <span asp-validation-for="SubPoRemarks" class="text-danger"></span>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="button" class="btn btn-primary next-step" data-next="step2">Next</button>
                     </div>
                 </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Supplier List<span class="required">*</span></label>
-                    <select asp-for="SupplierIds" asp-items="@Model.Suppliers"
-                            class="form-select js-multiple border-0 shadow" 
-                            style="width:100%"
-                            multiple="multiple">
-                    </select>
-                    <span asp-validation-for="SupplierIds" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">PO List<span class="required">*</span></label>
-                    <select asp-for="PurchaseOrderIds" asp-items="@Model.PurchaseOrders" 
-                            class="form-select js-multiple border-0 shadow"
-                            style="width:100%"
-                            multiple="multiple">
-                    </select>
-                    <span asp-validation-for="PurchaseOrderIds" class="text-danger"></span>
-                </div>
-                <div id="poQuantitySection" style="display:none;">
-                    <div class="form-group py-2 col-12">
-                        <label class="control-label">Enter Quantities for Selected POs</label>
-                        <div id="poQuantities"></div>
+
+                <!-- Step 2: Delivery Option -->
+                <div class="form-step d-none" id="step2">
+                    <h4 class="mb-3">Step 2: Select Delivery Option</h4>
+                    <div class="form-group py-2">
+                        <label class="control-label mb-2">Delivery Option<span class="required">*</span></label>
+                        <div class="d-flex flex-column gap-3">
+                            <div class="form-check p-3 border rounded">
+                                <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByHauler" id="DeliveryType_ForPickUpByHauler" />
+                                <label class="form-check-label" for="DeliveryType_ForPickUpByHauler">@SD.DeliveryOption_ForPickUpByHauler</label>
+                            </div>
+                            <div class="form-check p-3 border rounded">
+                                <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByClient" id="DeliveryType_ForPickUpByClient" />
+                                <label class="form-check-label" for="DeliveryType_ForPickUpByClient">@SD.DeliveryOption_ForPickUpByClient</label>
+                            </div>
+                            <div class="form-check p-3 border rounded">
+                                <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_DirectDelivery" id="DeliveryType_DirectDelivery" />
+                                <label class="form-check-label" for="DeliveryType_DirectDelivery">@SD.DeliveryOption_DirectDelivery</label>
+                            </div>
+                        </div>
+                        <span asp-validation-for="DeliveryOption" class="text-danger"></span>
+                    </div>
+
+                    <!-- Freight and SubPoRemarks fields -->
+                    <div id="freightRemarksSection" class="mt-3 d-none">
+                        <div class="form-floating py-2">
+                            <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" min="0.01" />
+                            <label asp-for="Freight" class="ms-2">Freight<span class="required">*</span></label>
+                            <span asp-validation-for="Freight" class="text-danger"></span>
+                        </div>
+                        <div class="form-floating py-2">
+                            <textarea asp-for="SubPoRemarks" class="form-control border-0 shadow" placeholder="Add description." style="height: 100px"></textarea>
+                            <label asp-for="SubPoRemarks" class="control-label">Sub PO Remarks<span class="required">*</span></label>
+                            <span asp-validation-for="SubPoRemarks" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary prev-step" data-prev="step1">Previous</button>
+                        <button type="button" class="btn btn-primary next-step" data-next="step3">Next</button>
                     </div>
                 </div>
-                <div class="row pt-2">
-                    <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control">Appoint</button>
+
+                <!-- Step 3: Supplier Selection -->
+                <div class="form-step d-none" id="step3">
+                    <h4 class="mb-3">Step 3: Select Supplier(s)</h4>
+                    <div class="form-group py-2">
+                        <label class="control-label mb-2">Supplier List<span class="required">*</span></label>
+                        <select asp-for="SupplierIds" asp-items="@Model.Suppliers"
+                                class="form-select js-multiple border-0 shadow"
+                                style="width:100%"
+                                multiple="multiple">
+                        </select>
+                        <span asp-validation-for="SupplierIds" class="text-danger"></span>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CustomerOrderSlip" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary prev-step" data-prev="step2">Previous</button>
+                        <button type="button" class="btn btn-primary next-step" data-next="step4">Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: PO Selection and Quantities -->
+                <div class="form-step d-none" id="step4">
+                    <h4 class="mb-3">Step 4: Select Purchase Orders</h4>
+                    <div class="form-group py-2">
+                        <label class="control-label mb-2">Purchase Order List<span class="required">*</span></label>
+                        <select asp-for="PurchaseOrderIds" asp-items="@Model.PurchaseOrders"
+                                class="form-select js-multiple border-0 shadow"
+                                style="width:100%"
+                                multiple="multiple">
+                        </select>
+                        <span asp-validation-for="PurchaseOrderIds" class="text-danger"></span>
+                    </div>
+
+                    <div id="poQuantitySection" class="mt-4 d-none">
+                        <h5>Enter Quantities for Selected POs</h5>
+                        <div class="alert alert-info">
+                            <div class="d-flex justify-content-between">
+                                <div>COS Volume Required: <strong id="cosVolumeDisplay">@Model.COSVolume.ToString(SD.Two_Decimal_Format)</strong></div>
+                                <div>Total Allocated: <strong id="totalAllocatedDisplay">0</strong></div>
+                            </div>
+                            <div class="progress mt-2">
+                                <div id="allocationProgress" class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                            </div>
+                        </div>
+                        <div id="poQuantities" class="mt-3"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary prev-step" data-prev="step3">Previous</button>
+                        <button type="submit" class="btn btn-success" id="submitButton" disabled>Appoint Supplier</button>
                     </div>
                 </div>
             </div>
@@ -99,144 +148,328 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-<script>
-    $(document).ready(function () {
+    <script>
+        $(document).ready(function () {
+            const cosVolume = @Model.COSVolume;
 
-        $('input[name="DeliveryOption"]').change(function () {
-            if ($(this).val() === '@SD.DeliveryOption_DirectDelivery') {
-                $('#freightRemarksSection').show();
-            } else {
-                $('#freightRemarksSection').hide();
-            }
-        });
+            // Initialize select2
+            $('.js-select2').select2();
+            $('.js-multiple').select2({
+                placeholder: "Select options"
+            });
 
-        // Function to fetch Purchase Orders based on selected suppliers
-        function fetchPurchaseOrders() {
-            var supplierIds = $('#SupplierIds').val();
-            var depot = $('#PickUpPointId option:selected').text();
-            var productId = $('#ProductId').val();
-            var $poSelect = $('#PurchaseOrderIds');
+            // Show/hide freight remarks section based on delivery option
+            $('input[name="DeliveryOption"]').change(function () {
+                if ($(this).val() === '@SD.DeliveryOption_DirectDelivery') {
+                    $('#freightRemarksSection').removeClass('d-none');
+                } else {
+                    $('#freightRemarksSection').addClass('d-none');
+                }
+            });
 
-            // Clear existing options
-            $poSelect.empty();
+            // Multi-step form navigation
+            $('.next-step').click(function() {
+                const currentStep = $(this).closest('.form-step');
+                const nextStepId = $(this).data('next');
 
-            if (supplierIds && supplierIds.length > 0) {
-                $.ajax({
-                    url: '@Url.Action("GetPurchaseOrders", "CustomerOrderSlip")',
-                    type: 'GET',
-                    data: {
-                        supplierIds: supplierIds.join(','),
-                        depot: depot,
-                        productId: productId,
-                    },
-                    success: function (data) {
-                        $.each(data, function (index, po) {
-                            $poSelect.append($('<option></option>')
-                                .val(po.value)
-                                .text(po.text + ' (Balance: ' + formatNumber(po.availableBalance) + ')')
-                                .data('available-balance', po.availableBalance)
-                                .data('supplier-id', po.supplierId)
-                            );
-                        });
-                        
-                        // Reinitialize Select2 to reflect new options
-                        $poSelect.trigger('change');
-                    },
-                    error: function () {
-                        alert('Failed to retrieve POs');
+                // Basic validation before proceeding
+                let isValid = true;
+
+                if (nextStepId === 'step2') {
+                    if (!$('#PickUpPointId').val()) {
+                        alert('Please select a pick-up point before proceeding.');
+                        isValid = false;
                     }
-                });
-            }
-        }
+                }
 
-        // Separate function for handling PO selection changes
-        function handlePOSelectionChange() {
-            // Explicitly reference the dropdown by ID
-            var selectedPOs = $('#PurchaseOrderIds').val();
-            if (!selectedPOs) {
-                selectedPOs = []; // Default to an empty array
+                if (nextStepId === 'step3') {
+                    if (!$('input[name="DeliveryOption"]:checked').val()) {
+                        alert('Please select a delivery option before proceeding.');
+                        isValid = false;
+                    }
+
+                    if ($('#DeliveryType_DirectDelivery').is(':checked')) {
+                        if (!$('#Freight').val() || !$('#SubPoRemarks').val()) {
+                            alert('Please enter freight and remarks for direct delivery.');
+                            isValid = false;
+                        }
+                    }
+                }
+
+                if (nextStepId === 'step4') {
+                    if (!$('#SupplierIds').val() || $('#SupplierIds').val().length === 0) {
+                        alert('Please select at least one supplier before proceeding.');
+                        isValid = false;
+                    }
+                }
+
+                if (isValid) {
+                    currentStep.addClass('d-none');
+                    $(`#${nextStepId}`).removeClass('d-none');
+
+                    // Update progress bar
+                    updateProgressBar(nextStepId);
+                }
+            });
+
+            $('.prev-step').click(function() {
+                const currentStep = $(this).closest('.form-step');
+                const prevStepId = $(this).data('prev');
+
+                currentStep.addClass('d-none');
+                $(`#${prevStepId}`).removeClass('d-none');
+
+                // Update progress bar
+                updateProgressBar(prevStepId);
+            });
+
+            function updateProgressBar(stepId) {
+                let progressPercent = 0;
+                let stepText = '';
+
+                switch(stepId) {
+                    case 'step1':
+                        progressPercent = 25;
+                        stepText = 'Step 1 of 4';
+                        break;
+                    case 'step2':
+                        progressPercent = 50;
+                        stepText = 'Step 2 of 4';
+                        break;
+                    case 'step3':
+                        progressPercent = 75;
+                        stepText = 'Step 3 of 4';
+                        break;
+                    case 'step4':
+                        progressPercent = 100;
+                        stepText = 'Step 4 of 4';
+                        break;
+                }
+
+                $('#formProgress').css('width', `${progressPercent}%`).attr('aria-valuenow', progressPercent).text(stepText);
             }
             
-            $('#poQuantities').empty();
+            // Function to fetch Purchase Orders based on selected suppliers
+            function fetchPurchaseOrders() {
+                const supplierIds = $('#SupplierIds').val();
+                const depot = $('#PickUpPointId option:selected').text();
+                const productId = $('#ProductId').val();
+                const $poSelect = $('#PurchaseOrderIds');
 
-            if (selectedPOs.length > 0) {
-                $.each(selectedPOs, function (index, po) {
-                    var selectedOption = $('#PurchaseOrderIds option[value="' + po + '"]');``
-                    var selectedText = selectedOption.text();
-                    var availableBalance = selectedOption.data('available-balance');
-                    var supplierId = selectedOption.data('supplier-id');
-                    var cosVolume = @Model.COSVolume;
+                // Show loading indicator
+                $('.loader-container').show();
 
-                    $('#poQuantities').append(
-                        `<div class="form-group py-2">
-                        <input type="hidden" name="PurchaseOrderQuantities[${index}].PurchaseOrderId" value="${po}" />
-                        <input type="hidden" name="PurchaseOrderQuantities[${index}].SupplierId" value="${supplierId}" />
-                        <label for="quantity_${po}">Enter Quantity for ${selectedText}</label>
-                        <input type="number" name="PurchaseOrderQuantities[${index}].Quantity" class="form-control" id="quantity_${index}" 
-                               min="0" max="${availableBalance}" 
-                               placeholder="Quantity (max: ${availableBalance})" 
-                               value="${index === 0 ? Math.min(cosVolume, availableBalance) : ''}" 
-                               required/>
-                    </div>`
-                    );
-                });
+                // Clear existing options
+                $poSelect.empty();
 
-                $('#poQuantitySection').show();
-            } else {
-                $('#poQuantitySection').hide();
-            }
-        }
+                if (supplierIds && supplierIds.length > 0) {
+                    $.ajax({
+                        url: '@Url.Action("GetPurchaseOrders", "CustomerOrderSlip")',
+                        type: 'GET',
+                        data: {
+                            supplierIds: supplierIds.join(','),
+                            depot: depot,
+                            productId: productId,
+                        },
+                        success: function (data) {
+                            if (data.length === 0) {
+                                $poSelect.append('<option disabled>No purchase orders available</option>');
+                            } else {
+                                // Group POs by supplier
+                                const posBySupplier = {};
 
-        // Only attach to specific events that should trigger refresh
-        $('#SupplierIds').on('change', function() {
-            // Use setTimeout to avoid race conditions with select2 internal events
-            setTimeout(fetchPurchaseOrders, 50);
-        });
+                                $.each(data, function (index, po) {
+                                    if (!posBySupplier[po.supplierName]) {
+                                        posBySupplier[po.supplierName] = [];
+                                    }
+                                    posBySupplier[po.supplierName].push(po);
+                                });
 
-        $('#PickUpPointId').on('change', function() {
-            let supplierSelect = $('#SupplierIds');
-            supplierSelect.val(null).trigger('change');
-        });
+                                // Add options with optgroups
+                                $.each(posBySupplier, function(supplierName, pos) {
+                                    const $optgroup = $('<optgroup>').attr('label', supplierName);
 
-        // Attach PO change handler separately
-        $('#PurchaseOrderIds').on('change', function() {
-            handlePOSelectionChange();
-        });
+                                    $.each(pos, function(i, po) {
+                                        $optgroup.append($('<option></option>')
+                                            .val(po.value)
+                                            .text(po.text)
+                                            .data('available-balance', po.availableBalance)
+                                            .data('supplier-id', po.supplierId)
+                                            .data('supplier-name', po.supplierName)
+                                        );
+                                    });
 
-        $(document).on('blur', '#poQuantities input[type="number"]', function() {
-            var totalQuantity = 0;
-            var cosVolume = @Model.COSVolume;
-            var selectedPO = $('#PurchaseOrderIds').val();
+                                    $poSelect.append($optgroup);
+                                });
+                            }
+                            
+                            $poSelect.trigger('change');
 
-            if (selectedPO.length > 0) {
-                $('#poQuantities input[type="number"]').each(function () {
-                    var enteredQuantity = parseFloat($(this).val()) || 0;
-                    var maxQuantity = parseFloat($(this).attr('max'));
-
-                    if (enteredQuantity > maxQuantity) {
-                        alert(`Quantity exceeds the available balance for this PO (max: ${maxQuantity}).`);
-                        return false;
-                    }
-
-                    totalQuantity += enteredQuantity;
-                });
-
-                if (totalQuantity !== cosVolume) {
-                    alert(`Total quantity (${totalQuantity}) must equal the available COS quantity of ${cosVolume}.`);
+                            // Hide loading indicator
+                            $('.loader-container').hide();
+                        },
+                        error: function () {
+                            alert('Failed to retrieve purchase orders. Please try again.');
+                            $('.loader-container').hide();
+                        }
+                    });
+                } else {
+                    // Hide loading indicator if no suppliers selected
+                    $('.loader-container').hide();
                 }
             }
 
-            var totalAvailableBalance = 0;
+            // Handle PO selection changes
+            function handlePOSelectionChange() {
+                const selectedPOs = $('#PurchaseOrderIds').val() || [];
+                const $poQuantitiesContainer = $('#poQuantities');
 
-            $('#PurchaseOrderIds option:selected').each(function () {
-                totalAvailableBalance += parseFloat($(this).data('available-balance')) || 0;
+                $poQuantitiesContainer.empty();
+
+                if (selectedPOs.length > 0) {
+                    // Create a card for each selected PO
+                    $.each(selectedPOs, function (index, po) {
+                        const selectedOption = $('#PurchaseOrderIds option[value="' + po + '"]');
+                        const selectedText = selectedOption.text();
+                        const availableBalance = selectedOption.data('available-balance');
+                        const supplierId = selectedOption.data('supplier-id');
+                        const supplierName = selectedOption.data('supplier-name');
+
+                        // Default value calculation - distribute COS volume across POs
+                        const remainingToAllocate = cosVolume - getCurrentTotalAllocated();
+                        const defaultValue = index === selectedPOs.length - 1 ?
+                            remainingToAllocate :
+                            Math.min(availableBalance, remainingToAllocate / (selectedPOs.length - index));
+
+                        const card = `
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <strong>${supplierName}</strong>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="card-title">${selectedText}</h6>
+                                <div class="form-group">
+                                    <input type="hidden" name="PurchaseOrderQuantities[${index}].PurchaseOrderId" value="${po}" />
+                                    <input type="hidden" name="PurchaseOrderQuantities[${index}].SupplierId" value="${supplierId}" />
+                                    <label for="quantity_${index}" class="form-label">Quantity</label>
+                                    <div class="input-group">
+                                        <input type="number" name="PurchaseOrderQuantities[${index}].Quantity" 
+                                               class="form-control quantity-input" id="quantity_${index}" 
+                                               min="0" max="${availableBalance}" step="0.01"
+                                               placeholder="Enter quantity" 
+                                               value="${defaultValue > 0 && defaultValue <= availableBalance ? defaultValue.toFixed(2) : ''}" 
+                                               required/>
+                                        <span class="input-group-text">Max: ${formatNumber(availableBalance)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                        $poQuantitiesContainer.append(card);
+                    });
+
+                    $('#poQuantitySection').removeClass('d-none');
+                    updateAllocationProgress();
+                } else {
+                    $('#poQuantitySection').addClass('d-none');
+                }
+            }
+
+            // Calculate current total allocated quantity
+            function getCurrentTotalAllocated() {
+                let total = 0;
+                $('.quantity-input').each(function() {
+                    const val = parseFloat($(this).val()) || 0;
+                    total += val;
+                });
+                return total;
+            }
+
+            // Update allocation progress display
+            function updateAllocationProgress() {
+                const totalAllocated = getCurrentTotalAllocated();
+                const percentAllocated = Math.min(100, (totalAllocated / cosVolume) * 100);
+
+                $('#totalAllocatedDisplay').text(formatNumber(totalAllocated));
+                $('#allocationProgress').css('width', percentAllocated + '%')
+                    .attr('aria-valuenow', percentAllocated)
+                    .text(percentAllocated.toFixed(0) + '%');
+
+                // Change progress bar color based on allocation status
+                if (Math.abs(totalAllocated - cosVolume) < 0.01) {
+                    $('#allocationProgress').removeClass('bg-danger bg-warning').addClass('bg-success');
+                    $('#submitButton').prop('disabled', false);
+                } else if (totalAllocated > cosVolume) {
+                    $('#allocationProgress').removeClass('bg-success bg-warning').addClass('bg-danger');
+                    $('#submitButton').prop('disabled', true);
+                } else {
+                    $('#allocationProgress').removeClass('bg-success bg-danger').addClass('bg-warning');
+                    $('#submitButton').prop('disabled', true);
+                }
+            }
+
+            // Event handlers for component interactions
+            $('#SupplierIds').on('change', function() {
+                // Clear PO selections when suppliers change
+                $('#PurchaseOrderIds').val(null).trigger('change');
+                $('#poQuantitySection').addClass('d-none');
+
+                // Fetch new POs with a small delay to avoid race conditions
+                setTimeout(fetchPurchaseOrders, 50);
             });
 
-            if (totalQuantity > totalAvailableBalance) {
-                alert(`Total quantity (${totalQuantity}) exceeds the total available balance of the selected POs (${totalAvailableBalance}).`);
-            }
-        });
-    });
-</script>
+            $('#PickUpPointId').on('change', function() {
+                // Reset supplier selection when pick-up point changes
+                $('#SupplierIds').val(null).trigger('change');
+            });
 
+            // Handle PO selection changes
+            $('#PurchaseOrderIds').on('change', function() {
+                handlePOSelectionChange();
+            });
+
+            // Real-time validation of quantities
+            $(document).on('input', '.quantity-input', function() {
+                const poId = $(this).attr('id');
+                const enteredValue = parseFloat($(this).val()) || 0;
+                const maxValue = parseFloat($(this).attr('max'));
+
+                console.log(maxValue);
+                // Validate against maximum
+                if (enteredValue > maxValue) {
+                    $(this).addClass('is-invalid');
+                    $(this).val(maxValue);
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+
+                updateAllocationProgress();
+            });
+
+            // Form validation before submit
+            $('#appointSupplierForm').on('submit', function(e) {
+                const totalAllocated = getCurrentTotalAllocated();
+
+                if (Math.abs(totalAllocated - cosVolume) > 0.01) {
+                    e.preventDefault();
+                    alert(`Total allocated quantity (${formatNumber(totalAllocated)}) must equal the COS volume (${formatNumber(cosVolume)}).`);
+                    return false;
+                }
+
+                // Additional validation for Direct Delivery
+                if ($('#DeliveryType_DirectDelivery').is(':checked')) {
+                    if (!$('#Freight').val() || !$('#SubPoRemarks').val()) {
+                        e.preventDefault();
+                        alert('Please enter freight and remarks for direct delivery.');
+                        return false;
+                    }
+                }
+
+                // Show loading indicator while submitting
+                $('.loader-container').show();
+                return true;
+            });
+        });
+    </script>
 }
