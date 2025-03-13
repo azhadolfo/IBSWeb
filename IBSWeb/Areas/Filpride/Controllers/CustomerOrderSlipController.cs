@@ -890,11 +890,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                 ProductId = existingRecord.ProductId,
+                COSVolume = existingRecord.Quantity,
                 Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
                 PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
-                COSVolume = existingRecord.Quantity,
                 PickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                    .GetPickUpPointList(cancellationToken),
+                    .GetDistinctPickupPointList(cancellationToken),
             };
 
             return View(viewModel);
@@ -983,7 +983,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointList(cancellationToken);
+                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetDistinctPickupPointList(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     _logger.LogError(ex, "Failed to appoint supplier. Appointed by: {UserName}", _userManager.GetUserName(User));
@@ -1023,7 +1023,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Freight = existingRecord.Freight ?? 0,
                     PickUpPointId = (int)existingRecord.PickUpPointId,
                     PickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                    .GetPickUpPointList(cancellationToken),
+                    .GetDistinctPickupPointList(cancellationToken),
                     SubPoRemarks = existingRecord.SubPORemarks,
 
                 };
@@ -1160,7 +1160,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointList(cancellationToken);
+                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetDistinctPickupPointList(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     _logger.LogError(ex, "Failed to re-appoint supplier. Appointed by: {UserName}", _userManager.GetUserName(User));
@@ -1173,7 +1173,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> GetPurchaseOrders(string supplierIds, int? productId, int? cosId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetPurchaseOrders(string supplierIds, string depot, int? productId, int? cosId, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(supplierIds) || productId == null)
             {
@@ -1198,7 +1198,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
             var purchaseOrders = await _dbContext.FilpridePurchaseOrders
+                .Include(p => p.PickUpPoint)
                 .Where(p => supplierIdList.Contains(p.SupplierId) &&
+                            p.PickUpPoint.Depot == depot &&
                             p.ProductId == productId &&
                             !p.IsReceived && !p.IsSubPo &&
                             p.Status == nameof(Status.Posted))
@@ -1440,5 +1442,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }
+
     }
 }
