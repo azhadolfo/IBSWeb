@@ -25,7 +25,7 @@
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
             <div class="form-floating py-2 col-12">
-                <input asp-for="TriggerDate" type="date" class="form-control border-0 shadow" placeholder="" value="yyyy-MM-dd" />
+                <input asp-for="TriggerDate" type="date" class="form-control border-0 shadow" placeholder="" />
                 <label asp-for="TriggerDate">Trigger Date<span class="required">*</span></label>
                 <span asp-validation-for="TriggerDate" class="text-danger"></span>
             </div>
@@ -40,6 +40,13 @@
                     <option value="" selected>Select supplier</option>
                 </select>
                 <span asp-validation-for="SupplierId" class="text-danger"></span>
+            </div>
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Port List<span class="required">*</span></label>
+                <select asp-for="PickUpPointId" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <option value="" selected>Select port</option>
+                </select>
+                <span asp-validation-for="PickUpPointId" class="text-danger"></span>
             </div>
             <div class="form-group py-2 col-12">
                 <label class="control-label">Product List</label>
@@ -84,7 +91,7 @@
             <div class="form-floating py-2 col-12">
                 <input asp-for="SupplierSalesOrderNo" class="form-control border-0 shadow price" placeholder="" />
                 <label asp-for="SupplierSalesOrderNo">Supplier SO#</label>
-                <span asp-validation-for="Price" class="text-danger"></span>
+                <span asp-validation-for="SupplierSalesOrderNo" class="text-danger"></span>
             </div>
             <div class="form-floating py-2 col-12">
                 <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
@@ -108,4 +115,44 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        $(document).ready(function () {
+            function updateTotal() {
+                var quantity = parseNumber($(".quantity").val());
+                var price = parseNumber($(".price").val());
+                var total = quantity * price;
+                $(".total").val(formatNumber(total));
+            }
+
+            $(".quantity, .price").on("input", updateTotal);
+            
+            $("#SupplierId").change(function (){
+                let supplierId = $(this).val();
+                fetchPickUpPoints(supplierId);
+            });
+            
+            function fetchPickUpPoints(supplierId){
+                if (supplierId) {
+                    $.ajax({
+                        url: '@Url.Action("GetPickUpPoints", "PurchaseOrder", new { area = "Filpride" })',
+                        type: "GET",
+                        data: { supplierId: supplierId },
+                        success: function (data) {
+                            var pickupDropdown = $("#PickUpPointId");
+                            pickupDropdown.empty();
+                            pickupDropdown.append('<option value="">Select Pickup Point</option>');
+
+                            $.each(data, function (index, item) {
+                                pickupDropdown.append('<option value="' + item.value + '">' + item.text + '</option>');
+                            });
+                        },
+                        error: function () {
+                            alert("Error fetching pickup points.");
+                        }
+                    });
+                }
+            }
+            
+        });
+    </script>
 }

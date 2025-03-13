@@ -568,6 +568,11 @@ namespace IBS.DataAccess.Data
             builder.Entity<FilpridePickUpPoint>(p =>
             {
                 p.HasIndex(p => p.Company);
+
+                p.HasOne(p => p.Supplier)
+                    .WithMany()
+                    .HasForeignKey(p => p.SupplierId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             #endregion
@@ -691,6 +696,11 @@ namespace IBS.DataAccess.Data
                 .WithMany()
                 .HasForeignKey(po => po.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+                po.HasOne(po => po.PickUpPoint)
+                    .WithMany()
+                    .HasForeignKey(po => po.PickUpPointId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             #endregion -- Purchase Order --

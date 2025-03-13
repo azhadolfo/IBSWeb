@@ -15,7 +15,7 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<List<SelectListItem>> GetPickUpPointListBasedOnSupplier(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetPickUpPointList(CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePickUpPoints
                .OrderBy(p => p.Depot)
@@ -25,6 +25,19 @@ namespace IBS.DataAccess.Repository.Filpride
                    Text = po.Depot
                })
                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetPickUpPointListBasedOnSupplier(int supplierId, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilpridePickUpPoints
+                .OrderBy(p => p.Depot)
+                .Where(p => p.SupplierId == supplierId)
+                .Select(po => new SelectListItem
+                {
+                    Value = po.PickUpPointId.ToString(),
+                    Text = po.Depot
+                })
+                .ToListAsync(cancellationToken);
         }
     }
 }

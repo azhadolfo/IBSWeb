@@ -87,11 +87,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.PurchaseOrderNo.ToLower().Contains(searchValue) ||
                         s.OldPoNo.ToLower().Contains(searchValue) ||
                         s.Supplier.SupplierName.ToLower().Contains(searchValue) ||
+                        s.PickUpPoint.Depot.ToLower().Contains(searchValue) ||
                         s.Product.ProductName.ToLower().Contains(searchValue) ||
                         s.Date.ToString("MMM dd, yyyy").ToLower().Contains(searchValue) ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.Remarks.ToString().Contains(searchValue) ||
-                        s.CreatedBy.ToLower().Contains(searchValue)
+                        s.CreatedBy.ToLower().Contains(searchValue) ||
+                        s.Status.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -212,7 +214,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || _dbContext.FilpridePurchaseOrders == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -220,12 +222,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
-            if (purchaseOrder == null)
-            {
-                return NotFound();
-            }
 
             purchaseOrder.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+
+            purchaseOrder.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(purchaseOrder.SupplierId, cancellationToken);
 
             purchaseOrder.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
@@ -270,6 +270,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingModel.OldPoNo = model.OldPoNo;
                     existingModel.TriggerDate = model.TriggerDate;
+                    existingModel.PickUpPointId = model.PickUpPointId;
 
                     #region --Audit Trail Recording
 
@@ -735,6 +736,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return NotFound();
+        }
+
+        public async Task<IActionResult> GetPickUpPoints(int supplierId, CancellationToken cancellationToken)
+        {
+            var pickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(supplierId, cancellationToken);
+
+            return Json(pickUpPoints);
         }
     }
 }

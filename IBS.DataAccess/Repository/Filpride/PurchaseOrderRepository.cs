@@ -81,6 +81,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return await dbSet.Where(filter)
                 .Include(p => p.Supplier)
                 .Include(p => p.Product)
+                .Include(p => p.PickUpPoint)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -88,7 +89,8 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilpridePurchaseOrder> query = dbSet
                 .Include(p => p.Supplier)
-                .Include(p => p.Product);
+                .Include(p => p.Product)
+                .Include(p => p.PickUpPoint);
 
             if (filter != null)
             {

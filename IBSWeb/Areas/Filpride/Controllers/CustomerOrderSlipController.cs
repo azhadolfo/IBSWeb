@@ -894,7 +894,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
                 COSVolume = existingRecord.Quantity,
                 PickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                    .GetPickUpPointListBasedOnSupplier(cancellationToken),
+                    .GetPickUpPointList(cancellationToken),
             };
 
             return View(viewModel);
@@ -983,7 +983,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(cancellationToken);
+                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointList(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     _logger.LogError(ex, "Failed to appoint supplier. Appointed by: {UserName}", _userManager.GetUserName(User));
@@ -1023,7 +1023,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Freight = existingRecord.Freight ?? 0,
                     PickUpPointId = (int)existingRecord.PickUpPointId,
                     PickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                    .GetPickUpPointListBasedOnSupplier(cancellationToken),
+                    .GetPickUpPointList(cancellationToken),
                     SubPoRemarks = existingRecord.SubPORemarks,
 
                 };
@@ -1160,7 +1160,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(cancellationToken);
+                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointList(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     _logger.LogError(ex, "Failed to re-appoint supplier. Appointed by: {UserName}", _userManager.GetUserName(User));

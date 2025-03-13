@@ -119,5 +119,13 @@ namespace IBS.Models.Filpride.AccountsPayable
         public decimal UnTriggeredQuantity { get; set; }
 
         public ICollection<FilpridePOActualPrice>? ActualPrices { get; set; }
+
+        public int PickUpPointId { get; set; }
+
+        [ForeignKey(nameof(PickUpPointId))]
+        public FilpridePickUpPoint? PickUpPoint { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? PickUpPoints { get; set; }
     }
 }
