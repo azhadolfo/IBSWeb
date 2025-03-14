@@ -15,7 +15,7 @@ namespace IBS.DataAccess.Migrations
                 table: "filpride_authority_to_loads",
                 type: "text",
                 nullable: false,
-                defaultValue: "Filpride");//Remove this after migration
+                defaultValue: "");
         }
 
         /// <inheritdoc />
