@@ -15,7 +15,7 @@ namespace IBS.DataAccess.Migrations
                 table: "filpride_purchase_orders",
                 type: "integer",
                 nullable: false,
-                defaultValue: 1);//Make it 0 value after updating the database
+                defaultValue: 0);
 
             migrationBuilder.CreateIndex(
                 name: "ix_filpride_purchase_orders_pick_up_point_id",
