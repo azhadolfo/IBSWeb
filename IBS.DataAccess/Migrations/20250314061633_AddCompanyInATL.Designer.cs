@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250314061633_AddCompanyInATL")]
+    partial class AddCompanyInATL
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -926,17 +929,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
 
-                    b.Property<string>("F2306FileName")
-                        .HasColumnType("text")
-                        .HasColumnName("f2306file_name");
-
                     b.Property<string>("F2306FilePath")
                         .HasColumnType("varchar(200)")
                         .HasColumnName("f2306file_path");
-
-                    b.Property<string>("F2307FileName")
-                        .HasColumnType("text")
-                        .HasColumnName("f2307file_name");
 
                     b.Property<string>("F2307FilePath")
                         .HasColumnType("varchar(200)")

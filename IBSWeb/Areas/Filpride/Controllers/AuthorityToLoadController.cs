@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using IBS.Models.Filpride.Books;
-using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -62,7 +61,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
                 var atlList = await _unitOfWork.FilprideAuthorityToLoad
-                    .GetAllAsync(null, cancellationToken);
+                    .GetAllAsync(a => a.Company == companyClaims, cancellationToken);
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -150,7 +149,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 FilprideAuthorityToLoad model = new()
                 {
-                    AuthorityToLoadNo = await _unitOfWork.FilprideAuthorityToLoad.GenerateAtlNo(cancellationToken),
+                    AuthorityToLoadNo = await _unitOfWork.FilprideAuthorityToLoad.GenerateAtlNo(companyClaims, cancellationToken),
                     CustomerOrderSlipId = viewModel.CosIds.FirstOrDefault(),
                     DateBooked = viewModel.Date,
                     ValidUntil = viewModel.Date.AddDays(4),

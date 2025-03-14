@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -29,17 +30,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly IWebHostEnvironment _webHostEnvironment;
-
         private readonly ILogger<CollectionReceiptController> _logger;
 
-        public CollectionReceiptController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<CollectionReceiptController> logger)
+        private readonly ICloudStorageService _cloudStorageService;
+
+        public CollectionReceiptController(ApplicationDbContext dbContext,
+            UserManager<IdentityUser> userManager,
+            IUnitOfWork unitOfWork,
+            ILogger<CollectionReceiptController> logger,
+            ICloudStorageService cloudStorageService)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
-            _webHostEnvironment = webHostEnvironment;
             _logger = logger;
+            _cloudStorageService = cloudStorageService;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -47,6 +52,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        private string? GenerateFileNameToSave(string incomingFileName)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
+            var extension = Path.GetExtension(incomingFileName);
+            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
         }
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
@@ -58,13 +70,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
                     .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
 
-                return View("ExportIndex");
+                return View("ExportIndex", collectionReceipts);
             }
 
             return View();
         }
 
-        public async Task<IActionResult> ServiceInvoiceIndex(CancellationToken cancellationToken)
+        public IActionResult ServiceInvoiceIndex()
         {
             return View();
         }
@@ -208,55 +220,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Company = companyClaims;
                     model.Type = existingSalesInvoice.Type;
 
-                    try
+                    if (bir2306 != null && bir2306.Length > 0)
                     {
-                        if (bir2306 != null && bir2306.Length > 0)
-                        {
-                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
-
-                            if (!Directory.Exists(uploadsFolder))
-                            {
-                                Directory.CreateDirectory(uploadsFolder);
-                            }
-
-                            string fileName = Path.GetFileName(bir2306.FileName);
-                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                            {
-                                await bir2306.CopyToAsync(stream);
-                            }
-
-                            model.F2306FilePath = fileSavePath;
-                            model.IsCertificateUpload = true;
-                        }
-
-                        if (bir2307 != null && bir2307.Length > 0)
-                        {
-                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
-
-                            if (!Directory.Exists(uploadsFolder))
-                            {
-                                Directory.CreateDirectory(uploadsFolder);
-                            }
-
-                            string fileName = Path.GetFileName(bir2307.FileName);
-                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                            {
-                                await bir2307.CopyToAsync(stream);
-                            }
-
-                            model.F2307FilePath = fileSavePath;
-                            model.IsCertificateUpload = true;
-                        }
+                        model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
+                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName);
+                        model.IsCertificateUpload = true;
                     }
-                    catch (Exception ex)
+
+                    if (bir2307 != null && bir2307.Length > 0)
                     {
-                        _logger.LogError(ex, "Failed to upload file in collection receipt. Uploaded by: {UserName}", _userManager.GetUserName(User));
-                        TempData["error"] = ex.Message;
-                        return View(model);
+                        model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
+                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName);
+                        model.IsCertificateUpload = true;
                     }
 
                     await _dbContext.AddAsync(model, cancellationToken);
@@ -387,9 +362,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TempData["error"] = "Please input atleast one type form of payment";
                         return View(model);
                     }
-                    var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
-                                                   .Where(si => model.MultipleSIId.Contains(si.SalesInvoiceId))
-                                                   .ToListAsync(cancellationToken);
 
                     model.MultipleSI = new string[model.MultipleSIId.Length];
                     model.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
@@ -414,55 +386,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Total = computeTotalInModelIfZero;
 
-                    try
+                    if (bir2306 != null && bir2306.Length > 0)
                     {
-                        if (bir2306 != null && bir2306.Length > 0)
-                        {
-                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
-
-                            if (!Directory.Exists(uploadsFolder))
-                            {
-                                Directory.CreateDirectory(uploadsFolder);
-                            }
-
-                            string fileName = Path.GetFileName(bir2306.FileName);
-                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                            {
-                                await bir2306.CopyToAsync(stream);
-                            }
-
-                            model.F2306FilePath = fileSavePath;
-                            model.IsCertificateUpload = true;
-                        }
-
-                        if (bir2307 != null && bir2307.Length > 0)
-                        {
-                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
-
-                            if (!Directory.Exists(uploadsFolder))
-                            {
-                                Directory.CreateDirectory(uploadsFolder);
-                            }
-
-                            string fileName = Path.GetFileName(bir2307.FileName);
-                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                            {
-                                await bir2307.CopyToAsync(stream);
-                            }
-
-                            model.F2307FilePath = fileSavePath;
-                            model.IsCertificateUpload = true;
-                        }
+                        model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
+                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName);
+                        model.IsCertificateUpload = true;
                     }
-                    catch (Exception ex)
+
+                    if (bir2307 != null && bir2307.Length > 0)
                     {
-                        _logger.LogError(ex, "Failed to upload file in collection receipt. Uploaded by: {UserName}", _userManager.GetUserName(User));
-                        TempData["error"] = ex.Message;
-                        return View(model);
+                        model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
+                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName);
+                        model.IsCertificateUpload = true;
                     }
 
                     await _dbContext.AddAsync(model, cancellationToken);
@@ -597,9 +532,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TempData["error"] = "Please input atleast one type form of payment";
                         return View(model);
                     }
-                    var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
-                                                   .Where(si => model.MultipleSIId.Contains(si.SalesInvoiceId))
-                                                   .ToListAsync(cancellationToken);
 
                     existingModel.MultipleSIId = new int[model.MultipleSIId.Length];
                     existingModel.MultipleSI = new string[model.MultipleSIId.Length];
@@ -635,55 +567,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.WVAT = model.WVAT;
                     existingModel.Total = computeTotalInModelIfZero;
 
-                    try
+                    if (bir2306 != null && bir2306.Length > 0)
                     {
-                        if (bir2306 != null && bir2306.Length > 0)
-                        {
-                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
-
-                            if (!Directory.Exists(uploadsFolder))
-                            {
-                                Directory.CreateDirectory(uploadsFolder);
-                            }
-
-                            string fileName = Path.GetFileName(bir2306.FileName);
-                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                            {
-                                await bir2306.CopyToAsync(stream);
-                            }
-
-                            existingModel.F2306FilePath = fileSavePath;
-                            existingModel.IsCertificateUpload = true;
-                        }
-
-                        if (bir2307 != null && bir2307.Length > 0)
-                        {
-                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
-
-                            if (!Directory.Exists(uploadsFolder))
-                            {
-                                Directory.CreateDirectory(uploadsFolder);
-                            }
-
-                            string fileName = Path.GetFileName(bir2307.FileName);
-                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                            {
-                                await bir2307.CopyToAsync(stream);
-                            }
-
-                            existingModel.F2307FilePath = fileSavePath;
-                            existingModel.IsCertificateUpload = true;
-                        }
+                        model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
+                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName);
+                        model.IsCertificateUpload = true;
                     }
-                    catch (Exception ex)
+
+                    if (bir2307 != null && bir2307.Length > 0)
                     {
-                        _logger.LogError(ex, "Failed to upload file in collection receipt. Uploaded by: {UserName}", _userManager.GetUserName(User));
-                        TempData["error"] = ex.Message;
-                        return View(model);
+                        model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
+                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName);
+                        model.IsCertificateUpload = true;
                     }
 
                     decimal offsetAmount = 0;
@@ -867,55 +762,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Company = companyClaims;
                     model.Type = existingServiceInvoice.Type;
 
-                    try
+                    if (bir2306 != null && bir2306.Length > 0)
                     {
-                        if (bir2306 != null && bir2306.Length > 0)
-                        {
-                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
-
-                            if (!Directory.Exists(uploadsFolder))
-                            {
-                                Directory.CreateDirectory(uploadsFolder);
-                            }
-
-                            string fileName = Path.GetFileName(bir2306.FileName);
-                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                            {
-                                await bir2306.CopyToAsync(stream);
-                            }
-
-                            model.F2306FilePath = fileSavePath;
-                            model.IsCertificateUpload = true;
-                        }
-
-                        if (bir2307 != null && bir2307.Length > 0)
-                        {
-                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
-
-                            if (!Directory.Exists(uploadsFolder))
-                            {
-                                Directory.CreateDirectory(uploadsFolder);
-                            }
-
-                            string fileName = Path.GetFileName(bir2307.FileName);
-                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                            {
-                                await bir2307.CopyToAsync(stream);
-                            }
-
-                            model.F2307FilePath = fileSavePath;
-                            model.IsCertificateUpload = true;
-                        }
+                        model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
+                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName);
+                        model.IsCertificateUpload = true;
                     }
-                    catch (Exception ex)
+
+                    if (bir2307 != null && bir2307.Length > 0)
                     {
-                        _logger.LogError(ex, "Failed to upload file in collection receipt. Uploaded by: {UserName}", _userManager.GetUserName(User));
-                        TempData["error"] = ex.Message;
-                        return View(model);
+                        model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
+                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName);
+                        model.IsCertificateUpload = true;
                     }
 
                     await _dbContext.AddAsync(model, cancellationToken);
@@ -989,12 +847,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(cr);
         }
 
-        public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
-        {
-            var cr = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
-            return PartialView("_CollectionPreviewPartialView", cr);
-        }
-
         [HttpGet]
         public async Task<IActionResult> GetSalesInvoices(int customerNo, CancellationToken cancellationToken)
         {
@@ -1055,7 +907,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = (netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)).ToString(SD.Two_Decimal_Format)
                 });
             }
-            else if (isServices && !isSales)
+
+            if (isServices && !isSales)
             {
                 var sv = await _unitOfWork.FilprideServiceInvoice.GetAsync(s => s.ServiceInvoiceId == invoiceNo, cancellationToken);
 
@@ -1202,55 +1055,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                    try
+                    if (bir2306 != null && bir2306.Length > 0)
                     {
-                        if (bir2306 != null && bir2306.Length > 0)
-                        {
-                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2306");
-
-                            if (!Directory.Exists(uploadsFolder))
-                            {
-                                Directory.CreateDirectory(uploadsFolder);
-                            }
-
-                            string fileName = Path.GetFileName(bir2306.FileName);
-                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                            {
-                                await bir2306.CopyToAsync(stream);
-                            }
-
-                            existingModel.F2306FilePath = fileSavePath;
-                            existingModel.IsCertificateUpload = true;
-                        }
-
-                        if (bir2307 != null && bir2307.Length > 0)
-                        {
-                            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "BIR 2307");
-
-                            if (!Directory.Exists(uploadsFolder))
-                            {
-                                Directory.CreateDirectory(uploadsFolder);
-                            }
-
-                            string fileName = Path.GetFileName(bir2307.FileName);
-                            string fileSavePath = Path.Combine(uploadsFolder, fileName);
-
-                            using (FileStream stream = new FileStream(fileSavePath, FileMode.Create))
-                            {
-                                await bir2307.CopyToAsync(stream);
-                            }
-
-                            existingModel.F2307FilePath = fileSavePath;
-                            existingModel.IsCertificateUpload = true;
-                        }
+                        model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
+                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName);
+                        model.IsCertificateUpload = true;
                     }
-                    catch (Exception ex)
+
+                    if (bir2307 != null && bir2307.Length > 0)
                     {
-                        _logger.LogError(ex, "Failed to upload file in collection receipt. Uploaded by: {UserName}", _userManager.GetUserName(User));
-                        TempData["error"] = ex.Message;
-                        return View(model);
+                        model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
+                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName);
+                        model.IsCertificateUpload = true;
                     }
 
                     decimal offsetAmount = 0;
@@ -1363,11 +1179,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(model);
                 }
             }
-            else
-            {
-                TempData["error"] = "The information you submitted is not valid!";
-                return View(model);
-            }
+
+            TempData["error"] = "The information you submitted is not valid!";
+            return View(model);
         }
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)

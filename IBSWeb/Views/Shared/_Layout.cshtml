@@ -84,6 +84,49 @@
                                     if(selectedCompany == "Mobility")
                                     {
                                         <li class="nav-item dropdown">
+                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">POS</a>
+                                            <ul class="dropdown-menu">
+                                                
+                                                <li class="nav-item dropend">
+                                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        Sales
+                                                    </a>
+                                                    <ul class="dropdown-menu">
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CashierReport" asp-action="Index">Cashier Report</a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CashierReport" asp-action="CustomerInvoicing">Customer Invoicing</a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index">Customer Order Slip</a>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                                
+                                                <li><hr class="dropdown-divider"></li>
+                                                
+                                                <li class="nav-item dropend">
+                                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        Purchases
+                                                    </a>
+                                                    <ul class="dropdown-menu">
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Purchase" asp-action="Fuel">Fuel</a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li class="nav-item">
+                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Purchase" asp-action="Lube">Lube</a>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+
+
+                                            </ul>
+                                        </li>
+                                        <li class="nav-item dropdown">
                                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Inventory</a>
                                             <ul class="dropdown-menu">
                                                 <li class="nav-item">
@@ -145,29 +188,7 @@
                                             <li class="nav-item">
                                                 <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CreditMemo" asp-action="Index">Credit Memo</a>
                                             </li>
-
-                                            @if (selectedCompany == "Mobility")
-                                            {
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li class="nav-item dropend">
-                                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        Sales
-                                                    </a>
-                                                    <ul class="dropdown-menu">
-                                                        <li class="nav-item">
-                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CashierReport" asp-action="Index">Cashier Report</a>
-                                                        </li>
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li class="nav-item">
-                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CashierReport" asp-action="CustomerInvoicing">Customer Invoicing</a>
-                                                        </li>
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li class="nav-item">
-                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index">Customer Order Slip</a>
-                                                        </li>
-                                                    </ul>
-                                                </li>
-                                            }
+                                                
 
                                         </ul>
                                     </li>
@@ -215,33 +236,6 @@
                                             <li class="nav-item">
                                                 <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="JournalVoucher" asp-action="Index">Journal Voucher</a>
                                             </li>
-                                            
-                                            @if (selectedCompany == "Mobility")
-                                            {
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li class="nav-item dropend">
-                                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        Purchases
-                                                    </a>
-                                                    <ul class="dropdown-menu">
-                                                        <li class="nav-item">
-                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Purchase" asp-action="Fuel">Fuel</a>
-                                                        </li>
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li class="nav-item">
-                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Purchase" asp-action="Lube">Lube</a>
-                                                        </li>
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li class="nav-item">
-                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="PurchaseOrder" asp-action="Index">PO</a>
-                                                        </li>
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li class="nav-item">
-                                                            <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="ReceivingReport" asp-action="Index">RR</a>
-                                                        </li>
-                                                    </ul>
-                                                </li>
-                                            }
                                             
                                         </ul>
                                     </li>
