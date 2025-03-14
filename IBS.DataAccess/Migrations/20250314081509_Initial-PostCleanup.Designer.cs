@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250308024617_ChangeTheLenghtOfPurchaseOrderTerms")]
-    partial class ChangeTheLenghtOfPurchaseOrderTerms
+    [Migration("20250314081509_Initial-PostCleanup")]
+    partial class InitialPostCleanup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -180,6 +180,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
 
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employee_id");
+
                     b.Property<DateOnly?>("EndDate")
                         .HasColumnType("date")
                         .HasColumnName("end_date");
@@ -187,6 +191,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("InvoiceAmount")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("invoice_amount");
+
+                    b.Property<bool>("IsAdvances")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_advances");
 
                     b.Property<bool>("IsComplete")
                         .HasColumnType("boolean")
@@ -286,6 +294,9 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("BankId")
                         .HasDatabaseName("ix_filpride_check_voucher_headers_bank_id");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("ix_filpride_check_voucher_headers_employee_id");
 
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_check_voucher_headers_supplier_id");
@@ -558,6 +569,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("old_po_no");
 
+                    b.Property<int>("PickUpPointId")
+                        .HasColumnType("integer")
+                        .HasColumnName("pick_up_point_id");
+
                     b.Property<string>("PostedBy")
                         .HasColumnType("varchar(50)")
                         .HasColumnName("posted_by");
@@ -642,6 +657,9 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_filpride_purchase_orders_customer_id");
+
+                    b.HasIndex("PickUpPointId")
+                        .HasDatabaseName("ix_filpride_purchase_orders_pick_up_point_id");
 
                     b.HasIndex("ProductId")
                         .HasDatabaseName("ix_filpride_purchase_orders_product_id");
@@ -911,9 +929,17 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
 
+                    b.Property<string>("F2306FileName")
+                        .HasColumnType("text")
+                        .HasColumnName("f2306file_name");
+
                     b.Property<string>("F2306FilePath")
                         .HasColumnType("varchar(200)")
                         .HasColumnName("f2306file_path");
+
+                    b.Property<string>("F2307FileName")
+                        .HasColumnType("text")
+                        .HasColumnName("f2307file_name");
 
                     b.Property<string>("F2307FilePath")
                         .HasColumnType("varchar(200)")
@@ -2507,6 +2533,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(20)")
                         .HasColumnName("authority_to_load_no");
 
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
+
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("varchar(20)")
@@ -3521,6 +3552,11 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PickUpPointId"));
 
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("company");
+
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("varchar(50)")
@@ -3535,8 +3571,18 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(50)")
                         .HasColumnName("depot");
 
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("integer")
+                        .HasColumnName("supplier_id");
+
                     b.HasKey("PickUpPointId")
                         .HasName("pk_filpride_pick_up_points");
+
+                    b.HasIndex("Company")
+                        .HasDatabaseName("ix_filpride_pick_up_points_company");
+
+                    b.HasIndex("SupplierId")
+                        .HasDatabaseName("ix_filpride_pick_up_points_supplier_id");
 
                     b.ToTable("filpride_pick_up_points", (string)null);
                 });
@@ -7117,6 +7163,11 @@ namespace IBS.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_filpride_check_voucher_headers_filpride_bank_accounts_bank_");
 
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideEmployee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .HasConstraintName("fk_filpride_check_voucher_headers_filpride_employees_employee_");
+
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
                         .WithMany()
                         .HasForeignKey("SupplierId")
@@ -7124,6 +7175,8 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_filpride_check_voucher_headers_filpride_suppliers_supplier_");
 
                     b.Navigation("BankAccount");
+
+                    b.Navigation("Employee");
 
                     b.Navigation("Supplier");
                 });
@@ -7180,6 +7233,13 @@ namespace IBS.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_filpride_purchase_orders_filpride_customers_customer_id");
 
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilpridePickUpPoint", "PickUpPoint")
+                        .WithMany()
+                        .HasForeignKey("PickUpPointId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_purchase_orders_filpride_pick_up_points_pick_up_po");
+
                     b.HasOne("IBS.Models.MasterFile.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
@@ -7195,6 +7255,8 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_filpride_purchase_orders_filpride_suppliers_supplier_id");
 
                     b.Navigation("Customer");
+
+                    b.Navigation("PickUpPoint");
 
                     b.Navigation("Product");
 
@@ -7657,6 +7719,18 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_filpride_customer_branches_filpride_customers_customer_id");
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilpridePickUpPoint", b =>
+                {
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_pick_up_points_filpride_suppliers_supplier_id");
+
+                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerPurchaseOrder", b =>
