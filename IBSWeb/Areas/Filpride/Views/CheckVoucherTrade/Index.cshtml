@@ -251,7 +251,8 @@
                 `,
                 showCancelButton: true,
                 confirmButtonText: 'Proceed',
-                preConfirm: (selectedKey) => {
+                preConfirm: () => {
+                    let selectedKey = document.getElementById("paymentSelect").value;
                     if (selectedKey) {
                         let routes = {
                             'supplier': '@Url.Action("Create", "CheckVoucherTrade", new { area = "Filpride" })',
