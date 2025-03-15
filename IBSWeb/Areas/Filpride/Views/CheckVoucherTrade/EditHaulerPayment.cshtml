@@ -140,7 +140,7 @@
                 <br />
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Save</button>
+                        <button type="submit" class="btn btn-primary form-control">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
@@ -233,7 +233,7 @@
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${dr.deliveryReceiptNo}</td>
-                                            <td><input type="text" class="paymentAmount" data-balance="${formatNumber(checkingBalance)}" readonly style="display: none"></td>
+                                            <td><input type="text" class="paymentAmount" readonly style="display: none"></td>
                                             <td class="text-end">${formatNumber(dr.netOfEwtAmount)}</td>
                                             <td class="text-end">${formatNumber(dr.amountPaid)}</td>
                                             <td class="text-end balance">${formatNumber(balance)}</td>
@@ -375,6 +375,7 @@
             });
             $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
             updateTotalDebitAndCredit();
+            validateDebitAndCredit();
         }
 
         function updateTotalDebitAndCredit() {
@@ -404,50 +405,34 @@
         }
     </script>
     <script>
-        function validateDebitAndCredit(event) {
+        function validateDebitAndCredit() {
             var totalDebit = parseNumber($(".totalDebit").text());
             var totalCredit = parseNumber($(".totalCredit").text());
+            var errorMessage = "";
+            var isValid = true;
+
+            if ($("#balance-error-message").length === 0) {
+                $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
+            }
 
             if (totalDebit !== totalCredit) {
-                alert("Debit and Credit totals must be equal.");
-                event.preventDefault(); // Prevent form submission
-                return false;
+                errorMessage = "Debit and Credit totals must be equal.";
+                isValid = false;
+            } else if (totalDebit === 0 && totalCredit === 0) {
+                errorMessage = "Debit and Credit cannot both be zero.";
+                isValid = false;
+            } else if (totalDebit === 0 || totalCredit === 0) {
+                errorMessage = "Debit and Credit cannot be zero.";
+                isValid = false;
             }
 
-            if (totalDebit === 0 && totalCredit === 0) {
-                alert("Debit and Credit cannot both be zero.");
-                event.preventDefault(); // Prevent form submission
-                return false;
-            }
+            // Display or clear the error message
+            $("#balance-error-message").text(errorMessage);
 
-            if (totalDebit === 0 || totalCredit === 0) {
-                alert("Debit and Credit cannot be zero.");
-                event.preventDefault();
-                return false;
-            }
+            // Optionally disable/enable the submit button based on validation
+            $("button[type='submit']").prop("disabled", !isValid);
 
-            return true; // Allow form submission
+            return isValid;
         }
-    </script>
-    <script>
-        // Validate before form submission
-        $('#paymentForm').on('submit', function(event) {
-            let isValid = true;
-
-            $('.paymentAmount').each(function() {
-                let paymentValue = parseFloat($(this).val()) || 0;
-                let maxBalance = parseFloat($(this).data('balance')) || 0;
-
-                if (paymentValue > parseNumber(maxBalance)) {
-                    alert(`Payment amount cannot exceed balance for one or more entries.`);
-                    isValid = false;
-                    return false; // Break loop
-                }
-            });
-
-            if (!isValid) {
-                event.preventDefault(); // Prevent form submission
-            }
-});
     </script>
 }

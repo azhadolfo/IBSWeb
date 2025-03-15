@@ -160,6 +160,8 @@
                 $(".cib-credit").val(formattedTotal);
                 
                 updateTotals();
+                
+                validateDebitAndCredit();
             }
             
             function updateTotals() {
@@ -216,24 +218,35 @@
                 $("#PayeeTin").val("");
             }
         }
-    
-        function validateDebitAndCredit(event) {
+
+        function validateDebitAndCredit() {
             var totalDebit = parseNumber($(".totalDebit").text());
             var totalCredit = parseNumber($(".totalCredit").text());
+            var errorMessage = "";
+            var isValid = true;
+
+            if ($("#balance-error-message").length === 0) {
+                $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
+            }
 
             if (totalDebit !== totalCredit) {
-                alert("Debit and Credit totals must be equal.");
-                event.preventDefault(); // Prevent form submission
-                return false;
+                errorMessage = "Debit and Credit totals must be equal.";
+                isValid = false;
+            } else if (totalDebit === 0 && totalCredit === 0) {
+                errorMessage = "Debit and Credit cannot both be zero.";
+                isValid = false;
+            } else if (totalDebit === 0 || totalCredit === 0) {
+                errorMessage = "Debit and Credit cannot be zero.";
+                isValid = false;
             }
 
-            if (totalDebit === 0 && totalCredit === 0) {
-                alert("Debit and Credit cannot both be zero.");
-                event.preventDefault(); // Prevent form submission
-                return false;
-            }
+            // Display or clear the error message
+            $("#balance-error-message").text(errorMessage);
 
-            return true; // Allow form submission
+            // Optionally disable/enable the submit button based on validation
+            $("button[type='submit']").prop("disabled", !isValid);
+
+            return isValid;
         }
     </script>
 }

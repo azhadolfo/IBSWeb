@@ -127,7 +127,7 @@
                 <br />
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Save</button>
+                        <button type="submit" class="btn btn-primary form-control">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
@@ -288,6 +288,8 @@
                 $(".totalCredit").text(formatNumber(totalCredit));
                 $("#debit").val("0.000");
                 $("#credit").val("0.000");
+                
+                validateDebitAndCredit();
             }
 
             // Function to remove the corresponding row
