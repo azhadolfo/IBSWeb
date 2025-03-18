@@ -3,11 +3,13 @@ using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Dtos;
 using IBS.Models;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -18,10 +20,10 @@ namespace IBS.Services
 {
     public interface IGoogleDriveImportService
     {
-        Task<List<GoogleDriveFile>> GetFileFromDriveAsync(string folderId);
+        Task<List<GoogleDriveFile>> GetFileFromDriveAsync(string stationName, string folderId);
     }
 
-    public class GoogleDriveImportService : IGoogleDriveImportService, IJob
+    public class GoogleDriveImportService : IGoogleDriveImportService
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
@@ -64,23 +66,56 @@ namespace IBS.Services
             }
         }
 
-        public async Task Execute(IJobExecutionContext context)
+        public async Task Execute()
         {
             await using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
+            var sessionStartDate = DateTimeHelper.GetCurrentPhilippineTime();
+            string sessionCode = sessionStartDate.ToString("yyyyddMMHHmmss");
+
             try
             {
-                _logger.LogInformation($"==========Import process started in {DateTimeHelper.GetCurrentPhilippineTime()}==========");
-                LogMessage logMessage = new("Information", "GDriveImportService",
+                LogMessage logMessage = new("Information", "ImportStart",
+                    sessionCode);
+                await _dbContext.LogMessages.AddAsync(logMessage);
+
+                _logger.LogInformation($"==========Import process started in {sessionStartDate}==========");
+
+                logMessage = new("Information", "GoogleDriveImportService",
                     $"Import process started in {DateTimeHelper.GetCurrentPhilippineTime()}.");
                 await _dbContext.LogMessages.AddAsync(logMessage);
 
-                await ImportSales();
-                await ImportPurchases();
+                var salesModel = await ImportSales();
+                var purchasesModel = await ImportPurchases();
 
-                _logger.LogInformation($"==========Import process finished in {DateTimeHelper.GetCurrentPhilippineTime()}==========");
-                logMessage = new("Information", "GDriveImportService",
+                foreach (var sales in salesModel)
+                {
+                    var purchase = purchasesModel
+                        .FirstOrDefault(s => s.StationName == sales.StationName);
+                    var message = $"{sales.Message} /// {purchase.Message}";
+                    logMessage = new("Information", $"ImportService-{sales.StationName}",
+                        message);
+                    if (!string.IsNullOrEmpty(purchase.OpeningFileStatus) || !string.IsNullOrEmpty(sales.OpeningFileStatus))
+                    {
+                        logMessage.LogLevel = "Warning";
+                    }
+                    if (!string.IsNullOrEmpty(purchase.Error) || !string.IsNullOrEmpty(sales.Error))
+                    {
+                        logMessage.LogLevel = "Error";
+                    }
+
+                    await _dbContext.LogMessages.AddAsync(logMessage);
+                }
+
+                _logger.LogInformation(
+                    $"==========Import process finished in {DateTimeHelper.GetCurrentPhilippineTime()}==========");
+
+                logMessage = new("Information", "GoogleDriveImportService",
                     $"Import process finished in {DateTimeHelper.GetCurrentPhilippineTime()}.");
+                await _dbContext.LogMessages.AddAsync(logMessage);
+
+                logMessage = new("Information", "ImportEnd",
+                    sessionCode);
                 await _dbContext.LogMessages.AddAsync(logMessage);
 
                 await _dbContext.SaveChangesAsync();
@@ -90,16 +125,19 @@ namespace IBS.Services
             {
                 await transaction.RollbackAsync();
 
-                LogMessage logMessage = new("Warning", "GDriveImportService",
-                    $"Importing service exception {DateTimeHelper.GetCurrentPhilippineTime()}.");
                 _logger.LogInformation("==========GoogleDriveImportService.Execute - EXCEPTION: " + ex.Message + "==========");
 
+                LogMessage logMessage = new("Error", "GoogleDriveImportService",
+                    $"Importing service exception {DateTimeHelper.GetCurrentPhilippineTime()}.");
+                await _dbContext.LogMessages.AddAsync(logMessage);
+                logMessage = new("Information", "ImportEnd",
+                    sessionCode);
                 await _dbContext.LogMessages.AddAsync(logMessage);
                 await _dbContext.SaveChangesAsync();
             }
         }
 
-        public async Task<List<GoogleDriveFile>> GetFileFromDriveAsync(string folderId)
+        public async Task<List<GoogleDriveFile>> GetFileFromDriveAsync(string stationName, string folderId)
         {
             // get credential
             var serviceCredential = _googleCredential.CreateScoped(DriveService.ScopeConstants.Drive);
@@ -142,8 +180,9 @@ namespace IBS.Services
             return filesModel;
         }
 
-        public async Task ImportSales()
+        public async Task<List<LogMessageDto>> ImportSales()
         {
+            List<LogMessageDto> logList = new();
             _logger.LogInformation("==========IMPORTING SALES==========");
 
             int fuelsCount;
@@ -152,14 +191,17 @@ namespace IBS.Services
             bool hasPoSales = false;
 
             var stations = await _dbContext.MobilityStations
-                .Where(s => !string.IsNullOrEmpty(s.FolderPath) && s.StationCode == "S19")
+                .Where(s => s.IsActive)
                 .ToListAsync();
 
             foreach (var station in stations)
             {
-                if (station.FolderPath != "No Salestext")
+                LogMessageDto model = new LogMessageDto();
+                model.StationName = station.StationName;
+
+                if (station.FolderPath != " ")
                 {
-                    var fileList = await GetFileFromDriveAsync(station.FolderPath);
+                    var fileList = await GetFileFromDriveAsync(station.StationName, station.FolderPath);
 
                     try
                     {
@@ -176,11 +218,18 @@ namespace IBS.Services
                         {
                             _logger.LogWarning($"==========NO CSV FILES IN '{station.StationName}' FOR IMPORT SALES.==========");
 
-                            LogMessage logMessage = new("Warning", "ImportSales",
-                                $"No csv files found in station '{station.StationName}'.");
+                            // LogMessage logMessage = new("Warning", $"ImportSales - {station.StationName}",
+                            //     $"No csv files found for station '{station.StationName}'.");
 
-                            await _dbContext.LogMessages.AddAsync(logMessage);
-                            await _dbContext.SaveChangesAsync();
+                            // await _dbContext.LogMessages.AddAsync(logMessage);
+                            // await _dbContext.SaveChangesAsync();
+
+                            model.CsvStatus = " (NO CSV) ";
+
+                            model.Message =
+                                $" ImportSales({model.StationName}): {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
+
+                            logList.Add(model);
 
                             continue;
                         }
@@ -231,11 +280,18 @@ namespace IBS.Services
                                 // Log a warning or handle the situation where the file could not be opened after retrying
                                 _logger.LogWarning($"==========Failed to open file '{file.FileName}' after multiple retries.==========");
 
-                                LogMessage logMessage = new("Warning", "ImportSales",
-                                    $"Failed to open file '{file.FileName}' after multiple retries.");
+                                // LogMessage logMessage = new("Warning", $"ImportSales - {station.StationName}",
+                                //     $"Failed to open file '{file.FileName}' after multiple retries.");
+                                //
+                                // await _dbContext.LogMessages.AddAsync(logMessage);
+                                // await _dbContext.SaveChangesAsync();
 
-                                await _dbContext.LogMessages.AddAsync(logMessage);
-                                await _dbContext.SaveChangesAsync();
+                                model.OpeningFileStatus = "Can't open ";
+
+                                model.Message =
+                                    $" ImportSales({model.StationName}): {model.CsvStatus}/{model.OpeningFileStatus}/{model.Error}/{model.HowManyImported} ";
+
+                                logList.Add(model);
                             }
                         }
 
@@ -243,48 +299,63 @@ namespace IBS.Services
                         {
                             await _unitOfWork.MobilitySalesHeader.ComputeSalesPerCashier(hasPoSales);
 
-                            LogMessage logMessage = new("Information", "ImportSales",
-                                $"Imported successfully in the station '{station.StationName}', Fuels: '{fuelsCount}' record(s), Lubes: '{lubesCount}' record(s), Safe drops: '{safedropsCount}' record(s).");
+                            // LogMessage logMessage = new("Information", $"ImportSales - {station.StationName}",
+                            //     $"Sales imported successfully in the station '{station.StationName}', Fuels: '{fuelsCount}' record(s), Lubes: '{lubesCount}' record(s), Safe drops: '{safedropsCount}' record(s).");
 
                             _logger.LogInformation("==========" + station.StationName + " SALES IMPORTED==========");
 
-                            await _dbContext.LogMessages.AddAsync(logMessage);
-                            await _dbContext.SaveChangesAsync();
+                            // await _dbContext.LogMessages.AddAsync(logMessage);
+                            // await _dbContext.SaveChangesAsync();
+
+                            model.HowManyImported = $"Sales for: '{station.StationName}', Fuels: '{fuelsCount}', Lubes: '{lubesCount}', Safe drops: '{safedropsCount}'.";
                         }
                         else
                         {
                             // Import this message to your message box
                             _logger.LogInformation("==========You're up to date.==========");
 
-                            LogMessage logMessage = new("Information", "ImportSales",
-                                $"No new record found in the station '{station.StationName}'.");
+                            // LogMessage logMessage = new("Information", $"ImportSales - {station.StationName}",
+                            //     $"No new record found in the station '{station.StationName}'.");
 
-                            await _dbContext.LogMessages.AddAsync(logMessage);
-                            await _dbContext.SaveChangesAsync();
+                            // await _dbContext.LogMessages.AddAsync(logMessage);
+                            // await _dbContext.SaveChangesAsync();
+
+                            model.HowManyImported = "You're up to date.";
                         }
                     }
                     catch (Exception ex)
                     {
-                        LogMessage logMessage = new("Error", "ImportSales",
-                            $"Error: {ex.Message} in '{station.StationName}'.");
-                        _logger.LogInformation("==========GoogleDriveImportService.ImportSales - EXCEPTION: " + ex.Message + " " + station.StationName +
-                                               " SALES==========");
+                        // LogMessage logMessage = new("Error", $"ImportSales - {station.StationName}",
+                        //     $"Error: {ex.Message} in '{station.StationName}'.");
+                        // _logger.LogInformation("EXCEPTION - ImportSales("  + station.StationName + "): " + ex.Message);
 
-                        await _dbContext.LogMessages.AddAsync(logMessage);
-                        await _dbContext.SaveChangesAsync();
+                        // await _dbContext.LogMessages.AddAsync(logMessage);
+                        // await _dbContext.SaveChangesAsync();
+
+                        model.Error = $"ERROR: {ex.Message} in '{station.StationName}'.";
                     }
                 }
-            }
+                else
+                {
+                    model.Error =
+                        $" ERROR: NO SALESTEXT.";
+                }
+                model.Message =
+                    $" ImportSales({model.StationName}): {model.CsvStatus}/{model.OpeningFileStatus}/{model.Error}/{model.HowManyImported} ";
 
+                logList.Add(model);
+            }
             _logger.LogInformation($"==========SALES IMPORT COMPLETED==========");
+
+            return logList;
         }
 
-        public async Task ImportPurchases()
+        public async Task<List<LogMessageDto>> ImportPurchases()
         {
+            List<LogMessageDto> logList = new();
             _logger.LogInformation("==========IMPORTING PURCHASES==========");
 
-            var stations = await _dbContext.MobilityStations.Where(s =>
-                !string.IsNullOrEmpty(s.FolderPath) && s.StationCode == "S19")
+            var stations = await _dbContext.MobilityStations.Where(s => s.IsActive)
                 .ToListAsync();
 
             int fuelsCount;
@@ -293,9 +364,12 @@ namespace IBS.Services
 
             foreach (var station in stations)
             {
-                if (station.FolderPath != "No Salestext")
+                LogMessageDto model = new LogMessageDto();
+                model.StationName = station.StationName;
+
+                if (station.FolderPath != " ")
                 {
-                    var fileList = await GetFileFromDriveAsync(station.FolderPath);
+                    var fileList = await GetFileFromDriveAsync(station.StationName, station.FolderPath);
 
                     try
                     {
@@ -309,13 +383,18 @@ namespace IBS.Services
                         if (!files.Any())
                         {
                             // Import this message to your message box
-                            _logger.LogWarning($"NO CSV FILES IN '{station.StationName}' FOR IMPORT PURCHASE.");
+                            // _logger.LogWarning($"NO CSV FILES IN '{station.StationName}' FOR IMPORT PURCHASE.");
 
-                            LogMessage logMessage = new("Warning", "ImportPurchases",
-                                $"No csv files found in station '{station.StationName}'.");
+                            // LogMessage logMessage = new("Warning", $"ImportPurchases - {station.StationName}",
+                            //     $"No csv files found in station '{station.StationName}'.");
 
-                            await _dbContext.LogMessages.AddAsync(logMessage);
-                            await _dbContext.SaveChangesAsync();
+                            // await _dbContext.LogMessages.AddAsync(logMessage);
+                            // await _dbContext.SaveChangesAsync();
+
+                            model.CsvStatus = " (NO CSV) ";
+                            model.Message =
+                                $" ImportPurchases({model.StationName}): {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
+                            logList.Add(model);
 
                             continue;
                         }
@@ -367,56 +446,73 @@ namespace IBS.Services
                             {
                                 // Log a warning or handle the situation where the file could not be opened after retrying
                                 _logger.LogWarning(
-                                    $"==========Failed to open file '{file.FileName}' after multiple retries.==========");
+                                $"==========Failed to open file '{file.FileName}' after multiple retries.==========");
 
-                                LogMessage logMessage = new("Warning", "ImportPurchases",
-                                    $"Failed to open file '{file.FileName}' after multiple retries.");
+                                // LogMessage logMessage = new("Warning", $"ImportPurchases - {station.StationName}",
+                                //     $"Failed to open file '{file.FileName}' after multiple retries.");
 
-                                await _dbContext.AddAsync(logMessage);
-                                await _dbContext.SaveChangesAsync();
+                                // await _dbContext.AddAsync(logMessage);
+                                // await _dbContext.SaveChangesAsync();
 
-                                return;
+                                model.OpeningFileStatus = $" (CAN'T OPEN FILE'{file.FileName}') ";
                             }
                         }
 
                         if (fuelsCount != 0 || lubesCount != 0 || poSalesCount != 0)
                         {
-                            LogMessage logMessage = new("Information", "ImportPurchases",
-                                $"Imported successfully in the station '{station.StationName}', Fuel Delivery: '{fuelsCount}' record(s), Lubes Delivery: '{lubesCount}' record(s), PO Sales: '{poSalesCount}' record(s).");
+                            // LogMessage logMessage = new("Information", $"ImportPurchases - {station.StationName}",
+                            //     $"Purchases imported successfully in the station '{station.StationName}', Fuel Delivery: '{fuelsCount}' record(s), Lubes Delivery: '{lubesCount}' record(s), PO Sales: '{poSalesCount}' record(s).");
 
-                            _logger.LogInformation($"Imported successfully in the station '{station.StationName}', Fuel Delivery: '{fuelsCount}' record(s), Lubes Delivery: '{lubesCount}' record(s), PO Sales: '{poSalesCount}' record(s).");
+                            // _logger.LogInformation($"Imported successfully in the station '{station.StationName}', Fuel Delivery: '{fuelsCount}' record(s), Lubes Delivery: '{lubesCount}' record(s), PO Sales: '{poSalesCount}' record(s).");
 
-                            await _dbContext.LogMessages.AddAsync(logMessage);
-                            await _dbContext.SaveChangesAsync();
+                            // await _dbContext.LogMessages.AddAsync(logMessage);
+                            // await _dbContext.SaveChangesAsync();
+
+                            model.HowManyImported = $"Purchases for: '{station.StationName}', Fuels: '{fuelsCount}', Lubes: '{lubesCount}', PO Sales: '{poSalesCount}'.";
                         }
                         else
                         {
                             // Import this message to your message box
-                            _logger.LogInformation("==========You're up to date.==========");
+                            // _logger.LogInformation("==========You're up to date.==========");
 
-                            LogMessage logMessage = new("Information", "ImportPurchases",
-                                $"No new record found in the station '{station.StationName}'.");
+                            // LogMessage logMessage = new("Information", $"ImportPurchases - {station.StationName}",
+                            //     $"No new record found in the station '{station.StationName}'.");
 
-                            await _dbContext.LogMessages.AddAsync(logMessage);
-                            await _dbContext.SaveChangesAsync();
+                            // await _dbContext.LogMessages.AddAsync(logMessage);
+                            // await _dbContext.SaveChangesAsync();
+
+                            model.HowManyImported = "You're up to date.";
                         }
                     }
                     catch (Exception ex)
                     {
-                        LogMessage logMessage = new("Error", "ImportPurchase",
-                            $"Error: {ex.Message} in '{station.StationName}'.");
-                        _logger.LogInformation("==========GoogleDriveImportService.Purchases - EXCEPTION: " + ex.Message + " " + station.StationName +
-                                               " SALES==========");
+                        // LogMessage logMessage = new("Error", $"ImportPurchase - {station.StationName}",
+                        //     $"Error: {ex.Message} in '{station.StationName}'.");
+                        // _logger.LogInformation("==========GoogleDriveImportService.Purchases - EXCEPTION: " + ex.Message + " " + station.StationName +
+                        //                        " SALES==========");
 
-                        await _dbContext.LogMessages.AddAsync(logMessage);
-                        await _dbContext.SaveChangesAsync();
+                        // await _dbContext.LogMessages.AddAsync(logMessage);
+                        // await _dbContext.SaveChangesAsync();
+
+                        model.Error = $"ERROR: {ex.Message} in '{station.StationName}'.";
                     }
 
                     _logger.LogInformation("==========" + station.StationName + " PURCHASES IMPORTED==========");
                 }
-            }
+                else
+                {
+                    model.Error =
+                        $" ERROR: NO SALESTEXT.";
+                }
 
+                model.Message =
+                    $" ImportPurchases({model.StationName}): {model.CsvStatus} {model.OpeningFileStatus} {model.Error}/{model.HowManyImported} ";
+
+                logList.Add(model);
+            }
             _logger.LogInformation($"==========PURCHASE IMPORT COMPLETE==========");
+
+            return logList;
         }
     }
 }

@@ -122,8 +122,6 @@
                                                         </li>
                                                     </ul>
                                                 </li>
-
-
                                             </ul>
                                         </li>
                                         <li class="nav-item dropdown">
@@ -713,6 +711,13 @@
                                                 <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="PickupPoint" asp-action="Index">Pickup Points</a>
                                             </li>
                                         </ul>
+                                    </li>
+                                }
+                                
+                                @if(selectedCompany == "Mobility" && User.IsInRole("Admin"))
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="Mobility" asp-controller="ImportPOS" asp-action="Index">Import POS</a>
                                     </li>
                                 }
                             }
