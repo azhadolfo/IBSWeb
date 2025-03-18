@@ -926,9 +926,17 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
 
+                    b.Property<string>("F2306FileName")
+                        .HasColumnType("text")
+                        .HasColumnName("f2306file_name");
+
                     b.Property<string>("F2306FilePath")
                         .HasColumnType("varchar(200)")
                         .HasColumnName("f2306file_path");
+
+                    b.Property<string>("F2307FileName")
+                        .HasColumnType("text")
+                        .HasColumnName("f2307file_name");
 
                     b.Property<string>("F2307FilePath")
                         .HasColumnType("varchar(200)")
@@ -2521,6 +2529,11 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(20)")
                         .HasColumnName("authority_to_load_no");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()

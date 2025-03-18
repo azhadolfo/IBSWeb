@@ -5,6 +5,6 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface IAuthorityToLoadRepository : IRepository<FilprideAuthorityToLoad>
     {
-        Task<string> GenerateAtlNo(CancellationToken cancellationToken);
+        Task<string> GenerateAtlNo(string company, CancellationToken cancellationToken);
     }
 }

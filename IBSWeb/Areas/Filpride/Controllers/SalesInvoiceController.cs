@@ -154,9 +154,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region Saving Default Entries
 
-                    var existingCustomer = await _unitOfWork.FilprideCustomer
-                        .GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
-
                     model.SalesInvoiceNo = await _unitOfWork.FilprideSalesInvoice.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
                     model.Amount = model.Quantity * model.UnitPrice;
@@ -179,13 +176,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         TempData["success"] = "Sales invoice created successfully";
                         return RedirectToAction(nameof(Index));
                     }
-                    else
-                    {
-                        model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-                        model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                        TempData["error"] = "Please input below or exact amount based on the Sales Invoice";
-                        return View(model);
-                    }
+
+                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+                    model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                    TempData["error"] = "Please input below or exact amount based on the Sales Invoice";
+                    return View(model);
 
                     #endregion Saving Default Entries
                 }
@@ -300,9 +295,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     var existingRecord = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
-
-                    var customer = await _unitOfWork.FilprideCustomer
-                        .GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken) ?? throw new NullReferenceException();
 
                     if (existingRecord == null)
                     {

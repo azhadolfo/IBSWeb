@@ -131,8 +131,12 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "varchar(200)")]
         public string? F2306FilePath { get; set; }
 
+        public string? F2306FileName { get; set; }
+
         [Column(TypeName = "varchar(200)")]
         public string? F2307FilePath { get; set; }
+
+        public string? F2307FileName { get; set; }
 
         [Column(TypeName = "numeric[]")]
         public decimal[]? SIMultipleAmount { get; set; }

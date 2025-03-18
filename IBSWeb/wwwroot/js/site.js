@@ -109,8 +109,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Get all dropend elements
     const dropends = document.querySelectorAll(".dropend");
 
-    // Track the currently open dropend
-    let openDropend = null;
+    // Track the currently open parent dropend
+    let openParentDropend = null;
 
     dropends.forEach(function (dropend) {
         dropend.addEventListener("click", function (event) {
@@ -119,15 +119,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const clickedMenu = this.querySelector(".dropdown-menu");
 
-            // If we click on an already open dropend, do nothing
-            // This prevents the double-click issue
-            if (openDropend === this) {
+            // If clicking on a child menu inside an open parent, allow it
+            if (openParentDropend && openParentDropend.contains(this)) {
                 return;
             }
 
-            // Close the currently open dropend if there is one
-            if (openDropend) {
-                const openMenu = openDropend.querySelector(".dropdown-menu");
+            // Close the currently open parent dropend if different
+            if (openParentDropend && openParentDropend !== this) {
+                const openMenu = openParentDropend.querySelector(".dropdown-menu");
                 if (openMenu) {
                     openMenu.classList.remove("show");
                 }
@@ -136,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // Open the clicked dropend
             if (clickedMenu) {
                 clickedMenu.classList.add("show");
-                openDropend = this;
+                openParentDropend = this;
             }
         });
     });

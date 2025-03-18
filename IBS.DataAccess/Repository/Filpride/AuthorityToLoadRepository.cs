@@ -15,12 +15,13 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateAtlNo(CancellationToken cancellationToken)
+        public async Task<string> GenerateAtlNo(string company, CancellationToken cancellationToken)
         {
             FilprideAuthorityToLoad? lastAtl = await _db
                 .FilprideAuthorityToLoads
                 .OrderBy(c => c.AuthorityToLoadId)
                 .ThenBy(c => c.AuthorityToLoadNo)
+                .Where(c => c.Company == company)
                 .LastOrDefaultAsync(cancellationToken);
 
             var yearToday = DateTime.UtcNow.Year;
