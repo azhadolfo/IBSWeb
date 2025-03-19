@@ -14,6 +14,8 @@
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
+    
+    var decimalFormat = Model.CustomerOrderSlip.Customer.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
 <div class="container mt-4">
@@ -93,11 +95,11 @@
             <tbody>
             <tr>
                 <td>@Model.CustomerOrderSlip.Product?.ProductName</td>
-                <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
+                <td>@Model.CustomerOrderSlip.Quantity.ToString(decimalFormat)</td>
                 <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
-                <td>@Html.DisplayFor(model => model.VatAmount)</td>
+                <td>@Model.VatAmount.ToString(decimalFormat)</td>
                 <td>@Html.DisplayFor(model => model.CustomerOrderSlip.DeliveredPrice)</td>
-                <td>@Html.DisplayFor(model => model.CustomerOrderSlip.TotalAmount)</td>
+                <td>@Model.CustomerOrderSlip.TotalAmount.ToString(decimalFormat)</td>
             </tr>
             </tbody>
         </table>
@@ -136,9 +138,9 @@
             </tr>
             </thead>
             <tbody>
-            <tr><td class="text-center col-6">Available Credit Limit</td><td class="col-6">@Html.DisplayFor(model => model.CreditBalance)</td></tr>
-            <tr><td class="text-center">COS Amount</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip.TotalAmount)</td></tr>
-            <tr><td class="text-center">Credit Balance</td><td>@Html.DisplayFor(model => model.Total)</td></tr>
+            <tr><td class="text-center col-6">Available Credit Limit</td><td class="col-6">@Model.CreditBalance.ToString(decimalFormat)</td></tr>
+            <tr><td class="text-center">COS Amount</td><td>@Model.CustomerOrderSlip.TotalAmount.ToString(decimalFormat)</td></tr>
+            <tr><td class="text-center">Credit Balance</td><td>@Model.Total.ToString(decimalFormat)</td></tr>
             </tbody>
         </table>
     </div>

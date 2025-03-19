@@ -15,6 +15,8 @@
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
+    
+    var decimalFormat = Model.Customer.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 
 }
 
@@ -88,7 +90,7 @@
             <tr>
                 <td scope="row">@Model.CustomerOrderSlip.Product?.ProductName.ToUpper()</td>
                 <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
-                <td>@Html.DisplayFor(model => model.Quantity)</td>
+                <td>@Model.Quantity.ToString(decimalFormat)</td>
             </tr>
         </tbody>
     </table>
