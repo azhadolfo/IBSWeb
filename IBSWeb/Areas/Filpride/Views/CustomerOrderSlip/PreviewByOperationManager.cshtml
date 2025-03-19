@@ -15,6 +15,8 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
     
+    var decimalFormat = Model.CustomerOrderSlip.Customer.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
+    
 }
 
 <div class="container mt-4">
@@ -92,12 +94,12 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>@Model.CustomerOrderSlip.Product.ProductName</td>
-                    <td>@Html.DisplayFor(model => model.CustomerOrderSlip.Quantity)</td>
-                    <td>@Model.CustomerOrderSlip.Product.ProductUnit</td>
-                    <td>@Html.DisplayFor(model => model.VatAmount)</td>
-                    <td>@Html.DisplayFor(model => model.CustomerOrderSlip.DeliveredPrice)</td>
-                    <td>@Html.DisplayFor(model => model.CustomerOrderSlip.TotalAmount)</td>
+                    <td>@Model.CustomerOrderSlip.Product?.ProductName</td>
+                    <td>@Model.CustomerOrderSlip.Quantity.ToString(decimalFormat)</td>
+                    <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
+                    <td>@Model.VatAmount.ToString(decimalFormat)</td>
+                    <td>@Model.CustomerOrderSlip.DeliveredPrice.ToString(decimalFormat)</td>
+                    <td>@Model.CustomerOrderSlip.TotalAmount.ToString(decimalFormat)</td>
                 </tr>
             </tbody>
         </table>
