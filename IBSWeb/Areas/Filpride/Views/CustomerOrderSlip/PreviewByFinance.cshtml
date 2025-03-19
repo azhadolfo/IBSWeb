@@ -98,7 +98,7 @@
                 <td>@Model.CustomerOrderSlip.Quantity.ToString(decimalFormat)</td>
                 <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
                 <td>@Model.VatAmount.ToString(decimalFormat)</td>
-                <td>@Model.CustomerOrderSlip.DeliveredPrice.ToString(decimalFormat)</td>
+                <td>@Html.DisplayFor(model => model.CustomerOrderSlip.DeliveredPrice)</td>
                 <td>@Model.CustomerOrderSlip.TotalAmount.ToString(decimalFormat)</td>
             </tr>
             </tbody>
