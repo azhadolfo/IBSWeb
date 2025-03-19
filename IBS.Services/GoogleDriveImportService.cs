@@ -75,12 +75,11 @@ namespace IBS.Services
 
             try
             {
-                LogMessage logMessage = new("Information", "ImportStart",
-                    sessionCode);
-                await _dbContext.LogMessages.AddAsync(logMessage);
-
                 _logger.LogInformation($"==========Import process started in {sessionStartDate}==========");
 
+                LogMessage logMessage = new("Information", "Start",
+                    sessionCode);
+                await _dbContext.LogMessages.AddAsync(logMessage);
                 logMessage = new("Information", "GoogleDriveImportService",
                     $"Import process started in {DateTimeHelper.GetCurrentPhilippineTime()}.");
                 await _dbContext.LogMessages.AddAsync(logMessage);
@@ -92,10 +91,11 @@ namespace IBS.Services
                 {
                     var purchase = purchasesModel
                         .FirstOrDefault(s => s.StationName == sales.StationName);
-                    var message = $"{sales.Message} /// {purchase.Message}";
-                    logMessage = new("Information", $"ImportService-{sales.StationName}",
+                    var message = $"{sales.Message} {purchase.Message}";
+                    logMessage = new("Information", $"{sales.StationName}",
                         message);
-                    if (!string.IsNullOrEmpty(purchase.OpeningFileStatus) || !string.IsNullOrEmpty(sales.OpeningFileStatus))
+                    if (!string.IsNullOrEmpty(purchase.OpeningFileStatus) || !string.IsNullOrEmpty(sales.OpeningFileStatus) ||
+                        !string.IsNullOrEmpty(purchase.CsvStatus) || !string.IsNullOrEmpty(sales.CsvStatus))
                     {
                         logMessage.LogLevel = "Warning";
                     }
@@ -114,7 +114,7 @@ namespace IBS.Services
                     $"Import process finished in {DateTimeHelper.GetCurrentPhilippineTime()}.");
                 await _dbContext.LogMessages.AddAsync(logMessage);
 
-                logMessage = new("Information", "ImportEnd",
+                logMessage = new("Information", "End",
                     sessionCode);
                 await _dbContext.LogMessages.AddAsync(logMessage);
 
@@ -128,9 +128,9 @@ namespace IBS.Services
                 _logger.LogInformation("==========GoogleDriveImportService.Execute - EXCEPTION: " + ex.Message + "==========");
 
                 LogMessage logMessage = new("Error", "GoogleDriveImportService",
-                    $"Importing service exception {DateTimeHelper.GetCurrentPhilippineTime()}.");
+                    $"IMPORT SERVICE EXCEPTION {DateTimeHelper.GetCurrentPhilippineTime()}.");
                 await _dbContext.LogMessages.AddAsync(logMessage);
-                logMessage = new("Information", "ImportEnd",
+                logMessage = new("Information", "End",
                     sessionCode);
                 await _dbContext.LogMessages.AddAsync(logMessage);
                 await _dbContext.SaveChangesAsync();
@@ -224,10 +224,10 @@ namespace IBS.Services
                             // await _dbContext.LogMessages.AddAsync(logMessage);
                             // await _dbContext.SaveChangesAsync();
 
-                            model.CsvStatus = " (NO CSV) ";
+                            model.CsvStatus = " NO CSV ";
 
                             model.Message =
-                                $" ImportSales({model.StationName}): {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
+                                $"<strong>SALES:</strong> {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
 
                             logList.Add(model);
 
@@ -289,7 +289,7 @@ namespace IBS.Services
                                 model.OpeningFileStatus = "Can't open ";
 
                                 model.Message =
-                                    $" ImportSales({model.StationName}): {model.CsvStatus}/{model.OpeningFileStatus}/{model.Error}/{model.HowManyImported} ";
+                                    $" SALES: {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
 
                                 logList.Add(model);
                             }
@@ -307,7 +307,7 @@ namespace IBS.Services
                             // await _dbContext.LogMessages.AddAsync(logMessage);
                             // await _dbContext.SaveChangesAsync();
 
-                            model.HowManyImported = $"Sales for: '{station.StationName}', Fuels: '{fuelsCount}', Lubes: '{lubesCount}', Safe drops: '{safedropsCount}'.";
+                            model.HowManyImported = $"FUELS: '{fuelsCount}', LUBES: '{lubesCount}', SAFE DROPS: '{safedropsCount}'.";
                         }
                         else
                         {
@@ -320,7 +320,7 @@ namespace IBS.Services
                             // await _dbContext.LogMessages.AddAsync(logMessage);
                             // await _dbContext.SaveChangesAsync();
 
-                            model.HowManyImported = "You're up to date.";
+                            model.HowManyImported = "YOU'RE UP TO DATE.";
                         }
                     }
                     catch (Exception ex)
@@ -341,7 +341,7 @@ namespace IBS.Services
                         $" ERROR: NO SALESTEXT.";
                 }
                 model.Message =
-                    $" ImportSales({model.StationName}): {model.CsvStatus}/{model.OpeningFileStatus}/{model.Error}/{model.HowManyImported} ";
+                    $"SALES: {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
 
                 logList.Add(model);
             }
@@ -355,7 +355,8 @@ namespace IBS.Services
             List<LogMessageDto> logList = new();
             _logger.LogInformation("==========IMPORTING PURCHASES==========");
 
-            var stations = await _dbContext.MobilityStations.Where(s => s.IsActive)
+            var stations = await _dbContext.MobilityStations
+                .Where(s => s.IsActive)
                 .ToListAsync();
 
             int fuelsCount;
@@ -391,9 +392,9 @@ namespace IBS.Services
                             // await _dbContext.LogMessages.AddAsync(logMessage);
                             // await _dbContext.SaveChangesAsync();
 
-                            model.CsvStatus = " (NO CSV) ";
+                            model.CsvStatus = " NO CSV ";
                             model.Message =
-                                $" ImportPurchases({model.StationName}): {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
+                                $" <strong>PURCHASES:</strong> {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
                             logList.Add(model);
 
                             continue;
@@ -468,7 +469,7 @@ namespace IBS.Services
                             // await _dbContext.LogMessages.AddAsync(logMessage);
                             // await _dbContext.SaveChangesAsync();
 
-                            model.HowManyImported = $"Purchases for: '{station.StationName}', Fuels: '{fuelsCount}', Lubes: '{lubesCount}', PO Sales: '{poSalesCount}'.";
+                            model.HowManyImported = $"FUELS: '{fuelsCount}', LUBES: '{lubesCount}', PO SALES: '{poSalesCount}'.";
                         }
                         else
                         {
@@ -481,7 +482,7 @@ namespace IBS.Services
                             // await _dbContext.LogMessages.AddAsync(logMessage);
                             // await _dbContext.SaveChangesAsync();
 
-                            model.HowManyImported = "You're up to date.";
+                            model.HowManyImported = "YOU'RE UP TO DATE.";
                         }
                     }
                     catch (Exception ex)
@@ -506,7 +507,7 @@ namespace IBS.Services
                 }
 
                 model.Message =
-                    $" ImportPurchases({model.StationName}): {model.CsvStatus} {model.OpeningFileStatus} {model.Error}/{model.HowManyImported} ";
+                    $" PURCHASES: {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
 
                 logList.Add(model);
             }

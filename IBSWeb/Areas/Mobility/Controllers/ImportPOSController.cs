@@ -22,19 +22,20 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _dbContext = dbContext;
         }
 
+        [HttpGet]
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
             try
             {
                 var lastImport = await _dbContext.LogMessages
-                    .Where(l => l.LoggerName == "ImportStart")
+                    .Where(l => l.LoggerName == "Start")
                     .OrderByDescending(l => l.TimeStamp)
                     .FirstOrDefaultAsync(cancellationToken);
 
                 if (lastImport != null)
                 {
                     var lastImportEnd = await _dbContext.LogMessages
-                        .Where(l => l.LoggerName == "ImportEnd" && l.Message == lastImport.Message)
+                        .Where(l => l.LoggerName == "End" && l.Message == lastImport.Message)
                         .OrderByDescending(l => l.TimeStamp)
                         .FirstOrDefaultAsync(cancellationToken);
 
@@ -72,19 +73,18 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
         }
 
+        [HttpPost]
         public async Task<IActionResult> StartImport()
         {
             try
             {
                 await _googleDriveImportService.Execute();
                 TempData["success"] = "Import was successful";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index));
             }
         }
