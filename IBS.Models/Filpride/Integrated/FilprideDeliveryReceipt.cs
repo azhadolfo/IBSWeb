@@ -1,8 +1,7 @@
-﻿using IBS.Models.Filpride.AccountsPayable;
-using IBS.Models.Filpride.MasterFile;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Utility.Enums;
 
 namespace IBS.Models.Filpride.Integrated
@@ -31,6 +30,10 @@ namespace IBS.Models.Filpride.Integrated
 
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
+
+        public string CustomerAddress { get; set; }
+
+        public string CustomerTin { get; set; }
 
         #endregion
 

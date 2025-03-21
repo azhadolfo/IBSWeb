@@ -1,10 +1,8 @@
-﻿using IBS.Models.Filpride.AccountsPayable;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Utility;
 using IBS.Utility.Helpers;
 
 namespace IBS.Models.Filpride.Integrated
@@ -33,6 +31,10 @@ namespace IBS.Models.Filpride.Integrated
         public FilprideCustomer? Customer { get; set; }
 
         public string CustomerType { get; set; }
+
+        public string CustomerAddress { get; set; }
+
+        public string CustomerTin { get; set; }
 
         #endregion Preparation of COS
 
