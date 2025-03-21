@@ -1,7 +1,7 @@
-﻿using IBS.Models.Filpride.MasterFile;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.MasterFile;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.AccountsReceivable
 {
@@ -23,6 +23,10 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
+
+        public string CustomerAddress { get; set; }
+
+        public string CustomerTin { get; set; }
 
         #endregion Customer properties
 

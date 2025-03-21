@@ -1,7 +1,8 @@
-﻿using IBS.Models.Filpride.MasterFile;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.MasterFile;
+using IBS.Utility.Enums;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.AccountsPayable
 {
@@ -122,7 +123,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsPrinted { get; set; }
 
-        public string Status { get; set; } = nameof(Utility.Enums.CheckVoucherPaymentStatus.ForPosting);
+        public string Status { get; set; } = nameof(CheckVoucherPaymentStatus.ForPosting);
 
         public string? Type { get; set; }
 
@@ -144,5 +145,9 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [ForeignKey("EmployeeId")]
         public FilprideEmployee? Employee { get; set; }
+
+        public string Address { get; set; }
+
+        public string Tin { get; set; }
     }
 }
