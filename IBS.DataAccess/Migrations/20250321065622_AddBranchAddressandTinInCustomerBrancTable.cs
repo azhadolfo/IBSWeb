@@ -30,14 +30,14 @@ namespace IBS.DataAccess.Migrations
                 table: "filpride_customer_branches",
                 type: "varchar(200)",
                 nullable: false,
-                defaultValue: "KATIPUNAN ST., TISA CEBU CITY");
+                defaultValue: "");
 
             migrationBuilder.AddColumn<string>(
                 name: "branch_tin",
                 table: "filpride_customer_branches",
                 type: "varchar(50)",
                 nullable: false,
-                defaultValue: "452-357-458-00300");
+                defaultValue: "");
         }
 
         /// <inheritdoc />
