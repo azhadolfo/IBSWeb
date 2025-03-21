@@ -1,0 +1,69 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.MMSI.MasterFile;
+using Microsoft.AspNetCore.Mvc.Rendering;
+
+namespace IBS.Models.MMSI
+{
+    public class MMSIBilling
+    {
+        [Key]
+        public int MMSIBillingId { get; set; }
+
+        [Column(TypeName = "varchar(10)")]
+        public string? MMSIBillingNumber { get; set; }
+
+        public DateOnly Date {  get; set; }
+
+        public string? Status {  get; set; }
+
+        public bool IsDocumented { get; set; } = default;
+
+        public string? VoyageNumber { get; set; }
+
+        public int? CustomerId { get; set; }
+
+        [ForeignKey(nameof(CustomerId))]
+        public MMSICustomer? Customer { get; set; }
+
+        public int? VesselId { get; set; }
+
+        [ForeignKey(nameof(VesselId))]
+        public MMSIVessel? Vessel { get; set; }
+
+        public int? PortId { get; set; }
+
+        [ForeignKey(nameof(PortId))]
+        public MMSIPort? Port { get; set; }
+
+        public int? TerminalId { get; set; }
+
+        [ForeignKey(nameof(TerminalId))]
+        public MMSITerminal? Terminal { get; set; }
+
+        #region ---Select Lists---
+
+        [NotMapped]
+        public List<SelectListItem>? Customers { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Vessels { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Ports { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Terminals { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? UnbilledDispatchTickets { get; set; }
+
+        [NotMapped]
+        public List<string>? ToBillDispatchTickets { get; set; }
+
+        [NotMapped]
+        public List<MMSIDispatchTicket>? PaidDispatchTickets { get; set; }
+
+        #endregion ---Select Lists---
+    }
+}

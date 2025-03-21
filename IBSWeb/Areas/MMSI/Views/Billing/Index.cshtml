@@ -1,0 +1,149 @@
+@model IEnumerable<IBS.Models.MMSI.MMSIBilling>
+
+@{
+    ViewData["Title"] = "Index";
+    
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+
+
+
+    table {
+        font-size: 10px !important;
+        table-layout: auto !important;
+    }
+
+    table td {
+        font-size: 12px !important;
+        padding-left: 10px !important;
+    }
+
+    .card-body {
+        margin: 5px !important;
+        padding: 5px !important;
+    }
+</style>
+
+<html class="bg-light">
+    <body class="bg-light">
+        <div class="card text-dark bg-white  m-1">
+            <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">BILLING LIST</div>
+            <div class="card-body table-responsive">
+                <div class="row justify-content-end">
+                    <div class="text-center w-150px">
+                        <a class="btn custom-btn col-12 align-content-center" asp-action="Create" asp-controller="Billing"><i class="bi bi-plus-circle"></i> Create</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
+                        <thead>
+                        <tr>
+                            <th class="text-start align-middle ps-4">Date</th>
+                            <th class="text-start align-middle ps-4">Billing Number</th>
+                            <th class="text-start align-middle ps-4">Status</th>
+                            <th class="text-start align-middle ps-4">Customer</th>
+                            <th class="text-start align-middle ps-4">Port-Terminal</th>
+                            <th class="text-start align-middle ps-4">Vessel</th>
+                            <th class="actions-column align-content-center text-center w-150px">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="text-start align-middle ps-4">@item.Date</td>
+                                <td class="text-start align-middle ps-4">@item.MMSIBillingNumber</td>
+                                <td class="text-start align-middle ps-4">@item.Status</td>
+                                <td class="text-start align-middle ps-4">@item?.Customer?.CustomerName</td>
+                                <td class="text-start align-middle ps-4">@item?.Terminal?.Port?.PortName-@item?.Terminal?.TerminalName</td>
+                                <td class="text-start align-middle ps-4">@item?.Vessel?.VesselName</td>
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <!-- Keep actionsDropdown as is if it's not causing issues -->
+                                        <button class="btn custom-btn dropdown-toggle col-12" type="button" id="actionsDropdown-@item.MMSIBillingId" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                        <ul class="dropdown-menu" aria-labelledby="actionsDropdown-@item.MMSIBillingId">
+                                            <li><a class="dropdown-item" href="@Url.Action("Preview", "Billing", new { id = item.MMSIBillingId })"><i class="bi bi-eye-fill"></i> Preview</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Select all delete entries
+            var deleteEntries = document.querySelectorAll('.delete-entry');
+
+            deleteEntries.forEach(function (entry) {
+                entry.addEventListener('click', function (e) {
+                    e.preventDefault(); // Prevent the link from navigating away immediately
+
+                    var id = this.getAttribute('data-id');
+                    console.log(id);
+
+                    Swal.fire({
+                        title: "Delete this Billing?",
+                        text: "This action cannot be undone.",
+                        showCancelButton: true,
+                        confirmButtonText: "Yes",
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = `/Billing/Delete/${id}`;
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+}

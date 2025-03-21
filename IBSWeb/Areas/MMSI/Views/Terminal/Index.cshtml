@@ -1,0 +1,86 @@
+@model IEnumerable<IBS.Models.MMSI.MasterFile.MMSITerminal>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<html class="bg-light">
+    <body class="bg-light">
+
+        <div class="card text-dark bg-white  m-4">
+            <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white"><i class="bi bi-database"></i> MMSI Terminal</div>
+            <div class="col-12 text-end">
+                <a class="btn btn-primary custom-btn mt-4 me-4" asp-controller="Terminal" asp-action="Create">
+                    <i class="bi bi-plus-circle"></i> Create
+                </a>
+            </div>
+            <div class="card-body">
+                <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>
+                                Port-Terminal Number
+                            </th>
+                            <th>
+                                Terminal
+                            </th>
+                            <th>
+                                Port Name
+                            </th>
+                            <th class="actions-column text-center">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @item.Port?.PortNumber-@item.TerminalNumber
+                                </td>
+                                <td>
+                                    @item.TerminalName
+                                </td>
+                                <td>
+                                    @item.Port?.PortName
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown px-4">
+                                        <button class="btn custom-btn dropdown-toggle col-6" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                        <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                            <li><a class="dropdown-item" href="@Url.Action("Edit", "Terminal", new { id = item.TerminalId })"><i class="bi bi-pencil-fill"></i> Edit</a></li>
+                                            <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "Terminal", new { id = item.TerminalId })"><i class="bi bi-trash-fill"></i> Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+
+    <script>
+            document.querySelectorAll('.delete-button').forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent default navigation
+
+                const href = this.getAttribute('href'); // Get the href value
+                Swal.fire({
+                    title: 'Delete?',
+                    text: "Delete this Terminal entry?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = href; // Redirect to the href URL
+                    }
+                });
+            });
+        });
+    </script>
+</html>

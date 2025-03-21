@@ -1,0 +1,393 @@
+@model IEnumerable<IBS.Models.MMSI.MMSIDispatchTicket>
+
+@{
+    ViewData["Title"] = "Index";
+    
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+
+
+
+    table {
+        font-size: 10px !important;
+        table-layout: auto !important;
+    }
+
+    table td {
+        font-size: 12px !important;
+        padding-left: 10px !important;
+    }
+
+    .card-body {
+        margin: 5px !important;
+        padding: 5px !important;
+    }
+</style>
+<body class="bg-light">
+<div class="card text-dark bg-white  m-1">
+    <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">SERVICE REQUEST LIST</div>
+    <div class="card-body table-responsive">
+        <div class="row justify-content-end">
+            <div class="text-center w-250px">
+                <a class="btn custom-btn col-12 align-content-center" asp-area="MMSI" asp-controller="ServiceRequest" asp-action="Create"><i class="bi bi-plus-circle"></i> Create</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <table id="dataTable" class="table table-striped custom-table-width table-bordered mt-1">
+                <thead>
+                <tr>
+                    <th data-orderable="false" class="px-3 py-1 text-center align-content-center"><input type="checkbox" class="text-center" id="selectAll"></th>
+                    <th class="text-center align-middle py-1">Date</th>
+                    <th class="text-center align-middle py-1">COS #</th>
+                    <th class="text-center align-middle py-1">Dispatch/<br />Mooring Ticket</th>
+                    <th class="text-center align-middle py-1">Date/<br />Time Start</th>
+                    <th class="text-center align-middle py-1">Date/<br />Time End</th>
+                    <th class="text-center align-middle py-1">Activity/<br />Service Type</th>
+                    <th class="text-center align-middle py-1">Port-<br />Terminal</th>
+                    <th class="text-center align-middle py-1">Tugboat</th>
+                    <th class="text-center align-middle py-1">Tug Master</th>
+                    <th class="text-center align-middle py-1">Vessel</th>
+                    <th class="text-center align-middle py-1 w-150px">
+                        <select id="statusDropdown" class="form-select">
+                            <option value="For Posting">For Posting</option>
+                            <option value="Cancelled">Cancelled</option>
+                            <option value="All">All</option>
+                        </select>
+                    </th>
+                    <th class="actions-column align-middle text-center w-150px">Uploaded file</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        @if(item.Status != "Cancelled")
+                        {
+                            <td class="text-center"><input type="checkbox" class="selectCheckbox" value="@item.DispatchTicketId"></td>
+                        }
+                        else
+                        {
+                            <td class="text-center"><input type="checkbox" disabled></td>
+                        }
+                        <td class="text-start align-middle"><pre>@(item.CreateDate.ToString("yyyy-MM-dd"))</pre></td>
+                        <td class="text-start align-middle"><pre>@item.COSNumber</pre></td>
+                        <td class="text-start align-middle"><pre>@item.DispatchNumber</pre></td>
+                        <td class="text-start align-middle"><pre>@item.DateLeft @item.TimeLeft</pre></td>
+                        <td class="text-start align-middle"><pre>@item.DateArrived @item.TimeArrived</pre></td>
+                        <td class="text-start align-middle"><pre>@item.ActivityService.ActivityServiceName</pre></td>
+                        <td class="text-start align-middle"><pre>@item.Terminal.Port.PortName-@item.Terminal.TerminalName</pre></td>
+                        <td class="text-start align-middle"><pre>@item.Tugboat.TugboatName</pre></td>
+                        <td class="text-start align-middle"><pre>@item.TugMaster.TugMasterName</pre></td>
+                        <td class="text-start align-middle"><pre>@item.Vessel.VesselName</pre></td>
+
+                        <td class="text-center align-middle">
+                            @{
+                                var status = item.Status;
+                            }
+
+                            <span class="badge rounded-pill
+                                          @{
+                                                                                       switch (item.Status)
+                                                                                       {
+                                                                                       case "For Posting":
+                                                                                       {
+                                                                                       <text>bg-info</text>
+                                                                                       };
+                                                                                       break;
+                                                                                       case "Cancelled":
+                                                                                       {
+                                                                                       <text>bg-secondary</text>
+                                                                                       };
+                                                                                       break;
+                                                                                       default:
+                                                                                       {
+                                                                                       <text>bg-secondary</text>
+                                                                                       };
+                                                                                       break;
+                                                                                       }
+                                                                                   }
+                                            " style="font-size: 14px; color: Ivory">@item.Status
+                                        </span>
+                        </td>
+
+                        <td class="text-center">
+                            @if (!string.IsNullOrEmpty(item.UploadName))
+                            {
+                                <a class="view-upload btn custom-btn col-12" data-uploadname="@item.UploadName"><i class="bi bi-eye-fill"></i> View</a>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <div class="row justify-content-end mt-2">
+                <div class="text-center w-250px">
+                    <a class="btn custom-btn col-12 align-content-center selected-options" id="postSelected" style="display:none">Post Selected</a>
+                </div>
+                <div class="text-center w-250px">
+                    <a class="btn custom-btn col-12 align-content-center selected-options" id="cancelSelected" style="display:none">Cancel Selected</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+
+@section Scripts {
+    <script>
+        // State management
+        const selectedRecords = new Set(); // Tracks selected record IDs
+        let allRecordsSelected = false;    // Flag for "Select All" across pages
+        const optionButtons = document.querySelectorAll(".selected-options");
+
+        // Dropdown toggle for checkbox dropdown
+        function toggleDropdown() {
+            const content = document.getElementById("dropdown-content");
+            content.style.display = content.style.display === "none" ? "block" : "none";
+        }
+
+        // Handle "Select All" checkbox toggle
+        function toggleSelectAll(selectAllCheckbox) {
+            const checkboxes = document.querySelectorAll(".selectCheckbox"); // Fresh query
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+                if (selectAllCheckbox.checked) {
+                    selectedRecords.add(checkbox.value);
+                } else {
+                    selectedRecords.delete(checkbox.value);
+                }
+            });
+            console.log("All clicked, checkboxes found:", checkboxes.length);
+            toggleSelectedOptions();
+        }
+
+        // Toggle visibility of selected options
+        function toggleSelectedOptions() {
+            const checkboxes = document.querySelectorAll(".selectCheckbox"); // Fresh query
+            const anyChecked = Array.from(checkboxes).some(checkbox => checkbox.checked);
+            optionButtons.forEach(button => {
+                button.style.display = anyChecked ? "inline-block" : "none";
+            });
+        }
+
+        // Check if all checkboxes are selected
+        function isAllCheckboxChecked() {
+            const checkboxes = document.querySelectorAll(".selectCheckbox"); // Fresh query
+            const isAllChecked = checkboxes.length > 0 &&
+                document.querySelectorAll(".selectCheckbox:checked").length === checkboxes.length;
+            console.log("Is all selected?", isAllChecked);
+            document.getElementById("selectAll").checked = isAllChecked;
+        }
+
+        // Handle individual checkbox changes
+        function toggleSelect() {
+            const checkboxes = document.querySelectorAll(".selectCheckbox"); // Fresh query
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedRecords.add(checkbox.value);
+                } else {
+                    selectedRecords.delete(checkbox.value);
+                }
+            });
+            toggleSelectedOptions();
+            isAllCheckboxChecked();
+        }
+
+        // Update table based on status filter
+        function handleStatusChange(status) {
+            console.log("Status filter changed to:", status);
+
+            $.ajax({
+                url: '@Url.Action("GetDispatchTicketList", "ServiceRequest")',
+                type: "GET",
+                data: { status: status },
+                success: function (data) {
+                    // Destroy existing DataTable if initialized
+                    if ($.fn.DataTable.isDataTable("#dataTable")) {
+                        $("#dataTable").DataTable().destroy();
+                    }
+
+                    // Clear table body
+                    $("#dataTable tbody").empty();
+
+                    // Populate table with new data
+                    data.forEach((value, index) => {
+                        const badgeClass = {
+                            "For Posting": "bg-info",
+                            "Cancelled": "bg-secondary"
+                        }[value.status] || "bg-secondary";
+
+                        $("#dataTable tbody").append(`
+                                    <tr>
+                                        <td data-orderable="false" class="text-center">
+                                            <input type="checkbox"
+                                                ${value.status !== "Cancelled" ? `class="selectCheckbox" value="${value.dispatchTicketId}"` : "disabled"}>
+                                        </td>
+                                        <td class="text-start align-middle ps-4"><pre>${value.createDate}</pre></td>
+                                        <td class="text-start align-middle ps-4"><pre>${value.cosNumber || ""}</pre></td>
+                                        <td class="text-start align-middle ps-4"><pre>${value.dispatchNumber}</pre></td>
+                                        <td class="text-start align-middle ps-4"><pre>${value.dateLeft} ${value.timeLeft}</pre></td>
+                                        <td class="text-start align-middle ps-4"><pre>${value.dateArrived} ${value.timeArrived}</pre></td>
+                                        <td class="text-start align-middle ps-4"><pre>${value.activityService.activityServiceName}</pre></td>
+                                        <td class="text-start align-middle ps-4"><pre>${value.terminal.port.portName}-${value.terminal.terminalName}</pre></td>
+                                        <td class="text-start align-middle ps-4"><pre>${value.tugboat.tugboatName}</pre></td>
+                                        <td class="text-start align-middle ps-4"><pre>${value.tugMaster.tugMasterName}</pre></td>
+                                        <td class="text-start align-middle ps-4"><pre>${value.vessel.vesselName}</pre></td>
+                                        <td class="text-center align-middle">
+                                            <span class="badge rounded-pill ${badgeClass}" style="font-size: 14px; color: Ivory">
+                                                ${value.status}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            ${value.uploadName ? `
+                                                <a class="view-upload btn custom-btn col-12" data-uploadname="${value.uploadName}">
+                                                    <i class="bi bi-eye-fill"></i> View
+                                                </a>` : ""}
+                                        </td>
+                                    </tr>
+                                `);
+                    });
+
+                    // Initialize DataTable with custom options
+                    $("#dataTable").DataTable({
+                        order: [[11, "desc"]], // Sort by status column (index 11) descending
+                        paging: true,
+                        searching: true,
+                        info: true,
+                        lengthChange: true
+                    });
+
+                    // Ensure checkbox state is updated after DataTable init
+                    toggleSelect(); // Refresh UI state
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX error:", error);
+                }
+            });
+        }
+
+        // Event listeners
+        $(document).ready(function () {
+            // "Select All" checkbox
+            $(document).on("click", "#selectAll", function () {
+                toggleSelectAll(this);
+            });
+
+            $(document).on("click", "#postSelected", function () {
+                const selectedArray = Array.from(selectedRecords); // Convert Set to Array
+                const queryString = encodeURIComponent(JSON.stringify(selectedArray));
+
+                Swal.fire({
+                    title: "Post selected requests?",
+                    text: "This action cannot be undone.",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/ServiceRequest/PostSelected?records=${queryString}`;
+                    }
+                });
+            });
+
+            $(document).on("click", "#cancelSelected", function () {
+                const selectedArray = Array.from(selectedRecords);
+                const queryString = encodeURIComponent(JSON.stringify(selectedArray));
+
+                Swal.fire({
+                    title: "Cancel selected requests?",
+                    text: "This action cannot be undone.",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/ServiceRequest/CancelSelected?records=${queryString}`;
+                    }
+                });
+            });
+
+            $('#statusDropdown').click(function (e) {
+                e.stopPropagation();
+            });
+
+            // Status filter change
+            $(document).on("change", "#statusDropdown", function () {
+                const selectedValue = $(this).val();
+                handleStatusChange(selectedValue);
+            });
+
+            // Individual checkbox change
+            $(document).on("change", ".selectCheckbox", toggleSelect);
+
+            // View upload click handler
+            $(document).on("click", ".view-upload", function () {
+                const uploadName = this.getAttribute("data-uploadname");
+                if (!uploadName) {
+                    console.error("No upload name found.");
+                    return;
+                }
+
+                const maxHeight = window.innerHeight * 0.8;
+                Swal.fire({
+                    imageUrl: '@Url.Content("~/Dispatch_Ticket_Uploads/")' + uploadName,
+                    imageAlt: "Dispatch Ticket Upload",
+                    showConfirmButton: false,
+                    background: "transparent",
+                    customClass: { popup: "custom-image-popup" },
+                    padding: 0,
+                    width: "auto",
+                    heightAuto: true,
+                    didOpen: () => {
+                        $(".swal2-image").css({
+                            "max-height": `${maxHeight}px`,
+                            "height": "auto"
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

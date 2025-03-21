@@ -1,0 +1,43 @@
+@model IBS.Models.MMSI.MasterFile.MMSIActivityService
+
+@{
+    ViewData["Title"] = "Edit";
+}
+<html class="bg-light">
+<body class="bg-light">
+
+    <div class="card text-dark bg-white  m-4">
+        <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">
+            <i class="bi bi-pencil-square"></i> Edit Activity/Service
+        </div>
+        <div class="card-body">
+            <form method="post" class="row">
+                <div class="border-2 px-3">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <input asp-for="ActivityServiceId" value="@Model.ActivityServiceId" style="display: none" />
+                    <div class="row pt-2">
+                        <div class="form-floating col-6 my-3">
+                            <input asp-for="ActivityServiceName" value="@Model.ActivityServiceName" type="text" class="form-control border-0 shadow" id="ActivityServiceName" placeholder="Name" required>
+                            <label asp-for="ActivityServiceName" for="ActivityServiceName" class="ms-2">Activity/Service<span class="required text-danger">*</span></label>
+                            <span asp-validation-for="ActivityServiceName" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row pb-3">
+                        <div class="form-floating col-6 my-3">
+                            <input asp-for="ActivityServiceNumber" value="@Model.ActivityServiceNumber" type="text" class="form-control border-0 shadow" id="ActivityServiceNumber" placeholder="Number" required>
+                            <label asp-for="ActivityServiceNumber" for="ActivityServiceNumber" class="ms-2">Activity/Service number<span class="required text-danger">*</span></label>
+                            <span asp-validation-for="ActivityServiceNumber" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <button class="btn btn-primary custom-btn col-3 mx-3" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                    <a class="btn btn-primary custom2-btn col-3 mx-2" asp-controller="ActivityService" asp-action="Index">
+                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

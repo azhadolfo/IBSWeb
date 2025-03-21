@@ -1,0 +1,394 @@
+@model IBS.Models.MMSI.MMSIDispatchTicket
+
+@{
+    ViewData["Title"] = "Preview";
+    
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+        .table tbody tr:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+        .actions-dropdown .dropdown-item:hover {
+            background-color: #f3f4f6;
+        }
+
+
+
+    table {
+        font-size: 10px !important;
+        table-layout: auto !important;
+    }
+
+        table td {
+            font-size: 12px !important;
+            padding-left: 10px !important;
+        }
+
+    .card-body {
+        margin: 5px !important;
+        padding: 5px !important;
+    }
+</style>
+
+<html class="bg-light">
+    <body class="bg-light">
+        <div class="card text-dark bg-white  m-4">
+            <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">
+                <i class="bi bi-pencil-square"></i> PREVIEW
+            </div>
+            <div class="card-body">
+                <div class="p-3">
+
+                    <div class="row mb-2 justify-content-end">
+                        <div class="col-12 d-flex justify-content-end">
+                            <h2>DISPATCH TICKET DETAILS</h2>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 d-flex flex-column justify-content-end">
+                            <div class="row d-flex align-content-center text-center mb-2">   
+                                    <div class="col-2 text-start small-text">
+                                        <span><b>Create Date:</b> @Model.CreateDate</span>
+                                    </div>
+                                    <div class="col-2 text-start small-text">
+                                        <span><b>Dispatch Ticket#:</b> @Model.DispatchNumber</span>
+                                    </div>
+                                    <div class="col-2 text-start small-text">
+                                        <span><b>Total Hours:</b> @Model.TotalHours?.ToString("F4")</span>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row col-12">
+                        <div class="col-3 text-center p-2 small-text border">
+                            <b>Voyage:</b> <br /> @Model.VoyageNumber
+                        </div>
+                        <div class="col-3 text-center p-2 small-text border">
+                            <b>Activity/Service Type:</b> @Model.ActivityService.ActivityServiceName
+                        </div>
+                        <div class="col-3 text-center p-2 small-text border">
+                            <b>Date / Time Start:</b> @Model.DateLeft @Model.TimeLeft
+                        </div>
+                        <div class="col-3 text-center p-2 small-text border">
+                            <b>Date / Time End:</b> @Model.DateArrived @Model.TimeArrived
+                        </div>
+                    </div>
+
+                    <div class="row border col-12">
+                        <div class="col-3 text-center p-2 small-text border">
+                            <b>Tug Master:</b> @Model.TugMaster?.TugMasterName
+                        </div>
+                        <div class="col-2 text-center p-2 small-text border">
+                            <b>Tugboat:</b> @Model.Tugboat?.TugboatName
+                        </div>
+                        <div class="col-2 text-center p-2 small-text border">
+                            <b>Vessel:</b> @Model.Vessel.VesselName
+                        </div>
+                        <div class="col-5 text-center p-2 small-text border">
+                            <b>Port-Terminal:</b> @Model.Terminal?.Port?.PortName-@Model.Terminal?.TerminalName
+                        </div>
+                    </div>
+
+                    <div class="row p-2 col-12 small-text border">
+                        <div class="col-2 text-center small-text">
+                            <b>Remarks:</b>
+                        </div>
+                        <div class="col-10 text-start small-text">
+                            @Model.Remarks
+                        </div>
+                    </div>
+
+                    @if (Model.DispatchRate != null)
+                    {
+                        <div class="row mt-4">
+
+                            <div class="row justify-content-end">
+
+                                @if (Model.Status == "Tariff Pending")
+                                {
+                                    <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
+                                        <img src="~/img/orangePendingIcon.png" style="height: 25px; width: 25px;" />
+                                        <h3 class="text-warning ms-2 mb-0">Tariff Pending</h3>
+                                    </div>
+
+                                }
+
+                                @if (Model.Status == "For Billing")
+                                {
+
+                                    <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
+                                        <img src="~/img/greenCheckIcon.png" style="height: 25px; width: 25px;" />
+                                        <h3 class="text-success">Tariff Approved</h3>
+                                    </div>
+                                }
+
+                                @if (Model.Status == "Disapproved")
+                                {
+                                    <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
+                                        <img src="~/img/redCrossIcon.png" style="height: 25px; width: 25px;" />
+                                        <h2 class="text-danger">Tariff Disapproved</h2>
+                                    </div>
+                                }
+
+                                <div class="col-6 d-flex justify-content-end align-items-center">
+                                    <h2 class="pb-2">TARIFF DETAILS</h2>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    
+                        <div class="row">
+                            <div class="col-12 d-flex flex-column justify-content-start">
+                                <div class="row d-flex align-content-center text-center mb-2">
+                                    <div class="col-2 small-text text-start">
+                                        <span><b>Dispatch Rate:</b> ₱@Model.DispatchRate?.ToString("N2")</span>
+                                    </div>
+
+                                    <div class="col-2 small-text text-start">
+                                        <span><b>Dispatch Discount: </b> @Model.DispatchDiscount%</span>
+                                    </div>
+
+                                    <div class="col-2 small-text text-start">
+                                        <span><b>BAF Rate:</b> ₱@Model.BAFRate?.ToString("N2")</span>
+                                    </div>
+
+                                    <div class="col-2 small-text text-start">
+                                        <span><b>BAF Discount:</b> @Model.BAFDiscount%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-4 text-center border p-2 small-text">
+                                <b>Dispatch Billing: </b> ₱ @Model.DispatchBillingAmount?.ToString("N2")
+                            </div>
+
+                            <div class="col-4 text-center border p-2 small-text">
+                                <b>BAF Billing:</b> ₱ @Model.BAFBillingAmount?.ToString("N2")
+                            </div>
+
+                            <div class="col-4 text-center border p-2 small-text">
+                                <b>Total Billings:</b> <i>₱ @Model.TotalBilling?.ToString("N2")</i>
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-4 text-center border p-2 small-text">
+                                <b>Dispatch Net Revenue: </b> ₱ @Model.DispatchNetRevenue?.ToString("N2")
+                            </div>
+
+                            <div class="col-4 text-center border p-2 small-text">
+                                <b>BAF Net Revenue:</b> ₱ @Model.BAFNetRevenue?.ToString("N2")
+                            </div>
+
+                            <div class="col-4 text-center border p-2 small-text">
+                                <b>Total Net Revenue:</b> <i>₱ @Model.TotalNetRevenue</i>
+                            </div>
+
+                        </div>
+                    }
+                </div>
+                <div class="row mt-2">
+
+                    @* <div class="col-12 text-end">
+                        <div class="row text-end mt-2">
+                            <div class="col-6">
+                                @if ((Model.Status != "For Collection" && Model.Status != "Disapproved" && Model.Status != "For Billing") 
+                                || !string.IsNullOrEmpty(Model.UploadName))
+                                {
+                                    <div class="dropdown align-content-center">
+                                        <button class="btn custom-btn dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                        <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
+                                            @if (Model.Status == "For Tariff")
+                                            {
+                                                <li><a class="dropdown-item" href="@Url.Action("Tariffing", "DispatchTicket", new { id = Model.DispatchTicketId })"><i class="bi bi-cash-coin"></i> Tariffing</a></li>
+                                            }
+                                            @if (Model.Status == "Tariff Pending")
+                                            {
+                                                <li><a class="dropdown-item" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Approve</a></li>
+                                                <li><a class="dropdown-item" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Disapprove</a></li>
+                                            }
+                                            @if (!string.IsNullOrEmpty(Model.UploadName))
+                                            {
+                                                <li><a class="dropdown-item" id="viewUpload"><i class="bi bi-eye-fill"></i> View Upload</a></li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-6">
+                                <a class="btn btn-primary custom2-btn col-12" asp-controller="DispatchTicket" asp-action="Index">
+                                    <i class="bi bi-arrow-90deg-left"></i> Go Back
+                                </a>
+                            </div>
+
+                        </div>
+                    </div> *@
+
+                    <div class="row col-12 justify-content-end my-2">
+                        <div class="text-center w-250px">
+                            @if ((Model.Status != "For Collection" && Model.Status != "Disapproved" && Model.Status != "For Billing") 
+                            || !string.IsNullOrEmpty(Model.UploadName))
+                            {
+                                <div class="dropdown align-content-center">
+                                    <button class="btn custom-btn dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                    <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
+                                        
+                                        @if (Model.Status == "For Tariff")
+                                        {
+                                            <li><a class="dropdown-item" href="@Url.Action("Tariffing", "DispatchTicket", new { id = Model.DispatchTicketId })"><i class="bi bi-cash-coin"></i> Tariffing</a></li>
+                                        }
+                                        
+                                        @if (Model.Status == "Tariff Pending")
+                                        {
+                                            <li><a class="dropdown-item" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Approve</a></li>
+                                            <li><a class="dropdown-item" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Disapprove</a></li>
+                                        }
+                                        
+                                        @if (!string.IsNullOrEmpty(Model.UploadName))
+                                        {
+                                            <li><a class="dropdown-item" id="viewUpload"><i class="bi bi-eye-fill"></i> View Upload</a></li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+
+                        </div>
+                        <div class="text-center w-250px">
+                            <a class="btn btn-primary custom2-btn col-12 align-content-center" asp-controller="DispatchTicket" asp-action="Index">
+                                <i class="bi bi-arrow-90deg-left"></i> Go Back
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            document.getElementById('viewUpload')?.addEventListener('click', function () {
+                var maxHeight = window.innerHeight * 0.8;
+
+                Swal.fire({
+                    imageUrl: '@Url.Content("~/Dispatch_Ticket_Uploads/" + Model.UploadName)',
+                    imageAlt: "Custom image",
+                    showConfirmButton: false,
+                    background: 'transparent',
+                    customClass: {
+                        popup: 'custom-image-popup' // Unique class for this modal
+                    },
+                    padding: 0,
+                    width: 'auto',
+                    heightAuto: true,
+                    didOpen: () => {
+                        $('.swal2-image').css('max-height', maxHeight + 'px');
+                        $('.swal2-image').css('height', 'auto');
+                    }
+                });
+            });
+
+            document.getElementById('approveTariff')?.addEventListener('click', function () {
+
+                var imageId = this.getAttribute('data-id');
+
+                Swal.fire({
+                    title: "Approve this Tariff?",
+                    text: "This action cannot be undone.",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/DispatchTicket/Approve/${imageId}`;
+                    }
+                });
+            });
+
+            document.getElementById('disapproveTariff')?.addEventListener('click', function () {
+
+                var imageId = this.getAttribute('data-id');
+
+                Swal.fire({
+                    title: "Disapprove this Tariff?",
+                    text: "This action cannot be undone.",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/DispatchTicket/Disapprove/${imageId}`;
+                    }
+                });
+            });
+
+            document.getElementById('deleteEntry')?.addEventListener('click', function () {
+
+                var id = this.getAttribute('data-id');
+
+                Swal.fire({
+                    title: "Delete this Dispatch Ticket?",
+                    text: "This action cannot be undone.",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/DispatchTicket/Delete/${id}`;
+                    }
+                });
+            });
+
+        });
+    </script>
+}

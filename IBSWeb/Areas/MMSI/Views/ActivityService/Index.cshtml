@@ -1,0 +1,81 @@
+@model IEnumerable<IBS.Models.MMSI.MasterFile.MMSIActivityService>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<html class="bg-light">
+<body class="bg-light">
+
+<div class="card text-dark bg-white  m-4">
+    <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white"><i class="bi bi-database"></i> MMSI Activities and Services</div>
+    <div class="col-12 text-end">
+        <a class="btn btn-primary custom-btn mt-4 me-4" asp-controller="ActivityService" asp-action="Create">
+            <i class="bi bi-plus-circle"></i> Create
+        </a>
+    </div>
+    <div class="card-body">
+        <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
+            <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(m => m.ActivityServiceNumber)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(m => m.ActivityServiceName)
+                </th>
+                <th class="actions-column text-center w-150px">
+                    Actions
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <pre>@Html.DisplayFor(model => item.ActivityServiceNumber)</pre>
+                    </td>
+                    <td>
+                        <pre>@Html.DisplayFor(model => item.ActivityServiceName)</pre>
+                    </td>
+                    <td class="text-center">
+                        <div class="dropdown">
+                            <button class="btn custom-btn dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "ActivityService", new { id = item.ActivityServiceId })"><i class="bi bi-pencil-fill"></i> Edit</a></li>
+                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "ActivityService", new { id = item.ActivityServiceId })"><i class="bi bi-trash-fill"></i> Delete</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+
+<script>
+    document.querySelectorAll('.delete-button').forEach(button => {
+        button.addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent default navigation
+
+            const href = this.getAttribute('href'); // Get the href value
+            Swal.fire({
+                title: 'Delete?',
+                text: "Delete this Activity/Service entry?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = href; // Redirect to the href URL
+                }
+            });
+        });
+    });
+</script>
+
+</html>

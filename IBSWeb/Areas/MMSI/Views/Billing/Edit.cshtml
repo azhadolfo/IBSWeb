@@ -1,0 +1,192 @@
+@model IBS.Models.MMSI.MMSIBilling
+
+@{
+    ViewData["Title"] = "Edit";
+    
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card text-dark bg-white  m-4">
+    <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">
+        <i class="bi bi-pencil-square"></i> EDIT BILLING
+    </div>
+    <div class="card-body">
+        <form id="myForm" method="post" class="row" enctype="multipart/form-data">
+            <div class="border-2 px-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <input asp-for="MMSIBillingId" style="display: none" value="@Model.MMSIBillingId" />
+                <div class="row pt-3">
+                    <div class="form-check col-2 my-3 text-center d-flex align-items-center justify-content-center">
+                        <input asp-for="IsDocumented" class="form-check-input me-2" type="checkbox" id="isDocumentedCheckbox" checked>
+                        <label class="form-check-label" id="status" for="isDocumentedCheckbox">
+                            Documented
+                        </label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-floating col-4 mb-3">
+                        <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder="" required>
+                        <label asp-for="MMSIBillingNumber" for="MMSIBillingNumber" class="ms-2">Billing Number</label>
+                        <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-4 mb-3">
+                        <input asp-for="Date" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
+                        <label asp-for="Date" for="Date" class="ms-2">Date Created</label>
+                        <span asp-validation-for="Date" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-4 mb-3">
+                        <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder="">
+                        <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage Number</label>
+                        <span asp-validation-for="VoyageNumber" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-8 my-3">
+                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
+                        <select asp-for="CustomerId" value="@Model.CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Customer</option>
+                        </select>
+                        <span asp-validation-for="CustomerId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-4 my-3">
+                        <input class="form-control border-0 shadow" id="Terms" placeholder="" disabled>
+                        <label class="ms-2">Terms</label>
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row pt-2">
+                    <div class="form-floating col-4 my-3">
+                        <input class="form-control border-0 shadow" id="Address" placeholder="" disabled>
+                        <label class="ms-2">Address</label>
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-4 my-3">
+                        <input class="form-control border-0 shadow" id="TIN" placeholder="" disabled>
+                        <label class="ms-2">TIN</label>
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-4 my-3">
+                        <input class="form-control border-0 shadow" id="BusinessStyle" placeholder="" disabled>
+                        <label class="ms-2">Business Style</label>
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row pt-2">
+                    <div class="form-group col-4 my-2">
+                        <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
+                        <select asp-for="PortId" asp-items="@Model.Ports" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Port</option>
+                        </select>
+                        <span asp-validation-for="PortId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-4 my-2">
+                        <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
+                        <select asp-for="TerminalId" asp-items="@Model.Terminals" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Terminal</option>
+                        </select>
+                        <span asp-validation-for="TerminalId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-4 my-2">
+                        <label class="control-label ps-1 pb-1">Vessel<span class="required text-danger">*</span></label>
+                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Vessel</option>
+                        </select>
+                        <span asp-validation-for="VesselId" class="text-danger"></span>
+                    </div>
+                </div>
+                <br />
+                <br />
+                <div class="row">
+                    <button class="btn btn-primary custom-btn col-3 mx-3" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                    <a class="btn btn-primary custom2-btn col-3 mx-2" asp-controller="Billing" asp-action="Index">
+                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            var checkbox = document.getElementById("isDocumentedCheckbox");
+            var inputField = document.getElementById("billingNumber");
+
+            var isDocumented = '@Model.IsDocumented';
+
+            if (isDocumented == 'True') {
+                checkbox.checked = true;
+                console.log('@Model.IsDocumented');
+                document.getElementById("status").innerText = "Documented";
+                inputField.setAttribute("required", "required"); // Make it required
+                inputField.removeAttribute("disabled", ""); // Enable input
+            } else {
+                checkbox.checked = false;
+                console.log('@Model.IsDocumented');
+                document.getElementById("status").innerText = "Undocumented";
+                inputField.removeAttribute("required", ""); // Remove required
+                checkbox.removeAttribute("checked");
+                inputField.setAttribute("disabled", "disabled"); // Disable input
+            }
+
+            function CheckboxChanged() {
+                console.log("test checkbox");
+
+                if (checkbox.checked) {
+                    console.log("Checkbox is checked!");
+                    document.getElementById("status").innerText = "Documented";
+                    inputField.setAttribute("required", "required"); // Make it required
+                    inputField.removeAttribute("disabled"); // Enable input
+                } else {
+                    console.log("Checkbox is unchecked.");
+                    document.getElementById("status").innerText = "Undocumented";
+                    inputField.removeAttribute("required", ""); // Remove required
+                    inputField.setAttribute("disabled", "disabled"); // Disable input
+                }
+            }
+
+            function UpdateCustomerDetails() {
+                var customerId = $("#CustomerId").val(); // Use the specific ID to get the value
+                if (customerId && customerId !== "") {
+                    $.ajax({
+                        url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "Filpride" })',
+                        method: "GET",
+                        data: { customerId: customerId },
+                        success: function (data) {
+                            if (data) {
+                                // Ensure these property names match what's returned by the server
+                                $("#Terms").val(data.terms || ''); // Use OR to provide default if undefined
+                                $("#Address").val(data.address || '');
+                                $("#TIN").val(data.tinNo || '');
+                                $("#BusinessStyle").val(data.businessStyle || '');
+                            } else {
+                                $("#Terms").val('');
+                                $("#Address").val('');
+                                $("#TIN").val('');
+                                $("#BusinessStyle").val('');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error:', error);
+                        }
+                    });
+                } else {
+                    // Clear fields if no customer is selected
+                    $("#Terms").val('');
+                    $("#Address").val('');
+                    $("#TIN").val('');
+                    $("#BusinessStyle").val('');
+                }
+            }
+
+            $("#CustomerId").on("change", UpdateCustomerDetails);
+            document.getElementById("isDocumentedCheckbox").addEventListener("change", CheckboxChanged);
+
+            UpdateCustomerDetails();
+
+        });
+
+    </script>
+}

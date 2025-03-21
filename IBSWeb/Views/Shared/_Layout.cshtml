@@ -484,6 +484,53 @@
                                 
                                 if (selectedCompany == "MMSI")
                                 {
+                                    
+                                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                                        <ul class="navbar-nav flex-grow-1 ms-5">
+                                            <li class="nav-item text-light mx-2">
+                                                <a class="nav-link" asp-area="MMSI" asp-controller="Home" asp-action="Index">Home</a>
+                                            </li>
+                                            <li class="nav-item text-light mx-2">
+                                                <a class="nav-link" asp-area="MMSI" title="Create Service Request" asp-controller="ServiceRequest" asp-action="Index">Service Requests</a>
+                                            </li>
+                                            <li class="nav-item text-light mx-2">
+                                                <a class="nav-link" asp-area="MMSI" title="Create, Tariff, and Approve Dispatch Tickets" asp-controller="DispatchTicket" asp-action="Index">Dispatch Tickets</a>
+                                            </li>
+                                            <li class="nav-item text-light mx-2">
+                                                <a class="nav-link" asp-area="MMSI" title="Dispatch Ticket Billings" asp-controller="Billing" asp-action="Index">Billing</a>
+                                            </li>
+                                            <li class="nav-item dropdown">
+                                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" >
+                                                    MasterFile
+                                                </a>
+                                                <ul class="dropdown-menu">
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="ActivityService" asp-action="Index"><i class="bi bi-database"></i> Activities/Services</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Port" asp-action="Index"><i class="bi bi-database"></i> Ports</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Terminal" asp-action="Index"><i class="bi bi-database"></i> Terminals</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="TugMaster" asp-action="Index"><i class="bi bi-database"></i> Tug Masters</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Tugboat" asp-action="Index"><i class="bi bi-database"></i> Tugboats</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Vessel" asp-action="Index"><i class="bi bi-database"></i> Vessels</a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Customer" asp-action="Index"><i class="bi bi-database"></i> Customers</a>
+                                                    </li>
+                                                </ul>
+                                            </li>
+
+                                        </ul>
+                                    </div>
+                                    
                                     <li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">A. Receivable</a>
                                         <ul class="dropdown-menu">
