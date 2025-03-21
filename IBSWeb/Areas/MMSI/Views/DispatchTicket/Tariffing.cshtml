@@ -79,9 +79,11 @@
 <html class="bg-light">
     <body class="bg-light">
         <div class="card text-dark bg-white  m-4">
-            
-            <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">
-                <i class="bi bi-cash-coin"></i> SET TARIFF
+
+            <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+                <div class="col-12 text-center">
+                    <h2 class="text-white py-2"><i class="bi bi-cash-coin"></i> SET TARIFF</h2>
+                </div>
             </div>
             
             <div class="card-body">
@@ -108,7 +110,7 @@
                         </div>
                         <div class="col-4">
                             <div class="row mb-2 justify-content-end">
-                                <div class="col-12 d-flex justify-content-end">
+                                <div class="col-12 d-flex justify-content-end pe-3">
                                     <h2>DISPATCH TICKET DETAILS</h2>
                                 </div>
                             </div>
@@ -164,6 +166,7 @@
                         <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" type="text" class="form-control border-0 shadow" id="COSNumber" style="display:none">
 
                         <div class="row">
+                            <!-- Left Section -->
                             <div class="col-6 align-content-center">
                                 <div class="row mt-3">
                                     <div class="col-6 text-start">
@@ -173,41 +176,38 @@
                                         <b><i>Total Hours:</i></b> @(Model.TotalHours?.ToString("F4"))
                                     </div>
                                 </div>
-                                
                                 <div class="row justify-content-end">
                                     <div class="col text-start">
-                                        <label class="col text-start mx-1">
+                                        <label class="mx-1">
                                             <input name="chargeType" type="radio" value="Per hour" required @(Model.DispatchChargeType == null ? "checked" : "") @(Model.DispatchChargeType == "Per hour" ? "checked" : "") /> Per Hour
                                         </label>
-                                        <label class="col text-start mx-1">
+                                        <label class="mx-1">
                                             <input name="chargeType" type="radio" value="Per move" required @(Model.DispatchChargeType == "Per move" ? "checked" : "") /> Per Move
                                         </label>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="row col-6 align-content-center">
+                            <!-- Right Section -->
+                            <div class="col-6 align-content-center">
                                 <div class="row">
                                     <div class="col-6 mt-3 text-start">
                                         <b><i>BAF charge Type</i></b>
                                     </div>
-                                
-                                    <h2 class="col-6 text-end mb-0">TARIFF DETAILS </h2>
+                                    <div class="col-6 text-end pe-3">
+                                        <h2 class="mb-0">TARIFF DETAILS</h2>
+                                    </div>
                                 </div>
-
-
                                 <div class="row justify-content-end">
                                     <div class="col text-start">
-                                        <label class="col text-start mx-1">
+                                        <label class="mx-1">
                                             <input name="chargeType2" type="radio" value="Per hour" required @(Model.DispatchChargeType == null ? "checked" : "") @(Model.DispatchChargeType == "Per hour" ? "checked" : "") /> Per Hour
                                         </label>
-                                        <label class="col text-start mx-1">
+                                        <label class="mx-1">
                                             <input name="chargeType2" type="radio" value="Per move" required @(Model.DispatchChargeType == "Per move" ? "checked" : "") /> Per Move
                                         </label>
                                     </div>
                                 </div>
-
-
                             </div>
                         </div>
 
@@ -273,11 +273,11 @@
                             </div>
 
                             <div class="row col-6 justify-content-end mt-4 mb-2">
-                                <div class="text-center w-250px">
-                                    <button class="btn custom-btn col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                                <div class="text-center" style="width: 250px;">
+                                    <button class="btn btn-primary col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
                                 </div>
-                                <div class="text-center w-250px">
-                                    <a class="btn custom2-btn col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index">
+                                <div class="text-center" style="width: 250px;">
+                                    <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index">
                                         <i class="bi bi-arrow-90deg-left"></i> Go Back
                                     </a>
                                 </div>

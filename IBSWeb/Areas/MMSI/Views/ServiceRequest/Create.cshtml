@@ -9,6 +9,10 @@
 
 <style>
     @@media (max-width: 768px) {
+        .btn{
+            width: 100px !important;
+        }
+        
         label {
             font-size: .8em !important
         }
@@ -58,15 +62,10 @@
         label[for="dt-search-0"] {
             font-size: .8em;
         }
-
-        .custom2-btn {
-            text-align: center !important;
-            align-content: center !important;
-        }
     }
 </style>
 
-<div class="card text-dark bg-white shadow mt-3">
+<div class="card text-dark bg-white shadow mt-4">
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center">
@@ -195,9 +194,9 @@
                 <br/>
             </div>
             <div class="row">
-                <button class="btn btn-primary custom-btn col-3 mx-3" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                <button class="btn btn-primary col-3 mx-3" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
 
-                <a class="btn btn-primary custom2-btn col-3 mx-2" asp-controller="ServiceRequest" asp-action="Index">
+                <a class="btn btn-outline-primary col-3 mx-2" asp-controller="ServiceRequest" asp-action="Index">
                     <i class="bi bi-arrow-90deg-left"></i> Back
                 </a>
             </div>

@@ -69,10 +69,17 @@
 
 <html class="bg-light">
     <body class="bg-light">
+    
         <div class="card text-dark bg-white  m-4">
-            <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">
-                <i class="bi bi-pencil-square"></i> PREVIEW
+
+            <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <h2 class="text-white py-2"><i class="bi bi-pencil-square"></i> PREVIEW</h2>
+                    </div>
+                </div>
             </div>
+            
             <div class="card-body">
                 <div class="p-3">
 
@@ -272,12 +279,12 @@
                     </div> *@
 
                     <div class="row col-12 justify-content-end my-2">
-                        <div class="text-center w-250px">
+                        <div class="text-center" style="width: 250px;">
                             @if ((Model.Status != "For Collection" && Model.Status != "Disapproved" && Model.Status != "For Billing") 
                             || !string.IsNullOrEmpty(Model.UploadName))
                             {
                                 <div class="dropdown align-content-center">
-                                    <button class="btn custom-btn dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                    <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                     <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
                                         
                                         @if (Model.Status == "For Tariff")
@@ -287,21 +294,21 @@
                                         
                                         @if (Model.Status == "Tariff Pending")
                                         {
-                                            <li><a class="dropdown-item" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Approve</a></li>
-                                            <li><a class="dropdown-item" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Disapprove</a></li>
+                                            <li><a class="dropdown-item" href="#" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Approve</a></li>
+                                            <li><a class="dropdown-item" href="#" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Disapprove</a></li>
                                         }
                                         
                                         @if (!string.IsNullOrEmpty(Model.UploadName))
                                         {
-                                            <li><a class="dropdown-item" id="viewUpload"><i class="bi bi-eye-fill"></i> View Upload</a></li>
+                                            <li><a class="dropdown-item" href="#" id="viewUpload"><i class="bi bi-eye-fill"></i> View Upload</a></li>
                                         }
                                     </ul>
                                 </div>
                             }
 
                         </div>
-                        <div class="text-center w-250px">
-                            <a class="btn btn-primary custom2-btn col-12 align-content-center" asp-controller="DispatchTicket" asp-action="Index">
+                        <div class="text-center" style="width: 250px;">
+                            <a class="btn btn-outline-primary custom2-btn col-12 align-content-center" asp-controller="DispatchTicket" asp-action="Index">
                                 <i class="bi bi-arrow-90deg-left"></i> Go Back
                             </a>
                         </div>
@@ -352,7 +359,7 @@
                     confirmButtonText: "Yes",
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `/DispatchTicket/Approve/${imageId}`;
+                        window.location.href = `/MMSI/DispatchTicket/Approve/${imageId}`;
                     }
                 });
             });
@@ -368,7 +375,7 @@
                     confirmButtonText: "Yes",
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `/DispatchTicket/Disapprove/${imageId}`;
+                        window.location.href = `/MMSI/DispatchTicket/Disapprove/${imageId}`;
                     }
                 });
             });
@@ -384,7 +391,7 @@
                     confirmButtonText: "Yes",
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `/DispatchTicket/Delete/${id}`;
+                        window.location.href = `/MMSI/DispatchTicket/Delete/${id}`;
                     }
                 });
             });
