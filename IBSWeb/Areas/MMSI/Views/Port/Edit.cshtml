@@ -3,42 +3,45 @@
 @{
     ViewData["Title"] = "Edit";
 }
-<html class="bg-light">
-    <body class="bg-light">
 
-    <div class="card text-dark bg-white  m-4">
-        <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">
-            <i class="bi bi-pencil-square"></i> Edit Port
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2>
+                <i class="bi bi-pencil-square"></i> Edit Port
+            </h2>
         </div>
-        <div class="card-body">
-            <form method="post" class="row">
-                <div class="border-2 px-3">
-                    <div asp-validation-summary="ModelOnly"></div>
-                    <input asp-for="PortId" value="@Model.PortId" style="display: none" />
-                    <div class="row pt-2">
-                        <div class="form-floating col-6 my-3">
-                            <input asp-for="PortName" value="@Model.PortName" type="text" class="form-control border-0 shadow" id="PortName" placeholder="Name" required>
-                            <label asp-for="PortName" for="PortName" class="ms-2">Port name<span class="required text-danger">*</span></label>
-                            <span asp-validation-for="PortName" class="text-danger"></span>
-                        </div>
+    </div>
+    
+    <div class="card-body">
+        <form method="post" class="row">
+            <div class="border-2 px-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <input asp-for="PortId" value="@Model.PortId" style="display: none" />
+                <div class="row">
+                    <div class="form-floating col-6 my-3">
+                        <input asp-for="PortName" value="@Model.PortName" type="text" class="form-control border-0 shadow" id="PortName" placeholder="Name" required>
+                        <label asp-for="PortName" for="PortName" class="ms-2">Port name<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="PortName" class="text-danger"></span>
                     </div>
-                    <div class="row pb-3">
-                        <div class="form-floating col-6 my-3">
-                            <input asp-for="PortNumber" value="@Model.PortNumber" type="text" class="form-control border-0 shadow" id="PortNumber" placeholder="Number" required>
-                            <label asp-for="PortNumber" for="PortNumber" class="ms-2">Port number<span class="required text-danger">*</span></label>
-                            <span asp-validation-for="PortNumber" class="text-danger"></span>
-                        </div>
+                    <div class="form-floating col-6 my-3">
+                        <input asp-for="PortNumber" value="@Model.PortNumber" type="text" class="form-control border-0 shadow" id="PortNumber" placeholder="Number" required>
+                        <label asp-for="PortNumber" for="PortNumber" class="ms-2">Port number<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="PortNumber" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="row">
-                    <button class="btn btn-primary custom-btn col-3 mx-3" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
-                    <a class="btn btn-primary custom2-btn col-3 mx-2" asp-controller="Port" asp-action="Index">
+            </div>
+            <div class="row justify-content-end mt-3">
+                <div class="text-center" style="width: 250px;">
+                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                </div>
+                <div class="text-center" style="width: 250px;">
+                    <a class="btn btn-outline-primary col-12" asp-controller="Port" asp-action="Index">
                         <i class="bi bi-arrow-90deg-left"></i> Go Back
                     </a>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
-
-    </body>
-</html>
+</div>
