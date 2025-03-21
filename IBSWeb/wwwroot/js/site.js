@@ -141,4 +141,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+document.addEventListener("keydown", function (event) {
+    if (event.ctrlKey && event.key === "p") {
+        event.preventDefault();
+        alert("Printing is disabled!");
+    }
+});
+
+// Disable right-click context menu
+document.addEventListener("contextmenu", function (event) {
+    event.preventDefault();
+});
+
 
