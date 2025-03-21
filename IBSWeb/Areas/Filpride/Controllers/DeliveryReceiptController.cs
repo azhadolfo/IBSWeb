@@ -1,23 +1,23 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Linq.Dynamic.Core;
+using System.Security.Claims;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBSWeb.Hubs;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -255,6 +255,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CommissioneeId = customerOrderSlip.CommissioneeId,
                         CommissionRate = customerOrderSlip.CommissionRate,
                         CommissionAmount = viewModel.Volume * customerOrderSlip.CommissionRate,
+                        CustomerAddress = customerOrderSlip.CustomerAddress,
+                        CustomerTin = customerOrderSlip.CustomerTin,
                     };
 
                     customerOrderSlip.DeliveredQuantity += model.Quantity;
@@ -435,8 +437,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Date = existingRecord.Date,
                     CustomerId = existingRecord.Customer.CustomerId,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
-                    CustomerAddress = existingRecord.Customer.CustomerAddress,
-                    CustomerTin = existingRecord.Customer.CustomerTin,
+                    CustomerAddress = existingRecord.CustomerAddress,
+                    CustomerTin = existingRecord.CustomerTin,
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                     CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
                     PurchaseOrderId = (int)existingRecord.PurchaseOrderId,

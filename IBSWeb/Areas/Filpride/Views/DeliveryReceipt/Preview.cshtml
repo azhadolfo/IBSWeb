@@ -1,7 +1,6 @@
-﻿@using Microsoft.AspNetCore.Identity
-@using IBS.Utility
-@using IBS.Utility.Constants
+﻿@using IBS.Utility.Constants
 @using IBS.Utility.Enums
+@using Microsoft.AspNetCore.Identity
 @model FilprideDeliveryReceipt
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
@@ -66,7 +65,7 @@
                 <td class="w-25 text-end"><b>Date:</b> &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr>
-                <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerOrderSlip.Customer?.CustomerAddress.ToUpper()</td>
+                <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerAddress.ToUpper()</td>
                 <td class="w-25 text-end"><b>PO No:</b> &nbsp;@(Model.PurchaseOrder?.PurchaseOrderNo)</td>
             </tr>
             <tr>

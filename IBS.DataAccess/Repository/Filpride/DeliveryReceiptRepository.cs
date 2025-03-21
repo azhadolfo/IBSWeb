@@ -1,15 +1,14 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Linq.Expressions;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -121,6 +120,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CommissioneeId = customerOrderSlip.CommissioneeId;
             existingRecord.CommissionRate = customerOrderSlip.CommissionRate;
             existingRecord.CommissionAmount = existingRecord.Quantity * existingRecord.CommissionRate;
+            existingRecord.CustomerAddress = customerOrderSlip.CustomerAddress;
+            existingRecord.CustomerTin = customerOrderSlip.CustomerTin;
 
             if (_db.ChangeTracker.HasChanges())
             {
