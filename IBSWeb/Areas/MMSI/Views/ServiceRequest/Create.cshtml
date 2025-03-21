@@ -193,12 +193,16 @@
                 </div>
                 <br/>
             </div>
-            <div class="row">
-                <button class="btn btn-primary col-3 mx-3" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
 
-                <a class="btn btn-outline-primary col-3 mx-2" asp-controller="ServiceRequest" asp-action="Index">
-                    <i class="bi bi-arrow-90deg-left"></i> Back
-                </a>
+            <div class="row col-12 justify-content-end mb-2">
+                <div class="text-center" style="width: 150px">
+                    <button class="btn btn-primary custom-btn col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                </div>
+                <div class="text-center" style="width: 150px">
+                    <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="ServiceRequest" asp-action="Index">
+                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                    </a>
+                </div>
             </div>
         </form>
     </div>

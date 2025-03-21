@@ -67,57 +67,59 @@
     }
 </style>
 
-<html class="bg-light">
-    <body class="bg-light">
-        <div class="card text-dark bg-white  m-1">
-            <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">BILLING LIST</div>
-            <div class="card-body table-responsive">
-                <div class="row justify-content-end">
-                    <div class="text-center w-150px">
-                        <a class="btn custom-btn col-12 align-content-center" asp-action="Create" asp-controller="Billing"><i class="bi bi-plus-circle"></i> Create</a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
-                        <thead>
-                        <tr>
-                            <th class="text-start align-middle ps-4">Date</th>
-                            <th class="text-start align-middle ps-4">Billing Number</th>
-                            <th class="text-start align-middle ps-4">Status</th>
-                            <th class="text-start align-middle ps-4">Customer</th>
-                            <th class="text-start align-middle ps-4">Port-Terminal</th>
-                            <th class="text-start align-middle ps-4">Vessel</th>
-                            <th class="actions-column align-content-center text-center w-150px">Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td class="text-start align-middle ps-4">@item.Date</td>
-                                <td class="text-start align-middle ps-4">@item.MMSIBillingNumber</td>
-                                <td class="text-start align-middle ps-4">@item.Status</td>
-                                <td class="text-start align-middle ps-4">@item?.Customer?.CustomerName</td>
-                                <td class="text-start align-middle ps-4">@item?.Terminal?.Port?.PortName-@item?.Terminal?.TerminalName</td>
-                                <td class="text-start align-middle ps-4">@item?.Vessel?.VesselName</td>
-                                <td class="text-center">
-                                    <div class="dropdown">
-                                        <!-- Keep actionsDropdown as is if it's not causing issues -->
-                                        <button class="btn custom-btn dropdown-toggle col-12" type="button" id="actionsDropdown-@item.MMSIBillingId" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                        <ul class="dropdown-menu" aria-labelledby="actionsDropdown-@item.MMSIBillingId">
-                                            <li><a class="dropdown-item" href="@Url.Action("Preview", "Billing", new { id = item.MMSIBillingId })"><i class="bi bi-eye-fill"></i> Preview</a></li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
-                </div>
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center">
+            <h2 class="text-white py-2">BILLING LIST</h2>
+        </div>
+    </div>
+
+    <div class="card-body table-responsive">
+        <div class="row justify-content-end">
+            <div class="text-center" style="width: 150px;">
+                <a class="btn btn-primary col-12 align-content-center" asp-action="Create" asp-controller="Billing"><i class="bi bi-plus-circle"></i> Create</a>
             </div>
         </div>
-    </body>
-</html>
+        <div class="card-body">
+            <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
+                <thead>
+                <tr>
+                    <th class="text-start align-middle ps-4">Date</th>
+                    <th class="text-start align-middle ps-4">Billing Number</th>
+                    <th class="text-start align-middle ps-4">Status</th>
+                    <th class="text-start align-middle ps-4">Customer</th>
+                    <th class="text-start align-middle ps-4">Port-Terminal</th>
+                    <th class="text-start align-middle ps-4">Vessel</th>
+                    <th class="actions-column align-content-center text-center w-150px">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="text-start align-middle ps-4">@item.Date</td>
+                        <td class="text-start align-middle ps-4">@item.MMSIBillingNumber</td>
+                        <td class="text-start align-middle ps-4">@item.Status</td>
+                        <td class="text-start align-middle ps-4">@item?.Customer?.CustomerName</td>
+                        <td class="text-start align-middle ps-4">@item?.Terminal?.Port?.PortName-@item?.Terminal?.TerminalName</td>
+                        <td class="text-start align-middle ps-4">@item?.Vessel?.VesselName</td>
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <!-- Keep actionsDropdown as is if it's not causing issues -->
+                                <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown-@item.MMSIBillingId" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                <ul class="dropdown-menu" aria-labelledby="actionsDropdown-@item.MMSIBillingId">
+                                    <li><a class="dropdown-item" href="@Url.Action("Preview", "Billing", new { id = item.MMSIBillingId })"><i class="bi bi-eye-fill"></i> Preview</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
