@@ -484,24 +484,24 @@
                                 
                                 if (selectedCompany == "MMSI")
                                 {
-                                    
-                                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                                        <ul class="navbar-nav flex-grow-1 ms-5">
-                                            <li class="nav-item text-light mx-2">
-                                                <a class="nav-link" asp-area="MMSI" asp-controller="Home" asp-action="Index">Home</a>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">MSAP</a>
+                                        <ul class="dropdown-menu">
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="MMSI" title="Create Service Request" asp-controller="ServiceRequest" asp-action="Index">Service Requests</a>
                                             </li>
-                                            <li class="nav-item text-light mx-2">
-                                                <a class="nav-link" asp-area="MMSI" title="Create Service Request" asp-controller="ServiceRequest" asp-action="Index">Service Requests</a>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" title="Create, Tariff, and Approve Dispatch Tickets" asp-area="MMSI" asp-controller="DispatchTicket" asp-action="Index">Dispatch Tickets</a>
                                             </li>
-                                            <li class="nav-item text-light mx-2">
-                                                <a class="nav-link" asp-area="MMSI" title="Create, Tariff, and Approve Dispatch Tickets" asp-controller="DispatchTicket" asp-action="Index">Dispatch Tickets</a>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="MMSI" title="Dispatch Ticket Billings" asp-controller="Billing" asp-action="Index">Billing</a>
                                             </li>
-                                            <li class="nav-item text-light mx-2">
-                                                <a class="nav-link" asp-area="MMSI" title="Dispatch Ticket Billings" asp-controller="Billing" asp-action="Index">Billing</a>
-                                            </li>
-                                            <li class="nav-item dropdown">
-                                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" >
-                                                    MasterFile
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item dropend">
+                                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    MMSI MasterFile
                                                 </a>
                                                 <ul class="dropdown-menu">
                                                     <li class="nav-item">
@@ -527,9 +527,8 @@
                                                     </li>
                                                 </ul>
                                             </li>
-
                                         </ul>
-                                    </div>
+                                    </li>
                                     
                                     <li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">A. Receivable</a>

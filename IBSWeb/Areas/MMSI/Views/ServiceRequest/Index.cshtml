@@ -66,116 +66,114 @@
         padding: 5px !important;
     }
 </style>
-<body class="bg-light">
-<div class="card text-dark bg-white  m-1">
-    <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">SERVICE REQUEST LIST</div>
-    <div class="card-body table-responsive">
-        <div class="row justify-content-end">
-            <div class="text-center w-250px">
-                <a class="btn custom-btn col-12 align-content-center" asp-area="MMSI" asp-controller="ServiceRequest" asp-action="Create"><i class="bi bi-plus-circle"></i> Create</a>
+
+<div class="container-fluid mt-3">
+    
+    <div class="card shadow m-1">
+        
+        <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h2 class="text-white py-2">SERVICE REQUESTS</h2>
+                </div>
             </div>
         </div>
-        <div class="card-body">
-            <table id="dataTable" class="table table-striped custom-table-width table-bordered mt-1">
-                <thead>
-                <tr>
-                    <th data-orderable="false" class="px-3 py-1 text-center align-content-center"><input type="checkbox" class="text-center" id="selectAll"></th>
-                    <th class="text-center align-middle py-1">Date</th>
-                    <th class="text-center align-middle py-1">COS #</th>
-                    <th class="text-center align-middle py-1">Dispatch/<br />Mooring Ticket</th>
-                    <th class="text-center align-middle py-1">Date/<br />Time Start</th>
-                    <th class="text-center align-middle py-1">Date/<br />Time End</th>
-                    <th class="text-center align-middle py-1">Activity/<br />Service Type</th>
-                    <th class="text-center align-middle py-1">Port-<br />Terminal</th>
-                    <th class="text-center align-middle py-1">Tugboat</th>
-                    <th class="text-center align-middle py-1">Tug Master</th>
-                    <th class="text-center align-middle py-1">Vessel</th>
-                    <th class="text-center align-middle py-1 w-150px">
-                        <select id="statusDropdown" class="form-select">
-                            <option value="For Posting">For Posting</option>
-                            <option value="Cancelled">Cancelled</option>
-                            <option value="All">All</option>
-                        </select>
-                    </th>
-                    <th class="actions-column align-middle text-center w-150px">Uploaded file</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var item in Model)
-                {
+        
+        <div class="card-body table-responsive">
+            
+            <div class="row justify-content-end">
+                <div class="text-center" style="width: 150px;">
+                    <a class="btn btn-primary custom2-btn col-12 align-content-center" asp-area="MMSI" asp-controller="ServiceRequest" asp-action="Create"><i class="bi bi-plus-circle"></i> Create</a>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <table id="dataTable" class="table table-striped custom-table-width table-bordered mt-1">
+                    <thead>
                     <tr>
-                        @if(item.Status != "Cancelled")
-                        {
-                            <td class="text-center"><input type="checkbox" class="selectCheckbox" value="@item.DispatchTicketId"></td>
-                        }
-                        else
-                        {
-                            <td class="text-center"><input type="checkbox" disabled></td>
-                        }
-                        <td class="text-start align-middle"><pre>@(item.CreateDate.ToString("yyyy-MM-dd"))</pre></td>
-                        <td class="text-start align-middle"><pre>@item.COSNumber</pre></td>
-                        <td class="text-start align-middle"><pre>@item.DispatchNumber</pre></td>
-                        <td class="text-start align-middle"><pre>@item.DateLeft @item.TimeLeft</pre></td>
-                        <td class="text-start align-middle"><pre>@item.DateArrived @item.TimeArrived</pre></td>
-                        <td class="text-start align-middle"><pre>@item.ActivityService.ActivityServiceName</pre></td>
-                        <td class="text-start align-middle"><pre>@item.Terminal.Port.PortName-@item.Terminal.TerminalName</pre></td>
-                        <td class="text-start align-middle"><pre>@item.Tugboat.TugboatName</pre></td>
-                        <td class="text-start align-middle"><pre>@item.TugMaster.TugMasterName</pre></td>
-                        <td class="text-start align-middle"><pre>@item.Vessel.VesselName</pre></td>
-
-                        <td class="text-center align-middle">
-                            @{
-                                var status = item.Status;
-                            }
-
-                            <span class="badge rounded-pill
-                                          @{
-                                                                                       switch (item.Status)
-                                                                                       {
-                                                                                       case "For Posting":
-                                                                                       {
-                                                                                       <text>bg-info</text>
-                                                                                       };
-                                                                                       break;
-                                                                                       case "Cancelled":
-                                                                                       {
-                                                                                       <text>bg-secondary</text>
-                                                                                       };
-                                                                                       break;
-                                                                                       default:
-                                                                                       {
-                                                                                       <text>bg-secondary</text>
-                                                                                       };
-                                                                                       break;
-                                                                                       }
-                                                                                   }
-                                            " style="font-size: 14px; color: Ivory">@item.Status
-                                        </span>
-                        </td>
-
-                        <td class="text-center">
-                            @if (!string.IsNullOrEmpty(item.UploadName))
-                            {
-                                <a class="view-upload btn custom-btn col-12" data-uploadname="@item.UploadName"><i class="bi bi-eye-fill"></i> View</a>
-                            }
-                        </td>
+                        <th data-orderable="false" class="px-3 py-1 text-center align-content-center"><input type="checkbox" class="text-center" id="selectAll"></th>
+                        <th class="text-center align-middle py-1">Date</th>
+                        <th class="text-center align-middle py-1">COS #</th>
+                        <th class="text-center align-middle py-1">Dispatch/<br/>Mooring Ticket</th>
+                        <th class="text-center align-middle py-1">Date/<br/>Time Start</th>
+                        <th class="text-center align-middle py-1">Date/<br/>Time End</th>
+                        <th class="text-center align-middle py-1">Activity/<br/>Service Type</th>
+                        <th class="text-center align-middle py-1">Port-<br/>Terminal</th>
+                        <th class="text-center align-middle py-1">Tugboat</th>
+                        <th class="text-center align-middle py-1">Tug Master</th>
+                        <th class="text-center align-middle py-1">Vessel</th>
+                        <th class="text-center align-middle py-1 w-150px">
+                            <select id="statusDropdown" class="form-select">
+                                <option value="For Posting">For Posting</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="All">All</option>
+                            </select>
+                        </th>
+                        <th class="actions-column align-middle text-center w-150px">Uploaded file</th>
                     </tr>
-                }
-                </tbody>
-            </table>
-            <div class="row justify-content-end mt-2">
-                <div class="text-center w-250px">
-                    <a class="btn custom-btn col-12 align-content-center selected-options" id="postSelected" style="display:none">Post Selected</a>
-                </div>
-                <div class="text-center w-250px">
-                    <a class="btn custom-btn col-12 align-content-center selected-options" id="cancelSelected" style="display:none">Cancel Selected</a>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            @if (item.Status != "Cancelled")
+                            {
+                                <td class="text-center"><input type="checkbox" class="selectCheckbox" value="@item.DispatchTicketId"></td>
+                            }
+                            else
+                            {
+                                <td class="text-center"><input type="checkbox" disabled></td>
+                            }
+                            <td class="text-start align-middle"><pre>@(item.CreateDate.ToString("yyyy-MM-dd"))</pre></td>
+                            <td class="text-start align-middle"><pre>@item.COSNumber</pre></td>
+                            <td class="text-start align-middle"><pre>@item.DispatchNumber</pre></td>
+                            <td class="text-start align-middle"><pre>@item.DateLeft @item.TimeLeft</pre></td>
+                            <td class="text-start align-middle"><pre>@item.DateArrived @item.TimeArrived</pre></td>
+                            <td class="text-start align-middle"><pre>@item.ActivityService.ActivityServiceName</pre></td>
+                            <td class="text-start align-middle"><pre>@item.Terminal.Port.PortName-@item.Terminal.TerminalName</pre></td>
+                            <td class="text-start align-middle"><pre>@item.Tugboat.TugboatName</pre></td>
+                            <td class="text-start align-middle"><pre>@item.TugMaster.TugMasterName</pre></td>
+                            <td class="text-start align-middle"><pre>@item.Vessel.VesselName</pre></td>
+
+                            <td class="text-center align-middle">
+                                @{
+                                    var status = item.Status;
+                                }
+
+                                <span class="badge rounded-pill @(item.Status switch
+                                                                {
+                                                                    "For Posting" => "bg-info",
+                                                                    "Cancelled" => "bg-secondary",
+                                                                    _ => "bg-secondary"
+                                                                })"
+                                      style="font-size: 14px; color: Ivory">
+                                    @item.Status
+                                </span>
+                            </td>
+
+                            <td class="text-center">
+                                @if (!string.IsNullOrEmpty(item.UploadName))
+                                {
+                                    <a class="view-upload btn custom-btn col-12" data-uploadname="@item.UploadName"><i class="bi bi-eye-fill"></i> View</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+                <div class="row justify-content-end mt-2">
+                    <div class="text-center" style="width: 250px;">
+                        <a class="btn btn-primary custom-btn col-12 align-content-center selected-options" id="postSelected" style="display:none">Post Selected</a>
+                    </div>
+                    <div class="text-center" style="width: 250px;">
+                        <a class="btn btn-primary custom-btn col-12 align-content-center selected-options" id="cancelSelected" style="display:none">Cancel Selected</a>
+                    </div>
                 </div>
             </div>
-        </div>
 
+        </div>
     </div>
 </div>
-</body>
 
 @section Scripts {
     <script>
@@ -328,7 +326,7 @@
                     confirmButtonText: "Yes",
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `/ServiceRequest/PostSelected?records=${queryString}`;
+                        window.location.href = `/MMSI/ServiceRequest/PostSelected?records=${queryString}`;
                     }
                 });
             });
@@ -344,7 +342,7 @@
                     confirmButtonText: "Yes",
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `/ServiceRequest/CancelSelected?records=${queryString}`;
+                        window.location.href = `/MMSI/ServiceRequest/CancelSelected?records=${queryString}`;
                     }
                 });
             });

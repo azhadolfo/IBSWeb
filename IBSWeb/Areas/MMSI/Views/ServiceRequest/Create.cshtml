@@ -15,13 +15,65 @@
         input {
             font-size: .9em !important;
         }
+        html {
+            font-size: 16px;
+        }
+
+        table td {
+            font-size: 10px;
+            padding: 5px !important;
+            margin: 0px !important;
+        }
+
+        table th {
+            font-size: 12px;
+            padding: 0px !important;
+            margin: 0px !important;
+        }
+
+        span {
+            font-size: 10px !important;
+        }
+
+        .btn {
+            font-size: 12px !important;
+        }
+
+        ul li {
+            font-size: 12px !important;
+        }
+
+        .form-select {
+            font-size: 10px;
+            min-width: 120px; /* Adjust as needed */
+            width: auto; /* Adjust or set a fixed width if necessary */
+            max-width: 120px; /* Prevent it from being too wide */
+        }
+
+        label[for="dt-length-0"] {
+            font-size: 10px;
+            margin-left: 2px;
+        }
+
+        label[for="dt-search-0"] {
+            font-size: .8em;
+        }
+
+        .custom2-btn {
+            text-align: center !important;
+            align-content: center !important;
+        }
     }
 </style>
 
-<div class="card text-dark bg-white  m-2">
-    <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">
-        <i class="bi bi-pencil-square"></i> CREATE SERVICE REQUEST
+<div class="card text-dark bg-white shadow mt-3">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center">
+            <h2 class="text-white py-2">CREATE SERVICE REQUESTS</h2>
+        </div>
     </div>
+
     <div class="card-body">
         <form id="myForm" method="post" class="row" enctype="multipart/form-data">
             <div class="border-2 px-3">
@@ -138,15 +190,15 @@
                 </div>
                 <div class="form-group col-12 my-2">
                     <label for="file" class="form-label">Upload image of Dispatch Ticket</label>
-                    <input class="form-control form-control-sm" id="fileUpload" name="file" type='file' accept="image/png, image/jpg, image/jpeg" />
+                    <input class="form-control form-control-sm" id="fileUpload" name="file" type='file' accept="image/png, image/jpg, image/jpeg"/>
                 </div>
-                <br />
+                <br/>
             </div>
             <div class="row">
                 <button class="btn btn-primary custom-btn col-3 mx-3" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
 
                 <a class="btn btn-primary custom2-btn col-3 mx-2" asp-controller="ServiceRequest" asp-action="Index">
-                    <i class="bi bi-arrow-90deg-left"></i> Go Back
+                    <i class="bi bi-arrow-90deg-left"></i> Back
                 </a>
             </div>
         </form>

@@ -637,3 +637,25 @@ table {
 body.loading {
     overflow: hidden;
 }
+
+.custom-btn {
+    height: 30px !important;
+    padding: 2px !important;
+    text-align: center !important;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1), 0 3px 10px 0 rgba(0,0,0,0.19);
+}
+
+.custom-btn:hover {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.custom2-btn {
+    height: 30px !important;
+    padding: 2px !important;
+    text-align: center !important;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1), 0 3px 10px 0 rgba(0,0,0,0.19);
+}
+
+.custom2-btn:hover {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
