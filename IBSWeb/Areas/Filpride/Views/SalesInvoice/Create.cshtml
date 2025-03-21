@@ -1,5 +1,4 @@
-﻿@using IBS.Utility
-@using IBS.Utility.Enums
+﻿@using IBS.Utility.Enums
 @model FilprideSalesInvoice
 
 @{
@@ -225,6 +224,10 @@
                                 $("#productUnit").val(data.productUnit);
                                 $("#UnitPrice").val(data.deliveredPrice);
                                 $("#Terms").val(data.terms);
+                                $("#address").val(data.customerAddress);
+                                $("#tinNo").val(data.customerTin);
+                                
+                                
                                 // Populate DR dropdown
                                 var drSelect = $("#DeliveryReceiptId");
                                 drSelect.empty();
@@ -244,6 +247,8 @@
                                 $("#productUnit").val('');
                                 $("#UnitPrice").val('');
                                 $("#Terms").val('');
+                                $("#address").val('');
+                                $("#tinNo").val('');
 
                                 var drSelect = $("#DeliveryReceiptId");
                                 drSelect.empty();

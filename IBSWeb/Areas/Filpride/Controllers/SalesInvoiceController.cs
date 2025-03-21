@@ -1,19 +1,19 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
-using System.Linq.Dynamic.Core;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -234,6 +234,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cos.Product.ProductUnit,
                     cos.DeliveredPrice,
                     cos.Terms,
+                    cos.CustomerAddress,
+                    cos.CustomerTin,
                     DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(cos.CustomerOrderSlipId, cancellationToken)
                 });
             }
@@ -316,6 +318,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.DeliveryReceiptId = model.DeliveryReceiptId;
                     existingRecord.Terms = model.Terms;
                     existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, model.TransactionDate);
+                    existingRecord.CustomerAddress = model.CustomerAddress;
+                    existingRecord.CustomerTin = model.CustomerTin;
 
                     existingRecord.EditedBy = _userManager.GetUserName(User);
                     existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
