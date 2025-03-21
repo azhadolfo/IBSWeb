@@ -208,7 +208,7 @@
                                 // Populate Branches dropdown using fetched data
                                 populateBranches(data.branches);
 
-                                updateTermsEditability(customerId);
+                                updateTermsEditability(data.hasMultipleTerms);
 
                             } else {
                                 $('input[name="CustomerAddress"]').val('');
@@ -296,12 +296,11 @@
                 }
             }
 
-            function updateTermsEditability(customerId) {
+            function updateTermsEditability(hasMultipleTerms) {
                 var termsSelect = $('#termsSelect');
                 var selectedValue = termsSelect.val(); // Get the current selected value
-                console.log(selectedValue);
 
-                if (customerId === '7' || customerId === '53') {
+                if (hasMultipleTerms) {
                     termsSelect.prop('disabled', false);
                     termsSelect.removeClass('bg-light');
                 } else {

@@ -1,14 +1,13 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Linq.Expressions;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-using IBS.Models.Filpride.Books;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -95,6 +94,16 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Branch = viewModel.SelectedBranch;
             existingRecord.Terms = viewModel.Terms;
             existingRecord.CustomerType = viewModel.CustomerType;
+
+            if (existingRecord.Branch != null)
+            {
+                var branch = await _db.FilprideCustomerBranches
+                    .Where(b => b.BranchName == existingRecord.Branch)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                existingRecord.CustomerAddress = branch.BranchAddress;
+                existingRecord.CustomerTin = branch.BranchTin;
+            }
 
             if (_db.ChangeTracker.HasChanges())
             {

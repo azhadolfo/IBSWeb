@@ -1,23 +1,23 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Linq.Dynamic.Core;
+using System.Security.Claims;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBSWeb.Hubs;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -277,6 +277,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CustomerType = viewModel.CustomerType,
                     };
 
+                    if (model.Branch != null)
+                    {
+                        var branch = await _dbContext.FilprideCustomerBranches
+                            .Where(b => b.BranchName == model.Branch)
+                            .FirstOrDefaultAsync(cancellationToken);
+
+                        model.CustomerAddress = branch.BranchAddress;
+                        model.CustomerTin = branch.BranchTin;
+                    }
+
                     if (viewModel.HasCommission)
                     {
                         model.HasCommission = viewModel.HasCommission;
@@ -339,8 +349,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerOrderSlipId = exisitingRecord.CustomerOrderSlipId,
                     Date = exisitingRecord.Date,
                     CustomerId = exisitingRecord.CustomerId,
-                    CustomerAddress = exisitingRecord.Customer.CustomerAddress,
-                    TinNo = exisitingRecord.Customer.CustomerTin,
+                    CustomerAddress = exisitingRecord.CustomerAddress,
+                    TinNo = exisitingRecord.CustomerTin,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
                     HasCommission = exisitingRecord.HasCommission,
                     CommissioneeId = exisitingRecord.CommissioneeId,
@@ -869,7 +879,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Terms = customer.CustomerTerms,
                 customer.CustomerType,
                 Branches = !customer.HasBranch ? null : await _unitOfWork.FilprideCustomer
-                    .GetCustomerBranchesSelectListAsync(customer.CustomerId)
+                    .GetCustomerBranchesSelectListAsync(customer.CustomerId),
+                customer.HasMultipleTerms
             });
         }
 
