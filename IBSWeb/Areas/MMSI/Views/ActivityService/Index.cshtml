@@ -4,27 +4,34 @@
     ViewData["Title"] = "Index";
 }
 
-<html class="bg-light">
-<body class="bg-light">
+<div class="card shadow mt-4">
 
-<div class="card text-dark bg-white  m-4">
-    <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white"><i class="bi bi-database"></i> MMSI Activities and Services</div>
-    <div class="col-12 text-end">
-        <a class="btn btn-primary custom-btn mt-4 me-4" asp-controller="ActivityService" asp-action="Create">
-            <i class="bi bi-plus-circle"></i> Create
-        </a>
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2><i class="bi bi-database"></i> MMSI Activities and Services</h2>
+        </div>
     </div>
+
     <div class="card-body">
-        <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
+
+        <div class="row justify-content-end mb-2">
+            <div class="text-center" style="width: 150px;">
+                <a class="btn btn-primary col-12 align-content-center" asp-controller="ActivityService" asp-action="Create">
+                    <i class="bi bi-plus-circle"></i> Create
+                </a>
+            </div>
+        </div>
+        
+        <table id="dataTable" class="table table-striped table-bordered" style="width:100%">
             <thead>
             <tr>
-                <th>
+                <th class="text-center">
                     @Html.DisplayNameFor(m => m.ActivityServiceNumber)
                 </th>
-                <th>
+                <th class="text-center">
                     @Html.DisplayNameFor(m => m.ActivityServiceName)
                 </th>
-                <th class="actions-column text-center w-150px">
+                <th class="text-center"> <!-- Width controlled via DataTables -->
                     Actions
                 </th>
             </tr>
@@ -33,15 +40,15 @@
             @foreach (var item in Model)
             {
                 <tr>
-                    <td>
-                        <pre>@Html.DisplayFor(model => item.ActivityServiceNumber)</pre>
+                    <td class="text-center align-content-center">
+                        @Html.DisplayFor(model => item.ActivityServiceNumber)
                     </td>
-                    <td>
-                        <pre>@Html.DisplayFor(model => item.ActivityServiceName)</pre>
+                    <td class="text-center align-content-center">
+                        @Html.DisplayFor(model => item.ActivityServiceName)
                     </td>
                     <td class="text-center">
                         <div class="dropdown">
-                            <button class="btn custom-btn dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                            <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                 <li><a class="dropdown-item" href="@Url.Action("Edit", "ActivityService", new { id = item.ActivityServiceId })"><i class="bi bi-pencil-fill"></i> Edit</a></li>
                                 <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "ActivityService", new { id = item.ActivityServiceId })"><i class="bi bi-trash-fill"></i> Delete</a></li>
@@ -54,28 +61,48 @@
         </table>
     </div>
 </div>
-</body>
 
-<script>
-    document.querySelectorAll('.delete-button').forEach(button => {
-        button.addEventListener('click', function (event) {
-            event.preventDefault(); // Prevent default navigation
 
-            const href = this.getAttribute('href'); // Get the href value
-            Swal.fire({
-                title: 'Delete?',
-                text: "Delete this Activity/Service entry?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Yes',
-                cancelButtonText: 'No'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = href; // Redirect to the href URL
-                }
+@section Scripts{
+    <script>
+        document.querySelectorAll('.delete-button').forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent default navigation
+
+                const href = this.getAttribute('href'); // Get the href value
+                Swal.fire({
+                    title: 'Delete?',
+                    text: "Delete this Activity/Service entry?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = href; // Redirect to the href URL
+                    }
+                });
             });
         });
-    });
-</script>
 
-</html>
+        $(document).ready(function () {
+            // Check if the table is already initialized and destroy it
+            if ($.fn.DataTable.isDataTable('#dataTable')) {
+                $('#dataTable').DataTable().destroy();
+            }
+
+            // Initialize the DataTable with your settings
+            $('#dataTable').DataTable({
+                "autoWidth": false,
+                "columnDefs": [
+                    {
+                        "targets": 2,
+                        "width": "150px",
+                        "className": "text-center",
+                        "orderable": false // Optional: disable sorting on Actions column
+                    }
+                ]
+            });
+        });
+    </script>
+}
