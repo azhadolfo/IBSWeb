@@ -3,47 +3,56 @@
 @{
     ViewData["Title"] = "Create";
 }
-<html class="bg-light">
-    <body class="bg-light">
+<div class="card shadow mt-4">
 
-        <div class="card text-dark bg-white  m-4">
-            <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2>
                 <i class="bi bi-pencil-square"></i> Create Terminal
-            </div>
-            <div class="card-body">
-                <form method="post" class="row">
-                    <div class="border-2 px-3">
-                        <div asp-validation-summary="ModelOnly"></div>
-                        <div class="row pt-2">
-                            <div class="form-floating col-6 my-3">
-                                <input asp-for="TerminalName" type="text" class="form-control border-0 shadow" id="TerminalName" placeholder="Name" required>
-                                <label asp-for="TerminalName" for="TerminalName" class="ms-2">Terminal name<span class="required text-danger">*</span></label>
-                                <span asp-validation-for="TerminalName" class="text-danger"></span>
-                            </div>
-                            <div class="form-group col-6 my-3">
-                                <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
-                                <select asp-for="PortId" asp-items="@Model.Ports" class="form-select js-select2 border-0 shadow" style="width:100%" required>
-                                    <option value="">Select Port</option>
-                                </select>
-                                <span asp-validation-for="PortId" class="text-danger"></span>
-                            </div>
-                        </div>
-                        <div class="row pb-3">
-                            <div class="form-floating col-6 my-3">
-                                <input asp-for="TerminalNumber" type="text" class="form-control border-0 shadow" id="TerminalNumber" placeholder="Number" required>
-                                <label asp-for="TerminalNumber" for="TerminalNumber" class="ms-2">Tugboat Number<span class="required text-danger">*</span></label>
-                                <span asp-validation-for="TerminalNumber" class="text-danger"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <button class="btn btn-primary custom-btn col-3 mx-3" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
-                        <a class="btn btn-primary custom2-btn col-3 mx-2" asp-controller="Terminal" asp-action="Index">
-                            <i class="bi bi-arrow-90deg-left"></i> Go Back
-                        </a>
-                    </div>
-                </form>
-            </div>
+            </h2>
         </div>
-    </body>
-</html>
+    </div>
+
+    <div class="card-body">
+
+        <form method="post" class="row">
+            
+            <div class="border-2 px-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div class="row">
+                    <div class="form-floating col-6 my-3">
+                        <input asp-for="TerminalName" type="text" class="form-control border-0 shadow" id="TerminalName" placeholder="Name" required>
+                        <label asp-for="TerminalName" for="TerminalName" class="ms-2">Terminal name<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="TerminalName" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6 my-3">
+                        <input asp-for="TerminalNumber" type="text" class="form-control border-0 shadow" id="TerminalNumber" placeholder="Number" required>
+                        <label asp-for="TerminalNumber" for="TerminalNumber" class="ms-2">Tugboat Number<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="TerminalNumber" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-6 my-3">
+                        <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
+                        <select asp-for="PortId" asp-items="@Model.Ports" class="form-select js-select2 border-0 shadow" style="width:100%" required>
+                            <option value="">Select Port</option>
+                        </select>
+                        <span asp-validation-for="PortId" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-end mt-3">
+                <div class="text-center" style="width: 250px;">
+                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                </div>
+                <div class="text-center" style="width: 250px;">
+                    <a class="btn btn-outline-primary col-12" asp-controller="Terminal" asp-action="Index">
+                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                    </a>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
