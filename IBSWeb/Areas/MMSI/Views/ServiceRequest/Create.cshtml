@@ -86,7 +86,7 @@
                     </div>
                     <div class="form-floating col-6 my-2">
                         <input asp-for="COSNumber" type="text" class="form-control border-0 shadow" id="COSNumber" placeholder="" maxlength="10" title="COS Number must not exceed 10 characters">
-                        <label asp-for="COSNumber" for="COSNumber" class="ms-2">COS #</label>
+                        <label asp-for="COSNumber" for="COSNumber" class="ms-2">COS#(Optional)</label>
                         <span asp-validation-for="COSNumber" class="text-danger"></span>
                     </div>
                 </div>
@@ -184,7 +184,7 @@
                 </div>
                 <div class="form-floating col-12 my-2">
                     <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" placeholder=" ">
-                    <label asp-for="Remarks" for="Remarks" class="ms-2">Remarks</label>
+                    <label asp-for="Remarks" for="Remarks" class="ms-2">Remarks(Optional)</label>
                     <span asp-validation-for="Remarks" class="text-danger"></span>
                 </div>
                 <div class="form-group col-12 my-2">

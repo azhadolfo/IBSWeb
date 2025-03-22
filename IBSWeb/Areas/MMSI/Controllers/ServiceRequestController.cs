@@ -99,7 +99,7 @@ namespace IBSWeb.Areas.MMSI
                         await _db.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Entry Created Successfully!";
 
-                        return RedirectToAction(nameof(Index));
+                        return RedirectToAction("Index", "DispatchTicket");
                     }
                     else
                     {
