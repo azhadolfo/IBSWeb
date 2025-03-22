@@ -1,8 +1,8 @@
-@model IEnumerable<IBS.Models.MMSI.MMSIBilling>
+@model IEnumerable<MMSICollection>
 
 @{
     ViewData["Title"] = "Index";
-    
+
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -48,7 +48,7 @@
     .actions-dropdown .dropdown-item:hover {
         background-color: #f3f4f6;
     }
-    
+
     table {
         font-size: 10px !important;
         table-layout: auto !important;
@@ -84,12 +84,11 @@
                 <thead>
                 <tr>
                     <th class="text-center align-content-center">Date</th>
-                    <th class="text-center align-content-center">Billing Number</th>
+                    <th class="text-center align-content-center">Collection Number</th>
+                    <th class="text-center align-content-center">Amount</th>
                     <th class="text-center align-content-center">Status</th>
                     <th class="text-center align-content-center">Customer</th>
-                    <th class="text-center align-content-center">Port-Terminal</th>
-                    <th class="text-center align-content-center">Vessel</th>
-                    <th class="align-content-center text-center">Actions</th>
+                    <th class="text-center align-content-center">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -97,15 +96,13 @@
                 {
                     <tr>
                         <td class="text-center align-content-center ">@item.Date.ToString("yyyy-MM-dd")</td>
-                        <td class="text-center align-content-center ">@item.MMSIBillingNumber</td>
+                        <td class="text-center align-content-center ">@item.CollectionNumber</td>
+                        <td class="text-center align-content-center ">@item.Amount</td>
                         <td class="text-center align-content-center ">@item.Status</td>
-                        <td class="text-center align-content-center ">@item?.Customer?.CustomerName</td>
-                        <td class="text-center align-content-center ">@item?.Terminal?.Port?.PortName-@item?.Terminal?.TerminalName</td>
-                        <td class="text-center align-content-center ">@item?.Vessel?.VesselName</td>
+                        <td class="text-center align-content-center ">@item.Customer</td>
                         <td class="text-center justify-content-center d-flex">
                             <div class="align-content-center text-center" style="width: 150px !important;">
-                                <!-- Keep actionsDropdown as is if it's not causing issues -->
-                                <a class="btn btn-primary col-12" href="@Url.Action("Preview", "Billing", new { id = item?.MMSIBillingId })"><i class="bi bi-eye"></i> View</a>
+                                @* <a class="btn btn-primary col-12" href="@Url.Action("Preview", "Collection", new { id = item?.MMSICollectionId })"><i class="bi bi-eye"></i> View</a> *@
                             </div>
                         </td>
                     </tr>
@@ -118,29 +115,7 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
-            // Select all delete entries
-            var deleteEntries = document.querySelectorAll('.delete-entry');
-
-            deleteEntries.forEach(function (entry) {
-                entry.addEventListener('click', function (e) {
-                    e.preventDefault(); // Prevent the link from navigating away immediately
-
-                    var id = this.getAttribute('data-id');
-                    console.log(id);
-
-                    Swal.fire({
-                        title: "Delete this Billing?",
-                        text: "This action cannot be undone.",
-                        showCancelButton: true,
-                        confirmButtonText: "Yes",
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = `/Billing/Delete/${id}`;
-                        }
-                    });
-                });
-            });
-        });
+        
+    
     </script>
 }
