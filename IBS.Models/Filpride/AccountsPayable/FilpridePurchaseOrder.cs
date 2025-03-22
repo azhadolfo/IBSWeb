@@ -29,9 +29,9 @@ namespace IBS.Models.Filpride.AccountsPayable
         [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
-        public string SupplierAddress { get; set; }
+        public string SupplierAddress { get; set; } = string.Empty;
 
-        public string SupplierTin { get; set; }
+        public string SupplierTin { get; set; } = string.Empty;
 
         #endregion
 

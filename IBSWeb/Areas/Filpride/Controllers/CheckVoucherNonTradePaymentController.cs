@@ -541,8 +541,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CheckDate = existingHeaderModel.CheckDate ?? default,
                 Particulars = index >= 0 ? particulars.Substring(0, index).Trim() : particulars,
                 Payee = existingHeaderModel.SupplierId != null ? existingHeaderModel.Supplier.SupplierName : existingDetailsModel.Supplier.SupplierName,
-                PayeeAddress = existingHeaderModel.SupplierId != null ? existingHeaderModel.Supplier.SupplierAddress : existingDetailsModel.Supplier.SupplierAddress,
-                PayeeTin = existingHeaderModel.SupplierId != null ? existingHeaderModel.Supplier.SupplierTin : existingDetailsModel.Supplier.SupplierTin,
+                PayeeAddress = existingHeaderModel.Address,
+                PayeeTin = existingHeaderModel.Tin,
                 MultipleSupplierId = existingHeaderModel.SupplierId != null ? existingHeaderModel.SupplierId : existingDetailsModel.SupplierId,
                 Suppliers = suppliers,
                 CvId = existingHeaderModel.CheckVoucherHeaderId
@@ -643,6 +643,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingHeaderModel.Reference = string.Join(", ", invoicingVoucher.Select(inv => inv.CheckVoucherHeaderNo));
                         existingHeaderModel.BankId = viewModel.BankId;
                         existingHeaderModel.Payee = viewModel.Payee;
+                        existingHeaderModel.Address = viewModel.PayeeAddress;
+                        existingHeaderModel.Tin = viewModel.PayeeTin;
                         existingHeaderModel.CheckNo = viewModel.CheckNo;
                         existingHeaderModel.CheckDate = viewModel.CheckDate;
                         existingHeaderModel.CheckAmount = viewModel.Total;
@@ -1034,7 +1036,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CvType = nameof(CVType.Payment),
                         Reference = string.Join(", ", invoicingVoucher.Select(inv => inv.CheckVoucherHeaderNo)),
                         BankId = viewModel.BankId,
-                        Payee = invoicingVoucher.Select(i => i.Payee).FirstOrDefault(),
+                        Payee = viewModel.Payee,
+                        Address = viewModel.PayeeAddress,
+                        Tin = viewModel.PayeeTin,
                         CheckNo = viewModel.CheckNo,
                         CheckDate = viewModel.CheckDate,
                         CheckAmount = viewModel.Total,
@@ -1395,6 +1399,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                        CvType = nameof(CVType.Payment),
                        BankId = viewModel.BankId,
                        Payee = viewModel.Payee,
+                       Address = viewModel.PayeeAddress,
+                       Tin = viewModel.PayeeTin,
                        CheckNo = viewModel.CheckNo,
                        CheckDate = viewModel.CheckDate,
                        CheckAmount = viewModel.Total,
@@ -1564,8 +1570,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 EmployeeId = existingHeaderModel.EmployeeId ?? 0,
                 Employees = employees,
                 Payee = existingHeaderModel.Payee,
-                PayeeAddress = existingHeaderModel.Employee.Address,
-                PayeeTin = existingHeaderModel.Employee.TinNo,
+                PayeeAddress = existingHeaderModel.Address,
+                PayeeTin = existingHeaderModel.Tin,
                 Total = existingHeaderModel.Total,
                 BankId = existingHeaderModel.BankId ?? 0,
                 Banks = bankAccounts,
@@ -1607,6 +1613,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingHeaderModel.BankId = viewModel.BankId;
                     existingHeaderModel.Payee = viewModel.Payee;
+                    existingHeaderModel.Address = viewModel.PayeeAddress;
+                    existingHeaderModel.Tin = viewModel.PayeeTin;
                     existingHeaderModel.CheckNo = viewModel.CheckNo;
                     existingHeaderModel.CheckDate = viewModel.CheckDate;
                     existingHeaderModel.CheckAmount = viewModel.Total;

@@ -293,7 +293,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CreatedBy = _userManager.GetUserName(this.User),
                         Company = companyClaims,
                         Type = getPurchaseOrder.Type,
-                        CvType = "Supplier"
+                        CvType = "Supplier",
+                        Address = supplier.SupplierAddress,
+                        Tin = supplier.SupplierTin,
                     };
 
                     await _dbContext.FilprideCheckVoucherHeaders.AddAsync(cvh, cancellationToken);
@@ -581,8 +583,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 SupplierId = existingHeaderModel.SupplierId ?? 0,
                 Payee = existingHeaderModel.Payee,
-                SupplierAddress = existingHeaderModel.Supplier.SupplierAddress,
-                SupplierTinNo = existingHeaderModel.Supplier.SupplierTin,
+                SupplierAddress = existingHeaderModel.Address,
+                SupplierTinNo = existingHeaderModel.Tin,
                 POSeries = existingHeaderModel.PONo,
                 TransactionDate = existingHeaderModel.Date,
                 BankId = existingHeaderModel.BankId,
@@ -696,6 +698,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.Date = viewModel.TransactionDate;
                     existingHeaderModel.PONo = viewModel.POSeries;
                     existingHeaderModel.SupplierId = viewModel.SupplierId;
+                    existingHeaderModel.Address = viewModel.SupplierAddress;
+                    existingHeaderModel.Tin = viewModel.SupplierTinNo;
                     existingHeaderModel.Particulars = viewModel.Particulars;
                     existingHeaderModel.BankId = viewModel.BankId;
                     existingHeaderModel.CheckNo = viewModel.CheckNo;

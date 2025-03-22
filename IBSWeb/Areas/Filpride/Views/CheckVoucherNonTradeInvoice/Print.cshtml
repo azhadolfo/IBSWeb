@@ -78,16 +78,8 @@
             </tr>
             <tr>
                 <td style="padding-left:20px;">Address :</td>
-                @if (Model.Header.SupplierId != null)
-                {
-                    <td>@Html.DisplayFor(model => model.Header.Supplier.SupplierAddress)</td>
-                }
-                else
-                {
-                    <td>@Html.DisplayFor(model => model.Supplier.SupplierAddress)</td>
-                }
+                <td>@Html.DisplayFor(model => model.Header.Address)</td>
                 <td style="width:5%;">PO # :</td>
-
                 <td>
                     @if (Model.Header.PONo != null)
                     {
@@ -107,14 +99,7 @@
             </tr>
             <tr>
                 <td style="padding-left:20px;">TIN # :</td>
-                @if (Model.Header.SupplierId != null)
-                {
-                    <td>@Html.DisplayFor(model => model.Header.Supplier.SupplierTin)</td>
-                }
-                else
-                {
-                    <td>@Html.DisplayFor(model => model.Supplier.SupplierTin)</td>
-                }
+                <td>@Html.DisplayFor(model => model.Header.Tin)</td>
                 <td>SI # :</td>
                 <td>
                     @for (int i = 0; i < Model.Header.SINo.Length; i++)

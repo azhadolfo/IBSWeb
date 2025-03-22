@@ -13,7 +13,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [Column(TypeName = "varchar(12)")]
         [Display(Name = "SV No")]
-        public string? ServiceInvoiceNo { get; set; }
+        public string ServiceInvoiceNo { get; set; } = string.Empty;
 
         #region Customer properties
 
@@ -24,9 +24,9 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
-        public string CustomerAddress { get; set; }
+        public string CustomerAddress { get; set; } = string.Empty;
 
-        public string CustomerTin { get; set; }
+        public string CustomerTin { get; set; } = string.Empty;
 
         #endregion Customer properties
 
@@ -94,6 +94,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
-        public string? Type { get; set; }
+        public string Type { get; set; }
     }
 }

@@ -27,9 +27,9 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
-        public string CustomerAddress { get; set; }
+        public string CustomerAddress { get; set; } = string.Empty;
 
-        public string CustomerTin { get; set; }
+        public string CustomerTin { get; set; } = string.Empty;
 
         #endregion Customer properties
 

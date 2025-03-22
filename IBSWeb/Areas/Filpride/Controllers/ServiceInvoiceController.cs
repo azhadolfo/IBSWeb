@@ -192,12 +192,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Saving the default properties
 
                     model.ServiceInvoiceNo = await _unitOfWork.FilprideServiceInvoice.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
-
                     model.CreatedBy = _userManager.GetUserName(this.User);
-
                     model.Total = model.Amount;
-
                     model.Company = companyClaims;
+                    model.CustomerAddress = customer.CustomerAddress;
+                    model.CustomerTin = customer.CustomerTin;
 
                     if (DateOnly.FromDateTime(model.CreatedDate) < model.Period)
                     {
@@ -665,6 +664,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    var customer = await _dbContext.FilprideCustomers
+                        .FirstOrDefaultAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
 
                     #region --Saving the default properties
 
@@ -678,6 +679,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.Total = model.Amount;
                     existingModel.CustomerId = model.CustomerId;
                     existingModel.ServiceId = model.ServiceId;
+                    existingModel.CustomerAddress = customer.CustomerAddress;
+                    existingModel.CustomerTin = customer.CustomerTin;
 
                     if (DateOnly.FromDateTime(model.CreatedDate) < model.Period)
                     {

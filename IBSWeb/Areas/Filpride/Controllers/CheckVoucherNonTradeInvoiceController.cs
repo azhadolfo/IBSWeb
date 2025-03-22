@@ -227,6 +227,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultipleInvoiceAsync(companyClaims, viewModel.Type, cancellationToken),
                         Date = viewModel.TransactionDate,
                         Payee = viewModel.SupplierName,
+                        Address = viewModel.SupplierAddress,
+                        Tin = viewModel.SupplierTinNo,
                         PONo = [viewModel.PoNo],
                         SINo = [viewModel.SiNo],
                         SupplierId = viewModel.SupplierId,
@@ -526,6 +528,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultipleInvoiceAsync(companyClaims, viewModel.Type, cancellationToken),
                         Date = viewModel.TransactionDate,
                         Payee = null,
+                        Address = "",
+                        Tin = "",
                         PONo = [viewModel.PoNo],
                         SINo = [viewModel.SiNo],
                         SupplierId = null,
@@ -685,8 +689,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ChartOfAccounts = existingModel.COA,
                 TransactionDate = existingModel.Date,
                 SupplierId = existingModel.SupplierId ?? 0,
-                SupplierAddress = existingModel.Supplier.SupplierAddress,
-                SupplierTinNo = existingModel.Supplier.SupplierTin,
+                SupplierAddress = existingModel.Address,
+                SupplierTinNo = existingModel.Tin,
                 PoNo = existingModel.PONo?.FirstOrDefault(),
                 SiNo = existingModel.SINo?.FirstOrDefault(),
                 Total = existingModel.Total,
@@ -739,6 +743,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         existingModel.Date = viewModel.TransactionDate;
                         existingModel.SupplierId = supplier.SupplierId;
                         existingModel.Payee = supplier.SupplierName;
+                        existingModel.Address = supplier.SupplierAddress;
+                        existingModel.Tin = supplier.SupplierTin;
                         existingModel.PONo = [viewModel.PoNo];
                         existingModel.SINo = [viewModel.SiNo];
                         existingModel.Particulars = viewModel.Particulars;

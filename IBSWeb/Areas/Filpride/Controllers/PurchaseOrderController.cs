@@ -177,10 +177,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    var supplier = await _dbContext.FilprideSuppliers
+                        .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId, cancellationToken);
+
                     model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Amount = model.Quantity * model.Price;
                     model.UnTriggeredQuantity = model.Quantity;
+                    model.SupplierAddress = supplier.SupplierAddress;
+                    model.SupplierTin = supplier.SupplierTin;
                     await _dbContext.AddAsync(model, cancellationToken);
 
                     #region --Audit Trail Recording
@@ -252,8 +257,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
-                    model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    var suppliers = await _dbContext.FilprideSuppliers
+                        .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId, cancellationToken);
 
+                    model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
                     existingModel.Date = model.Date;
@@ -271,6 +278,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.OldPoNo = model.OldPoNo;
                     existingModel.TriggerDate = model.TriggerDate;
                     existingModel.PickUpPointId = model.PickUpPointId;
+                    existingModel.SupplierAddress = suppliers.SupplierAddress;
+                    existingModel.SupplierTin = suppliers.SupplierTin;
 
                     #region --Audit Trail Recording
 
