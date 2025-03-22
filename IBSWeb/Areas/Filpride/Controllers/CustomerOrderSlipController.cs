@@ -260,6 +260,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(companyClaims, cancellationToken),
                         Date = viewModel.Date,
                         CustomerId = viewModel.CustomerId,
+                        CustomerAddress = viewModel.CustomerAddress,
+                        CustomerTin = viewModel.TinNo,
                         CustomerPoNo = viewModel.CustomerPoNo,
                         Quantity = viewModel.Quantity,
                         BalanceQuantity = viewModel.Quantity,
