@@ -94,20 +94,32 @@ namespace IBSWeb.Areas.MMSI
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSICustomer model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(MMSICustomer model, CancellationToken cancellationToken = default)
         {
             try
             {
-                var currentModel = await _db.MMSICustomers.FindAsync(model.MMSICustomerId);
+                var currentModel = await _db.MMSICustomers.FindAsync(model.MMSICustomerId, cancellationToken);
 
-                currentModel.CustomerAddress = model.CustomerAddress;
-                currentModel.CustomerName = model.CustomerName;
-                currentModel.CustomerTIN = model.CustomerTIN;
-                currentModel.CustomerBusinessStyle = model.CustomerBusinessStyle;
-                currentModel.CustomerTerms = model.CustomerName;
-                currentModel.CustomerTerms = model.CustomerTerms;
+                if (currentModel == null)
+                {
+                    currentModel.CustomerAddress = model.CustomerAddress;
+                    currentModel.CustomerName = model.CustomerName;
+                    currentModel.CustomerTIN = model.CustomerTIN;
+                    currentModel.CustomerBusinessStyle = model.CustomerBusinessStyle;
+                    currentModel.CustomerTerms = model.CustomerName;
+                    currentModel.CustomerTerms = model.CustomerTerms;
+                    currentModel.Mobile1 = model.Mobile1;
+                    currentModel.Mobile2 = model.Mobile2;
+                    currentModel.Landline1 = model.Landline1;
+                    currentModel.Landline2 = model.Landline2;
+                }
+                else
+                {
+                    TempData["error"] = "Customer not found.";
+                    return View(model);
+                }
 
-                await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
@@ -115,9 +127,7 @@ namespace IBSWeb.Areas.MMSI
 
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
                 TempData["error"] = "An error occurred while editing the entry. Please try again.";
-
                 return View(model);
             }
         }

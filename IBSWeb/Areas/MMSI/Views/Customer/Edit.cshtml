@@ -20,6 +20,7 @@
 
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
+                <input asp-for="MMSICustomerId" style="display: none" value="@Model.MMSICustomerId" />
                 <div class="row pt-2">
                     <div class="form-floating col-6 my-2">
                         <input asp-for="CustomerName" type="text" class="form-control border-0 shadow" id="CustomerName" placeholder=" " required>
