@@ -25,14 +25,15 @@ var googleCloudSinkOptions = new GoogleCloudLoggingSinkOptions
 {
     ProjectId = "integrated-business-system",
     LogName = "ibs-web-log",
-    ResourceType = "global"
+    ResourceType = "global",
+    UseLogCorrelation = true,  // Enable correlation IDs
+    UseSourceContextAsLogName = false  // Keep the log name you specified
 };
 
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .Enrich.WithProperty("severity", "{Level:u}") // Ensures GCP understands severity
-    .WriteTo.Console() // Log to Console
-    .WriteTo.GoogleCloudLogging(googleCloudSinkOptions, restrictedToMinimumLevel: LogEventLevel.Warning) // Log to GCP
+    .MinimumLevel.Debug()  // Sets the minimum level for ALL sinks to Debug
+    .WriteTo.Console()  // This sink will log Debug and above
+    .WriteTo.GoogleCloudLogging(googleCloudSinkOptions, restrictedToMinimumLevel: LogEventLevel.Warning)  // This sink will only log Warning and above
     .CreateLogger();
 
 // Replace default logging with Serilog
