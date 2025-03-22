@@ -48,9 +48,7 @@
     .actions-dropdown .dropdown-item:hover {
         background-color: #f3f4f6;
     }
-
-
-
+    
     table {
         font-size: 10px !important;
         table-layout: auto !important;
@@ -110,16 +108,16 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td class="text-start align-middle"><pre>@(item.CreateDate.ToString("yyyy-MM-dd"))</pre></td>
-                        <td class="text-start align-middle"><pre>@item.COSNumber</pre></td>
-                        <td class="text-start align-middle"><pre>@item.DispatchNumber</pre></td>
-                        <td class="text-start align-middle"><pre>@item.DateLeft @item.TimeLeft</pre></td>
-                        <td class="text-start align-middle"><pre>@item.DateArrived @item.TimeArrived</pre></td>
-                        <td class="text-start align-middle"><pre>@item.ActivityService.ActivityServiceName</pre></td>
-                        <td class="text-start align-middle"><pre>@item.Terminal.Port.PortName-@item.Terminal.TerminalName</pre></td>
-                        <td class="text-start align-middle"><pre>@item.Tugboat.TugboatName</pre></td>
-                        <td class="text-start align-middle"><pre>@item.TugMaster.TugMasterName</pre></td>
-                        <td class="text-start align-middle"><pre>@item.Vessel.VesselName</pre></td>
+                        <td class="text-center align-middle"><pre class="m-0 p-0">@(item.CreateDate.ToString("yyyy-MM-dd"))</pre></td>
+                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.COSNumber</pre></td>
+                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.DispatchNumber</pre></td>
+                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.DateLeft @item.TimeLeft</pre></td>
+                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.DateArrived @item.TimeArrived</pre></td>
+                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.ActivityService.ActivityServiceName</pre></td>
+                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.Terminal.Port.PortName-@item.Terminal.TerminalName</pre></td>
+                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.Tugboat.TugboatName</pre></td>
+                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.TugMaster.TugMasterName</pre></td>
+                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.Vessel.VesselName</pre></td>
 
                         <td class="text-center align-middle">
                             @{
@@ -210,35 +208,30 @@
                             }
                             $('#dataTable tbody').append(`
                                     <tr>
-                                        <td class="text-start align-middle ps-4"><pre>${value.createDate}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.cosNumber || ""}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.dispatchNumber}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.dateLeft} ${value.timeLeft}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.dateArrived} ${value.timeArrived}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.activityService.activityServiceName}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.terminal.port.portName}-${value.terminal.terminalName}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.tugboat.tugboatName}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.tugMaster.tugMasterName}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.vessel.vesselName}</pre></td>
-                                        <td class="text-center align-middle">
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.createDate}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.cosNumber || ""}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dispatchNumber}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dateLeft} ${value.timeLeft}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dateArrived} ${value.timeArrived}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.activityService.activityServiceName}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.terminal.port.portName}-${value.terminal.terminalName}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.tugboat.tugboatName}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.tugMaster.tugMasterName}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.vessel.vesselName}</pre></td>
+                                        <td class="text-center align-content-center">
                                         <span class="badge rounded-pill ${badgeClass}" style="font-size: 14px; color: Ivory">
                                             ${value.status}
                                         </span>
                                     </td>
-                                     <td class="text-center">
-                                        <div class="dropdown">
-                                            <button class="btn custom-btn dropdown-toggle col-12" type="button" id="actionsDropdown${index}"
-                                                data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown${index}">
-                                                <li><a class="dropdown-item" href="DispatchTicket/Preview/${value.dispatchTicketId}"><i class="bi bi-eye-fill"></i> Preview</a></li>
-                                                ${value.status === "For Tariff" ? 
-                                                `
-                                                    <li><a class="dropdown-item" href="DispatchTicket/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-fill"></i> Edit</a></li>
-                                                    <li><a class="dropdown-item" href="DispatchTicket/Tariffing/${value.dispatchTicketId}"><i class="bi bi-pencil-fill"></i> Tariffing</a></li>
-                                                ` : ''}
-                                                    <li><a class="dropdown-item delete-entry" data-id="${value.dispatchTicketId}"><i class="bi bi-trash-fill"></i> Delete</a>
-                                                </li>
-                                            </ul>
+                                    <td class="text-center">
+                                        <div class="align-content-center text-center">
+                                            ${value.status !== "For Tariff" ?
+                                            `
+                                                <a class="btn btn-primary col-12" href="DispatchTicket/Preview/${value.dispatchTicketId}"><i class="bi bi-eye"></i> View</a>
+                                            ` :
+                                            `
+                                                <a class="btn btn-primary col-12" href="DispatchTicket/Tariffing/${value.dispatchTicketId}"><i class="bi bi-cash-coin"></i> Set</a>
+                                            `}
                                         </div>
                                     </td>
                                 </tr>
@@ -281,7 +274,6 @@
                     });
                 });
             });
-
         });
     </script>
 }

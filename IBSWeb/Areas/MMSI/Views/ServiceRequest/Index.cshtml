@@ -258,28 +258,28 @@
 
                         $("#dataTable tbody").append(`
                                     <tr>
-                                        <td data-orderable="false" class="text-center">
+                                        <td data-orderable="false" class="text-center align-content-center">
                                             <input type="checkbox"
                                                 ${value.status !== "Cancelled" ? `class="selectCheckbox" value="${value.dispatchTicketId}"` : "disabled"}>
                                         </td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.createDate}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.cosNumber || ""}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.dispatchNumber}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.dateLeft} ${value.timeLeft}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.dateArrived} ${value.timeArrived}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.activityService.activityServiceName}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.terminal.port.portName}-${value.terminal.terminalName}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.tugboat.tugboatName}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.tugMaster.tugMasterName}</pre></td>
-                                        <td class="text-start align-middle ps-4"><pre>${value.vessel.vesselName}</pre></td>
-                                        <td class="text-center align-middle">
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.createDate}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.cosNumber || ""}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dispatchNumber}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dateLeft} ${value.timeLeft}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dateArrived} ${value.timeArrived}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.activityService.activityServiceName}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.terminal.port.portName}-${value.terminal.terminalName}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.tugboat.tugboatName}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.tugMaster.tugMasterName}</pre></td>
+                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.vessel.vesselName}</pre></td>
+                                        <td class="text-center align-content-center">
                                             <span class="badge rounded-pill ${badgeClass}" style="font-size: 14px; color: Ivory">
                                                 ${value.status}
                                             </span>
                                         </td>
                                         <td class="text-center">
                                             ${value.uploadName ? `
-                                                <a class="view-upload btn custom-btn col-12" data-uploadname="${value.uploadName}">
+                                                <a class="view-upload btn btn-primary col-12" data-uploadname="${value.uploadName}">
                                                     <i class="bi bi-eye-fill"></i> View
                                                 </a>` : ""}
                                         </td>
