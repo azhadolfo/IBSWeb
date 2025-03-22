@@ -103,7 +103,7 @@
                                 </div>
                                 <div class="col">
                                     <div class="col-12 text-start small-text">
-                                        <span><b>Total Hours:</b> @Model.TotalHours?.ToString("F4")</span>
+                                        <span><b>Total Hours:</b> @Model.TotalHours?.ToString("N2")</span>
                                     </div>
                                 </div>
                             </div>
@@ -117,42 +117,39 @@
                         </div>
                     </div>
                     
-                    <div class="row col-12">
-                        <div class="col-3 text-center p-2 small-text border">
+                    <div class="row border">
+                        <div class="col-3 text-start p-2 small-text border">
                             <b>Voyage:</b> <br /> @Model.VoyageNumber
                         </div>
-                        <div class="col-3 text-center p-2 small-text border">
+                        <div class="col-3 text-start p-2 small-text border">
                             <b>Activity/Service Type:</b> @Model.ActivityService.ActivityServiceName
                         </div>
-                        <div class="col-3 text-center p-2 small-text border">
+                        <div class="col-3 text-start p-2 small-text border">
                             <b>Date / Time Start:</b> @Model.DateLeft @Model.TimeLeft
                         </div>
-                        <div class="col-3 text-center p-2 small-text border">
+                        <div class="col-3 text-start p-2 small-text border">
                             <b>Date / Time End:</b> @Model.DateArrived @Model.TimeArrived
                         </div>
                     </div>
                     
-                    <div class="row border col-12">
-                        <div class="col-3 text-center p-2 small-text border">
+                    <div class="row border">
+                        <div class="col-3 text-start p-2 small-text border">
                             <b>Tug Master:</b> @Model.TugMaster?.TugMasterName
                         </div>
-                        <div class="col-3 text-center p-2 small-text border">
+                        <div class="col-3 text-start p-2 small-text border">
                             <b>Tugboat:</b> @Model.Tugboat?.TugboatName
                         </div>
-                        <div class="col-3 text-center p-2 small-text border">
+                        <div class="col-3 text-start p-2 small-text border">
                             <b>Vessel:</b> @Model.Vessel.VesselName
                         </div>
-                        <div class="col-3 text-center p-2 small-text border">
+                        <div class="col-3 text-start p-2 small-text border">
                             <b>Port-Terminal:</b> @Model.Terminal?.Port?.PortName-@Model.Terminal?.TerminalName
                         </div>
                     </div>
                     
-                    <div class="row p-2 col-12 small-text border">
-                        <div class="col-2 text-center small-text">
-                            <b>Remarks:</b>
-                        </div>
-                        <div class="col-10 text-start small-text">
-                            @Model.Remarks
+                    <div class="row small-text border">
+                        <div class="col-12 p-2 text-start small-text border">
+                            <b>Remarks:</b> @Model.Remarks
                         </div>
                     </div>
                     
@@ -173,7 +170,7 @@
                                         <b><i>Dispatch charge Type</i></b>
                                     </div>
                                     <div class="col-6 text-start">
-                                        <b><i>Total Hours:</i></b> @(Model.TotalHours?.ToString("F4"))
+                                        <b><i>Total Hours:</i></b> @(Model.TotalHours?.ToString("N2"))
                                     </div>
                                 </div>
                                 <div class="row justify-content-end">
