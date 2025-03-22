@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Serilog;
+using Serilog.Formatting.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,7 @@ builder.Configuration
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration) // Optional, if using appsettings.json
     .Enrich.FromLogContext()
-    .WriteTo.Console() // Only logs to the terminal
+    .WriteTo.Console(new JsonFormatter())
     .CreateLogger();
 
 // Replace default logging with Serilog
