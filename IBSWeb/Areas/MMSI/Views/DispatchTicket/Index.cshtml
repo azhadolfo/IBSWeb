@@ -65,7 +65,6 @@
     }
 </style>
 
-<body class="bg-light">
 <div class="card shadow m-1">
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
@@ -91,7 +90,7 @@
                     <th class="text-center align-middle py-1">Tugboat</th>
                     <th class="text-center align-middle py-1">Tug Master</th>
                     <th class="text-center align-middle py-1">Vessel</th>
-                    <th class="text-center align-middle w-150px">
+                    <th class="text-center align-middle">
                         <select id="statusDropdown" class="form-select">
                             <option value="All">All</option>
                             <option value="For Tariff">For Tariff</option>
@@ -101,25 +100,25 @@
                             <option value="For Collection">For Collection</option>
                         </select>
                     </th>
-                    <th class="actions-column align-middle text-center w-150px">Actions</th>
+                    <th class="actions-column align-middle text-center">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td class="text-center align-middle"><pre class="m-0 p-0">@(item.CreateDate.ToString("yyyy-MM-dd"))</pre></td>
-                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.COSNumber</pre></td>
-                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.DispatchNumber</pre></td>
-                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.DateLeft @item.TimeLeft</pre></td>
-                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.DateArrived @item.TimeArrived</pre></td>
-                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.ActivityService.ActivityServiceName</pre></td>
-                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.Terminal.Port.PortName-@item.Terminal.TerminalName</pre></td>
-                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.Tugboat.TugboatName</pre></td>
-                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.TugMaster.TugMasterName</pre></td>
-                        <td class="text-center align-middle"><pre class="m-0 p-0">@item.Vessel.VesselName</pre></td>
+                        <td class="text-center align-content-center"><pre class="m-0 p-0">@(item.CreateDate.ToString("yyyy-MM-dd"))</pre></td>
+                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.COSNumber</pre></td>
+                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DispatchNumber</pre></td>
+                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateLeft.ToString("yyyy-MM-dd") @item.TimeLeft</pre></td>
+                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateArrived.ToString("yyyy-MM-dd") @item.TimeArrived</pre></td>
+                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.ActivityService.ActivityServiceName</pre></td>
+                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Terminal.Port.PortName-@item.Terminal.TerminalName</pre></td>
+                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Tugboat.TugboatName</pre></td>
+                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.TugMaster.TugMasterName</pre></td>
+                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Vessel.VesselName</pre></td>
 
-                        <td class="text-center align-middle">
+                        <td class="text-center align-content-center">
                             @{
                                 var status = item.Status;
                             }
@@ -137,8 +136,8 @@
                             </span>
                         </td>
 
-                        <td class="text-center">
-                            <div class="align-content-center text-center">
+                        <td class="text-center justify-content-center d-flex">
+                            <div class="align-content-center text-center" style="width: 150px !important;">
                                 @if (item.Status != "For Tariff")
                                 {
                                     <a class="btn btn-primary col-12" href="@Url.Action("Preview", "DispatchTicket", new { id = item.DispatchTicketId })"><i class="bi bi-eye"></i> View</a>
@@ -157,7 +156,6 @@
 
     </div>
 </div>
-</body>
 
 @section Scripts {
     <script>
@@ -223,8 +221,8 @@
                                             ${value.status}
                                         </span>
                                     </td>
-                                    <td class="text-center">
-                                        <div class="align-content-center text-center">
+                                    <td class="text-center justify-content-center d-flex">
+                                        <div class="align-content-center text-center" style="width: 150px !important;">
                                             ${value.status !== "For Tariff" ?
                                             `
                                                 <a class="btn btn-primary col-12" href="DispatchTicket/Preview/${value.dispatchTicketId}"><i class="bi bi-eye"></i> View</a>
@@ -242,7 +240,7 @@
                             searching: true,     // Enable the search bar
                             info: true,          // Show table information (e.g., "Showing 1 to 10 of X entries")
                             lengthChange: true,  // Enable "entries per page" dropdown
-                            order: [[0, 'asc']]  // Default ordering (adjust as needed)
+                            order: [[0, 'desc']]  // Default ordering (adjust as needed)
                         });
                     },
                     error: function (xhr, status, error) {

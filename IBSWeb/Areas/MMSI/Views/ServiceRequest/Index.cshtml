@@ -85,7 +85,7 @@
 
             <div class="card-body">
                 <table id="dataTable" class="table table-striped custom-table-width table-bordered mt-1" data-order='[[1, "asc"]]'
-                       data-column-defs='[{"orderable": false, "targets": 0}]'>
+                       data-column-defs='[{"orderable": false, "targets": 0}]' >
                     <thead>
                     <tr>
                         <th data-orderable="false" class="px-3 py-1 text-center align-content-center"><input type="checkbox" class="text-center" id="selectAll"></th>
@@ -99,14 +99,14 @@
                         <th class="text-center align-middle py-1">Tugboat</th>
                         <th class="text-center align-middle py-1">Tug Master</th>
                         <th class="text-center align-middle py-1">Vessel</th>
-                        <th class="text-center align-middle py-1 w-150px">
+                        <th class="text-center align-middle py-1">
                             <select id="statusDropdown" class="form-select">
                                 <option value="For Posting">For Posting</option>
                                 <option value="Cancelled">Cancelled</option>
                                 <option value="All">All</option>
                             </select>
                         </th>
-                        <th class="actions-column align-middle text-center w-150px">Uploaded file</th>
+                        <th class="actions-column align-middle text-center">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -115,17 +115,17 @@
                         <tr>
                             @if (item.Status != "Cancelled")
                             {
-                                <td class="text-center"><input type="checkbox" class="selectCheckbox" value="@item.DispatchTicketId"></td>
+                                <td class="text-center align-content-center"><input type="checkbox" class="selectCheckbox" value="@item.DispatchTicketId"></td>
                             }
                             else
                             {
-                                <td class="text-center"><input type="checkbox" disabled></td>
+                                <td class="text-center align-content-center"><input type="checkbox" disabled></td>
                             }
                             <td class="text-center align-content-center"><pre class="m-0 p-0">@(item.CreateDate.ToString("yyyy-MM-dd"))</pre></td>
                             <td class="text-center align-content-center"><pre class="m-0 p-0">@item.COSNumber</pre></td>
                             <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DispatchNumber</pre></td>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateLeft @item.TimeLeft</pre></td>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateArrived @item.TimeArrived</pre></td>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateLeft.ToString("yyyy-MM-dd") @item.TimeLeft</pre></td>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateArrived.ToString("yyyy-MM-dd") @item.TimeArrived</pre></td>
                             <td class="text-center align-content-center"><pre class="m-0 p-0">@item.ActivityService.ActivityServiceName</pre></td>
                             <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Terminal.Port.PortName-@item.Terminal.TerminalName</pre></td>
                             <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Tugboat.TugboatName</pre></td>
@@ -148,11 +148,13 @@
                                 </span>
                             </td>
 
-                            <td class="text-center">
-                                @if (!string.IsNullOrEmpty(item.UploadName))
-                                {
-                                    <a class="view-upload btn btn-primary custom-btn col-12" data-uploadname="@item.UploadName"><i class="bi bi-eye"></i> View</a>
-                                }
+                            <td class="text-center justify-content-center d-flex">
+                                <div class="text-center" style="width: 150px !important;">
+                                    @if (!string.IsNullOrEmpty(item.UploadName))
+                                    {
+                                        <a class="view-upload btn btn-primary custom-btn col-12" data-uploadname="@item.UploadName"><i class="bi bi-eye"></i> View</a>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
@@ -167,7 +169,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
@@ -277,11 +278,13 @@
                                                 ${value.status}
                                             </span>
                                         </td>
-                                        <td class="text-center">
-                                            ${value.uploadName ? `
-                                                <a class="view-upload btn btn-primary col-12" data-uploadname="${value.uploadName}">
-                                                    <i class="bi bi-eye-fill"></i> View
-                                                </a>` : ""}
+                                        <td class="text-center justify-content-center d-flex">
+                                            <div class="text-center" style="width: 150px !important;">
+                                                ${value.uploadName ? `
+                                                    <a class="view-upload btn btn-primary col-12" data-uploadname="${value.uploadName}">
+                                                        <i class="bi bi-eye-fill"></i> View
+                                                    </a>` : ""}
+                                            </div>
                                         </td>
                                     </tr>
                                 `);
