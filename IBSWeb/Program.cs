@@ -34,7 +34,7 @@ Log.Warning("This is a test warning message for Google Cloud");
 Log.Error("This is a test error message for Google Cloud");
 
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()  // Sets the minimum level for ALL sinks to Debug
+    .MinimumLevel.Information()  // Sets the minimum level for ALL sinks to Debug
     .WriteTo.Console()  // This sink will log Debug and above
     .WriteTo.GoogleCloudLogging(googleCloudSinkOptions, restrictedToMinimumLevel: LogEventLevel.Warning)  // This sink will only log Warning and above
     .CreateLogger();
