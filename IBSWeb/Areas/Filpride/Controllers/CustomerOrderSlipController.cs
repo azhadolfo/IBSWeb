@@ -222,7 +222,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get customer order slips.");
+                _logger.LogError(ex, "Failed to get customer order slips. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
@@ -382,7 +383,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to fetch customer order slip.");
+                _logger.LogError(ex, "Failed to fetch customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -511,7 +513,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to edit customer order slip. Edited by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to edit customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     return View(viewModel);
                 }
             }
@@ -560,7 +563,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to preview the customer order slip. Previewed by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to preview customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Previewed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -773,7 +777,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to approve customer order slip. Approved by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to approve customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Approved by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }
@@ -819,7 +824,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to approve customer order slip. Approved by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to approve customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Approved by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }
@@ -855,7 +861,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to disapprove customer order slip. Disapproved by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to disapprove customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Disapproved by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }
@@ -1001,7 +1008,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetDistinctPickupPointList(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to appoint supplier. Appointed by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to appoint supplier. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     return View(viewModel);
                 }
             }
@@ -1066,7 +1074,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to fetch appointed supplier.");
+                _logger.LogError(ex, "Failed to fetch appointed supplier. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -1178,7 +1187,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetDistinctPickupPointList(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to re-appoint supplier. Appointed by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to re-appoint supplier. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     return View(viewModel);
                 }
             }
@@ -1331,7 +1341,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to appoint hauler. Appointed by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to appoint hauler. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     return View(viewModel);
                 }
@@ -1420,7 +1431,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to re-appoint hauler. Appointed by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to re-appoint hauler. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     return View(viewModel);
                 }
@@ -1455,7 +1467,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to close the customer order slip. Closed by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to close the customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Closed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }

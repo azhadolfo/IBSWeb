@@ -111,7 +111,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to get authority to loads.");
+                _logger.LogError(ex, "Failed to get authority to loads. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -217,7 +218,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to book ATL. Created by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to book ATL. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return View(viewModel);
             }
 
@@ -246,7 +248,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to print ATL. Printed by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to print ATL. Error: {ErrorMessage}, Stack: {StackTrace}. Printed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -315,7 +318,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to update the validity date of ATL. Updated by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to update the validity date of ATL. Error: {ErrorMessage}, Stack: {StackTrace}. Updated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return Json(new { success = false });
             }
         }
