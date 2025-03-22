@@ -1,18 +1,17 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
-using IBS.DataAccess.Repository.Filpride;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.DataAccess.Repository.Mobility;
 using IBS.Services;
 using IBS.Utility;
-using IBS.Utility.Constants;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using Serilog.Formatting.Json;
+using Serilog.Sinks.GoogleCloudLogging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,18 +21,22 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// Configure Serilog to log only to the terminal
+var googleCloudSinkOptions = new GoogleCloudLoggingSinkOptions
+{
+    ProjectId = "integrated-business-system",
+    LogName = "ibs-web-log",
+    ResourceType = "global"
+};
+
 Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration) // Optional, if using appsettings.json
-    .Enrich.FromLogContext()
-    .WriteTo.Console(new Serilog.Formatting.Compact.CompactJsonFormatter())
+    .MinimumLevel.Debug()
+    .Enrich.WithProperty("severity", "{Level:u}") // Ensures GCP understands severity
+    .WriteTo.Console() // Log to Console
+    .WriteTo.GoogleCloudLogging(googleCloudSinkOptions, restrictedToMinimumLevel: LogEventLevel.Warning) // Log to GCP
     .CreateLogger();
 
 // Replace default logging with Serilog
-builder.Host.UseSerilog((context, config) =>
-{
-    config.ReadFrom.Configuration(context.Configuration);
-});
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
