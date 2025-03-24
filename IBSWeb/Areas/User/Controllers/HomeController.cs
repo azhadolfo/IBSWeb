@@ -54,7 +54,11 @@ namespace IBSWeb.Areas.User.Controllers
                     .CountAsync(),
 
                 OMApprovalDRCount = await _dbContext.FilprideDeliveryReceipts
-                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfOM))
+                    .Where(dr => dr.Status == nameof(CosStatus.ForApprovalOfOM))
+                    .CountAsync(),
+
+                OMApprovalPOCount = await _dbContext.FilpridePurchaseOrders
+                    .Where(po => po.Status == nameof(CosStatus.ForApprovalOfOM))
                     .CountAsync(),
 
                 FMApprovalCount = await _dbContext.FilprideCustomerOrderSlips
@@ -69,8 +73,12 @@ namespace IBSWeb.Areas.User.Controllers
                     .Where(dr => dr.Status == nameof(DRStatus.PendingDelivery))
                     .CountAsync(),
 
-                InvoiceCount = await _dbContext.FilprideDeliveryReceipts
+                ForInvoiceCount = await _dbContext.FilprideDeliveryReceipts
                     .Where(dr => dr.Status == nameof(DRStatus.ForInvoicing))
+                    .CountAsync(),
+
+                RecordLiftingDateCount = await _dbContext.FilprideReceivingReports
+                    .Where(rr => rr.SupplierInvoiceDate == null)
                     .CountAsync(),
             };
 
