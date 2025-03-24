@@ -8,9 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Serilog;
-using Serilog.Core;
 using Serilog.Events;
-using Serilog.Formatting.Json;
 using Serilog.Sinks.GoogleCloudLogging;
 
 var builder = WebApplication.CreateBuilder(args);
