@@ -88,7 +88,7 @@
                 <div class="row pt-3">
                 </div>
                 <div class="row">
-                    <div class="form-check col-2 ps-2 my-2 text-center d-flex align-items-center justify-content-center">
+                    <div class="form-check col-3 ps-2 my-2 text-center d-flex align-items-center justify-content-center">
                         <input asp-for="IsDocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isDocumentedCheckbox" checked>
                         <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isDocumentedCheckbox">
                             Documented
@@ -101,7 +101,7 @@
                     </div>
                     <div class="form-floating col-3 mb-2">
                         <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder="" required>
-                        <label asp-for="MMSIBillingNumber" for="MMSIBillingNumber" class="ms-2">Billing Number<span class="required text-danger">*</span></label>
+                        <label asp-for="MMSIBillingNumber" for="MMSIBillingNumber" id="status" class="ms-2">Billing Number<span class="required text-danger">*</span></label>
                         <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-3 mb-2">
@@ -176,15 +176,15 @@
                 <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
                     <thead>
                     <tr>
-                        <th class="text-start align-middle ps-4">TUGBOAT</th>
-                        <th class="text-start align-middle ps-4">SERVICE</th>
-                        <th class="text-start align-middle ps-4">TIME START</th>
-                        <th class="text-start align-middle ps-4">TIME END</th>
-                        <th class="text-start align-middle ps-4">HOUR</th>
-                        <th class="text-start align-middle ps-4">RATE</th>
-                        <th class="text-start align-middle ps-4">AMOUNT</th>
-                        <th class="text-start align-middle ps-4">BAF RATE</th>
-                        <th class="text-start align-middle ps-4">BAF AMOUNT</th>
+                        <th class="text-center align-content-center ps-4">TUGBOAT</th>
+                        <th class="text-center align-content-center ps-4">SERVICE</th>
+                        <th class="text-center align-content-center ps-4">TIME START</th>
+                        <th class="text-center align-content-center ps-4">TIME END</th>
+                        <th class="text-center align-content-center ps-4">HOUR</th>
+                        <th class="text-center align-content-center ps-4">RATE</th>
+                        <th class="text-center align-content-center ps-4">AMOUNT</th>
+                        <th class="text-center align-content-center ps-4">BAF RATE</th>
+                        <th class="text-center align-content-center ps-4">BAF AMOUNT</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -238,13 +238,11 @@
                 var inputField = document.getElementById("billingNumber");
 
                 if (checkbox.checked) {
-                    console.log("Checkbox is checked!");
-                    document.getElementById("status").innerText = "Documented";
+                    document.getElementById("status").innerHTML = "Billing Number<span class=\"required text-danger\">*</span>";
                     inputField.setAttribute("required", "required");
                     inputField.removeAttribute("disabled")
                 } else {
-                    console.log("Checkbox is unchecked.");
-                    document.getElementById("status").innerText = "Undocumented";
+                    document.getElementById("status").innerHTML = "Undocumented";
                     inputField.removeAttribute("required");
                     inputField.setAttribute("disabled", "disabled");
                 }
@@ -326,15 +324,15 @@
 
                         $('#dataTable tbody').append(`
                             <tr>
-                                <td class="text-start align-middle ps-4"><pre>${value.tugboat.tugboatName}</pre></td>
-                                <td class="text-start align-middle ps-4"><pre>${value.activityService.activityServiceName}</pre></td>
-                                <td class="text-start align-middle ps-4"><pre>${value.dateLeft} - ${value.timeLeft}</pre></td>
-                                <td class="text-start align-middle ps-4"><pre>${value.dateArrived} - ${value.timeArrived}</pre></td>
-                                <td class="text-start align-middle ps-4"><pre>${value.totalHours}</pre></td>
-                                <td class="text-start align-middle ps-4"><pre>${value.dispatchRate}</pre></td>
-                                <td class="text-start align-middle ps-4"><pre>${value.dispatchNetRevenue}</pre></td>
-                                <td class="text-start align-middle ps-4"><pre>${value.bafRate}</pre></td>
-                                <td class="text-start align-middle ps-4"><pre>${value.bafNetRevenue}</pre></td>
+                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.tugboat.tugboatName}</pre></td>
+                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.activityService.activityServiceName}</pre></td>
+                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.dateLeft} - ${value.timeLeft}</pre></td>
+                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.dateArrived} - ${value.timeArrived}</pre></td>
+                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.totalHours}</pre></td>
+                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.dispatchRate}</pre></td>
+                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.dispatchNetRevenue}</pre></td>
+                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.bafRate}</pre></td>
+                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.bafNetRevenue}</pre></td>
                             </tr>`
                         );
                     });

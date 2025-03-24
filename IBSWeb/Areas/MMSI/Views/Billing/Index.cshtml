@@ -65,53 +65,56 @@
     }
 </style>
 
-<div class="card shadow mt-4">
+<div class="container-fluid mt-4">
+    
+    <div class="card shadow m-1">
 
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center">
-            <h2 class="text-white py-2">BILLING LIST</h2>
-        </div>
-    </div>
-
-    <div class="card-body table-responsive">
-        <div class="row justify-content-end">
-            <div class="text-center" style="width: 150px;">
-                <a class="btn btn-primary col-12 align-content-center" asp-action="Create" asp-controller="Billing"><i class="bi bi-plus-circle"></i> Create</a>
+        <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">BILLING LIST</h2>
             </div>
         </div>
-        <div class="card-body">
-            <table id="dataTable" class="table table-striped table-bordered" style="width:100%" data-order='[[0, "asc"]]'>
-                <thead>
-                <tr>
-                    <th class="text-center align-content-center">Date</th>
-                    <th class="text-center align-content-center">Billing Number</th>
-                    <th class="text-center align-content-center">Status</th>
-                    <th class="text-center align-content-center">Customer</th>
-                    <th class="text-center align-content-center">Port-Terminal</th>
-                    <th class="text-center align-content-center">Vessel</th>
-                    <th class="align-content-center text-center">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var item in Model)
-                {
+
+        <div class="card-body table-responsive">
+            <div class="row justify-content-end">
+                <div class="text-center" style="width: 150px;">
+                    <a class="btn btn-primary col-12 align-content-center" asp-action="Create" asp-controller="Billing"><i class="bi bi-plus-circle"></i> Create</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="dataTable" class="table table-striped table-bordered" style="width:100%" data-order='[[0, "asc"]]'>
+                    <thead>
                     <tr>
-                        <td class="text-center align-content-center ">@item.Date.ToString("yyyy-MM-dd")</td>
-                        <td class="text-center align-content-center ">@item.MMSIBillingNumber</td>
-                        <td class="text-center align-content-center ">@item.Status</td>
-                        <td class="text-center align-content-center ">@item?.Customer?.CustomerName</td>
-                        <td class="text-center align-content-center ">@item?.Terminal?.Port?.PortName-@item?.Terminal?.TerminalName</td>
-                        <td class="text-center align-content-center ">@item?.Vessel?.VesselName</td>
-                        <td class="text-center justify-content-center d-flex">
-                            <div class="align-content-center text-center" style="width: 150px !important;">
-                                <!-- Keep actionsDropdown as is if it's not causing issues -->
-                                <a class="btn btn-primary col-12" href="@Url.Action("Preview", "Billing", new { id = item?.MMSIBillingId })"><i class="bi bi-eye"></i> View</a>
-                            </div>
-                        </td>
+                        <th class="text-center align-content-center">Date</th>
+                        <th class="text-center align-content-center">Billing Number</th>
+                        <th class="text-center align-content-center">Status</th>
+                        <th class="text-center align-content-center">Customer</th>
+                        <th class="text-center align-content-center">Port-Terminal</th>
+                        <th class="text-center align-content-center">Vessel</th>
+                        <th class="align-content-center text-center">Actions</th>
                     </tr>
-                }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center align-content-center ">@item.Date.ToString("yyyy-MM-dd")</td>
+                            <td class="text-center align-content-center ">@item.MMSIBillingNumber</td>
+                            <td class="text-center align-content-center ">@item.Status</td>
+                            <td class="text-center align-content-center ">@item?.Customer?.CustomerName</td>
+                            <td class="text-center align-content-center ">@item?.Terminal?.Port?.PortName-@item?.Terminal?.TerminalName</td>
+                            <td class="text-center align-content-center ">@item?.Vessel?.VesselName</td>
+                            <td class="text-center justify-content-center d-flex">
+                                <div class="align-content-center text-center" style="width: 150px !important;">
+                                    <!-- Keep actionsDropdown as is if it's not causing issues -->
+                                    <a class="btn btn-primary col-12" href="@Url.Action("Preview", "Billing", new { id = item?.MMSIBillingId })"><i class="bi bi-eye"></i> View</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

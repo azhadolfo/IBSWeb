@@ -148,14 +148,20 @@
                                 </span>
                             </td>
 
-                            <td class="text-center justify-content-center d-flex">
-                                <div class="text-center" style="width: 150px !important;">
-                                    @if (!string.IsNullOrEmpty(item.UploadName))
-                                    {
+                            @if (!string.IsNullOrEmpty(item.UploadName))
+                            {
+                                <td class="text-center justify-content-center d-flex">
+                                    <div class="text-center" style="width: 150px !important;">
                                         <a class="view-upload btn btn-primary custom-btn col-12" data-uploadname="@item.UploadName"><i class="bi bi-eye"></i> View</a>
-                                    }
-                                </div>
-                            </td>
+                                    </div>
+                                </td>
+                            }
+                            else
+                            {
+                                <td>
+                                    <div class="width: 150px"></div>
+                                </td>
+                            }
                         </tr>
                     }
                     </tbody>

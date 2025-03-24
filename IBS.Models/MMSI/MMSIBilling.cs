@@ -38,6 +38,8 @@ namespace IBS.Models.MMSI
 
         public int? TerminalId { get; set; }
 
+        public decimal Amount { get; set; }
+
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; }
 

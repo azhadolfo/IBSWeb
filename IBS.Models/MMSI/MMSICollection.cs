@@ -28,6 +28,10 @@ namespace IBS.Models.MMSI
 
         public int? CustomerId { get; set; }
 
+        public bool IsDocumented { get; set; }
+
+        #region --Objects--
+
         [ForeignKey(nameof(CustomerId))]
         public MMSICustomer Customer { get; set; }
 
@@ -38,7 +42,12 @@ namespace IBS.Models.MMSI
         public List<SelectListItem> Billings { get; set; }
 
         [NotMapped]
+        public List<SelectListItem> Customers { get; set; }
+
+        [NotMapped]
         public List<string>? ToCollectBillings { get; set; }
+
+        #endregion
 
     }
 }

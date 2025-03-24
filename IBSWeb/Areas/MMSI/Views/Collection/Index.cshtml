@@ -1,5 +1,3 @@
-@model IEnumerable<MMSICollection>
-
 @{
     ViewData["Title"] = "Index";
 
@@ -65,57 +63,98 @@
     }
 </style>
 
-<div class="card shadow mt-4">
+<div class="container-fluid mt-4">
+    <div class="card shadow mt-4">
 
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="col-12 text-center">
-            <h2 class="text-white py-2">BILLING LIST</h2>
-        </div>
-    </div>
-
-    <div class="card-body table-responsive">
-        <div class="row justify-content-end">
-            <div class="text-center" style="width: 150px;">
-                <a class="btn btn-primary col-12 align-content-center" asp-action="Create" asp-controller="Billing"><i class="bi bi-plus-circle"></i> Create</a>
+        <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">COLLECTION LIST</h2>
             </div>
         </div>
-        <div class="card-body">
-            <table id="dataTable" class="table table-striped table-bordered" style="width:100%" data-order='[[0, "asc"]]'>
-                <thead>
-                <tr>
-                    <th class="text-center align-content-center">Date</th>
-                    <th class="text-center align-content-center">Collection Number</th>
-                    <th class="text-center align-content-center">Amount</th>
-                    <th class="text-center align-content-center">Status</th>
-                    <th class="text-center align-content-center">Customer</th>
-                    <th class="text-center align-content-center">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var item in Model)
-                {
+
+        <div class="card-body table-responsive">
+            <div class="row justify-content-end">
+                <div class="text-center" style="width: 150px;">
+                    <a class="btn btn-primary col-12 align-content-center" asp-action="Create" asp-controller="Collection"><i class="bi bi-plus-circle"></i> Create</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table id="dataTable" class="table table-striped table-bordered" style="width:100%" data-order='[[0, "asc"]]'>
+                    <thead>
                     <tr>
-                        <td class="text-center align-content-center ">@item.Date.ToString("yyyy-MM-dd")</td>
-                        <td class="text-center align-content-center ">@item.CollectionNumber</td>
-                        <td class="text-center align-content-center ">@item.Amount</td>
-                        <td class="text-center align-content-center ">@item.Status</td>
-                        <td class="text-center align-content-center ">@item.Customer</td>
-                        <td class="text-center justify-content-center d-flex">
-                            <div class="align-content-center text-center" style="width: 150px !important;">
-                                @* <a class="btn btn-primary col-12" href="@Url.Action("Preview", "Collection", new { id = item?.MMSICollectionId })"><i class="bi bi-eye"></i> View</a> *@
-                            </div>
-                        </td>
+                        <th class="text-center align-content-center">Date</th>
+                        <th class="text-center align-content-center">Collection Number</th>
+                        <th class="text-center align-content-center">Amount</th>
+                        <th class="text-center align-content-center">Status</th>
+                        <th class="text-center align-content-center">Customer</th>
+                        <th class="text-center align-content-center">Actions</th>
                     </tr>
-                }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
+
+        function handleStatusChange() {
+
+            $.ajax({
+                url: '@Url.Action("GetCollections", "Collection")',
+                type: "GET",
+                success: function (data) {
+                    // Destroy existing DataTable if initialized
+                    if ($.fn.DataTable.isDataTable("#dataTable")) {
+                        $("#dataTable").DataTable().destroy();
+                    }
+
+                    // Clear table body
+                    $("#dataTable tbody").empty();
+
+                    // Populate table with new data
+                    data.forEach((value, index) => {
+
+                        $("#dataTable tbody").append(`
+                                <tr>
+                                    <td class="text-center align-content-center ">${value.date}</td>
+                                    <td class="text-center align-content-center ">${value.collectionNumber}</td>
+                                    <td class="text-center align-content-center ">${value.amount}</td>
+                                    <td class="text-center align-content-center ">${value.status}</td>
+                                    <td class="text-center align-content-center ">${value.customer}</td>
+                                    <td class="text-center justify-content-center d-flex">
+                                        <div class="align-content-center text-center" style="width: 150px !important;">
+                                            @* <a class="btn btn-primary col-12" href="@Url.Action("Preview", "Collection", new { id = item?.MMSICollectionId })"><i class="bi bi-eye"></i> View</a> *@
+                                        </div>
+                                    </td>
+                                </tr>
+                            `);
+                    });
+
+                    // Initialize DataTable with custom options
+                    $("#dataTable").DataTable({
+                        paging: true,
+                        searching: true,
+                        info: true,
+                        lengthChange: true
+                    });
+
+                    // Ensure checkbox state is updated after DataTable init
+                    toggleSelect(); // Refresh UI state
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX error:", error);
+                }
+            });
+        }
         
+        $(document).ready(function () {
+            handleStatusChange();
+        });
     
     </script>
 }

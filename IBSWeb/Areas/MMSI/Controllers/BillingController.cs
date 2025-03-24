@@ -53,20 +53,25 @@ namespace IBSWeb.Areas.MMSI
             {
                 if (ModelState.IsValid)
                 {
-                    model.Status = "Created";
+                    model.Status = "For Collection";
 
                     if (!model.IsDocumented)
                     {
                         model.MMSIBillingNumber = await _dispatchRepo.GenerateBillingNumber(cancellationToken);
                     }
 
+                    decimal totalAmount = 0;
+
                     foreach(var billDispatchTicket in model.ToBillDispatchTickets)
                     {
                         var dtEntry = await _db.MMSIDispatchTickets.FindAsync(int.Parse(billDispatchTicket));
+                        totalAmount = (totalAmount + dtEntry?.TotalNetRevenue) ?? 0m;
                         dtEntry.Status = "For Collection";
                         dtEntry.BillingId = model.MMSIBillingNumber;
                         await _db.SaveChangesAsync(cancellationToken);
                     }
+
+                    model.Amount = totalAmount;
                     await _db.MMSIBillings.AddAsync(model, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
 

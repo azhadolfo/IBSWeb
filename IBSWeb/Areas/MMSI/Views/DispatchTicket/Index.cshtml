@@ -65,95 +65,98 @@
     }
 </style>
 
-<div class="card shadow m-1">
+<div class="container-fluid mt-4">
+    
+    <div class="card shadow m-1">
 
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2">DISPATCH TICKETS</h2>
+        <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h2 class="text-white py-2">DISPATCH TICKETS</h2>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="card-body table-responsive">
-        <div class="card-body">
-            <table id="dataTable" class="table table-striped custom-table-width table-bordered mt-3">
-                <thead>
-                <tr>
-                    <th class="text-center align-middle py-1">Date</th>
-                    <th class="text-center align-middle py-1">COS #</th>
-                    <th class="text-center align-middle py-1">Dispatch/<br/>Mooring Ticket</th>
-                    <th class="text-center align-middle py-1">Date/<br/>Time Start</th>
-                    <th class="text-center align-middle py-1">Date/<br/>Time End</th>
-                    <th class="text-center align-middle py-1">Activity/<br/>Service Type</th>
-                    <th class="text-center align-middle py-1">Port-<br/>Terminal</th>
-                    <th class="text-center align-middle py-1">Tugboat</th>
-                    <th class="text-center align-middle py-1">Tug Master</th>
-                    <th class="text-center align-middle py-1">Vessel</th>
-                    <th class="text-center align-middle">
-                        <select id="statusDropdown" class="form-select">
-                            <option value="All">All</option>
-                            <option value="For Tariff">For Tariff</option>
-                            <option value="Tariff Pending">Tariff Pending</option>
-                            <option value="Disapproved">Disapproved</option>
-                            <option value="For Billing">For Billing</option>
-                            <option value="For Collection">For Collection</option>
-                        </select>
-                    </th>
-                    <th class="actions-column align-middle text-center">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var item in Model)
-                {
+        <div class="card-body table-responsive">
+            <div class="card-body">
+                <table id="dataTable" class="table table-striped custom-table-width table-bordered mt-3">
+                    <thead>
                     <tr>
-                        <td class="text-center align-content-center"><pre class="m-0 p-0">@(item.CreateDate.ToString("yyyy-MM-dd"))</pre></td>
-                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.COSNumber</pre></td>
-                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DispatchNumber</pre></td>
-                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateLeft.ToString("yyyy-MM-dd") @item.TimeLeft</pre></td>
-                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateArrived.ToString("yyyy-MM-dd") @item.TimeArrived</pre></td>
-                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.ActivityService.ActivityServiceName</pre></td>
-                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Terminal.Port.PortName-@item.Terminal.TerminalName</pre></td>
-                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Tugboat.TugboatName</pre></td>
-                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.TugMaster.TugMasterName</pre></td>
-                        <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Vessel.VesselName</pre></td>
-
-                        <td class="text-center align-content-center">
-                            @{
-                                var status = item.Status;
-                            }
-                            <span class="badge rounded-pill @(item.Status switch
-                                                            {
-                                                                "For Tariff" => "bg-info",
-                                                                "Tariff Pending" => "bg-warning",
-                                                                "Disapproved" => "bg-danger",
-                                                                "For Billing" => "bg-success",
-                                                                "For Collection" => "bg-success",
-                                                                _ => "bg-secondary"
-                                                            })"
-                                  style="font-size: 14px; color: Ivory">
-                                @item.Status
-                            </span>
-                        </td>
-
-                        <td class="text-center justify-content-center d-flex">
-                            <div class="align-content-center text-center" style="width: 150px !important;">
-                                @if (item.Status != "For Tariff")
-                                {
-                                    <a class="btn btn-primary col-12" href="@Url.Action("Preview", "DispatchTicket", new { id = item.DispatchTicketId })"><i class="bi bi-eye"></i> View</a>
-                                }
-                                else
-                                {
-                                    <a class="btn btn-primary col-12" href="@Url.Action("Tariffing", "DispatchTicket", new { id = item.DispatchTicketId })"><i class="bi bi-cash-coin"></i> Set</a>
-                                }
-                            </div>
-                        </td>
+                        <th class="text-center align-middle py-1">Date</th>
+                        <th class="text-center align-middle py-1">COS #</th>
+                        <th class="text-center align-middle py-1">Dispatch/<br/>Mooring Ticket</th>
+                        <th class="text-center align-middle py-1">Date/<br/>Time Start</th>
+                        <th class="text-center align-middle py-1">Date/<br/>Time End</th>
+                        <th class="text-center align-middle py-1">Activity/<br/>Service Type</th>
+                        <th class="text-center align-middle py-1">Port-<br/>Terminal</th>
+                        <th class="text-center align-middle py-1">Tugboat</th>
+                        <th class="text-center align-middle py-1">Tug Master</th>
+                        <th class="text-center align-middle py-1">Vessel</th>
+                        <th class="text-center align-middle">
+                            <select id="statusDropdown" class="form-select">
+                                <option value="All">All</option>
+                                <option value="For Tariff">For Tariff</option>
+                                <option value="Tariff Pending">Tariff Pending</option>
+                                <option value="Disapproved">Disapproved</option>
+                                <option value="For Billing">For Billing</option>
+                                <option value="For Collection">For Collection</option>
+                            </select>
+                        </th>
+                        <th class="actions-column align-middle text-center">Actions</th>
                     </tr>
-                }
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@(item.CreateDate.ToString("yyyy-MM-dd"))</pre></td>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.COSNumber</pre></td>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DispatchNumber</pre></td>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateLeft.ToString("yyyy-MM-dd") @item.TimeLeft</pre></td>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateArrived.ToString("yyyy-MM-dd") @item.TimeArrived</pre></td>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.ActivityService.ActivityServiceName</pre></td>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Terminal.Port.PortName-@item.Terminal.TerminalName</pre></td>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Tugboat.TugboatName</pre></td>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.TugMaster.TugMasterName</pre></td>
+                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Vessel.VesselName</pre></td>
 
+                            <td class="text-center align-content-center">
+                                @{
+                                    var status = item.Status;
+                                }
+                                <span class="badge rounded-pill @(item.Status switch
+                                                                {
+                                                                    "For Tariff" => "bg-info",
+                                                                    "Tariff Pending" => "bg-warning",
+                                                                    "Disapproved" => "bg-danger",
+                                                                    "For Billing" => "bg-success",
+                                                                    "For Collection" => "bg-success",
+                                                                    _ => "bg-secondary"
+                                                                })"
+                                      style="font-size: 14px; color: Ivory">
+                                    @item.Status
+                                </span>
+                            </td>
+
+                            <td class="text-center justify-content-center d-flex">
+                                <div class="align-content-center text-center" style="width: 150px !important;">
+                                    @if (item.Status != "For Tariff")
+                                    {
+                                        <a class="btn btn-primary col-12" href="@Url.Action("Preview", "DispatchTicket", new { id = item.DispatchTicketId })"><i class="bi bi-eye"></i> View</a>
+                                    }
+                                    else
+                                    {
+                                        <a class="btn btn-primary col-12" href="@Url.Action("Tariffing", "DispatchTicket", new { id = item.DispatchTicketId })"><i class="bi bi-cash-coin"></i> Set</a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
     </div>
 </div>
 
