@@ -80,7 +80,9 @@ namespace IBSWeb.Areas.MMSI
 
         public async Task<IActionResult> GetCollections(CancellationToken cancellationToken = default)
         {
-            var collections = await _dbContext.MMSICollections.ToListAsync(cancellationToken);
+            var collections = await _dbContext.MMSICollections
+                .Include(c => c.Customer)
+                .ToListAsync(cancellationToken);
 
             return Json(collections);
         }
@@ -115,15 +117,20 @@ namespace IBSWeb.Areas.MMSI
         {
             var collection = await _dbContext.MMSICollections.FindAsync(id, cancellationToken);
 
-            if (collection == null)
+            if (collection != null)
+            {
+                // list of dispatch tickets
+                collection.PaidBills = await _dbContext.MMSIBillings
+                    .Where(b => b.MMSICollectionId == collection.MMSICollectionId)
+                    .ToListAsync (cancellationToken);
+
+                return View(collection);
+            }
+            else
             {
                 TempData["Error"] = "Error: collection record not found.";
 
                 return RedirectToAction("Index");
-            }
-            else
-            {
-                return View(collection);
             }
         }
     }

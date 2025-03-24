@@ -1,18 +1,108 @@
 @model MMSICollection
 
 @{
-    Layout = null;
+    ViewData["Title"] = "Create";
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!DOCTYPE html>
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    table {
+        table-layout: auto !important;
+    }
+    .card-body {
+        margin: 5px !important;
+        padding: 5px !important;
+    }
+</style>
 
-<html>
-<head>
-    <title>title</title>
-</head>
-<body>
-<div>
-      
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2 class="py-2"><i class="bi bi-pencil-square"></i> PREVIEW COLLECTION</h2>
+        </div>
+    </div>
+
+    <div class="card-body table-responsive">
+        <div class="row mb-2 justify-content-end">
+            <div class="col-12 d-flex justify-content-end">
+                <h2>COLLECTION DETAILS</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 d-flex flex-column justify-content-end">
+                <div class="row d-flex align-content-center text-center mb-2">
+                    <div class="col-2 text-start small-text">
+                        <span><b>Create Date:</b> @Model.Date</span>
+                    </div>
+                    <div class="col-2 text-start small-text">
+                        <span><b>Dispatch Ticket#:</b> @Model.CollectionNumber</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row border">
+            <div class="col-3 text-start p-2 small-text border">
+                <b>Bank:</b> <br /> MBTC
+            </div>
+            <div class="col-3 text-start p-2 small-text border">
+                <b>Account Number</b> 167-7-16753668-5
+            </div>
+            <div class="col-3 text-start p-2 small-text border">
+                <b>Account Name:</b> MALAYAN MARITIME SERVICES INC.
+            </div>
+        </div>
+
+        <div class="row border">
+            <div class="col-3 text-start p-2 small-text border">
+                <b>Check:</b> <br /> @Model.CheckNumber
+            </div>
+            <div class="col-3 text-start p-2 small-text border">
+                <b>Check Date:</b> @Model.CheckDate
+            </div>
+            <div class="col-3 text-start p-2 small-text border">
+                <b>Date Deposited:</b> @Model.DepositDate
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-6 text-start p-2 small-text border">
+                <div class="row">
+                    <div class="col-6 text-start p-2 small-text border">
+                        <b>Amount:</b> <br /> @Model.Amount
+                    </div>
+                    <div class="col-6 text-start p-2 small-text border">
+                        <b>EWT:</b> @Model.EWT
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 text-start p-2 small-text border">
+                <table class="dataTable">
+                    <thead>
+                    <tr>
+                        <th class="col-6 text-start p-2 small-text border">Amount</th>
+                        <th class="col-6 text-start p-2 small-text border">EWT</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var billing in Model.PaidBills)
+                    {
+                        <tr>
+                            <td>@billing.Amount</td>
+                            <td>0</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    </div>
 </div>
-</body>
-</html>
