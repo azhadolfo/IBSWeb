@@ -84,7 +84,8 @@
             <th class="px-3">Filpride RR</th>
             <th class="px-3">Filpride DR</th>
             <th class="px-3">ATL No.</th>
-            <th class="px-3">Supplier Sales Invoice</th>
+            <th class="px-3">Supplier SI</th>
+            <th class="px-3">SI/Lifting Date</th>
             <th class="px-3">Supplier DR</th>
             <th class="px-3">Supplier WC</th>
             <th class="px-3">Customer Name</th>
@@ -124,6 +125,7 @@
                 <td class="px-3"> @rr.DeliveryReceipt?.DeliveryReceiptNo </td> @* Filpride DR *@
                 <td class="px-3"> @rr.AuthorityToLoadNo </td> @* ATL # *@
                 <td class="px-3"> @rr.SupplierInvoiceNumber </td> @* Supplier Sales Invoice *@
+                <td class="px-3"> @rr.SupplierInvoiceDate </td> @* Supplier SI Date *@
                 <td class="px-3"> @rr.SupplierDrNo </td> @* Supplier DR No. *@
                 <td class="px-3"> @rr.WithdrawalCertificate </td> @* Supplier WC *@
                 <td class="px-3"> @rr.DeliveryReceipt?.Customer?.CustomerName </td> @* Customer Name *@

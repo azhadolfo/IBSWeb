@@ -42,7 +42,8 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string? SupplierInvoiceNumber { get; set; }
 
         [Display(Name = "Supplier Invoice Date")]
-        public string? SupplierInvoiceDate { get; set; }
+        [Column(TypeName = "date")]
+        public DateOnly? SupplierInvoiceDate { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string? SupplierDrNo { get; set; }
