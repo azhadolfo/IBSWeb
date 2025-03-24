@@ -24,116 +24,136 @@
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center text-white">
-            <h2><i class="bi bi-pencil-square"></i> Create Collection</h2>
+            <h2 class="py-2"><i class="bi bi-pencil-square"></i> CREATE COLLECTION</h2>
         </div>
     </div>
 
     <div class="card-body table-responsive">
-        <form method="post" class="row">
-            <div class="border-2 px-3">
-                <div asp-validation-summary="ModelOnly"></div>
-                <div class="row my-3">
-                    <div class="form-floating col-4">
-                        <input asp-for="CollectionNumber" type="text" class="form-control border-0 shadow" id="collectionNumber" placeholder="#" required>
-                        <label asp-for="CollectionNumber" for="CollectionNumber" class="ms-2" id="status">Collection Receipt #<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="CollectionNumber" class="text-danger"></span>
-                    </div>
-                    <div class="form-check col-4 ps-2 text-start d-flex align-items-center justify-content-start">
-                        <input asp-for="IsDocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isDocumentedCheckbox" checked>
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isDocumentedCheckbox">
-                            Documented
-                        </label>
-                    </div>
-                    <div class="form-floating col-4">
-                        <input asp-for="Date" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
-                        <label asp-for="Date" for="Date" class="ms-2">Date</label>
-                        <span asp-validation-for="Date" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="form-group col-4">
-                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                        <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Customer</option>
-                        </select>
-                        <span asp-validation-for="CustomerId" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-4">
-                        <input asp-for="Amount" type="number" class="form-control border-0 shadow" id="Amount" placeholder=" " min="0" required>
-                        <label asp-for="Amount" for="Amount" class="ms-2">Amount<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="Amount" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-4">
-                        <input asp-for="EWT" type="number" class="form-control border-0 shadow" id="EWT" placeholder=" " min="0" required>
-                        <label asp-for="EWT" for="EWT" class="ms-2">EWT<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="EWT" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="form-floating col-4">
-                        <input type="text" class="form-control border-0 shadow" placeholder="#" value="MBTC" disabled>
-                        <label class="ms-2">Bank</label>
-                    </div>
-                    <div class="form-floating col-4">
-                        <input type="text" class="form-control border-0 shadow" placeholder="#" value="167-7-16753668-5" disabled>
-                        <label class="ms-2">Account Number</label>
-                    </div>
-                    <div class="form-floating col-4">
-                        <input type="text" class="form-control border-0 shadow" placeholder="#" value="MALAYAN MARITIME SERVICES INC." disabled>
-                        <label class="ms-2">Account Name</label>
-                    </div>
-                </div>
-                <div class="row my-3">
-                    <div class="form-floating col-4">
-                        <input asp-for="CheckNumber" type="text" class="form-control border-0 shadow" placeholder="#" required>
-                        <label asp-for="CheckNumber" for="CheckNumber" class="ms-2">Check Number<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="CheckNumber" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-4">
-                        <input asp-for="CheckDate" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
-                        <label asp-for="CheckDate" for="CheckDate" class="ms-2">CheckDate<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="CheckDate" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-4">
-                        <input asp-for="DepositDate" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
-                        <label asp-for="DepositDate" for="DepositDate" class="ms-2">Date<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="DepositDate" class="text-danger"></span>
-                    </div>
-                </div>
+        <div class="border-2 px-3">
+            <form method="post" class="row">
+                <div class="border-2 px-3">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <div class="row">
+                        <div class="col-9">
+                            <div class="row py-2">
+                                <div class="col-2"><h3 class="m-0 p-0">Collection</h3></div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="form-floating col-4">
+                                    <input asp-for="CollectionNumber" type="text" class="form-control border-0 shadow" id="collectionNumber" placeholder="#" required>
+                                    <label asp-for="CollectionNumber" for="CollectionNumber" class="ms-2" id="status">Collection Receipt #<span class="required text-danger">*</span></label>
+                                    <span asp-validation-for="CollectionNumber" class="text-danger"></span>
+                                </div>
+                                <div class="form-check col-4 ps-2 text-start d-flex align-items-center justify-content-start">
+                                    <input asp-for="IsDocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isDocumentedCheckbox" checked>
+                                    <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isDocumentedCheckbox">
+                                        Documented
+                                    </label>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input asp-for="Date" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
+                                    <label asp-for="Date" for="Date" class="ms-2">Date</label>
+                                    <span asp-validation-for="Date" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="row my-3">
+                                <div class="form-group col-4">
+                                    <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
+                                    <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                        <option value="">Select Customer</option>
+                                    </select>
+                                    <span asp-validation-for="CustomerId" class="text-danger"></span>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input asp-for="Amount" type="number" class="form-control border-0 shadow" id="amount" placeholder=" " min="0" disabled>
+                                    <label asp-for="Amount" for="Amount" class="ms-2">Amount<span class="required text-danger">*</span></label>
+                                    <span asp-validation-for="Amount" class="text-danger"></span>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input asp-for="EWT" type="number" class="form-control border-0 shadow" id="ewt" placeholder=" " min="0" disabled>
+                                    <label asp-for="EWT" for="EWT" class="ms-2">EWT<span class="required text-danger">*</span></label>
+                                    <span asp-validation-for="EWT" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="row py-2">
+                                <div class="col-2"><h3 class="m-0 p-0">Deposit</h3></div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="form-floating col-4">
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MBTC" disabled>
+                                    <label class="ms-2">Bank</label>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="167-7-16753668-5" disabled>
+                                    <label class="ms-2">Account Number</label>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MALAYAN MARITIME SERVICES INC." disabled>
+                                    <label class="ms-2">Account Name</label>
+                                </div>
+                            </div>
+                            <div class="row my-3">
+                                <div class="form-floating col-4">
+                                    <input asp-for="CheckNumber" type="text" class="form-control border-0 shadow" placeholder="#" required>
+                                    <label asp-for="CheckNumber" for="CheckNumber" class="ms-2">Check Number<span class="required text-danger">*</span></label>
+                                    <span asp-validation-for="CheckNumber" class="text-danger"></span>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input asp-for="CheckDate" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
+                                    <label asp-for="CheckDate" for="CheckDate" class="ms-2">CheckDate<span class="required text-danger">*</span></label>
+                                    <span asp-validation-for="CheckDate" class="text-danger"></span>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input asp-for="DepositDate" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
+                                    <label asp-for="DepositDate" for="DepositDate" class="ms-2">Date Deposited<span class="required text-danger">*</span></label>
+                                    <span asp-validation-for="DepositDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                <div class="form-group col-12">
+                                    <label class="control-label mb-2">Bill Paid</label>
+                                    <select asp-for="ToCollectBillings" asp-items="@Model.Billings" class="form-control js-example-basic-multiple col-12" name="ToBillDispatchTickets" multiple="multiple" required>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="row pt-2 my-3">
+                        <div class="col-3">
+                            <div class="row py-2">
+                                <h3 class="m-0 p-0">Bill Paid</h3>
+                            </div>
+                            <table id="dataTable" class="table table-striped table-bordered" style="width: 100%">
+                                <thead>
+                                <tr>
+                                    <th class="text-center align-middle">BILLING NUMBER</th>
+                                    <th class="text-center align-middle">BILLING AMOUNT</th>
+                                </tr>
+                                </thead>
+                                <tbody>
 
-                    <div class="form-group col-12">
-                        <label class="control-label mb-2">Bill Paid</label>
-                        <select asp-for="ToCollectBillings" asp-items="@Model.Billings" class="form-control js-example-basic-multiple col-12" name="ToBillDispatchTickets" multiple="multiple" required>
-                        </select>
+                                </tbody>
+                            </table>
+                            <div class="row pt-2 justify-content-end d-flex">
+                                <div class="col-6 justify-content-center d-flex">
+                                    <label id="billingsTotal">Total: ₱ 0.00</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
                 </div>
-
-                <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
-                    <thead>
-                    <tr>
-                        <th class="text-center align-middle">BILLING NUMBER</th>
-                        <th class="text-center align-middle">BILLING AMOUNT</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-
-                    </tbody>
-                </table>
-            </div>
-            <div class="row justify-content-end mt-3">
-                <div class="text-center" style="width: 250px;">
-                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                
+                <div class="row justify-content-end mt-4    ">
+                    <div class="text-center" style="width: 250px;">
+                        <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                    </div>
+                    <div class="text-center" style="width: 250px;">
+                        <a class="btn btn-outline-primary col-12" asp-controller="Collection" asp-action="Index">
+                            <i class="bi bi-arrow-90deg-left"></i> Go Back
+                        </a>
+                    </div>
                 </div>
-                <div class="text-center" style="width: 250px;">
-                    <a class="btn btn-outline-primary col-12" asp-controller="Collection" asp-action="Index">
-                        <i class="bi bi-arrow-90deg-left"></i> Go Back
-                    </a>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -184,13 +204,13 @@
                 type: 'POST',
                 data: { billingIds : selectedBills },
                 success: function(result) {
-                    console.log('Success:', result);
-
+                    
                     if ($.fn.DataTable.isDataTable('#dataTable')) {
                         $('#dataTable').DataTable().destroy();
                     }
 
                     $('#dataTable tbody').empty();
+                    let totalAmount = 0.00;
 
                     $.each(result.data, function (index, value) {
                         console.log('Index:', index, 'Value:', value);
@@ -198,12 +218,18 @@
                         $('#dataTable tbody').append(`
                             <tr>
                                 <td class="text-center align-middle ps-4">${value.mmsiBillingNumber}</td>
-                                <td class="text-center align-middle ps-4">${value.amount}</td>
+                                <td class="text-center align-middle ps-4">₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                             </tr>`
                         );
+                        
+                        totalAmount = totalAmount + value.amount;
                     });
+
+                    document.getElementById("billingsTotal").innerHTML = `<u>Total: ₱ ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`;
+                    document.getElementById("amount").value = totalAmount;
+                    
                     $('#dataTable').DataTable({
-                        paging: true,        // Enable pagination
+                        paging: false,        // Enable pagination
                         info: false,          // Show table information (e.g., "Showing 1 to 10 of X entries")
                         order: [[0, 'asc']],  // Default ordering (adjust as needed)
                         lengthChange: false,

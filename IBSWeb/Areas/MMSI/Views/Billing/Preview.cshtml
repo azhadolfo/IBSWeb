@@ -102,25 +102,25 @@
 
             <table id="dataTable" class="table table-striped table-bordered mt-1" style="width:100%">
                 <thead>
-                <tr>
-                    <th class="text-start align-middle ps-4">TUGBOAT</th>
-                    <th class="text-start align-middle ps-4">SERVICE</th>
-                    <th class="text-start align-middle ps-4">TIME START</th>
-                    <th class="text-start align-middle ps-4">TIME END</th>
-                    <th class="text-start align-middle ps-4">HOUR</th>
-                    <th class="text-start align-middle ps-4">RATE</th>
-                </tr>
+                    <tr>
+                        <th class="text-start align-middle ps-4">TUGBOAT</th>
+                        <th class="text-start align-middle ps-4">SERVICE</th>
+                        <th class="text-start align-middle ps-4">TIME START</th>
+                        <th class="text-start align-middle ps-4">TIME END</th>
+                        <th class="text-start align-middle ps-4">HOUR</th>
+                        <th class="text-start align-middle ps-4">RATE</th>
+                    </tr>
                 </thead>
                 <tbody>
                 @foreach (var billing in Model.PaidDispatchTickets)
                 {
                     <tr>
-                        <td class="text-start align-middle ps-4"><pre>@billing.Tugboat?.TugboatName</pre></td>
-                        <td class="text-start align-middle ps-4"><pre>@billing.ActivityService?.ActivityServiceName</pre></td>
-                        <td class="text-start align-middle ps-4"><pre>@billing.DateLeft - @billing.TimeLeft</pre></td>
-                        <td class="text-start align-middle ps-4"><pre>@billing.DateArrived - @billing.TimeArrived</pre></td>
-                        <td class="text-start align-middle ps-4"><pre>@billing.TotalHours</pre></td>
-                        <td class="text-start align-middle ps-4"><pre>@billing.DispatchRate</pre></td>
+                        <td class="text-start align-middle ps-4">@billing.Tugboat?.TugboatName</td>
+                        <td class="text-start align-middle ps-4">@billing.ActivityService?.ActivityServiceName</td>
+                        <td class="text-start align-middle ps-4">@billing.DateLeft - @billing.TimeLeft</td>
+                        <td class="text-start align-middle ps-4">@billing.DateArrived - @billing.TimeArrived</td>
+                        <td class="text-start align-middle ps-4">@billing.TotalHours</td>
+                        <td class="text-start align-middle ps-4">@billing.DispatchRate</td>
                     </tr>
                 }
                 </tbody>
