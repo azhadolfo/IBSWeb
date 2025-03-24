@@ -33,16 +33,16 @@ namespace IBS.Models.MMSI
         #region --Objects--
 
         [ForeignKey(nameof(CustomerId))]
-        public MMSICustomer Customer { get; set; }
+        public MMSICustomer? Customer { get; set; }
 
         [NotMapped]
-        public List<MMSIBilling> PaidBills { get; set; }
+        public List<MMSIBilling>? PaidBills { get; set; }
 
         [NotMapped]
-        public List<SelectListItem> Billings { get; set; }
+        public List<SelectListItem>? Billings { get; set; }
 
         [NotMapped]
-        public List<SelectListItem> Customers { get; set; }
+        public List<SelectListItem>? Customers { get; set; }
 
         [NotMapped]
         public List<string>? ToCollectBillings { get; set; }

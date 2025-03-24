@@ -33,6 +33,7 @@
             <form method="post" class="row">
                 <div class="border-2 px-3">
                     <div asp-validation-summary="ModelOnly"></div>
+                    <input asp-for="Status" value="Created" type="hidden"></input>
                     <div class="row">
                         <div class="col-9">
                             <div class="row py-2">
@@ -64,15 +65,15 @@
                                     </select>
                                     <span asp-validation-for="CustomerId" class="text-danger"></span>
                                 </div>
+                                <input type="hidden" asp-for="Amount" value="@Model.Amount" id="amount">
                                 <div class="form-floating col-4">
-                                    <input asp-for="Amount" type="number" class="form-control border-0 shadow" id="amount" placeholder=" " min="0" disabled>
-                                    <label asp-for="Amount" for="Amount" class="ms-2">Amount<span class="required text-danger">*</span></label>
-                                    <span asp-validation-for="Amount" class="text-danger"></span>
+                                    <input type="number" class="form-control border-0 shadow"  id="amountShow"  placeholder=" " min="0" disabled>
+                                    <label class="ms-2">Amount</label>
                                 </div>
+                                <input type="hidden" asp-for="EWT" value="@Model.EWT" id="ewt">
                                 <div class="form-floating col-4">
-                                    <input asp-for="EWT" type="number" class="form-control border-0 shadow" id="ewt" placeholder=" " min="0" disabled>
-                                    <label asp-for="EWT" for="EWT" class="ms-2">EWT<span class="required text-danger">*</span></label>
-                                    <span asp-validation-for="EWT" class="text-danger"></span>
+                                    <input type="number" class="form-control border-0 shadow"  id="ewtShow" value="0" placeholder=" " min="0" disabled>
+                                    <label class="ms-2">EWT</label>
                                 </div>
                             </div>
                             <div class="row py-2">
@@ -112,7 +113,7 @@
                             <div class="row my-2">
                                 <div class="form-group col-12">
                                     <label class="control-label mb-2">Bill Paid</label>
-                                    <select asp-for="ToCollectBillings" asp-items="@Model.Billings" class="form-control js-example-basic-multiple col-12" name="ToBillDispatchTickets" multiple="multiple" required>
+                                    <select asp-for="ToCollectBillings" asp-items="@Model.Billings" class="form-control js-example-basic-multiple col-12" name="ToCollectBillings" multiple="multiple" required>
                                     </select>
                                 </div>
                             </div>
@@ -142,7 +143,7 @@
                     </div>
                 </div>
                 
-                <div class="row justify-content-end mt-4    ">
+                <div class="row justify-content-end mt-4">
                     <div class="text-center" style="width: 250px;">
                         <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
                     </div>
@@ -226,7 +227,9 @@
                     });
 
                     document.getElementById("billingsTotal").innerHTML = `<u>Total: ₱ ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`;
+                    document.getElementById("amountShow").value = totalAmount;
                     document.getElementById("amount").value = totalAmount;
+                    console.log(document.getElementById("amount").value);
                     
                     $('#dataTable').DataTable({
                         paging: false,        // Enable pagination

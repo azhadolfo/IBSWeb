@@ -66,6 +66,8 @@ namespace IBS.Models.MMSI
         [NotMapped]
         public List<MMSIDispatchTicket>? PaidDispatchTickets { get; set; }
 
+        public int? MMSICollectionId { get; set; }
+
         #endregion ---Select Lists---
     }
 }

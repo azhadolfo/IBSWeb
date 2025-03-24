@@ -25,12 +25,57 @@ namespace IBSWeb.Areas.MMSI
             return View();
         }
 
+        [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
             var model = new MMSICollection();
             model.Billings = await _dispatchTicketRepository.GetMMSIUncollectedBillingsById(cancellationToken);
             model.Customers = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(MMSICollection model, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    foreach(var collectBills in model.ToCollectBillings)
+                    {
+                        // find the billings that was collected and mark them as collected
+                        var billingChosen = await _dbContext.MMSIBillings.FindAsync(int.Parse(collectBills));
+                        billingChosen.Status = "Collected";
+                        billingChosen.MMSICollectionId = model.MMSICollectionId;
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                    }
+
+                    await _dbContext.MMSICollections.AddAsync(model, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    TempData["success"] = "Collection created successfully";
+
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    TempData["error"] = "There was an error creating the collection.";
+
+                    model.Billings = await _dispatchTicketRepository.GetMMSIUncollectedBillingsById(cancellationToken);
+                    model.Customers = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
+
+                    return View(model);
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+
+                model.Billings = await _dispatchTicketRepository.GetMMSIUncollectedBillingsById(cancellationToken);
+                model.Customers = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
+
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> GetCollections(CancellationToken cancellationToken = default)
