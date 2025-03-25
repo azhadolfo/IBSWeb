@@ -128,7 +128,6 @@ namespace IBS.DataAccess.Repository.MMSI
         }
 
         public async Task<List<SelectListItem>> GetMMSITerminalsById(int portId, CancellationToken cancellationToken = default)
-
         {
             if (portId != null)
             {
@@ -167,6 +166,17 @@ namespace IBS.DataAccess.Repository.MMSI
                     Text = $"{s.MMSIBillingNumber} {s.Customer.CustomerName} {s.Date}"
                 }).ToListAsync(cancellationToken);
             return billingsList;
+        }
+
+        public async Task<List<SelectListItem>> GetMMSICompanyOwnerSelectListById(CancellationToken cancellationToken = default)
+        {
+            List<SelectListItem> companyOwnerList = await _dbContext.MMSICompanyOwners
+                .OrderBy(dt => dt.CompanyOwnerNumber).Select(s => new SelectListItem
+                {
+                    Value = s.MMSICompanyOwnerId.ToString(),
+                    Text = $"{s.CompanyOwnerNumber} {s.CompanyOwnerName}"
+                }).ToListAsync(cancellationToken);
+            return companyOwnerList;
         }
 
         public async Task<MMSIDispatchTicket> GetDispatchTicketLists(MMSIDispatchTicket model, CancellationToken cancellationToken = default)

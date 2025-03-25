@@ -1,4 +1,5 @@
 using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.MMSI;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +11,12 @@ namespace IBSWeb.Areas.MMSI
     public class TugboatController : Controller
     {
         private readonly ApplicationDbContext _db;
+        private readonly DispatchTicketRepository _dispatchTicketRepository;
 
-        public TugboatController(ApplicationDbContext db)
+        public TugboatController(ApplicationDbContext db, DispatchTicketRepository dispatchTicketRepository)
         {
-            _db = db;//sample test
+            _db = db;
+            _dispatchTicketRepository = dispatchTicketRepository;
         }
 
         public IActionResult Index()
@@ -24,9 +27,12 @@ namespace IBSWeb.Areas.MMSI
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            return View();
+            MMSITugboat tugboat = new MMSITugboat();
+            tugboat.CompanyList = await _dispatchTicketRepository.GetMMSICompanyOwnerSelectListById(cancellationToken);
+
+            return View(tugboat);
         }
 
         [HttpPost]
@@ -39,6 +45,11 @@ namespace IBSWeb.Areas.MMSI
                     TempData["error"] = "Invalid entry, please try again.";
 
                     return View(model);
+                }
+
+                if (model.IsCompanyOwned == false)
+                {
+                    model.CompanyOwnerId = null;
                 }
 
                 await _db.MMSITugboats.AddAsync(model, cancellationToken);

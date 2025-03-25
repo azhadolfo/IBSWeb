@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.MMSI.MasterFile
 {
@@ -21,11 +22,14 @@ namespace IBS.Models.MMSI.MasterFile
         [Column(TypeName = "varchar(25)")]
         public string TugboatName { get; set; }
 
-        public bool? IsCompanyOwned { get; set; }
+        public bool IsCompanyOwned { get; set; }
 
         public int? CompanyOwnerId { get; set; }
 
         [ForeignKey(nameof(CompanyOwnerId))]
         public MMSICompanyOwner? CompanyOwner { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? CompanyList { get; set; }
     }
 }
