@@ -95,6 +95,7 @@ namespace IBSWeb.Areas.MMSI
             var currentModel = await _db.MMSITugMasters.FindAsync(model.TugMasterId);
             currentModel.TugMasterNumber = model.TugMasterNumber;
             currentModel.TugMasterName = model.TugMasterName;
+            currentModel.IsActive = model.IsActive;
 
             await _db.SaveChangesAsync();
 

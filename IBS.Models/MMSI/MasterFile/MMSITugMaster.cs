@@ -21,6 +21,6 @@ namespace IBS.Models.MMSI.MasterFile
         [Column(TypeName = "varchar(30)")]
         public string TugMasterName { get; set; }
 
-        public bool? IsActive {  get; set; }
+        public bool IsActive {  get; set; }
     }
 }

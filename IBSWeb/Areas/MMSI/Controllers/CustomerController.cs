@@ -100,7 +100,7 @@ namespace IBSWeb.Areas.MMSI
             {
                 var currentModel = await _db.MMSICustomers.FindAsync(model.MMSICustomerId, cancellationToken);
 
-                if (currentModel == null)
+                if (currentModel != null)
                 {
                     currentModel.CustomerAddress = model.CustomerAddress;
                     currentModel.CustomerName = model.CustomerName;
@@ -112,6 +112,8 @@ namespace IBSWeb.Areas.MMSI
                     currentModel.Mobile2 = model.Mobile2;
                     currentModel.Landline1 = model.Landline1;
                     currentModel.Landline2 = model.Landline2;
+                    currentModel.IsVatable = model.IsVatable;
+                    currentModel.IsActive = model.IsActive;
                 }
                 else
                 {
