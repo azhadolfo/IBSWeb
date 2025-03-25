@@ -42,6 +42,10 @@ namespace IBSWeb.Areas.MMSI
                 if (ModelState.IsValid)
                 {
 
+                    if (model.IsDocumented == false)
+                    {
+                    }
+
                     await _dbContext.MMSICollections.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
