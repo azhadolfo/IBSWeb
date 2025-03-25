@@ -25,8 +25,8 @@ namespace IBS.Models.MMSI.MasterFile
 
         public string? Mobile2 { get; set; }
 
-        public bool? IsActive { get; set; }
+        public bool IsActive { get; set; }
 
-        public bool? IsVatable { get; set; }
+        public bool IsVatable { get; set; }
     }
 }
