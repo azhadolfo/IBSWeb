@@ -70,9 +70,11 @@
         </div>
 
         <div class="card-body table-responsive">
-            <div class="row justify-content-end">
+            <div class="row justify-content-end mx-0">
                 <div class="text-center" style="width: 150px;">
-                    <a class="btn btn-primary col-12 align-content-center" asp-action="Create" asp-controller="Billing"><i class="bi bi-plus-circle"></i> Create</a>
+                    <a class="btn btn-primary w-100 align-content-center" asp-action="Create" asp-controller="Billing">
+                        <i class="bi bi-plus-circle"></i> Create
+                    </a>
                 </div>
             </div>
             <div class="card-body">
@@ -85,6 +87,7 @@
                         <th class="text-center align-content-center">Customer</th>
                         <th class="text-center align-content-center">Port-Terminal</th>
                         <th class="text-center align-content-center">Vessel</th>
+                        <th class="text-center align-content-center">Status</th>
                         <th class="align-content-center text-center">Actions</th>
                     </tr>
                     </thead>
@@ -98,6 +101,7 @@
                             <td class="text-center align-content-center ">@item?.Customer?.CustomerName</td>
                             <td class="text-center align-content-center ">@item?.Terminal?.Port?.PortName-@item?.Terminal?.TerminalName</td>
                             <td class="text-center align-content-center ">@item?.Vessel?.VesselName</td>
+                            <td class="text-center align-content-center ">@item?.Status</td>
                             <td class="text-center justify-content-center d-flex">
                                 <div class="align-content-center text-center" style="width: 150px !important;">
                                     <!-- Keep actionsDropdown as is if it's not causing issues -->
@@ -137,6 +141,22 @@
                         }
                     });
                 });
+            });
+            
+            if ($.fn.DataTable.isDataTable('#dataTable')) {
+                $('#dataTable').DataTable().destroy();
+            }
+
+            $('#dataTable').DataTable({
+                "autoWidth": false,
+                "columnDefs": [
+                    {
+                        "targets": 6,
+                        "width": "150px",
+                        "className": "text-center",
+                        "orderable": false
+                    }
+                ]
             });
         });
     </script>
