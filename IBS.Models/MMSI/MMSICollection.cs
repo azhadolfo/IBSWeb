@@ -10,7 +10,7 @@ namespace IBS.Models.MMSI
         [Key]
         public int MMSICollectionId { get; set; }
 
-        public string CollectionNumber { get; set; }
+        public string? CollectionNumber { get; set; }
 
         public string CheckNumber { get; set; }
 

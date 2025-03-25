@@ -42,6 +42,11 @@ namespace IBSWeb.Areas.MMSI
                 if (ModelState.IsValid)
                 {
 
+                    if (model.IsDocumented == false)
+                    {
+                        model.CollectionNumber = await _dispatchTicketRepository.GenerateCollectionNumber(cancellationToken);
+                    }
+
                     await _dbContext.MMSICollections.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
 

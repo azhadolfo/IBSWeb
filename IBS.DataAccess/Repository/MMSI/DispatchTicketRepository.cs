@@ -219,5 +219,24 @@ namespace IBS.DataAccess.Repository.MMSI
                 return "BL" + (parsed.ToString("D8"));
             }
         }
+
+        public async Task<string> GenerateCollectionNumber (CancellationToken cancellationToken = default)
+        {
+            var lastRecord = await _dbContext.MMSICollections
+                .Where(b => b.IsDocumented == false && b.CollectionNumber != null)
+                .OrderByDescending(b => b.CollectionNumber)
+                .FirstOrDefaultAsync();
+
+            if(lastRecord == null)
+            {
+                return "CL00000001";
+            }
+            else
+            {
+                var lastSeries = lastRecord.CollectionNumber.Substring(3);
+                int parsed = int.Parse(lastSeries) + 1;
+                return "CL" + (parsed.ToString("D8"));
+            }
+        }
     }
 }

@@ -18,6 +18,7 @@
         <form method="post" class="row">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
+                <input asp-for="VesselType" value="Type" type="hidden">
                 <div class="row">
                     <div class="form-floating col-6 my-3">
                         <input asp-for="VesselName" type="text" class="form-control border-0 shadow" id="VesselName" placeholder="Name" required>
