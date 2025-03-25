@@ -1,18 +1,111 @@
 @model MMSICollection
 
 @{
-    Layout = null;
+    ViewData["Title"] = "Create";
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!DOCTYPE html>
-
-<html>
-<head>
-    <title>title</title>
-</head>
-<body>
-<div>
-      
+<div class="loader-container" style="display: none;">
+    <div class="loader"></div>
+    <div class="loader-text">Importing...</div>
 </div>
-</body>
-</html>
+
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2 class="py-2"><i class="bi bi-pencil-square"></i> PREVIEW COLLECTION</h2>
+        </div>
+    </div>
+
+    <div class="card-body table-responsive">
+        <div class="row mb-2 justify-content-end">
+            <div class="col-12 d-flex justify-content-end">
+                <h2><strong>COLLECTION DETAILS</strong></h2>
+            </div>
+        </div>
+
+        <div class="row px-2">
+            <div class="col-12 d-flex flex-column justify-content-end">
+                <div class="row d-flex align-content-center text-center mb-2">
+                    <div class="col-2 text-start small-text">
+                        <span><b>Create Date:</b> @Model.Date</span>
+                    </div>
+                    <div class="col-2 text-start small-text">
+                        <span><b>Dispatch Ticket#:</b> @Model.CollectionNumber</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row border mx-2">
+            <div class="col-4 text-start p-2 small-text border">
+                <b>Bank:</b> <br /> MBTC
+            </div>
+            <div class="col-4 text-start p-2 small-text border">
+                <b>Account Number</b> <br /> 167-7-16753668-5
+            </div>
+            <div class="col-4 text-start p-2 small-text border">
+                <b>Account Name:</b> <br /> MALAYAN MARITIME SERVICES INC.
+            </div>
+        </div>
+
+        <div class="row border mx-2">
+            <div class="col-4 text-start p-2 small-text border">
+                <b>Check:</b> <br /> @Model.CheckNumber
+            </div>
+            <div class="col-4 text-start p-2 small-text border">
+                <b>Check Date:</b> <br /> @Model.CheckDate
+            </div>
+            <div class="col-4 text-start p-2 small-text border">
+                <b>Date Deposited:</b> <br /> @Model.DepositDate
+            </div>
+        </div>
+
+        <div class="row mx-2">
+            <div class="col-6 text-start small-text">
+                <div class="row h-100">
+                    <div class="col-6 text-start small-text py-2 ps-2">
+                        <b>Collection Amount:</b> <br />₱ @Model.Amount.ToString("N2")
+                    </div>
+                    <div class="col-6 text-start small-text py-2 ps-2">
+                        <b>EWT:</b> <br />₱ @Model.EWT
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 text-start p-2 small-text">
+                <table class="dataTable">
+                    <thead>
+                    <tr>
+                        <th class="col-4 text-center p-2 small-text border-1">Billing Number</th>
+                        <th class="col-4 text-center p-2 small-text border-1">Customer</th>
+                        <th class="col-4 text-center p-2 small-text border-1">Amount</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var billing in Model.PaidBills)
+                    {
+                        <tr>
+                            <td class="border text-center">@billing.MMSIBillingNumber</td>
+                            <td class="border text-center">@billing.Customer?.CustomerName</td>
+                            <td class="border text-center">₱ @billing.Amount.ToString("N2")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row text-end justify-content-end mt-3">
+            <div class="d-flex me-3" style="width: 250px">
+                <a class="btn btn-outline-primary custom2-btn col-12" asp-controller="Collection" asp-action="Index">
+                    <i class="bi bi-arrow-90deg-left"></i> Go Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@{
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}

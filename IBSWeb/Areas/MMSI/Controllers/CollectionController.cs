@@ -41,17 +41,27 @@ namespace IBSWeb.Areas.MMSI
             {
                 if (ModelState.IsValid)
                 {
+
+                    await _dbContext.MMSICollections.AddAsync(model, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    // save first then refetch again so it has auto generated id
+                    var refetchModel = await _dbContext.MMSICollections
+                        .Where(c => c.Status == model.Status &&
+                                    c.Date == model.Date &&
+                                    c.CheckDate == model.CheckDate &&
+                                    c.DepositDate == model.DepositDate &&
+                                    c.Amount == model.Amount)
+                        .FirstOrDefaultAsync(cancellationToken);
+
                     foreach(var collectBills in model.ToCollectBillings)
                     {
                         // find the billings that was collected and mark them as collected
                         var billingChosen = await _dbContext.MMSIBillings.FindAsync(int.Parse(collectBills));
                         billingChosen.Status = "Collected";
-                        billingChosen.MMSICollectionId = model.MMSICollectionId;
+                        billingChosen.MMSICollectionId = refetchModel.MMSICollectionId;
                         await _dbContext.SaveChangesAsync(cancellationToken);
                     }
-
-                    await _dbContext.MMSICollections.AddAsync(model, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
 
                     TempData["success"] = "Collection created successfully";
 
@@ -80,7 +90,9 @@ namespace IBSWeb.Areas.MMSI
 
         public async Task<IActionResult> GetCollections(CancellationToken cancellationToken = default)
         {
-            var collections = await _dbContext.MMSICollections.ToListAsync(cancellationToken);
+            var collections = await _dbContext.MMSICollections
+                .Include(c => c.Customer)
+                .ToListAsync(cancellationToken);
 
             return Json(collections);
         }
@@ -115,15 +127,21 @@ namespace IBSWeb.Areas.MMSI
         {
             var collection = await _dbContext.MMSICollections.FindAsync(id, cancellationToken);
 
-            if (collection == null)
+            if (collection != null)
+            {
+                // list of dispatch tickets
+                collection.PaidBills = await _dbContext.MMSIBillings
+                    .Where(b => b.MMSICollectionId == collection.MMSICollectionId)
+                    .Include(b => b.Customer)
+                    .ToListAsync (cancellationToken);
+
+                return View(collection);
+            }
+            else
             {
                 TempData["Error"] = "Error: collection record not found.";
 
                 return RedirectToAction("Index");
-            }
-            else
-            {
-                return View(collection);
             }
         }
     }

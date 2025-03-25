@@ -275,11 +275,13 @@ namespace IBSWeb.Areas.MMSI
                 .Include(a => a.Port)
                 .FirstOrDefaultAsync(cancellationToken);
 
+            // list of dispatch numbers
             model.ToBillDispatchTickets = await _db.MMSIDispatchTickets
                 .Where(dt => dt.BillingId == model.MMSIBillingNumber)
                 .Select(dt => dt.DispatchNumber.ToString())
                 .ToListAsync(cancellationToken);
 
+            // list of dispatch tickets
             model.PaidDispatchTickets = await _db.MMSIDispatchTickets
                 .Where(dt => dt.BillingId == model.MMSIBillingNumber)
                 .Include(dt => dt.Tugboat)

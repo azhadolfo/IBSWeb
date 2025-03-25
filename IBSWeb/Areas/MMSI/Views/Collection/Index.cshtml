@@ -125,10 +125,10 @@
                                     <td class="text-center align-content-center ">${value.collectionNumber}</td>
                                     <td class="text-center align-content-center ">${value.amount}</td>
                                     <td class="text-center align-content-center ">${value.status}</td>
-                                    <td class="text-center align-content-center ">${value.customer}</td>
+                                    <td class="text-center align-content-center ">${value.customer.customerName}</td>
                                     <td class="text-center justify-content-center d-flex">
                                         <div class="align-content-center text-center" style="width: 150px !important;">
-                                            @* <a class="btn btn-primary col-12" href="@Url.Action("Preview", "Collection", new { id = item?.MMSICollectionId })"><i class="bi bi-eye"></i> View</a> *@
+                                            <a class="btn btn-primary col-12" href="/MMSI/Collection/Preview/${value.mmsiCollectionId}"><i class="bi bi-eye"></i> View</a>
                                         </div>
                                     </td>
                                 </tr>
