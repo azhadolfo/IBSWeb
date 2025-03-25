@@ -19,6 +19,6 @@ namespace IBS.Models.MMSI.MasterFile
         [Required(ErrorMessage = "Company/Owner name is required.")]
         [StringLength(50, ErrorMessage = "Company/Owner name cannot exceed 50 characters.")]
         [Column(TypeName = "varchar(50)")]
-        public string ComanyOwnerName { get; set; }
+        public string CompanyOwnerName { get; set; }
     }
 }

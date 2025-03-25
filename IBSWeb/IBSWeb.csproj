@@ -56,4 +56,10 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <AdditionalFiles Include="Areas\MMSI\Views\CompanyOwner\Create.cshtml" />
+    <AdditionalFiles Include="Areas\MMSI\Views\CompanyOwner\Edit.cshtml" />
+    <AdditionalFiles Include="Areas\MMSI\Views\CompanyOwner\Index.cshtml" />
+  </ItemGroup>
+
 </Project>
