@@ -98,6 +98,7 @@ namespace IBSWeb.Areas.MMSI
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var model = _db.MMSITugboats.Where(a => a.TugboatId == id).FirstOrDefault();
+            model.CompanyList = await _dispatchTicketRepository.GetMMSICompanyOwnerSelectListById(cancellationToken);
 
             return View(model);
         }
@@ -107,6 +108,16 @@ namespace IBSWeb.Areas.MMSI
         {
             var currentModel = await _db.MMSITugboats.FindAsync(model.TugboatId);
 
+            if(model.IsCompanyOwned == false)
+            {
+                currentModel.CompanyOwnerId = null;
+            }
+            else
+            {
+                currentModel.CompanyOwnerId = model.CompanyOwnerId;
+            }
+
+            currentModel.IsCompanyOwned = model.IsCompanyOwned;
             currentModel.TugboatNumber = model.TugboatNumber;
             currentModel.TugboatName = model.TugboatName;
 
