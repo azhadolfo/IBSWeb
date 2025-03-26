@@ -651,6 +651,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet2.Cells["P1"].Value = "OriginalSeriesNumber";
                 worksheet2.Cells["Q1"].Value = "OriginalSupplierId";
                 worksheet2.Cells["R1"].Value = "OriginalDocumentId";
+                worksheet2.Cells["S1"].Value = "PostedDate";
 
                 #endregion -- Purchase Order Table Header --
 
@@ -680,6 +681,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["T1"].Value = "OriginalPOId";
                 worksheet.Cells["U1"].Value = "OriginalSeriesNumber";
                 worksheet.Cells["V1"].Value = "OriginalDocumentId";
+                worksheet.Cells["W1"].Value = "PostedDate";
 
                 #endregion -- Receving Report Table Header --
 
@@ -711,6 +713,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 20].Value = item.POId;
                     worksheet.Cells[row, 21].Value = item.ReceivingReportNo;
                     worksheet.Cells[row, 22].Value = item.ReceivingReportId;
+                    worksheet.Cells[row, 23].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -753,6 +756,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[poRow, 16].Value = item.PurchaseOrder.PurchaseOrderNo;
                     worksheet2.Cells[poRow, 17].Value = item.PurchaseOrder.SupplierId;
                     worksheet2.Cells[poRow, 18].Value = item.PurchaseOrder.PurchaseOrderId;
+                    worksheet2.Cells[poRow, 19].Value = item.PurchaseOrder.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     poRow++;
                 }
