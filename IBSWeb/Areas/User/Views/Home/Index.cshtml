@@ -273,7 +273,7 @@
                             <div class="col-md-4">
                                 @if (department == SD.Department_TradeAndSupply || User.IsInRole("Admin"))
                                 {
-                                    <a href="@Url.Action("Index", "ReceivingReport", new { area = "Filpride", filterType = "RecordLiftingDate" })" class="text-decoration-none">
+                                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "RecordLiftingDate" })" class="text-decoration-none">
                                         <div class="card shadow-sm h-100 border-0">
                                             <div class="card-body text-center">
                                                 <h5 class="card-title text-dark fw-semibold">

@@ -3311,8 +3311,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["B3"].Value = $"{extractedBy}";
                     purchaseReportWorksheet.Cells["B4"].Value = $"{companyClaims}";
 
-                    purchaseReportWorksheet.Cells["A7"].Value = "DELIVERY DATE";
-                    purchaseReportWorksheet.Cells["B7"].Value = "CUSTOMER RECEIVE DATE"; // move down from here:
+                    purchaseReportWorksheet.Cells["A7"].Value = "TRANSACTION DATE";
+                    purchaseReportWorksheet.Cells["B7"].Value = "CUSTOMER RECEIVED DATE"; // move down from here:
                     purchaseReportWorksheet.Cells["C7"].Value = "SUPPLIER NAME";
                     purchaseReportWorksheet.Cells["D7"].Value = "SUPPLIER TIN";
                     purchaseReportWorksheet.Cells["E7"].Value = "SUPPLIER ADDRESS";
@@ -3386,8 +3386,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Assign Values to Cells --
 
-                        purchaseReportWorksheet.Cells[row, 1].Value = pr.DeliveryReceipt?.Date; // Date = dr date
-                        purchaseReportWorksheet.Cells[row, 2].Value = pr.Date; // Date = rr date
+                        purchaseReportWorksheet.Cells[row, 1].Value = pr.Date; // Date
+                        purchaseReportWorksheet.Cells[row, 2].Value = pr.DeliveryReceipt?.DeliveredDate; // DeliveredDate
                         purchaseReportWorksheet.Cells[row, 3].Value = pr.PurchaseOrder?.Supplier?.SupplierName; // Supplier Name
                         purchaseReportWorksheet.Cells[row, 4].Value = pr.PurchaseOrder?.Supplier?.SupplierTin; // Supplier Tin
                         purchaseReportWorksheet.Cells[row, 5].Value = pr.PurchaseOrder?.Supplier?.SupplierAddress; // Supplier Address

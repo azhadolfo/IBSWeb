@@ -77,8 +77,8 @@ namespace IBSWeb.Areas.User.Controllers
                     .Where(dr => dr.Status == nameof(DRStatus.ForInvoicing))
                     .CountAsync(),
 
-                RecordLiftingDateCount = await _dbContext.FilprideReceivingReports
-                    .Where(rr => rr.SupplierInvoiceDate == null)
+                RecordLiftingDateCount = await _dbContext.FilprideDeliveryReceipts
+                    .Where(rr => !rr.HasReceivingReport)
                     .CountAsync(),
             };
 
