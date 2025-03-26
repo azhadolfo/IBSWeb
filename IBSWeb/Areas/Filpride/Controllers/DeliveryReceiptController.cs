@@ -464,7 +464,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
                     Driver = existingRecord.Driver,
                     PlateNo = existingRecord.PlateNo,
-                    ATLNo = existingRecord.AuthorityToLoadNo
+                    ATLNo = existingRecord.AuthorityToLoadNo,
+                    HasReceivingReport = existingRecord.HasReceivingReport,
                 };
 
                 ViewBag.DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption;

@@ -98,15 +98,31 @@
                     </div>
                 </fieldset>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Volume" 
-                           class="form-control border-0 shadow" 
-                           placeholder="" 
-                           required
-                           min="0.01"
-                           value="@Model.Volume.ToString("0.0000")"
-                           />
+                    @if (Model.HasReceivingReport)
+                    {
+                        <input asp-for="Volume"
+                               class="form-control border-0 shadow"
+                               placeholder=""
+                               required
+                               min="0.01"
+                               readonly=""
+                               value="@Model.Volume.ToString("0.0000")"/>
+                    }
+                    else
+                    {
+                        <input asp-for="Volume"
+                               class="form-control border-0 shadow"
+                               placeholder=""
+                               required
+                               min="0.01"
+                               value="@Model.Volume.ToString("0.0000")"/>
+                    }
                     <label asp-for="Volume">Volume<span class="required">*</span></label>
                     <span asp-validation-for="Volume" class="text-danger"></span>
+                    @if (Model.HasReceivingReport)
+                    {
+                        <small class="fst-italic">Please note: The volume field cannot be edited as the lifting date has already been added by TNS.</small>
+                    }
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="ATLNo" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
