@@ -94,6 +94,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
-        public string Type { get; set; }
+        public string Type { get; set; } = string.Empty;
     }
 }
