@@ -36,6 +36,17 @@
                     </div>
                 </div>
                 
+                <div class="row">
+                    <div class="form-group col-6">
+                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
+                        <select asp-for="VesselType" id="customerId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="Local">Local</option>
+                            <option value="Foreign">Foreign</option>
+                        </select>
+                        <span asp-validation-for="VesselType" class="text-danger"></span>
+                    </div>
+                </div>
+                
             </div>
             
             <div class="row justify-content-end mt-3">

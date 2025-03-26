@@ -37,6 +37,9 @@
                     @Html.DisplayNameFor(m => m.VesselName)
                 </th>
                 <th class="text-center">
+                    @Html.DisplayNameFor(m => m.VesselType)
+                </th>
+                <th class="text-center">
                     Actions
                 </th>
             </tr>
@@ -50,6 +53,9 @@
                     </td>
                     <td class="text-center align-content-center">
                         @Html.DisplayFor(model => item.VesselName)
+                    </td>
+                    <td class="text-center align-content-center">
+                        @Html.DisplayFor(model => item.VesselType)
                     </td>
                     
                     <td class="text-center">
@@ -100,7 +106,7 @@
                 "autoWidth": false,
                 "columnDefs": [
                     {
-                        "targets": 2,
+                        "targets": 3,
                         "width": "150px",
                         "className": "text-center",
                         "orderable": false

@@ -99,6 +99,7 @@ namespace IBSWeb.Areas.MMSI
 
             currentModel.VesselNumber = model.VesselNumber;
             currentModel.VesselName = model.VesselName;
+            currentModel.VesselType = model.VesselType;
             await _db.SaveChangesAsync();
 
             TempData["success"] = "Edited successfully";

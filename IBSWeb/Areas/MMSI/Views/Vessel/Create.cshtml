@@ -18,7 +18,6 @@
         <form method="post" class="row">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
-                <input asp-for="VesselType" value="Type" type="hidden">
                 <div class="row">
                     <div class="form-floating col-6 my-3">
                         <input asp-for="VesselName" type="text" class="form-control border-0 shadow" id="VesselName" placeholder="Name" required>
@@ -29,6 +28,16 @@
                         <input asp-for="VesselNumber" type="text" class="form-control border-0 shadow" id="VesselNumber" placeholder="Number" required>
                         <label asp-for="VesselNumber" for="VesselNumber" class="ms-2">Vessel number<span class="required text-danger">*</span></label>
                         <span asp-validation-for="VesselNumber" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-6">
+                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
+                        <select asp-for="VesselType" id="customerId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="Local">Local</option>
+                            <option value="Foreign">Foreign</option>
+                        </select>
+                        <span asp-validation-for="VesselType" class="text-danger"></span>
                     </div>
                 </div>
             </div>
