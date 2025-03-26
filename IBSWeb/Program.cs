@@ -1,3 +1,4 @@
+using Google.Apis.Auth.OAuth2;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
@@ -19,23 +20,50 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-var googleCloudSinkOptions = new GoogleCloudLoggingSinkOptions
+
+// Configure logging based on environment
+if (builder.Environment.IsProduction())
 {
-    ProjectId = "integrated-business-system",
-    LogName = "ibs-web-log",
-    ResourceType = "global",
-    UseLogCorrelation = true,  // Enable correlation IDs
-    UseSourceContextAsLogName = false  // Keep the log name you specified
-};
+    try
+    {
+        var googleCloudSinkOptions = new GoogleCloudLoggingSinkOptions
+        {
+            ProjectId = "integrated-business-system",
+            LogName = "ibs-web-log",
+            ResourceType = "global",
+            UseLogCorrelation = true,
+            UseSourceContextAsLogName = false
+        };
 
-// Log.Logger = new LoggerConfiguration()
-//     .MinimumLevel.Information()  // Sets the minimum level for ALL sinks to Debug
-//     .WriteTo.Console()  // This sink will log Debug and above
-//     .WriteTo.GoogleCloudLogging(googleCloudSinkOptions, restrictedToMinimumLevel: LogEventLevel.Warning)  // This sink will only log Warning and above
-//     .CreateLogger();
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .WriteTo.GoogleCloudLogging(googleCloudSinkOptions, restrictedToMinimumLevel: LogEventLevel.Warning)
+            .CreateLogger();
 
-// Replace default logging with Serilog
-builder.Host.UseSerilog();
+        // Replace default logging with Serilog
+        builder.Host.UseSerilog();
+    }
+    catch (Exception ex)
+    {
+        // Fallback logging if Google Cloud Logging fails
+        Console.WriteLine($"Failed to configure Google Cloud Logging: {ex.Message}");
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .CreateLogger();
+    }
+}
+else
+{
+    // Use standard console logging for non-production environments
+    Log.Logger = new LoggerConfiguration()
+        .MinimumLevel.Information()
+        .WriteTo.Console()
+        .CreateLogger();
+
+    builder.Host.UseSerilog();
+}
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
