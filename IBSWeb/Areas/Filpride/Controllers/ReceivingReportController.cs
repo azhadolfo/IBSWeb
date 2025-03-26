@@ -775,7 +775,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var excelBytes = await package.GetAsByteArrayAsync();
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "ReceivingReportList.xlsx");
+                    $"ReceivingReportList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
         }
 
