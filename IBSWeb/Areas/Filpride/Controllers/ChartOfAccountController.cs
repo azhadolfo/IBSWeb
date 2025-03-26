@@ -200,7 +200,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = await package.GetAsByteArrayAsync();
                 await transaction.CommitAsync(cancellationToken);
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ChartOfAccountList.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ChartOfAccountList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
 		    }
             catch (Exception ex)
             {
