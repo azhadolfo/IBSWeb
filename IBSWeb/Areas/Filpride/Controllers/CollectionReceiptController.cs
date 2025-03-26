@@ -1512,7 +1512,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet3.Cells["T1"].Value = "OriginalProductId";
                 worksheet3.Cells["U1"].Value = "OriginalSeriesNumber";
                 worksheet3.Cells["V1"].Value = "OriginalDocumentId";
-                worksheet3.Cells["W1"].Value = "PostedDate";
+                worksheet3.Cells["W1"].Value = "PostedBy";
+                worksheet3.Cells["X1"].Value = "PostedDate";
 
                 #endregion -- Sales Invoice Table Header --
 
@@ -1539,7 +1540,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet4.Cells["Q1"].Value = "OriginalSeriesNumber";
                 worksheet4.Cells["R1"].Value = "OriginalServicesId";
                 worksheet4.Cells["S1"].Value = "OriginalDocumentId";
-                worksheet4.Cells["T1"].Value = "PostedDate";
+                worksheet4.Cells["T1"].Value = "PostedBy";
+                worksheet4.Cells["U1"].Value = "PostedDate";
 
                 #endregion -- Service Invoice Table Header --
 
@@ -1579,7 +1581,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["AD1"].Value = "OriginalSeriesNumber";
                 worksheet.Cells["AE1"].Value = "OriginalServiceInvoiceId";
                 worksheet.Cells["AF1"].Value = "OriginalDocumentId";
-                worksheet.Cells["AG1"].Value = "PostedDate";
+                worksheet.Cells["AG1"].Value = "PostedBy";
+                worksheet.Cells["AH1"].Value = "PostedDate";
 
                 #endregion -- Collection Receipt Table Header --
 
@@ -1639,7 +1642,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 30].Value = item.CollectionReceiptNo;
                     worksheet.Cells[row, 31].Value = item.ServiceInvoiceId;
                     worksheet.Cells[row, 32].Value = item.CollectionReceiptId;
-                    worksheet.Cells[row, 33].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet.Cells[row, 33].Value = item.PostedBy;
+                    worksheet.Cells[row, 34].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -1685,7 +1689,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[siRow, 20].Value = item.SalesInvoice.ProductId;
                     worksheet3.Cells[siRow, 21].Value = item.SalesInvoice.SalesInvoiceNo;
                     worksheet3.Cells[siRow, 22].Value = item.SalesInvoice.SalesInvoiceId;
-                    worksheet3.Cells[siRow, 23].Value = item.SalesInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[siRow, 23].Value = item.SalesInvoice.PostedBy;
+                    worksheet3.Cells[siRow, 24].Value = item.SalesInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     siRow++;
                 }
@@ -1728,7 +1733,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet4.Cells[svRow, 17].Value = item.ServiceInvoice.ServiceInvoiceNo;
                     worksheet4.Cells[svRow, 18].Value = item.ServiceInvoice.ServiceId;
                     worksheet4.Cells[svRow, 19].Value = item.ServiceInvoice.ServiceInvoiceId;
-                    worksheet4.Cells[svRow, 20].Value = item.ServiceInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet4.Cells[svRow, 20].Value = item.ServiceInvoice.PostedBy;
+                    worksheet4.Cells[svRow, 21].Value = item.ServiceInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     svRow++;
                 }
@@ -1769,7 +1775,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[siRow, 20].Value = item.ProductId;
                     worksheet3.Cells[siRow, 21].Value = item.SalesInvoiceNo;
                     worksheet3.Cells[siRow, 22].Value = item.SalesInvoiceId;
-                    worksheet3.Cells[siRow, 23].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
+                    worksheet3.Cells[siRow, 23].Value = item.PostedBy;
+                    worksheet3.Cells[siRow, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     siRow++;
                 }
