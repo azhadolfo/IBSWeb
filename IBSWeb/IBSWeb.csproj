@@ -60,6 +60,9 @@
     <AdditionalFiles Include="Areas\MMSI\Views\CompanyOwner\Create.cshtml" />
     <AdditionalFiles Include="Areas\MMSI\Views\CompanyOwner\Edit.cshtml" />
     <AdditionalFiles Include="Areas\MMSI\Views\CompanyOwner\Index.cshtml" />
+    <AdditionalFiles Include="Areas\MMSI\Views\Principal\Create.cshtml" />
+    <AdditionalFiles Include="Areas\MMSI\Views\Principal\Edit.cshtml" />
+    <AdditionalFiles Include="Areas\MMSI\Views\Principal\Index.cshtml" />
   </ItemGroup>
 
 </Project>

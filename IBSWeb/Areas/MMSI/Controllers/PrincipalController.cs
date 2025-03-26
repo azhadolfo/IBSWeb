@@ -1,36 +1,45 @@
 using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.MMSI;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.MMSI
 {
     [Area(nameof(MMSI))]
     [CompanyAuthorize(nameof(MMSI))]
-    public class CustomerController : Controller
+    public class PrincipalController : Controller
     {
         private readonly ApplicationDbContext _db;
+        private readonly DispatchTicketRepository _dispatchTicketRepository;
 
-        public CustomerController(ApplicationDbContext db)
+        public PrincipalController(ApplicationDbContext db, DispatchTicketRepository dispatchTicketRepository)
         {
             _db = db;
+            _dispatchTicketRepository = dispatchTicketRepository;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var customers = _db.MMSICustomers.ToList();
+            var principals = await _db.MMSIPrincipals
+                .Include(p => p.Customer)
+                .ToListAsync(cancellationToken);
 
-            return View(customers);
+            return View(principals);
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            return View();
+            MMSIPrincipal model = new MMSIPrincipal();
+            model.CustomerSelectList = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
+
+            return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSICustomer model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(MMSIPrincipal model, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -41,7 +50,11 @@ namespace IBSWeb.Areas.MMSI
                     return View(model);
                 }
 
-                await _db.MMSICustomers.AddAsync(model, cancellationToken);
+                var customer = await _db.MMSICustomers.Where(c => c.MMSICustomerId == model.CustomerId)
+                    .FirstOrDefaultAsync(cancellationToken);
+                model.PrincipalNumber = customer.CustomerNumber;
+
+                await _db.MMSIPrincipals.AddAsync(model, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Creation Succeed!";
@@ -64,13 +77,13 @@ namespace IBSWeb.Areas.MMSI
             }
         }
 
-        public IActionResult Delete(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var model = _db.MMSICustomers.Where(i => i.MMSICustomerId == id).FirstOrDefault();
+                var model = await _db.MMSIPrincipals.FindAsync(id, cancellationToken);
 
-                _db.MMSICustomers.Remove(model);
+                _db.MMSIPrincipals.Remove(model);
                 _db.SaveChanges();
 
                 TempData["success"] = "Entry deleted successfully";
@@ -88,26 +101,27 @@ namespace IBSWeb.Areas.MMSI
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = _db.MMSICustomers.Where(a => a.MMSICustomerId == id).FirstOrDefault();
+            var model = await _db.MMSIPrincipals.FindAsync(id, cancellationToken);
+            model.CustomerSelectList = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
 
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSICustomer model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Edit(MMSIPrincipal model, CancellationToken cancellationToken = default)
         {
             try
             {
-                var currentModel = await _db.MMSICustomers.FindAsync(model.MMSICustomerId, cancellationToken);
+                var currentModel = await _db.MMSIPrincipals.FindAsync(model.PrincipalId, cancellationToken);
 
                 if (currentModel != null)
                 {
-                    currentModel.CustomerAddress = model.CustomerAddress;
-                    currentModel.CustomerName = model.CustomerName;
-                    currentModel.CustomerNumber = model.CustomerNumber;
-                    currentModel.CustomerTIN = model.CustomerTIN;
-                    currentModel.CustomerBusinessStyle = model.CustomerBusinessStyle;
-                    currentModel.CustomerTerms = model.CustomerTerms;
+                    currentModel.Address = model.Address;
+                    currentModel.PrincipalName = model.PrincipalName;
+                    currentModel.TIN = model.TIN;
+                    currentModel.BusinessType = model.BusinessType;
+                    currentModel.PrincipalName = model.PrincipalName;
+                    currentModel.Terms = model.Terms;
                     currentModel.Mobile1 = model.Mobile1;
                     currentModel.Mobile2 = model.Mobile2;
                     currentModel.Landline1 = model.Landline1;
@@ -117,7 +131,7 @@ namespace IBSWeb.Areas.MMSI
                 }
                 else
                 {
-                    TempData["error"] = "Customer not found.";
+                    TempData["error"] = "Principal not found.";
                     return View(model);
                 }
 

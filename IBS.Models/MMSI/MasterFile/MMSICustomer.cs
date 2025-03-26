@@ -9,6 +9,8 @@ namespace IBS.Models.MMSI.MasterFile
 
         public string CustomerName { get; set; }
 
+        public string CustomerNumber { get; set; }
+
         public string CustomerAddress { get; set; }
 
         public string CustomerTIN {  get; set; }
