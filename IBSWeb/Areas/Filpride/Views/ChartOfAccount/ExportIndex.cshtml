@@ -1,7 +1,9 @@
-﻿@model IEnumerable<FilprideService>
-
+@model IEnumerable<FilprideChartOfAccount>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
 @{
-    ViewData["Title"] = "Export Service";
+    ViewData["Title"] = "Export Check Voucher";
 }
 <style>
     .container {
@@ -50,7 +52,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">SERIVCE MASTER FILE</h2>
+                <h2 class="text-white py-2">CHART OF ACCOUNT</h2>
             </div>
         </div>
     </div>
@@ -60,7 +62,7 @@
             </div>
             <div class="col-6 text-end">
                 <p>
-                    <button type="button" class="btn btn-primary" onclick="exportToCsv()">Export Selected to CSV</button>
+                    <button type="button" class="btn btn-primary" onclick="exportToExcel()">Export Selected to CSV</button>
                 </p>
             </div>
         </div>
@@ -68,23 +70,23 @@
         <table class="table table-bordered table-hover" id="dataTable">
             <thead class="table-secondary">
             <tr>
-                <th>
+                <th data-orderable="false">
                     <input type="checkbox" class="text-center" id="selectAll" onclick="toggleSelectAll(this)">
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.ServiceNo)
+                    @Html.DisplayNameFor(model => model.AccountNumber)
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Name)
+                    @Html.DisplayNameFor(model => model.AccountName)
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Percent)
+                    @Html.DisplayNameFor(model => model.AccountType)
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.CreatedBy)
+                    @Html.DisplayNameFor(model => model.NormalBalance)
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.CreatedDate)
+                    @Html.DisplayNameFor(model => model.Level)
                 </th>
             </tr>
             </thead>
@@ -93,22 +95,22 @@
                 {
                     <tr>
                         <td>
-                            <input type="checkbox" class="selectCheckbox text-center" value="@item.ServiceId">
+                            <input type="checkbox" class="selectCheckbox text-center" value="@item.AccountId">
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.ServiceNo)
+                            @Html.DisplayFor(modelItem => item.AccountNumber)
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.Name)
+                            @Html.DisplayFor(modelItem => item.AccountName)
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.Percent)
+                            @Html.DisplayFor(modelItem => item.AccountType)
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.CreatedBy)
+                            @Html.DisplayFor(modelItem => item.NormalBalance)
                         </td>
                         <td>
-                            @item.CreatedDate.ToString("MM/dd/yyyy")
+                            @Html.DisplayFor(modelItem => item.Level)
                         </td>
                     </tr>
                 }
@@ -116,14 +118,13 @@
         </table>
     </div>
 </div>
-@section Scripts{
+
+@section Scripts {
     <script>
         let selectedRecords = new Set(); // To track selected record IDs
         let allRecordsSelected = false;  // Flag to check if "Select All" is toggled across all pages
-
         function toggleSelectAll(selectAllCheckbox) {
             const checkboxes = document.querySelectorAll('.selectCheckbox');
-
             if (selectAllCheckbox.checked) {
                 // Select all visible checkboxes and mark all records as selected
                 checkboxes.forEach(checkbox => {
@@ -140,7 +141,6 @@
                 allRecordsSelected = false;
             }
         }
-
         // Update selectedRecords when individual checkboxes are toggled
         document.addEventListener('change', function (e) {
             if (e.target && e.target.classList.contains('selectCheckbox')) {
@@ -151,14 +151,12 @@
                 }
             }
         });
-
-        function exportToCsv() {
+        function exportToExcel() {
             let selectedIds = '';
-
             if (allRecordsSelected) {
                 // Optionally make an AJAX call to get all IDs if "Select All" was selected
                 // Example of a call:
-                fetch('@Url.Action("GetAllServiceIds", "Service", new { area = "Filpride" })')
+                fetch('@Url.Action("GetAllChartOfAccountIds", "ChartOfAccount")')
                     .then(response => response.json())
                     .then(data => {
                         selectedIds = data.join(',');
@@ -171,21 +169,18 @@
                 if (selectedIds) {
                     submitForm(selectedIds);
                 } else {
-                    alert('No Service selected.');
+                    alert('No ChartOfAccount selected.');
                 }
             }
         }
-
         function submitForm(selectedIds) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '@Url.Action("Export", "Service", new { area = "Filpride" })';
-
+            form.action = '@Url.Action("Export", "ChartOfAccount")';
             const input = document.createElement('input');
             input.type = 'hidden';
             input.name = 'selectedRecord';
             input.value = selectedIds;
-
             form.appendChild(input);
             document.body.appendChild(form);
             form.submit();

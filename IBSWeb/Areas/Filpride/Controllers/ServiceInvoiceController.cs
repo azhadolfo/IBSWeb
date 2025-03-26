@@ -774,6 +774,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["Q1"].Value = "OriginalSeriesNumber";
             worksheet.Cells["R1"].Value = "OriginalServicesId";
             worksheet.Cells["S1"].Value = "OriginalDocumentId";
+            worksheet.Cells["T1"].Value = "PostedBy";
+            worksheet.Cells["U1"].Value = "PostedDate";
 
             int row = 2;
 
@@ -798,6 +800,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 17].Value = item.ServiceInvoiceNo;
                 worksheet.Cells[row, 18].Value = item.ServiceId;
                 worksheet.Cells[row, 19].Value = item.ServiceInvoiceId;
+                worksheet.Cells[row, 20].Value = item.PostedBy;
+                worksheet.Cells[row, 21].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                 row++;
             }
@@ -809,7 +813,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ServiceInvoiceList.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ServiceInvoiceList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion -- export xlsx record --

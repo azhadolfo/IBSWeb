@@ -567,6 +567,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["P1"].Value = "OriginalSeriesNumber";
             worksheet.Cells["Q1"].Value = "OriginalSupplierId";
             worksheet.Cells["R1"].Value = "OriginalDocumentId";
+            worksheet.Cells["S1"].Value = "PostedBy";
+            worksheet.Cells["T1"].Value = "PostedDate";
 
             int row = 2;
 
@@ -590,6 +592,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 16].Value = item.PurchaseOrderNo;
                 worksheet.Cells[row, 17].Value = item.SupplierId;
                 worksheet.Cells[row, 18].Value = item.PurchaseOrderId;
+                worksheet.Cells[row, 19].Value = item.PostedBy;
+                worksheet.Cells[row, 20].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                 row++;
             }
@@ -601,7 +605,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PurchaseOrderList.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"PurchaseOrderList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion -- export xlsx record --

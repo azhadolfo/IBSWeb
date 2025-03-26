@@ -1121,6 +1121,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet2.Cells["T1"].Value = "OriginalProductId";
                 worksheet2.Cells["U1"].Value = "OriginalSeriesNumber";
                 worksheet2.Cells["V1"].Value = "OriginalDocumentId";
+                worksheet2.Cells["W1"].Value = "PostedBy";
+                worksheet2.Cells["X1"].Value = "PostedDate";
 
                 #endregion -- Sales Invoice Table Header --
 
@@ -1147,6 +1149,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet3.Cells["Q1"].Value = "OriginalSeriesNumber";
                 worksheet3.Cells["R1"].Value = "OriginalServicesId";
                 worksheet3.Cells["S1"].Value = "OriginalDocumentId";
+                worksheet3.Cells["T1"].Value = "PostedBy";
+                worksheet3.Cells["U1"].Value = "PostedDate";
 
                 #endregion -- Service Invoice Table Header --
 
@@ -1173,6 +1177,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["Q1"].Value = "OriginalSeriesNumber";
                 worksheet.Cells["R1"].Value = "OriginalServiceInvoiceId";
                 worksheet.Cells["S1"].Value = "OriginalDocumentId";
+                worksheet.Cells["T1"].Value = "PostedBy";
+                worksheet.Cells["U1"].Value = "PostedDate";
 
                 #endregion -- Credit Memo Table Header --
 
@@ -1201,6 +1207,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 17].Value = item.CreditMemoNo;
                     worksheet.Cells[row, 18].Value = item.ServiceInvoiceId;
                     worksheet.Cells[row, 19].Value = item.CreditMemoId;
+                    worksheet.Cells[row, 20].Value = item.PostedBy;
+                    worksheet.Cells[row, 21].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -1246,6 +1254,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[siRow, 20].Value = item.SalesInvoice.ProductId;
                     worksheet2.Cells[siRow, 21].Value = item.SalesInvoice.SalesInvoiceNo;
                     worksheet2.Cells[siRow, 22].Value = item.SalesInvoice.SalesInvoiceId;
+                    worksheet2.Cells[siRow, 23].Value = item.SalesInvoice.PostedBy;
+                    worksheet2.Cells[siRow, 24].Value = item.SalesInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     siRow++;
                 }
@@ -1288,6 +1298,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[svRow, 17].Value = item.ServiceInvoice.ServiceInvoiceNo;
                     worksheet3.Cells[svRow, 18].Value = item.ServiceInvoice.ServiceId;
                     worksheet3.Cells[svRow, 19].Value = item.ServiceInvoice.ServiceInvoiceId;
+                    worksheet3.Cells[svRow, 20].Value = item.ServiceInvoice.PostedBy;
+                    worksheet3.Cells[svRow, 21].Value = item.ServiceInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     svRow++;
                 }
@@ -1306,7 +1318,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var excelBytes = await package.GetAsByteArrayAsync();
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "CreditMemoList.xlsx");
+                    $"CreditMemoList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
         }
 

@@ -1251,6 +1251,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells["P1"].Value = "OriginalSeriesNumber";
                     worksheet3.Cells["Q1"].Value = "OriginalSupplierId";
                     worksheet3.Cells["R1"].Value = "OriginalDocumentId";
+                    worksheet3.Cells["S1"].Value = "PostedBy";
+                    worksheet3.Cells["T1"].Value = "PostedDate";
 
                     #endregion -- Purchase Order Table Header --
 
@@ -1280,6 +1282,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet4.Cells["T1"].Value = "OriginalPOId";
                     worksheet4.Cells["U1"].Value = "OriginalSeriesNumber";
                     worksheet4.Cells["V1"].Value = "OriginalDocumentId";
+                    worksheet4.Cells["W1"].Value = "PostedBy";
+                    worksheet4.Cells["X1"].Value = "PostedDate";
 
                     #endregion -- Receving Report Table Header --
 
@@ -1318,6 +1322,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells["AC1"].Value = "OriginalSeriesNumber";
                     worksheet.Cells["AD1"].Value = "OriginalSupplierId";
                     worksheet.Cells["AE1"].Value = "OriginalDocumentId";
+                    worksheet.Cells["AF1"].Value = "PostedBy";
+                    worksheet.Cells["AG1"].Value = "PostedDate";
 
                     #endregion -- Check Voucher Header Table Header --
 
@@ -1385,6 +1391,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 29].Value = item.CheckVoucherHeaderNo;
                         worksheet.Cells[row, 30].Value = item.SupplierId;
                         worksheet.Cells[row, 31].Value = item.CheckVoucherHeaderId;
+                        worksheet.Cells[row, 32].Value = item.PostedBy;
+                        worksheet.Cells[row, 33].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                         row++;
                     }
@@ -1445,6 +1453,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 29].Value = item.CheckVoucherHeaderNo;
                         worksheet.Cells[row, 30].Value = item.SupplierId;
                         worksheet.Cells[row, 31].Value = item.CheckVoucherHeaderId;
+                        worksheet.Cells[row, 32].Value = item.PostedBy;
+                        worksheet.Cells[row, 33].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                         row++;
                     }
@@ -1544,6 +1554,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet4.Cells[rrRow, 20].Value = item.POId;
                         worksheet4.Cells[rrRow, 21].Value = item.ReceivingReportNo;
                         worksheet4.Cells[rrRow, 22].Value = item.ReceivingReportId;
+                        worksheet4.Cells[rrRow, 23].Value = item.PostedBy;
+                        worksheet4.Cells[rrRow, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                         rrRow++;
                     }
@@ -1588,6 +1600,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet3.Cells[poRow, 16].Value = item.PurchaseOrderNo;
                         worksheet3.Cells[poRow, 17].Value = item.SupplierId;
                         worksheet3.Cells[poRow, 18].Value = item.PurchaseOrderId;
+                        worksheet3.Cells[poRow, 19].Value = item.PostedBy;
+                        worksheet3.Cells[poRow, 20].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                         poRow++;
                     }
@@ -1605,7 +1619,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Convert the Excel package to a byte array
                     var excelBytes = await package.GetAsByteArrayAsync();
 
-                    return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CheckVoucherList.xlsx");
+                    return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CheckVoucherList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
                 }
             }
             catch (Exception ex)
