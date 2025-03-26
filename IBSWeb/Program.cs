@@ -28,11 +28,11 @@ var googleCloudSinkOptions = new GoogleCloudLoggingSinkOptions
     UseSourceContextAsLogName = false  // Keep the log name you specified
 };
 
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()  // Sets the minimum level for ALL sinks to Debug
-    .WriteTo.Console()  // This sink will log Debug and above
-    .WriteTo.GoogleCloudLogging(googleCloudSinkOptions, restrictedToMinimumLevel: LogEventLevel.Warning)  // This sink will only log Warning and above
-    .CreateLogger();
+// Log.Logger = new LoggerConfiguration()
+//     .MinimumLevel.Information()  // Sets the minimum level for ALL sinks to Debug
+//     .WriteTo.Console()  // This sink will log Debug and above
+//     .WriteTo.GoogleCloudLogging(googleCloudSinkOptions, restrictedToMinimumLevel: LogEventLevel.Warning)  // This sink will only log Warning and above
+//     .CreateLogger();
 
 // Replace default logging with Serilog
 builder.Host.UseSerilog();
