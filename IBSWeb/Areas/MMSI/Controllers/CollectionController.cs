@@ -149,5 +149,21 @@ namespace IBSWeb.Areas.MMSI
                 return RedirectToAction("Index");
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> IsCustomerVatable(string customerId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var customer = await _dbContext.MMSICustomers
+                    .FindAsync(int.Parse(customerId), cancellationToken);
+
+                return Json(customer.IsVatable);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Customer not found" });
+            }
+        }
     }
 }

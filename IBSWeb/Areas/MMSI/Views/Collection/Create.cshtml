@@ -61,19 +61,21 @@
                             <div class="row my-3">
                                 <div class="form-group col-4">
                                     <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                                    <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                    <input id="customerIsVatable" type="hidden"></input>
+                                    <select asp-for="CustomerId" id="customerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                                         <option value="">Select Customer</option>
                                     </select>
                                     <span asp-validation-for="CustomerId" class="text-danger"></span>
                                 </div>
+                                <input type="hidden" id="undeductedAmount">
                                 <input type="hidden" asp-for="Amount" value="@Model.Amount" id="amount">
                                 <div class="form-floating col-4">
-                                    <input type="number" class="form-control border-0 shadow"  id="amountShow"  placeholder=" " min="0" disabled>
+                                    <input type="number" class="form-control border-0 shadow"  id="amountShow" value="0.00"  placeholder=" " min="0" disabled>
                                     <label class="ms-2">Amount</label>
                                 </div>
                                 <input type="hidden" asp-for="EWT" value="@Model.EWT" id="ewt">
                                 <div class="form-floating col-4">
-                                    <input type="number" class="form-control border-0 shadow"  id="ewtShow" value="0" placeholder=" " min="0" disabled>
+                                    <input type="number" class="form-control border-0 shadow"  id="ewtShow" value="0.00" placeholder=" " min="0" disabled>
                                     <label class="ms-2">EWT</label>
                                 </div>
                             </div>
@@ -120,7 +122,7 @@
                             </div>
                         </div>
 
-                        <div class="col-3">
+                        <div class="col-3 ps-5">
                             <div class="row py-2">
                                 <h3 class="m-0 p-0">Bill Paid</h3>
                             </div>
@@ -165,12 +167,50 @@
 
         $('.js-example-basic-multiple').select2();
         
+        function calculateEWTDeduction() {
+            var originalAmount = document.getElementById("undeductedAmount").value;
+            var totalAmount = document.getElementById("amount").value;
+            var customerId = document.getElementById("customerId").value;
+            console.log("Amount debug:" + totalAmount);
+            console.log("CustomerId debug:" + customerId);
+            
+            $.ajax({
+                url: '/MMSI/Collection/IsCustomerVatable',
+                type: 'GET',
+                data: { customerId : customerId },
+                success: function(result) {
+                    console.log(result);
+                    if (result){
+                        var deductedAmount = totalAmount / 1.12;
+                        var ewt = totalAmount - deductedAmount;
+                        document.getElementById("amountShow").value = deductedAmount.toFixed(2);
+                        document.getElementById("amount").value = deductedAmount.toFixed(2);
+                        document.getElementById("ewt").value = ewt.toFixed(2);
+                        document.getElementById("ewtShow").value = ewt.toFixed(2);
+                    }
+                    else{
+                        document.getElementById("amountShow").value = document.getElementById("undeductedAmount").value;
+                        document.getElementById("amount").value = document.getElementById("undeductedAmount").value;
+                        document.getElementById("ewt").value = 0.00;
+                        document.getElementById("ewtShow").value = 0.00;
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });
+        }
+        
         $(document).ready(function (){
 
+            $('#customerId').on('change', function() {
+                calculateEWTDeduction();
+            });
+
+            document.getElementById("isDocumentedCheckbox").addEventListener("change", checkboxChanged);
+
             table = $('#dataTable').DataTable();
-
             table.destroy();
-
             table = $('#dataTable').DataTable({
                 paging: false,
                 info: false,
@@ -179,10 +219,8 @@
                 searching: false
             });
             
-            document.getElementById("isDocumentedCheckbox").addEventListener("change", checkboxChanged);
-
+            // turns collection number field on and off
             function checkboxChanged() {
-                
                 var checkbox = document.getElementById("isDocumentedCheckbox");
                 var inputField = document.getElementById("collectionNumber");
 
@@ -192,12 +230,13 @@
                     inputField.removeAttribute("disabled")
                 } else {
                     document.getElementById("status").innerHTML = "Undocumented";
+                    document.getElementById("collectionNumber").value = "";
                     inputField.removeAttribute("required");
                     inputField.setAttribute("disabled", "disabled");
                 }
             }
         });
-
+        
         $('.js-example-basic-multiple').on('change', function() {
             var selectedBills = $(this).val();
 
@@ -228,9 +267,11 @@
                     });
 
                     document.getElementById("billingsTotal").innerHTML = `<u>Total: ₱ ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`;
-                    document.getElementById("amountShow").value = totalAmount;
-                    document.getElementById("amount").value = totalAmount;
+                    document.getElementById("amountShow").value = totalAmount.toFixed(2);
+                    document.getElementById("amount").value = totalAmount.toFixed(2);
+                    document.getElementById("undeductedAmount").value = totalAmount.toFixed(2);
                     console.log(document.getElementById("amount").value);
+                    calculateEWTDeduction();
                     
                     $('#dataTable').DataTable({
                         paging: false,        // Enable pagination
