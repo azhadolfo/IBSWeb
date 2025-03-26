@@ -258,12 +258,12 @@ namespace IBS.DataAccess.Repository.Filpride
             return await query.ToListAsync(cancellationToken);
         }
 
-        public async Task AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, CancellationToken cancellationToken = default)
+        public async Task<string> AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, DateOnly liftingDate, CancellationToken cancellationToken = default)
         {
             FilprideReceivingReport model = new()
             {
                 DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId,
-                Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                Date = liftingDate,
                 POId = deliveryReceipt.PurchaseOrder.PurchaseOrderId,
                 PONo = deliveryReceipt.PurchaseOrder.PurchaseOrderNo,
                 QuantityDelivered = deliveryReceipt.Quantity,
@@ -277,7 +277,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 PostedBy = "SYSTEM GENERATED",
                 PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 Status = nameof(Status.Posted),
-                Type = deliveryReceipt.PurchaseOrder.Type
+                Type = deliveryReceipt.PurchaseOrder.Type,
+                SupplierInvoiceDate = liftingDate,
             };
 
             if (model.QuantityDelivered > deliveryReceipt.PurchaseOrder.Quantity - deliveryReceipt.PurchaseOrder.QuantityReceived)
@@ -290,6 +291,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var freight = deliveryReceipt.CustomerOrderSlip.DeliveryOption == SD.DeliveryOption_DirectDelivery
                 ? deliveryReceipt.Freight
                 : 0;
+
             model.ReceivedDate = model.Date;
             model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type, cancellationToken);
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
@@ -350,6 +352,8 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.SaveChangesAsync(cancellationToken);
 
             await PostAsync(model, cancellationToken);
+
+            return model.ReceivingReportNo;
         }
 
         public async Task PostAsync(FilprideReceivingReport model, CancellationToken cancellationToken = default)
@@ -531,38 +535,31 @@ namespace IBS.DataAccess.Repository.Filpride
                 return;
             }
 
-            try
+            if (model.PostedBy != null)
             {
-                if (model.PostedBy != null)
-                {
-                    model.PostedBy = null;
-                }
-
-                model.VoidedBy = currentUser;
-                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                model.Status = nameof(Status.Voided);
-
-                await RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
-                await RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
-                var unitOfWork = new UnitOfWork(_db);
-                await unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
-                await RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
-
-                model.QuantityReceived = 0;
-
-                #region --Audit Trail Recording
-
-                FilprideAuditTrail auditTrailBook = new(currentUser, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
-                await _db.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion --Audit Trail Recording
-
-                await _db.SaveChangesAsync(cancellationToken);
+                model.PostedBy = null;
             }
-            catch
-            {
-                throw;
-            }
+
+            model.VoidedBy = currentUser;
+            model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+            model.Status = nameof(Status.Voided);
+
+            await RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
+            await RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
+            var unitOfWork = new UnitOfWork(_db);
+            await unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
+            await RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
+
+            model.QuantityReceived = 0;
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrailBook = new(currentUser, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+            await _db.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
+            await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }

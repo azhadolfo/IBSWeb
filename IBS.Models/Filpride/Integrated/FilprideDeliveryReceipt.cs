@@ -126,5 +126,7 @@ namespace IBS.Models.Filpride.Integrated
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal CommissionAmount { get; set; }
+
+        public bool HasReceivingReport { get; set; }
     }
 }
