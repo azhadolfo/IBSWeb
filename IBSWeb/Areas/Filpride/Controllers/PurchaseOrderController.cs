@@ -207,7 +207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilpridePurchaseOrder();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
