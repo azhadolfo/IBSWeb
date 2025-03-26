@@ -83,7 +83,8 @@
         Product,
         Supplier,
         Service,
-        BankAccount
+        BankAccount,
+        ChartOfAccount
     }
 
     public enum CVType
