@@ -47,6 +47,7 @@
     .actions-dropdown .dropdown-item:hover {
         background-color: #f3f4f6;
     }
+    
 </style>
 
 <div class="container-fluid mt-4">
@@ -187,6 +188,11 @@
                                     <li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Preview</a></li>
                                     <li><a class="dropdown-item" href="#" onclick="confirmCancel(${data})">Cancel</a></li>
                                     <li><a class="dropdown-item" href="#" onclick="markAsDelivered(${data})">Mark As Delivered</a></li>`;
+                                    
+                                if (!row.hasReceivingReport) {
+                                    actions += `<li><a class="dropdown-item" href="#" onclick="recordLiftingDate(${data})">Record Lifting Date</a></li>`;
+                                }
+                                
                             } else {
                                 actions += `
                                     <li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Print</a></li>
@@ -259,7 +265,7 @@
             let lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
 
             Swal.fire({
-                title: "Please Confirm the Delivery Date",
+                title: "Please confirm the delivery date",
                 html: `
             <input type="date" id="deliveredDate" class="swal2-input" value="${today}" max="${lastDayOfMonth}" required>
         `,
@@ -296,6 +302,59 @@
                     let deliveredDate = result.value;
                     // Redirect to the delivered action with the id and date as parameters
                     let url = `@Url.Action("Delivered", "DeliveryReceipt", new { area = "Filpride" })/${id}?deliveredDate=${encodeURIComponent(deliveredDate)}`;
+                    window.location.href = url;
+                }
+            });
+        }
+    </script>
+
+    <script>
+        function recordLiftingDate(id) {
+            // Get today's date in yyyy-MM-dd format
+            let today = new Date().toISOString().split('T')[0];
+
+            // Get the last day of the current month
+            let currentDate = new Date();
+            let lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
+
+            Swal.fire({
+                title: "Please confirm the lifting date",
+                html: `
+            <input type="date" id="liftingDate" class="swal2-input" value="${today}" max="${lastDayOfMonth}" required>
+        `,
+                focusConfirm: false,
+                allowEscapeKey: false,
+                allowOutsideClick: false,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes',
+                preConfirm: () => {
+                    let liftingDate = document.getElementById('liftingDate').value;
+
+                    // Validate the selected date
+                    if (!liftingDate) {
+                        Swal.showValidationMessage('Please select a date.');
+                        return false; // Prevent submission
+                    }
+
+                    // Check if the selected date exceeds the last day of the current month
+                    let selectedDate = new Date(liftingDate);
+                    let maxDate = new Date(lastDayOfMonth);
+
+                    if (selectedDate > maxDate) {
+                        Swal.showValidationMessage('The selected date cannot exceed the current month.');
+                        return false; // Prevent submission
+                    }
+
+                    return liftingDate; // Allow submission
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let liftingDate = result.value;
+                    // Redirect to the delivered action with the id and date as parameters
+                    let url = `@Url.Action("RecordLiftingDate", "DeliveryReceipt", new { area = "Filpride" })/${id}?liftingDate=${encodeURIComponent(liftingDate)}`;
                     window.location.href = url;
                 }
             });

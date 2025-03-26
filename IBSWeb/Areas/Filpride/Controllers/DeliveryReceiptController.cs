@@ -125,8 +125,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 dr.Status == nameof(DRStatus.ForInvoicing));
                             break;
                         case "ForOMApproval":
-                            drList = drList.Where(cos =>
-                                cos.Status == nameof(CosStatus.ForApprovalOfOM));
+                            drList = drList.Where(dr =>
+                                dr.Status == nameof(CosStatus.ForApprovalOfOM));
+                            break;
+                        case "RecordLiftingDate":
+                            drList = drList.Where(dr =>
+                                !dr.HasReceivingReport);
                             break;
                         // Add other cases as needed
                     }
@@ -862,8 +866,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                await _unitOfWork.FilprideReceivingReport.AutoGenerateReceivingReport(existingRecord, cancellationToken);
-
                 #region--Inventory Recording
 
                 await _unitOfWork.FilprideInventory.AddSalesToInventoryAsync(existingRecord, cancellationToken);
@@ -894,6 +896,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
@@ -1056,6 +1059,54 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var exists = await _unitOfWork.FilprideDeliveryReceipt.CheckIfManualDrNoExists(manualDrNo);
             return Json(exists);
+        }
+
+        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
+        [HttpGet]
+        public async Task<IActionResult> RecordLiftingDate(int id, DateOnly liftingDate, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var receivingReportNo = await _unitOfWork.FilprideReceivingReport
+                    .AutoGenerateReceivingReport(model, liftingDate, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(User.Identity.Name,
+                    $"Record lifting date of delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt",
+                    ipAddress, model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                model.HasReceivingReport = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                TempData["success"] = "Delivery Receipt lifting date has been recorded successfully. " +
+                                      $"RR#{receivingReportNo} has been generated.";
+
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to record lifting date. Error: {ErrorMessage}, Stack: {StackTrace}. Recorded by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+
         }
 
     }

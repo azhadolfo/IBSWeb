@@ -229,7 +229,7 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 throw new InvalidOperationException(
                     $"The requested quantity exceeds the available inventory for '{deliveryReceipt.CustomerOrderSlip.Product.ProductName}'. " +
-                    $"Please contact the Logistics department to verify the delivery date if it aligns with your transaction date.");
+                    $"Please contact the TNS department to verify remaining inventory.");
             }
 
             // Calculate initial values for new inventory entry

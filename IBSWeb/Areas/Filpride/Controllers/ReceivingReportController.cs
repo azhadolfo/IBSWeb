@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -30,6 +31,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ILogger<ReceivingReportController> _logger;
 
+        private const string FilterTypeClaimType = "ReceivingReport.FilterType";
+
         public ReceivingReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<ReceivingReportController> logger)
         {
             _dbContext = dbContext;
@@ -45,8 +48,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        private async Task UpdateFilterTypeClaim(string filterType)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var existingClaim = (await _userManager.GetClaimsAsync(user))
+                    .FirstOrDefault(c => c.Type == FilterTypeClaimType);
+
+                if (existingClaim != null)
+                {
+                    await _userManager.RemoveClaimAsync(user, existingClaim);
+                }
+
+                if (!string.IsNullOrEmpty(filterType))
+                {
+                    await _userManager.AddClaimAsync(user, new Claim(FilterTypeClaimType, filterType));
+                }
+            }
+        }
+
+        private async Task<string> GetCurrentFilterType()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var claims = await _userManager.GetClaimsAsync(user);
+                return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
+            }
+            return null;
+        }
+
+        public async Task<IActionResult> Index(string? view, string filterType, CancellationToken cancellationToken)
+        {
+            await UpdateFilterTypeClaim(filterType);
             if (view == nameof(DynamicView.ReceivingReport))
             {
                 var companyClaims = await GetCompanyClaimAsync();
@@ -77,9 +112,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
+                var filterTypeClaim = await GetCurrentFilterType();
 
                 var receivingReports = await _unitOfWork.FilprideReceivingReport
                     .GetAllAsync(rr => rr.Company == companyClaims, cancellationToken);
+
+                if (!string.IsNullOrEmpty(filterTypeClaim))
+                {
+                    switch (filterTypeClaim)
+                    {
+                        case "RecordLiftingDate":
+                            receivingReports = receivingReports
+                                .Where(rr => rr.SupplierInvoiceDate == null);
+                            break;
+                        // Add other cases as needed
+                    }
+                }
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -133,7 +181,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _logger.LogError(ex, "Failed to get receiving reports. Error: {ErrorMessage}, Stack: {StackTrace}.",
                     ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -209,7 +257,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     TempData["success"] = "Receiving Report created successfully";
 
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 catch (Exception ex)
                 {
@@ -337,7 +385,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Receiving Report updated successfully";
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 catch (Exception ex)
                 {
@@ -381,7 +429,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.ReceivedDate == null)
                     {
                         TempData["error"] = "Please indicate the received date.";
-                        return RedirectToAction(nameof(Index));
+                        return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                     }
 
                     if (model.PostedBy == null)
@@ -405,7 +453,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     else
                     {
-                        return RedirectToAction(nameof(Index));
+                        return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                     }
                 }
                 catch (Exception ex)
@@ -413,7 +461,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     _logger.LogError(ex, "Failed to post receiving report. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }
 
@@ -442,7 +490,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (hasAlreadyBeenUsed)
                 {
                     TempData["error"] = "Please note that this record has already been utilized in a sales invoice or check voucher. As a result, voiding it is not permitted.";
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
 
                 if (model.VoidedBy == null)
@@ -484,10 +532,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                         await transaction.RollbackAsync(cancellationToken);
                         TempData["error"] = ex.Message;
-                        return RedirectToAction(nameof(Index));
+                        return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
             return NotFound();
@@ -525,7 +573,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Receiving Report has been Cancelled.";
                     }
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }
             catch (Exception ex)
@@ -534,7 +582,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _logger.LogError(ex, "Failed to cancel receiving report. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
             return NotFound();
@@ -613,7 +661,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (string.IsNullOrEmpty(selectedRecord))
             {
                 // Handle the case where no invoices are selected
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
