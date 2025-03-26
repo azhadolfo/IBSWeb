@@ -84,7 +84,6 @@
                         <th class="text-center align-content-center">Date</th>
                         <th class="text-center align-content-center">Collection Number</th>
                         <th class="text-center align-content-center">Amount</th>
-                        <th class="text-center align-content-center">Status</th>
                         <th class="text-center align-content-center">Customer</th>
                         <th class="text-center align-content-center">Actions</th>
                     </tr>
@@ -123,7 +122,6 @@
                                     <td class="text-center align-content-center ">${value.date}</td>
                                     <td class="text-center align-content-center ">${value.collectionNumber}</td>
                                     <td class="text-center align-content-center ">${value.amount}</td>
-                                    <td class="text-center align-content-center ">${value.status}</td>
                                     <td class="text-center align-content-center ">${value.customer.customerName}</td>
                                     <td class="text-center justify-content-center d-flex">
                                         <div class="align-content-center text-center" style="width: 150px !important;">
@@ -142,7 +140,7 @@
                         lengthChange: true,
                         columnDefs: [
                             {
-                                "targets": 5,
+                                "targets": 4,
                                 "width": "150px",
                                 "className": "text-center",
                                 "orderable": false

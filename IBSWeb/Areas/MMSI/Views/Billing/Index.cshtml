@@ -101,7 +101,22 @@
                             <td class="text-center align-content-center ">@item?.Customer?.CustomerName</td>
                             <td class="text-center align-content-center ">@item?.Terminal?.Port?.PortName-@item?.Terminal?.TerminalName</td>
                             <td class="text-center align-content-center ">@item?.Vessel?.VesselName</td>
-                            <td class="text-center align-content-center ">@item?.Status</td>
+                            
+                            <td class="text-center align-content-center">
+                                @{
+                                    var status = item?.Status;
+                                }
+                                <span class="badge rounded-pill @(item?.Status switch
+                                                                {
+                                                                    "For Collection" => "bg-info",
+                                                                    "Collected" => "bg-success",
+                                                                    _ => "bg-secondary"
+                                                                })"
+                                      style="font-size: 14px; color: Ivory">
+                                    @item.Status
+                                </span>
+                            </td>
+                            
                             <td class="text-center justify-content-center d-flex">
                                 <div class="align-content-center text-center" style="width: 150px !important;">
                                     <!-- Keep actionsDropdown as is if it's not causing issues -->
@@ -151,7 +166,7 @@
                 "autoWidth": false,
                 "columnDefs": [
                     {
-                        "targets": 6,
+                        "targets": 7,
                         "width": "150px",
                         "className": "text-center",
                         "orderable": false

@@ -63,8 +63,8 @@
             </div>
         </div>
 
-        <div class="row mx-2">
-            <div class="col-6 text-start small-text">
+        <div class="row mx-2 py-2">
+            <div class="col-4 text-start small-text">
                 <div class="row h-100">
                     <div class="col-6 text-start small-text py-2 ps-2">
                         <b>Collection Amount:</b> <br />₱ @Model.Amount.ToString("N2")
@@ -74,11 +74,12 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6 text-start p-2 small-text">
+            <div class="col-8 text-start p-2 small-text">
                 <table class="dataTable">
                     <thead>
                     <tr>
                         <th class="col-4 text-center p-2 small-text border-1">Billing Number</th>
+                        <th class="col-4 text-center p-2 small-text border-1">Date</th>
                         <th class="col-4 text-center p-2 small-text border-1">Customer</th>
                         <th class="col-4 text-center p-2 small-text border-1">Amount</th>
                     </tr>
@@ -88,6 +89,7 @@
                     {
                         <tr>
                             <td class="border text-center">@billing.MMSIBillingNumber</td>
+                            <td class="border text-center">@billing.Date</td>
                             <td class="border text-center">@billing.Customer?.CustomerName</td>
                             <td class="border text-center">₱ @billing.Amount.ToString("N2")</td>
                         </tr>
