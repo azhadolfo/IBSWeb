@@ -93,7 +93,7 @@
                                 <option value="Tariff Pending">Tariff Pending</option>
                                 <option value="Disapproved">Disapproved</option>
                                 <option value="For Billing">For Billing</option>
-                                <option value="For Collection">For Collection</option>
+                                <option value="Billed">Billed</option>
                             </select>
                         </th>
                         <th class="actions-column align-middle text-center">Actions</th>
@@ -124,7 +124,7 @@
                                                                     "Tariff Pending" => "bg-warning",
                                                                     "Disapproved" => "bg-danger",
                                                                     "For Billing" => "bg-success",
-                                                                    "For Collection" => "bg-success",
+                                                                    "Billed" => "bg-success",
                                                                     _ => "bg-secondary"
                                                                 })"
                                       style="font-size: 14px; color: Ivory">
@@ -194,7 +194,7 @@
                                 case "For Billing":
                                     badgeClass = "bg-success";
                                     break;
-                                case "For Collection":
+                                case "Billed":
                                     badgeClass = "bg-success";
                                     break;
                                 default:

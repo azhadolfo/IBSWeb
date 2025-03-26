@@ -66,7 +66,7 @@ namespace IBSWeb.Areas.MMSI
                     {
                         var dtEntry = await _db.MMSIDispatchTickets.FindAsync(int.Parse(billDispatchTicket));
                         totalAmount = (totalAmount + dtEntry?.TotalNetRevenue) ?? 0m;
-                        dtEntry.Status = "For Collection";
+                        dtEntry.Status = "Billed";
                         dtEntry.BillingId = model.MMSIBillingNumber;
                         await _db.SaveChangesAsync(cancellationToken);
                     }

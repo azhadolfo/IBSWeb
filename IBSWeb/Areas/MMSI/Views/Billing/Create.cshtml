@@ -82,7 +82,7 @@
     </div>
     
     <div class="card-body table-responsive">
-        <form id="myForm" method="post" class="row" enctype="multipart/form-data">
+        <form id="myForm" method="post" enctype="multipart/form-data">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="row pt-3">
@@ -324,15 +324,15 @@
 
                         $('#dataTable tbody').append(`
                             <tr>
-                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.tugboat.tugboatName}</pre></td>
-                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.activityService.activityServiceName}</pre></td>
-                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.dateLeft} - ${value.timeLeft}</pre></td>
-                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.dateArrived} - ${value.timeArrived}</pre></td>
-                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.totalHours}</pre></td>
-                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.dispatchRate}</pre></td>
-                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.dispatchNetRevenue}</pre></td>
-                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.bafRate}</pre></td>
-                                <td class="text-center align-middle ps-4"><pre class="m-0 p-0">${value.bafNetRevenue}</pre></td>
+                                <td class="text-center align-middle ps-4">${value.tugboat.tugboatName}</td>
+                                <td class="text-center align-middle ps-4">${value.activityService.activityServiceName}</td>
+                                <td class="text-center align-middle ps-4">${value.dateLeft} - ${value.timeLeft}</td>
+                                <td class="text-center align-middle ps-4">${value.dateArrived} - ${value.timeArrived}</td>
+                                <td class="text-center align-middle ps-4">${value.totalHours}</td>
+                                <td class="text-center align-middle ps-4">${value.dispatchRate}</td>
+                                <td class="text-center align-middle ps-4">${value.dispatchNetRevenue}</td>
+                                <td class="text-center align-middle ps-4">${value.bafRate}</td>
+                                <td class="text-center align-middle ps-4">${value.bafNetRevenue}</td>
                             </tr>`
                         );
                     });

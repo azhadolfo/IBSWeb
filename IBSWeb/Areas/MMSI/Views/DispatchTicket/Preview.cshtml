@@ -274,7 +274,7 @@
 
             <div class="row col-12 justify-content-end my-2">
                 <div class="text-center" style="width: 250px;">
-                    @if ((Model.Status != "For Collection" && Model.Status != "Disapproved" && Model.Status != "For Billing") 
+                    @if ((Model.Status != "Billed" && Model.Status != "Disapproved" && Model.Status != "For Billing") 
                     || !string.IsNullOrEmpty(Model.UploadName))
                     {
                         <div class="dropdown align-content-center">
