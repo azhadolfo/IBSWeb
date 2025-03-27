@@ -252,6 +252,7 @@ namespace IBS.DataAccess.Repository.Filpride
                              dr.DeliveredDate <= dateTo &&
                              (dr.Status == nameof(DRStatus.ForInvoicing) || dr.Status == nameof(DRStatus.Invoiced)))
                 .Include(dr => dr.CustomerOrderSlip.Product)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Commissionee)
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.PurchaseOrder)
                 .OrderBy(dr => dr.DeliveredDate)
