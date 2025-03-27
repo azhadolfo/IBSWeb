@@ -1,0 +1,139 @@
+@model IBS.Models.MMSI.MMSITariffRate
+
+@{
+    ViewData["Title"] = "Create";
+    
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2><i class="bi bi-pencil-square"></i> CREATE TARIFF RATE</h2>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <form method="post" class="row">
+            <div class="border-2 px-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                
+                <div class="row">
+                    <div class="form-floating col-6 my-3">
+                        <input asp-for="AsOfDate" type="date" value="@DateOnly.FromDateTime(DateTime.UtcNow.AddHours(8)).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="AsOfDate" placeholder="Name" required>
+                        <label asp-for="AsOfDate" for="AsOfDate" class="ms-2">Tariff as of:<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="AsOfDate" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="form-group col-6 my-3">
+                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
+                        <select asp-for="CustomerId" id="CustomerSelect" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Customer</option>
+                        </select>
+                        <span asp-validation-for="CustomerId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-6 my-3">
+                        <label class="control-label ps-1 pb-1">Type of Service<span class="required text-danger">*</span></label>
+                        <select asp-for="ActivityServiceId" id="ActivityServiceSelect" asp-items="@Model.ActivitiesServices" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Service Type</option>
+                        </select>
+                        <span asp-validation-for="ActivityServiceId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    @if (Model.TerminalId != null)
+                    {
+                        <div class="form-group col-6 my-2">
+                            <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
+                            <select id="PortSelect" asp-items="@Model.Ports" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                <option value="">Select Port</option>
+                            </select>
+                            <span class="text-danger"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-group col-6 my-2">
+                            <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
+                            <select id="PortSelect" asp-items="@Model.Ports" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                <option value="">Select Port</option>
+                            </select>
+                            <span class="text-danger"></span>
+                        </div>
+                    }
+
+                    <div class="form-group col-6 my-2">
+                        <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
+                        <select id="TerminalSelect" asp-for="TerminalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Terminal</option>
+                        </select>
+                        <span asp-validation-for="TerminalId" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row pb-3">
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="Dispatch" type="number" class="form-control border-0 shadow" id="Dispatch" placeholder=" " required>
+                        <label asp-for="Dispatch" for="Dispatch" class="ms-2">Dispatch</label>
+                        <span asp-validation-for="Dispatch" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="BAF" type="number" class="form-control border-0 shadow" id="BAF" placeholder=" " required>
+                        <label asp-for="BAF" for="BAF" class="ms-2">BAF</label>
+                        <span asp-validation-for="BAF" class="text-danger"></span>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="row justify-content-end mt-3">
+                <div class="text-center" style="width: 250px;">
+                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                </div>
+                <div class="text-center" style="width: 250px;">
+                    <a class="btn btn-outline-primary col-12" asp-controller="TariffRate" asp-action="Index">
+                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        
+        $(document).ready(function () {
+            
+            function HandlePortChange() {
+                var portId = $("#PortSelect").val();
+
+                $.ajax({
+                    url: '@Url.Action("ChangeTerminal", "DispatchTicket")',
+                    type: "GET",
+                    data: { portId: portId },
+                    success: function (data) {
+                        $("#TerminalSelect").empty();
+
+                        if (Array.isArray(data) && data.length > 0) {
+                            $("#TerminalSelect").append('<option>');
+
+                            $.each(data, function (index, item) {
+                                $("#TerminalSelect").append($('<option>', {
+                                    value: item.value,
+                                    text: item.text
+                                }));
+                            });
+                        }
+                    }
+                });
+            }
+            $("#PortSelect").change(HandlePortChange);
+            
+        });
+    
+    </script>
+}

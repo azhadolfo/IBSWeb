@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.MMSI.MasterFile;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.MMSI
 {
@@ -29,5 +30,25 @@ namespace IBS.Models.MMSI
         public decimal Dispatch {  get; set; }
 
         public decimal BAF { get; set; }
+
+        public string? CreatedBy { get; set; }
+
+        public DateTime? CreatedDate { get; set; }
+
+        #region -- Select Lists --
+
+        [NotMapped]
+        public List<SelectListItem>? Customers { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Ports { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? ActivitiesServices { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Terminals { get; set; }
+
+        #endregion
     }
 }
