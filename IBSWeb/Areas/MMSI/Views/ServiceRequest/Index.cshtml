@@ -147,15 +147,23 @@
                             @if (!string.IsNullOrEmpty(item.UploadName))
                             {
                                 <td class="text-center justify-content-center d-flex">
-                                    <div class="text-center" style="width: 150px !important;">
-                                        <a class="view-upload btn btn-primary custom-btn col-12" data-uploadname="@item.UploadName"><i class="bi bi-eye"></i> View</a>
+                                    <div class="text-center" style="width: 150px;">
+                                        <div class="dropdown align-content-center">
+                                            <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                                <li><a class="dropdown-item" href="@Url.Action("Edit", "ServiceRequest", new { id = item.DispatchTicketId })"><i class="bi bi-pencil-square"></i> Edit</a></li>
+                                                <li><a class="dropdown-item view-upload" href="#" data-uploadname="@item.UploadName"><i class="bi bi-eye"></i> View File</a></li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </td>
                             }
                             else
                             {
-                                <td>
-                                    <div class="width: 150px"></div>
+                                <td class="text-center justify-content-center d-flex">
+                                    <div class="text-center" style="width: 150px !important;">
+                                        <a class="view-upload btn btn-primary custom-btn col-12" href="@Url.Action("Edit", "ServiceRequest", new { id = item.DispatchTicketId })"><i class="bi bi-pencil-square"></i> Edit</a>
+                                    </div>
                                 </td>
                             }
                         </tr>
@@ -268,8 +276,12 @@
                                         <td class="text-center align-content-center"><pre class="m-0 p-0">${value.createDate}</pre></td>
                                         <td class="text-center align-content-center"><pre class="m-0 p-0">${value.cosNumber || ""}</pre></td>
                                         <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dispatchNumber}</pre></td>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dateLeft} ${value.timeLeft}</pre></td>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dateArrived} ${value.timeArrived}</pre></td>
+                                        <td class="text-center align-content-center">
+                                            <pre class="m-0 p-0">${value.dateLeft} ${new Date("1970-01-01 " + value.timeLeft).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</pre>
+                                        </td>
+                                        <td class="text-center align-content-center">
+                                            <pre class="m-0 p-0">${value.dateArrived} ${new Date("1970-01-01 " + value.timeArrived).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</pre>
+                                        </td>
                                         <td class="text-center align-content-center"><pre class="m-0 p-0">${value.activityService.activityServiceName}</pre></td>
                                         <td class="text-center align-content-center"><pre class="m-0 p-0">${value.terminal.port.portName}-${value.terminal.terminalName}</pre></td>
                                         <td class="text-center align-content-center"><pre class="m-0 p-0">${value.tugboat.tugboatName}</pre></td>
@@ -283,9 +295,16 @@
                                         <td class="text-center justify-content-center d-flex">
                                             <div class="text-center" style="width: 150px !important;">
                                                 ${value.uploadName ? `
-                                                    <a class="view-upload btn btn-primary col-12" data-uploadname="${value.uploadName}">
-                                                        <i class="bi bi-eye-fill"></i> View
-                                                    </a>` : ""}
+                                                    <div class="dropdown align-content-center">
+                                                        <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                                        <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                                            <li><a class="dropdown-item" href="/MMSI/ServiceRequest/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>
+                                                            <li><a class="dropdown-item view-upload" href="#" data-uploadname="${value.uploadName}"><i class="bi bi-eye"></i> View File</a></li>
+                                                        </ul>
+                                                    </div>
+                                                ` : `
+                                                    <a class="view-upload btn btn-primary custom-btn col-12" href="/MMSI/ServiceRequest/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a>
+                                                `}
                                             </div>
                                         </td>
                                     </tr>

@@ -120,14 +120,7 @@
                         <span asp-validation-for="TimeArrived" class="text-danger"></span>
                     </div>
                 </div>
-
-                <div class="form-group col-12 my-2">
-                    <label class="control-label ps-1 pb-1">Activity/Service Type<span class="required text-danger">*</span></label>
-                    <select asp-for="ActivityServiceId" asp-items="@Model.ActivitiesServices" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                        <option value="">Select Activity Service</option>
-                    </select>
-                    <span asp-validation-for="ActivityServiceId" class="text-danger"></span>
-                </div>
+                
                 <div class="row">
                     @if (Model.TerminalId != null)
                     {
@@ -159,13 +152,24 @@
                     </div>
                 </div>
 
-                <div class="form-group col-12 my-2">
-                    <label class="control-label ps-1 pb-1">Tugboat/Service provider<span class="required text-danger">*</span></label>
-                    <select asp-for="TugBoatId" asp-items="@Model.Tugboats" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                        <option value="">Select Tugboat</option>
-                    </select>
-                    <span asp-validation-for="TugBoatId" class="text-danger"></span>
+                <div class="row">
+                    <div class="form-group col-6 my-2">
+                        <label class="control-label ps-1 pb-1">Activity/Service Type<span class="required text-danger">*</span></label>
+                        <select asp-for="ActivityServiceId" asp-items="@Model.ActivitiesServices" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Activity Service</option>
+                        </select>
+                        <span asp-validation-for="ActivityServiceId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group col-6 my-2">
+                        <label class="control-label ps-1 pb-1">Tugboat/Service provider<span class="required text-danger">*</span></label>
+                        <select asp-for="TugBoatId" asp-items="@Model.Tugboats" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Tugboat</option>
+                        </select>
+                        <span asp-validation-for="TugBoatId" class="text-danger"></span>
+                    </div>
                 </div>
+                
                 <div class="row">
                     <div class="form-group col-6 my-2">
                         <label class="control-label pb-1">Master on Duty<span class="required text-danger">*</span></label>
