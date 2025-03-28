@@ -213,7 +213,7 @@ namespace IBSWeb.Areas.MMSI
                     Date = DateTime.Now,
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
-                    Activity = $"Set Tariff: {model.DispatchNumber}",
+                    Activity = $"Set Tariff: #{currentModel.DispatchNumber}",
                     DocumentType = "DispatchTicket",
                     Company = await GetCompanyClaimAsync()
                 };
@@ -250,7 +250,24 @@ namespace IBSWeb.Areas.MMSI
             {
                 var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
                 model.Status = "For Billing";
-                await _db.SaveChangesAsync();
+
+                #region -- Audit Trail
+
+                var audit = new MMSIAuditTrail
+                {
+                    Date = DateTime.Now,
+                    Username = await GetUserNameAsync(),
+                    MachineName = Environment.MachineName,
+                    Activity = $"Approve Tariff: #{model.DispatchNumber}",
+                    DocumentType = "DispatchTicket",
+                    Company = await GetCompanyClaimAsync()
+                };
+
+                await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+
+                #endregion --Audit Trail
+
                 TempData["success"] = "Entry Approved!";
 
                 return RedirectToAction(nameof(Index), new { id = id });
@@ -269,7 +286,24 @@ namespace IBSWeb.Areas.MMSI
             {
                 var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
                 model.Status = "Disapproved";
-                await _db.SaveChangesAsync();
+
+                #region -- Audit Trail
+
+                var audit = new MMSIAuditTrail
+                {
+                    Date = DateTime.Now,
+                    Username = await GetUserNameAsync(),
+                    MachineName = Environment.MachineName,
+                    Activity = $"Disapprove Tariff: #{model.DispatchNumber}",
+                    DocumentType = "DispatchTicket",
+                    Company = await GetCompanyClaimAsync()
+                };
+
+                await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+
+                #endregion --Audit Trail
+
                 TempData["success"] = "Entry Disapproved!";
 
                 return RedirectToAction(nameof(Index), new { id = id });
