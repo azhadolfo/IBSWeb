@@ -331,10 +331,10 @@ namespace IBSWeb.Areas.MMSI
                             Company = await GetCompanyClaimAsync()
                         };
 
-                        #endregion --Audit Trail
-
                         await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
                         await _db.SaveChangesAsync(cancellationToken);
+
+                        #endregion --Audit Trail
 
                         TempData["success"] = "Entry edited successfully!";
 
@@ -508,6 +508,7 @@ namespace IBSWeb.Areas.MMSI
                 try
                 {
                     var recordList = JsonConvert.DeserializeObject<List<string>>(records);
+                    var posteds = new List<string>();
 
                     foreach (var recordId in recordList)
                     {
@@ -519,10 +520,28 @@ namespace IBSWeb.Areas.MMSI
                         if (recordToUpdate != null)
                         {
                             recordToUpdate.Status = "For Tariff";
+                            posteds.Add($"#{recordToUpdate.DispatchNumber}");
                         }
                     }
 
+                    #region -- Audit Trail
+
+                    var audit = new MMSIAuditTrail
+                    {
+                        Date = DateTime.Now,
+                        Username = await GetUserNameAsync(),
+                        MachineName = Environment.MachineName,
+                        Activity = posteds.Any()
+                            ? $"Posted: {string.Join(", ", posteds)}"
+                            : $"No posting detected",
+                        DocumentType = "ServiceRequest",
+                        Company = await GetCompanyClaimAsync()
+                    };
+
+                    await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
+
+                    #endregion --Audit Trail
 
                     TempData["success"] = "Records posted successfully";
 
