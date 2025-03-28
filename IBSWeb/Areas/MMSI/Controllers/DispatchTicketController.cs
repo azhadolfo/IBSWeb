@@ -170,7 +170,7 @@ namespace IBSWeb.Areas.MMSI
         }
 
         [HttpPost]
-        public async Task<IActionResult> Tariffing(MMSIDispatchTicket model, string chargeType, CancellationToken cancellationToken)
+        public async Task<IActionResult> Tariffing(MMSIDispatchTicket model, string chargeType, string chargeType2, CancellationToken cancellationToken)
         {
             try
             {
@@ -187,6 +187,7 @@ namespace IBSWeb.Areas.MMSI
                 currentModel.BAFDiscount = model.BAFDiscount;
                 currentModel.BAFNetRevenue = model.BAFNetRevenue;
                 currentModel.DispatchChargeType = chargeType;
+                currentModel.BAFChargeType = chargeType2;
                 currentModel.TotalBilling = model.TotalBilling;
                 currentModel.TotalNetRevenue = model.TotalNetRevenue;
 

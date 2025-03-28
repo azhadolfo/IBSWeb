@@ -182,7 +182,7 @@
                     <div class="col-12 d-flex flex-column justify-content-start">
                         <div class="row d-flex align-content-center text-center mb-2">
                             <div class="col-2 small-text text-start">
-                                <span><b>Dispatch Rate:</b> ₱@Model.DispatchRate?.ToString("N2")</span>
+                                <span><b>Dispatch Rate:</b> ₱@Model.DispatchRate?.ToString("N2") @Model.DispatchChargeType</span>
                             </div>
 
                             <div class="col-2 small-text text-start">
@@ -190,7 +190,7 @@
                             </div>
 
                             <div class="col-2 small-text text-start">
-                                <span><b>BAF Rate:</b> ₱@Model.BAFRate?.ToString("N2")</span>
+                                <span><b>BAF Rate:</b> ₱@Model.BAFRate?.ToString("N2") @Model.BAFChargeType</span>
                             </div>
 
                             <div class="col-2 small-text text-start">
