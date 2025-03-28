@@ -166,7 +166,7 @@
                 <div class="row pt-2 mt-4">
 
                     <div class="form-group col-12">
-                        <label class="control-label mb-2">Dispatch Tickets</label>
+                        <label class="control-label mb-2">Choose dispatch tickets to bill:</label>
                         <select asp-for="ToBillDispatchTickets" asp-items="@Model.UnbilledDispatchTickets" class="form-control js-example-basic-multiple col-12" name="ToBillDispatchTickets" multiple="multiple" required>
                         </select>
                     </div>
@@ -191,8 +191,15 @@
 
                     </tbody>
                 </table>
-
-                <br/>
+                
+                <div class="row py-3 justify-content-end d-flex">
+                    <div class="col-3">
+                        <label>Total Dispatch Amount: ₱<label id="DispatchAmountTotal"></label></label>
+                    </div>
+                    <div class="col-2">
+                        <label>Total BAF Amount: ₱<label id="BAFAmountTotal"></label></label>
+                    </div>
+                </div>
 
                 <div class="row col-12 justify-content-end mb-2">
                     <div class="text-center" style="width: 250px">
@@ -222,7 +229,7 @@
             table.destroy();
 
             table = $('#dataTable').DataTable({
-                paging: true,
+                paging: false,
                 info: false,
                 order: [[0, 'asc']],
                 lengthChange: false,
@@ -312,6 +319,8 @@
                 data: { dispatchTicketIds: selectedTickets },
                 success: function(result) {
                     console.log('Success:', result);
+                    let totalDispatchAmount = 0;
+                    let totalBAFAmount = 0;
 
                     if ($.fn.DataTable.isDataTable('#dataTable')) {
                         $('#dataTable').DataTable().destroy();
@@ -321,7 +330,8 @@
 
                     $.each(result.data, function (index, value) {
                         console.log('Index:', index, 'Value:', value);
-
+                        totalDispatchAmount = totalDispatchAmount + value.dispatchNetRevenue;
+                        totalBAFAmount = totalBAFAmount + value.bafNetRevenue;
                         $('#dataTable tbody').append(`
                             <tr>
                                 <td class="text-center align-middle ps-4">${value.tugboat.tugboatName}</td>
@@ -336,8 +346,12 @@
                             </tr>`
                         );
                     });
+
+                    document.getElementById("DispatchAmountTotal").innerHTML = totalDispatchAmount;
+                    document.getElementById("BAFAmountTotal").innerHTML = totalBAFAmount;
+                    
                     $('#dataTable').DataTable({
-                        paging: true,        // Enable pagination
+                        paging: false,        // Enable pagination
                         info: false,          // Show table information (e.g., "Showing 1 to 10 of X entries")
                         order: [[0, 'asc']],  // Default ordering (adjust as needed)
                         lengthChange: false,
