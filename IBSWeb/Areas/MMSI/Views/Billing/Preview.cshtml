@@ -16,61 +16,66 @@
 
     <div class="card-body table-responsive">
         <div class="px-3">
-            <div class="row justify-content-end">
-
-                <div class="row mb-2 justify-content-end">
-                    <div class="col-12 d-flex justify-content-end">
-                        <h1 class="text-end"><strong>BILLING DETAILS</strong></h1>
-                    </div>
-                </div>
-
-            </div>
+            
 
             <div class="row">
 
-                <div class="row">
-                    <div class="col-12 text-start small-text">
-                        <span><b>Date:</b> @Model.Date</span>
+                <div class="col-6">
+                    <div class="row">
+                        <div class="col-12 text-start small-text">
+                            <span><b>Date:</b> @Model.Date</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 text-start small-text">
+                            <span><b>Billing#:</b> @Model.MMSIBillingNumber</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 mb-2 text-start small-text">
+                            <span><b>Status:</b> @Model.Status</span>
+                        </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-12 text-start small-text">
-                        <span><b>Billing#:</b> @Model.MMSIBillingNumber</span>
+                
+                <div class="col-6">
+                    <div class="row justify-content-end">
+                        <div class="row justify-content-end">
+                            <div class="col-12 d-flex justify-content-end">
+                                <h1 class="text-end"><strong>BILLING DETAILS</strong></h1>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-12 mb-2 text-start small-text">
-                        <span><b>Status:</b> @Model.Status</span>
-                    </div>
-                </div>
-
+                
             </div>
 
-            <div class="row">
-                <div class="col-6 text-center border p-2 small-text">
+            <div class="row mx-2">
+                <div class="col-3 text-center border p-2 small-text">
                     <b>Voyage#:</b> @Model.VoyageNumber
                 </div>
-                <div class="col-6 text-center border p-2 small-text">
+                <div class="col-3 text-center border p-2 small-text">
                     <b>Terminal:</b> @Model.Terminal?.TerminalName
                 </div>
-            </div>
-
-            <div class="row">
-                <div class="col-6 text-center border p-2 small-text">
+                <div class="col-3 text-center border p-2 small-text">
                     <b>Vessel:</b> @Model.Vessel?.VesselName
                 </div>
-                <div class="col-6 text-center border p-2 small-text">
+                <div class="col-3 text-center border p-2 small-text">
                     <b>Port:</b> @Model.Port?.PortName
                 </div>
             </div>
+            
+            <div class="row mt-4">
+                <hr style="border-top: 2px solid black;" />
+            </div>
 
-            <div class="row mt-3 mb-2 justify-content-end">
+            <div class="row mt-2 mb-2 justify-content-end">
                 <div class="col-12 d-flex justify-content-end">
                     <h3 class="text-end"><strong>CUSTOMER DETAILS</strong></h3>
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row mx-2">
                 <div class="col-6 text-center border p-2 small-text">
                     <b>Name:</b> @Model.Customer?.CustomerName
                 </div>
@@ -79,22 +84,23 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-6 text-center border p-2 small-text">
+            <div class="row mx-2">
+                <div class="col-4 text-center border p-2 small-text">
                     <b>TIN:</b> @Model.Customer?.CustomerTIN
                 </div>
-                <div class="col-6 text-center border p-2 small-text">
+                <div class="col-4 text-center border p-2 small-text">
                     <b>Business Style:</b> @Model.Customer?.CustomerBusinessStyle
                 </div>
-            </div>
-
-            <div class="row">
-                <div class="col-6 text-center border p-2 small-text">
+                <div class="col-4 text-center border p-2 small-text">
                     <b>Terms:</b> @Model.Customer?.CustomerTerms
                 </div>
             </div>
 
-            <div class="row mt-3 mb-2 justify-content-end">
+            <div class="row mt-4">
+                <hr style="border-top: 2px solid black;" />
+            </div>
+
+            <div class="row mt-2 mb-2 justify-content-end">
                 <div class="col-12 d-flex justify-content-end">
                     <h3 class="text-end"><strong>DISPATCH TICKETS PAID</strong></h3>
                 </div>
@@ -102,14 +108,16 @@
 
             <table id="dataTable" class="table table-striped table-bordered mt-1" style="width:100%">
                 <thead>
-                    <tr>
-                        <th class="text-start align-middle ps-4">TUGBOAT</th>
-                        <th class="text-start align-middle ps-4">SERVICE</th>
-                        <th class="text-start align-middle ps-4">TIME START</th>
-                        <th class="text-start align-middle ps-4">TIME END</th>
-                        <th class="text-start align-middle ps-4">HOUR</th>
-                        <th class="text-start align-middle ps-4">RATE</th>
-                    </tr>
+                <tr>
+                    <th class="text-start align-middle ps-4">TUGBOAT</th>
+                    <th class="text-start align-middle ps-4">SERVICE</th>
+                    <th class="text-start align-middle ps-4">TIME START</th>
+                    <th class="text-start align-middle ps-4">TIME END</th>
+                    <th class="text-start align-middle ps-4">HOUR(S)</th>
+                    <th class="text-start align-middle ps-4">DISPATCH AMOUNT</th>
+                    <th class="text-start align-middle ps-4">BAF AMOUNT</th>
+                    <th class="text-start align-middle ps-4">TOTAL AMOUNT</th>
+                </tr>
                 </thead>
                 <tbody>
                 @foreach (var billing in Model.PaidDispatchTickets)
@@ -119,12 +127,20 @@
                         <td class="text-start align-middle ps-4">@billing.ActivityService?.ActivityServiceName</td>
                         <td class="text-start align-middle ps-4">@billing.DateLeft - @billing.TimeLeft</td>
                         <td class="text-start align-middle ps-4">@billing.DateArrived - @billing.TimeArrived</td>
-                        <td class="text-start align-middle ps-4">@billing.TotalHours</td>
-                        <td class="text-start align-middle ps-4">@billing.DispatchRate</td>
+                        <td class="text-start align-middle ps-4">@billing.TotalHours hrs.</td>
+                        <td class="text-start align-middle ps-4">₱ @billing.DispatchNetRevenue</td>
+                        <td class="text-start align-middle ps-4">₱ @billing.BAFNetRevenue</td>
+                        <td class="text-start align-middle ps-4">₱ @billing.TotalNetRevenue</td>
                     </tr>
                 }
                 </tbody>
             </table>
+
+            <div class="row py-3 justify-content-end d-flex">
+                <div class="col-3">
+                    <label>Billing Amount Total: ₱@Model.Amount</label>
+                </div>
+            </div>
 
         </div>
         <div class="row text-end justify-content-end mt-3">
