@@ -56,6 +56,14 @@ namespace IBS.Models.MMSI
 
         public string? Status { get; set; }
 
+        public string? CreatedBy { get; set; }
+
+        public DateTime? CreatedDate { get; set; }
+
+        public string? EditedBy { get; set; }
+
+        public DateTime? EditedDate { get; set; }
+
         #region == Tariff ==
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
@@ -96,6 +104,14 @@ namespace IBS.Models.MMSI
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,2)")]
         public decimal? TotalNetRevenue { get; set; }
+
+        public string? TariffBy { get; set; }
+
+        public DateTime? TariffDate { get; set; }
+
+        public string? TariffEditedBy { get; set; }
+
+        public DateTime? TariffEditedDate { get; set; }
 
         #endregion == Tariff ==
 

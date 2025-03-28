@@ -35,6 +35,10 @@ namespace IBS.Models.MMSI
 
         public DateTime? CreatedDate { get; set; }
 
+        public string? UpdateBy { get; set; }
+
+        public DateTime? UpdateDate { get; set; }
+
         #region -- Select Lists --
 
         [NotMapped]

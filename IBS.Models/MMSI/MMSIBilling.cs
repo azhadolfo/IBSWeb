@@ -23,6 +23,16 @@ namespace IBS.Models.MMSI
 
         public int? CustomerId { get; set; }
 
+        public decimal Amount { get; set; }
+
+        public string? CreatedBy { get; set; }
+
+        public DateTime? CreatedDate { get; set; }
+
+        public string? LastEditedBy { get; set; }
+
+        public DateTime? LastEditedDate { get; set; }
+
         [ForeignKey(nameof(CustomerId))]
         public MMSICustomer? Customer { get; set; }
 
@@ -37,8 +47,6 @@ namespace IBS.Models.MMSI
         public MMSIPort? Port { get; set; }
 
         public int? TerminalId { get; set; }
-
-        public decimal Amount { get; set; }
 
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; }

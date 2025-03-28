@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +16,13 @@ namespace IBSWeb.Areas.MMSI
     {
         public readonly ApplicationDbContext _db;
         private readonly DispatchTicketRepository _dispatchRepo;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public ServiceRequestController(ApplicationDbContext db, DispatchTicketRepository dispatchRepo)
+        public ServiceRequestController(ApplicationDbContext db, DispatchTicketRepository dispatchRepo, UserManager<IdentityUser> userManager)
         {
             _db = db;
             _dispatchRepo = dispatchRepo;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
@@ -67,6 +70,10 @@ namespace IBSWeb.Areas.MMSI
                 {
                     if (model.DateLeft < model.DateArrived || (model.TimeLeft != model.TimeArrived && model.TimeLeft < model.TimeArrived))
                     {
+                        var user = await _userManager.GetUserAsync(User);
+                        model.CreatedBy = user.UserName;
+                        model.CreatedDate = DateTime.Now;
+
                         string uploadFolder = "wwwroot/Dispatch_Ticket_Uploads";
 
                         if (file != null && file.Length > 0)
@@ -160,6 +167,7 @@ namespace IBSWeb.Areas.MMSI
         [HttpPost]
         public async Task<IActionResult> Edit(MMSIDispatchTicket model, IFormFile? file, CancellationToken cancellationToken)
         {
+            var user = await _userManager.GetUserAsync(User);
             try
             {
                 if (ModelState.IsValid)
@@ -191,6 +199,8 @@ namespace IBSWeb.Areas.MMSI
                             }
                         }
 
+                        currentModel.EditedBy = user.UserName;
+                        currentModel.EditedDate = DateTime.Now;
                         currentModel.TotalHours = (decimal)timeDifference.TotalHours;
                         currentModel.ActivityServiceId = model.ActivityServiceId;
                         currentModel.DispatchNumber = model.DispatchNumber;
