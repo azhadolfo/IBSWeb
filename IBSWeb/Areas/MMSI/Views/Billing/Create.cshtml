@@ -181,8 +181,8 @@
                         <th class="text-center align-content-center ps-4">TIME START</th>
                         <th class="text-center align-content-center ps-4">TIME END</th>
                         <th class="text-center align-content-center ps-4">HOUR</th>
-                        <th class="text-center align-content-center ps-4">RATE</th>
-                        <th class="text-center align-content-center ps-4">AMOUNT</th>
+                        <th class="text-center align-content-center ps-4">DISPATCH RATE</th>
+                        <th class="text-center align-content-center ps-4">DISPATCH AMOUNT</th>
                         <th class="text-center align-content-center ps-4">BAF RATE</th>
                         <th class="text-center align-content-center ps-4">BAF AMOUNT</th>
                     </tr>
@@ -329,10 +329,10 @@
                                 <td class="text-center align-middle ps-4">${value.dateLeft} - ${value.timeLeft}</td>
                                 <td class="text-center align-middle ps-4">${value.dateArrived} - ${value.timeArrived}</td>
                                 <td class="text-center align-middle ps-4">${value.totalHours}</td>
-                                <td class="text-center align-middle ps-4">${value.dispatchRate}</td>
-                                <td class="text-center align-middle ps-4">${value.dispatchNetRevenue}</td>
-                                <td class="text-center align-middle ps-4">${value.bafRate}</td>
-                                <td class="text-center align-middle ps-4">${value.bafNetRevenue}</td>
+                                <td class="text-center align-middle ps-4">₱ ${value.dispatchRate} ${value.dispatchChargeType}</td>
+                                <td class="text-center align-middle ps-4">₱ ${value.dispatchNetRevenue}</td>
+                                <td class="text-center align-middle ps-4">₱ ${value.bafRate} ${value.bafChargeType}</td>
+                                <td class="text-center align-middle ps-4">₱ ${value.bafNetRevenue}</td>
                             </tr>`
                         );
                     });
