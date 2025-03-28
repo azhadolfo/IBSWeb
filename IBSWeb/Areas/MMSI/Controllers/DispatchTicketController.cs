@@ -3,6 +3,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,25 @@ namespace IBSWeb.Areas.MMSI
     {
         public readonly ApplicationDbContext _db;
         private readonly DispatchTicketRepository _dispatchRepo;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public DispatchTicketController(ApplicationDbContext db, DispatchTicketRepository dispatchRepo)
+        public DispatchTicketController(ApplicationDbContext db, DispatchTicketRepository dispatchRepo, UserManager<IdentityUser> userManager)
         {
             _db = db;
             _dispatchRepo = dispatchRepo;
+            _userManager = userManager;
+        }
+
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var claims = await _userManager.GetClaimsAsync(await _userManager.GetUserAsync(User));
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        private async Task<string> GetUserNameAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            return user.UserName;
         }
 
         public async Task<IActionResult> Index()
@@ -191,7 +206,23 @@ namespace IBSWeb.Areas.MMSI
                 currentModel.TotalBilling = model.TotalBilling;
                 currentModel.TotalNetRevenue = model.TotalNetRevenue;
 
-                await _db.SaveChangesAsync();
+                #region -- Audit Trail
+
+                var audit = new MMSIAuditTrail
+                {
+                    Date = DateTime.Now,
+                    Username = await GetUserNameAsync(),
+                    MachineName = Environment.MachineName,
+                    Activity = $"Set Tariff: {model.DispatchNumber}",
+                    DocumentType = "DispatchTicket",
+                    Company = await GetCompanyClaimAsync()
+                };
+
+                await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+
+                #endregion --Audit Trail
+
                 TempData["success"] = "Tariff entered successfully!";
 
                 return RedirectToAction(nameof(Index), new { id = currentModel.DispatchTicketId });
