@@ -156,6 +156,18 @@ namespace IBS.DataAccess.Repository.MMSI
             return dispatchTicketList;
         }
 
+        public async Task<List<SelectListItem>> GetMMSIBilledTicketsById(int id, CancellationToken cancellationToken = default)
+        {
+            List<SelectListItem> dispatchTicketList = await _dbContext.MMSIDispatchTickets
+                .Where(dt => dt.BillingId == id.ToString())
+                .OrderBy(dt => dt.DispatchNumber).Select(s => new SelectListItem
+                {
+                    Value = s.DispatchTicketId.ToString(),
+                    Text = s.DispatchNumber
+                }).ToListAsync(cancellationToken);
+            return dispatchTicketList;
+        }
+
         public async Task<List<SelectListItem>> GetMMSIUncollectedBillingsById(CancellationToken cancellationToken = default)
         {
             List<SelectListItem> billingsList = await _dbContext.MMSIBillings

@@ -1,92 +1,138 @@
 @model IBS.Models.MMSI.MMSIBilling
 
 @{
-    ViewData["Title"] = "Edit";
-    
+    ViewData["Title"] = "Create";
+
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="card text-dark bg-white  m-4">
-    <div class="h1 fw-lighter p-3 align-middle text-center card-header bg-dark bg-gradient text-white">
-        <i class="bi bi-pencil-square"></i> EDIT BILLING
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+
+
+
+    table {
+        font-size: 10px !important;
+        table-layout: auto !important;
+    }
+
+    table td {
+        font-size: 12px !important;
+        padding-left: 10px !important;
+    }
+
+    .card-body {
+        margin: 5px !important;
+        padding: 5px !important;
+    }
+</style>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Select with Bootstrap</title>
+</head>
+
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center">
+            <h2 class="text-white py-2"><i class="bi bi-pencil-square"></i> EDIT BILLING</h2>
+        </div>
     </div>
-    <div class="card-body">
-        <form id="myForm" method="post" class="row" enctype="multipart/form-data">
+
+    <div class="card-body table-responsive">
+        <form id="myForm" method="post" enctype="multipart/form-data">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
-                <input asp-for="MMSIBillingId" style="display: none" value="@Model.MMSIBillingId" />
                 <div class="row pt-3">
-                    <div class="form-check col-2 my-3 text-center d-flex align-items-center justify-content-center">
-                        <input asp-for="IsDocumented" class="form-check-input me-2" type="checkbox" id="isDocumentedCheckbox" checked>
-                        <label class="form-check-label" id="status" for="isDocumentedCheckbox">
+                </div>
+                <div class="row">
+                    <div class="form-check col-3 ps-2 my-2 text-center d-flex align-items-center justify-content-center">
+                        <input asp-for="IsDocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isDocumentedCheckbox" checked>
+                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isDocumentedCheckbox">
                             Documented
                         </label>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="form-floating col-4 mb-3">
-                        <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder="" required>
-                        <label asp-for="MMSIBillingNumber" for="MMSIBillingNumber" class="ms-2">Billing Number</label>
-                        <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-4 mb-3">
+                    <div class="form-floating col-3 mb-2">
                         <input asp-for="Date" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
                         <label asp-for="Date" for="Date" class="ms-2">Date Created</label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
-                    <div class="form-floating col-4 mb-3">
+                    <div class="form-floating col-3 mb-2">
+                        <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder="" required>
+                        <label asp-for="MMSIBillingNumber" for="MMSIBillingNumber" id="status" class="ms-2">Billing Number<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3 mb-2">
                         <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder="">
                         <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage Number</label>
                         <span asp-validation-for="VoyageNumber" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="form-group col-8 my-3">
+                <div class="row pt-2">
+                    <div class="form-group col-3 my-2">
                         <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                        <select asp-for="CustomerId" value="@Model.CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                             <option value="">Select Customer</option>
                         </select>
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
-                    <div class="form-floating col-4 my-3">
-                        <input class="form-control border-0 shadow" id="Terms" placeholder="" disabled>
-                        <label class="ms-2">Terms</label>
-                        <span class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="row pt-2">
-                    <div class="form-floating col-4 my-3">
-                        <input class="form-control border-0 shadow" id="Address" placeholder="" disabled>
-                        <label class="ms-2">Address</label>
-                        <span class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-4 my-3">
-                        <input class="form-control border-0 shadow" id="TIN" placeholder="" disabled>
-                        <label class="ms-2">TIN</label>
-                        <span class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-4 my-3">
-                        <input class="form-control border-0 shadow" id="BusinessStyle" placeholder="" disabled>
-                        <label class="ms-2">Business Style</label>
-                        <span class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="row pt-2">
-                    <div class="form-group col-4 my-2">
+                    <div class="form-group col-3 my-2">
                         <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
-                        <select asp-for="PortId" asp-items="@Model.Ports" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <select asp-for="PortId" asp-items="@Model.Ports" id="PortSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                             <option value="">Select Port</option>
                         </select>
                         <span asp-validation-for="PortId" class="text-danger"></span>
                     </div>
-                    <div class="form-group col-4 my-2">
+                    <div class="form-group col-3 my-2">
                         <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
-                        <select asp-for="TerminalId" asp-items="@Model.Terminals" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <select asp-for="TerminalId" asp-items="@Model.Terminals" id="TerminalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                             <option value="">Select Terminal</option>
                         </select>
                         <span asp-validation-for="TerminalId" class="text-danger"></span>
                     </div>
-                    <div class="form-group col-4 my-2">
+                    <div class="form-group col-3 my-2">
                         <label class="control-label ps-1 pb-1">Vessel<span class="required text-danger">*</span></label>
                         <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                             <option value="">Select Vessel</option>
@@ -94,99 +140,227 @@
                         <span asp-validation-for="VesselId" class="text-danger"></span>
                     </div>
                 </div>
-                <br />
-                <br />
-                <div class="row">
-                    <button class="btn btn-primary custom-btn col-3 mx-3" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
-                    <a class="btn btn-primary custom2-btn col-3 mx-2" asp-controller="Billing" asp-action="Index">
-                        <i class="bi bi-arrow-90deg-left"></i> Go Back
-                    </a>
+                <div class="row pt-2">
+                    <div class="form-floating col-3 my-2">
+                        <input class="form-control border-0 shadow" id="Address" placeholder="" disabled>
+                        <label class="ms-2">Address</label>
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3 my-2">
+                        <input class="form-control border-0 shadow" id="TIN" placeholder="" disabled>
+                        <label class="ms-2">TIN</label>
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3 my-2">
+                        <input class="form-control border-0 shadow" id="BusinessStyle" placeholder="" disabled>
+                        <label class="ms-2">Business Style</label>
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3 my-2">
+                        <input class="form-control border-0 shadow" id="Terms" placeholder="" disabled>
+                        <label class="ms-2">Terms</label>
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row pt-2 mt-4">
+                    <div class="form-group col-12">
+                        <label class="control-label mb-2">Choose dispatch tickets to bill:</label>
+                        <select asp-for="ToBillDispatchTickets" asp-items="@Model.UnbilledDispatchTickets" class="form-control js-example-basic-multiple col-12" name="ToBillDispatchTickets" multiple="multiple" required>
+                        </select>
+                    </div>
+                </div>
+
+                <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th class="text-center align-content-center ps-4">TUGBOAT</th>
+                        <th class="text-center align-content-center ps-4">SERVICE</th>
+                        <th class="text-center align-content-center ps-4">TIME START</th>
+                        <th class="text-center align-content-center ps-4">TIME END</th>
+                        <th class="text-center align-content-center ps-4">HOUR</th>
+                        <th class="text-center align-content-center ps-4">DISPATCH RATE</th>
+                        <th class="text-center align-content-center ps-4">DISPATCH AMOUNT</th>
+                        <th class="text-center align-content-center ps-4">BAF RATE</th>
+                        <th class="text-center align-content-center ps-4">BAF AMOUNT</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+
+                <div class="row py-3 justify-content-end d-flex">
+                    <div class="col-3">
+                        <label>Total Dispatch Amount: ₱<label id="DispatchAmountTotal"></label></label>
+                    </div>
+                    <div class="col-2">
+                        <label>Total BAF Amount: ₱<label id="BAFAmountTotal"></label></label>
+                    </div>
+                </div>
+
+                <div class="row col-12 justify-content-end mb-2">
+                    <div class="text-center" style="width: 250px">
+                        <button class="btn btn-primary custom-btn col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                    </div>
+                    <div class="text-center" style="width: 250px">
+                        <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="Billing" asp-action="Index">
+                            <i class="bi bi-arrow-90deg-left"></i> Go Back
+                        </a>
+                    </div>
                 </div>
             </div>
         </form>
     </div>
 </div>
 
-@section Scripts {
+@section Scripts{
     <script>
+
+        var currentPort = "";
+        const select = document.getElementById("TerminalSelect");
+
         $(document).ready(function () {
 
-            var checkbox = document.getElementById("isDocumentedCheckbox");
-            var inputField = document.getElementById("billingNumber");
+            table = $('#dataTable').DataTable();
 
-            var isDocumented = '@Model.IsDocumented';
+            table.destroy();
 
-            if (isDocumented == 'True') {
-                checkbox.checked = true;
-                console.log('@Model.IsDocumented');
-                document.getElementById("status").innerText = "Documented";
-                inputField.setAttribute("required", "required"); // Make it required
-                inputField.removeAttribute("disabled", ""); // Enable input
-            } else {
-                checkbox.checked = false;
-                console.log('@Model.IsDocumented');
-                document.getElementById("status").innerText = "Undocumented";
-                inputField.removeAttribute("required", ""); // Remove required
-                checkbox.removeAttribute("checked");
-                inputField.setAttribute("disabled", "disabled"); // Disable input
-            }
+            table = $('#dataTable').DataTable({
+                paging: false,
+                info: false,
+                order: [[0, 'asc']],
+                lengthChange: false,
+                searching: false
+            });
 
-            function CheckboxChanged() {
+            $('.js-example-basic-multiple').select2();
+
+            function checkboxChanged() {
                 console.log("test checkbox");
 
+                var checkbox = document.getElementById("isDocumentedCheckbox");
+                var inputField = document.getElementById("billingNumber");
+
                 if (checkbox.checked) {
-                    console.log("Checkbox is checked!");
-                    document.getElementById("status").innerText = "Documented";
-                    inputField.setAttribute("required", "required"); // Make it required
-                    inputField.removeAttribute("disabled"); // Enable input
+                    document.getElementById("status").innerHTML = "Billing Number<span class=\"required text-danger\">*</span>";
+                    inputField.setAttribute("required", "required");
+                    inputField.removeAttribute("disabled")
                 } else {
-                    console.log("Checkbox is unchecked.");
-                    document.getElementById("status").innerText = "Undocumented";
-                    inputField.removeAttribute("required", ""); // Remove required
-                    inputField.setAttribute("disabled", "disabled"); // Disable input
+                    document.getElementById("status").innerHTML = "Undocumented";
+                    inputField.removeAttribute("required");
+                    inputField.setAttribute("disabled", "disabled");
                 }
             }
 
-            function UpdateCustomerDetails() {
-                var customerId = $("#CustomerId").val(); // Use the specific ID to get the value
-                if (customerId && customerId !== "") {
+            $("#CustomerId").change(function () {
+                var customerId = $(this).val();
+                if (customerId !== "") {
                     $.ajax({
-                        url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "Filpride" })',
+                        url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "MMSI" })',
                         method: "GET",
                         data: { customerId: customerId },
                         success: function (data) {
                             if (data) {
-                                // Ensure these property names match what's returned by the server
-                                $("#Terms").val(data.terms || ''); // Use OR to provide default if undefined
-                                $("#Address").val(data.address || '');
-                                $("#TIN").val(data.tinNo || '');
-                                $("#BusinessStyle").val(data.businessStyle || '');
-                            } else {
+                                $("#Terms").val(data.terms);
+                                $("#Address").val(data.address);
+                                $("#TIN").val(data.tinNo);
+                                $("#BusinessStyle").val(data.businessStyle);
+                            }
+                            else {
                                 $("#Terms").val('');
                                 $("#Address").val('');
                                 $("#TIN").val('');
                                 $("#BusinessStyle").val('');
                             }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Error:', error);
                         }
                     });
-                } else {
-                    // Clear fields if no customer is selected
-                    $("#Terms").val('');
-                    $("#Address").val('');
-                    $("#TIN").val('');
-                    $("#BusinessStyle").val('');
                 }
+            });
+            var currentPort = "";
+            const select = document.getElementById("TerminalSelect");
+            document.getElementById("isDocumentedCheckbox").addEventListener("change", checkboxChanged);
+
+            function HandlePortChange() {
+                var portId = $("#PortSelect").val();
+
+                $.ajax({
+                    url: '@Url.Action("ChangeTerminal", "DispatchTicket", new { area = "MMSI" })',
+                    type: "GET",
+                    data: { portId: portId },
+                    success: function (data) {
+                        $("#TerminalSelect").empty();
+
+                        if (Array.isArray(data) && data.length > 0) {
+                            $("#TerminalSelect").append('<option>');
+
+                            $.each(data, function (index, item) {
+                                $("#TerminalSelect").append($('<option>', {
+                                    value: item.value,
+                                    text: item.text
+                                }));
+                            });
+                        }
+                    }
+                });
             }
 
-            $("#CustomerId").on("change", UpdateCustomerDetails);
-            document.getElementById("isDocumentedCheckbox").addEventListener("change", CheckboxChanged);
-
-            UpdateCustomerDetails();
-
+            $("#PortSelect").change(HandlePortChange);
         });
 
+        $('.js-example-basic-multiple').on('change', function() {
+            var selectedTickets = $(this).val();
+
+            $.ajax({
+                url: '/MMSI/Billing/GetDispatchTickets',
+                type: 'POST',
+                data: { dispatchTicketIds: selectedTickets },
+                success: function(result) {
+                    console.log('Success:', result);
+                    let totalDispatchAmount = 0;
+                    let totalBAFAmount = 0;
+
+                    if ($.fn.DataTable.isDataTable('#dataTable')) {
+                        $('#dataTable').DataTable().destroy();
+                    }
+
+                    $('#dataTable tbody').empty();
+
+                    $.each(result.data, function (index, value) {
+                        console.log('Index:', index, 'Value:', value);
+                        totalDispatchAmount = totalDispatchAmount + value.dispatchNetRevenue;
+                        totalBAFAmount = totalBAFAmount + value.bafNetRevenue;
+                        $('#dataTable tbody').append(`
+                            <tr>
+                                <td class="text-center align-middle ps-4">${value.tugboat.tugboatName}</td>
+                                <td class="text-center align-middle ps-4">${value.activityService.activityServiceName}</td>
+                                <td class="text-center align-middle ps-4">${value.dateLeft} - ${value.timeLeft}</td>
+                                <td class="text-center align-middle ps-4">${value.dateArrived} - ${value.timeArrived}</td>
+                                <td class="text-center align-middle ps-4">${value.totalHours}</td>
+                                <td class="text-center align-middle ps-4">₱ ${value.dispatchRate} ${value.dispatchChargeType}</td>
+                                <td class="text-center align-middle ps-4">₱ ${value.dispatchNetRevenue}</td>
+                                <td class="text-center align-middle ps-4">₱ ${value.bafRate} ${value.bafChargeType}</td>
+                                <td class="text-center align-middle ps-4">₱ ${value.bafNetRevenue}</td>
+                            </tr>`
+                        );
+                    });
+
+                    document.getElementById("DispatchAmountTotal").innerHTML = totalDispatchAmount;
+                    document.getElementById("BAFAmountTotal").innerHTML = totalBAFAmount;
+
+                    $('#dataTable').DataTable({
+                        paging: false,        // Enable pagination
+                        info: false,          // Show table information (e.g., "Showing 1 to 10 of X entries")
+                        order: [[0, 'asc']],  // Default ordering (adjust as needed)
+                        lengthChange: false,
+                        searching: false
+                    });
+
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });
+        });
     </script>
 }

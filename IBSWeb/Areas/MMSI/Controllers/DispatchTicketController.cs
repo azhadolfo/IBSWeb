@@ -212,7 +212,7 @@ namespace IBSWeb.Areas.MMSI
                     Date = DateTime.Now,
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
-                    Activity = $"Set Tariff: #{currentModel.DispatchNumber}",
+                    Activity = $"Set Tariff: id#{currentModel.DispatchTicketId}",
                     DocumentType = "DispatchTicket",
                     Company = await GetCompanyClaimAsync()
                 };
@@ -306,7 +306,7 @@ namespace IBSWeb.Areas.MMSI
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
                     Activity = changes.Any()
-                        ? $"Edit Tariff: {string.Join(", ", changes)}"
+                        ? $"Edit Tariff: id#{currentModel.DispatchTicketId} {string.Join(", ", changes)}"
                         : $"No changes detected for service request #{currentModel.DispatchNumber}",
                     DocumentType = "DispatchTicket",
                     Company = await GetCompanyClaimAsync()
@@ -352,7 +352,7 @@ namespace IBSWeb.Areas.MMSI
                     Date = DateTime.Now,
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
-                    Activity = $"Approve Tariff: #{model.DispatchNumber}",
+                    Activity = $"Approve Tariff: id#{model.DispatchTicketId}",
                     DocumentType = "DispatchTicket",
                     Company = await GetCompanyClaimAsync()
                 };
@@ -388,7 +388,7 @@ namespace IBSWeb.Areas.MMSI
                     Date = DateTime.Now,
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
-                    Activity = $"Disapprove Tariff: #{model.DispatchNumber}",
+                    Activity = $"Disapprove Tariff: id#{model.DispatchTicketId}",
                     DocumentType = "DispatchTicket",
                     Company = await GetCompanyClaimAsync()
                 };

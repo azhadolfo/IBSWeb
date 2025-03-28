@@ -67,7 +67,7 @@ namespace IBSWeb.Areas.MMSI
                         var dtEntry = await _db.MMSIDispatchTickets.FindAsync(int.Parse(billDispatchTicket));
                         totalAmount = (totalAmount + dtEntry?.TotalNetRevenue) ?? 0m;
                         dtEntry.Status = "Billed";
-                        dtEntry.BillingId = model.MMSIBillingNumber;
+                        dtEntry.BillingId = model.MMSIBillingId.ToString();
                         await _db.SaveChangesAsync(cancellationToken);
                     }
 
@@ -140,8 +140,25 @@ namespace IBSWeb.Areas.MMSI
                 .Include(b => b.Vessel)
                 .Include (b => b.Port)
                 .Include(b => b.Terminal)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
             model = await _dispatchRepo.GetBillingLists(model, cancellationToken);
+
+            model.UnbilledDispatchTickets = await _dispatchRepo.GetMMSIUnbilledTicketsById(cancellationToken);
+            var billedByCurrentBill = await _dispatchRepo.GetMMSIBilledTicketsById(model.MMSIBillingId, cancellationToken);
+            model.UnbilledDispatchTickets.AddRange(billedByCurrentBill);
+
+            var listOfDtBilled = await _db.MMSIDispatchTickets
+                .Where(d => d.BillingId == id.ToString())
+                .ToListAsync(cancellationToken);
+            model.ToBillDispatchTickets = listOfDtBilled.Select(d => d.DispatchTicketId.ToString()).ToList();
+
+            foreach(var billDispatchTicket in model.ToBillDispatchTickets)
+            {
+                var dtEntry = await _db.MMSIDispatchTickets.FindAsync(int.Parse(billDispatchTicket), cancellationToken);
+                dtEntry.Status = "Billed";
+                dtEntry.BillingId = model.MMSIBillingNumber;
+                await _db.SaveChangesAsync(cancellationToken);
+            }
 
             return View(model);
         }
