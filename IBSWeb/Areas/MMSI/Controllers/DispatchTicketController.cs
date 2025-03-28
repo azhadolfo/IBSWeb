@@ -190,7 +190,6 @@ namespace IBSWeb.Areas.MMSI
             try
             {
                 var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
-                TimeSpan timeDifference = model.DateArrived.ToDateTime(model.TimeArrived) - model.DateLeft.ToDateTime(model.TimeLeft);
 
                 currentModel.Status = "Tariff Pending";
                 currentModel.DispatchRate = model.DispatchRate;
@@ -224,6 +223,101 @@ namespace IBSWeb.Areas.MMSI
                 #endregion --Audit Trail
 
                 TempData["success"] = "Tariff entered successfully!";
+
+                return RedirectToAction(nameof(Index), new { id = currentModel.DispatchTicketId });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+
+                model = await _db.MMSIDispatchTickets
+                .Where(dt => dt.DispatchTicketId == model.DispatchTicketId)
+                .Include(a => a.ActivityService)
+                .Include(a => a.Terminal).ThenInclude(t => t.Port)
+                .Include(a => a.Tugboat)
+                .Include(a => a.TugMaster)
+                .Include(a => a.Vessel)
+                .FirstOrDefaultAsync(cancellationToken);
+
+                return View(model);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditTariff(int id, CancellationToken cancellationToken)
+        {
+            var model = await _db.MMSIDispatchTickets
+                .Where(dt => dt.DispatchTicketId == id)
+                .Include(a => a.ActivityService)
+                .Include(a => a.Terminal).ThenInclude(t => t.Port)
+                .Include(a => a.Tugboat)
+                .Include(a => a.TugMaster)
+                .Include(a => a.Vessel)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditTariff(MMSIDispatchTicket model, string chargeType, string chargeType2, CancellationToken cancellationToken)
+        {
+            try
+            {
+
+                var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
+
+                #region -- Changes
+
+                var changes = new List<string>();
+
+                if (currentModel.DispatchRate != model.DispatchRate) { changes.Add($"DispatchRate: {currentModel.DispatchRate} -> {model.DispatchRate}"); }
+                if (currentModel.DispatchDiscount != model.DispatchDiscount) { changes.Add($"DispatchDiscount: {currentModel.DispatchDiscount} -> {model.DispatchDiscount}"); }
+                if (currentModel.DispatchNetRevenue != model.DispatchNetRevenue) { changes.Add($"DispatchNetRevenue: {currentModel.DispatchNetRevenue} -> {model.DispatchNetRevenue}"); }
+                if (currentModel.BAFRate != model.BAFRate) { changes.Add($"BAFRate: {currentModel.BAFRate} -> {model.BAFRate}"); }
+                if (currentModel.BAFBillingAmount != model.BAFBillingAmount) { changes.Add($"BAFBillingAmount: {currentModel.BAFBillingAmount} -> {model.BAFBillingAmount}"); }
+                if (currentModel.BAFDiscount != model.BAFDiscount) { changes.Add($"BAFDiscount: {currentModel.BAFDiscount} -> {model.BAFDiscount}"); }
+                if (currentModel.BAFNetRevenue != model.BAFNetRevenue) { changes.Add($"BAFNetRevenue: {currentModel.BAFNetRevenue} -> {model.BAFNetRevenue}"); }
+                if (currentModel.DispatchChargeType != model.DispatchChargeType) { changes.Add($"DispatchChargeType: {currentModel.DispatchChargeType} -> {model.DispatchChargeType}"); }
+                if (currentModel.BAFChargeType != model.BAFChargeType) { changes.Add($"BAFChargeType: {currentModel.BAFChargeType} -> {model.BAFChargeType}"); }
+                if (currentModel.TotalBilling != model.TotalBilling) { changes.Add($"TotalBilling: {currentModel.TotalBilling} -> {model.TotalBilling}"); }
+                if (currentModel.TotalNetRevenue != model.TotalNetRevenue) { changes.Add($"TotalNetRevenue: {currentModel.TotalNetRevenue} -> {model.TotalNetRevenue}"); }
+
+                #endregion -- Changes
+
+                currentModel.Status = "Tariff Pending";
+                currentModel.DispatchRate = model.DispatchRate;
+                currentModel.DispatchBillingAmount = model.DispatchBillingAmount;
+                currentModel.DispatchDiscount = model.DispatchDiscount;
+                currentModel.DispatchNetRevenue = model.DispatchNetRevenue;
+                currentModel.BAFRate = model.BAFRate;
+                currentModel.BAFBillingAmount = model.BAFBillingAmount;
+                currentModel.BAFDiscount = model.BAFDiscount;
+                currentModel.BAFNetRevenue = model.BAFNetRevenue;
+                currentModel.DispatchChargeType = chargeType;
+                currentModel.BAFChargeType = chargeType2;
+                currentModel.TotalBilling = model.TotalBilling;
+                currentModel.TotalNetRevenue = model.TotalNetRevenue;
+
+                #region -- Audit Trail
+
+                var audit = new MMSIAuditTrail
+                {
+                    Date = DateTime.Now,
+                    Username = await GetUserNameAsync(),
+                    MachineName = Environment.MachineName,
+                    Activity = changes.Any()
+                        ? $"Edit Tariff: {string.Join(", ", changes)}"
+                        : $"No changes detected for service request #{currentModel.DispatchNumber}",
+                    DocumentType = "DispatchTicket",
+                    Company = await GetCompanyClaimAsync()
+                };
+
+                await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+
+                #endregion -- Audit Trail
+
+                TempData["success"] = "Tariff edited successfully!";
 
                 return RedirectToAction(nameof(Index), new { id = currentModel.DispatchTicketId });
             }
