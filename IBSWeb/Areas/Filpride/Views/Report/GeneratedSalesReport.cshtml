@@ -18,6 +18,9 @@
 
     var totalQuantityForEconogas = 0m;
     var totalAmountForEconogas = 0m;
+    
+    var totalQuantityForEnvirogas = 0m;
+    var totalAmountForEnvirogas  = 0m;
 
     var overallTotalQuantity = 0m;
     var overallTotalAmount = 0m;
@@ -184,7 +187,7 @@
                 {
                     var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
 
-                    // Computation for Envirogas
+                    // Computation for Overall
                     var overAllQuantitySum = list.Sum(s => s.DeliveryReceipt.Quantity);
                     var overallAmountSum = list.Sum(s => s.DeliveryReceipt.TotalAmount);
                     var overallNetOfAmountSum = overallAmountSum != 0m ? overallAmountSum / 1.12m : 0;
@@ -326,13 +329,13 @@
                         <td>@envirogasAverageSellingPrice.ToString(SD.Four_Decimal_Format)</td>
                     </tr>
 
-                    overallTotalQuantity += envirogasQuantitySum;
-                    overallTotalAmount += envirogasNetOfAmountSum;
+                    totalQuantityForEnvirogas += envirogasQuantitySum;
+                    totalAmountForEnvirogas += envirogasNetOfAmountSum;
                 }
                 <tr class="table-primary" style="border-top: double">
-                    <td class="text-end">@overallTotalQuantity.ToString(SD.Two_Decimal_Format)</td>
-                    <td class="text-end">@overallTotalAmount.ToString(SD.Two_Decimal_Format)</td>
-                    <td class="text-end">@(overallTotalAmount != 0 || overallTotalQuantity != 0 ? (overallTotalAmount / overallTotalQuantity).ToString(SD.Four_Decimal_Format) : 0m)</td>
+                    <td class="text-end">@totalQuantityForEnvirogas.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@totalAmountForEnvirogas.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@(totalAmountForEnvirogas != 0 || totalQuantityForEnvirogas != 0 ? (totalAmountForEnvirogas / totalQuantityForEnvirogas).ToString(SD.Four_Decimal_Format) : 0m)</td>
                 </tr>
                 </tbody>
             </table>
