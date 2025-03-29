@@ -486,6 +486,47 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
+        [HttpPost]
+        public async Task<IActionResult> GeneratedDispatchReport(DispatchReportViewModel viewModel, CancellationToken cancellationToken)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(viewModel.ReportType))
+                    {
+                        return BadRequest();
+                    }
+
+                    var companyClaims = await GetCompanyClaimAsync();
+                    var currentUser = _userManager.GetUserName(User);
+                    var today = DateTimeHelper.GetCurrentPhilippineTime();
+                    var firstDayOfMonth = new DateOnly(viewModel.AsOf.Year, viewModel.AsOf.Month, 1);
+                    var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+                    ViewData["DateFrom"] = firstDayOfMonth;
+                    ViewData["DateTo"] = lastDayOfMonth;
+
+                    var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAllAsync(i => i.Company == companyClaims
+                                          && i.AuthorityToLoadNo != null
+                                          && i.Date >= firstDayOfMonth
+                                          && i.Date <= lastDayOfMonth
+                                          && (viewModel.ReportType == "AllDeliveries" || i.Status == nameof(DRStatus.PendingDelivery)), cancellationToken);
+
+                    return View(deliveryReceipts);
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(SalesReport));
+                }
+            }
+
+            TempData["error"] = "Please input date from";
+            return RedirectToAction(nameof(SalesReport));
+        }
+
         [HttpGet]
         public async Task<IActionResult> PostedCollection()
         {
@@ -6330,9 +6371,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion
 
         #region -- Generate Dispatch Report Excel File --
-
-        [HttpPost]
-        public async Task<IActionResult> DispatchReport(DispatchReportViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateDispatchReportExcelFile(DispatchReportViewModel viewModel, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(viewModel.ReportType))
             {
@@ -6381,126 +6420,107 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["D9"].Value = "DR NO.";
                 worksheet.Cells["E9"].Value = "PRODUCTS";
                 worksheet.Cells["F9"].Value = "QTY.";
-                worksheet.Cells["G9"].Value = "AMOUNT";
-                worksheet.Cells["H9"].Value = "PICK-UP POINT";
-                worksheet.Cells["I9"].Value = "PO #";
-                worksheet.Cells["J9"].Value = "ATL#/SO#";
-                worksheet.Cells["K9"].Value = "COS NO.";
-                worksheet.Cells["L9"].Value = "HAULER NAME";
-                worksheet.Cells["M9"].Value = "SUPPLIER";
-                worksheet.Cells["N9"].Value = "COST";
-                worksheet.Cells["O9"].Value = "FREIGHT";
-                worksheet.Cells["P9"].Value = "ECC";
-                worksheet.Cells["Q9"].Value = "TOTAL FREIGHT";
+                worksheet.Cells["G9"].Value = "PICK-UP POINT";
+                worksheet.Cells["H9"].Value = "PO #";
+                worksheet.Cells["I9"].Value = "ATL#";
+                worksheet.Cells["J9"].Value = "COS NO.";
+                worksheet.Cells["K9"].Value = "HAULER NAME";
+                worksheet.Cells["L9"].Value = "SUPPLIER";
+                worksheet.Cells["M9"].Value = "FREIGHT CHARGE";
+                worksheet.Cells["N9"].Value = "ECC";
+                worksheet.Cells["O9"].Value = "TOTAL FREIGHT";
 
                 //TODO Remove this in the future
-                worksheet.Cells["R9"].Value = "OTC COS No.";
-                worksheet.Cells["S9"].Value = "OTC DR No.";
+                worksheet.Cells["P9"].Value = "OTC COS No.";
+                worksheet.Cells["Q9"].Value = "OTC DR No.";
 
                 if (viewModel.ReportType == "AllDeliveries")
                 {
-                    worksheet.Cells["T9"].Value = "DELIVERY DATE";
-                    worksheet.Cells["U9"].Value = "STATUS";
+                    worksheet.Cells["R9"].Value = "DELIVERY DATE";
+                    worksheet.Cells["S9"].Value = "STATUS";
                 }
 
 
                 int currentRow = 10;
-                string headerColumn = viewModel.ReportType == "AllDeliveries" ? "U9" : "S9";
+                string headerColumn = viewModel.ReportType == "AllDeliveries" ? "S9" : "Q9";
 
                 var groupedReceipts = deliveryReceipts
                     .OrderBy(d => d.CustomerOrderSlip.ProductId)
                     .ThenBy(d => d.Date)
                     .GroupBy(d => d.CustomerOrderSlip.ProductId);
 
-                decimal grandSumOfCost = 0;
                 decimal grandSumOfFreight = 0;
                 decimal grandSumOfECC = 0;
-                decimal grandSumOfTotalFreight = 0;
+                decimal grandSumOfTotalFreightAmount = 0;
                 decimal grandTotalQuantity = 0;
-                decimal grandTotalAmount = 0;
 
                 foreach (var group in groupedReceipts)
                 {
                     string productName = group.First().CustomerOrderSlip.Product.ProductName;
-                    decimal sumOfCost = 0;
                     decimal sumOfFreight = 0;
                     decimal sumOfECC = 0;
                     decimal sumOfTotalFreight = 0;
                     decimal totalQuantity = 0;
-                    decimal totalAmount = 0;
 
                     foreach (var dr in group)
                     {
+
+                        var quantity = dr.Quantity;
+                        var freightCharge = dr.Freight;
+                        var ecc = dr.ECC;
+                        var totalFreightAmount = quantity * (freightCharge + ecc);
+
                         worksheet.Cells[currentRow, 1].Value = dr.Date;
                         worksheet.Cells[currentRow, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        worksheet.Cells[currentRow, 2].Value = dr.Customer.CustomerName;
-                        worksheet.Cells[currentRow, 3].Value = dr.Customer.CustomerType;
+                        worksheet.Cells[currentRow, 2].Value = dr.Customer?.CustomerName;
+                        worksheet.Cells[currentRow, 3].Value = dr.Customer?.CustomerType;
                         worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
-                        worksheet.Cells[currentRow, 5].Value = dr.CustomerOrderSlip.Product.ProductName;
+                        worksheet.Cells[currentRow, 5].Value = productName;
                         worksheet.Cells[currentRow, 6].Value = dr.Quantity;
-                        worksheet.Cells[currentRow, 7].Value = dr.TotalAmount;
-                        worksheet.Cells[currentRow, 8].Value = dr.CustomerOrderSlip.PickUpPoint.Depot;
-                        worksheet.Cells[currentRow, 9].Value = dr.PurchaseOrder.PurchaseOrderNo;
-                        worksheet.Cells[currentRow, 10].Value = dr.AuthorityToLoadNo;
-                        worksheet.Cells[currentRow, 11].Value = dr.CustomerOrderSlip.CustomerOrderSlipNo;
-                        worksheet.Cells[currentRow, 12].Value = dr.Hauler?.SupplierName;
-                        worksheet.Cells[currentRow, 13].Value = dr.PurchaseOrder.Supplier.SupplierName;
-
-                        var cost = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.PurchaseOrder.Price) * dr.Quantity;
-                        worksheet.Cells[currentRow, 14].Value = cost;
-                        sumOfCost += cost;
-
-                        var freight = (dr.Freight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.Freight) : dr.Freight) * dr.Quantity;
-                        worksheet.Cells[currentRow, 15].Value = freight;
-                        sumOfFreight += freight;
-
-                        var ecc = (dr.ECC > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.ECC) : dr.ECC) * dr.Quantity;
-                        worksheet.Cells[currentRow, 16].Value = ecc;
-                        sumOfECC += ecc;
-
-                        var totalFreight = dr.Freight + dr.ECC;
-                        var netTotalFreight = (totalFreight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(totalFreight) : totalFreight) * dr.Quantity;
-                        worksheet.Cells[currentRow, 17].Value = netTotalFreight;
-                        sumOfTotalFreight += netTotalFreight;
-
-                        totalQuantity += dr.Quantity;
-                        totalAmount += dr.TotalAmount;
-
-                        worksheet.Cells[currentRow, 18].Value = dr.CustomerOrderSlip.OldCosNo;
-                        worksheet.Cells[currentRow, 19].Value = dr.ManualDrNo;
+                        worksheet.Cells[currentRow, 7].Value = dr.CustomerOrderSlip?.PickUpPoint?.Depot;
+                        worksheet.Cells[currentRow, 8].Value = dr.PurchaseOrder?.PurchaseOrderNo;
+                        worksheet.Cells[currentRow, 9].Value = dr.AuthorityToLoadNo;
+                        worksheet.Cells[currentRow, 10].Value = dr.CustomerOrderSlip?.CustomerOrderSlipNo;
+                        worksheet.Cells[currentRow, 11].Value = dr.Hauler?.SupplierName;
+                        worksheet.Cells[currentRow, 12].Value = dr.PurchaseOrder?.Supplier?.SupplierName;
+                        worksheet.Cells[currentRow, 13].Value = freightCharge;
+                        worksheet.Cells[currentRow, 14].Value = ecc;
+                        worksheet.Cells[currentRow, 15].Value = totalFreightAmount;
+                        worksheet.Cells[currentRow, 16].Value = dr.CustomerOrderSlip?.OldCosNo;
+                        worksheet.Cells[currentRow, 17].Value = dr.ManualDrNo;
 
                         if (viewModel.ReportType == "AllDeliveries")
                         {
-                            worksheet.Cells[currentRow, 20].Value = dr.DeliveredDate;
-                            worksheet.Cells[currentRow, 20].Style.Numberformat.Format = "MMM/dd/yyyy";
-                            worksheet.Cells[currentRow, 21].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
+                            worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate;
+                            worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
+                            worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
                         }
 
                         currentRow++;
+                        totalQuantity += quantity;
+                        sumOfFreight += freightCharge;
+                        sumOfECC += ecc;
+                        sumOfTotalFreight += totalFreightAmount;
                     }
 
                     // Subtotal row for each product
                     worksheet.Cells[currentRow, 5].Value = "SUB TOTAL";
                     worksheet.Cells[currentRow, 6].Value = totalQuantity;
-                    worksheet.Cells[currentRow, 7].Value = totalAmount;
-                    worksheet.Cells[currentRow, 14].Value = sumOfCost;
-                    worksheet.Cells[currentRow, 15].Value = sumOfFreight;
-                    worksheet.Cells[currentRow, 16].Value = sumOfECC;
-                    worksheet.Cells[currentRow, 17].Value = sumOfTotalFreight;
+                    worksheet.Cells[currentRow, 13].Value = sumOfFreight;
+                    worksheet.Cells[currentRow, 14].Value = sumOfECC;
+                    worksheet.Cells[currentRow, 15].Value = sumOfTotalFreight;
 
-                    using (var subtotalRowRange = worksheet.Cells[currentRow, 1, currentRow, 21]) // Adjust range as needed
+                    using (var subtotalRowRange = worksheet.Cells[currentRow, 1, currentRow, 19]) // Adjust range as needed
                     {
                         subtotalRowRange.Style.Font.Bold = true; // Make text bold
                         subtotalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                         subtotalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                     }
 
-                    grandSumOfCost += sumOfCost;
                     grandSumOfFreight += sumOfFreight;
                     grandSumOfECC += sumOfECC;
-                    grandSumOfTotalFreight += sumOfTotalFreight;
+                    grandSumOfTotalFreightAmount += sumOfTotalFreight;
                     grandTotalQuantity += totalQuantity;
-                    grandTotalAmount += totalAmount;
 
                     currentRow += 2;
                 }
@@ -6508,14 +6528,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Grand Total row
                 worksheet.Cells[currentRow, 5].Value = "GRAND TOTAL";
                 worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
-                worksheet.Cells[currentRow, 7].Value = grandTotalAmount;
-                worksheet.Cells[currentRow, 14].Value = grandSumOfCost;
-                worksheet.Cells[currentRow, 15].Value = grandSumOfFreight;
-                worksheet.Cells[currentRow, 16].Value = grandSumOfECC;
-                worksheet.Cells[currentRow, 17].Value = grandSumOfTotalFreight;
+                worksheet.Cells[currentRow, 13].Value = grandSumOfFreight;
+                worksheet.Cells[currentRow, 14].Value = grandSumOfECC;
+                worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
 
                 // Adding borders and bold styling to the total row
-                using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, 21]) // Whole row
+                using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, 19]) // Whole row
                 {
                     totalRowRange.Style.Font.Bold = true; // Make text bold
                     totalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
@@ -6539,8 +6557,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[currentRow + 5, 8].Value = "CNC SUPERVISOR";
 
                 // Styling and formatting (optional)
-                worksheet.Cells["N"].Style.Numberformat.Format = "#,##0.0000";
-                worksheet.Cells["F,G,O:Q"].Style.Numberformat.Format = "#,##0.00";
+                worksheet.Cells["M:N"].Style.Numberformat.Format = "#,##0.0000";
+                worksheet.Cells["F,O"].Style.Numberformat.Format = "#,##0.00";
 
                 using (var range = worksheet.Cells[$"A9:{headerColumn}"])
                 {
