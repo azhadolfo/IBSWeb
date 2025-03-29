@@ -1,9 +1,9 @@
 @using IBS.Utility.Enums
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@model AdvancesToEmployeeViewModel
+@model AdvancesToSupplierViewModel
 
 @{
-    ViewData["Title"] = "Create Advances To Employee";
+    ViewData["Title"] = "Create Advances To Supplier";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -16,7 +16,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Create Advances To Employee</h2>
+                <h2 class="text-white py-2">Create Advances To Supplier</h2>
             </div>
         </div>
     </div>
@@ -41,11 +41,11 @@
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
-                    <label class="control-label">Employee<span class="required">*</span></label>
-                    <select asp-for="EmployeeId" asp-items="@Model.Employees" class="form-select js-select2" style="width: 100%" required>
+                    <label class="control-label">Supplier<span class="required">*</span></label>
+                    <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2" style="width: 100%" required>
                         <option></option>
                     </select>
-                    <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                    <span asp-validation-for="SupplierId" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
                     <input asp-for="Payee" type="text" class="form-control" placeholder="Optional" readonly />
@@ -116,6 +116,13 @@
                                 <td></td>
                             </tr>
                             <tr>
+                                <td><input type="text" name="AccountNumber" value="201030210" class="w-100" style="border:none" readonly /></td>
+                                <td><input type="text" name="AccountTitle" value="Expanded Withholding Tax 1%" class="w-100" style="border:none" readonly /></td>
+                                <td><input type="text" name="Debit" value="0.00" class="w-100" style="border:none" readonly /></td>
+                                <td><input type="text" name="Credit" value="0.00" class="w-100 ewt-amount" style="border:none" readonly /></td>
+                                <td></td>
+                            </tr>
+                            <tr>
                                 <td><input type="text" name="AccountNumber" value="101010100" class="w-100" style="border:none" readonly /></td>
                                 <td><input type="text" name="AccountTitle" value="Cash in Bank" class="w-100" style="border:none" readonly /></td>
                                 <td><input type="text" name="Debit" value="0.00" class="w-100" style="border:none" readonly /></td>
@@ -163,11 +170,13 @@
             
             function updateAccountingEntries() {
                 let total = parseFloat($("#Total").val()) || 0;
-                let formattedTotal = total.toFixed(2);
+                let netOfVat = total / 1.12;
+                let ewtAmount = netOfVat * 0.01;
+                let netOfEwtAmount = total - ewtAmount;
                 
-                $(".advances-debit").val(formattedTotal);
-                
-                $(".cib-credit").val(formattedTotal);
+                $(".advances-debit").val(total.toFixed(2));
+                $(".ewt-amount").val(ewtAmount.toFixed(2));
+                $(".cib-credit").val(netOfEwtAmount.toFixed(2));
                 
                 updateTotals();
                 validateDebitAndCredit();
@@ -192,19 +201,19 @@
                 $(".totalCredit").text(totalCredit.toFixed(2));
             }
 
-            $("#EmployeeId").change(function () {
-                let employeeId = $(this).val();
-                getEmployeeDetails(employeeId)
+            $("#SupplierId").change(function () {
+                let supplierId = $(this).val();
+                getSupplierDetails(supplierId)
             });
             
         });
 
-        function getEmployeeDetails(employeeId) {
-            if (employeeId !== "") {
+        function getSupplierDetails(supplierId) {
+            if (supplierId !== "") {
                 $.ajax({
-                    url: '@Url.Action("GetEmployeeDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
+                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
                     method: "GET",
-                    data: { employeeId: employeeId },
+                    data: { supplierId: supplierId },
                     success: function (data) {
                         if (data) {
                             $("#Payee").val(data.name);
