@@ -32,7 +32,7 @@
                     <div class="col-2 text-start small-text">
                         <span><b>Create Date:</b> @Model.Date</span>
                     </div>
-                    <div class="col-2 text-start small-text">
+                    <div class="col-4 text-start small-text">
                         <span><b>Dispatch Ticket#:</b> @Model.CollectionNumber</span>
                     </div>
                 </div>
@@ -41,25 +41,55 @@
 
         <div class="row border mx-2">
             <div class="col-4 text-start p-2 small-text border">
-                <b>Bank:</b> <br /> MBTC
+                <div class="row">
+                    <div class="col-12"><b>Bank::</b></div>
+                </div>
+                <div class="row">
+                    <div class="col-12 ms-2">MBTC</div>
+                </div>
             </div>
             <div class="col-4 text-start p-2 small-text border">
-                <b>Account Number</b> <br /> 167-7-16753668-5
+                <div class="row">
+                    <div class="col-12"><b>Account Number:</b></div>
+                </div>
+                <div class="row">
+                    <div class="col-12 ms-2">167-7-16753668-5</div>
+                </div>
             </div>
             <div class="col-4 text-start p-2 small-text border">
-                <b>Account Name:</b> <br /> MALAYAN MARITIME SERVICES INC.
+                <div class="row">
+                    <div class="col-12"><b>Account Name:</b></div>
+                </div>
+                <div class="row">
+                    <div class="col-12 ms-2">MALAYAN MARITIME SERVICES INC.</div>
+                </div>
             </div>
         </div>
 
         <div class="row border mx-2">
             <div class="col-4 text-start p-2 small-text border">
-                <b>Check:</b> <br /> @Model.CheckNumber
+                <div class="row">
+                    <div class="col-12"><b>Check Number:</b></div>
+                </div>
+                <div class="row">
+                    <div class="col-12 ms-2">@Model.CheckNumber</div>
+                </div>
             </div>
             <div class="col-4 text-start p-2 small-text border">
-                <b>Check Date:</b> <br /> @Model.CheckDate
+                <div class="row">
+                    <div class="col-12"><b>Check Date:</b></div>
+                </div>
+                <div class="row">
+                    <div class="col-12 ms-2">@Model.CheckDate</div>
+                </div>
             </div>
             <div class="col-4 text-start p-2 small-text border">
-                <b>Date Deposited:</b> <br /> @Model.DepositDate
+                <div class="row">
+                    <div class="col-12"><b>Date Deposited:</b></div>
+                </div>
+                <div class="row">
+                    <div class="col-12 ms-2">@Model.DepositDate</div>
+                </div>
             </div>
         </div>
 
@@ -67,10 +97,20 @@
             <div class="col-4 text-start small-text">
                 <div class="row h-100">
                     <div class="col-6 text-start small-text py-2 ps-2">
-                        <b>Collection Amount:</b> <br />₱ @Model.Amount.ToString("N2")
+                        <div class="row">
+                            <div class="col-12"><b>Collection Amount:</b></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 ms-2">₱ @Model.Amount.ToString("N2")</div>
+                        </div>
                     </div>
                     <div class="col-6 text-start small-text py-2 ps-2">
-                        <b>EWT:</b> <br />₱ @Model.EWT
+                        <div class="row">
+                            <div class="col-12"><b>EWT:</b></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 ms-2">₱ @Model.EWT</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -78,10 +118,10 @@
                 <table class="dataTable">
                     <thead>
                     <tr>
-                        <th class="col-4 text-center p-2 small-text border-1">Billing Number</th>
-                        <th class="col-4 text-center p-2 small-text border-1">Date</th>
-                        <th class="col-4 text-center p-2 small-text border-1">Customer</th>
-                        <th class="col-4 text-center p-2 small-text border-1">Amount</th>
+                        <th class="col-3 text-center p-2 small-text border-1">Billing Number</th>
+                        <th class="col-3 text-center p-2 small-text border-1">Date</th>
+                        <th class="col-3 text-center p-2 small-text border-1">Customer</th>
+                        <th class="col-3 text-center p-2 small-text border-1">Amount</th>
                     </tr>
                     </thead>
                     <tbody>
