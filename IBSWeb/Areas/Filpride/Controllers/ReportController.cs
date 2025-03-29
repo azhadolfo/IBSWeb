@@ -519,12 +519,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(SalesReport));
+                    return RedirectToAction(nameof(DispatchReport));
                 }
             }
 
             TempData["error"] = "Please input date from";
-            return RedirectToAction(nameof(SalesReport));
+            return RedirectToAction(nameof(DispatchReport));
         }
 
         [HttpGet]
