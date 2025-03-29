@@ -175,7 +175,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .OrderBy(dt => dt.MMSIBillingNumber).Select(s => new SelectListItem
                 {
                     Value = s.MMSIBillingId.ToString(),
-                    Text = $"{s.MMSIBillingNumber} {s.Customer.CustomerName} {s.Date}"
+                    Text = $"{s.MMSIBillingNumber} - {s.Customer.CustomerName}, {s.Date}"
                 }).ToListAsync(cancellationToken);
             return billingsList;
         }
