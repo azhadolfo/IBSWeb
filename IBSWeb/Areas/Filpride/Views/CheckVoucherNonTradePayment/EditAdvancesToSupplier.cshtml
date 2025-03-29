@@ -159,14 +159,13 @@
             });
             
             function updateAccountingEntries() {
-                let total = parseFloat($("#Total").val()) || 0;
-                let netOfVat = total / 1.12;
-                let ewtAmount = netOfVat * 0.01;
+                let total = parseNumber($("#Total").val()) || 0;
+                let ewtAmount = total * 0.01;
                 let netOfEwtAmount = total - ewtAmount;
                 
-                $(".advances-debit").val(total.toFixed(2));
-                $(".ewt-amount").val(ewtAmount.toFixed(2));
-                $(".cib-credit").val(netOfEwtAmount.toFixed(2));
+                $(".advances-debit").val(formatNumber(total));
+                $(".ewt-amount").val(formatNumber(ewtAmount));
+                $(".cib-credit").val(formatNumber(netOfEwtAmount));
                 
                 updateTotals();
                 validateDebitAndCredit();
@@ -178,17 +177,17 @@
                 
                 // Calculate total debit
                 $("input[name='Debit']").each(function() {
-                    totalDebit += parseFloat($(this).val()) || 0;
+                    totalDebit += parseNumber($(this).val()) || 0;
                 });
                 
                 // Calculate total credit
                 $("input[name='Credit']").each(function() {
-                    totalCredit += parseFloat($(this).val()) || 0;
+                    totalCredit += parseNumber($(this).val()) || 0;
                 });
                 
                 // Update total displays
-                $(".totalDebit").text(totalDebit.toFixed(2));
-                $(".totalCredit").text(totalCredit.toFixed(2));
+                $(".totalDebit").text(formatNumber(totalDebit));
+                $(".totalCredit").text(formatNumber(totalCredit));
             }
 
             $("#SupplierId").change(function () {

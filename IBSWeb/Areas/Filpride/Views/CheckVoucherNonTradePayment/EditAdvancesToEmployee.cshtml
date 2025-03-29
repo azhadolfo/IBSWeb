@@ -152,8 +152,8 @@
             });
             
             function updateAccountingEntries() {
-                let total = parseFloat($("#Total").val()) || 0;
-                let formattedTotal = total.toFixed(2);
+                let total = parseNumber($("#Total").val()) || 0;
+                let formattedTotal = formatNumber(total);
                 
                 $(".advances-debit").val(formattedTotal);
                 
@@ -170,17 +170,17 @@
                 
                 // Calculate total debit
                 $("input[name='Debit']").each(function() {
-                    totalDebit += parseFloat($(this).val()) || 0;
+                    totalDebit += parseNumber($(this).val()) || 0;
                 });
                 
                 // Calculate total credit
                 $("input[name='Credit']").each(function() {
-                    totalCredit += parseFloat($(this).val()) || 0;
+                    totalCredit += parseNumber($(this).val()) || 0;
                 });
                 
                 // Update total displays
-                $(".totalDebit").text(totalDebit.toFixed(2));
-                $(".totalCredit").text(totalCredit.toFixed(2));
+                $(".totalDebit").text(formatNumber(totalDebit));
+                $(".totalCredit").text(formatNumber(totalCredit));
             }
 
             $("#EmployeeId").change(function () {

@@ -1838,8 +1838,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                    var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
 
                    var grossAmount = viewModel.Total;
-                   var netOfVatAmount = _unitOfWork.FilprideCheckVoucher.ComputeNetOfVat(grossAmount);
-                   var ewtAmount = _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(netOfVatAmount, 0.01m);
+                   var ewtAmount = _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(grossAmount, 0.01m);
                    var netOfEwtAmount = _unitOfWork.FilprideCheckVoucher.ComputeNetOfEwt(grossAmount, ewtAmount);
 
                    var checkVoucherDetails = new List<FilprideCheckVoucherDetail>
@@ -2051,8 +2050,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                    var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
 
                    var grossAmount = viewModel.Total;
-                   var netOfVatAmount = _unitOfWork.FilprideCheckVoucher.ComputeNetOfVat(grossAmount);
-                   var ewtAmount = _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(netOfVatAmount, 0.01m);
+                   var ewtAmount = _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(grossAmount, 0.01m);
                    var netOfEwtAmount = _unitOfWork.FilprideCheckVoucher.ComputeNetOfEwt(grossAmount, ewtAmount);
 
                    var checkVoucherDetails = new List<FilprideCheckVoucherDetail>

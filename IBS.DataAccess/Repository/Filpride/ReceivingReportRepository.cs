@@ -366,6 +366,7 @@ namespace IBS.DataAccess.Repository.Filpride
             decimal vatAmount = 0;
             decimal ewtAmount = 0;
             decimal netOfEwtAmount = 0;
+            decimal advanceEwtAmount = 0;
 
             if (model.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable)
             {
@@ -377,15 +378,29 @@ namespace IBS.DataAccess.Repository.Filpride
                 netOfVatAmount = model.Amount;
             }
 
-            if (model.PurchaseOrder.Supplier.TaxType == SD.TaxType_WithTax)
+            ewtAmount = ComputeEwtAmount(netOfVatAmount, 0.01m);
+
+            if (model.PurchaseOrder.Terms == SD.Terms_Cod || model.PurchaseOrder.Terms == SD.Terms_Prepaid)
             {
-                ewtAmount = ComputeEwtAmount(netOfVatAmount, 0.01m);
-                netOfEwtAmount = ComputeNetOfEwt(model.Amount, ewtAmount);
+                var advancesVoucher = await _db.FilprideCheckVoucherDetails
+                    .Include(cv => cv.CheckVoucherHeader)
+                    .FirstOrDefaultAsync(cv =>
+                        cv.CheckVoucherHeader.SupplierId == model.PurchaseOrder.SupplierId &&
+                        cv.CheckVoucherHeader.IsAdvances &&
+                        cv.CheckVoucherHeader.Status == nameof(CheckVoucherPaymentStatus.Posted) &&
+                        cv.AccountName.Contains("Expanded Withholding Tax") &&
+                        cv.Credit > cv.AmountPaid,
+                        cancellationToken);
+
+                if (advancesVoucher != null)
+                {
+                    var affectedEwt = Math.Min(advancesVoucher.Credit, ewtAmount);
+                    ewtAmount -= affectedEwt;
+                    advancesVoucher.AmountPaid += affectedEwt;
+                }
             }
-            else
-            {
-                netOfEwtAmount = model.Amount;
-            }
+
+            netOfEwtAmount = ComputeNetOfEwt(model.Amount, ewtAmount);
 
             var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.PurchaseOrder.Product.ProductCode);
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
