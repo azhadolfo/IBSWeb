@@ -204,7 +204,6 @@ namespace IBSWeb.Areas.MMSI
 
                     currentModel.Date = model.Date;
                     currentModel.Status = "For Collection";
-                    currentModel.MMSIBillingNumber = model.MMSIBillingNumber;
                     currentModel.VoyageNumber = model.VoyageNumber;
                     currentModel.CustomerId = model.CustomerId;
                     currentModel.PortId = model.PortId;
