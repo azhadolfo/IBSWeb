@@ -76,6 +76,23 @@ namespace IBSWeb.Areas.MMSI
 
                     model = await _db.MMSIBillings.FindAsync(id, cancellationToken);
 
+                    #region -- Audit Trail
+
+                    var audit = new MMSIAuditTrail
+                    {
+                        Date = DateTime.Now,
+                        Username = await GetUserNameAsync(),
+                        MachineName = Environment.MachineName,
+                        Activity = $"Create Billing: id#{model.MMSICollectionId}",
+                        DocumentType = "Billing",
+                        Company = await GetCompanyClaimAsync()
+                    };
+
+                    await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+
+                    #endregion -- Audit Trail
+
                     decimal totalAmount = 0;
 
                     foreach(var billDispatchTicket in model.ToBillDispatchTickets)
