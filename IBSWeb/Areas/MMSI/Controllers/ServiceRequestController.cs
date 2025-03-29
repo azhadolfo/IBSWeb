@@ -116,18 +116,21 @@ namespace IBSWeb.Areas.MMSI
 
                         #region -- Audit Trail
 
-                        var audit = new MMSIAuditTrail();
-                        audit.Date = DateTime.Now;
-                        audit.Username = await GetUserNameAsync();
-                        audit.MachineName = Environment.MachineName;
-                        audit.Activity = $"Create service request #{model.DispatchNumber}";
-                        audit.DocumentType = "ServiceRequest";
-                        audit.Company = await GetCompanyClaimAsync();
+                        var audit = new MMSIAuditTrail
+                        {
+                            Date = DateTime.Now,
+                            Username = await GetUserNameAsync(),
+                            MachineName = Environment.MachineName,
+                            Activity = $"Create service request: id#{model.DispatchTicketId}",
+                            DocumentType = "ServiceRequest",
+                            Company = await GetCompanyClaimAsync()
+                        };
+
                         await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                        await _db.SaveChangesAsync(cancellationToken);
 
                         #endregion --Audit Trail
 
-                        await _db.SaveChangesAsync(cancellationToken);
                         TempData["success"] = "Entry Created Successfully!";
 
                         return RedirectToAction(nameof(Index));
@@ -185,7 +188,6 @@ namespace IBSWeb.Areas.MMSI
             ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
             return View(model);
-
         }
 
         [HttpPost]
@@ -227,70 +229,21 @@ namespace IBSWeb.Areas.MMSI
 
                         var changes = new List<string>();
 
-                        if (currentModel.ActivityServiceId != model.ActivityServiceId)
-                        {
-                            changes.Add($"ActivityServiceId: {currentModel.ActivityServiceId} -> {model.ActivityServiceId}");
-                        }
-                        if (currentModel.DispatchNumber != model.DispatchNumber)
-                        {
-                            changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}");
-                        }
-                        if (currentModel.Remarks != model.Remarks)
-                        {
-                            changes.Add($"Remarks: '{currentModel.Remarks}' -> '{model.Remarks}'");
-                        }
-                        if (currentModel.CreateDate != model.CreateDate)
-                        {
-                            changes.Add($"CreateDate: {currentModel.CreateDate} -> {model.CreateDate}");
-                        }
-                        if (currentModel.TerminalId != model.TerminalId)
-                        {
-                            changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}");
-                        }
-                        if (currentModel.TugBoatId != model.TugBoatId)
-                        {
-                            changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {model.TugBoatId}");
-                        }
-                        if (currentModel.TugMasterId != model.TugMasterId)
-                        {
-                            changes.Add($"TugMasterId: {currentModel.TugMasterId} -> {model.TugMasterId}");
-                        }
-                        if (currentModel.VesselId != model.VesselId)
-                        {
-                            changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}");
-                        }
-                        if (currentModel.VoyageNumber != model.VoyageNumber)
-                        {
-                            changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}");
-                        }
-                        if (currentModel.DateArrived != model.DateArrived)
-                        {
-                            changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}");
-                        }
-                        if (currentModel.DateLeft != model.DateLeft)
-                        {
-                            changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}");
-                        }
-                        if (currentModel.TimeArrived != model.TimeArrived)
-                        {
-                            changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}");
-                        }
-                        if (currentModel.TimeLeft != model.TimeLeft)
-                        {
-                            changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}");
-                        }
-                        if (currentModel.COSNumber  != model.COSNumber)
-                        {
-                            changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}");
-                        }
-                        if (currentModel.BaseOrStation != model.BaseOrStation)
-                        {
-                            changes.Add($"BaseOrStation: {currentModel.BaseOrStation} -> {model.BaseOrStation}");
-                        }
-                        if (file != null && currentModel.UploadName != model.UploadName)
-                        {
-                            changes.Add($"UploadName: '{currentModel.UploadName}' -> '{model.UploadName}'");
-                        }
+                        if (currentModel.ActivityServiceId != model.ActivityServiceId) { changes.Add($"ActivityServiceId: {currentModel.ActivityServiceId} -> {model.ActivityServiceId}"); }
+                        if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
+                        if (currentModel.Remarks != model.Remarks) { changes.Add($"Remarks: '{currentModel.Remarks}' -> '{model.Remarks}'"); }
+                        if (currentModel.CreateDate != model.CreateDate) { changes.Add($"CreateDate: {currentModel.CreateDate} -> {model.CreateDate}"); }
+                        if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
+                        if (currentModel.TugBoatId != model.TugBoatId) { changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {model.TugBoatId}"); }
+                        if (currentModel.TugMasterId != model.TugMasterId) { changes.Add($"TugMasterId: {currentModel.TugMasterId} -> {model.TugMasterId}"); }
+                        if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
+                        if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
+                        if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
+                        if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
+                        if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
+                        if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
+                        if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); } if (currentModel.BaseOrStation != model.BaseOrStation) { changes.Add($"BaseOrStation: {currentModel.BaseOrStation} -> {model.BaseOrStation}"); }
+                        if (file != null && currentModel.UploadName != model.UploadName) { changes.Add($"UploadName: '{currentModel.UploadName}' -> '{model.UploadName}'"); }
 
                         #endregion -- Changes
 
@@ -325,8 +278,8 @@ namespace IBSWeb.Areas.MMSI
                             Username = await GetUserNameAsync(),
                             MachineName = Environment.MachineName,
                             Activity = changes.Any()
-                                ? $"Edit: {string.Join(", ", changes)}"
-                                : $"No changes detected for service request #{currentModel.DispatchNumber}",
+                                ? $"Edit: id#{currentModel.DispatchTicketId}, {string.Join(", ", changes)}"
+                                : $"No changes detected: id#{currentModel.DispatchTicketId}",
                             DocumentType = "ServiceRequest",
                             Company = await GetCompanyClaimAsync()
                         };
@@ -345,8 +298,8 @@ namespace IBSWeb.Areas.MMSI
                         TempData["error"] = "Date/Time Left cannot be later than Date/Time Arrived!";
 
                         model = await _db.MMSIDispatchTickets
-                        .Include(dt => dt.Terminal)            // Include the Terminal navigation property
-                        .ThenInclude(t => t.Port)             // Include the Port navigation property of Terminal
+                        .Include(dt => dt.Terminal)
+                        .ThenInclude(t => t.Port)
                         .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
                         model = await _dispatchRepo.GetDispatchTicketLists(model, cancellationToken);
@@ -361,8 +314,8 @@ namespace IBSWeb.Areas.MMSI
                     TempData["error"] = "Can't create entry, please review your input.";
 
                     model = await _db.MMSIDispatchTickets
-                    .Include(dt => dt.Terminal)            // Include the Terminal navigation property
-                    .ThenInclude(t => t.Port)             // Include the Port navigation property of Terminal
+                    .Include(dt => dt.Terminal)
+                    .ThenInclude(t => t.Port)
                     .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
                     model = await _dispatchRepo.GetDispatchTicketLists(model, cancellationToken);
@@ -379,7 +332,7 @@ namespace IBSWeb.Areas.MMSI
                 model = await _db.MMSIDispatchTickets
                 .Where(dt => dt.DispatchTicketId == model.DispatchTicketId)
                 .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
                 model = await _dispatchRepo.GetDispatchTicketLists(model, cancellationToken);
 
@@ -420,7 +373,7 @@ namespace IBSWeb.Areas.MMSI
                     .Include(a => a.Tugboat)
                     .Include(a => a.TugMaster)
                     .Include(a => a.Vessel)
-                    .ToListAsync();
+                    .ToListAsync(cancellationToken);
             }
             else
             {
@@ -467,7 +420,7 @@ namespace IBSWeb.Areas.MMSI
         {
             try
             {
-                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken = default);
+                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
                 model.Status = "For Tariff";
                 await _db.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Entry Posted!";
@@ -520,7 +473,7 @@ namespace IBSWeb.Areas.MMSI
                         if (recordToUpdate != null)
                         {
                             recordToUpdate.Status = "For Tariff";
-                            posteds.Add($"#{recordToUpdate.DispatchNumber}");
+                            posteds.Add($"#{recordToUpdate.DispatchTicketId}");
                         }
                     }
 
@@ -532,7 +485,7 @@ namespace IBSWeb.Areas.MMSI
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = posteds.Any()
-                            ? $"Posted: {string.Join(", ", posteds)}"
+                            ? $"Posted: #{string.Join(", #", posteds)}"
                             : $"No posting detected",
                         DocumentType = "ServiceRequest",
                         Company = await GetCompanyClaimAsync()
@@ -564,6 +517,7 @@ namespace IBSWeb.Areas.MMSI
                 try
                 {
                     var recordList = JsonConvert.DeserializeObject<List<string>>(records);
+                    var posteds = new List<string>();
 
                     foreach (var recordId in recordList)
                     {
@@ -575,8 +529,28 @@ namespace IBSWeb.Areas.MMSI
                         if (recordToUpdate != null)
                         {
                             recordToUpdate.Status = "Cancelled";
+                            posteds.Add(recordToUpdate.DispatchTicketId.ToString());
                         }
                     }
+
+                    #region -- Audit Trail
+
+                    var audit = new MMSIAuditTrail
+                    {
+                        Date = DateTime.Now,
+                        Username = await GetUserNameAsync(),
+                        MachineName = Environment.MachineName,
+                        Activity = posteds.Any()
+                            ? $"Cancel: id#{string.Join(", #", posteds)}"
+                            : $"No cancel detected",
+                        DocumentType = "ServiceRequest",
+                        Company = await GetCompanyClaimAsync()
+                    };
+
+                    await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+
+                    #endregion --Audit Trail
 
                     await _db.SaveChangesAsync(cancellationToken);
 
@@ -593,7 +567,5 @@ namespace IBSWeb.Areas.MMSI
             TempData["error"] = "Passed record list is empty";
             return RedirectToAction(nameof(Index));
         }
-
-
     }
 }
