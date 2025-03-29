@@ -1,3 +1,4 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI;
 using IBS.Models.MMSI;
@@ -210,7 +211,7 @@ namespace IBSWeb.Areas.MMSI
                         }
                         if (!model.IsDocumented && !currentModel.IsDocumented)
                         {
-                            // as is, use old generated
+                            model.MMSIBillingNumber = currentModel.MMSIBillingNumber;
                         }
                         if (!model.IsDocumented && currentModel.IsDocumented)
                         {
@@ -218,6 +219,48 @@ namespace IBSWeb.Areas.MMSI
                             currentModel.MMSIBillingNumber = await _dispatchRepo.GenerateBillingNumber(cancellationToken);
                         }
                     }
+
+                    List<string> idsOfBilledTickets = null;
+                    var tempModel = await _db.MMSIDispatchTickets
+                        .Where(d => d.BillingId == model.MMSIBillingId.ToString()).ToListAsync(cancellationToken);
+                    idsOfBilledTickets = tempModel.Select(d => d.DispatchTicketId.ToString()).OrderBy(x => x).ToList();
+                    currentModel.ToBillDispatchTickets = idsOfBilledTickets;
+
+                    #region -- Changes
+
+                    var changes = new List<string>();
+
+                    if (currentModel.IsDocumented != model.IsDocumented) { changes.Add($"IsDocumented: {currentModel.IsDocumented} -> {model.IsDocumented}"); }
+                    if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
+                    if (currentModel.MMSIBillingNumber != model.MMSIBillingNumber) { changes.Add($"MMSIBillingNumber: {currentModel.MMSIBillingNumber} -> {model.MMSIBillingNumber}"); }
+                    if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
+                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                    if (currentModel.PortId != model.PortId) { changes.Add($"PortId: {currentModel.PortId} -> {model.PortId}"); }
+                    if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
+                    if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
+                    if (!currentModel.ToBillDispatchTickets.OrderBy(x => x).SequenceEqual(model.ToBillDispatchTickets.OrderBy(x => x)))
+                    { changes.Add($"ToBillDispatchTickets: {string.Join(", ", currentModel.ToBillDispatchTickets)} -> {string.Join(", ", model.ToBillDispatchTickets)}"); }
+
+                    #endregion -- Changes
+
+                    #region -- Audit Trail
+
+                    var audit = new MMSIAuditTrail
+                    {
+                        Date = DateTime.Now,
+                        Username = await GetUserNameAsync(),
+                        MachineName = Environment.MachineName,
+                        Activity = changes.Any()
+                            ? $"Edit Billing: id#{currentModel.MMSIBillingId} {string.Join(", ", changes)}"
+                            : $"No changes detected for service request #{currentModel.MMSIBillingId}",
+                        DocumentType = "Billing",
+                        Company = await GetCompanyClaimAsync()
+                    };
+
+                    await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+
+                    #endregion -- Audit Trail
 
                     currentModel.Date = model.Date;
                     currentModel.Status = "For Collection";

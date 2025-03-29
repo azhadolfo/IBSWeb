@@ -315,6 +315,8 @@
             $("#PortSelect").change(HandlePortChange);
             
             updateCustomerDetails($("#CustomerId").val());
+            
+            checkboxChanged();
         });
 
         function triggerDispatchTicketTable(selectedTickets)
