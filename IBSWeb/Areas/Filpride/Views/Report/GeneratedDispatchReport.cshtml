@@ -1,0 +1,160 @@
+@model IEnumerable<FilprideDeliveryReceipt>
+@using IBS.Utility.Constants
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    ViewData["Title"] = "Dispatch Report";
+
+    decimal totalQuantity = 0m;
+    decimal totalFreightCharge = 0m;
+    decimal totalECC = 0m;
+    decimal totalFreightAmount = 0m;
+}
+<style>
+    .container {
+        max-width: none;
+    }
+
+    .table-responsive {
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+
+    table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .print-header, .table-responsive, .table-responsive * {
+            visibility: visible;
+        }
+
+        .print-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .table-responsive {
+            position: absolute;
+            top: 0; /* Adjust this value based on your header's height */
+            left: 0;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+    }
+</style>
+
+<div class="table-responsive">
+    <h5>DISPATCH REPORT</h5>
+    <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
+    <table id="ledgerTable" class="table">
+        <thead>
+        <tr class="table-primary text-center text-nowrap">
+            <th class="px-3">DR Date</th>
+            <th class="px-3">Customer Name</th>
+            <th class="px-3">Type</th>
+            <th class="px-3">DR#</th>
+            <th class="px-3">Products</th>
+            <th class="px-3">Quantity</th>
+            <th class="px-3">Pick-up Point</th>
+            <th class="px-3">PO#</th>
+            <th class="px-3">ATL#</th>
+            <th class="px-3">COS#</th>
+            <th class="px-3">Hauler Name</th>
+            <th class="px-3">Supplier</th>
+            <th class="px-3">Freight Charge</th>
+            <th class="px-3">ECC</th>
+            <th class="px-3">Total Freight</th>
+            <th class="px-3">Delivery Date</th>
+            <th class="px-3">Status</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        @* Populate rows *@
+        @foreach (var dr in Model)
+        {
+            var quantity = dr.Quantity;
+            var freightCharge = dr.Freight;
+            var ecc = dr.ECC;
+            var totalFreight = quantity * (freightCharge + ecc);
+        
+            <tr class="align-text-bottom text-nowrap">
+                <td class="px-3"> @dr.Date.ToString(SD.Date_Format)</td> 
+                <td class="px-3"> @dr.Customer?.CustomerName</td> 
+                <td class="px-3"> @dr.Customer?.CustomerType</td> 
+                <td class="px-3"> @dr.DeliveryReceiptNo</td> 
+                <td class="px-3"> @dr.PurchaseOrder?.Product?.ProductName</td> 
+                <td class="px-3 text-end"> @quantity.ToString(SD.Two_Decimal_Format)</td> 
+                <td class="px-3"> @dr.CustomerOrderSlip?.PickUpPoint?.Depot</td> 
+                <td class="px-3"> @dr.PurchaseOrder?.PurchaseOrderNo</td> 
+                <td class="px-3"> @dr.AuthorityToLoadNo</td> 
+                <td class="px-3"> @dr.CustomerOrderSlip?.CustomerOrderSlipNo</td> 
+                <td class="px-3"> @dr.Hauler?.SupplierName</td> 
+                <td class="px-3"> @dr.PurchaseOrder?.Supplier?.SupplierName</td> 
+                <td class="px-3 text-end"> @freightCharge.ToString(SD.Four_Decimal_Format)</td> 
+                <td class="px-3 text-end"> @ecc.ToString(SD.Four_Decimal_Format)</td> 
+                <td class="px-3 text-end"> @totalFreight.ToString(SD.Two_Decimal_Format)</td> 
+                <td class="px-3"> @dr.DeliveredDate?.ToString(SD.Date_Format)</td> 
+                <td class="px-3"> @dr.Status</td> 
+            </tr>
+            
+            @* Add values to total variables *@
+            totalQuantity += quantity;
+            totalFreightCharge += freightCharge;
+            totalECC += ecc;
+            totalFreightAmount += totalFreight;
+        }
+
+        @* Populate subtotal rows *@
+        <tr class="table-primary" style="border-top: double">
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="text-center px-3"><b>TOTAL:</b></td>
+            <td class="text-end px-3">@totalQuantity.ToString(SD.Two_Decimal_Format)</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="text-end px-3">@totalFreightCharge.ToString(SD.Four_Decimal_Format)</td>
+            <td class="text-end px-3">@totalECC.ToString(SD.Four_Decimal_Format)</td>
+            <td class="text-end px-3">@totalFreightAmount.ToString(SD.Two_Decimal_Format)</td>
+            <td></td>
+            <td></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="row mt-5">
+    <div class="col-6 col-md-3">
+        <a onclick="printTable()" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="Report" asp-action="DispatchReport"
+           class="btn btn-outline-primary border form-control buttons">Back</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function printTable() {
+            window.print();
+        }
+    </script>
+}

@@ -252,6 +252,7 @@ namespace IBS.DataAccess.Repository.Filpride
                              dr.DeliveredDate <= dateTo &&
                              (dr.Status == nameof(DRStatus.ForInvoicing) || dr.Status == nameof(DRStatus.Invoiced)))
                 .Include(dr => dr.CustomerOrderSlip.Product)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Commissionee)
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.PurchaseOrder)
                 .OrderBy(dr => dr.DeliveredDate)
@@ -335,16 +336,22 @@ namespace IBS.DataAccess.Repository.Filpride
                              && rr.SupplierInvoiceDate >= dateFrom
                              && rr.SupplierInvoiceDate <= dateTo
                              && rr.Status == nameof(Status.Posted))
-                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
-                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(po => po.Supplier)
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(po => po.Product)
                 .Include(rr => rr.DeliveryReceipt)
                 .ThenInclude(dr => dr.CustomerOrderSlip)
                 .ThenInclude(cos => cos.PickUpPoint)
+                .Include(rr => rr.DeliveryReceipt)
+                .ThenInclude(dr => dr.CustomerOrderSlip)
+                .ThenInclude(cos => cos.Commissionee)
                 .Include(rr => rr.DeliveryReceipt)
                 .ThenInclude(dr => dr.Customer)
                 .Include(rr => rr.DeliveryReceipt)
                 .ThenInclude(dr => dr.Hauler)
                 .ToListAsync(cancellationToken);
+
 
             // Add DeliveryReceipts that are in the date range but not yet delivered
             var additionalDeliveryReceipts = await _db.FilprideDeliveryReceipts
@@ -367,10 +374,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     QuantityReceived = dr.Quantity,
                     QuantityDelivered = dr.Quantity
                 }))
-                .OrderBy(rr => rr.Date)
                 .ToList(); // Call this if needs to implement the in-transit purchases
 
-            return receivingReports;
+            return receivingReports.OrderBy(rr => rr.Date).ToList();
         }
 
         public async Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport (DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
