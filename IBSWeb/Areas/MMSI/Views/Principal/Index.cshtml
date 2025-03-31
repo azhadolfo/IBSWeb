@@ -76,7 +76,7 @@
                             <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                 <li><a class="dropdown-item" href="@Url.Action("Edit", "Principal", new { id = item.PrincipalId })"><i class="bi bi-pencil-fill"></i> Edit</a></li>
-                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "Principal", new { id = item.CustomerId })"><i class="bi bi-trash-fill"></i> Delete</a></li>
+                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "Principal", new { id = item.PrincipalId })"><i class="bi bi-trash-fill"></i> Delete</a></li>
                             </ul>
                         </div>
                     </td>

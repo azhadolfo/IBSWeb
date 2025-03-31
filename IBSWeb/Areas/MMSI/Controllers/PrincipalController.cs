@@ -50,9 +50,9 @@ namespace IBSWeb.Areas.MMSI
                     return View(model);
                 }
 
-                var customer = await _db.MMSICustomers.Where(c => c.MMSICustomerId == model.CustomerId)
-                    .FirstOrDefaultAsync(cancellationToken);
-                model.PrincipalNumber = customer.CustomerNumber;
+                var customer = await _db.MMSICustomers.FindAsync(model.CustomerId, cancellationToken);
+                model.CustomerId = customer.MMSICustomerId;
+                customer.HasPrincipal = true;
 
                 await _db.MMSIPrincipals.AddAsync(model, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
@@ -77,14 +77,25 @@ namespace IBSWeb.Areas.MMSI
             }
         }
 
-        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
             try
             {
                 var model = await _db.MMSIPrincipals.FindAsync(id, cancellationToken);
+                var idOfCustomer = model.CustomerId;
 
                 _db.MMSIPrincipals.Remove(model);
-                _db.SaveChanges();
+                await _db.SaveChangesAsync(cancellationToken);
+
+                var principalsOfTheCustomer = await _db.MMSIPrincipals.Where(p => p.CustomerId == id).ToListAsync(cancellationToken);
+
+                if (principalsOfTheCustomer.Count == 0)
+                {
+                    var customer = _db.MMSICustomers.Find(idOfCustomer);
+                    customer.HasPrincipal = false;
+
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
 
                 TempData["success"] = "Entry deleted successfully";
 
@@ -93,7 +104,7 @@ namespace IBSWeb.Areas.MMSI
 
             catch (Exception ex)
             {
-                TempData["error"] = ex.InnerException.Message;
+                TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }
