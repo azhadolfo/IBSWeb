@@ -10,42 +10,6 @@
         width: 100% !important;
     }
 
-    /* Custom styles for professional look */
-    .table th {
-        font-weight: 600;
-        color: #374151;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.025em;
-    }
-
-    .table tbody tr {
-        transition: all 0.2s;
-    }
-
-    .table tbody tr:hover {
-        background-color: rgba(59, 130, 246, 0.05);
-    }
-    
-    .actions-dropdown .dropdown-item {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-    }
-
-    .actions-dropdown .dropdown-item:hover {
-        background-color: #f3f4f6;
-    }
-
-    table {
-        font-size: 10px !important;
-        table-layout: auto !important;
-    }
-
-    table td {
-        font-size: 12px !important;
-        padding-left: 10px !important;
-    }
-
     .card-body {
         margin: 5px !important;
         padding: 5px !important;
@@ -80,13 +44,15 @@
             <div class="card-body">
                 <table id="dataTable" class="table table-striped table-bordered" style="width:100%" data-order='[[0, "asc"]]'>
                     <thead>
-                    <tr>
-                        <th class="text-center align-content-center">Date</th>
-                        <th class="text-center align-content-center">Collection Number</th>
-                        <th class="text-center align-content-center">Amount</th>
-                        <th class="text-center align-content-center">Customer</th>
-                        <th class="text-center align-content-center">Actions</th>
-                    </tr>
+                        <tr>
+                            <th class="text-center align-content-center">Date</th>
+                            <th class="text-center align-content-center">Collection Number</th>
+                            <th class="text-center align-content-center">Check Date</th>
+                            <th class="text-center align-content-center">Date Deposited</th>
+                            <th class="text-center align-content-center">Amount</th>
+                            <th class="text-center align-content-center">Customer</th>
+                            <th class="text-center align-content-center">Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
 
@@ -121,6 +87,8 @@
                                 <tr>
                                     <td class="text-center align-content-center ">${value.date}</td>
                                     <td class="text-center align-content-center ">${value.collectionNumber}</td>
+                                    <td class="text-center align-content-center ">${value.checkDate}</td>
+                                    <td class="text-center align-content-center ">${value.depositDate}</td>
                                     <td class="text-center align-content-center ">${value.amount}</td>
                                     <td class="text-center align-content-center ">${value.customer.customerName}</td>
                                     <td class="text-center justify-content-center d-flex">
@@ -140,7 +108,7 @@
                         lengthChange: true,
                         columnDefs: [
                             {
-                                "targets": 4,
+                                "targets": 6,
                                 "width": "150px",
                                 "className": "text-center",
                                 "orderable": false
