@@ -64,14 +64,7 @@ namespace IBSWeb.Areas.MMSI
 
             catch (Exception ex)
             {
-                if (!string.IsNullOrEmpty(ex.InnerException?.Message))
-                {
-                    TempData["error"] = ex.InnerException.Message;
-                }
-                else
-                {
-                    TempData["error"] = ex.Message;
-                }
+                TempData["error"] = ex.Message;
 
                 return View(model);
             }
@@ -79,16 +72,22 @@ namespace IBSWeb.Areas.MMSI
 
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
         {
+            // id of principal
             try
             {
+                // model of principal to delete
                 var model = await _db.MMSIPrincipals.FindAsync(id, cancellationToken);
+                // id of customer where the principal is
                 var idOfCustomer = model.CustomerId;
 
+                // delete the model(principal)
                 _db.MMSIPrincipals.Remove(model);
                 await _db.SaveChangesAsync(cancellationToken);
 
-                var principalsOfTheCustomer = await _db.MMSIPrincipals.Where(p => p.CustomerId == id).ToListAsync(cancellationToken);
+                // get the customer of the principal
+                var principalsOfTheCustomer = await _db.MMSIPrincipals.Where(p => p.CustomerId == idOfCustomer).ToListAsync(cancellationToken);
 
+                // check if the customer still has principals, if 0, hasprincipal = false
                 if (principalsOfTheCustomer.Count == 0)
                 {
                     var customer = _db.MMSICustomers.Find(idOfCustomer);
@@ -121,9 +120,13 @@ namespace IBSWeb.Areas.MMSI
         [HttpPost]
         public async Task<IActionResult> Edit(MMSIPrincipal model, CancellationToken cancellationToken = default)
         {
+            // model of new principal
             try
             {
+                // model of old principal
                 var currentModel = await _db.MMSIPrincipals.FindAsync(model.PrincipalId, cancellationToken);
+                // id of old principal's customer
+                var previousCustomerId = currentModel.CustomerId;
 
                 if (currentModel != null)
                 {
@@ -139,6 +142,11 @@ namespace IBSWeb.Areas.MMSI
                     currentModel.Landline2 = model.Landline2;
                     currentModel.IsVatable = model.IsVatable;
                     currentModel.IsActive = model.IsActive;
+                    currentModel.CustomerId = model.CustomerId;
+
+                    // current chosen customer
+                    var newCustomer = await _db.MMSICustomers.FindAsync(model.CustomerId, cancellationToken);
+                    newCustomer.HasPrincipal = true;
                 }
                 else
                 {
@@ -147,6 +155,16 @@ namespace IBSWeb.Areas.MMSI
                 }
 
                 await _db.SaveChangesAsync(cancellationToken);
+
+                // see if old customer still has principals, if not, has principal = false
+                var previousCustomerPrincipals = await _db.MMSIPrincipals.Where(p => p.CustomerId == previousCustomerId).ToListAsync(cancellationToken);
+                if (previousCustomerPrincipals.Count == 0)
+                {
+                    var customer = await _db.MMSICustomers.FindAsync(previousCustomerId, cancellationToken);
+                    customer.HasPrincipal = false;
+
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
 
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
