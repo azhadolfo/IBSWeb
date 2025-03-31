@@ -30,5 +30,9 @@ namespace IBS.Models.MMSI.MasterFile
         public bool IsActive { get; set; }
 
         public bool IsVatable { get; set; }
+
+        public bool HasPrincipal { get; set; } = default;
+
+        public List<MMSIPrincipal>? Principals { get; set; }
     }
 }

@@ -43,7 +43,11 @@ namespace IBS.Models.MMSI.MasterFile
         [ForeignKey(nameof(CustomerId))]
         public MMSICustomer? Customer { get; set; }
 
+        #region -- Select List
+
         [NotMapped]
         public List<SelectListItem>? CustomerSelectList { get; set; }
+
+        #endregion
     }
 }
