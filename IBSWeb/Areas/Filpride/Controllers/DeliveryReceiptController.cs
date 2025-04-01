@@ -1089,6 +1089,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 model.HasReceivingReport = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
 
                 TempData["success"] = "Delivery Receipt lifting date has been recorded successfully. " +
                                       $"RR#{receivingReportNo} has been generated.";

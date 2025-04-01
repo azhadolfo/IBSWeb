@@ -27,7 +27,7 @@
                 <div class="form-group mb-3">
                     <label class="control-label">Type<span class="required">*</span></label>
                     <select asp-for="DocumentType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" required>
-                        <option value="" selected disabled>Select PO type</option>
+                        <option value="" selected disabled>Select document type</option>
                         @foreach (DocumentType documentType in Enum.GetValues<DocumentType>())
                         {
                             <option value="@documentType">@documentType.ToString()</option>
@@ -126,8 +126,8 @@
                         <tfoot>
                             <tr>
                                 <td class="text-end" colspan="2">TOTAL:</td>
-                                <td class="totalDebit">0.0000</td>
-                                <td class="totalCredit">0.0000</td>
+                                <td class="totalDebit">0.00</td>
+                                <td class="totalCredit">0.00</td>
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -163,7 +163,7 @@
             
             function updateAccountingEntries() {
                 let total = parseFloat($("#Total").val()) || 0;
-                let formattedTotal = total.toFixed(2);
+                let formattedTotal = formatNumber(total);
                 
                 $(".advances-debit").val(formattedTotal);
                 
@@ -188,18 +188,14 @@
                 });
                 
                 // Update total displays
-                $(".totalDebit").text(totalDebit.toFixed(2));
-                $(".totalCredit").text(totalCredit.toFixed(2));
+                $(".totalDebit").text(formatNumber(totalDebit));
+                $(".totalCredit").text(formatNumber(totalCredit));
             }
 
             $("#EmployeeId").change(function () {
                 let employeeId = $(this).val();
                 getEmployeeDetails(employeeId)
             });
-
-            if ($("#EmployeeId").val()){
-                console.log("test");
-            }
             
         });
 

@@ -22,6 +22,7 @@
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <input type="hidden" asp-for="CVId"/>
+                    <input type="hidden" asp-for="AdvancesCVNo"/>
                     <div class="form-group mb-3">
                         <label asp-for="SupplierId" class="control-label"></label><span class="required">*</span>
                         <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 GetPOList supplier" style="width:100%">
@@ -130,7 +131,14 @@
                             <td><input type="text" name="AccountNumber" value="101010100" class="w-100" style='border:none' readonly /></td>
                             <td><input type='text' name="AccountTitle" value="Cash in Bank" class="w-100 accountTitle" style='border:none' readonly /></td>
                             <td><input type='text' name="Debit" value='0.000' class="w-100" style='border:none' readonly /></td>
-                            <td><input type='text' name="Credit" value="0.000" class="w-100 totalNetOfEWT" style='border:none' readonly /></td>
+                            <td><input type='text' name="Credit" value="0.000" class="w-100 cib-credit" style='border:none' readonly /></td>
+                            <td></td>
+                        </tr>
+                        <tr id="advancesRow" style="display: none;">
+                            <td><input type="text" name="AccountNumber" value="101060100" class="w-100" style='border:none' readonly /></td>
+                            <td><input type='text' name="AccountTitle" value='Advances to Supplier' class="w-100" style='border:none' readonly /></td>
+                            <td><input type='text' name="Debit" value='0.000' class="w-100" id="advancesDebit" style='border:none' readonly /></td>
+                            <td><input type='text' name="Credit" value='0.000' class="w-100" id="advancesCredit" style='border:none' readonly /></td>
                             <td></td>
                         </tr>
                         </tbody>
@@ -248,10 +256,12 @@
         });
 
         displayRecords(@Html.Raw(Json.Serialize(Model.POSeries)), @Html.Raw(Json.Serialize(Model.CVId)));
+        displayAdvances(@Html.Raw(Json.Serialize(Model.POSeries)));
 
         $(".GetRRList").change(function () {
             var poNumber = $(this).val(); // Get all selected POIds
-            displayRecords(poNumber)
+            displayRecords(poNumber);
+            displayAdvances(poNumber);
         });
         
         function displayRecords(poNumber, cvId) {
@@ -318,6 +328,41 @@
                     console.error('Error fetching RRs:', error);
                 }
             });
+        }
+
+        function displayAdvances(poNumber){
+            // New addition: Check if any selected PO has COD or PREPAID terms
+            if (poNumber && poNumber.length > 0) {
+                $.ajax({
+                    url: "@Url.Action("CheckPOPaymentTerms", "CheckVoucherTrade")",
+                    method: "GET",
+                    data: { poNumbers: poNumber },
+                    traditional: true,
+                    success: function(response) {
+                        // If any PO has COD or PREPAID terms, show the Advances row
+                        if (response.hasCodOrPrepaid) {
+                            $("#advancesRow").show();
+                            // Default values can be set based on what makes sense for your business logic
+                            $("#advancesDebit").val(formatNumber(0));
+                            $("#advancesCredit").val(formatNumber(response.advanceAmount || 0));
+                            $("#AdvancesCVNo").val(response.advanceCVNo);
+                            updateTotalDebitAndCredit();
+                        } else {
+                            $("#advancesRow").hide();
+                            $("#advancesDebit").val("0.000");
+                            $("#advancesCredit").val("0.000");
+                            $("#AdvancesCVNo").val("");
+                            updateTotalDebitAndCredit();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error checking PO payment terms:', error);
+                        $("#advancesRow").hide();
+                    }
+                });
+            } else {
+                $("#advancesRow").hide();
+            }
         }
 
         let selectedRecords = []; // Store selected records
@@ -424,6 +469,21 @@
                 totalNetOfEWT += rrAmount;
             });
             $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
+
+            // Check if advances row is visible
+            var hasAdvances = $("#advancesRow").is(":visible");
+            var advancesAmount = hasAdvances ? parseNumber($("#advancesCredit").val()) : 0;
+
+            // Adjust the Cash in Bank (Credit) - deduct advances if present
+            var cashInBankAmount = totalNetOfEWT;
+            if (hasAdvances) {
+                cashInBankAmount = totalNetOfEWT - advancesAmount;
+                if (cashInBankAmount < 0) cashInBankAmount = 0; // Prevent negative values
+            }
+
+            // Update the Cash in Bank amount
+            $(".cib-credit").val(formatNumber(cashInBankAmount));
+            
             updateTotalDebitAndCredit();
             validateDebitAndCredit();
         }

@@ -4,11 +4,9 @@ using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
-using IBS.Models.Filpride.ViewModels;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
@@ -814,6 +812,45 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var pickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(supplierId, cancellationToken);
 
             return Json(pickUpPoints);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ProcessProductTransfer(int purchaseOrderId, int pickupPointId, string notes, CancellationToken cancellationToken)
+        {
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(p => p.PurchaseOrderId == purchaseOrderId, cancellationToken);
+
+                var pickupPoint = await _dbContext.FilpridePickUpPoints
+                    .FindAsync(pickupPointId, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(User.Identity.Name, $"Product transfer for Purchase Order {purchaseOrder.PurchaseOrderNo} from {purchaseOrder.PickUpPoint.Depot} to {pickupPoint.Depot}. \nNote: {notes}", "Purchase Order", ipAddress, purchaseOrder.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                purchaseOrder.PickUpPointId = pickupPointId;
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return Json(new { success = true});
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to product transfer the purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Transfer by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return Json(new { success = false, message = TempData["error"] });
+            }
+
         }
     }
 }

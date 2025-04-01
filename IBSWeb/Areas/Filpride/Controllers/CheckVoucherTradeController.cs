@@ -284,7 +284,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Date = viewModel.TransactionDate,
                         PONo = viewModel.POSeries,
                         SupplierId = viewModel.SupplierId,
-                        Particulars = viewModel.Particulars,
+                        Particulars = $"{viewModel.Particulars}. Advances# {viewModel.AdvancesCVNo}",
+                        Reference = viewModel.AdvancesCVNo,
                         BankId = viewModel.BankId,
                         CheckNo = viewModel.CheckNo,
                         Category = "Trade",
@@ -705,12 +706,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.Particulars = viewModel.Particulars;
                     existingHeaderModel.BankId = viewModel.BankId;
                     existingHeaderModel.CheckNo = viewModel.CheckNo;
-                    existingHeaderModel.Category = "Trade";
                     existingHeaderModel.Payee = viewModel.Payee;
                     existingHeaderModel.CheckDate = viewModel.CheckDate;
                     existingHeaderModel.Total = cashInBank;
                     existingHeaderModel.EditedBy = _userManager.GetUserName(User);
                     existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingHeaderModel.Reference = viewModel.AdvancesCVNo;
 
                     #endregion --Saving the default entries
 
@@ -905,122 +906,140 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    if (modelHeader.PostedBy == null)
+                    modelHeader.PostedBy = _userManager.GetUserName(this.User);
+                    modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    modelHeader.Status = nameof(Status.Posted);
+
+                    #region -- Recalculate payment of RR's or DR's
+
+                    var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                        .Where(cv => cv.CheckVoucherId == id)
+                        .Include(cv => cv.CV)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var item in getCheckVoucherTradePayment)
                     {
-                        modelHeader.PostedBy = _userManager.GetUserName(this.User);
-                        modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        modelHeader.Status = nameof(Status.Posted);
-
-                        #region -- Recalculate payment of RR's or DR's
-
-                        var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
-                            .Where(cv => cv.CheckVoucherId == id)
-                            .Include(cv => cv.CV)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var item in getCheckVoucherTradePayment)
+                        if (item.DocumentType == "RR")
                         {
-                            if (item.DocumentType == "RR")
-                            {
-                                var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+                            var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
 
-                                receivingReport.IsPaid = true;
-                                receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
-                            }
-                            if (item.DocumentType == "DR")
+                            receivingReport.IsPaid = true;
+                            receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        }
+                        if (item.DocumentType == "DR")
+                        {
+                            var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                            if (item.CV.CvType == "Commission")
                             {
-                                var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
-                                if (item.CV.CvType == "Commission")
-                                {
-                                    deliveryReceipt.IsCommissionPaid = true;
-                                }
-                                if (item.CV.CvType == "Hauler")
-                                {
-                                    deliveryReceipt.IsFreightPaid = true;
-                                }
+                                deliveryReceipt.IsCommissionPaid = true;
+                            }
+                            if (item.CV.CvType == "Hauler")
+                            {
+                                deliveryReceipt.IsFreightPaid = true;
                             }
                         }
-
-                        #endregion -- Recalculate payment of RR's or DR's
-
-                        #region --General Ledger Book Recording(CV)--
-
-                        var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                        var ledgers = new List<FilprideGeneralLedgerBook>();
-                        foreach (var details in modelDetails)
-                        {
-                            var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
-                            ledgers.Add(
-                                    new FilprideGeneralLedgerBook
-                                    {
-                                        Date = modelHeader.Date,
-                                        Reference = modelHeader.CheckVoucherHeaderNo,
-                                        Description = modelHeader.Particulars,
-                                        AccountId = account.AccountId,
-                                        AccountNo = account.AccountNumber,
-                                        AccountTitle = account.AccountName,
-                                        Debit = details.Debit,
-                                        Credit = details.Credit,
-                                        Company = modelHeader.Company,
-                                        CreatedBy = modelHeader.CreatedBy,
-                                        CreatedDate = modelHeader.CreatedDate,
-                                        BankAccountId = modelHeader.BankId
-                                    }
-                                );
-                        }
-
-                        if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))
-                        {
-                            throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                        }
-
-                        await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-
-                        #endregion --General Ledger Book Recording(CV)--
-
-                        #region --Disbursement Book Recording(CV)--
-
-                        var disbursement = new List<FilprideDisbursementBook>();
-                        foreach (var details in modelDetails)
-                        {
-                            var bank = _dbContext.FilprideBankAccounts.FirstOrDefault(model => model.BankAccountId == modelHeader.BankId);
-                            disbursement.Add(
-                                    new FilprideDisbursementBook
-                                    {
-                                        Date = modelHeader.Date,
-                                        CVNo = modelHeader.CheckVoucherHeaderNo,
-                                        Payee = modelHeader.Payee != null ? modelHeader.Payee : supplierName,
-                                        Amount = modelHeader.Total,
-                                        Particulars = modelHeader.Particulars,
-                                        Bank = bank != null ? bank.Branch : "N/A",
-                                        CheckNo = !string.IsNullOrEmpty(modelHeader.CheckNo) ? modelHeader.CheckNo : "N/A",
-                                        CheckDate = modelHeader.CheckDate != null ? modelHeader.CheckDate?.ToString("MM/dd/yyyy") : "N/A",
-                                        ChartOfAccount = details.AccountNo + " " + details.AccountName,
-                                        Debit = details.Debit,
-                                        Credit = details.Credit,
-                                        Company = modelHeader.Company,
-                                        CreatedBy = modelHeader.CreatedBy,
-                                        CreatedDate = modelHeader.CreatedDate
-                                    }
-                                );
-                        }
-
-                        await _dbContext.FilprideDisbursementBooks.AddRangeAsync(disbursement, cancellationToken);
-
-                        #endregion --Disbursement Book Recording(CV)--
-
-                        #region --Audit Trail Recording
-
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, modelHeader.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Check Voucher has been Posted.";
                     }
+
+                    #endregion -- Recalculate payment of RR's or DR's
+
+                    #region Add amount paid for the advances if applicable
+
+                    if (modelHeader.Reference != null)
+                    {
+                        var advances = await _unitOfWork.FilprideCheckVoucher
+                            .GetAsync(cv =>
+                                    cv.CheckVoucherHeaderNo == modelHeader.Reference &&
+                                    cv.Company == modelHeader.Company,
+                                cancellationToken);
+
+                        if (advances == null)
+                        {
+                            throw new NullReferenceException($"Advance check voucher not found. Check Voucher Header No: {modelHeader.Reference}");
+                        }
+
+                        advances.AmountPaid += advances.Total;
+
+                    }
+
+                    #endregion
+
+                    #region --General Ledger Book Recording(CV)--
+
+                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                    var ledgers = new List<FilprideGeneralLedgerBook>();
+                    foreach (var details in modelDetails)
+                    {
+                        var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
+                        ledgers.Add(
+                                new FilprideGeneralLedgerBook
+                                {
+                                    Date = modelHeader.Date,
+                                    Reference = modelHeader.CheckVoucherHeaderNo,
+                                    Description = modelHeader.Particulars,
+                                    AccountId = account.AccountId,
+                                    AccountNo = account.AccountNumber,
+                                    AccountTitle = account.AccountName,
+                                    Debit = details.Debit,
+                                    Credit = details.Credit,
+                                    Company = modelHeader.Company,
+                                    CreatedBy = modelHeader.CreatedBy,
+                                    CreatedDate = modelHeader.CreatedDate,
+                                    BankAccountId = modelHeader.BankId
+                                }
+                            );
+                    }
+
+                    if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))
+                    {
+                        throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                    }
+
+                    await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+
+                    #endregion --General Ledger Book Recording(CV)--
+
+                    #region --Disbursement Book Recording(CV)--
+
+                    var disbursement = new List<FilprideDisbursementBook>();
+                    foreach (var details in modelDetails)
+                    {
+                        var bank = _dbContext.FilprideBankAccounts.FirstOrDefault(model => model.BankAccountId == modelHeader.BankId);
+                        disbursement.Add(
+                                new FilprideDisbursementBook
+                                {
+                                    Date = modelHeader.Date,
+                                    CVNo = modelHeader.CheckVoucherHeaderNo,
+                                    Payee = modelHeader.Payee != null ? modelHeader.Payee : supplierName,
+                                    Amount = modelHeader.Total,
+                                    Particulars = modelHeader.Particulars,
+                                    Bank = bank != null ? bank.Branch : "N/A",
+                                    CheckNo = !string.IsNullOrEmpty(modelHeader.CheckNo) ? modelHeader.CheckNo : "N/A",
+                                    CheckDate = modelHeader.CheckDate != null ? modelHeader.CheckDate?.ToString("MM/dd/yyyy") : "N/A",
+                                    ChartOfAccount = details.AccountNo + " " + details.AccountName,
+                                    Debit = details.Debit,
+                                    Credit = details.Credit,
+                                    Company = modelHeader.Company,
+                                    CreatedBy = modelHeader.CreatedBy,
+                                    CreatedDate = modelHeader.CreatedDate
+                                }
+                            );
+                    }
+
+                    await _dbContext.FilprideDisbursementBooks.AddRangeAsync(disbursement, cancellationToken);
+
+                    #endregion --Disbursement Book Recording(CV)--
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, modelHeader.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Check Voucher has been Posted.";
                     return RedirectToAction(nameof(Print), new { id, supplierId });
                 }
                 catch (Exception ex)
@@ -1142,7 +1161,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo);
                         await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo);
 
-                        //re-compute amount paid in trade and payment voucher
                         #region -- Recalculate payment of RR's or DR's
 
                         var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
@@ -1176,6 +1194,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         #endregion -- Recalculate payment of RR's or DR's
+
+                        #region Revert the amount paid of advances
+
+                        if (model.Reference != null)
+                        {
+                            var advances = await _unitOfWork.FilprideCheckVoucher
+                                .GetAsync(cv =>
+                                        cv.CheckVoucherHeaderNo == model.Reference &&
+                                        cv.Company == model.Company,
+                                    cancellationToken);
+
+                            advances.AmountPaid -= advances.AmountPaid;
+                        }
+
+                        #endregion
 
                         #region --Audit Trail Recording
 
@@ -2830,6 +2863,57 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             TempData["error"] = "The information provided was invalid.";
             return View(viewModel);
+        }
+
+        public async Task<IActionResult> CheckPOPaymentTerms(string[] poNumbers, CancellationToken cancellationToken)
+        {
+            bool hasCodOrPrepaid = false;
+            decimal advanceAmount = 0;
+            string advanceCVNo = string.Empty;
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            foreach (var poNumber in poNumbers)
+            {
+                var po = await _dbContext.FilpridePurchaseOrders
+                    .FirstOrDefaultAsync(p => p.PurchaseOrderNo == poNumber && p.Company == companyClaims, cancellationToken);
+
+                if (po != null && (po.Terms == SD.Terms_Cod || po.Terms == SD.Terms_Prepaid) && advanceAmount == 0)
+                {
+                    var (cvNo, amount) = await CalculateAdvanceAmount(po.SupplierId);
+                    advanceAmount += amount;
+                    advanceCVNo = cvNo;
+
+                    // If this is the first or largest advance, use its CVNo
+                    if (!string.IsNullOrEmpty(advanceCVNo) && amount > 0)
+                    {
+                        advanceCVNo = cvNo;
+                        hasCodOrPrepaid = true;
+                    }
+                }
+            }
+
+            return Json(new { hasCodOrPrepaid, advanceAmount, advanceCVNo });
+
+        }
+
+        private async Task<(string CVNo, decimal Amount)> CalculateAdvanceAmount(int supplierId)
+        {
+            var advancesVoucher = await _dbContext.FilprideCheckVoucherDetails
+                .Include(cv => cv.CheckVoucherHeader)
+                .FirstOrDefaultAsync(cv =>
+                        cv.CheckVoucherHeader.SupplierId == supplierId &&
+                        cv.CheckVoucherHeader.IsAdvances &&
+                        cv.CheckVoucherHeader.Total > cv.CheckVoucherHeader.AmountPaid &&
+                        cv.CheckVoucherHeader.Status == nameof(CheckVoucherPaymentStatus.Posted) &&
+                        cv.AccountName.Contains("Advances to Suppliers"));
+
+            if (advancesVoucher == null)
+            {
+                return (string.Empty, 0 );
+            }
+
+            return (advancesVoucher.CheckVoucherHeader.CheckVoucherHeaderNo, advancesVoucher.CheckVoucherHeader.Total - advancesVoucher.CheckVoucherHeader.AmountPaid);
         }
     }
 }

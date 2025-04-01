@@ -86,10 +86,10 @@
     </div>
 </div>
 
-<!-- Add Modal HTML -->
+<!-- Update Price Modal  -->
 <div id="notification"></div>
 <div class="modal fade" id="updatePriceModal" tabindex="-1" aria-labelledby="updatePriceModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="updatePriceModalLabel">Update Price</h5>
@@ -108,6 +108,45 @@
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Transfer Modal -->
+<div class="modal fade" id="productTransferModal" tabindex="-1" aria-labelledby="productTransferModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productTransferModalLabel">Product Transfer - Select Pickup Point</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="productTransferForm">
+                    <input type="hidden" id="transferPurchaseOrderId" name="purchaseOrderId">
+                    <input type="hidden" id="transferSupplierId" name="supplierId">
+
+                    <div class="mb-3">
+                        <label for="supplierName" class="form-label">Supplier</label>
+                        <input type="text" class="form-control" id="supplierName" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="pickupPointSelect" class="form-label">Pickup Point</label>
+                        <select class="form-select" id="pickupPointSelect" name="pickupPointId" required>
+                            <option value="" selected disabled>Select pickup point...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transferNotes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="transferNotes" name="notes" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmTransferBtn">Confirm Transfer</button>
             </div>
         </div>
     </div>
@@ -242,11 +281,11 @@
                 {
                     "data": "status",
                     "render": function(data, type, row) {
-                        var statusClass = row.status == "@nameof(Status.Posted)" ? "bg-info" :
-                                          row.status == "@nameof(Status.Voided)" || row.status == "@nameof(DRStatus.ForApprovalOfOM)" ? "bg-danger" :
-                                          row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
+                        var statusClass = row.status === "@nameof(Status.Posted)" ? "bg-info" :
+                                          row.status === "@nameof(Status.Voided)" || row.status === "@nameof(DRStatus.ForApprovalOfOM)" ? "bg-danger" :
+                                          row.status === "@nameof(Status.Canceled)" ? "bg-warning" : "";
 
-                        if (row.isReceived && row.status == "@nameof(Status.Posted)") {
+                        if (row.isReceived && row.status === "@nameof(Status.Posted)") {
                             row.status = "Lifted";
                             statusClass = "bg-success"
                         }
@@ -260,7 +299,7 @@
                     "render": function (data, type, row) {
                         var dropdownContent = '';
 
-                        if (row.status == "@nameof(DRStatus.ForApprovalOfOM)") {
+                        if (row.status === "@nameof(DRStatus.ForApprovalOfOM)") {
                             // Show only the "Preview" option when status is "ForApprovalOfOM"
                             dropdownContent = `
                                 <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Preview</a></li>
@@ -287,11 +326,17 @@
                                     `;
                                 }
                                 
+                                if (!row.isReceived && !row.isSubPo) {
+                                    dropdownContent += `
+                                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="initiateProductTransfer(${data}, '${row.supplierId}', '${row.supplier.supplierName}')">Product Transfer</a></li>
+                                    `;
+                                }
+                                
                                 dropdownContent += `
                                 <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Print</a></li>
                                  `;
                                 
-                                if (row.quantityReceived == 0) {
+                                if (row.quantityReceived === 0 && !row.isSubPo) {
                                     dropdownContent += `
                                         <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${data})">Void</a></li>
                                     `;
@@ -403,5 +448,95 @@
                 }
             });
         });
+
+        // Function to initiate product transfer
+        function initiateProductTransfer(purchaseOrderId, supplierId, supplierName) {
+            // Set hidden input values
+            document.getElementById('transferPurchaseOrderId').value = purchaseOrderId;
+            document.getElementById('transferSupplierId').value = supplierId;
+
+            // Set supplier name from the row data
+            document.getElementById('supplierName').value = supplierName;
+            document.getElementById('transferNotes').value = "";
+
+            // Fetch pickup points
+            fetch(`@Url.Action("GetPickUpPoints", "PurchaseOrder", new { area = "Filpride" })?supplierId=${supplierId}`)
+                .then(response => response.json())
+                .then(pickUpPoints => {
+                    
+                    // Populate pickup points dropdown
+                    let pickupDropdown = $("#pickupPointSelect").empty().append('<option value="">Select Pickup Point</option>');
+                    pickUpPoints.forEach(item => pickupDropdown.append(`<option value="${item.value}">${item.text}</option>`));
+
+                    // Show the modal
+                    const transferModal = new bootstrap.Modal(document.getElementById('productTransferModal'));
+                    transferModal.show();
+                })
+                .catch(error => {
+                    console.error('Error fetching pickup points:', error);
+                    alert('Failed to load pickup points.');
+                });
+        }
+
+        // Event listener for confirm button
+        $(document).ready(function () {
+            $('#confirmTransferBtn').on('click', function () {
+                const pickupPointId = $('#pickupPointSelect').val();
+                const notes = $('#transferNotes').val()
+
+                if (!pickupPointId) {
+                    Swal.fire({ icon: 'warning', title: 'Validation', text: 'Please select a pickup point.' });
+                    return;
+                }
+
+                if (!notes) {
+                    Swal.fire({ icon: 'warning', title: 'Validation', text: 'Please input notes.' });
+                    return;
+                }
+
+                const purchaseOrderId = $('#transferPurchaseOrderId').val();
+                const csrfToken = $('input[name="__RequestVerificationToken"]').val();
+
+                $.ajax({
+                    url: '@Url.Action("ProcessProductTransfer", "PurchaseOrder", new { area = "Filpride" })',
+                    type: 'POST',
+                    contentType: 'application/x-www-form-urlencoded',
+                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    data: {
+                        purchaseOrderId: purchaseOrderId,
+                        pickupPointId: pickupPointId,
+                        notes: notes
+                    },
+                    success: function (data) {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Product transfer processed successfully!',
+                                timer: 5000,
+                                timerProgressBar: true,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Failed to process transfer.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                        alert('Failed to process transfer.');
+                    }
+                });
+
+                // Hide the modal
+                const transferModal = bootstrap.Modal.getInstance(document.getElementById('productTransferModal'));
+                transferModal.hide();
+            });
+        });
+
     </script>
 }
