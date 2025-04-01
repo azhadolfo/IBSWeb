@@ -68,7 +68,7 @@ namespace IBS.Services
             try
             {
                 var users = await _dbContext.ApplicationUsers
-                    .Where(u => u.Department == SD.Department_TradeAndSupply ||
+                    .Where(u => u.Department == SD.Department_Logistics ||
                                 u.Department == SD.Department_ManagementAccounting)
                     .Select(u => u.Id)
                     .ToListAsync();
@@ -77,7 +77,7 @@ namespace IBS.Services
                 var link = "<a href='/Filpride/Report/DispatchReport' target='_blank'>Dispatch Report</a>";
                 var message = $"Is the in-transit report final? Kindly generate the {link} and " +
                               $"answer this question to enable the creation of DR for the month of " +
-                              $"{DateTime.UtcNow:MMM yyyy}. \n" +
+                              $"{DateTimeHelper.GetCurrentPhilippineTime():MMM yyyy}. \n" +
                               $"CC: Management Accounting";
 
                 await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
@@ -135,7 +135,7 @@ namespace IBS.Services
                 var purchaseOrderNosList = string.Join(", ", purchaseOrders);
                 var message = $"Kindly trigger the following purchase orders: {purchaseOrderNosList}. " +
                               $"To enable the creation of purchase order for the month of " +
-                              $"{DateTime.UtcNow:MMM yyyy}. \n" +
+                              $"{DateTimeHelper.GetCurrentPhilippineTime():MMM yyyy}. \n" +
                               $"CC: Management Accounting";
 
                 await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
@@ -361,7 +361,7 @@ namespace IBS.Services
 
                 var beginning = await _dbContext.FilprideMonthlyNibits
                     .OrderByDescending(m => m.Year)
-                    .OrderByDescending(m => m.Month)
+                    .ThenByDescending(m => m.Month)
                     .FirstOrDefaultAsync();
 
                 if (beginning != null)

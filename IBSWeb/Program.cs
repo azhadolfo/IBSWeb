@@ -107,7 +107,7 @@ builder.Services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(monthlyClosureKey)
         .WithIdentity("MonthlyTrigger") // Trigger 1
-        .WithCronSchedule("0 0 0 1 * ?",
+        .WithCronSchedule("0 1 * * * ?",
             x => x.InTimeZone(
                 TimeZoneInfo
                     .FindSystemTimeZoneById("Asia/Manila")))); // Run at midnight on the first day of every month

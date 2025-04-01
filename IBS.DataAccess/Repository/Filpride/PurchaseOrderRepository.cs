@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -290,7 +291,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<List<string>> GetUntriggeredPurchaseOrderNumbersAsync(CancellationToken cancellationToken = default)
         {
-            var previousMonth = DateTime.UtcNow.AddMonths(-1);
+            var previousMonth = DateTimeHelper.GetCurrentPhilippineTime().AddMonths(-1);
 
             var uppi = await _db.FilprideSuppliers
                 .FirstOrDefaultAsync(s =>
