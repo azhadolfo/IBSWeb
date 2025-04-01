@@ -1371,8 +1371,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells["E1"].Value = "Credit";
                     worksheet2.Cells["F1"].Value = "CVHeaderId";
                     worksheet2.Cells["G1"].Value = "OriginalDocumentId";
+                    worksheet2.Cells["H1"].Value = "Amount";
+                    worksheet2.Cells["I1"].Value = "AmountPaid";
+                    worksheet2.Cells["J1"].Value = "SupplierId";
+                    worksheet2.Cells["K1"].Value = "EwtPercent";
+                    worksheet2.Cells["L1"].Value = "IsUserSelected";
+                    worksheet2.Cells["M1"].Value = "IsVatable";
 
                     #endregion -- Check Voucher Details Table Header --
+
+                    #region -- Check Voucher Trade Payments Table Header --
+
+                    var worksheet5 = package.Workbook.Worksheets.Add("CheckVoucherTradePayments");
+
+                    worksheet5.Cells["A1"].Value = "Id";
+                    worksheet5.Cells["B1"].Value = "DocumentId";
+                    worksheet5.Cells["C1"].Value = "DocumentType";
+                    worksheet5.Cells["D1"].Value = "CheckVoucherId";
+                    worksheet5.Cells["E1"].Value = "AmountPaid";
+
+                    #endregion -- Check Voucher Header Table Header --
+
+                    #region -- Check Voucher Multiple Payment Table Header --
+
+                    var worksheet6 = package.Workbook.Worksheets.Add("MultipleCheckVoucherPayments");
+
+                    worksheet6.Cells["A1"].Value = "Id";
+                    worksheet6.Cells["B1"].Value = "CheckVoucherHeaderPaymentId";
+                    worksheet6.Cells["C1"].Value = "CheckVoucherHeaderInvoiceId";
+                    worksheet6.Cells["D1"].Value = "AmountPaid";
+
+                    #endregion
 
                     #region -- Check Voucher Header Export (Trade and Invoicing)--
 
@@ -1428,6 +1457,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 33].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                         row++;
+                    }
+
+                    var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                        .Where(cv => recordIds.Contains(cv.CheckVoucherId) && cv.DocumentType == "RR")
+                        .ToListAsync();
+
+                    int cvRow = 2;
+                    foreach (var payment in getCheckVoucherTradePayment)
+                    {
+                        worksheet5.Cells[cvRow, 1].Value = payment.Id;
+                        worksheet5.Cells[cvRow, 2].Value = payment.DocumentId;
+                        worksheet5.Cells[cvRow, 3].Value = payment.DocumentType;
+                        worksheet5.Cells[cvRow, 4].Value = payment.CheckVoucherId;
+                        worksheet5.Cells[cvRow, 5].Value = payment.AmountPaid;
+
+                        cvRow++;
                     }
 
                     #endregion -- Check Voucher Header Export (Trade and Invoicing) --
@@ -1492,6 +1537,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         row++;
                     }
 
+                    var cvPaymentId = checkVoucherPayment.Select(cvn => cvn.CheckVoucherHeaderId).ToList();
+                    var getCheckVoucherMultiplePayment = await _dbContext.FilprideMultipleCheckVoucherPayments
+                        .Where(cv => cvPaymentId.Contains(cv.CheckVoucherHeaderPaymentId))
+                        .ToListAsync();
+
+                    int cvn = 2;
+                    foreach (var payment in getCheckVoucherMultiplePayment)
+                    {
+                        worksheet6.Cells[cvn, 1].Value = payment.Id;
+                        worksheet6.Cells[cvn, 2].Value = payment.CheckVoucherHeaderPaymentId;
+                        worksheet6.Cells[cvn, 3].Value = payment.CheckVoucherHeaderInvoiceId;
+                        worksheet6.Cells[cvn, 4].Value = payment.AmountPaid;
+
+                        cvn++;
+                    }
+
                     #endregion -- Check Voucher Header Export (Payment) --
 
                     #region -- Check Voucher Details Export (Trade and Invoicing) --
@@ -1514,6 +1575,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet2.Cells[cvdRow, 5].Value = item.Credit;
                         worksheet2.Cells[cvdRow, 6].Value = item.CheckVoucherHeaderId;
                         worksheet2.Cells[cvdRow, 7].Value = item.CheckVoucherDetailId;
+                        worksheet2.Cells[cvdRow, 8].Value = item.Amount;
+                        worksheet2.Cells[cvdRow, 9].Value = item.AmountPaid;
+                        worksheet2.Cells[cvdRow, 10].Value = item.SupplierId;
+                        worksheet2.Cells[cvdRow, 11].Value = item.EwtPercent;
+                        worksheet2.Cells[cvdRow, 12].Value = item.IsUserSelected;
+                        worksheet2.Cells[cvdRow, 13].Value = item.IsVatable;
 
                         cvdRow++;
                     }
@@ -1538,6 +1605,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet2.Cells[cvdRow, 5].Value = item.Credit;
                         worksheet2.Cells[cvdRow, 6].Value = item.CheckVoucherHeaderId;
                         worksheet2.Cells[cvdRow, 7].Value = item.CheckVoucherDetailId;
+                        worksheet2.Cells[cvdRow, 8].Value = item.Amount;
+                        worksheet2.Cells[cvdRow, 9].Value = item.AmountPaid;
+                        worksheet2.Cells[cvdRow, 10].Value = item.SupplierId;
+                        worksheet2.Cells[cvdRow, 11].Value = item.EwtPercent;
+                        worksheet2.Cells[cvdRow, 12].Value = item.IsUserSelected;
+                        worksheet2.Cells[cvdRow, 13].Value = item.IsVatable;
 
                         cvdRow++;
                     }
@@ -1548,11 +1621,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     List<FilprideReceivingReport> getReceivingReport = new List<FilprideReceivingReport>();
 
-                    getReceivingReport = _dbContext.FilprideReceivingReports
-                        .AsEnumerable()
-                        .Where(rr => selectedList?.Select(item => item?.RRNo).Any(rrs => rrs?.Contains(rr.ReceivingReportNo) == true) == true)
-                        .OrderBy(rr => rr.ReceivingReportNo)
-                        .ToList();
+                    var selectedIds = selectedList.Select(item => item.CheckVoucherHeaderId).ToList();
+
+                    var cvTradePaymentList = await _dbContext.FilprideCVTradePayments
+                        .Where(cvtp => selectedIds.Contains(cvtp.CheckVoucherId))
+                        .ToListAsync();
+
+                    var rrIds = cvTradePaymentList.Select(item => item.DocumentId).ToList();
+
+                    getReceivingReport = await _dbContext.FilprideReceivingReports
+                        .Where(rr => rrIds.Contains(rr.ReceivingReportId))
+                        .ToListAsync();
 
                     int rrRow = 2;
                     var currentRR = "";
