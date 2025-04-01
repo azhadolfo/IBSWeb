@@ -1832,9 +1832,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                    #region Details
 
                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                   /// TODO Need to update the actual advances to supplier title
-                   var advancesToOfficerTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020400") ?? throw new ArgumentException($"Account title '101020400' not found.");
-                   var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException($"Account title '101010100' not found.");
+                   var advancesToSupplierTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060100") ?? throw new ArgumentException("Account title '101060100' not found.");
+                   var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
                    var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
 
                    var grossAmount = viewModel.Total;
@@ -1845,8 +1844,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                    {
                        new()
                        {
-                           AccountNo = advancesToOfficerTitle.AccountNumber,
-                           AccountName = advancesToOfficerTitle.AccountName,
+                           AccountNo = advancesToSupplierTitle.AccountNumber,
+                           AccountName = advancesToSupplierTitle.AccountName,
                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                            Debit = grossAmount,
@@ -2044,9 +2043,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                   /// TODO Need to update the actual advances to supplier title
-                   var advancesToOfficerTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020400") ?? throw new ArgumentException($"Account title '101020400' not found.");
-                   var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException($"Account title '101010100' not found.");
+                   var advancesToSupplierTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060100") ?? throw new ArgumentException("Account title '101060100' not found.");
+                   var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
                    var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
 
                    var grossAmount = viewModel.Total;
@@ -2057,8 +2055,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                    {
                        new()
                        {
-                           AccountNo = advancesToOfficerTitle.AccountNumber,
-                           AccountName = advancesToOfficerTitle.AccountName,
+                           AccountNo = advancesToSupplierTitle.AccountNumber,
+                           AccountName = advancesToSupplierTitle.AccountName,
                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                            CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                            Debit = grossAmount,
