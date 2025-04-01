@@ -84,5 +84,7 @@ namespace IBS.Models.Filpride.ViewModels
         #endregion
 
         public bool HasReceivingReport { get; set; }
+
+        public bool IsTheCreationLockForTheMonth { get; set; }
     }
 }

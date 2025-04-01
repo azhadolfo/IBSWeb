@@ -1,9 +1,13 @@
 ﻿@using IBS.Utility
 @using IBS.Utility.Constants
+@using IBS.Utility.Helpers
 @model DeliveryReceiptViewModel
 
 @{
     ViewData["Title"] = "Create Delivery Receipt";
+    bool creationOfDrIsLock = true;
+    DateTime today = DateTimeHelper.GetCurrentPhilippineTime();
+    DateTime maxDate = Model.IsTheCreationLockForTheMonth ? new DateTime(today.Year, today.Month, 1).AddDays(-1) : DateTime.MaxValue;
 }
 <div class="loader-container">
     <div class="loader"></div>
@@ -22,7 +26,10 @@
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="form-floating col-12">
-                    <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+                    <input asp-for="Date" type="date" class="form-control border-0 shadow"
+                           placeholder=""
+                           value="@today.ToString("yyyy-MM-dd")"
+                           max="@(Model.IsTheCreationLockForTheMonth ? maxDate.ToString("yyyy-MM-dd") : null)" />
                     <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
                     <span asp-validation-for="Date" class="text-danger"></span>
                 </div>

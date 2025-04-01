@@ -196,18 +196,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Select(s => s.Value == "true")
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (isPoLock)
-            {
-                TempData["denied"] = "Creation is locked due to untriggered purchase orders.";
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-            }
-
             var viewModel = new FilpridePurchaseOrder();
+
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+
+            ViewData["IsPoLock"] = isPoLock;
 
             return View(viewModel);
         }

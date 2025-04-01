@@ -205,16 +205,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Select(s => s.Value == "true")
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (isDrLock)
-            {
-                TempData["denied"] = "Creation of the DR is locked due to incomplete in-transit deliveries.";
-                return RedirectToAction(nameof(Index));
-            }
-
             DeliveryReceiptViewModel viewModel = new()
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
-                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
+                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
+                IsTheCreationLockForTheMonth = isDrLock,
             };
 
             return View(viewModel);
