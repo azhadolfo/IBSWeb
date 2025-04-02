@@ -411,6 +411,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         viewModel.Terms = customer.CustomerTerms;
                     }
 
+                    if (viewModel.ProductId == 0)
+                    {
+                        viewModel.ProductId = existingRecord.ProductId;
+                    }
+
                     var changes = new List<string>();
 
                     if (existingRecord.Date != viewModel.Date)
@@ -422,6 +427,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         changes.Add("Product was updated.");
                     }
+
                     if (existingRecord.OldCosNo != viewModel.OtcCosNo)
                     {
                         changes.Add("OTC COS# was updated.");
