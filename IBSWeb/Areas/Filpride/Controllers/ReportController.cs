@@ -5196,8 +5196,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion == Summary Contents ==
 
-                #endregion -- Summary Rows --
-
                 // Auto-fit columns for better readability
                 gmReportWorksheet.Cells.AutoFitColumns();
                 gmReportWorksheet.View.FreezePanes(8, 1);
@@ -5214,6 +5212,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        #endregion -- Generate GM Report Excel File --
 
         #region -- Generate Posted Collection Excel File --
 
