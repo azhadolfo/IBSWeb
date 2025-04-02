@@ -473,7 +473,7 @@ namespace IBSWeb.Areas.MMSI
                         if (recordToUpdate != null)
                         {
                             recordToUpdate.Status = "For Tariff";
-                            posteds.Add($"#{recordToUpdate.DispatchTicketId}");
+                            posteds.Add($"{recordToUpdate.DispatchTicketId}");
                         }
                     }
 
