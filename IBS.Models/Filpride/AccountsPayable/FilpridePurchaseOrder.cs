@@ -60,7 +60,6 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
         public string Remarks { get; set; }
 
         [Column(TypeName = "varchar(10)")]
