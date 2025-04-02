@@ -143,19 +143,19 @@
 
                 <div id="PrincipalDiv" class="d-none row">
 
+                    <div class="form-check col-3 ps-2 my-2 text-center d-flex align-items-center justify-content-center">
+                        <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox">
+                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="UsePrincipalCheckbox">
+                            Use Principal
+                        </label>
+                    </div>
+
                     <div id="SelectDiv" class="form-group col-3 my-2 d-none">
                         <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
                         <select asp-for="PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                             <option value="">Select Principal</option>
                         </select>
                         <span asp-validation-for="PrincipalId" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="form-check col-3 ps-2 my-2 text-center d-flex align-items-center justify-content-center">
-                        <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox">
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="UsePrincipalCheckbox">
-                            Use Principal
-                        </label>
                     </div>
 
                 </div>
@@ -292,6 +292,8 @@
                 console.log("use principal: checked");
                 const $checkbox = $("#UsePrincipalCheckbox");
                 const $selectDiv = $("#SelectDiv");
+                $("#PrincipalSelect").val("");
+                console.log("test");
                 const customerId = $("#CustomerId").val();
 
                 if ($checkbox.is(":checked")) {
@@ -304,7 +306,7 @@
 
             function fetchPrincipals(customerId) {
                 $.ajax({
-                    url: '@Url.Action("GetPrincipals", "DispatchTicket", new { area = "MMSI" })',
+                    url: '@Url.Action("GetPrincipalsJSON", "Billing", new { area = "MMSI" })',
                     type: "GET",
                     data: { customerId: customerId },
                     success: function (data) {

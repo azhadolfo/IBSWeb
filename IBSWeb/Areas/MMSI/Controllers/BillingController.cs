@@ -5,6 +5,7 @@ using IBS.Models.MMSI;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.MMSI
@@ -72,9 +73,9 @@ namespace IBSWeb.Areas.MMSI
                     await _db.SaveChangesAsync(cancellationToken);
 
                     // find it and reference it
-                    model = await _db.MMSIBillings.Where(b => b.CreatedDate == datetimeNow).FirstOrDefaultAsync(cancellationToken);
-                    int id = model.MMSIBillingId;
-                    model = await _db.MMSIBillings.FindAsync(id, cancellationToken);
+                    var newmodel = await _db.MMSIBillings.Where(b => b.CreatedDate == datetimeNow).FirstOrDefaultAsync(cancellationToken);
+                    int id = newmodel.MMSIBillingId;
+                    newmodel = await _db.MMSIBillings.FindAsync(id, cancellationToken);
 
                     #region -- Audit Trail
 
@@ -83,7 +84,7 @@ namespace IBSWeb.Areas.MMSI
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
-                        Activity = $"Create Billing: id#{model.MMSICollectionId} for dt#{string.Join(", #", model.ToBillDispatchTickets)}",
+                        Activity = $"Create Billing: id#{id} for dt #{string.Join(", #", model.ToBillDispatchTickets)}",
                         DocumentType = "Billing",
                         Company = await GetCompanyClaimAsync()
                     };
@@ -166,7 +167,8 @@ namespace IBSWeb.Areas.MMSI
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var model = await _db.MMSIBillings
-                .FindAsync(id, cancellationToken);
+                .Include(b => b.Customer)
+                .FirstOrDefaultAsync(b => b.MMSIBillingId == id, cancellationToken);
 
             // get select lists
             model = await _dispatchRepo.GetBillingLists(model, cancellationToken);
@@ -187,6 +189,8 @@ namespace IBSWeb.Areas.MMSI
 
             // put the already billed DT to string list so it appears on the select2 of view
             model.ToBillDispatchTickets = listOfDtBilled.Select(d => d.DispatchTicketId.ToString()).ToList();
+
+            model.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
 
             return View(model);
         }
@@ -234,11 +238,12 @@ namespace IBSWeb.Areas.MMSI
                     if (currentModel.MMSIBillingNumber != model.MMSIBillingNumber) { changes.Add($"MMSIBillingNumber: {currentModel.MMSIBillingNumber} -> {model.MMSIBillingNumber}"); }
                     if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
                     if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                    if (currentModel.PrincipalId != model.PrincipalId) { changes.Add($"PrincipalId: {currentModel.PrincipalId} -> {model.PrincipalId}"); }
                     if (currentModel.PortId != model.PortId) { changes.Add($"PortId: {currentModel.PortId} -> {model.PortId}"); }
                     if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
                     if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
                     if (!currentModel.ToBillDispatchTickets.OrderBy(x => x).SequenceEqual(model.ToBillDispatchTickets.OrderBy(x => x)))
-                    { changes.Add($"ToBillDispatchTickets: {string.Join(", ", currentModel.ToBillDispatchTickets)} -> {string.Join(", ", model.ToBillDispatchTickets)}"); }
+                    { changes.Add($"ToBillDispatchTickets: #{string.Join(", #", currentModel.ToBillDispatchTickets)} -> #{string.Join(", #", model.ToBillDispatchTickets)}"); }
 
                     #endregion -- Changes
 
@@ -250,7 +255,7 @@ namespace IBSWeb.Areas.MMSI
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = changes.Any()
-                            ? $"Edit Billing: id#{currentModel.MMSIBillingId} {string.Join(", ", changes)}"
+                            ? $"Edit Billing: id #{currentModel.MMSIBillingId} {string.Join(", ", changes)}"
                             : $"No changes detected for service request #{currentModel.MMSIBillingId}",
                         DocumentType = "Billing",
                         Company = await GetCompanyClaimAsync()
@@ -404,6 +409,7 @@ namespace IBSWeb.Areas.MMSI
             return Json(customerDetailsJson);
         }
 
+        [HttpGet]
         public async Task<JsonResult> GetPrincipalDetails(int principalId)
         {
             var customerDetails = await _db.MMSIPrincipals
@@ -432,5 +438,30 @@ namespace IBSWeb.Areas.MMSI
             return user.UserName;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetPrincipalsJSON(string customerId, CancellationToken cancellationToken)
+        {
+            var principalsList = await GetPrincipals(customerId, cancellationToken);
+
+            return Json(principalsList);
+        }
+
+        [HttpGet]
+        public async Task<List<SelectListItem>> GetPrincipals(string customerId, CancellationToken cancellationToken)
+        {
+            var principals = await _db
+                .MMSIPrincipals
+                .Where(t => t.CustomerId == int.Parse(customerId))
+                .OrderBy(t => t.PrincipalName)
+                .ToListAsync(cancellationToken);
+
+            var principalsList = principals.Select(t => new SelectListItem
+            {
+                Value = t.PrincipalId.ToString(),
+                Text = t.PrincipalNumber + " " + t.PrincipalName
+            }).ToList();
+
+            return principalsList;
+        }
     }
 }

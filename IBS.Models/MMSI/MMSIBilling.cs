@@ -78,6 +78,9 @@ namespace IBS.Models.MMSI
 
         public int? MMSICollectionId { get; set; }
 
+        [NotMapped]
+        public List<SelectListItem>? CustomerPrincipal { get; set; }
+
         #endregion ---Select Lists---
     }
 }
