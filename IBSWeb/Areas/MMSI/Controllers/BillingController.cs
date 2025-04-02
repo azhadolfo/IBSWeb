@@ -71,10 +71,9 @@ namespace IBSWeb.Areas.MMSI
                     await _db.MMSIBillings.AddAsync(model, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
 
+                    // find it and reference it
                     model = await _db.MMSIBillings.Where(b => b.CreatedDate == datetimeNow).FirstOrDefaultAsync(cancellationToken);
-
                     int id = model.MMSIBillingId;
-
                     model = await _db.MMSIBillings.FindAsync(id, cancellationToken);
 
                     #region -- Audit Trail
@@ -84,7 +83,7 @@ namespace IBSWeb.Areas.MMSI
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
-                        Activity = $"Create Billing: id#{model.MMSICollectionId}",
+                        Activity = $"Create Billing: id#{model.MMSICollectionId} for dt#{string.Join(", #", model.ToBillDispatchTickets)}",
                         DocumentType = "Billing",
                         Company = await GetCompanyClaimAsync()
                     };
@@ -398,7 +397,24 @@ namespace IBSWeb.Areas.MMSI
                 terms = customerDetails.CustomerTerms,
                 address = customerDetails.CustomerAddress,
                 tinNo = customerDetails.CustomerTIN,
-                businessStyle = customerDetails.CustomerBusinessStyle
+                businessStyle = customerDetails.CustomerBusinessStyle,
+                hasPrincipal = customerDetails.HasPrincipal
+            };
+
+            return Json(customerDetailsJson);
+        }
+
+        public async Task<JsonResult> GetPrincipalDetails(int principalId)
+        {
+            var customerDetails = await _db.MMSIPrincipals
+                .FindAsync(principalId);
+
+            var customerDetailsJson = new
+            {
+                terms = customerDetails.Terms,
+                address = customerDetails.Address,
+                tinNo = customerDetails.TIN,
+                businessStyle = customerDetails.BusinessType
             };
 
             return Json(customerDetailsJson);

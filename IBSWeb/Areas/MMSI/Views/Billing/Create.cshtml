@@ -140,6 +140,26 @@
                         <span asp-validation-for="VesselId" class="text-danger"></span>
                     </div>
                 </div>
+
+                <div id="PrincipalDiv" class="d-none row">
+
+                    <div id="SelectDiv" class="form-group col-3 my-2 d-none">
+                        <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
+                        <select asp-for="PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Principal</option>
+                        </select>
+                        <span asp-validation-for="PrincipalId" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-check col-3 ps-2 my-2 text-center d-flex align-items-center justify-content-center">
+                        <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox">
+                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="UsePrincipalCheckbox">
+                            Use Principal
+                        </label>
+                    </div>
+
+                </div>
+                
                 <div class="row pt-2">
                     <div class="form-floating col-3 my-2">
                         <input class="form-control border-0 shadow" id="Address" placeholder="" disabled>
@@ -176,6 +196,7 @@
                 <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
                     <thead>
                     <tr>
+                        <th class="text-center align-content-center ps-4">DISPATCH#</th>
                         <th class="text-center align-content-center ps-4">TUGBOAT</th>
                         <th class="text-center align-content-center ps-4">SERVICE</th>
                         <th class="text-center align-content-center ps-4">TIME START</th>
@@ -216,88 +237,82 @@
     </div>
 </div>
 
-@section Scripts{
+@section Scripts {
     <script>
-
-        var currentPort = "";
-        const select = document.getElementById("TerminalSelect");
-
+        // Initialize when DOM is ready
         $(document).ready(function () {
-
-            table = $('#dataTable').DataTable();
-
-            table.destroy();
-
-            table = $('#dataTable').DataTable({
-                paging: false,
-                info: false,
-                order: [[0, 'asc']],
-                lengthChange: false,
-                searching: false
-            });
-
+            // Initialize Select2 for all elements with this class
             $('.js-example-basic-multiple').select2();
 
-            function checkboxChanged() {
-                console.log("test checkbox");
+            // DataTable initialization
+            let table = initializeDataTable('#dataTable');
 
-                var checkbox = document.getElementById("isDocumentedCheckbox");
-                var inputField = document.getElementById("billingNumber");
+            // Event Handlers
+            setupEventListeners();
 
-                if (checkbox.checked) {
-                    document.getElementById("status").innerHTML = "Billing Number<span class=\"required text-danger\">*</span>";
-                    inputField.setAttribute("required", "required");
-                    inputField.removeAttribute("disabled")
+            // Functions
+            function initializeDataTable(selector) {
+                if ($.fn.DataTable.isDataTable(selector)) {
+                    $(selector).DataTable().destroy();
+                }
+                return $(selector).DataTable({
+                    paging: false,
+                    info: false,
+                    order: [[0, 'asc']],
+                    lengthChange: false,
+                    searching: false
+                });
+            }
+
+            function setupEventListeners() {
+                $("#isDocumentedCheckbox").on("change", handleCheckboxChange);
+                $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
+                $("#PrincipalSelect").on("change.select2", handlePrincipalChange);
+                $("#CustomerId").on("change", handleCustomerChange);
+                $("#PortSelect").on("change", handlePortChange);
+                $('.js-example-basic-multiple').on('change', handleDispatchTicketsChange);
+            }
+
+            function handleCheckboxChange() {
+                console.log("documented/undoc: changed");
+                const $checkbox = $("#isDocumentedCheckbox");
+                const $inputField = $("#billingNumber");
+                const $status = $("#status");
+
+                if ($checkbox.is(":checked")) {
+                    $status.html("Billing Number<span class=\"required text-danger\">*</span>");
+                    $inputField.prop("required", true).prop("disabled", false);
                 } else {
-                    document.getElementById("status").innerHTML = "Undocumented";
-                    inputField.removeAttribute("required");
-                    inputField.setAttribute("disabled", "disabled");
+                    $status.text("Undocumented");
+                    $inputField.prop("required", false).prop("disabled", true);
                 }
             }
 
-            $("#CustomerId").change(function () {
-                var customerId = $(this).val();
-                if (customerId !== "") {
-                    $.ajax({
-                        url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "MMSI" })',
-                        method: "GET",
-                        data: { customerId: customerId },
-                        success: function (data) {
-                            if (data) {
-                                $("#Terms").val(data.terms);
-                                $("#Address").val(data.address);
-                                $("#TIN").val(data.tinNo);
-                                $("#BusinessStyle").val(data.businessStyle);
-                            }
-                            else {
-                                $("#Terms").val('');
-                                $("#Address").val('');
-                                $("#TIN").val('');
-                                $("#BusinessStyle").val('');
-                            }
-                        }
-                    });
+            function handleUsePrincipalChange() {
+                console.log("use principal: checked");
+                const $checkbox = $("#UsePrincipalCheckbox");
+                const $selectDiv = $("#SelectDiv");
+                const customerId = $("#CustomerId").val();
+
+                if ($checkbox.is(":checked")) {
+                    fetchPrincipals(customerId);
+                    $selectDiv.removeClass("d-none");
+                } else {
+                    $selectDiv.addClass("d-none");
                 }
-            });
-            var currentPort = "";
-            const select = document.getElementById("TerminalSelect");
-            document.getElementById("isDocumentedCheckbox").addEventListener("change", checkboxChanged);
+            }
 
-            function HandlePortChange() {
-                var portId = $("#PortSelect").val();
-
+            function fetchPrincipals(customerId) {
                 $.ajax({
-                    url: '@Url.Action("ChangeTerminal", "DispatchTicket", new { area = "MMSI" })',
+                    url: '@Url.Action("GetPrincipals", "DispatchTicket", new { area = "MMSI" })',
                     type: "GET",
-                    data: { portId: portId },
+                    data: { customerId: customerId },
                     success: function (data) {
-                        $("#TerminalSelect").empty();
-
+                        const $principalSelect = $("#PrincipalSelect");
+                        $principalSelect.empty().append('<option value="">Select Principal</option>');
                         if (Array.isArray(data) && data.length > 0) {
-                            $("#TerminalSelect").append('<option>');
-
                             $.each(data, function (index, item) {
-                                $("#TerminalSelect").append($('<option>', {
+                                $principalSelect.append($('<option>', {
                                     value: item.value,
                                     text: item.text
                                 }));
@@ -307,62 +322,128 @@
                 });
             }
 
-            $("#PortSelect").change(HandlePortChange);
-        });
-
-        $('.js-example-basic-multiple').on('change', function() {
-            var selectedTickets = $(this).val();
-        
-            $.ajax({
-                url: '/MMSI/Billing/GetDispatchTickets',
-                type: 'POST',
-                data: { dispatchTicketIds: selectedTickets },
-                success: function(result) {
-                    console.log('Success:', result);
-                    let totalDispatchAmount = 0;
-                    let totalBAFAmount = 0;
-
-                    if ($.fn.DataTable.isDataTable('#dataTable')) {
-                        $('#dataTable').DataTable().destroy();
+            function handlePrincipalChange() {
+                console.log("principal choice: changed");
+                const principalId = $("#PrincipalSelect").val();
+                $.ajax({
+                    url: '@Url.Action("GetPrincipalDetails", "Billing", new { area = "MMSI" })',
+                    method: "GET",
+                    data: { principalId: principalId },
+                    success: function (data) {
+                        console.log(data);
+                        updateFields(data);
                     }
+                });
+            }
 
-                    $('#dataTable tbody').empty();
+            function handleCustomerChange() {
+                console.log("customer: changed");
+                $("#UsePrincipalCheckbox").prop("checked", false);
+                const customerId = $(this).val();
+                // continue here
+                const $principalDiv = $("#PrincipalDiv");
+                const $selectDiv = $("#SelectDiv");
+                $principalDiv.removeClass("d-none");
+                $selectDiv.addClass("d-none");
+                console.log("principal should've been blanked here");
 
-                    $.each(result.data, function (index, value) {
-                        console.log('Index:', index, 'Value:', value);
-                        totalDispatchAmount = totalDispatchAmount + value.dispatchNetRevenue;
-                        totalBAFAmount = totalBAFAmount + value.bafNetRevenue;
-                        $('#dataTable tbody').append(`
-                            <tr>
-                                <td class="text-center align-middle ps-4">${value.tugboat.tugboatName}</td>
-                                <td class="text-center align-middle ps-4">${value.activityService.activityServiceName}</td>
-                                <td class="text-center align-middle ps-4">${value.dateLeft} - ${value.timeLeft}</td>
-                                <td class="text-center align-middle ps-4">${value.dateArrived} - ${value.timeArrived}</td>
-                                <td class="text-center align-middle ps-4">${value.totalHours}</td>
-                                <td class="text-center align-middle ps-4">₱ ${value.dispatchRate} ${value.dispatchChargeType}</td>
-                                <td class="text-center align-middle ps-4">₱ ${value.dispatchNetRevenue}</td>
-                                <td class="text-center align-middle ps-4">₱ ${value.bafRate} ${value.bafChargeType}</td>
-                                <td class="text-center align-middle ps-4">₱ ${value.bafNetRevenue}</td>
-                            </tr>`
-                        );
+                if (customerId) {
+                    $.ajax({
+                        url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "MMSI" })',
+                        method: "GET",
+                        data: { customerId: customerId },
+                        success: function (data) {
+                            updateFields(data);
+                            console.log(data);
+                            $principalDiv.toggleClass("d-none", !data.hasPrincipal);
+                        }
                     });
-
-                    document.getElementById("DispatchAmountTotal").innerHTML = totalDispatchAmount;
-                    document.getElementById("BAFAmountTotal").innerHTML = totalBAFAmount;
-                    
-                    $('#dataTable').DataTable({
-                        paging: false,        // Enable pagination
-                        info: false,          // Show table information (e.g., "Showing 1 to 10 of X entries")
-                        order: [[0, 'asc']],  // Default ordering (adjust as needed)
-                        lengthChange: false,
-                        searching: false
-                    });
-
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
+                } else {
+                    $principalDiv.addClass("d-none");
                 }
-            });
+            }
+
+            function updateFields(data) {
+                const fields = {
+                    "#Terms": data?.terms || '',
+                    "#Address": data?.address || '',
+                    "#TIN": data?.tinNo || '',
+                    "#BusinessStyle": data?.businessStyle || ''
+                };
+                for (const [selector, value] of Object.entries(fields)) {
+                    $(selector).val(value);
+                }
+            }
+
+            function handlePortChange() {
+                const portId = $("#PortSelect").val();
+                $.ajax({
+                    url: '@Url.Action("ChangeTerminal", "DispatchTicket", new { area = "MMSI" })',
+                    type: "GET",
+                    data: { portId: portId },
+                    success: function (data) {
+                        const $terminalSelect = $("#TerminalSelect");
+                        $terminalSelect.empty().append('<option value="">Select Terminal</option>');
+                        if (Array.isArray(data) && data.length > 0) {
+                            $.each(data, function (index, item) {
+                                $terminalSelect.append($('<option>', {
+                                    value: item.value,
+                                    text: item.text
+                                }));
+                            });
+                        }
+                    }
+                });
+            }
+
+            function handleDispatchTicketsChange() {
+                const selectedTickets = $(this).val();
+                $.ajax({
+                    url: '/MMSI/Billing/GetDispatchTickets',
+                    type: 'POST',
+                    data: { dispatchTicketIds: selectedTickets },
+                    success: function (result) {
+                        console.log('Success:', result);
+                        updateDispatchTable(result.data);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+
+            function updateDispatchTable(data) {
+                let totalDispatchAmount = 0;
+                let totalBAFAmount = 0;
+
+                table.destroy();
+                const $tbody = $('#dataTable tbody').empty();
+
+                $.each(data, function (index, value) {
+                    console.log('Index:', index, 'Value:', value);
+                    totalDispatchAmount += value.dispatchNetRevenue;
+                    totalBAFAmount += value.bafNetRevenue;
+                    $tbody.append(`
+                        <tr>
+                            <td class="text-center align-middle ps-4">${value.dispatchNumber}</td>
+                            <td class="text-center align-middle ps-4">${value.tugboat.tugboatName}</td>
+                            <td class="text-center align-middle ps-4">${value.activityService.activityServiceName}</td>
+                            <td class="text-center align-middle ps-4">${value.dateLeft} - ${value.timeLeft}</td>
+                            <td class="text-center align-middle ps-4">${value.dateArrived} - ${value.timeArrived}</td>
+                            <td class="text-center align-middle ps-4">${value.totalHours.toFixed(2)}</td>
+                            <td class="text-center align-middle ps-4">₱ ${value.dispatchRate} ${value.dispatchChargeType}</td>
+                            <td class="text-center align-middle ps-4">₱ ${value.dispatchNetRevenue}</td>
+                            <td class="text-center align-middle ps-4">₱ ${value.bafRate} ${value.bafChargeType}</td>
+                            <td class="text-center align-middle ps-4">₱ ${value.bafNetRevenue}</td>
+                        </tr>
+                    `);
+                });
+
+                $("#DispatchAmountTotal").text(totalDispatchAmount.toFixed(2));
+                $("#BAFAmountTotal").text(totalBAFAmount.toFixed(2));
+
+                table = initializeDataTable('#dataTable');
+            }
         });
     </script>
 }

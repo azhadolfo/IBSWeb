@@ -132,7 +132,7 @@
                         <td class="text-start align-middle ps-4">@billing.ActivityService?.ActivityServiceName</td>
                         <td class="text-start align-middle ps-4">@billing.DateLeft - @billing.TimeLeft</td>
                         <td class="text-start align-middle ps-4">@billing.DateArrived - @billing.TimeArrived</td>
-                        <td class="text-start align-middle ps-4">@billing.TotalHours hrs.</td>
+                        <td class="text-start align-middle ps-4">@(billing.TotalHours?.ToString("F2") ?? "0.00") hrs.</td>
                         <td class="text-start align-middle ps-4">₱ @billing.DispatchNetRevenue</td>
                         <td class="text-start align-middle ps-4">₱ @billing.BAFNetRevenue</td>
                         <td class="text-start align-middle ps-4">₱ @billing.TotalNetRevenue</td>

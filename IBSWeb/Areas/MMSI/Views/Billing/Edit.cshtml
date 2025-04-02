@@ -346,7 +346,7 @@
                                 <td class="text-center align-middle ps-4">${value.activityService.activityServiceName}</td>
                                 <td class="text-center align-middle ps-4">${value.dateLeft} - ${value.timeLeft}</td>
                                 <td class="text-center align-middle ps-4">${value.dateArrived} - ${value.timeArrived}</td>
-                                <td class="text-center align-middle ps-4">${value.totalHours}</td>
+                                <td class="text-center align-middle ps-4">${value.totalHours.toFixed(2)}</td>
                                 <td class="text-center align-middle ps-4">₱ ${value.dispatchRate} ${value.dispatchChargeType}</td>
                                 <td class="text-center align-middle ps-4">₱ ${value.dispatchNetRevenue}</td>
                                 <td class="text-center align-middle ps-4">₱ ${value.bafRate} ${value.bafChargeType}</td>
@@ -355,8 +355,8 @@
                         );
                     });
 
-                    document.getElementById("DispatchAmountTotal").innerHTML = totalDispatchAmount;
-                    document.getElementById("BAFAmountTotal").innerHTML = totalBAFAmount;
+                    document.getElementById("DispatchAmountTotal").innerHTML = totalDispatchAmount.toFixed(2);
+                    document.getElementById("BAFAmountTotal").innerHTML = totalBAFAmount.toFixed(2);
 
                     $('#dataTable').DataTable({
                         paging: false,        // Enable pagination

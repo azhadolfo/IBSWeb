@@ -469,6 +469,24 @@ namespace IBSWeb.Areas.MMSI
         }
 
         [HttpGet]
+        public async Task<IActionResult> GetPrincipals(string customerId, CancellationToken cancellationToken)
+        {
+            var terminals = await _db
+                .MMSIPrincipals
+                .Where(t => t.CustomerId == int.Parse(customerId))
+                .OrderBy(t => t.PrincipalName)
+                .ToListAsync(cancellationToken);
+
+            var terminalsList = terminals.Select(t => new SelectListItem
+            {
+                Value = t.PrincipalId.ToString(),
+                Text = t.PrincipalNumber + " " + t.PrincipalName
+            }).ToList();
+
+            return Json(terminalsList);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> GetDispatchTicketList(string status, CancellationToken cancellationToken)
         {
             var item = new List<MMSIDispatchTicket>();
