@@ -78,7 +78,7 @@ namespace IBSWeb.Areas.User.Controllers
                     .CountAsync(),
 
                 RecordLiftingDateCount = await _dbContext.FilprideDeliveryReceipts
-                    .Where(rr => !rr.HasReceivingReport)
+                    .Where(rr => !rr.HasReceivingReport && rr.CanceledBy == null)
                     .CountAsync(),
             };
 
