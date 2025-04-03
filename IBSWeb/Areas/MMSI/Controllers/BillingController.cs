@@ -223,10 +223,15 @@ namespace IBSWeb.Areas.MMSI
                         }
                     }
 
+                    //empty string list
                     List<string> idsOfBilledTickets = null;
+                    //get dt billed by current billing
                     var tempModel = await _db.MMSIDispatchTickets
-                        .Where(d => d.BillingId == model.MMSIBillingId.ToString()).ToListAsync(cancellationToken);
+                        .Where(d => d.BillingId == model.MMSIBillingId.ToString())
+                        .ToListAsync(cancellationToken);
+                    //from tempmodel, select the id=>string and list it
                     idsOfBilledTickets = tempModel.Select(d => d.DispatchTicketId.ToString()).OrderBy(x => x).ToList();
+                    //put the dt billed to its model container
                     currentModel.ToBillDispatchTickets = idsOfBilledTickets;
 
                     #region -- Changes
@@ -256,7 +261,7 @@ namespace IBSWeb.Areas.MMSI
                         MachineName = Environment.MachineName,
                         Activity = changes.Any()
                             ? $"Edit Billing: id #{currentModel.MMSIBillingId} {string.Join(", ", changes)}"
-                            : $"No changes detected for service request #{currentModel.MMSIBillingId}",
+                            : $"No changes detected for Billing #{currentModel.MMSIBillingId}",
                         DocumentType = "Billing",
                         Company = await GetCompanyClaimAsync()
                     };

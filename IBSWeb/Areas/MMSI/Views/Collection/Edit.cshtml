@@ -1,7 +1,7 @@
 @model MMSICollection
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Edit";
 
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -24,7 +24,7 @@
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center text-white">
-            <h2 class="py-2"><i class="bi bi-pencil-square"></i> CREATE COLLECTION</h2>
+            <h2 class="py-2"><i class="bi bi-pencil-square"></i> EDIT COLLECTION</h2>
         </div>
     </div>
 
@@ -34,7 +34,7 @@
                 <div class="border-2 px-3">
                     <div asp-validation-summary="ModelOnly"></div>
                     <input asp-for="Status" value="Created" type="hidden"></input>
-                    <input asp-for="Status" value="Created" type="hidden"></input>
+                    <input asp-for="MMSICollectionId" value="@Model.MMSICollectionId" type="hidden"></input>
                     <div class="row">
                         <div class="col-9">
                             <div class="row py-2">
@@ -43,17 +43,17 @@
                             <div class="row mb-3">
                                 <div class="form-floating col-4">
                                     <input asp-for="CollectionNumber" type="text" class="form-control border-0 shadow" id="collectionNumber" placeholder="#" required>
-                                    <label asp-for="CollectionNumber" for="CollectionNumber" class="ms-2" id="status">Collection Receipt #<span class="required text-danger">*</span></label>
+                                    <label asp-for="CollectionNumber" for="collectionNumber" class="ms-2" id="status">Collection Receipt #<span class="required text-danger">*</span></label>
                                     <span asp-validation-for="CollectionNumber" class="text-danger"></span>
                                 </div>
                                 <div class="form-check col-4 ps-2 text-start d-flex align-items-center justify-content-start">
-                                    <input asp-for="IsDocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isDocumentedCheckbox" checked>
+                                    <input asp-for="IsDocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isDocumentedCheckbox">
                                     <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isDocumentedCheckbox">
                                         Documented
                                     </label>
                                 </div>
                                 <div class="form-floating col-4">
-                                    <input asp-for="Date" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
+                                    <input asp-for="Date" id="Date" type="date" class="form-control border-0 shadow">
                                     <label asp-for="Date" for="Date" class="ms-2">Date</label>
                                     <span asp-validation-for="Date" class="text-danger"></span>
                                 </div>
@@ -61,7 +61,7 @@
                             <div class="row my-3">
                                 <div class="form-group col-4">
                                     <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                                    <input id="customerIsVatable" type="hidden"></input>
+                                    <input id="customerIsVatable" type="hidden">
                                     <select asp-for="CustomerId" id="customerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                                         <option value="">Select Customer</option>
                                     </select>
@@ -70,12 +70,12 @@
                                 <input type="hidden" id="undeductedAmount">
                                 <input type="hidden" asp-for="Amount" value="@Model.Amount" id="amount">
                                 <div class="form-floating col-4">
-                                    <input type="number" class="form-control border-0 shadow"  id="amountShow" value="0.00"  placeholder=" " min="0" disabled>
+                                    <input type="number" class="form-control border-0 shadow"  id="amountShow" value="@Model.Amount"  placeholder=" " min="0" disabled>
                                     <label class="ms-2">Amount</label>
                                 </div>
                                 <input type="hidden" asp-for="EWT" value="@Model.EWT" id="ewt">
                                 <div class="form-floating col-4">
-                                    <input type="number" class="form-control border-0 shadow"  id="ewtShow" value="0.00" placeholder=" " min="0" disabled>
+                                    <input type="number" class="form-control border-0 shadow"  id="ewtShow" value="@Model.EWT" placeholder=" " min="0" disabled>
                                     <label class="ms-2">EWT</label>
                                 </div>
                             </div>
@@ -98,17 +98,17 @@
                             </div>
                             <div class="row my-3">
                                 <div class="form-floating col-4">
-                                    <input asp-for="CheckNumber" type="text" class="form-control border-0 shadow" placeholder="#" required>
+                                    <input asp-for="CheckNumber" id="CheckNumber" type="text" class="form-control border-0 shadow" placeholder="#" required>
                                     <label asp-for="CheckNumber" for="CheckNumber" class="ms-2">Check Number<span class="required text-danger">*</span></label>
                                     <span asp-validation-for="CheckNumber" class="text-danger"></span>
                                 </div>
                                 <div class="form-floating col-4">
-                                    <input asp-for="CheckDate" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
+                                    <input asp-for="CheckDate" id="CheckDate" type="date" class="form-control border-0 shadow" required>
                                     <label asp-for="CheckDate" for="CheckDate" class="ms-2">CheckDate<span class="required text-danger">*</span></label>
                                     <span asp-validation-for="CheckDate" class="text-danger"></span>
                                 </div>
                                 <div class="form-floating col-4">
-                                    <input asp-for="DepositDate" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
+                                    <input asp-for="DepositDate" id="DepositDate" type="date" class="form-control border-0 shadow" required>
                                     <label asp-for="DepositDate" for="DepositDate" class="ms-2">Date Deposited<span class="required text-danger">*</span></label>
                                     <span asp-validation-for="DepositDate" class="text-danger"></span>
                                 </div>
@@ -164,44 +164,44 @@
 @section Scripts
 {
     <script>
-
-        $('.js-example-basic-multiple').select2();
-        
-        function calculateEWTDeduction() {
-            var originalAmount = document.getElementById("undeductedAmount").value;
-            var totalAmount = document.getElementById("amount").value;
-            var customerId = document.getElementById("customerId").value;
-            console.log("Amount debug:" + totalAmount);
-            console.log("CustomerId debug:" + customerId);
-            
-            $.ajax({
-                url: '/MMSI/Collection/IsCustomerVatable',
-                type: 'GET',
-                data: { customerId : customerId },
-                success: function(result) {
-                    console.log(result);
-                    if (result){
-                        var deductedAmount = totalAmount / 1.12;
-                        var ewt = totalAmount - deductedAmount;
-                        document.getElementById("amountShow").value = deductedAmount.toFixed(2);
-                        document.getElementById("amount").value = deductedAmount.toFixed(2);
-                        document.getElementById("ewt").value = ewt.toFixed(2);
-                        document.getElementById("ewtShow").value = ewt.toFixed(2);
-                    }
-                    else{
-                        document.getElementById("amountShow").value = document.getElementById("undeductedAmount").value;
-                        document.getElementById("amount").value = document.getElementById("undeductedAmount").value;
-                        document.getElementById("ewt").value = 0.00;
-                        document.getElementById("ewtShow").value = 0.00;
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                }
-            });
-        }
         
         $(document).ready(function (){
+
+            $('.js-example-basic-multiple').select2();
+
+            function calculateEWTDeduction() {
+                var originalAmount = document.getElementById("undeductedAmount").value;
+                var totalAmount = document.getElementById("amount").value;
+                var customerId = document.getElementById("customerId").value;
+                console.log("Amount debug:" + totalAmount);
+                console.log("CustomerId debug:" + customerId);
+
+                $.ajax({
+                    url: '/MMSI/Collection/IsCustomerVatable',
+                    type: 'GET',
+                    data: { customerId : customerId },
+                    success: function(result) {
+                        console.log(result);
+                        if (result){
+                            var deductedAmount = totalAmount / 1.12;
+                            var ewt = totalAmount - deductedAmount;
+                            document.getElementById("amountShow").value = deductedAmount.toFixed(2);
+                            document.getElementById("amount").value = deductedAmount.toFixed(2);
+                            document.getElementById("ewt").value = ewt.toFixed(2);
+                            document.getElementById("ewtShow").value = ewt.toFixed(2);
+                        }
+                        else{
+                            document.getElementById("amountShow").value = document.getElementById("undeductedAmount").value;
+                            document.getElementById("amount").value = document.getElementById("undeductedAmount").value;
+                            document.getElementById("ewt").value = 0.00;
+                            document.getElementById("ewtShow").value = 0.00;
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
 
             $('#customerId').on('change', function() {
                 calculateEWTDeduction();
@@ -230,62 +230,67 @@
                     inputField.removeAttribute("disabled")
                 } else {
                     document.getElementById("status").innerHTML = "Undocumented";
-                    document.getElementById("collectionNumber").value = "";
                     inputField.removeAttribute("required");
                     inputField.setAttribute("disabled", "disabled");
                 }
             }
+
+            function handleBillSelectionChange() {
+                var selectedBills = $('.js-example-basic-multiple').val();
+
+                $.ajax({
+                    url: '/MMSI/Collection/GetSelectedBillings',
+                    type: 'POST',
+                    data: { billingIds: selectedBills },
+                    success: function(result) {
+                        if ($.fn.DataTable.isDataTable('#dataTable')) {
+                            $('#dataTable').DataTable().destroy();
+                        }
+
+                        $('#dataTable tbody').empty();
+                        let totalAmount = 0.00;
+
+                        $.each(result.data, function(index, value) {
+                            console.log('Index:', index, 'Value:', value);
+
+                            $('#dataTable tbody').append(`
+                    <tr>
+                        <td class="text-center align-middle ps-4">${value.mmsiBillingNumber}</td>
+                        <td class="text-center align-middle ps-4">₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>`
+                            );
+
+                            totalAmount = totalAmount + value.amount;
+                        });
+
+                        document.getElementById("billingsTotal").innerHTML = `<u>Total: ₱ ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`;
+                        document.getElementById("amountShow").value = totalAmount.toFixed(2);
+                        document.getElementById("amount").value = totalAmount.toFixed(2);
+                        document.getElementById("undeductedAmount").value = totalAmount.toFixed(2);
+                        console.log(document.getElementById("amount").value);
+                        calculateEWTDeduction();
+
+                        $('#dataTable').DataTable({
+                            paging: false,
+                            info: false,
+                            order: [[0, 'asc']],
+                            lengthChange: false,
+                            searching: false
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+
+            // Call the function when the select changes
+            $('.js-example-basic-multiple').on('change', handleBillSelectionChange);
+            
+            handleBillSelectionChange();
+            
+            checkboxChanged();
         });
         
-        $('.js-example-basic-multiple').on('change', function() {
-            var selectedBills = $(this).val();
-
-            $.ajax({
-                url: '/MMSI/Collection/GetSelectedBillings',
-                type: 'POST',
-                data: { billingIds : selectedBills },
-                success: function(result) {
-                    
-                    if ($.fn.DataTable.isDataTable('#dataTable')) {
-                        $('#dataTable').DataTable().destroy();
-                    }
-
-                    $('#dataTable tbody').empty();
-                    let totalAmount = 0.00;
-
-                    $.each(result.data, function (index, value) {
-                        console.log('Index:', index, 'Value:', value);
-
-                        $('#dataTable tbody').append(`
-                            <tr>
-                                <td class="text-center align-middle ps-4">${value.mmsiBillingNumber}</td>
-                                <td class="text-center align-middle ps-4">₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            </tr>`
-                        );
-                        
-                        totalAmount = totalAmount + value.amount;
-                    });
-
-                    document.getElementById("billingsTotal").innerHTML = `<u>Total: ₱ ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`;
-                    document.getElementById("amountShow").value = totalAmount.toFixed(2);
-                    document.getElementById("amount").value = totalAmount.toFixed(2);
-                    document.getElementById("undeductedAmount").value = totalAmount.toFixed(2);
-                    console.log(document.getElementById("amount").value);
-                    calculateEWTDeduction();
-                    
-                    $('#dataTable').DataTable({
-                        paging: false,        // Enable pagination
-                        info: false,          // Show table information (e.g., "Showing 1 to 10 of X entries")
-                        order: [[0, 'asc']],  // Default ordering (adjust as needed)
-                        lengthChange: false,
-                        searching: false
-                    });
-
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-                }
-            });
-        });
     </script>
 }
