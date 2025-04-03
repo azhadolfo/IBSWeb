@@ -18,11 +18,12 @@
     </div>
     <div class="card-body p-4">
         <form method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
             <div class="row">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+                    <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")"/>
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -50,23 +51,23 @@
                     </tbody>
                 </table>
                 <div class="form-floating mb-3">
-                    <input asp-for="Payee" type="text" class="form-control" placeholder="Optional" readonly />
+                    <input asp-for="Payee" type="text" class="form-control" placeholder="Optional" readonly/>
                     <label asp-for="Payee" class="control-label ms-2"></label>
                     <span asp-validation-for="Payee" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
-                    <input asp-for="PayeeAddress" type="text" class="form-control" placeholder="Optional" readonly />
+                    <input asp-for="PayeeAddress" type="text" class="form-control" placeholder="Optional" readonly/>
                     <label asp-for="PayeeAddress" class="control-label ms-2"></label>
                     <span asp-validation-for="PayeeAddress" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
-                    <input asp-for="PayeeTin" type="text" class="form-control" placeholder="Optional" readonly />
+                    <input asp-for="PayeeTin" type="text" class="form-control" placeholder="Optional" readonly/>
                     <label asp-for="PayeeTin" class="control-label ms-2"></label>
                     <span asp-validation-for="PayeeTin" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="Total" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="Total" class="form-control money totalAmount total" value="" placeholder="0.000" readonly />
+                    <input asp-for="Total" class="form-control money totalAmount total" value="" placeholder="0.000" readonly/>
                     <span asp-validation-for="Total" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -77,18 +78,18 @@
                     <span asp-validation-for="BankId" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
-                    <input asp-for="CheckNo" type="text" class="form-control" placeholder="Input check #" />
+                    <input asp-for="CheckNo" type="text" class="form-control" placeholder="Input check #"/>
                     <label asp-for="CheckNo" class="control-label ms-2">Check No.<span class="required">*</span></label>
                     <span asp-validation-for="CheckNo" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="CheckDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="CheckDate" type="Date" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" class="form-control" />
+                    <input asp-for="CheckDate" type="Date" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" class="form-control"/>
                     <span asp-validation-for="CheckDate" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
                     <label class="control-label">Upload File (Optional)</label>
-                    <input name="file" type="file" class="form-control" />
+                    <input name="file" type="file" class="form-control"/>
                 </div>
                 <div class="form-floating mb-3">
                     <textarea asp-for="Particulars" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
@@ -110,16 +111,16 @@
                         <!-- Dynamic rows will be added here -->
                         </tbody>
                         <tfoot>
-                            <tr>
-                                <td class="text-end" colspan="2">TOTAL:</td>
-                                <td class="totalDebit">0.0000</td>
-                                <td class="totalCredit">0.0000</td>
-                                <td></td>
-                            </tr>
+                        <tr>
+                            <td class="text-end" colspan="2">TOTAL:</td>
+                            <td class="totalDebit">0.0000</td>
+                            <td class="totalCredit">0.0000</td>
+                            <td></td>
+                        </tr>
                         </tfoot>
                     </table>
                 </div>
-                <br />
+                <br/>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
                         <button type="submit" class="btn btn-primary form-control">Create</button>

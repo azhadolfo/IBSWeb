@@ -38,12 +38,13 @@
            </pre>
         </div>
         <form asp-action="Create">
+            @Html.AntiForgeryToken()
             <div class="row">
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group mb-3">
                         <label asp-for="Date" class="control-label"></label><span class="required">*</span>
-                        <input asp-for="Date" type="date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+                        <input asp-for="Date" type="date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")"/>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-3">
@@ -54,51 +55,51 @@
                         <span asp-validation-for="POId" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="ReceivedDate" type="date" class="form-control" placeholder="" />
+                        <input asp-for="ReceivedDate" type="date" class="form-control" placeholder=""/>
                         <label asp-for="ReceivedDate" class="control-label">Received Date</label>
                         <span asp-validation-for="ReceivedDate" class="text-danger"></span>
                     </div>
                     <fieldset class="border p-2 py-2 mb-3">
                         <legend class="w-auto px-2">Supplier Details</legend>
                         <div class="form-floating py-2 col-12">
-                            <input asp-for="SupplierInvoiceNumber" class="form-control border-0 shadow" placeholder="" />
+                            <input asp-for="SupplierInvoiceNumber" class="form-control border-0 shadow" placeholder=""/>
                             <label asp-for="SupplierInvoiceNumber">SI#</label>
                             <span asp-validation-for="SupplierInvoiceNumber" class="text-danger"></span>
                         </div>
                         <div class="form-floating py-2 col-12">
-                            <input asp-for="SupplierInvoiceDate" type="date" class="form-control border-0 shadow" placeholder="" />
+                            <input asp-for="SupplierInvoiceDate" type="date" class="form-control border-0 shadow" placeholder=""/>
                             <label asp-for="SupplierInvoiceDate">SI Date</label>
                             <span asp-validation-for="SupplierInvoiceDate" class="text-danger"></span>
                         </div>
                         <div class="form-floating py-2 col-12">
-                            <input asp-for="SupplierDrNo" class="form-control border-0 shadow" placeholder="" />
+                            <input asp-for="SupplierDrNo" class="form-control border-0 shadow" placeholder=""/>
                             <label asp-for="SupplierDrNo">DR#</label>
                             <span asp-validation-for="SupplierDrNo" class="text-danger"></span>
                         </div>
                     </fieldset>
                     <div class="form-floating mb-3">
-                        <input asp-for="WithdrawalCertificate" class="form-control" placeholder="" />
+                        <input asp-for="WithdrawalCertificate" class="form-control" placeholder=""/>
                         <label asp-for="WithdrawalCertificate" class="control-label">WC#</label>
                         <span asp-validation-for="WithdrawalCertificate" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="TruckOrVessels" class="form-control" placeholder="" />
+                        <input asp-for="TruckOrVessels" class="form-control" placeholder=""/>
                         <label asp-for="TruckOrVessels" class="control-label">Truck/Vessels<span class="required">*</span></label>
                         <span asp-validation-for="TruckOrVessels" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="QuantityDelivered" class="form-control" placeholder="" />
+                        <input asp-for="QuantityDelivered" class="form-control" placeholder=""/>
                         <label asp-for="QuantityDelivered" class="control-label">Qty Delivered<span class="required">*</span></label>
                         <span asp-validation-for="QuantityDelivered" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="QuantityReceived" class="form-control" placeholder="" />
+                        <input asp-for="QuantityReceived" class="form-control" placeholder=""/>
                         <label asp-for="QuantityReceived" class="control-label">Qty Received<span class="required">*</span></label>
                         <span asp-validation-for="QuantityReceived" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="form-floating mb-3">
-                    <input asp-for="AuthorityToLoadNo" class="form-control" placeholder="" />
+                    <input asp-for="AuthorityToLoadNo" class="form-control" placeholder=""/>
                     <label asp-for="AuthorityToLoadNo" class="control-label ms-2"></label>
                     <span asp-validation-for="AuthorityToLoadNo" class="text-danger"></span>
                 </div>

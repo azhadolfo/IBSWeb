@@ -52,6 +52,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(services);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var viewModel = new FilprideService();
@@ -152,6 +153,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(services);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
             if (id == null || _dbContext.FilprideServices == null)

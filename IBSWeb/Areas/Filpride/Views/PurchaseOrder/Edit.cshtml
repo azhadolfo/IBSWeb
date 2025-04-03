@@ -17,20 +17,21 @@
     </div>
     <div class="card-body p-4">
         <form method="post">
+            @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input asp-for="PurchaseOrderId" type="hidden" class="form-control" />
+            <input asp-for="PurchaseOrderId" type="hidden" class="form-control"/>
             <div class="form-floating py-2 col-12">
-                <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" />
+                <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder=""/>
                 <label asp-for="Date">Date</label>
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
             <div class="form-floating py-2 col-12">
-                <input asp-for="TriggerDate" type="date" class="form-control border-0 shadow" placeholder="" />
+                <input asp-for="TriggerDate" type="date" class="form-control border-0 shadow" placeholder=""/>
                 <label asp-for="TriggerDate">Trigger Date<span class="required">*</span></label>
                 <span asp-validation-for="TriggerDate" class="text-danger"></span>
             </div>
             <div class="form-floating py-2 col-12">
-                <input asp-for="OldPoNo" class="form-control border-0 shadow price" placeholder="" />
+                <input asp-for="OldPoNo" class="form-control border-0 shadow price" placeholder=""/>
                 <label asp-for="OldPoNo">IS PO#<span class="required">*</span></label>
                 <span asp-validation-for="OldPoNo" class="text-danger"></span>
             </div>
@@ -79,17 +80,17 @@
                 <span asp-validation-for="Terms" class="text-danger"></span>
             </div>
             <div class="form-floating py-2 col-12">
-                <input asp-for="Quantity" class="form-control border-0 shadow" placeholder="" required min="0.01" />
+                <input asp-for="Quantity" class="form-control border-0 shadow" placeholder="" required min="0.01"/>
                 <label asp-for="Quantity">Quantity</label>
                 <span asp-validation-for="Quantity" class="text-danger"></span>
             </div>
             <div class="form-floating py-2 col-12">
-                <input asp-for="Price" class="form-control border-0 shadow" placeholder="" required min="0.01" />
+                <input asp-for="Price" class="form-control border-0 shadow" placeholder="" required min="0.01"/>
                 <label asp-for="Price">Price</label>
                 <span asp-validation-for="Price" class="text-danger"></span>
             </div>
             <div class="form-floating py-2 col-12">
-                <input asp-for="SupplierSalesOrderNo" class="form-control border-0 shadow price" placeholder="" />
+                <input asp-for="SupplierSalesOrderNo" class="form-control border-0 shadow price" placeholder=""/>
                 <label asp-for="SupplierSalesOrderNo">Supplier SO#</label>
                 <span asp-validation-for="SupplierSalesOrderNo" class="text-danger"></span>
             </div>

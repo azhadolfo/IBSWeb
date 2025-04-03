@@ -20,10 +20,11 @@
     </div>
     <div class="card-body p-4">
         <form asp-action="Create" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
             <div class="row">
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    
+
                     <div class="form-group mb-3">
                         <label class="control-label">Type<span class="required">*</span></label>
                         <select asp-for="Header.Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
@@ -37,11 +38,11 @@
                     </div>
                     <div class="form-group mb-3">
                         <label asp-for="Header.Date" class="control-label"></label><span class="required">*</span>
-                        <input asp-for="Header.Date" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+                        <input asp-for="Header.Date" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")"/>
                         <span asp-validation-for="Header.Date" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="Header.References" type="text" class="form-control" placeholder="" />
+                        <input asp-for="Header.References" type="text" class="form-control" placeholder=""/>
                         <span asp-validation-for="Header.References" class="text-danger"></span>
                         <label asp-for="Header.References" class="control-label"></label>
                     </div>
@@ -53,12 +54,12 @@
                         <span asp-validation-for="Header.CVId" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="Header.Particulars" type="text" class="form-control" placeholder="" />
+                        <input asp-for="Header.Particulars" type="text" class="form-control" placeholder=""/>
                         <label asp-for="Header.Particulars" class="control-label">Particulars<span class="required">*</span></label>
                         <span asp-validation-for="Header.Particulars" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <input asp-for="Header.CRNo" type="text" class="form-control" placeholder="" />
+                        <input asp-for="Header.CRNo" type="text" class="form-control" placeholder=""/>
                         <label asp-for="Header.CRNo" class="control-label"></label>
                         <span asp-validation-for="Header.CRNo" class="text-danger"></span>
                     </div>
@@ -74,68 +75,68 @@
                         <div class="table-responsive">
                             <table class="w-100">
                                 <thead>
-                                    <tr style="border: 1px solid black;">
-                                        <th colspan="2" style="padding-left:20px;">I. PAYEE DETAILS</th>
-                                        <th colspan="1" class="text-end"><b>Date : </b></th>
-                                        <td id="date"></td>
-                                    </tr>
+                                <tr style="border: 1px solid black;">
+                                    <th colspan="2" style="padding-left:20px;">I. PAYEE DETAILS</th>
+                                    <th colspan="1" class="text-end"><b>Date : </b></th>
+                                    <td id="date"></td>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td style="width:11%; padding-left:20px;">Name :</td>
-                                        <td id="name"></td>
-                                        <td style="width:50%;" colspan="2" class="text-nowrap">Other References:</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-left:20px;">Address :</td>
-                                        <td id="address"></td>
-                                        <td style="width:6%;">PO # :</td>
-                                        <td id="poNo"></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-left:20px;">TIN # :</td>
-                                        <td id="tinNo"></td>
-                                        <td>SI # :</td>
-                                        <td id="siNo"></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-left:20px;" class="text-nowrap"></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
+                                <tr>
+                                    <td style="width:11%; padding-left:20px;">Name :</td>
+                                    <td id="name"></td>
+                                    <td style="width:50%;" colspan="2" class="text-nowrap">Other References:</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-left:20px;">Address :</td>
+                                    <td id="address"></td>
+                                    <td style="width:6%;">PO # :</td>
+                                    <td id="poNo"></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-left:20px;">TIN # :</td>
+                                    <td id="tinNo"></td>
+                                    <td>SI # :</td>
+                                    <td id="siNo"></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-left:20px;" class="text-nowrap"></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
                         <div class="table-responsive" style="margin-top:20px;">
                             <table class="w-100">
                                 <thead>
-                                    <tr style="border: 1px solid black;">
-                                        <th colspan="4" style="padding-left:20px;">II. CHECK DETAILS</th>
-                                    </tr>
+                                <tr style="border: 1px solid black;">
+                                    <th colspan="4" style="padding-left:20px;">II. CHECK DETAILS</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td style="width:15%; padding-left:20px;">Payee :</td>
-                                        <td style="width:65%;" id="payee"></td>
-                                        <td class="text-end" id="amount"></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-left:20px;"></td>
+                                <tr>
+                                    <td style="width:15%; padding-left:20px;">Payee :</td>
+                                    <td style="width:65%;" id="payee"></td>
+                                    <td class="text-end" id="amount"></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-left:20px;"></td>
 
-                                        <td class="w-25"></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-left:20px;">Particulars :</td>
-                                        <td id="particulars"></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-left:20px;">Check #:</td>
-                                        <td id="checkNo"></td>
-                                        <td></td>
-                                    </tr>
+                                    <td class="w-25"></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-left:20px;">Particulars :</td>
+                                    <td id="particulars"></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-left:20px;">Check #:</td>
+                                    <td id="checkNo"></td>
+                                    <td></td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -143,25 +144,25 @@
                         <div class="table-responsive" style="margin-top:20px;">
                             <table class="w-100">
                                 <thead>
-                                    <tr style="border: 1px solid black;">
-                                        <th colspan="4" style="padding-left:20px;">III. ACCOUNTING ENTRIES</th>
-                                    </tr>
+                                <tr style="border: 1px solid black;">
+                                    <th colspan="4" style="padding-left:20px;">III. ACCOUNTING ENTRIES</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td style="padding-left:20px;"></td>
-                                        <th class="text-end">DEBIT</th>
-                                        <th class="text-end">CREDIT</th>
-                                    </tr>
+                                <tr>
+                                    <td style="padding-left:20px;"></td>
+                                    <th class="text-end">DEBIT</th>
+                                    <th class="text-end">CREDIT</th>
+                                </tr>
                                 </tbody>
                                 <tbody id="tableBody"></tbody>
                                 <tbody>
-                                    <tr style="border-bottom:double;"></tr>
-                                    <tr>
-                                        <td class="text-end">TOTAL</td>
-                                        <td class="text-end" id="totalDebit"></td>
-                                        <td class="text-end" id="totalCredit"></td>
-                                    </tr>
+                                <tr style="border-bottom:double;"></tr>
+                                <tr>
+                                    <td class="text-end">TOTAL</td>
+                                    <td class="text-end" id="totalDebit"></td>
+                                    <td class="text-end" id="totalCredit"></td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -169,37 +170,37 @@
                     </div>
                 </div>
 
-                <br />
+                <br/>
                 <div class="form-group">
                     <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
                         Add Entry
                     </button>
                     <table class="table">
                         <thead>
-                            <tr>
-                                <th class="w-50">Account No.</th>
-                                <th class="w-25">
-                                    Debit
-                                </th>
-                                <th class="w-25">
-                                    Credit
-                                </th>
-                                <th></th>
-                            </tr>
+                        <tr>
+                            <th class="w-50">Account No.</th>
+                            <th class="w-25">
+                                Debit
+                            </th>
+                            <th class="w-25">
+                                Credit
+                            </th>
+                            <th></th>
+                        </tr>
                         </thead>
                         <tbody id="accountingEntriesBody">
                         </tbody>
                         <tbody>
-                            <tr>
-                                <td class="text-end">TOTAL:</td>
-                                <td class="totalDebit">0.0000</td>
-                                <td class="totalCredit">0.0000</td>
-                                <td></td>
-                            </tr>
+                        <tr>
+                            <td class="text-end">TOTAL:</td>
+                            <td class="totalDebit">0.0000</td>
+                            <td class="totalCredit">0.0000</td>
+                            <td></td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
-                <br />
+                <br/>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
                         <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Create</button>

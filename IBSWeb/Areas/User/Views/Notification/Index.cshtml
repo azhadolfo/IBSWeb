@@ -28,14 +28,16 @@
                     @if (!item.IsRead)
                     {
                         <form asp-action="MarkAsRead" method="post" class="d-inline">
-                            <input type="hidden" name="userNotificationId" value="@item.UserNotificationId" />
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="userNotificationId" value="@item.UserNotificationId"/>
                             <button type="submit" class="btn btn-sm btn-outline-primary">Mark as Read</button>
                         </form>
                     }
                     @if (item is { IsArchived: false, IsRead: true })
                     {
                         <form asp-action="Archive" method="post" class="d-inline">
-                            <input type="hidden" name="userNotificationId" value="@item.UserNotificationId" />
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="userNotificationId" value="@item.UserNotificationId"/>
                             <button type="submit" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-trash-fill"></i>
                             </button>
@@ -63,7 +65,8 @@
 
             <div id="responseButtons" class="modal-footer">
                 <form asp-action="RespondToNotification" method="post">
-                    <input type="hidden" id="modalNotificationId" name="userNotificationId" />
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="modalNotificationId" name="userNotificationId"/>
                     <button type="submit" name="response" value="yes" class="btn btn-success">Yes</button>
                     <button type="submit" name="response" value="no" class="btn btn-danger">No</button>
                 </form>

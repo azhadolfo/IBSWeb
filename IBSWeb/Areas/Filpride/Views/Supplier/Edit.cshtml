@@ -19,6 +19,7 @@
     </div>
     <div class="card-body p-4">
         <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
             <input asp-for="SupplierId" type="hidden" />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <fieldset class="form-group mb-3">

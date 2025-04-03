@@ -61,6 +61,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilpridePickUpPoint model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
@@ -118,6 +119,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilpridePickUpPoint model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)

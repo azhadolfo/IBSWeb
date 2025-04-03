@@ -42,6 +42,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsRead(Guid userNotificationId)
         {
             await _unitOfWork.Notifications.MarkAsReadAsync(userNotificationId);
@@ -72,6 +73,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Archive(Guid userNotificationId)
         {
             await _unitOfWork.Notifications.ArchiveAsync(userNotificationId);
@@ -79,6 +81,7 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RespondToNotification(Guid userNotificationId, string response)
         {
             if (string.IsNullOrWhiteSpace(response))

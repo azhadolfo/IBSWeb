@@ -20,41 +20,42 @@
     </div>
     <div class="card-body p-4">
         <form method="post" class="row">
-            <input asp-for="CustomerId" hidden />
+            @Html.AntiForgeryToken()
+            <input asp-for="CustomerId" hidden/>
             <div class="border p-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerName" class="form-control border-0 shadow " placeholder="" />
+                    <input asp-for="CustomerName" class="form-control border-0 shadow " placeholder=""/>
                     <label asp-for="CustomerName" class="ms-2"></label>
                     <span asp-validation-for="CustomerName" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerAddress" class="form-control border-0 shadow " placeholder="" />
+                    <input asp-for="CustomerAddress" class="form-control border-0 shadow " placeholder=""/>
                     <label asp-for="CustomerAddress" class="ms-2"></label>
                     <span asp-validation-for="CustomerAddress" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="ZipCode" class="form-control border-0 shadow " placeholder="" maxlength="4" />
+                    <input asp-for="ZipCode" class="form-control border-0 shadow " placeholder="" maxlength="4"/>
                     <label asp-for="ZipCode" class="ms-2"></label>
                     <span asp-validation-for="ZipCode" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="CustomerTin" class="form-control border-0 shadow formattedTinNumberInput" placeholder="" maxlength="17" />
+                    <input asp-for="CustomerTin" class="form-control border-0 shadow formattedTinNumberInput" placeholder="" maxlength="17"/>
                     <label asp-for="CustomerTin" class="ms-2"></label>
                     <span asp-validation-for="CustomerTin" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="CreditLimit" class="form-control border-0 shadow" placeholder="" />
+                    <input asp-for="CreditLimit" class="form-control border-0 shadow" placeholder=""/>
                     <label asp-for="CreditLimit" class="ms-2">Credit Limit</label>
                     <span asp-validation-for="CreditLimit" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="CreditLimitAsOfToday" class="form-control border-0 shadow" placeholder="" />
+                    <input asp-for="CreditLimitAsOfToday" class="form-control border-0 shadow" placeholder=""/>
                     <label asp-for="CreditLimitAsOfToday" class="ms-2">Available Credit Limit As of Today<span class="required">*</span></label>
                     <span asp-validation-for="CreditLimitAsOfToday" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="BusinessStyle" class="form-control border-0 shadow " placeholder="" />
+                    <input asp-for="BusinessStyle" class="form-control border-0 shadow " placeholder=""/>
                     <label asp-for="BusinessStyle" class="ms-2"></label>
                     <span asp-validation-for="BusinessStyle" class="text-danger"></span>
                 </div>
@@ -70,7 +71,7 @@
                     <span asp-validation-for="ClusterCode" class="text-danger"></span>
                 </div>
                 <div class="form-group py-2 col-12">
-                    <input asp-for="CustomerType" hidden />
+                    <input asp-for="CustomerType" hidden/>
                     <label class="control-label">Customer Type</label>
                     <select asp-for="CustomerType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" disabled>
                         <option value="" selected disabled>Select customer type</option>
@@ -116,7 +117,7 @@
                     </select>
                     <span asp-validation-for="RetentionRate" class="text-danger"></span>
                 </div>
-                
+
                 <div class="form-group py-2 col-12">
                     <label class="control-label">Vat Type</label>
                     <select asp-for="VatType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
@@ -129,12 +130,12 @@
                 </div>
                 <div class="form-check pt-2">
                     <label class="form-check-label">
-                        <input class="form-check-input" asp-for="WithHoldingVat" /> @Html.DisplayNameFor(model => model.WithHoldingVat)
+                        <input class="form-check-input" asp-for="WithHoldingVat"/> @Html.DisplayNameFor(model => model.WithHoldingVat)
                     </label>
                 </div>
                 <div class="form-check pb-2">
                     <label class="form-check-label">
-                        <input class="form-check-input" asp-for="WithHoldingTax" /> @Html.DisplayNameFor(model => model.WithHoldingTax)
+                        <input class="form-check-input" asp-for="WithHoldingTax"/> @Html.DisplayNameFor(model => model.WithHoldingTax)
                     </label>
                 </div>
                 <div class="row pt-2">

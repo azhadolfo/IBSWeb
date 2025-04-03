@@ -32,6 +32,7 @@ Balance:        <span id="balance"></span>
            </pre>
         </div>
         <form asp-action="SingleCollectionCreateForSales" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
             <div class="col-md-4">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-group mb-3">
@@ -52,16 +53,16 @@ Balance:        <span id="balance"></span>
 
                 <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label">Transaction Date<span class="required">*</span></label>
-                    <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+                    <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")"/>
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
-                    <input asp-for="ReferenceNo" id="floatingInput" type="text" class="form-control" placeholder="Reference #" />
+                    <input asp-for="ReferenceNo" id="floatingInput" type="text" class="form-control" placeholder="Reference #"/>
                     <label for="floatingInput" class="control-label">Reference# (Manual CR#)<span class="required">*</span></label>
                     <span asp-validation-for="ReferenceNo" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
-                    <input asp-for="Remarks" id="floatingInput" type="text" class="form-control" placeholder="Optional" />
+                    <input asp-for="Remarks" id="floatingInput" type="text" class="form-control" placeholder="Optional"/>
                     <label for="floatingInput" class="control-label">Remarks</label>
                     <span asp-validation-for="Remarks" class="text-danger"></span>
                 </div>
@@ -69,52 +70,52 @@ Balance:        <span id="balance"></span>
             </div>
             <table class="table-bordered w-100">
                 <tbody>
-                    <tr>
-                        <td colspan="6" style="padding-left:20px;">FORM OF PAYMENT<span class="required">*</span></td>
-                    </tr>
-                    <tr>
-                        <td class="text-center" style="width:25%"></td>
-                        <td class="text-center" style="width:15%">DATE</td>
-                        <td class="text-center" style="width:15%">CHK #</td>
-                        <td class="text-center" style="width:15%">BANK</td>
-                        <td class="text-center" style="width:15%">BRANCH</td>
-                        <td class="text-center" style="width:15%">AMOUNT</td>
-                    </tr>
+                <tr>
+                    <td colspan="6" style="padding-left:20px;">FORM OF PAYMENT<span class="required">*</span></td>
+                </tr>
+                <tr>
+                    <td class="text-center" style="width:25%"></td>
+                    <td class="text-center" style="width:15%">DATE</td>
+                    <td class="text-center" style="width:15%">CHK #</td>
+                    <td class="text-center" style="width:15%">BANK</td>
+                    <td class="text-center" style="width:15%">BRANCH</td>
+                    <td class="text-center" style="width:15%">AMOUNT</td>
+                </tr>
 
-                    <tr>
-                        <td style="padding-left:20px;">Cash</td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input asp-for="CashAmount" style="border:none" class="form-control moneyInput" /></td>
-                    </tr>
+                <tr>
+                    <td style="padding-left:20px;">Cash</td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input asp-for="CashAmount" style="border:none" class="form-control moneyInput"/></td>
+                </tr>
 
-                    <tr>
-                        <td style="padding-left:20px;">Check</td>
-                        <td><input asp-for="CheckDate" type="date" style="border:none" class="form-control" /></td>
-                        <td><input asp-for="CheckNo" style="border:none" class="form-control" /></td>
-                        <td><input asp-for="CheckBank" style="border:none" class="form-control" /></td>
-                        <td><input asp-for="CheckBranch" style="border:none" class="form-control" /></td>
-                        <td><input asp-for="CheckAmount" style="border:none" class="form-control moneyInput" /></td>
-                    </tr>
+                <tr>
+                    <td style="padding-left:20px;">Check</td>
+                    <td><input asp-for="CheckDate" type="date" style="border:none" class="form-control"/></td>
+                    <td><input asp-for="CheckNo" style="border:none" class="form-control"/></td>
+                    <td><input asp-for="CheckBank" style="border:none" class="form-control"/></td>
+                    <td><input asp-for="CheckBranch" style="border:none" class="form-control"/></td>
+                    <td><input asp-for="CheckAmount" style="border:none" class="form-control moneyInput"/></td>
+                </tr>
 
-                    <tr>
-                        <td style="padding-left:20px;">EWT</td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input asp-for="EWT" style="border:none" class="form-control moneyInput" /></td>
-                    </tr>
-                    <tr>
-                        <td style="padding-left:20px;">WVAT</td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input asp-for="WVAT" style="border:none" class="form-control moneyInput" /></td>
-                    </tr>
+                <tr>
+                    <td style="padding-left:20px;">EWT</td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input asp-for="EWT" style="border:none" class="form-control moneyInput"/></td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">WVAT</td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input style="border:none" class="form-control" disabled/></td>
+                    <td><input asp-for="WVAT" style="border:none" class="form-control moneyInput"/></td>
+                </tr>
                 </tbody>
             </table>
 
@@ -131,27 +132,27 @@ Balance:        <span id="balance"></span>
             </div>
 
 
-            <hr />
+            <hr/>
             <div class="form-group">
                 <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
                     Add Entry
                 </button>
                 <table class="table">
                     <thead>
-                        <tr>
-                            <th class="w-100">Account Title</th>
-                            <th class="w-20">
-                                Amount
-                            </th>
-                            <th></th>
-                        </tr>
+                    <tr>
+                        <th class="w-100">Account Title</th>
+                        <th class="w-20">
+                            Amount
+                        </th>
+                        <th></th>
+                    </tr>
                     </thead>
                     <tbody id="accountingEntriesBody">
                     </tbody>
                 </table>
             </div>
 
-            <br />
+            <br/>
             <div class="row pt-2">
                 <div class="col-6 col-md-3">
                     <button type="submit" class="btn btn-primary form-control">Create</button>
