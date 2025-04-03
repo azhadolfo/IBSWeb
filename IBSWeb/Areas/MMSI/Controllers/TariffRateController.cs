@@ -52,25 +52,52 @@ namespace IBSWeb.Areas.MMSI
             {
                 if (ModelState.IsValid)
                 {
-                    var user = await _userManager.GetUserAsync(User);
-                    model.CreatedBy = user?.UserName;
-                    model.CreatedDate = DateTime.Now;
+                    if (model.Dispatch <= 0)
+                    {
+                        throw new Exception("Dispatch value cannot be zero.");
+                    }
 
-                    await _dbContext.MMSITariffRates.AddAsync(model, cancellationToken);
+                    var user = await _userManager.GetUserAsync(User);
+                    var existingModel = await _dbContext.MMSITariffRates
+                        .Where(t => t.AsOfDate == model.AsOfDate && t.CustomerId == model.CustomerId && t.TerminalId == model.TerminalId && t.ActivityServiceId == model.ActivityServiceId)
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    if (existingModel != null)
+                    {
+                        existingModel.Dispatch = model.Dispatch;
+                        existingModel.BAF = model.BAF;
+                        existingModel.UpdateBy = user?.UserName;
+                        existingModel.UpdateDate = DateTime.Now;
+                        model = existingModel;
+                        model.Terminal = default;
+                        TempData["success"] = "Tariff rate updated successfully.";
+                    }
+                    else
+                    {
+                        model.CreatedBy = user?.UserName;
+                        model.CreatedDate = DateTime.Now;
+                        model.Terminal = default;
+                        await _dbContext.MMSITariffRates.AddAsync(model, cancellationToken);
+                        TempData["success"] = "Tariff rate created successfully.";
+                    }
+
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                     return RedirectToAction(nameof(Index));
                 }
                 else
                 {
-                    TempData["error"] = "The entry is invalid, please try again.";
-
-                    return View(model);
+                    throw new Exception("There is an error with the entry, please try again.");
                 }
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                model = await GetSelectLists(model, cancellationToken);
+                model.Terminal = await _dbContext.MMSITerminals
+                    .Include(t => t.Port)
+                    .Where(t => t.TerminalId == model.TerminalId)
+                    .FirstOrDefaultAsync(cancellationToken);
 
                 return View(model);
             }
@@ -131,10 +158,24 @@ namespace IBSWeb.Areas.MMSI
             model.ActivitiesServices = await _dispatchTicketRepository.GetMMSIActivitiesServicesById(cancellationToken);
             if (model.TerminalId != default)
             {
-                model.Terminals = await _dispatchTicketRepository.GetMMSITerminalsById(model.Terminal.Port.PortId, cancellationToken);
+                var terminal = await _dbContext.MMSITerminals
+                    .Where(t => t.TerminalId == model.TerminalId)
+                    .Include(t => t.Port)
+                    .FirstOrDefaultAsync(cancellationToken);
+                model.Terminal = terminal;
+                model.Terminals = await _dispatchTicketRepository.GetMMSITerminalsById(terminal.PortId, cancellationToken);
             }
 
             return model;
+        }
+
+        [HttpPost]
+        public async Task<bool> CheckIfExisting(DateOnly date, int customerId, int terminalId, int activityServiceId, decimal dispatch, decimal baf, CancellationToken cancellationToken = default)
+        {
+            var model = await _dbContext.MMSITariffRates
+                .Where(t => t.AsOfDate == date && t.CustomerId == customerId && t.TerminalId == terminalId && t.ActivityServiceId == activityServiceId)
+                .FirstOrDefaultAsync(cancellationToken);
+            return (model != null);
         }
     }
 }

@@ -15,7 +15,7 @@
     </div>
 
     <div class="card-body">
-        <form method="post" class="row">
+        <form id="myForm" method="post" class="row">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 
@@ -45,14 +45,22 @@
                 </div>
 
                 <div class="row">
-                    @if (Model.TerminalId != null)
+                    @if (Model.TerminalId != 0)
                     {
                         <div class="form-group col-6 my-2">
                             <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
-                            <select id="PortSelect" asp-items="@Model.Ports" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <select id="PortSelect" asp-items="@Model.Ports" asp-for="@Model.Terminal.Port.PortId" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                                 <option value="">Select Port</option>
                             </select>
                             <span class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group col-6 my-2">
+                            <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
+                            <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                <option value="">Select Terminal</option>
+                            </select>
+                            <span asp-validation-for="TerminalId" class="text-danger"></span>
                         </div>
                     }
                     else
@@ -64,15 +72,15 @@
                             </select>
                             <span class="text-danger"></span>
                         </div>
-                    }
 
-                    <div class="form-group col-6 my-2">
-                        <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
-                        <select id="TerminalSelect" asp-for="TerminalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Terminal</option>
-                        </select>
-                        <span asp-validation-for="TerminalId" class="text-danger"></span>
-                    </div>
+                        <div class="form-group col-6 my-2">
+                            <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
+                            <select id="TerminalSelect" asp-for="TerminalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                <option value="">Select Terminal</option>
+                            </select>
+                            <span asp-validation-for="TerminalId" class="text-danger"></span>
+                        </div>
+                    }
                 </div>
                 
                 <div class="row pb-3">
@@ -91,7 +99,7 @@
             </div>
             <div class="row justify-content-end mt-3">
                 <div class="text-center" style="width: 250px;">
-                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                    <a class="btn btn-primary custom-btn col-12" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</a>
                 </div>
                 <div class="text-center" style="width: 250px;">
                     <a class="btn btn-outline-primary col-12" asp-controller="TariffRate" asp-action="Index">
@@ -104,6 +112,10 @@
 </div>
 
 @section Scripts{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
     <script>
         
         $(document).ready(function () {
@@ -131,7 +143,48 @@
                     }
                 });
             }
+
+            function CheckExistence() {
+                $.ajax({
+                    url: '@Url.Action("CheckIfExisting", "TariffRate")',
+                    type: 'POST',
+                    data: { 
+                        date: $("#AsOfDate").val(), 
+                        customerId: $("#CustomerSelect").val(), 
+                        terminalId: $("#TerminalSelect").val(), 
+                        activityServiceId: $("#ActivityServiceSelect").val()
+                    },
+                    success: function (response) {
+                        console.log(response);
+                        
+                        // if same data exists
+                        if (response){
+                            Swal.fire({
+                                title: "An entry with similar data already exists",
+                                text: "replace the previous data?",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonColor: "#3085d6",
+                                cancelButtonColor: "#d33",
+                                confirmButtonText: "Yes, replace it"
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $("#myForm").submit();
+                                }
+                            });
+                        }
+                        else{
+                            $("#myForm").submit();
+                        }
+                    },
+                    error: function () {
+                        $("#result").text("Error");
+                    }
+                });
+            }
+            
             $("#PortSelect").change(HandlePortChange);
+            $("#submitButton").click(CheckExistence);
             
         });
     
