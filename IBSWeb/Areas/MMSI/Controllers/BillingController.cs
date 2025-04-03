@@ -275,6 +275,7 @@ namespace IBSWeb.Areas.MMSI
                     currentModel.Status = "For Collection";
                     currentModel.VoyageNumber = model.VoyageNumber;
                     currentModel.CustomerId = model.CustomerId;
+                    currentModel.PrincipalId = model.PrincipalId;
                     currentModel.PortId = model.PortId;
                     currentModel.TerminalId = model.TerminalId;
                     currentModel.VesselId = model.VesselId;

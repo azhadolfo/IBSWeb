@@ -96,7 +96,7 @@
                         </label>
                     </div>
                     <div class="form-floating col-3 mb-2">
-                        <input asp-for="Date" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
+                        <input asp-for="Date" type="date" class="form-control border-0 shadow">
                         <label asp-for="Date" for="Date" class="ms-2">Date Created</label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
@@ -153,7 +153,7 @@
 
                     <div id="SelectDiv" class="form-group col-3 my-2 @(Model.PrincipalId.HasValue ? "" : "d-none")">
                         <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
-                        <select asp-for="PrincipalId" asp-items="@Model.CustomerPrincipal" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <select asp-for="PrincipalId" asp-items="@Model.CustomerPrincipal" id="PrincipalSelect" value="@Model.PrincipalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                             <option value="">Select Principal</option>
                         </select>
                         <span asp-validation-for="PrincipalId" class="text-danger"></span>
@@ -298,9 +298,11 @@
                 if ($checkbox.is(":checked")) {
                     fetchPrincipals(customerId);
                     $selectDiv.removeClass("d-none");
+                    $selectDiv.prop("required", true);
                 } else {
                     fillDataOnStartup();
                     $selectDiv.addClass("d-none");
+                    $selectDiv.prop("required", false);
                 }
             }
 
