@@ -181,8 +181,8 @@
                 success: function(result) {
                     console.log(result);
                     if (result){
-                        var deductedAmount = totalAmount / 1.12;
-                        var ewt = totalAmount - deductedAmount;
+                        var deductedAmount = originalAmount / 1.12;
+                        var ewt = originalAmount - deductedAmount;
                         document.getElementById("amountShow").value = deductedAmount.toFixed(2);
                         document.getElementById("amount").value = deductedAmount.toFixed(2);
                         document.getElementById("ewt").value = ewt.toFixed(2);

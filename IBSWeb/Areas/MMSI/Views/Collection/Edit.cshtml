@@ -67,7 +67,7 @@
                                     </select>
                                     <span asp-validation-for="CustomerId" class="text-danger"></span>
                                 </div>
-                                <input type="hidden" id="undeductedAmount">
+                                <input type="hidden" id="undeductedAmount" value="@Model.Amount">
                                 <input type="hidden" asp-for="Amount" value="@Model.Amount" id="amount">
                                 <div class="form-floating col-4">
                                     <input type="number" class="form-control border-0 shadow"  id="amountShow" value="@Model.Amount"  placeholder=" " min="0" disabled>
@@ -183,8 +183,8 @@
                     success: function(result) {
                         console.log(result);
                         if (result){
-                            var deductedAmount = totalAmount / 1.12;
-                            var ewt = totalAmount - deductedAmount;
+                            var deductedAmount = originalAmount / 1.12;
+                            var ewt = originalAmount - deductedAmount;
                             document.getElementById("amountShow").value = deductedAmount.toFixed(2);
                             document.getElementById("amount").value = deductedAmount.toFixed(2);
                             document.getElementById("ewt").value = ewt.toFixed(2);
