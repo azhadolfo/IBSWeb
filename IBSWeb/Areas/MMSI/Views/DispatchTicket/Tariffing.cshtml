@@ -315,7 +315,7 @@
                 $('input[name="BAFNetRevenue"]').val(bafRevenueFormatted);
                 
                 @* Calculate, Parse, Format, and Display Total Billings/ Revenue *@
-                var totalBilling = dispatchBilling + bafRate;
+                var totalBilling = dispatchBilling + bafBilling;
                 var formattedTotalBilling = totalBilling.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 $('input[name="TotalBilling"]').val(formattedTotalBilling);
 
