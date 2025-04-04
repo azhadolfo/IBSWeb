@@ -188,15 +188,15 @@
                                     <li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Preview</a></li>
                                     <li><a class="dropdown-item" href="#" onclick="confirmCancel(${data})">Cancel</a></li>
                                     <li><a class="dropdown-item" href="#" onclick="markAsDelivered(${data})">Mark As Delivered</a></li>`;
-                                    
-                                if (!row.hasReceivingReport) {
-                                    actions += `<li><a class="dropdown-item" href="#" onclick="recordLiftingDate(${data})">Record Lifting Date</a></li>`;
-                                }
                                 
                             } else {
                                 actions += `
                                     <li><a class="dropdown-item" href="@Url.Action("Preview", "DeliveryReceipt", new { area = "Filpride" })/${data}">Print</a></li>
                                     <li><a class="dropdown-item" onclick="confirmVoid(${data})">Void</a></li>`;
+                            }
+
+                            if (!row.hasReceivingReport) {
+                                actions += `<li><a class="dropdown-item" href="#" onclick="recordLiftingDate(${data})">Record Lifting Date</a></li>`;
                             }
                         }
                         else {
