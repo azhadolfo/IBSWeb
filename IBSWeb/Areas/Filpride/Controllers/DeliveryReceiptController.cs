@@ -909,6 +909,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Status = nameof(DRStatus.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
                     await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
+                    await _unitOfWork.FilprideDeliveryReceipt.UpdatePreviousAppointedSupplierAsync(model);
 
                     #region --Audit Trail Recording
 
