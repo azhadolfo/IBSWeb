@@ -188,7 +188,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     transaction.TotalBalance = totalBalance + transaction.Total;
                     transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
-                    transaction.AverageCost = transaction.TotalBalance / transaction.InventoryBalance;
+                    transaction.AverageCost = transaction.TotalBalance == 0 || transaction.InventoryBalance == 0
+                        ? transaction.Cost
+                        : transaction.TotalBalance / transaction.InventoryBalance;
 
                     // Update running totals
                     averageCost = transaction.AverageCost;
@@ -289,7 +291,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     transaction.TotalBalance = totalBalance + transaction.Total;
                     transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
-                    transaction.AverageCost = transaction.TotalBalance / transaction.InventoryBalance;
+                    transaction.AverageCost = transaction.TotalBalance == 0 || transaction.InventoryBalance == 0
+                        ? transaction.Cost
+                        : transaction.TotalBalance / transaction.InventoryBalance;
 
                     // Update running totals
                     averageCost = transaction.AverageCost;
@@ -409,7 +413,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     {
                         transaction.TotalBalance = totalBalance + transaction.Total;
                         transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
-                        transaction.AverageCost = transaction.TotalBalance / transaction.InventoryBalance;
+                        transaction.AverageCost = transaction.TotalBalance == 0 || transaction.InventoryBalance == 0
+                            ? transaction.Cost
+                            : transaction.TotalBalance / transaction.InventoryBalance;
 
                         averageCost = transaction.AverageCost;
                         totalBalance = transaction.TotalBalance;
@@ -483,7 +489,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     transaction.TotalBalance = totalBalance + transaction.Total;
                     transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
-                    transaction.AverageCost = transaction.TotalBalance / transaction.InventoryBalance;
+                    transaction.AverageCost = transaction.TotalBalance == 0 || transaction.InventoryBalance == 0
+                        ? transaction.Cost
+                        : transaction.TotalBalance / transaction.InventoryBalance;
 
                     averageCost = transaction.AverageCost;
                     totalBalance = transaction.TotalBalance;
