@@ -148,20 +148,20 @@
                 @if (!string.IsNullOrEmpty(Model.UploadName))
                 {
                     <div class="text-center" style="width: 250px">
-                        <button class="btn btn-primary custom-btn col-12 align-content-center" type="button" id="viewUpload"><i class="bi bi-eye"></i> Current Image</button>
+                        <button class="btn btn-primary custom-btn col-12 align-content-center my-1" type="button" id="viewUpload"><i class="bi bi-eye"></i> Current Image</button>
                     </div>
-                    <div class="text-center me-3" style="width: 250px">
-                        <a class="btn btn-outline-primary col-12 align-content-center selected-options" type="button" id="deleteImage" data-image-id="@Model.DispatchTicketId">
+                    <div class="text-center" style="width: 250px">
+                        <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" id="deleteImage" data-image-id="@Model.DispatchTicketId">
                             <i class="bi bi-trash-fill"></i> Delete Image
                         </a>
                     </div>
                 }
 
                 <div class="text-center" style="width: 150px">
-                    <button class="btn btn-primary custom-btn col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Save</button>
+                    <button class="btn btn-primary custom-btn col-12 align-content-center selected-options my-1" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Save</button>
                 </div>
                 <div class="text-center" style="width: 150px">
-                    <a class="btn btn-outline-primary col-12 align-content-center selected-options" type="button" asp-controller="ServiceRequest" asp-action="Index">
+                    <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" asp-controller="ServiceRequest" asp-action="Index">
                         <i class="bi bi-arrow-90deg-left"></i> Go Back
                     </a>
                 </div>
