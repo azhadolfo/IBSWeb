@@ -23,179 +23,129 @@
         width: 100% !important;
     }
 
-    /* Custom styles for professional look */
-    .table th {
-        font-weight: 600;
-        color: #374151;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.025em;
-    }
-
-    .table tbody tr {
-        transition: all 0.2s;
-    }
-
-        .table tbody tr:hover {
-            background-color: rgba(59, 130, 246, 0.05);
-        }
-
-    .table-loading {
-        position: relative;
-        opacity: 0.6;
-    }
-
-    .badge {
-        font-weight: 500;
-        padding: 0.35em 0.8em;
-        font-size: 0.75rem;
-    }
-
-    .actions-dropdown .dropdown-item {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-    }
-
-        .actions-dropdown .dropdown-item:hover {
-            background-color: #f3f4f6;
-        }
-
-    table {
-        font-size: 10px !important;
-        table-layout: auto !important;
-    }
-
-        table td {
-            font-size: 12px !important;
-            padding-left: 10px !important;
-        }
-
     .card-body {
         margin: 5px !important;
         padding: 5px !important;
     }
 </style>
 
-<html class="bg-light">
-    <body class="bg-light">
-        <div class="card text-dark bg-white  m-4">
+<div class="card text-dark bg-white  m-4">
 
-            <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-                <div class="col-12 text-center">
-                    <h2 class="text-white py-2"><i class="bi bi-cash-coin"></i> EDIT TARIFF</h2>
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center">
+            <h2 class="text-white py-2"><i class="bi bi-cash-coin"></i> EDIT TARIFF</h2>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="p-2">
+            <div class="row">
+                <div class="col-8 d-flex flex-column justify-content-end">
+                    <div class="row d-flex align-content-center text-center mb-1">   
+                        <div class="col">
+                            <div class="col-12 text-start small-text">
+                                <span><b>Create Date:</b> @Model.CreateDate</span>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="col-12 text-start small-text">
+                                <span><b>Dispatch Ticket#:</b> @Model.DispatchNumber</span>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="col-12 text-start small-text">
+                                <span><b>Total Hours:</b> @Model.TotalHours?.ToString("N2")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="row mb-2 justify-content-end">
+                        <div class="col-12 d-flex justify-content-end pe-3">
+                            <h2><strong>DISPATCH TICKET DETAILS</strong></h2>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <div class="card-body">
-                <div class="p-2">
-                    <div class="row">
-                        <div class="col-8 d-flex flex-column justify-content-end">
-                            <div class="row d-flex align-content-center text-center mb-1">   
-                                <div class="col">
-                                    <div class="col-12 text-start small-text">
-                                        <span><b>Create Date:</b> @Model.CreateDate</span>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="col-12 text-start small-text">
-                                        <span><b>Dispatch Ticket#:</b> @Model.DispatchNumber</span>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="col-12 text-start small-text">
-                                        <span><b>Total Hours:</b> @Model.TotalHours?.ToString("N2")</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="row mb-2 justify-content-end">
-                                <div class="col-12 d-flex justify-content-end pe-3">
-                                    <h2><strong>DISPATCH TICKET DETAILS</strong></h2>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row border">
-                        <div class="col-3 text-start p-2 small-text border">
-                            <b>Voyage:</b> <br /> @Model.VoyageNumber
-                        </div>
-                        <div class="col-3 text-start p-2 small-text border">
-                            <b>Activity/Service Type:</b> @Model.ActivityService.ActivityServiceName
-                        </div>
-                        <div class="col-3 text-start p-2 small-text border">
-                            <b>Date / Time Start:</b> @Model.DateLeft @Model.TimeLeft
-                        </div>
-                        <div class="col-3 text-start p-2 small-text border">
-                            <b>Date / Time End:</b> @Model.DateArrived @Model.TimeArrived
-                        </div>
-                    </div>
-                    
-                    <div class="row border">
-                        <div class="col-3 text-start p-2 small-text border">
-                            <b>Tug Master:</b> @Model.TugMaster?.TugMasterName
-                        </div>
-                        <div class="col-3 text-start p-2 small-text border">
-                            <b>Tugboat:</b> @Model.Tugboat?.TugboatName
-                        </div>
-                        <div class="col-3 text-start p-2 small-text border">
-                            <b>Vessel:</b> @Model.Vessel.VesselName
-                        </div>
-                        <div class="col-3 text-start p-2 small-text border">
-                            <b>Port-Terminal:</b> @Model.Terminal?.Port?.PortName-@Model.Terminal?.TerminalName
-                        </div>
-                    </div>
-                    
-                    <div class="row small-text border">
-                        <div class="col-12 p-2 text-start small-text border">
-                            <b>Remarks:</b> @Model.Remarks
-                        </div>
-                    </div>
-                    
+            <div class="row border">
+                <div class="col-3 text-start p-2 small-text border">
+                    <b>Voyage:</b> <br /> @Model.VoyageNumber
+                </div>
+                <div class="col-3 text-start p-2 small-text border">
+                    <b>Activity/Service Type:</b> @Model.ActivityService.ActivityServiceName
+                </div>
+                <div class="col-3 text-start p-2 small-text border">
+                    <b>Date / Time Start:</b> @Model.DateLeft @Model.TimeLeft
+                </div>
+                <div class="col-3 text-start p-2 small-text border">
+                    <b>Date / Time End:</b> @Model.DateArrived @Model.TimeArrived
                 </div>
             </div>
-            <div class="card-body">
-                <form id="myForm" method="post" class="row">
-                    <div class="border-2 px-3">
-                        <div asp-validation-summary="ModelOnly"></div>
+            
+            <div class="row border">
+                <div class="col-3 text-start p-2 small-text border">
+                    <b>Tug Master:</b> @Model.TugMaster?.TugMasterName
+                </div>
+                <div class="col-3 text-start p-2 small-text border">
+                    <b>Tugboat:</b> @Model.Tugboat?.TugboatName
+                </div>
+                <div class="col-3 text-start p-2 small-text border">
+                    <b>Vessel:</b> @Model.Vessel.VesselName
+                </div>
+                <div class="col-3 text-start p-2 small-text border">
+                    <b>Port-Terminal:</b> @Model.Terminal?.Port?.PortName-@Model.Terminal?.TerminalName
+                </div>
+            </div>
+            
+            <div class="row small-text border">
+                <div class="col-12 p-2 text-start small-text border">
+                    <b>Remarks:</b> @Model.Remarks
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <div class="card-body">
+        <form id="myForm" method="post" class="row">
+            <div class="border-2 px-3">
+                <div asp-validation-summary="ModelOnly"></div>
 
-                        <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" type="text" class="form-control border-0 shadow" id="COSNumber" style="display:none">
+                <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" id="DispatchTicketId" type="hidden">
 
-                        <div class="row">
-                            <!-- Left Section -->
-                            <div class="col-6 align-content-center">
-                                <div class="row mt-3">
-                                    <div class="col-6 text-start">
-                                        <b><i>Dispatch charge Type</i></b>
-                                    </div>
-                                    <div class="col-6 text-start">
-                                        <b><i>Total Hours:</i></b> @(Model.TotalHours?.ToString("N2"))
-                                    </div>
-                                </div>
-                                <div class="row justify-content-end">
-                                    <div class="col text-start">
-                                        <label class="mx-1">
-                                            <input name="chargeType" type="radio" value="Per hour" required @(Model.DispatchChargeType == null ? "checked" : "") @(Model.DispatchChargeType == "Per hour" ? "checked" : "") /> Per Hour
-                                        </label>
-                                        <label class="mx-1">
-                                            <input name="chargeType" type="radio" value="Per move" required @(Model.DispatchChargeType == "Per move" ? "checked" : "") /> Per Move
-                                        </label>
-                                    </div>
-                                </div>
+                <div class="row">
+                    <!-- Left Section -->
+                    <div class="col-6 align-content-center">
+                        <div class="row mt-3">
+                            <div class="col-6 text-start">
+                                <b><i>Dispatch charge Type</i></b>
                             </div>
+                            <div class="col-6 text-start">
+                                <b><i>Total Hours:</i></b> @(Model.TotalHours?.ToString("N2"))
+                            </div>
+                        </div>
+                        <div class="row justify-content-end">
+                            <div class="col text-start">
+                                <label class="mx-1">
+                                    <input name="chargeType" type="radio" value="Per hour" required @(Model.DispatchChargeType == null ? "checked" : "") @(Model.DispatchChargeType == "Per hour" ? "checked" : "") /> Per Hour
+                                </label>
+                                <label class="mx-1">
+                                    <input name="chargeType" type="radio" value="Per move" required @(Model.DispatchChargeType == "Per move" ? "checked" : "") /> Per Move
+                                </label>
+                            </div>
+                        </div>
+                    </div>
 
-                            <!-- Right Section -->
-                            <div class="col-6 align-content-center">
+                    <!-- Right Section -->
+                    <div class="col-6 align-content-center">
+                        <div class="row">
+                            <div class="col-6 mt-3 text-start">
                                 <div class="row">
-                                    <div class="col-6 mt-3 text-start">
+                                    <div class="col-12">
                                         <b><i>BAF charge Type</i></b>
                                     </div>
-                                    <div class="col-6 text-end pe-3">
-                                        <h2 class="mb-0"><strong>TARIFF DETAILS</strong></h2>
-                                    </div>
                                 </div>
-                                <div class="row justify-content-end">
+                                <div class="row">
                                     <div class="col text-start">
                                         <label class="mx-1">
                                             <input name="chargeType2" type="radio" value="Per hour" required @(Model.BAFChargeType == null ? "checked" : "") @(Model.BAFChargeType == "Per hour" ? "checked" : "") /> Per Hour
@@ -206,86 +156,97 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="row pt-1">
-                            <div class="form-floating col-3 mb-3">
-                                <input asp-for="DispatchRate" type="number" class="form-control border-0 shadow" id="DispatchRate" placeholder=" " min="0" required>
-                                <label asp-for="DispatchRate" for="DispatchRate" class="ms-2">Dispatch Rate<span class="required text-danger">*</span></label>
-                                <span asp-validation-for="DispatchRate" class="text-danger"></span>
-                            </div>
-                            <div class="form-floating col-3 mb-3">
-                                <input asp-for="DispatchDiscount" type="number" class="form-control border-0 shadow" id="DispatchDiscount" placeholder=" " min="0" max="100" required>
-                                <label asp-for="DispatchDiscount" for="DispatchDiscount" class="ms-2">Dispatch Discount(%)</label>
-                                <span asp-validation-for="DispatchDiscount" class="text-danger"></span>
-                            </div>
-                            <div class="form-floating col-3 mb-3">
-                                <input asp-for="BAFRate" type="number" class="form-control border-0 shadow" id="BAFRate" placeholder=" " min="0" required>
-                                <label asp-for="BAFRate" for="BAFRate" class="ms-2">BAF Rate<span class="required text-danger">*</span></label>
-                                <span asp-validation-for="BAFRate" class="text-danger"></span>
-                            </div>
-                            <div class="form-floating col-3 mb-3">
-                                <input asp-for="BAFDiscount" type="number" class="form-control border-0 shadow" id="BAFDiscount" placeholder=" " min="0" max="100" required>
-                                <label asp-for="BAFDiscount" for="BAFDiscount" class="ms-2">BAF Discount(%)</label>
-                                <span asp-validation-for="BAFDiscount" class="text-danger"></span>
-                            </div>
-                        </div>
-                        <div class="row pt-1">
-                            <div class="form-floating col-3 mb-3">
-                                <input asp-for="DispatchBillingAmount" class="form-control border-0 shadow" placeholder="" id="DispatchBillingAmount" readonly />
-                                <label asp-for="DispatchBillingAmount" for="DispatchBillingAmount" class="ms-2">Dispatch Billing</label>
-                                <span asp-validation-for="DispatchBillingAmount" class="text-danger"></span>
-                            </div>
-                            <div class="form-floating col-3 mb-3">
-                                <input asp-for="DispatchNetRevenue" class="form-control border-0 shadow" placeholder="" id="DispatchNetRevenue" readonly />
-                                <label asp-for="DispatchNetRevenue" for="DispatchNetRevenue" class="ms-2">Dispatch Net Revenue</label>
-                                <span asp-validation-for="DispatchNetRevenue" class="text-danger"></span>
-                            </div>
-                            <div class="form-floating col-3 mb-3">
-                                <input asp-for="BAFBillingAmount" class="form-control border-0 shadow" placeholder="" id="BAFBillingAmount" readonly />
-                                <label asp-for="BAFBillingAmount" for="BAFBillingAmount" class="ms-2">BAF Billing</label>
-                                <span asp-validation-for="BAFBillingAmount" class="text-danger"></span>
-                            </div>
-                            <div class="form-floating col-3 mb-3">
-                                <input asp-for="BAFNetRevenue" class="form-control border-0 shadow" placeholder="" id="BAFNetRevenue" readonly />
-                                <label asp-for="BAFNetRevenue" for="BAFNetRevenue" class="ms-2">BAF Net Revenue</label>
-                                <span asp-validation-for="BAFNetRevenue" class="text-danger"></span>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <hr />
-                        </div>
-                        
-                        <div class="row mt-2 pt-2">
-                            <div class="form-floating col-3 mb-3">
-                                <input asp-for="TotalBilling" class="form-control border-0 shadow" placeholder="" id="TotalBilling" readonly />
-                                <label asp-for="TotalBilling" for="TotalBilling" class="ms-2">Total Billing</label>
-                                <span asp-validation-for="TotalBilling" class="text-danger"></span>
-                            </div>
-
-                            <div class="form-floating col-3 mb-3">
-                                <input asp-for="TotalNetRevenue" class="form-control border-0 shadow" placeholder="" id="TotalNetRevenue" readonly />
-                                <label asp-for="TotalNetRevenue" for="TotalNetRevenue" class="ms-2">Total Net Revenue</label>
-                                <span asp-validation-for="TotalNetRevenue" class="text-danger"></span>
-                            </div>
-
-                            <div class="row col-6 justify-content-end mt-4 mb-2">
-                                <div class="text-center" style="width: 250px;">
-                                    <button class="btn btn-primary col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
-                                </div>
-                                <div class="text-center" style="width: 250px;">
-                                    <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index">
-                                        <i class="bi bi-arrow-90deg-left"></i> Go Back
-                                    </a>
+                            <div class="col-6 text-start">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
+                                        <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                            <option value="">Select Customer</option>
+                                        </select>
+                                        <span asp-validation-for="CustomerId" class="text-danger"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </form>
+                </div>
+
+                <div class="row pt-1">
+                    <div class="form-floating col-3 mb-3">
+                        <input asp-for="DispatchRate" type="number" class="form-control border-0 shadow" id="DispatchRate" placeholder=" " min="0" required>
+                        <label asp-for="DispatchRate" for="DispatchRate" class="ms-2">Dispatch Rate<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="DispatchRate" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3 mb-3">
+                        <input asp-for="DispatchDiscount" type="number" class="form-control border-0 shadow" id="DispatchDiscount" placeholder=" " min="0" max="100" required>
+                        <label asp-for="DispatchDiscount" for="DispatchDiscount" class="ms-2">Dispatch Discount(%)</label>
+                        <span asp-validation-for="DispatchDiscount" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3 mb-3">
+                        <input asp-for="BAFRate" type="number" class="form-control border-0 shadow" id="BAFRate" placeholder=" " min="0" required>
+                        <label asp-for="BAFRate" for="BAFRate" class="ms-2">BAF Rate<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="BAFRate" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3 mb-3">
+                        <input asp-for="BAFDiscount" type="number" class="form-control border-0 shadow" id="BAFDiscount" placeholder=" " min="0" max="100" required>
+                        <label asp-for="BAFDiscount" for="BAFDiscount" class="ms-2">BAF Discount(%)</label>
+                        <span asp-validation-for="BAFDiscount" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row pt-1">
+                    <div class="form-floating col-3 mb-3">
+                        <input asp-for="DispatchBillingAmount" class="form-control border-0 shadow" placeholder="" id="DispatchBillingAmount" readonly />
+                        <label asp-for="DispatchBillingAmount" for="DispatchBillingAmount" class="ms-2">Dispatch Billing</label>
+                        <span asp-validation-for="DispatchBillingAmount" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3 mb-3">
+                        <input asp-for="DispatchNetRevenue" class="form-control border-0 shadow" placeholder="" id="DispatchNetRevenue" readonly />
+                        <label asp-for="DispatchNetRevenue" for="DispatchNetRevenue" class="ms-2">Dispatch Net Revenue</label>
+                        <span asp-validation-for="DispatchNetRevenue" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3 mb-3">
+                        <input asp-for="BAFBillingAmount" class="form-control border-0 shadow" placeholder="" id="BAFBillingAmount" readonly />
+                        <label asp-for="BAFBillingAmount" for="BAFBillingAmount" class="ms-2">BAF Billing</label>
+                        <span asp-validation-for="BAFBillingAmount" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3 mb-3">
+                        <input asp-for="BAFNetRevenue" class="form-control border-0 shadow" placeholder="" id="BAFNetRevenue" readonly />
+                        <label asp-for="BAFNetRevenue" for="BAFNetRevenue" class="ms-2">BAF Net Revenue</label>
+                        <span asp-validation-for="BAFNetRevenue" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <hr />
+                </div>
+                
+                <div class="row mt-2 pt-2">
+                    <div class="form-floating col-3 mb-3">
+                        <input asp-for="TotalBilling" class="form-control border-0 shadow" placeholder="" id="TotalBilling" readonly />
+                        <label asp-for="TotalBilling" for="TotalBilling" class="ms-2">Total Billing</label>
+                        <span asp-validation-for="TotalBilling" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating col-3 mb-3">
+                        <input asp-for="TotalNetRevenue" class="form-control border-0 shadow" placeholder="" id="TotalNetRevenue" readonly />
+                        <label asp-for="TotalNetRevenue" for="TotalNetRevenue" class="ms-2">Total Net Revenue</label>
+                        <span asp-validation-for="TotalNetRevenue" class="text-danger"></span>
+                    </div>
+
+                    <div class="row col-6 justify-content-end mt-4 mb-2">
+                        <div class="text-center" style="width: 250px;">
+                            <button class="btn btn-primary col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                        </div>
+                        <div class="text-center" style="width: 250px;">
+                            <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index">
+                                <i class="bi bi-arrow-90deg-left"></i> Go Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </body>
-</html>
+        </form>
+    </div>
+</div>
 
 @section Scripts {
 
@@ -357,6 +318,45 @@
                 $('input[name="TotalNetRevenue"]').val(formattedTotalRevenue);
             }
 
+            function CustomerChange() {
+                let customerId = $("#CustomerId").val();
+                let dispatchTicketId = $("#DispatchTicketId").val();
+
+                $.ajax({
+                    url: '/MMSI/DispatchTicket/CheckForTariffRate/',
+                    type: 'POST',
+                    data: { customerId : customerId, dispatchTicketId : dispatchTicketId },
+                    success: function(result) {
+                        console.log(result);
+                        if (result.exists){
+                            $("#DispatchRate").val(result.dispatch);
+                            $("#BAFRate").val(result.baf);
+
+                            Swal.fire({
+                                position: "center",
+                                icon: "success",
+                                title: "Rate applied:",
+                                html: `<strong>Dispatch:</strong> ₱${result.dispatch}<br><strong>BAF:</strong> ₱${result.baf}`,
+                                showConfirmButton: false,
+                                timer: 3000
+                            });
+                            ValueChange();
+                            
+                        }
+                        else
+                        {
+                            $("#DispatchRate").val(null);
+                            $("#BAFRate").val(null);
+                            ValueChange();
+                        }
+
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+
             $('input[name="DispatchRate"]').on('input', function () 
             { ValueChange(); });
 
@@ -368,6 +368,9 @@
 
             $('input[name="BAFDiscount"]').on('input', function () 
             { ValueChange(); });
+
+            $("#CustomerId").on('change', function ()
+            { CustomerChange(); });
 
             $(document).on('change', 'input[name="chargeType"]', ValueChange);
             $(document).on('change', 'input[name="chargeType2"]', ValueChange);

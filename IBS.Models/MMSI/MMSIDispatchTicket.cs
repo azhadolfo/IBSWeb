@@ -121,6 +121,10 @@ namespace IBS.Models.MMSI
 
         #region ---Columns with Table relations---
 
+        public int? CustomerId { get; set; }
+        [ForeignKey(nameof(CustomerId))]
+        public MMSICustomer? Customer { get; set; }
+
         public int TugBoatId { get; set; }
         [ForeignKey(nameof(TugBoatId))]
         public MMSITugboat? Tugboat { get; set; } //carries the columns of one record
@@ -162,6 +166,9 @@ namespace IBS.Models.MMSI
 
         [NotMapped]
         public List<SelectListItem>? ActivitiesServices { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Customers { get; set; }
 
         #endregion ---Select Lists---
 

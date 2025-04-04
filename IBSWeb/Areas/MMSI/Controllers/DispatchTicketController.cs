@@ -181,6 +181,8 @@ namespace IBSWeb.Areas.MMSI
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync(cancellationToken);
 
+            model.Customers = await _dispatchRepo.GetMMSICustomersById(cancellationToken);
+
             return View(model);
         }
 
@@ -192,6 +194,7 @@ namespace IBSWeb.Areas.MMSI
                 var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
 
                 currentModel.Status = "Tariff Pending";
+                currentModel.CustomerId = model.CustomerId;
                 currentModel.DispatchRate = model.DispatchRate;
                 currentModel.DispatchBillingAmount = model.DispatchBillingAmount;
                 currentModel.DispatchDiscount = model.DispatchDiscount;
@@ -255,6 +258,8 @@ namespace IBSWeb.Areas.MMSI
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync(cancellationToken);
 
+            model.Customers = await _dispatchRepo.GetMMSICustomersById(cancellationToken);
+
             return View(model);
         }
 
@@ -271,6 +276,7 @@ namespace IBSWeb.Areas.MMSI
                 var changes = new List<string>();
 
                 if (currentModel.DispatchRate != model.DispatchRate) { changes.Add($"DispatchRate: {currentModel.DispatchRate} -> {model.DispatchRate}"); }
+                if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                 if (currentModel.DispatchDiscount != model.DispatchDiscount) { changes.Add($"DispatchDiscount: {currentModel.DispatchDiscount} -> {model.DispatchDiscount}"); }
                 if (currentModel.DispatchNetRevenue != model.DispatchNetRevenue) { changes.Add($"DispatchNetRevenue: {currentModel.DispatchNetRevenue} -> {model.DispatchNetRevenue}"); }
                 if (currentModel.BAFRate != model.BAFRate) { changes.Add($"BAFRate: {currentModel.BAFRate} -> {model.BAFRate}"); }
@@ -285,6 +291,7 @@ namespace IBSWeb.Areas.MMSI
                 #endregion -- Changes
 
                 currentModel.Status = "Tariff Pending";
+                currentModel.CustomerId = model.CustomerId;
                 currentModel.DispatchRate = model.DispatchRate;
                 currentModel.DispatchBillingAmount = model.DispatchBillingAmount;
                 currentModel.DispatchDiscount = model.DispatchDiscount;
@@ -521,6 +528,41 @@ namespace IBSWeb.Areas.MMSI
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index), new { id = id });
+            }
+        }
+
+        public async Task<IActionResult> CheckForTariffRate (int customerId, int dispatchTicketId, CancellationToken cancellationToken)
+        {
+            var dispatchModel = await _db.MMSIDispatchTickets
+                .FindAsync(dispatchTicketId, cancellationToken);
+
+            var tariffRate = await _db.MMSITariffRates
+                .Where(t => t.CustomerId == customerId &&
+                            t.TerminalId == dispatchModel.TerminalId &&
+                            t.ActivityServiceId == dispatchModel.ActivityServiceId &&
+                            t.AsOfDate <= dispatchModel.DateLeft)
+                .OrderByDescending(t => t.AsOfDate)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (tariffRate != null)
+            {
+                var result = new
+                {
+                    Dispatch = tariffRate?.Dispatch ?? 0.00m, // Assuming Rate is a decimal property in MMSITariffRates
+                    BAF = tariffRate?.BAF ?? 0.00m, // Example second decimal; replace with your logic
+                    Exists = true
+                };
+
+                return Json(result);
+            }
+            else
+            {
+                var result = new
+                {
+                    Exists = false
+                };
+
+                return Json(result);
             }
         }
     }
