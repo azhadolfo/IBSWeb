@@ -91,7 +91,7 @@
                     <div class="row">
                         <div class="col-8 d-flex flex-column justify-content-end">
                             <div class="row d-flex align-content-center text-center mb-1">   
-                                <div class="col">
+                                <div class="col-3">
                                     <div class="col-12 text-start small-text">
                                         <span><b>Create Date:</b> @Model.CreateDate</span>
                                     </div>
@@ -99,11 +99,6 @@
                                 <div class="col">
                                     <div class="col-12 text-start small-text">
                                         <span><b>Dispatch Ticket#:</b> @Model.DispatchNumber</span>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="col-12 text-start small-text">
-                                        <span><b>Total Hours:</b> @Model.TotalHours?.ToString("N2")</span>
                                     </div>
                                 </div>
                             </div>
@@ -119,7 +114,7 @@
                     
                     <div class="row border">
                         <div class="col-3 text-start p-2 small-text border">
-                            <b>Voyage:</b> <br /> @Model.VoyageNumber
+                            <b>Total Hours:</b> @Model.TotalHours?.ToString("N2")
                         </div>
                         <div class="col-3 text-start p-2 small-text border">
                             <b>Activity/Service Type:</b> @Model.ActivityService.ActivityServiceName
