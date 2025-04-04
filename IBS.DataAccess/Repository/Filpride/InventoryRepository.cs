@@ -119,7 +119,9 @@ namespace IBS.DataAccess.Repository.Filpride
             decimal inventoryBalance = previousInventory?.InventoryBalance + receivingReport.QuantityReceived ?? receivingReport.QuantityReceived;
             decimal totalBalance = previousInventory?.TotalBalance + total ?? 0 + total;
 
-            decimal averageCost = totalBalance / inventoryBalance;
+            decimal averageCost = totalBalance == 0 || inventoryBalance == 0
+                ? total / receivingReport.QuantityReceived
+                : totalBalance / inventoryBalance;
 
             // Create new inventory entry
             FilprideInventory inventory = new()
