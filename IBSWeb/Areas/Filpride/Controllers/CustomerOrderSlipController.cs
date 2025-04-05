@@ -350,6 +350,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                var getPurchaseOrder = await _unitOfWork.MobilityPurchaseOrder.GetAsync(p => p.PurchaseOrderNo == exisitingRecord.CustomerPoNo, cancellationToken);
+
                 CustomerOrderSlipViewModel viewModel = new()
                 {
                     CustomerOrderSlipId = exisitingRecord.CustomerOrderSlipId,
@@ -378,6 +380,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetCustomerBranchesSelectListAsync(exisitingRecord.CustomerId, cancellationToken),
                     SelectedBranch = exisitingRecord.Branch,
                     CustomerType = exisitingRecord.CustomerType,
+                    StationCode = getPurchaseOrder.StationCode,
                 };
 
                 return View(viewModel);
@@ -893,6 +896,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return Json(new
             {
+                StationCode = customer.StationCode,
                 Address = customer.CustomerAddress,
                 TinNo = customer.CustomerTin,
                 Terms = customer.CustomerTerms,
@@ -1485,6 +1489,45 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }
+        public async Task<IActionResult> GetPurchaseOrderList(int? productId, string stationCode, CancellationToken cancellationToken)
+        {
+            if (productId == null)
+            {
+                return Json(null);
+            }
 
+            var purchaseOrder = await _dbContext.MobilityPurchaseOrders
+                .Where(p => p.ProductId == productId && p.StationCode == stationCode)
+                .Select(po => new SelectListItem
+                {
+                    Value = po.PurchaseOrderId.ToString(),
+                    Text = po.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
+
+            if (!purchaseOrder.Any())
+            {
+                return Json(null);
+            }
+
+            return Json(purchaseOrder);
+        }
+        public async Task<IActionResult> GetPurchaseOrder(string? customerPoNo, CancellationToken cancellationToken)
+        {
+            if (customerPoNo == null)
+            {
+                return Json(null);
+            }
+
+            var purchaseOrder = await _dbContext.MobilityPurchaseOrders
+                .FirstOrDefaultAsync(p => p.PurchaseOrderNo == customerPoNo.TrimStart().TrimEnd(), cancellationToken);
+
+            if (purchaseOrder == null)
+            {
+                return Json(null);
+            }
+
+            return Json(purchaseOrder);
+        }
     }
 }
