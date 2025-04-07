@@ -57,4 +57,11 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <AdditionalFiles Include="Areas\Bienes\Views\BankAccount\Create.cshtml" />
+    <AdditionalFiles Include="Areas\Bienes\Views\BankAccount\Edit.cshtml" />
+    <AdditionalFiles Include="Areas\Bienes\Views\BankAccount\ExportIndex.cshtml" />
+    <AdditionalFiles Include="Areas\Bienes\Views\BankAccount\Index.cshtml" />
+  </ItemGroup>
+
 </Project>

@@ -147,6 +147,12 @@ namespace IBS.DataAccess.Repository.IRepository
 
         #endregion
 
+        #region --Bienes
+
+        Bienes.IRepository.IBankAccountRepository BienesBankAccount { get; }
+
+        #endregion
+
         INotificationRepository Notifications { get; }
     }
 }

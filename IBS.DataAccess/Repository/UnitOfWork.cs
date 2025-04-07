@@ -98,6 +98,12 @@ namespace IBS.DataAccess.Repository
 
         #endregion
 
+        #region --Bienes
+
+        public Bienes.IRepository.IBankAccountRepository BienesBankAccount { get; private set; }
+
+        #endregion
+
         public UnitOfWork(ApplicationDbContext db)
         {
             _db = db;
@@ -168,6 +174,12 @@ namespace IBS.DataAccess.Repository
             FilprideService = new ServiceRepository(_db);
 
             #endregion
+
+            #endregion
+
+            #region --Bienes
+
+            BienesBankAccount = new Bienes.BankAccountRepository(_db);
 
             #endregion
         }
