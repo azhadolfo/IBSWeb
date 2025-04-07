@@ -1,0 +1,97 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model IEnumerable<IBS.Models.Mobility.MasterFile.MobilitySupplier>
+
+@{
+    ViewData["Title"] = "Supplier";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">SUPPLIER</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+            <div class="col-6 text-end">
+                <a asp-area="Mobility" asp-controller="Supplier" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create New Supplier
+                </a>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-striped" id="dataTable">
+            <thead>
+            <tr class="text-nowrap">
+                <th>
+                    @Html.DisplayNameFor(model => model.SupplierCode)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SupplierName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SupplierAddress)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SupplierTin)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SupplierTerms)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Category)
+                </th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var obj in Model.OrderBy(u => u.SupplierCode))
+            {
+                <tr>
+                    <td>
+                        @obj.SupplierCode
+                    </td>
+                    <td>
+                        @obj.SupplierName
+                    </td>
+                    <td>
+                        @obj.SupplierAddress
+                    </td>
+                    <td>
+                        @obj.SupplierTin
+                    </td>
+                    <td>
+                        @obj.SupplierTerms
+                    </td>
+                    <td>
+                        @obj.Category
+                    </td>
+                    <td>
+                        <div class="w-100 btn-group" role="group">
+                            <a asp-area="Mobility" asp-controller="Supplier" asp-action="Edit" asp-route-id="@obj.SupplierId" class="btn btn-primary mx-2">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </a>
+                            @if (obj.IsActive)
+                            {
+                                <a asp-area="Mobility" asp-controller="Supplier" asp-action="Deactivate" asp-route-id="@obj.SupplierId" class="btn btn-danger mx-2">
+                                    <i class="bi bi-person-fill-slash"></i> Deactivate
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-area="Mobility" asp-controller="Supplier" asp-action="Activate" asp-route-id="@obj.SupplierId" class="btn btn-success mx-2">
+                                    <i class="bi bi-person-fill-check"></i> Activate
+                                </a>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

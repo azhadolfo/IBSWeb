@@ -2,7 +2,7 @@
 using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.DataAccess.Repository.MasterFile.IRepository
+namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface ICustomerRepository : IRepository<FilprideCustomer>
     {

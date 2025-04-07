@@ -29,7 +29,7 @@ namespace IBS.Models.Filpride.MasterFile
         [Display(Name = "Tin No")]
         public string SupplierTin { get; set; }
 
-        [Column(TypeName = "varchar(3)")]
+        [Column(TypeName = "varchar(10)")]
         [Display(Name = "Supplier Terms")]
         public string SupplierTerms { get; set; }
 
