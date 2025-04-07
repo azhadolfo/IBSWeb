@@ -17,11 +17,11 @@ namespace IBS.DataAccess.Repository.Mobility
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string stationCodeClaims, CancellationToken cancellationToken = default)
         {
             MobilitySupplier? lastSupplier = await _db
                 .MobilitySuppliers
-                .Where(s => s.Company == company)
+                .Where(s => s.StationCode == stationCodeClaims)
                 .OrderBy(s => s.SupplierId)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -78,7 +78,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 existingSupplier.EditedBy = model.EditedBy;
                 existingSupplier.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                FilprideAuditTrail auditTrailBook = new(existingSupplier.CreatedBy, $"Edited supplier {existingSupplier.SupplierCode}", "Supplier", "", existingSupplier.Company);
+                FilprideAuditTrail auditTrailBook = new(existingSupplier.CreatedBy, $"Edited supplier {existingSupplier.SupplierCode}", "Supplier", "", existingSupplier.StationCode);
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                 await _db.SaveChangesAsync(cancellationToken);
