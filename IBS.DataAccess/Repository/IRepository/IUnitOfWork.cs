@@ -1,8 +1,10 @@
-﻿using IBS.DataAccess.Repository.Filpride.IRepository;
+﻿using IBS.DataAccess.Repository.Bienes.IRepository;
+using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using IBankAccountRepository = IBS.DataAccess.Repository.Filpride.IRepository.IBankAccountRepository;
 
 namespace IBS.DataAccess.Repository.IRepository
 {
@@ -155,6 +157,8 @@ namespace IBS.DataAccess.Repository.IRepository
         #region --Bienes
 
         Bienes.IRepository.IBankAccountRepository BienesBankAccount { get; }
+
+        IPlacementRepository BienesPlacement { get; }
 
         #endregion
 

@@ -143,7 +143,13 @@ namespace IBS.DataAccess.Data
 
         #region --BIENES
 
+        #region Master File
+
         public DbSet<BienesBankAccount> BienesBankAccounts { get; set; }
+
+        #endregion
+
+        public DbSet<BienesPlacement> BienesPlacements { get; set; }
 
         #endregion
 
@@ -885,6 +891,21 @@ namespace IBS.DataAccess.Data
             });
 
             #endregion
+
+            builder.Entity<BienesPlacement>(placement =>
+            {
+                placement.HasOne(p => p.BankAccount)
+                    .WithMany()
+                    .HasForeignKey(p => p.BankId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                placement.HasOne(p => p.Company)
+                    .WithMany()
+                    .HasForeignKey(p => p.CompanyId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                placement.HasIndex(p => p.ControlNumber);
+            });
 
             #endregion
         }

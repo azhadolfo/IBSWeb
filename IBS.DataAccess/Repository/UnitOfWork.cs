@@ -1,4 +1,6 @@
 ﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.Bienes;
+using IBS.DataAccess.Repository.Bienes.IRepository;
 using IBS.DataAccess.Repository.Filpride;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.IRepository;
@@ -11,6 +13,8 @@ using IBS.Utility;
 using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using BankAccountRepository = IBS.DataAccess.Repository.Filpride.BankAccountRepository;
+using IBankAccountRepository = IBS.DataAccess.Repository.Filpride.IRepository.IBankAccountRepository;
 
 namespace IBS.DataAccess.Repository
 {
@@ -108,6 +112,8 @@ namespace IBS.DataAccess.Repository
 
         public Bienes.IRepository.IBankAccountRepository BienesBankAccount { get; private set; }
 
+        public IPlacementRepository BienesPlacement { get; private set; }
+
         #endregion
 
         public UnitOfWork(ApplicationDbContext db)
@@ -192,6 +198,7 @@ namespace IBS.DataAccess.Repository
             #region --Bienes
 
             BienesBankAccount = new Bienes.BankAccountRepository(_db);
+            BienesPlacement = new PlacementRepository(_db);
 
             #endregion
         }
