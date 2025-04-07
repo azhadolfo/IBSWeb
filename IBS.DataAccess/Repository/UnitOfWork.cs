@@ -38,6 +38,7 @@ namespace IBS.DataAccess.Repository
         public IStationRepository MobilityStation { get; private set; }
         public Mobility.IRepository.ISupplierRepository MobilitySupplier { get; private set; }
         public Mobility.IRepository.ICustomerRepository MobilityCustomer { get; private set; }
+        public Mobility.IRepository.IBankAccountRepository MobilityBankAccount { get; private set; }
         public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
         public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
 
@@ -92,7 +93,7 @@ namespace IBS.DataAccess.Repository
 
         #region Master File
 
-        public IBankAccountRepository FilprideBankAccount { get; private set; }
+        public Filpride.IRepository.IBankAccountRepository FilprideBankAccount { get; private set; }
 
         public IServiceRepository FilprideService { get; private set; }
 
@@ -123,6 +124,7 @@ namespace IBS.DataAccess.Repository
             MobilityStation = new StationRepository(_db);
             MobilitySupplier = new Mobility.SupplierRepository(_db);
             MobilityCustomer = new Mobility.CustomerRepository(_db);
+            MobilityBankAccount = new Mobility.BankAccountRepository(_db);
             MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
             MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
             MobilityCustomerOrderSlip = new Mobility.CustomerOrderSlipRepository(_db);
@@ -168,7 +170,7 @@ namespace IBS.DataAccess.Repository
 
             #region Master File
 
-            FilprideBankAccount = new BankAccountRepository(_db);
+            FilprideBankAccount = new Filpride.BankAccountRepository(_db);
             FilprideService = new ServiceRepository(_db);
 
             #endregion
