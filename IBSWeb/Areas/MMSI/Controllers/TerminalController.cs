@@ -89,6 +89,7 @@ namespace IBSWeb.Areas.MMSI
             }
             catch (Exception ex)
             {
+                TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -113,6 +114,7 @@ namespace IBSWeb.Areas.MMSI
 
             currentModel.TerminalNumber = model.TerminalNumber;
             currentModel.TerminalName = model.TerminalName;
+            currentModel.PortId = model.PortId;
 
             await _db.SaveChangesAsync();
 

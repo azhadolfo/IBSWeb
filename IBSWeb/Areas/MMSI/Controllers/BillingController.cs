@@ -377,9 +377,9 @@ namespace IBSWeb.Areas.MMSI
             var model = await _db.MMSIBillings
                 .Where(a => a.MMSIBillingId == id)
                 .Include(a => a.Terminal)
+                .ThenInclude(t => t.Port)
                 .Include(a => a.Vessel)
                 .Include(a => a.Customer)
-                .Include(a => a.Port)
                 .FirstOrDefaultAsync(cancellationToken);
 
             // list of dispatch numbers

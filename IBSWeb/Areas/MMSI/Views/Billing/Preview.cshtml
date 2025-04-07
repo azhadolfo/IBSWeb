@@ -5,155 +5,234 @@
     
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
 <style>
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-
-    .card-body {
-        margin: 5px !important;
-        padding: 5px !important;
+    @@media print {
+        .print-bottom {
+            position: absolute;
+            bottom: 0;
+        }
+        .print-bottom2 {
+            position: absolute;
+            bottom: 12%;
+        }
     }
 </style>
 
-<div class="card shadow mt-4">
+<div class="container mt-4">
 
-        <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2"><i class="bi bi-pencil-square"></i> PREVIEW</h2>
+    <div class="row">
+        <div class="col-8">
+            <div class="text-start mb-4">
+                <h3 class="m-0"><u><b>MALAYAN MARITIME SERVICES INC.</b></u></h3>
+                <p>
+                    14th Floor Jollibee Centre, San Miguel Ave., Pasig City<br/>
+                    Phone No: 633-4302 * 633-9472 * 634-4904<br/>
+                    Mobile No: +639178202692
+                </p>
             </div>
         </div>
-
-    <div class="card-body">
-        <div class="px-3">
-            
-            <div class="row">
-
-                <div class="col-6">
-                    <div class="row">
-                        <div class="col-12 text-start small-text">
-                            <span><b>Date:</b> @Model.Date</span>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12 text-start small-text">
-                            <span><b>Billing#:</b> @Model.MMSIBillingNumber</span>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12 mb-2 text-start small-text">
-                            <span><b>Status:</b> @Model.Status</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6">
-                    <div class="row justify-content-end">
-                        <div class="row justify-content-end">
-                            <div class="col-12 d-flex justify-content-end">
-                                <h1 class="text-end"><strong>BILLING DETAILS</strong></h1>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+        <div class="col-4">
+            <div class="text-end">
+                <img src="~/img/mmsi-logo.jpg" width="80px"/>
             </div>
-
-            <div class="row mx-2">
-                <div class="col-3 text-center border p-2 small-text">
-                    <b>Voyage#:</b> @Model.VoyageNumber
-                </div>
-                <div class="col-3 text-center border p-2 small-text">
-                    <b>Terminal:</b> @Model.Terminal?.TerminalName
-                </div>
-                <div class="col-3 text-center border p-2 small-text">
-                    <b>Vessel:</b> @Model.Vessel?.VesselName
-                </div>
-                <div class="col-3 text-center border p-2 small-text">
-                    <b>Port:</b> @Model.Port?.PortName
-                </div>
+            <div class="text-end pt-3">
+                <h3><b>BILLING STATEMENT</b></h3>
             </div>
+        </div>
+    </div>
 
-            <div class="row mt-5 justify-content-end">
-                <div class="col-12 d-flex justify-content-end">
-                    <h3 class="text-end"><strong>CUSTOMER DETAILS</strong></h3>
-                </div>
-            </div>
+    <div class="table-responsive">
+        <table class="table table-borderless">
+            <tbody>
+            <tr>
+                <h6 class="text-end"><b class="text-danger">Bill #:&nbsp;@Html.DisplayFor(model => model.MMSIBillingNumber)</b></h6></tr>
+            <tr>
+                <td class="my-0 py-0"><b>Customer No:</b> @Model.Customer?.CustomerNumber
+                <td class="text-end my-0 py-0"><b>Date:</b> @Model.Date</td>
+            </tr>
+            <tr>
+                <td class="my-0 py-0"><b>Customer Name:</b> @Model.Customer?.CustomerName</td>
+                <td class="text-end my-0 py-0"><b>Terms:</b> @(Model.Customer?.CustomerTerms)</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
-            <div class="row mx-2">
-                <div class="col-6 text-center border p-2 small-text">
-                    <b>Name:</b> @Model.Customer?.CustomerName
-                </div>
-                <div class="col-6 text-center border p-2 small-text">
-                    <b>Address:</b> @Model.Customer?.CustomerAddress
-                </div>
-            </div>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th class="text-center py-1">Date</th>
+                <th class="text-center py-1">Billing #</th>
+                <th class="text-center py-1">Status</th>
+                <th class="text-center py-1">Voyage #</th>
+                <th class="text-center py-1">Port-Terminal</th>
+                <th class="text-center py-1">Vessel</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="text-center">@Model.Date</td>
+                <td class="text-center">@Model.MMSIBillingNumber</td>
+                <td class="text-center">@Model.Status</td>
+                <td class="text-center">@Model.VoyageNumber</td>
+                <td class="text-center">@Model.Terminal?.Port?.PortName-@Model.Terminal?.TerminalName</td>
+                <td class="text-center">@Model.Vessel?.VesselName</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
-            <div class="row mx-2">
-                <div class="col-4 text-center border p-2 small-text">
-                    <b>TIN:</b> @Model.Customer?.CustomerTIN
-                </div>
-                <div class="col-4 text-center border p-2 small-text">
-                    <b>Business Style:</b> @Model.Customer?.CustomerBusinessStyle
-                </div>
-                <div class="col-4 text-center border p-2 small-text">
-                    <b>Terms:</b> @Model.Customer?.CustomerTerms
-                </div>
-            </div>
-
-            <div class="row mt-5 justify-content-end">
-                <div class="col-12 d-flex justify-content-end">
-                    <h3 class="text-end"><strong>DISPATCH TICKETS PAID</strong></h3>
-                </div>
-            </div>
-
-            <table id="dataTable" class="table table-striped table-bordered mt-1" style="width:100%">
-                <thead>
+    <div class="table-responsive">
+        <table class="table table-borderless">
+            <thead>
+            <tr>
+                <th colspan="8">Dispatch Tickets Billed: </th>
+            </tr>
+            <tr>
+                <th class="text-center border">Date</th>
+                <th class="text-center border">Service Type</th>
+                <th class="text-center border">Time Start</th>
+                <th class="text-center border">Time End</th>
+                <th class="text-center border">Total Hours</th>
+                <th class="text-center border">Dispatch Rate</th>
+                <th class="text-center border">BAF Rate</th>
+                <th class="text-center border">Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var dt in @Model.PaidDispatchTickets)
+            {
                 <tr>
-                    <th class="text-start align-middle ps-4">BILLING#</th>
-                    <th class="text-start align-middle ps-4">TUGBOAT</th>
-                    <th class="text-start align-middle ps-4">SERVICE</th>
-                    <th class="text-start align-middle ps-4">TIME START</th>
-                    <th class="text-start align-middle ps-4">TIME END</th>
-                    <th class="text-start align-middle ps-4">HOUR(S)</th>
-                    <th class="text-start align-middle ps-4">DISPATCH AMOUNT</th>
-                    <th class="text-start align-middle ps-4">BAF AMOUNT</th>
-                    <th class="text-start align-middle ps-4">TOTAL AMOUNT</th>
+                    <td colspan="7" class="pt-4">TUGBOAT: @dt.Tugboat.TugboatName</td>
                 </tr>
-                </thead>
-                <tbody>
-                @foreach (var billing in Model.PaidDispatchTickets)
-                {
+                <tr class="pb-2">
+                    <td class="text-center p-0">@dt.CreateDate</td>
+                    <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
+                    <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
+                    <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
+                    <td class="text-center p-0">@dt.TotalHours hrs.</td>
+                    <td class="text-end p-0">₱@dt.DispatchRate?.ToString("N2") @dt.DispatchChargeType</td>
+                    <td class="text-end p-0">₱@dt.BAFRate?.ToString("N2") @dt.BAFChargeType</td>
+                    <td class="text-end p-0">₱@dt.TotalBilling?.ToString("N2")</td>
+                </tr>
+            }
+            <tr>
+                <td colspan="7" class="pt-4 text-center"> ---------- NOTHING FOLLOWS ---------- </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="p-3 border-top border-bottom border-dark print-bottom2">
+        <div class="row">
+            <div class="col-7">
+                <table>
+                    <thead>
                     <tr>
-                        <td class="text-start align-middle ps-4">@billing.DispatchNumber</td>
-                        <td class="text-start align-middle ps-4">@billing.Tugboat?.TugboatName</td>
-                        <td class="text-start align-middle ps-4">@billing.ActivityService?.ActivityServiceName</td>
-                        <td class="text-start align-middle ps-4">@billing.DateLeft - @billing.TimeLeft</td>
-                        <td class="text-start align-middle ps-4">@billing.DateArrived - @billing.TimeArrived</td>
-                        <td class="text-start align-middle ps-4">@(billing.TotalHours?.ToString("F2") ?? "0.00") hrs.</td>
-                        <td class="text-start align-middle ps-4">₱ @billing.DispatchNetRevenue</td>
-                        <td class="text-start align-middle ps-4">₱ @billing.BAFNetRevenue</td>
-                        <td class="text-start align-middle ps-4">₱ @billing.TotalNetRevenue</td>
+                        <th>
+                            Terms and Conditions:
+                        </th>
                     </tr>
-                }
-                </tbody>
-            </table>
-
-            <div class="py-3 justify-content-end d-flex">
-                <div class="col-3">
-                    <label>Billing Amount Total: ₱@Model.Amount</label>
-                </div>
+                    </thead>
+                    <tr>
+                        <td class="border p-1 m-1">
+                            Interest at the rate of 38% per annim will be charge on all overdue accounts and in the event of
+                            judicial proceedings to enforce collections, the Customer will pay a reasonable compensation not less than
+                            25% ofthe amount due of the Attorney's fees and expense of collection in addition to the costs of suit. Any
+                            action arising out of the transaction covered by billing statement shall be brought in the appropriate courts
+                            of Pasig City and/or Metro Manila.
+                        </td>
+                    </tr>
+                </table>
             </div>
-
+            <div class="col-5">
+                <table class="table-borderless col-12">
+                    <tr class="row">
+                        <td class="col-6">
+                            VATABLE SALES:
+                        </td>
+                        <td class="col-6 text-end border-bottom border-dark">
+                            <b>₱@Model.Amount.ToString("N2")</b>
+                        </td>
+                    </tr>
+                    <tr class="row mt-1">
+                        <td class="col-6">
+                            VAT - EXEMPT SALES
+                        </td>
+                        <td class="col-6 text-end border-bottom border-dark">
+                            
+                        </td>
+                    </tr>
+                    <tr class="row mt-1">
+                        <td class="col-6">
+                            ZERO RATED SALES
+                        </td>
+                        <td class="col-6 text-end border-bottom border-dark">
+                            
+                        </td>
+                    </tr>
+                    <tr class="row mt-1">
+                        <td class="col-6">
+                            TOTAL SALES
+                        </td>
+                        <td class="col-6 text-end border-bottom border-dark">
+                            
+                        </td>
+                    </tr>
+                    <tr class="row mt-1">
+                        <td class="col-6">
+                            12% VAT
+                        </td>
+                        <td class="col-6 text-end border-bottom border-dark">
+                            
+                        </td>
+                    </tr>
+                    <tr class="row mt-1">
+                        <td class="col-6">
+                            <b>TOTAL AMOUNT DUE:</b>
+                        </td>
+                        <td class="col-6 text-end border-bottom border-dark">
+                            <div class="row border-bottom border-dark">
+                                <div class="col-12">
+                                    <b> ₱@Model.Amount.ToString("N2")</b>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
         </div>
-        <div class="text-end justify-content-end d-flex my-3">
-            <div class="d-flex me-3" style="width: 250px">
-                <a class="btn btn-outline-primary custom2-btn col-12" asp-controller="Billing" asp-action="Index">
-                    <i class="bi bi-arrow-90deg-left"></i> Go Back
-                </a>
-            </div>
+    </div>
+    
+    <div class="row pt-3 print-bottom">
+        <div class="col-8">
+            <table>
+                <tr>
+                    <td>
+                        We hereby certify that this Billing Statement is correct and Just 
+                        and the payment thereof has not been received.
+                    </td>
+                </tr>
+                <tr>
+                    <th class="pt-3">MALAYAN MARITIME SERVICES INC.</th>
+                </tr>
+                <tr>
+                    <td class="pt-3">
+                        BY:___________________________________
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="row pt-3 justify-content-end d-flex">
+        <div class="col-6 col-md-3">
+            <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <a asp-area="MMSI" asp-controller="Billing" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
         </div>
     </div>
 </div>
