@@ -78,7 +78,10 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityStation> MobilityStations { get; set; }
         public DbSet<MobilityCustomer> MobilityCustomers { get; set; }
         public DbSet<MobilitySupplier> MobilitySuppliers { get; set; }
+
         public DbSet<MobilityBankAccount> MobilityBankAccounts { get; set; }
+
+        public DbSet<MobilityService> MobilityServices { get; set; }
 
         #endregion
 
