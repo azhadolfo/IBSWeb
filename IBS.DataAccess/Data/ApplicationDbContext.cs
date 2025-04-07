@@ -83,6 +83,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<MobilityProduct> MobilityProducts { get; set; }
 
+        public DbSet<MobilityPickUpPoint> MobilityPickUpPoints { get; set; }
+
         public DbSet<MobilityService> MobilityServices { get; set; }
 
         #endregion

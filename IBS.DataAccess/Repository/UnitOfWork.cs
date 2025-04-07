@@ -41,6 +41,7 @@ namespace IBS.DataAccess.Repository
         public Mobility.IRepository.IBankAccountRepository MobilityBankAccount { get; private set; }
         public Mobility.IRepository.IServiceRepository MobilityService { get; private set; }
         public Mobility.IRepository.IProductRepository MobilityProduct { get; private set; }
+        public Mobility.IRepository.IPickUpPointRepository MobilityPickUpPoint { get; private set; }
         public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
         public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
 
@@ -54,7 +55,7 @@ namespace IBS.DataAccess.Repository
         public IDeliveryReceiptRepository FilprideDeliveryReceipt { get; private set; }
         public Filpride.IRepository.ICustomerRepository FilprideCustomer { get; private set; }
         public Filpride.IRepository.ISupplierRepository FilprideSupplier { get; private set; }
-        public IPickUpPointRepository FilpridePickUpPoint { get; private set; }
+        public Filpride.IRepository.IPickUpPointRepository FilpridePickUpPoint { get; private set; }
         public IFreightRepository FilprideFreight { get; private set; }
         public IAuthorityToLoadRepository FilprideAuthorityToLoad { get; private set; }
         public Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; private set; }
@@ -129,6 +130,7 @@ namespace IBS.DataAccess.Repository
             MobilityBankAccount = new Mobility.BankAccountRepository(_db);
             MobilityService = new Mobility.ServiceRepository(_db);
             MobilityProduct = new Mobility.ProductRepository(_db);
+            MobilityPickUpPoint = new Mobility.PickUpPointRepository(_db);
             MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
             MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
             MobilityCustomerOrderSlip = new Mobility.CustomerOrderSlipRepository(_db);
@@ -141,7 +143,7 @@ namespace IBS.DataAccess.Repository
             FilprideDeliveryReceipt = new DeliveryReceiptRepository(_db);
             FilprideCustomer = new Filpride.CustomerRepository(_db);
             FilprideSupplier = new Filpride.SupplierRepository(_db);
-            FilpridePickUpPoint = new PickUpPointRepository(_db);
+            FilpridePickUpPoint = new Filpride.PickUpPointRepository(_db);
             FilprideFreight = new FreightRepository(_db);
             FilprideAuthorityToLoad = new AuthorityToLoadRepository(_db);
             FilprideChartOfAccount = new Filpride.ChartOfAccountRepository(_db);
