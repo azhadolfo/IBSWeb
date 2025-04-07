@@ -50,6 +50,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Mobility.IRepository.ISupplierRepository MobilitySupplier { get; }
         Mobility.IRepository.ICustomerRepository MobilityCustomer { get; }
         Mobility.IRepository.IBankAccountRepository MobilityBankAccount { get; }
+        Mobility.IRepository.IServiceRepository MobilityService { get; }
         Mobility.IRepository.IInventoryRepository MobilityInventory { get; }
 
         IGeneralLedgerRepository MobilityGeneralLedger { get; }
@@ -137,7 +138,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Filpride.IRepository.IBankAccountRepository FilprideBankAccount { get; }
 
-        IServiceRepository FilprideService { get; }
+        Filpride.IRepository.IServiceRepository FilprideService { get; }
 
         IPickUpPointRepository FilpridePickUpPoint { get; }
 
