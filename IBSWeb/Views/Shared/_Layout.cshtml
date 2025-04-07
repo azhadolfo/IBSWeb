@@ -546,21 +546,7 @@
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">A. Receivable</a>
                                         <ul class="dropdown-menu">
                                             <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="ServiceInvoice" asp-action="Index">Service Invoice</a>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="ServiceInvoiceIndex">
-                                                    Collection Receipt
-                                                </a>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="DebitMemo" asp-action="Index">Debit Memo</a>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CreditMemo" asp-action="Index">Credit Memo</a>
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="ServiceInvoice" asp-action="Index">Placement</a>
                                             </li>
                                         </ul>
                                     </li>
@@ -618,10 +604,10 @@
                                             <li class="nav-item">
                                                 <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="GeneralLedgerBook">General Ledger</a>
                                             </li>
-                                            @* <li><hr class="dropdown-divider"></li> *@
-                                            @* <li class="nav-item"> *@
-                                            @*     <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="DisbursementBook">Cash Disbursement</a> *@
-                                            @* </li> *@
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="DisbursementBook">Cash Disbursement</a>
+                                            </li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li class="nav-item">
                                                 <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="ClearedDisbursementReport">Cleared Disbursement Report</a>
@@ -652,6 +638,18 @@
                                             </li>
                                         </ul>
                                     </li>
+                                    
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li class="nav-item dropdown">
+                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Master File</a>
+                                            <ul class="dropdown-menu">
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Bienes" asp-controller="BankAccount" asp-action="Index">Bank Account</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    }
                                 }
                                 
                                 if (selectedCompany == "MMSI")
@@ -972,14 +970,10 @@
                                     </ul>
                                 </li>
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Admin Master File</a>
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">General Master File</a>
                                     <ul class="dropdown-menu">
                                         <li class="nav-item">
                                             <a class="dropdown-item text-dark" asp-area="User" asp-controller="Company" asp-action="Index">Company</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li class="nav-item">
-                                            <a class="dropdown-item text-dark" asp-area="User" asp-controller="ChartOfAccount" asp-action="Index">Chart Of Account</a>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li class="nav-item">
