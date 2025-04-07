@@ -104,7 +104,10 @@ namespace IBS.Models.Mobility.MasterFile
         [Column(TypeName = "date")]
         public DateTime? ValidityDate { get; set; }
 
-        public string Company { get; set; } = string.Empty;
+        [Display(Name = "Station Code")]
+        [Column(TypeName = "varchar(3)")]
+        [StringLength(3)]
+        public string StationCode { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Zip Code")]

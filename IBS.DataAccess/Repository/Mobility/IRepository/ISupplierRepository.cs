@@ -5,7 +5,7 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
     public interface ISupplierRepository : IRepository<MobilitySupplier>
     {
-        Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(string stationCodeClaims, CancellationToken cancellationToken = default);
 
         Task UpdateAsync(MobilitySupplier model, CancellationToken cancellationToken = default);
     }

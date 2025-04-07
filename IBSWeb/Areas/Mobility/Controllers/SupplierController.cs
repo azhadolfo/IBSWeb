@@ -40,11 +40,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _cloudStorageService = cloudStorageService;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+            return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
         }
 
         private string? GenerateFileNameToSave(string incomingFileName)
@@ -70,10 +70,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
+            var stationCodeClaims = await GetStationCodeClaimAsync();
 
             IEnumerable<MobilitySupplier> suppliers = await _dbContext.MobilitySuppliers
-                .Where(c => c.Company == companyClaims)
+                .Where(c => c.StationCode == stationCodeClaims)
                 .ToListAsync(cancellationToken);
 
             return View(suppliers);
@@ -112,17 +112,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-                var companyClaims = await GetCompanyClaimAsync();
+                var stationCodeClaims = await GetStationCodeClaimAsync();
 
                 if (await _dbContext.MobilitySuppliers
-                        .AnyAsync(s => s.Company == companyClaims && s.SupplierName == model.SupplierName && s.Category == model.Category, cancellationToken))
+                        .AnyAsync(s => s.StationCode == stationCodeClaims && s.SupplierName == model.SupplierName && s.Category == model.Category, cancellationToken))
                 {
                     ModelState.AddModelError("SupplierName", "Supplier already exist.");
                     return View(model);
                 }
 
                 if (await _dbContext.MobilitySuppliers
-                        .AnyAsync(s => s.Company == companyClaims && s.SupplierTin == model.SupplierTin && s.Branch == model.Branch && s.Category == model.Category, cancellationToken))
+                        .AnyAsync(s => s.StationCode == stationCodeClaims && s.SupplierTin == model.SupplierTin && s.Branch == model.Branch && s.Category == model.Category, cancellationToken))
                 {
                     ModelState.AddModelError("SupplierTin", "Tin number already exist.");
                     return View(model);
@@ -143,12 +143,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     }
 
                     model.SupplierCode = await _unitOfWork.MobilitySupplier
-                        .GenerateCodeAsync(companyClaims, cancellationToken);
+                        .GenerateCodeAsync(stationCodeClaims, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
-                    model.Company = companyClaims;
+                    model.StationCode = stationCodeClaims;
                     await _unitOfWork.MobilitySupplier.AddAsync(model, cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new supplier {model.SupplierCode}", "Supplier", "", model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new supplier {model.SupplierCode}", "Supplier", "", model.StationCode);
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -216,7 +216,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 try
                 {
-                    var companyClaims = await GetCompanyClaimAsync();
+                    var stationCodeClaims = await GetStationCodeClaimAsync();
+                    model.StationCode = stationCodeClaims;
 
                     if (registration != null && registration.Length > 0)
                     {
