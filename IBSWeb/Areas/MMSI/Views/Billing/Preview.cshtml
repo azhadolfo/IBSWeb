@@ -45,41 +45,68 @@
         <table class="table table-borderless">
             <tbody>
             <tr>
-                <h6 class="text-end"><b class="text-danger">Bill #:&nbsp;@Html.DisplayFor(model => model.MMSIBillingNumber)</b></h6></tr>
-            <tr>
-                <td class="my-0 py-0"><b>Customer No:</b> @Model.Customer?.CustomerNumber
-                <td class="text-end my-0 py-0"><b>Date:</b> @Model.Date</td>
+                <h6 class="text-end"><b class="text-danger">BILL #:&nbsp;@Html.DisplayFor(model => model.MMSIBillingNumber)</b></h6>
             </tr>
             <tr>
-                <td class="my-0 py-0"><b>Customer Name:</b> @Model.Customer?.CustomerName</td>
-                <td class="text-end my-0 py-0"><b>Terms:</b> @(Model.Customer?.CustomerTerms)</td>
+                <td class="col-1 p-0 m-0"><b>BILLED TO:</b></td>
+                <td class="col-4 p-0 m-0">@Model.Customer?.CustomerName</td>
+                <td class="col-1 p-0 m-0"></td>
+                <td class="col-2 p-0 m-0"><b>DATE:</b></td>
+                <td class="col-5 p-0 m-0">@Model.Date</td>
+            </tr>
+            <tr>
+                <td class="col-1 p-0 m-0"><b>ADDRESS:</b></td>
+                <td class="col-4 p-0 m-0" rowspan="3">@Model.Customer?.CustomerAddress</td>
+                <td class="col-1 p-0 m-0"></td>
+                <td class="col-2 p-0 m-0"><b>TIN:</b></td>
+                <td class="col-5 p-0 m-0">@Model.Customer.CustomerTIN</td>
+            </tr>
+            <tr>
+                <td class="col-1 p-0 m-0"></td>
+                @* empty*@
+                <td class="col-1 p-0 m-0"></td>
+                <td class="col-2 p-0 m-0"><b>BUSINESS STYLE:</b></td>
+                <td class="col-5 p-0 m-0">@Model.Customer.CustomerBusinessStyle</td>
+            </tr>
+            <tr>
+                <td class="col-1 p-0 m-0"></td>
+                @* empty*@
+                <td class="col-1 p-0 m-0"></td>
+                <td class="col-2 p-0 m-0"><b>TERMS:</b></td>
+                <td class="col-5 p-0 m-0">@Model.Customer.CustomerTerms</td>
             </tr>
             </tbody>
         </table>
     </div>
-
+    
     <div class="table-responsive">
-        <table class="table table-bordered">
+        <table class="table table-borderless">
             <thead>
-            <tr>
-                <th class="text-center py-1">Date</th>
-                <th class="text-center py-1">Billing #</th>
-                <th class="text-center py-1">Status</th>
-                <th class="text-center py-1">Voyage #</th>
-                <th class="text-center py-1">Port-Terminal</th>
-                <th class="text-center py-1">Vessel</th>
+            <tr class="border">
+                <th class="text-center" colspan="4">
+                    PARTICULARS
+                </th>
             </tr>
             </thead>
-            <tbody>
             <tr>
-                <td class="text-center">@Model.Date</td>
-                <td class="text-center">@Model.MMSIBillingNumber</td>
-                <td class="text-center">@Model.Status</td>
-                <td class="text-center">@Model.VoyageNumber</td>
-                <td class="text-center">@Model.Terminal?.Port?.PortName-@Model.Terminal?.TerminalName</td>
-                <td class="text-center">@Model.Vessel?.VesselName</td>
+                <td class="p-0 pt-2 c-0">
+                    FOR THE SERVICE RE: 
+                </td>
+                <td class="border-bottom p-0 pt-2 c-0">
+                    @Model.Vessel?.VesselName
+                </td>
+                <td class="border-bottom p-0 pt-2 c-0">
+                    VOYAGE #: @Model.VoyageNumber
+                </td>
             </tr>
-            </tbody>
+            <tr>
+                <td>
+                    
+                </td>
+                <td class="border-bottom p-0 pt-1 c-0">
+                    AT @Model.Terminal?.Port?.PortName
+                </td>
+            </tr>
         </table>
     </div>
 
@@ -87,28 +114,30 @@
         <table class="table table-borderless">
             <thead>
             <tr>
-                <th colspan="8">Dispatch Tickets Billed: </th>
+                <th colspan="8">DISPATCH TICKETS BILLED: </th>
             </tr>
             <tr>
-                <th class="text-center border">Date</th>
-                <th class="text-center border">Service Type</th>
-                <th class="text-center border">Time Start</th>
-                <th class="text-center border">Time End</th>
-                <th class="text-center border">Total Hours</th>
-                <th class="text-center border">Dispatch Rate</th>
-                <th class="text-center border">BAF Rate</th>
-                <th class="text-center border">Amount</th>
+                <th class="text-center border">DISPATCH #</th>
+                <th class="text-center border">SERVICE TYPE</th>
+                <th class="text-center border">DATE</th>
+                <th class="text-center border">TIME START</th>
+                <th class="text-center border">TIME END</th>
+                <th class="text-center border">TOTAL HOURS</th>
+                <th class="text-center border">DISPATCH RATE</th>
+                <th class="text-center border">BAF RATE</th>
+                <th class="text-center border">AMOUNT</th>
             </tr>
             </thead>
             <tbody>
             @foreach (var dt in @Model.PaidDispatchTickets)
             {
-                <tr>
-                    <td colspan="7" class="pt-4">TUGBOAT: @dt.Tugboat.TugboatName</td>
+                <tr class="">
+                    <td colspan="8" class="p-0 m-0 pt-4">TUGBOAT: @dt.Tugboat.TugboatName</td>
                 </tr>
                 <tr class="pb-2">
-                    <td class="text-center p-0">@dt.CreateDate</td>
+                    <td class="text-center p-0">@dt.DispatchNumber</td>
                     <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
+                    <td class="text-center p-0">@dt.CreateDate</td>
                     <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                     <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
                     <td class="text-center p-0">@dt.TotalHours hrs.</td>
@@ -118,7 +147,7 @@
                 </tr>
             }
             <tr>
-                <td colspan="7" class="pt-4 text-center"> ---------- NOTHING FOLLOWS ---------- </td>
+                <td colspan="8" class="pt-4 text-center"> ---------- NOTHING FOLLOWS ---------- </td>
             </tr>
             </tbody>
         </table>
