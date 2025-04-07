@@ -49,7 +49,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IStationRepository MobilityStation { get; }
         Mobility.IRepository.ISupplierRepository MobilitySupplier { get; }
         Mobility.IRepository.ICustomerRepository MobilityCustomer { get; }
-
+        Mobility.IRepository.IBankAccountRepository MobilityBankAccount { get; }
         Mobility.IRepository.IInventoryRepository MobilityInventory { get; }
 
         IGeneralLedgerRepository MobilityGeneralLedger { get; }
@@ -135,7 +135,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         #region Master File
 
-        IBankAccountRepository FilprideBankAccount { get; }
+        Filpride.IRepository.IBankAccountRepository FilprideBankAccount { get; }
 
         IServiceRepository FilprideService { get; }
 
