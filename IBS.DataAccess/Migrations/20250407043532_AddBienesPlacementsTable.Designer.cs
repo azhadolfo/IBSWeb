@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250407043532_AddBienesPlacementsTable")]
+    partial class AddBienesPlacementsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -212,10 +215,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_locked");
 
-                    b.Property<bool>("IsPosted")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_posted");
-
                     b.Property<DateTime?>("LockedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("locked_date");
@@ -254,11 +253,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("settlement_account_number");
-
-                    b.Property<string>("TDAccountNumber")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("td_account_number");
 
                     b.Property<string>("TerminatedBy")
                         .HasColumnType("varchar(100)")
