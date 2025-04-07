@@ -1,17 +1,14 @@
-﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.DataAccess.Repository.MasterFile.IRepository;
+using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Filpride.Books;
-using IBS.Models.Filpride.MasterFile;
+using IBS.Models.Mobility.MasterFile;
 using IBS.Utility;
 using IBS.Utility.Helpers;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
-namespace IBS.DataAccess.Repository.Filpride
+namespace IBS.DataAccess.Repository.Mobility
 {
-    public class SupplierRepository : Repository<FilprideSupplier>, ISupplierRepository
+    public class SupplierRepository : Repository<MobilitySupplier>, ISupplierRepository
     {
         private ApplicationDbContext _db;
 
@@ -22,8 +19,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
         {
-            FilprideSupplier? lastSupplier = await _db
-                .FilprideSuppliers
+            MobilitySupplier? lastSupplier = await _db
+                .MobilitySuppliers
                 .Where(s => s.Company == company)
                 .OrderBy(s => s.SupplierId)
                 .LastOrDefaultAsync(cancellationToken);
@@ -45,41 +42,12 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<bool> IsSupplierExistAsync(string supplierName, string category, string company, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(MobilitySupplier model, CancellationToken cancellationToken = default)
         {
-            return await _db.FilprideSuppliers
-                .AnyAsync(s => s.Company == company && s.SupplierName == supplierName && s.Category == category, cancellationToken);
-        }
-
-        public async Task<bool> IsTinNoExistAsync(string tin, string branch, string category, string company, CancellationToken cancellationToken = default)
-        {
-            return await _db.FilprideSuppliers
-                .AnyAsync(s => s.Company == company && s.SupplierTin == tin && s.Branch == branch && s.Category == category, cancellationToken);
-        }
-
-        public async Task<string> SaveProofOfRegistration(IFormFile file, string localPath, CancellationToken cancellationToken = default)
-        {
-            if (!Directory.Exists(localPath))
-            {
-                Directory.CreateDirectory(localPath);
-            }
-
-            string fileName = Path.GetFileName(file.FileName);
-            string fileSavePath = Path.Combine(localPath, fileName);
-
-            await using (FileStream stream = new(fileSavePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream, cancellationToken);
-            }
-
-            return fileSavePath;
-        }
-
-        public async Task UpdateAsync(FilprideSupplier model, CancellationToken cancellationToken = default)
-        {
-            FilprideSupplier existingSupplier = await _db.FilprideSuppliers
+            MobilitySupplier existingSupplier = await _db.MobilitySuppliers
                 .FindAsync(model.SupplierId, cancellationToken) ?? throw new InvalidOperationException($"Supplier with id '{model.SupplierId}' not found.");
 
+            existingSupplier.TradeName = model.TradeName;
             existingSupplier.Category = model.Category;
             existingSupplier.SupplierName = model.SupplierName;
             existingSupplier.SupplierAddress = model.SupplierAddress;
@@ -91,6 +59,9 @@ namespace IBS.DataAccess.Repository.Filpride
             existingSupplier.DefaultExpenseNumber = model.DefaultExpenseNumber;
             existingSupplier.WithholdingTaxPercent = model.WithholdingTaxPercent;
             existingSupplier.ZipCode = model.ZipCode;
+            existingSupplier.ReasonOfExemption = model.ReasonOfExemption;
+            existingSupplier.Validity = model.Validity;
+            existingSupplier.ValidityDate = model.ValidityDate;
 
             if (model.ProofOfRegistrationFilePath != null && existingSupplier.ProofOfRegistrationFilePath != model.ProofOfRegistrationFilePath)
             {
@@ -116,19 +87,6 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 throw new InvalidOperationException("No data changes!");
             }
-        }
-
-        public async Task<List<SelectListItem>> GetFilprideTradeSupplierListAsyncById(string company, CancellationToken cancellationToken = default)
-        {
-            return await _db.FilprideSuppliers
-                .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && s.Company == company && s.Category == "Trade")
-                .Select(s => new SelectListItem
-                {
-                    Value = s.SupplierId.ToString(),
-                    Text = s.SupplierCode + " " + s.SupplierName
-                })
-                .ToListAsync(cancellationToken);
         }
     }
 }

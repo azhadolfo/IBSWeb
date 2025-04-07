@@ -47,6 +47,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IOfflineRepository MobilityOffline { get; }
 
         IStationRepository MobilityStation { get; }
+        Mobility.IRepository.ISupplierRepository MobilitySupplier { get; }
 
         Mobility.IRepository.IInventoryRepository MobilityInventory { get; }
 
@@ -83,7 +84,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; }
         Filpride.IRepository.ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; }
         IDeliveryReceiptRepository FilprideDeliveryReceipt { get; }
-        ISupplierRepository FilprideSupplier { get; }
+        Filpride.IRepository.ISupplierRepository FilprideSupplier { get; }
         ICustomerRepository FilprideCustomer { get; }
         IAuditTrailRepository FilprideAuditTrail { get; }
 

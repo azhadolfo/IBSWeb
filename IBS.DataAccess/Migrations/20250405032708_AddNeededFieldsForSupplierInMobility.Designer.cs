@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250405032708_AddNeededFieldsForSupplierInMobility")]
+    partial class AddNeededFieldsForSupplierInMobility
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3804,7 +3807,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("SupplierTerms")
                         .IsRequired()
-                        .HasColumnType("varchar(10)")
+                        .HasColumnType("varchar(3)")
                         .HasColumnName("supplier_terms");
 
                     b.Property<string>("SupplierTin")
@@ -4466,7 +4469,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("SupplierTerms")
                         .IsRequired()
-                        .HasColumnType("varchar(10)")
+                        .HasColumnType("varchar(3)")
                         .HasColumnName("supplier_terms");
 
                     b.Property<string>("SupplierTin")

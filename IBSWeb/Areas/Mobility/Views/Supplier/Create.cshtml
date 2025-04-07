@@ -1,0 +1,271 @@
+@model MobilitySupplier
+@using IBS.Utility
+@using IBS.Utility.Constants
+
+@{
+    ViewData["Title"] = "Create Supplier";
+}
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Supplier</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <fieldset class="form-group mb-3">
+                <legend>Select Category</legend>
+
+                <div class="form-check form-check-inline mb-3">
+                    <input asp-for="Category" class="form-check-input" type="radio" id="inlineRadio1" value="Trade" aria-labelledby="labelInlineRadio1" onclick="toggleSelect('tradeList')">
+                    <label class="form-check-label" for="inlineRadio1" id="labelInlineRadio1">Trade</label>
+                </div>
+
+                <div class="form-check form-check-inline">
+                    <input asp-for="Category" class="form-check-input" type="radio" id="inlineRadio2" value="Non-Trade" aria-labelledby="labelInlineRadio2" onclick="toggleSelect('nonTradeList')">
+                    <label class="form-check-label" for="inlineRadio2" id="labelInlineRadio2">Non-Trade</label>
+                </div>
+
+                <div class="form-check form-check-inline">
+                    <input asp-for="Category" class="form-check-input" type="radio" id="inlineRadio3" value="Commissionee" aria-labelledby="labelInlineRadio3" onclick="toggleSelect('commissioneeList')">
+                    <label class="form-check-label" for="inlineRadio3" id="labelInlineRadio3">Commissionee</label>
+                </div>
+
+                <div class="form-check form-check-inline">
+                    <input asp-for="Category" class="form-check-input" type="radio" id="inlineRadio4" value="Hauler" aria-labelledby="labelInlineRadio4" onclick="toggleSelect('haulerList')">
+                    <label class="form-check-label" for="inlineRadio4" id="labelInlineRadio4">Hauler</label>
+                </div>
+
+                <br />
+                <span class="text-danger"></span>
+            </fieldset>
+            <div class="form-floating mb-3" id="tradeList" style="display: none;">
+                <input asp-for="TradeName" class="form-control " placeholder="" />
+                <label asp-for="TradeName" class="control-label">Trade Name<span class="required">*</span></label>
+                <span asp-validation-for="TradeName" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="SupplierName" class="form-control " placeholder="" />
+                <label asp-for="SupplierName" class="control-label">Name<span class="required">*</span></label>
+                <span asp-validation-for="SupplierName" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="SupplierAddress" class="form-control " placeholder="" />
+                <label asp-for="SupplierAddress" class="control-label">Address<span class="required">*</span></label>
+                <span asp-validation-for="SupplierAddress" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="ZipCode" class="form-control " placeholder="" maxlength="4" />
+                <label asp-for="ZipCode" class="control-label">Zip Code<span class="required">*</span></label>
+                <span asp-validation-for="ZipCode" class="text-danger"></span>
+            </div>
+            <div class="row mb-3">
+                <div class="form-floating col">
+                    <input asp-for="SupplierTin" class="form-control formattedTinNumberInput" placeholder="" maxlength="17" />
+                    <label asp-for="SupplierTin" class="control-label ms-2">Tin No<span class="required">*</span></label>
+                    <span asp-validation-for="SupplierTin" class="text-danger"></span>
+                </div>
+                <div class="form-floating col">
+                    <input asp-for="Branch" class="form-control " placeholder="" />
+                    <label asp-for="Branch" class="control-label ms-2">Branch</label>
+                    <span asp-validation-for="Branch" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group mb-3" id="nonTradeList" style="display: none;">
+                <label class="control-label">Default Expense</label>
+                <select asp-for="DefaultExpenseNumber" asp-items="@Model.DefaultExpenses" class="form-select js-select2" style="width: 100%">
+                    <option></option>
+                </select>
+                <span asp-validation-for="DefaultExpenseNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="SupplierTerms" class="control-label"></label><span class="required">*</span>
+                <select asp-for="SupplierTerms" class="form-select js-select2">
+                    <option value="" selected disabled>Select payment terms</option>
+                    <option value="@SD.Terms_Cod">@SD.Terms_Cod</option>
+                    <option value="@SD.Terms_Prepaid">@SD.Terms_Prepaid</option>
+                    <option value="@SD.Terms_7d">@SD.Terms_7d</option>
+                    <option value="@SD.Terms_10d">@SD.Terms_10d</option>
+                    <option value="@SD.Terms_15d">@SD.Terms_15d</option>
+                    <option value="@SD.Terms_30d">@SD.Terms_30d</option>
+                    <option value="@SD.Terms_45d">@SD.Terms_45d</option>
+                    <option value="@SD.Terms_60d">@SD.Terms_60d</option>
+                    <option value="@SD.Terms_90d">@SD.Terms_90d</option>
+                    <option value="@SD.Terms_15pdc">@SD.Terms_15pdc</option>
+                    <option value="@SD.Terms_30pdc">@SD.Terms_30pdc</option>
+                    <option value="@SD.Terms_45pdc">@SD.Terms_45pdc</option>
+                    <option value="@SD.Terms_60pdc">@SD.Terms_60pdc</option>
+                    <option value="@SD.Terms_M15">@SD.Terms_M15</option>
+                    <option value="@SD.Terms_M29">@SD.Terms_M29</option>
+                    <option value="@SD.Terms_M30">@SD.Terms_M30</option>
+                </select>
+                <span asp-validation-for="SupplierTerms" class="text-danger"></span>
+            </div>
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Vat Type<span class="required">*</span></label>
+                <select asp-for="VatType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                    <option value="" selected disabled>Select vat type</option>
+                    <option value="@SD.VatType_Vatable">@SD.VatType_Vatable</option>
+                    <option value="@SD.VatType_ZeroRated">@SD.VatType_ZeroRated</option>
+                    <option value="@SD.VatType_Exempt">@SD.VatType_Exempt</option>
+                </select>
+                <span asp-validation-for="VatType" class="text-danger"></span>
+            </div>
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Tax Type<span class="required">*</span></label>
+                <select asp-for="TaxType" class="form-select js-select2 border-0 shadow" onchange="toggleExemptionFields(this)" style="width:100%; max-height: 200px;">
+                    <option value="" selected disabled>Select tax type</option>
+                    <option value="@SD.TaxType_WithTax">@SD.TaxType_WithTax</option>
+                    <option value="@SD.TaxType_Exempt">@SD.TaxType_Exempt</option>
+                </select>
+                <span asp-validation-for="TaxType" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3" id="WithholdingTaxPercent" style="display: none;">
+                <label class="control-label">Percent</label>
+                <select asp-for="WithholdingTaxPercent" class="form-select js-select2 withHoldingTaxPercent" style="width: 100%">
+                    <option value="" selected disabled>%</option>
+                    <option value="0">0%</option>
+                    <option value="0.01">1%</option>
+                    <option value="0.02">2%</option>
+                    <option value="0.05">5%</option>
+                    <option value="0.1">10%</option>
+                </select>
+                <span asp-validation-for="WithholdingTaxPercent" class="text-danger"></span>
+            </div>
+            <div id="exemptionFields" style="display:none;">
+                <div class="form-floating mb-3">
+                    <textarea asp-for="ReasonOfExemption" class="form-control " placeholder="Reason of exemption" style="height: 100px" required></textarea>
+                    <label asp-for="ReasonOfExemption" class="control-label">Reason<span class="required">*</span></label>
+                    <span asp-validation-for="ReasonOfExemption" class="text-danger"></span>
+                </div>
+                <fieldset class="mb-3">
+                    <legend>Validity<span class="required">*</span></legend>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="Validity" value="Permanent" onchange="toggleValidityDate(this)" required>
+                        <label class="form-check-label" asp-for="Validity">Permanent</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="Validity" value="Temporary" onchange="toggleValidityDate(this)">
+                        <label class="form-check-label" asp-for="Validity">Temporary</label>
+                    </div>
+                    <span asp-validation-for="Validity" class="text-danger"></span>
+                </fieldset>
+                <div id="validityDateField" class="form-group mb-3">
+                    <label asp-for="ValidityDate" class="control-label">Validity Date<span class="required">*</span></label>
+                    <input asp-for="ValidityDate" type="date" value="yyyy-MM-dd" class="form-control" required />
+                    <span asp-validation-for="ValidityDate" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="document" class="form-label">Upload the proof of exemption documents.<span class="required">*</span></label>
+                    <input class="form-control form-control-sm" name="document" type="file" required>
+                    <span asp-validation-for="ProofOfExemptionFilePath" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group mb-3">
+                <label for="registration" class="form-label">Upload the proof of BIR registration</label>
+                <input class="form-control form-control-sm" name="registration" type='file'>
+                <span asp-validation-for="ProofOfRegistrationFilePath" class="text-danger"></span>
+            </div>
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control">Create</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Mobility" asp-controller="Supplier" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function toggleExemptionFields(selectElement) {
+            const exemptionFields = document.getElementById("exemptionFields");
+            const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
+            var inlineRadio2 = document.getElementById('inlineRadio2');
+
+            if (selectElement.value === "Exempt") {
+                exemptionFields.style.display = "block";
+                withHoldingTaxPercent.style.display = "none";
+                $(".withHoldingTaxPercent").val(null).trigger('change');
+            } else if (selectElement.value === "Withholding Tax" && inlineRadio2.checked === true) {
+                withHoldingTaxPercent.style.display = "block";
+                exemptionFields.style.display = "none";
+            } else {
+                exemptionFields.style.display = "none";
+            }
+        }
+
+        function toggleValidityDate(radioButton) {
+            const validityDateField = document.getElementById("validityDateField");
+            validityDateField.style.display = radioButton.value === "Permanent" ? "none" : "block";
+        }
+
+        window.onload = function () {
+            var inlineRadio1 = document.getElementById('inlineRadio1');
+            var inlineRadio2 = document.getElementById('inlineRadio2');
+
+            // Check the default radio button on page load
+            if (inlineRadio1.checked) {
+                document.getElementById('tradeList').style.display = 'block';
+                document.getElementById('nonTradeList').style.display = 'none';
+            } else if (inlineRadio2.checked) {
+                document.getElementById('tradeList').style.display = 'none';
+                document.getElementById('nonTradeList').style.display = 'block';
+            }
+        };
+
+        function toggleSelect(id) {
+            var tradeList = document.getElementById('tradeList');
+            var nonTradeList = document.getElementById('nonTradeList');
+            var radios = [
+                document.getElementById('inlineRadio1'),
+                document.getElementById('inlineRadio2'),
+                document.getElementById('inlineRadio3'),
+                document.getElementById('inlineRadio4')
+            ];
+            const withHoldingTaxPercent = document.getElementById("WithholdingTaxPercent");
+
+            const resetCommonFields = () => {
+                $("#DefaultExpenseNumber").val(null).trigger('change');
+                $(".withHoldingTaxPercent").val(null).trigger('change');
+            };
+
+            // Hide trade and non-trade lists by default
+            tradeList.style.display = 'none';
+            nonTradeList.style.display = 'none';
+            withHoldingTaxPercent.style.display = 'none';
+            radios.forEach(radio => radio.checked = false);
+
+            switch (id) {
+                case 'tradeList':
+                case 'commissioneeList':
+                case 'haulerList':
+                    tradeList.style.display = 'block';
+                    resetCommonFields();
+                    radios[id === 'tradeList' ? 0 : (id === 'commissioneeList' ? 2 : 3)].checked = true;
+                    break;
+                case 'nonTradeList':
+                    nonTradeList.style.display = 'block';
+                    radios[1].checked = true;
+                    $("#TradeName").val("");
+                    withHoldingTaxPercent.style.display = 'block';
+                    $("#TaxType").val(null).trigger('change');
+                    break;
+            }
+        }
+    </script>
+}

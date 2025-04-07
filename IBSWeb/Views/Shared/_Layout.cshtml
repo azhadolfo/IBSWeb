@@ -692,7 +692,7 @@
                                     </li>
                                 }
                                 
-                                @if (User.IsInRole("Admin"))
+                                @if (User.IsInRole("Admin") && selectedCompany == "Filpride")
                                 {
                                     <li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Master File</a>
@@ -726,6 +726,35 @@
                                 
                                 @if(selectedCompany == "Mobility" && User.IsInRole("Admin"))
                                 {
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Master File</a>
+                                        <ul class="dropdown-menu">
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Customer" asp-action="Index">Customer</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Supplier" asp-action="Index">Supplier</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="BankAccount" asp-action="Index">Bank Account</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Service" asp-action="Index">Service</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Product" asp-action="Index">Product</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="PickupPoint" asp-action="Index">Pickup Points</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    
                                     <li class="nav-item">
                                         <a class="nav-link" asp-area="Mobility" asp-controller="ImportPOS" asp-action="Index">Import POS</a>
                                     </li>

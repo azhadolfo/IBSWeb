@@ -36,6 +36,7 @@ namespace IBS.DataAccess.Repository
         public IGeneralLedgerRepository MobilityGeneralLedger { get; private set; }
         public Mobility.IRepository.IInventoryRepository MobilityInventory { get; private set; }
         public IStationRepository MobilityStation { get; private set; }
+        public Mobility.IRepository.ISupplierRepository MobilitySupplier { get; private set; }
         public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
         public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
 
@@ -48,7 +49,7 @@ namespace IBS.DataAccess.Repository
         public Filpride.IRepository.ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; private set; }
         public IDeliveryReceiptRepository FilprideDeliveryReceipt { get; private set; }
         public ICustomerRepository FilprideCustomer { get; private set; }
-        public ISupplierRepository FilprideSupplier { get; private set; }
+        public Filpride.IRepository.ISupplierRepository FilprideSupplier { get; private set; }
         public IPickUpPointRepository FilpridePickUpPoint { get; private set; }
         public IFreightRepository FilprideFreight { get; private set; }
         public IAuthorityToLoadRepository FilprideAuthorityToLoad { get; private set; }
@@ -119,6 +120,7 @@ namespace IBS.DataAccess.Repository
             MobilityGeneralLedger = new GeneralLedgerRepository(_db);
             MobilityInventory = new Mobility.InventoryRepository(_db);
             MobilityStation = new StationRepository(_db);
+            MobilitySupplier = new Mobility.SupplierRepository(_db);
             MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
             MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
             MobilityCustomerOrderSlip = new Mobility.CustomerOrderSlipRepository(_db);
@@ -130,7 +132,7 @@ namespace IBS.DataAccess.Repository
             FilprideCustomerOrderSlip = new Filpride.CustomerOrderSlipRepository(_db);
             FilprideDeliveryReceipt = new DeliveryReceiptRepository(_db);
             FilprideCustomer = new CustomerRepository(_db);
-            FilprideSupplier = new SupplierRepository(_db);
+            FilprideSupplier = new Filpride.SupplierRepository(_db);
             FilpridePickUpPoint = new PickUpPointRepository(_db);
             FilprideFreight = new FreightRepository(_db);
             FilprideAuthorityToLoad = new AuthorityToLoadRepository(_db);
