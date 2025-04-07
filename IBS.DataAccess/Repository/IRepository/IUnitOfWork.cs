@@ -8,7 +8,7 @@ namespace IBS.DataAccess.Repository.IRepository
 {
     public interface IUnitOfWork : IDisposable
     {
-        IProductRepository Product { get; }
+        MasterFile.IRepository.IProductRepository Product { get; }
 
         ICompanyRepository Company { get; }
 
@@ -51,6 +51,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Mobility.IRepository.ICustomerRepository MobilityCustomer { get; }
         Mobility.IRepository.IBankAccountRepository MobilityBankAccount { get; }
         Mobility.IRepository.IServiceRepository MobilityService { get; }
+        Mobility.IRepository.IProductRepository MobilityProduct { get; }
         Mobility.IRepository.IInventoryRepository MobilityInventory { get; }
 
         IGeneralLedgerRepository MobilityGeneralLedger { get; }

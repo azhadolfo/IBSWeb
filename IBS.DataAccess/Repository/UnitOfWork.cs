@@ -18,7 +18,7 @@ namespace IBS.DataAccess.Repository
     {
         private ApplicationDbContext _db;
 
-        public IProductRepository Product { get; private set; }
+        public MasterFile.IRepository.IProductRepository Product { get; private set; }
         public ICompanyRepository Company { get; private set; }
 
         public INotificationRepository Notifications { get; private set; }
@@ -40,6 +40,7 @@ namespace IBS.DataAccess.Repository
         public Mobility.IRepository.ICustomerRepository MobilityCustomer { get; private set; }
         public Mobility.IRepository.IBankAccountRepository MobilityBankAccount { get; private set; }
         public Mobility.IRepository.IServiceRepository MobilityService { get; private set; }
+        public Mobility.IRepository.IProductRepository MobilityProduct { get; private set; }
         public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
         public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
 
@@ -106,7 +107,7 @@ namespace IBS.DataAccess.Repository
         {
             _db = db;
 
-            Product = new ProductRepository(_db);
+            Product = new MasterFile.ProductRepository(_db);
             Company = new CompanyRepository(_db);
             Notifications = new NotificationRepository(_db);
 
@@ -127,6 +128,7 @@ namespace IBS.DataAccess.Repository
             MobilityCustomer = new Mobility.CustomerRepository(_db);
             MobilityBankAccount = new Mobility.BankAccountRepository(_db);
             MobilityService = new Mobility.ServiceRepository(_db);
+            MobilityProduct = new Mobility.ProductRepository(_db);
             MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
             MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
             MobilityCustomerOrderSlip = new Mobility.CustomerOrderSlipRepository(_db);
