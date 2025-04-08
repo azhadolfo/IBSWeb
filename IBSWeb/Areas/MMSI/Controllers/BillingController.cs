@@ -395,6 +395,41 @@ namespace IBSWeb.Areas.MMSI
                 .Include(dt => dt.ActivityService)
                 .ToListAsync (cancellationToken);
 
+            // Splitting the address for the view
+            string[] words = model.Customer.CustomerAddress.Split(' ');
+            List<string> resultStrings = new List<string>();
+            string currentString = "";
+
+            foreach (string word in words)
+            {
+                if (currentString.Length + word.Length + (currentString.Length > 0 ? 1 : 0) > 40)
+                {
+                    if (currentString.Length > 0)
+                    {
+                        resultStrings.Add(currentString.Trim());
+                    }
+                    currentString = word;
+                }
+                else
+                {
+                    currentString += (currentString.Length > 0 ? " " : "") + word;
+                }
+            }
+            if (currentString.Length > 0)
+            {
+                resultStrings.Add(currentString.Trim());
+            }
+            string firstString = resultStrings.Count > 0 ? resultStrings[0] : "";
+            string secondString = resultStrings.Count > 1 ? resultStrings[1] : "";
+            string thirdString = resultStrings.Count > 2 ? resultStrings[2] : "";
+            string fourthString = resultStrings.Count > 3 ? resultStrings[3] : "";
+
+            var results = resultStrings;
+            model.AddressLine1 = firstString;
+            model.AddressLine2 = secondString;
+            model.AddressLine3 = thirdString;
+            model.AddressLine4 = fourthString;
+
             return View(model);
         }
 

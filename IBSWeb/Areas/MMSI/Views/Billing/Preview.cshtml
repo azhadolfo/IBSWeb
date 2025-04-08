@@ -9,11 +9,11 @@
     @@media print {
         .print-bottom {
             position: absolute;
-            bottom: 0;
+            bottom: 3%;
         }
         .print-bottom2 {
             position: absolute;
-            bottom: 12%;
+            bottom: 15%;
         }
     }
 </style>
@@ -22,11 +22,12 @@
 
     <div class="row">
         <div class="col-8">
-            <div class="text-start mb-4">
-                <h3 class="m-0"><u><b>MALAYAN MARITIME SERVICES INC.</b></u></h3>
-                <p>
-                    14th Floor Jollibee Centre, San Miguel Ave., Pasig City<br/>
+            <div class="text-start">
+                <h3 class="m-0">MALAYAN MARITIME SERVICES INC.</h3>
+                <p style="font-size: 0.70em;" class="m-0">
+                    Office Address 14th Floor Jollibee Centre, San Miguel Ave., Pasig City<br/>
                     Phone No: 633-4302 * 633-9472 * 634-4904<br/>
+                    Business Office: 10 JP LAUREL AVE, SASA, DAVAO CITY<br/>
                     Mobile No: +639178202692
                 </p>
             </div>
@@ -35,111 +36,126 @@
             <div class="text-end">
                 <img src="~/img/mmsi-logo.jpg" width="80px"/>
             </div>
-            <div class="text-end pt-3">
-                <h3><b>BILLING STATEMENT</b></h3>
-            </div>
         </div>
     </div>
 
     <div class="table-responsive">
         <table class="table table-borderless">
+        <tbody>
+        <tr>
+            <td class="col-6 p-0 m-0"></td>
+            <td class="text-danger p-0 m-0"><b>BILLING STATEMENT NO.&nbsp;@Html.DisplayFor(model => model.MMSIBillingNumber)</b></td>
+        </tr>
+        </tbody>
+        </table>
+        <table class="table table-borderless">
             <tbody>
             <tr>
-                <h6 class="text-end"><b class="text-danger">BILL #:&nbsp;@Html.DisplayFor(model => model.MMSIBillingNumber)</b></h6>
-            </tr>
-            <tr>
                 <td class="col-1 p-0 m-0"><b>BILLED TO:</b></td>
-                <td class="col-4 p-0 m-0">@Model.Customer?.CustomerName</td>
+                <td class="col-4 p-0 m-0 px-2 border-bottom border-dark"><b>@Model.Customer?.CustomerName</b></td>
                 <td class="col-1 p-0 m-0"></td>
                 <td class="col-2 p-0 m-0"><b>DATE:</b></td>
-                <td class="col-5 p-0 m-0">@Model.Date</td>
+                <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Date</td>
             </tr>
             <tr>
                 <td class="col-1 p-0 m-0"><b>ADDRESS:</b></td>
-                <td class="col-4 p-0 m-0" rowspan="3">@Model.Customer?.CustomerAddress</td>
+                <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine1</td>
                 <td class="col-1 p-0 m-0"></td>
                 <td class="col-2 p-0 m-0"><b>TIN:</b></td>
-                <td class="col-5 p-0 m-0">@Model.Customer.CustomerTIN</td>
+                <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerTIN</td>
             </tr>
             <tr>
                 <td class="col-1 p-0 m-0"></td>
-                @* empty*@
+                <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine2</td>
                 <td class="col-1 p-0 m-0"></td>
                 <td class="col-2 p-0 m-0"><b>BUSINESS STYLE:</b></td>
-                <td class="col-5 p-0 m-0">@Model.Customer.CustomerBusinessStyle</td>
+                <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerBusinessStyle</td>
             </tr>
             <tr>
                 <td class="col-1 p-0 m-0"></td>
-                @* empty*@
+                <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine3</td>
                 <td class="col-1 p-0 m-0"></td>
                 <td class="col-2 p-0 m-0"><b>TERMS:</b></td>
-                <td class="col-5 p-0 m-0">@Model.Customer.CustomerTerms</td>
+                <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerTerms</td>
             </tr>
             </tbody>
         </table>
     </div>
     
-    <div class="table-responsive">
-        <table class="table table-bordered">
+    <div class="table-responsive mt-3 me-1">
+        <table class="table table-bordered border-dark">
             <thead>
-            <tr class="border">
-                <th class="text-center" colspan="4">
+            <tr>
+                <th class="text-center" colspan="4" style="border-width: 2px !important;">
                     PARTICULARS
                 </th>
             </tr>
             </thead>
-            <tr>
-                <td class="text-center">
-                    <b>VESSEL :</b> @Model.Vessel?.VesselName
-                </td>
-                <td class="text-center">
-                    <b>PORT-TERMINAL :</b> @Model.Terminal?.Port?.PortName - @Model.Terminal?.TerminalName
-                </td>
-                <td class="text-center">
-                    <b>VOYAGE # :</b> @Model.VoyageNumber
-                </td>
-            </tr>
         </table>
+            <div class="mt-3">
+                <table class="table table-borderless">
+                    <tr>
+                        <td class="text-center align-middle" rowspan="2">
+                            <b>FOR THE SERVICE RE:</b>
+                        </td>
+                        <td class="p-1 mx-1 ps-2 border-bottom border-dark">
+                            <b>@Model.Vessel?.VesselName</b>
+                        </td>
+                        <td class="text-start align-middle" rowspan="2">
+                            <div class="row p-0 m-0">
+                                <div class="text-end col-4">
+                                    <b>VOYAGE #: </b>
+                                </div> 
+                                <div class="col-8 m-0 p-0 border-bottom border-dark">
+                                    @Model.VoyageNumber
+                                </div> 
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="p-1 mx-1 ps-2 border-bottom border-dark">
+                            AT @Model.Terminal?.Port?.PortName
+                        </td>
+                    </tr>
+                </table>
+            </div>
     </div>
 
-    <div class="table-responsive">
+    <div class="table-responsive mt-3 me-1">
         <table class="table table-borderless">
             <thead>
             <tr>
-                <th colspan="8">DISPATCH TICKETS BILLED: </th>
-            </tr>
-            <tr>
-                <th class="text-center border">DISPATCH #</th>
-                <th class="text-center border">SERVICE TYPE</th>
-                <th class="text-center border">DATE</th>
-                <th class="text-center border">TIME START</th>
-                <th class="text-center border">TIME END</th>
-                <th class="text-center border">TOTAL HOURS</th>
-                <th class="text-center border">DISPATCH RATE</th>
-                <th class="text-center border">BAF RATE</th>
-                <th class="text-center border">AMOUNT</th>
+                <th class="text-center border border-dark">DATE</th>
+                <th class="text-center border border-dark">NATURE OF SERVICE</th>
+                <th class="text-center border border-dark">TIME START</th>
+                <th class="text-center border border-dark">TIME END</th>
+                <th class="text-center border border-dark">TOTAL HOURS</th>
+                <th class="text-center border border-dark">RATE</th>
+                <th class="text-center border border-dark">AMOUNT</th>
             </tr>
             </thead>
             <tbody>
             @foreach (var dt in @Model.PaidDispatchTickets)
             {
                 <tr class="">
-                    <td colspan="8" class="p-0 m-0 pt-4">TUGBOAT: @dt.Tugboat.TugboatName</td>
+                    <td colspan="8" class="p-0 m-0 pt-4">NAME OF TUGBOAT: @dt.Tugboat.TugboatName</td>
                 </tr>
                 <tr class="pb-2">
-                    <td class="text-center p-0">@dt.DispatchNumber</td>
+                    <td class="text-center p-0">@dt.CreateDate.ToString("dd-MMM")</td>
                     <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
-                    <td class="text-center p-0">@dt.CreateDate</td>
                     <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                     <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
-                    <td class="text-center p-0">@dt.TotalHours hrs.</td>
-                    <td class="text-center p-0">₱@dt.DispatchRate?.ToString("N2") @dt.DispatchChargeType</td>
-                    <td class="text-center p-0">₱@dt.BAFRate?.ToString("N2") @dt.BAFChargeType</td>
-                    <td class="text-center p-0">₱@dt.TotalNetRevenue?.ToString("N2")</td>
+                    <td class="text-center p-0">@dt.TotalHours</td>
+                    <td class="text-end p-0">@dt.DispatchRate?.ToString("N2")</td>
+                    <td class="text-end p-0">@dt.TotalNetRevenue?.ToString("N2")</td>
                 </tr>
             }
             <tr>
-                <td colspan="8" class="pt-4 text-center"> ---------- NOTHING FOLLOWS ---------- </td>
+                <td colspan="8" class="pt-4 text-center">
+                    <div class="mt-4">
+                        ---------- NOTHING FOLLOWS ----------
+                    </div>
+                </td>
             </tr>
             </tbody>
         </table>

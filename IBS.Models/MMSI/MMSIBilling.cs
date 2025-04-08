@@ -53,6 +53,22 @@ namespace IBS.Models.MMSI
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; }
 
+        #region ---Address Lines---
+
+        [NotMapped]
+        public string? AddressLine1 { get; set; }
+
+        [NotMapped]
+        public string? AddressLine2 { get; set; }
+
+        [NotMapped]
+        public string? AddressLine3 { get; set; }
+
+        [NotMapped]
+        public string? AddressLine4 { get; set; }
+
+        #endregion
+
         #region ---Select Lists---
 
         [NotMapped]
