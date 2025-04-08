@@ -393,7 +393,14 @@ namespace IBSWeb.Areas.MMSI
                 .Where(dt => dt.BillingId == model.MMSIBillingId.ToString())
                 .Include(dt => dt.Tugboat)
                 .Include(dt => dt.ActivityService)
+                .OrderBy(dt => dt.DateLeft).ThenBy(dt => dt.TimeLeft)
                 .ToListAsync (cancellationToken);
+
+            model.UniqueTugboats = await _db.MMSIDispatchTickets
+                .Where(dt => dt.BillingId == model.MMSIBillingId.ToString())
+                .Select(dt => dt.Tugboat.TugboatName.ToString())
+                .Distinct() // Ensures unique values
+                .ToListAsync(cancellationToken);
 
             model = await _unitOfWork.Msap.ProcessAddress(model, cancellationToken);
 

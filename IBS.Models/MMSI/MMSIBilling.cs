@@ -67,6 +67,9 @@ namespace IBS.Models.MMSI
         [NotMapped]
         public string? AddressLine4 { get; set; }
 
+        [NotMapped]
+        public List<string>? UniqueTugboats { get; set; }
+
         #endregion
 
         #region ---Select Lists---

@@ -135,20 +135,42 @@
             </tr>
             </thead>
             <tbody>
-            @foreach (var dt in @Model.PaidDispatchTickets)
+            @foreach (var tugboat in Model.UniqueTugboats)
             {
                 <tr class="">
-                    <td colspan="8" class="p-0 m-0 pt-4">NAME OF TUGBOAT: @dt.Tugboat.TugboatName</td>
+                    <td colspan="8" class="p-0 m-0 pt-4">NAME OF TUGBOAT: @tugboat</td>
                 </tr>
-                <tr class="pb-2">
-                    <td class="text-center p-0">@dt.CreateDate.ToString("dd-MMM")</td>
-                    <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
-                    <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
-                    <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
-                    <td class="text-center p-0">@dt.TotalHours?.ToString("N2")</td>
-                    <td class="text-end p-0">@dt.DispatchRate?.ToString("N2")</td>
-                    <td class="text-end p-0">@dt.TotalNetRevenue?.ToString("N2")</td>
+                
+                @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.Tugboat.TugboatName == tugboat))
+                {
+                    <tr class="pb-2">
+                        <td class="text-center p-0">@dt.CreateDate.ToString("dd-MMM")</td>
+                        <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
+                        <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
+                        <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
+                        <td class="text-center p-0">@dt.TotalHours?.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.DispatchRate?.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.DispatchNetRevenue?.ToString("N2")</td>
+                    </tr>
+                }
+            }
+            @if (Model.PaidDispatchTickets.Any(dt => dt.BAFNetRevenue.HasValue))
+            {
+                <tr class="">
+                    <td colspan="8" class="p-0 m-0 pt-4">BUNKER ADJUSTMENT FACTORS</td>
                 </tr>
+                @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.BAFNetRevenue.HasValue))
+                {
+                    <tr class="pb-2">
+                        <td class="text-center p-0">@dt.CreateDate.ToString("dd-MMM")</td>
+                        <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
+                        <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
+                        <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
+                        <td class="text-center p-0">@dt.TotalHours?.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.BAFRate?.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.BAFNetRevenue?.ToString("N2")</td>
+                    </tr>
+                }
             }
             <tr>
                 <td colspan="8" class="pt-4 text-center">
