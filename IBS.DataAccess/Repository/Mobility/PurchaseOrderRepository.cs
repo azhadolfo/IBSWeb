@@ -87,7 +87,8 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             IQueryable<MobilityPurchaseOrder> query = dbSet
                 .Include(po => po.Product)
-                .Include(po => po.Supplier);
+                .Include(po => po.Supplier)
+                .Include(po => po.PickUpPoint);
 
             if (filter != null)
             {

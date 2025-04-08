@@ -146,7 +146,34 @@
             }
 
             $(".quantity, .price").on("input", updateTotal);
-            updateTotal();
+            
+            $("#SupplierId").change(function (){
+                let supplierId = $(this).val();
+                fetchPickUpPoints(supplierId);
+            });
+            
+            function fetchPickUpPoints(supplierId){
+                if (supplierId) {
+                    $.ajax({
+                        url: '@Url.Action("GetPickUpPoints", "PurchaseOrder", new { area = "Mobility" })',
+                        type: "GET",
+                        data: { supplierId: supplierId },
+                        success: function (data) {
+                            var pickupDropdown = $("#PickUpPointId");
+                            pickupDropdown.empty();
+                            pickupDropdown.append('<option value="">Select Pickup Point</option>');
+
+                            $.each(data, function (index, item) {
+                                pickupDropdown.append('<option value="' + item.value + '">' + item.text + '</option>');
+                            });
+                        },
+                        error: function () {
+                            alert("Error fetching pickup points.");
+                        }
+                    });
+                }
+            }
+            
         });
     </script>
 }

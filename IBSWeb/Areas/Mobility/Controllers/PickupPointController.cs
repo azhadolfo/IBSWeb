@@ -52,7 +52,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
             var model = new MobilityPickUpPoint();
-            model.Suppliers = await _unitOfWork.MobilityPickUpPoint.GetFilprideTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
+            model.Suppliers = await _unitOfWork.MobilityPickUpPoint.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
             model.StationCode = stationCodeClaims;
 
             return View(model);
@@ -105,7 +105,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 var companyClaims = await GetStationCodeClaimAsync();
                 var model = await _unitOfWork.MobilityPickUpPoint
                     .GetAsync(p => p.PickUpPointId == id, cancellationToken);
-                model.Suppliers = await _unitOfWork.MobilityPickUpPoint.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                model.Suppliers = await _unitOfWork.MobilityPickUpPoint.GetMobilityTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
                 return View(model);
             }

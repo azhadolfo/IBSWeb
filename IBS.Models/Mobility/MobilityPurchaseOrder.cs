@@ -42,7 +42,7 @@ namespace IBS.Models.Mobility
         public int ProductId { get; set; }
 
         [ForeignKey(nameof(ProductId))]
-        public Product? Product { get; set; }
+        public MobilityProduct? Product { get; set; }
 
         #endregion Product
 
@@ -83,8 +83,6 @@ namespace IBS.Models.Mobility
 
         public bool IsClosed { get; set; }
 
-        public string Company { get; set; } = string.Empty;
-
         public bool IsPrinted { get; set; }
 
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
@@ -94,7 +92,7 @@ namespace IBS.Models.Mobility
         public int PickUpPointId { get; set; }
 
         [ForeignKey(nameof(PickUpPointId))]
-        public FilpridePickUpPoint? PickUpPoint { get; set; }
+        public MobilityPickUpPoint? PickUpPoint { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]

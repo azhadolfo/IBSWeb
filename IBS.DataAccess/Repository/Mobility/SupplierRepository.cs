@@ -4,6 +4,7 @@ using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Utility;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Mobility
@@ -87,6 +88,19 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 throw new InvalidOperationException("No data changes!");
             }
+        }
+
+        public async Task<List<SelectListItem>> GetMobilityTradeSupplierListAsyncById(string stationCodeClaims, CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilitySuppliers
+                .OrderBy(s => s.SupplierCode)
+                .Where(s => s.IsActive && s.StationCode == stationCodeClaims && s.Category == "Trade")
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = s.SupplierCode + " " + s.SupplierName
+                })
+                .ToListAsync(cancellationToken);
         }
     }
 }
