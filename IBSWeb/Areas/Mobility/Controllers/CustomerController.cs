@@ -79,7 +79,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var model = await _dbContext.MobilityCustomers.ToListAsync(cancellationToken);
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            IEnumerable<MobilityCustomer> model = await _dbContext.MobilityCustomers
+                .Where(c => c.StationCode == stationCodeClaims)
+                .ToListAsync(cancellationToken);
+
             return View(model);
         }
 
