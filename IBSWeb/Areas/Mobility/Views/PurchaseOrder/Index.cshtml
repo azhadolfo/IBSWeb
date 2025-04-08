@@ -309,6 +309,12 @@
                                 // Show Update Price, Preview, and Void options if posted
                                 dropdownContent = '';
 
+                                if (!row.isReceived && !row.isSubPo) {
+                                    dropdownContent += `
+                                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="initiateProductTransfer(${data}, '${row.supplierId}', '${row.supplier.supplierName}')">Product Transfer</a></li>
+                                    `;
+                                }
+                                
                                 dropdownContent += `
                                 <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Mobility" })/${data}">Print</a></li>
                                  `;
