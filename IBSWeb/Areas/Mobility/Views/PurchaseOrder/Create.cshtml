@@ -162,7 +162,7 @@
             function fetchPickUpPoints(supplierId){
                 if (supplierId) {
                     $.ajax({
-                        url: '@Url.Action("GetPickUpPoints", "PurchaseOrder", new { area = "Filpride" })',
+                        url: '@Url.Action("GetPickUpPoints", "PurchaseOrder", new { area = "Mobility" })',
                         type: "GET",
                         data: { supplierId: supplierId },
                         success: function (data) {

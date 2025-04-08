@@ -1,11 +1,14 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Linq.Dynamic.Core;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
+using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -33,13 +36,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        }
-
         public async Task<string> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -61,18 +57,84 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return View(purchaseOrders);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GetPurchaseOrders([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var stationCodeClaims = await GetStationCodeClaimAsync();
+
+                var purchaseOrders = await _unitOfWork.MobilityPurchaseOrder
+                    .GetAllAsync(po => po.StationCode == stationCodeClaims, cancellationToken);
+
+                // Search filter
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    purchaseOrders = purchaseOrders
+                    .Where(s =>
+                        s.PurchaseOrderNo.ToLower().Contains(searchValue) ||
+                        s.Supplier.SupplierName.ToLower().Contains(searchValue) ||
+                        s.PickUpPoint.Depot.ToLower().Contains(searchValue) ||
+                        s.Product.ProductName.ToLower().Contains(searchValue) ||
+                        s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                        s.Quantity.ToString().Contains(searchValue) ||
+                        s.Remarks.ToString().Contains(searchValue) ||
+                        s.CreatedBy.ToLower().Contains(searchValue) ||
+                        s.Status.ToLower().Contains(searchValue)
+                        )
+                    .ToList();
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    purchaseOrders = purchaseOrders
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = purchaseOrders.Count();
+
+                var pagedData = purchaseOrders
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get purchase order. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
+            var stationCodeClaims = await GetStationCodeClaimAsync();
 
             var viewModel = new PurchaseOrderViewModel();
 
-            viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
 
-            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-
-            viewModel.Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken);
+            viewModel.Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken);
 
             return View(viewModel);
         }
@@ -81,13 +143,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
+            var stationCodeClaims = await GetStationCodeClaimAsync();
 
-            var stationCodeClaim = await GetStationCodeClaimAsync();
+            viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
 
-            viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-
-            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            viewModel.Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -95,15 +155,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 try
                 {
-                    var supplier = await _dbContext.FilprideSuppliers
-                        .FirstOrDefaultAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+                    var supplier = await _unitOfWork.MobilitySupplier
+                        .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
 
                     MobilityPurchaseOrder model = new()
                     {
-                        PurchaseOrderNo = await _unitOfWork.MobilityPurchaseOrder.GenerateCodeAsync(stationCodeClaim, viewModel.Type, cancellationToken),
+                        PurchaseOrderNo = await _unitOfWork.MobilityPurchaseOrder.GenerateCodeAsync(stationCodeClaims, viewModel.Type, cancellationToken),
                         Type = viewModel.Type,
                         Date = viewModel.Date,
-                        SupplierId = 1,
+                        SupplierId = supplier.SupplierId,
                         PickUpPointId = viewModel.PickUpPointId,
                         ProductId = viewModel.ProductId,
                         Terms = viewModel.Terms,
@@ -112,11 +172,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Amount = viewModel.Quantity * viewModel.UnitPrice,
                         SupplierSalesOrderNo = viewModel.SupplierSalesOrderNo,
                         Remarks = viewModel.Remarks,
-                        StationCode = stationCodeClaim,
+                        StationCode = stationCodeClaims,
                         CreatedBy = _userManager.GetUserName(User),
                         SupplierAddress = supplier.SupplierAddress,
                         SupplierTin = supplier.SupplierTin,
-                        Company = companyClaims,
                     };
 
                     await _unitOfWork.MobilityPurchaseOrder.AddAsync(model, cancellationToken);
@@ -124,7 +183,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new purchase order# {model.PurchaseOrderNo}", "Purchase Order", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new purchase order# {model.PurchaseOrderNo}", "Purchase Order", ipAddress, model.StationCode);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -139,15 +198,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     _logger.LogError(ex, "Failed to create purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
-                    viewModel.Suppliers = await _unitOfWork.GetMobilitySupplierListAsyncById(cancellationToken);
-                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
+                    viewModel.Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
-            viewModel.Suppliers = await _unitOfWork.GetMobilitySupplierListAsyncById(cancellationToken);
-            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
+            viewModel.Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken);
             ModelState.AddModelError("", "The information you submitted is not valid!");
             return View(viewModel);
         }
@@ -155,7 +214,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
+            var stationCodeClaims = await GetStationCodeClaimAsync();
 
             if (id == null)
             {
@@ -178,11 +237,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Type = existingRecord.Type,
                     Date = existingRecord.Date,
                     SupplierId = existingRecord.SupplierId,
-                    Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
+                    Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken),
                     PickUpPointId = existingRecord.PickUpPointId,
-                    PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetDistinctPickupPointList(),
+                    PickUpPoints = await _unitOfWork.MobilityPickUpPoint.GetDistinctPickupPointList(),
                     ProductId = existingRecord.ProductId,
-                    Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
+                    Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken),
                     Terms = existingRecord.Terms,
                     Quantity = existingRecord.Quantity,
                     UnitPrice = existingRecord.UnitPrice,
@@ -203,26 +262,24 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
         {
+            var stationCodeClaims = await GetStationCodeClaimAsync();
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
                 try
                 {
                     var existingModel = await _dbContext.MobilityPurchaseOrders.FindAsync(viewModel.PurchaseOrderId, cancellationToken);
-
-                    var companyClaims = await GetCompanyClaimAsync();
 
                     if (existingModel == null)
                     {
                         return NotFound();
                     }
 
-                    var suppliers = await _dbContext.FilprideSuppliers
-                        .FirstOrDefaultAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+                    var suppliers = await _unitOfWork.MobilitySupplier
+                        .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
 
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
-                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
+                    viewModel.Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken);
 
                     existingModel.Date = viewModel.Date;
                     existingModel.SupplierId = viewModel.SupplierId;
@@ -245,7 +302,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited purchase order# {existingModel.PurchaseOrderNo}", "Purchase Order", ipAddress, existingModel.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited purchase order# {existingModel.PurchaseOrderNo}", "Purchase Order", ipAddress, existingModel.StationCode);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -260,41 +317,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     _logger.LogError(ex, "Failed to edit purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
+                    viewModel.Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
+            viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
+            viewModel.Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken);
             return View(viewModel);
         }
-
-        // [HttpPost]
-        // public async Task<IActionResult> Edit(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
-        // {
-        //     if (ModelState.IsValid)
-        //     {
-        //         try
-        //         {
-        //             viewModel.CurrentUser = _userManager.GetUserName(User);
-        //             await _unitOfWork.MobilityPurchaseOrder.UpdateAsync(viewModel, cancellationToken);
-        //
-        //             TempData["success"] = "Purchase order updated successfully.";
-        //             return RedirectToAction(nameof(Index));
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             viewModel.Suppliers = await _unitOfWork.GetMobilitySupplierListAsyncById(cancellationToken);
-        //             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-        //             TempData["error"] = ex.Message;
-        //             return View(viewModel);
-        //         }
-        //     }
-        //
-        //     viewModel.Suppliers = await _unitOfWork.GetMobilitySupplierListAsyncById(cancellationToken);
-        //     viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-        //     TempData["error"] = "The submitted information is invalid.";
-        //     return View(viewModel);
-        // }
 
         public async Task<IActionResult> Preview(string? id, CancellationToken cancellationToken)
         {
@@ -354,6 +387,52 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Preview), new { id });
             }
+        }
+
+        public async Task<IActionResult> GetPickUpPoints(int supplierId, CancellationToken cancellationToken)
+        {
+            var pickUpPoints = await _unitOfWork.MobilityPickUpPoint.GetPickUpPointListBasedOnSupplier(supplierId, cancellationToken);
+
+            return Json(pickUpPoints);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ProcessProductTransfer(int purchaseOrderId, int pickupPointId, string notes, CancellationToken cancellationToken)
+        {
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var purchaseOrder = await _unitOfWork.MobilityPurchaseOrder
+                    .GetAsync(p => p.PurchaseOrderId == purchaseOrderId, cancellationToken);
+
+                var pickupPoint = await _dbContext.MobilityPickUpPoints
+                    .FindAsync(pickupPointId, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(User.Identity.Name, $"Product transfer for Purchase Order {purchaseOrder.PurchaseOrderNo} from {purchaseOrder.PickUpPoint.Depot} to {pickupPoint.Depot}. \nNote: {notes}", "Purchase Order", ipAddress, purchaseOrder.StationCode);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                purchaseOrder.PickUpPointId = pickupPointId;
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return Json(new { success = true});
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to product transfer the purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Transfer by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return Json(new { success = false, message = TempData["error"] });
+            }
+
         }
     }
 }

@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Mobility
@@ -41,6 +42,19 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 throw new InvalidOperationException("No data changes!");
             }
+        }
+
+        public async Task<List<SelectListItem>> GetProductListAsyncById(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityProducts
+                .OrderBy(p => p.ProductId)
+                .Where(p => p.IsActive)
+                .Select(p => new SelectListItem
+                {
+                    Value = p.ProductId.ToString(),
+                    Text = p.ProductCode + " " + p.ProductName
+                })
+                .ToListAsync(cancellationToken);
         }
     }
 }
