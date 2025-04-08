@@ -103,6 +103,7 @@ namespace IBS.DataAccess.Repository.Mobility
             return await dbSet.Where(filter)
                 .Include(po => po.Product)
                 .Include(po => po.Supplier)
+                .Include(po => po.PickUpPoint)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 

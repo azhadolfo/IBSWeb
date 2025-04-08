@@ -130,7 +130,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var selected = await _unitOfWork.MobilityPickUpPoint
                         .GetAsync(p => p.PickUpPointId == model.PickUpPointId, cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", "", model.StationCode);
+                    FilprideAuditTrail auditTrailBook = new(User.Identity.Name, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", "", model.StationCode);
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     selected.Depot = model.Depot;
