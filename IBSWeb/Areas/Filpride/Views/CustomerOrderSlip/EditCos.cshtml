@@ -370,7 +370,6 @@
 
                                     poSelect.trigger("change");
                                 } else {
-                                    poSelect.empty();
                                     $('input[name="Quantity"]').val('');
                                     $('input[name="DeliveredPrice"]').val('');
                                     $('input[name="Vat"]').val('');
@@ -382,12 +381,12 @@
                             }
                         });
                     } else {
-                        poSelect.empty();
                         $('input[name="Quantity"]').val('');
                         $('input[name="DeliveredPrice"]').val('');
                         $('input[name="Vat"]').val('');
                         $('input[name="TotalAmount"]').val('');
                     }
+                    poSelect.val(null).empty().trigger("change");
                 }
                 $('select[name="ProductId"]').on('change', loadPurchaseOrderList);
                 loadPurchaseOrderList();
