@@ -36,17 +36,17 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             MobilityPurchaseOrder? lastPo = await _db
                 .MobilityPurchaseOrders
-                .Where(s => s.StationCode == stationCode)
+                .Where(s => s.StationCode == stationCode && s.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastPo != null)
             {
                 string lastSeries = lastPo.PurchaseOrderNo;
-                string numericPart = lastSeries.Substring(2);
+                string numericPart = lastSeries.Substring(6);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
-                return $" {stationCode}-{lastSeries.Substring(0, 2) + incrementedNumber.ToString("D9")}";
+                return $"{lastSeries.Substring(0, 6) + incrementedNumber.ToString("D9")}";
             }
             else
             {
@@ -58,17 +58,17 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             MobilityPurchaseOrder? lastPo = await _db
                 .MobilityPurchaseOrders
-                .Where(s => s.StationCode == stationCode)
+                .Where(s => s.StationCode == stationCode && s.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastPo != null)
             {
                 string lastSeries = lastPo.PurchaseOrderNo;
-                string numericPart = lastSeries.Substring(3);
+                string numericPart = lastSeries.Substring(7);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
-                return $" {stationCode}-{lastSeries.Substring(0, 3) + incrementedNumber.ToString("D8")}";
+                return $"{lastSeries.Substring(0, 7) + incrementedNumber.ToString("D8")}";
             }
             else
             {
