@@ -10,6 +10,7 @@ using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -329,66 +330,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return View(viewModel);
         }
 
-        public async Task<IActionResult> Preview(string? id, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                return NotFound();
-            }
-
-            try
-            {
-                var existingRecord = await _unitOfWork.MobilityPurchaseOrder
-                    .GetAsync(po => po.PurchaseOrderNo == id, cancellationToken);
-
-                if (existingRecord == null)
-                {
-                    return BadRequest();
-                }
-
-                return View(existingRecord);
-            }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        public async Task<IActionResult> Post(string? id, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                return NotFound();
-            }
-
-            try
-            {
-                var existingRecord = await _unitOfWork.MobilityPurchaseOrder
-                    .GetAsync(po => po.PurchaseOrderNo == id, cancellationToken);
-
-                if (existingRecord == null)
-                {
-                    return BadRequest();
-                }
-
-                if (existingRecord.PostedBy == null)
-                {
-                    existingRecord.PostedBy = _userManager.GetUserName(User);
-                    existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    await _unitOfWork.MobilityPurchaseOrder.PostAsync(existingRecord, cancellationToken);
-                }
-
-                TempData["success"] = "Purchase order approved successfully.";
-                return RedirectToAction(nameof(Preview), new { id });
-            }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Preview), new { id });
-            }
-        }
-
         public async Task<IActionResult> GetPickUpPoints(int supplierId, CancellationToken cancellationToken)
         {
             var pickUpPoints = await _unitOfWork.MobilityPickUpPoint.GetPickUpPointListBasedOnSupplier(supplierId, cancellationToken);
@@ -433,6 +374,169 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return Json(new { success = false, message = TempData["error"] });
             }
 
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var purchaseOrder = await _dbContext.MobilityPurchaseOrders
+                .Include(po => po.Supplier)
+                .Include(po => po.Product)
+                .Include(po => po.PickUpPoint)
+                .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
+
+            if (purchaseOrder == null)
+            {
+                return NotFound();
+            }
+
+            return View(purchaseOrder);
+        }
+
+        public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
+        {
+            var model = await _dbContext.MobilityPurchaseOrders.FindAsync(id, cancellationToken);
+
+            if (model != null)
+            {
+                if (model.PostedBy == null)
+                {
+                    model.PostedBy = _userManager.GetUserName(this.User);
+                    model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    model.Status = nameof(Status.Posted);
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted purchase order# {model.PurchaseOrderNo}", "Purchase Order", ipAddress, model.StationCode);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Purchase Order has been Posted.";
+                }
+                return RedirectToAction(nameof(Print), new { id });
+            }
+
+            return NotFound();
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
+        {
+            var model = await _dbContext.MobilityPurchaseOrders.FindAsync(id, cancellationToken);
+
+            var hasAlreadyBeenUsed =
+                await _dbContext.FilprideReceivingReports.AnyAsync(
+                    rr => rr.POId == model.PurchaseOrderId && rr.Status != nameof(Status.Voided),
+                    cancellationToken) ||
+                await _dbContext.FilprideCheckVoucherHeaders.AnyAsync(cv =>
+                    cv.CvType == "Trade" && cv.PONo.Contains(model.PurchaseOrderNo) && cv.Status != nameof(Status.Voided), cancellationToken);
+
+            if (hasAlreadyBeenUsed)
+            {
+                TempData["error"] = "Please note that this record has already been utilized in a receiving report or check voucher. As a result, voiding it is not permitted.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (model != null)
+            {
+                if (model.VoidedBy == null)
+                {
+                    if (model.PostedBy != null)
+                    {
+                        model.PostedBy = null;
+                    }
+
+                    model.VoidedBy = _userManager.GetUserName(this.User);
+                    model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    model.Status = nameof(Status.Voided);
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided purchase order# {model.PurchaseOrderNo}", "Purchase Order", ipAddress, model.StationCode);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Purchase Order has been Voided.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            return NotFound();
+        }
+
+        public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
+        {
+            var model = await _dbContext.MobilityPurchaseOrders.FindAsync(id, cancellationToken);
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (model != null)
+                {
+                    if (model.CanceledBy == null)
+                    {
+                        model.CanceledBy = _userManager.GetUserName(this.User);
+                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        model.Status = nameof(Status.Canceled);
+                        model.CancellationRemarks = cancellationRemarks;
+
+                        #region --Audit Trail Recording
+
+                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled purchase order# {model.PurchaseOrderNo}", "Purchase Order", ipAddress, model.StationCode);
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion --Audit Trail Recording
+
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
+                        TempData["success"] = "Purchase Order has been Cancelled.";
+                    }
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to cancel purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return NotFound();
+        }
+
+        public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
+        {
+            var po = await _unitOfWork.MobilityPurchaseOrder.GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
+            if (!po.IsPrinted)
+            {
+                #region --Audit Trail Recording
+
+                var printedBy = _userManager.GetUserName(User);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of purchase order# {po.PurchaseOrderNo}", "Purchase Order", ipAddress, po.StationCode);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                po.IsPrinted = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
+            }
+            return RedirectToAction(nameof(Print), new { id });
         }
     }
 }
