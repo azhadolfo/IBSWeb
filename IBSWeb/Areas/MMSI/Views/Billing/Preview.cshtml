@@ -80,7 +80,7 @@
     </div>
     
     <div class="table-responsive">
-        <table class="table table-borderless">
+        <table class="table table-bordered">
             <thead>
             <tr class="border">
                 <th class="text-center" colspan="4">
@@ -89,22 +89,14 @@
             </tr>
             </thead>
             <tr>
-                <td class="p-0 pt-2 c-0">
-                    FOR THE SERVICE RE: 
+                <td class="text-center">
+                    <b>VESSEL :</b> @Model.Vessel?.VesselName
                 </td>
-                <td class="border-bottom p-0 pt-2 c-0">
-                    @Model.Vessel?.VesselName
+                <td class="text-center">
+                    <b>PORT-TERMINAL :</b> @Model.Terminal?.Port?.PortName - @Model.Terminal?.TerminalName
                 </td>
-                <td class="border-bottom p-0 pt-2 c-0">
-                    VOYAGE #: @Model.VoyageNumber
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    
-                </td>
-                <td class="border-bottom p-0 pt-1 c-0">
-                    AT @Model.Terminal?.Port?.PortName
+                <td class="text-center">
+                    <b>VOYAGE # :</b> @Model.VoyageNumber
                 </td>
             </tr>
         </table>
@@ -141,9 +133,9 @@
                     <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                     <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
                     <td class="text-center p-0">@dt.TotalHours hrs.</td>
-                    <td class="text-end p-0">₱@dt.DispatchRate?.ToString("N2") @dt.DispatchChargeType</td>
-                    <td class="text-end p-0">₱@dt.BAFRate?.ToString("N2") @dt.BAFChargeType</td>
-                    <td class="text-end p-0">₱@dt.TotalBilling?.ToString("N2")</td>
+                    <td class="text-center p-0">₱@dt.DispatchRate?.ToString("N2") @dt.DispatchChargeType</td>
+                    <td class="text-center p-0">₱@dt.BAFRate?.ToString("N2") @dt.BAFChargeType</td>
+                    <td class="text-center p-0">₱@dt.TotalNetRevenue?.ToString("N2")</td>
                 </tr>
             }
             <tr>
