@@ -83,7 +83,7 @@
                     <tr>
                         <th class="text-center align-content-center">Date</th>
                         <th class="text-center align-content-center">Billing Number</th>
-                        <th class="text-center align-content-center">Status</th>
+                        <th class="text-center align-content-center">Total Amount</th>
                         <th class="text-center align-content-center">Customer</th>
                         <th class="text-center align-content-center">Port-Terminal</th>
                         <th class="text-center align-content-center">Vessel</th>
@@ -97,7 +97,7 @@
                         <tr>
                             <td class="text-center align-content-center ">@item.Date.ToString("yyyy-MM-dd")</td>
                             <td class="text-center align-content-center ">@item.MMSIBillingNumber</td>
-                            <td class="text-center align-content-center ">@item.Status</td>
+                            <td class="text-center align-content-center ">₱@item.Amount.ToString("N2")</td>
                             <td class="text-center align-content-center ">@item?.Customer?.CustomerName</td>
                             <td class="text-center align-content-center ">@item?.Terminal?.Port?.PortName-@item?.Terminal?.TerminalName</td>
                             <td class="text-center align-content-center ">@item?.Vessel?.VesselName</td>
