@@ -33,9 +33,9 @@
             </div>
         </div>
         <div class="col-4">
-            <div class="text-end">
-                <img src="~/img/mmsi-logo.jpg" width="80px"/>
-            </div>
+            @* <div class="text-end"> *@
+            @*     <img src="~/img/mmsi-logo.jpg" width="80px"/> *@
+            @* </div> *@
         </div>
     </div>
 
@@ -92,33 +92,33 @@
             </tr>
             </thead>
         </table>
-            <div class="mt-3">
-                <table class="table table-borderless">
-                    <tr>
-                        <td class="text-center align-middle" rowspan="2">
-                            <b>FOR THE SERVICE RE:</b>
-                        </td>
-                        <td class="p-1 mx-1 ps-2 border-bottom border-dark">
-                            <b>@Model.Vessel?.VesselName</b>
-                        </td>
-                        <td class="text-start align-middle" rowspan="2">
-                            <div class="row p-0 m-0">
-                                <div class="text-end col-4">
-                                    <b>VOYAGE #: </b>
-                                </div> 
-                                <div class="col-8 m-0 p-0 border-bottom border-dark">
-                                    @Model.VoyageNumber
-                                </div> 
+        <div class="mt-3">
+            <table class="table table-borderless">
+                <tr>
+                    <td class="text-center align-middle" rowspan="2" style="width: 30%;">
+                        <b>FOR THE SERVICE RE:</b>
+                    </td>
+                    <td class="p-1 ps-2 border-bottom border-dark" style="width: 40%;">
+                        <b>@Model.Vessel?.VesselName</b>
+                    </td>
+                    <td class="text-start align-middle pe-2" rowspan="2" style="width: 30%;">
+                        <div class="d-flex align-items-center ms-3"> <!-- Added ms-3 for spacing -->
+                            <div class="text-end pe-2" style="flex-shrink: 0;">
+                                <b>VOYAGE #: </b>
                             </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="p-1 mx-1 ps-2 border-bottom border-dark">
-                            AT @Model.Terminal?.Port?.PortName
-                        </td>
-                    </tr>
-                </table>
-            </div>
+                            <div class="flex-grow-1 border-bottom border-dark text-nowrap overflow-hidden text-ellipsis">
+                                @Model.VoyageNumber
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="p-1 ps-2 border-bottom border-dark">
+                        AT @Model.Terminal?.Port?.PortName
+                    </td>
+                </tr>
+            </table>
+        </div>
     </div>
 
     <div class="table-responsive mt-3 me-1">
@@ -145,7 +145,7 @@
                     <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
                     <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                     <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
-                    <td class="text-center p-0">@dt.TotalHours</td>
+                    <td class="text-center p-0">@dt.TotalHours?.ToString("N2")</td>
                     <td class="text-end p-0">@dt.DispatchRate?.ToString("N2")</td>
                     <td class="text-end p-0">@dt.TotalNetRevenue?.ToString("N2")</td>
                 </tr>
