@@ -1,5 +1,5 @@
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.MMSI;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +12,12 @@ namespace IBSWeb.Areas.MMSI
     public class TerminalController : Controller
     {
         private readonly ApplicationDbContext _db;
-        private readonly DispatchTicketRepository _dispatchRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public TerminalController(ApplicationDbContext db, DispatchTicketRepository dispatchRepo)
+        public TerminalController(ApplicationDbContext db, IUnitOfWork unitOfWork)
         {
             _db = db;
-            _dispatchRepo = dispatchRepo;
+            _unitOfWork = unitOfWork;
         }
 
         public IActionResult Index()
@@ -34,7 +34,7 @@ namespace IBSWeb.Areas.MMSI
         {
             MMSITerminal model = new()
             {
-                Ports = await _dispatchRepo.GetMMSIPortsById(cancellationToken)
+                Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken)
             };
 
             return View(model);
@@ -102,7 +102,7 @@ namespace IBSWeb.Areas.MMSI
                 .Include(t => t.Port)
                 .FirstOrDefault();
 
-            model.Ports = await _dispatchRepo.GetMMSIPortsById(cancellationToken);
+            model.Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken);
 
             return View(model);
         }

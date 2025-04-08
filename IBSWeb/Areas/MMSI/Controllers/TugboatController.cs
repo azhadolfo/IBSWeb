@@ -1,5 +1,5 @@
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.MMSI;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
@@ -11,12 +11,12 @@ namespace IBSWeb.Areas.MMSI
     public class TugboatController : Controller
     {
         private readonly ApplicationDbContext _db;
-        private readonly DispatchTicketRepository _dispatchTicketRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public TugboatController(ApplicationDbContext db, DispatchTicketRepository dispatchTicketRepository)
+        public TugboatController(ApplicationDbContext db, IUnitOfWork unitOfWork)
         {
             _db = db;
-            _dispatchTicketRepository = dispatchTicketRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public IActionResult Index()
@@ -30,7 +30,7 @@ namespace IBSWeb.Areas.MMSI
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             MMSITugboat tugboat = new MMSITugboat();
-            tugboat.CompanyList = await _dispatchTicketRepository.GetMMSICompanyOwnerSelectListById(cancellationToken);
+            tugboat.CompanyList = await _unitOfWork.Msap.GetMMSICompanyOwnerSelectListById(cancellationToken);
 
             return View(tugboat);
         }
@@ -98,7 +98,7 @@ namespace IBSWeb.Areas.MMSI
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var model = _db.MMSITugboats.Where(a => a.TugboatId == id).FirstOrDefault();
-            model.CompanyList = await _dispatchTicketRepository.GetMMSICompanyOwnerSelectListById(cancellationToken);
+            model.CompanyList = await _unitOfWork.Msap.GetMMSICompanyOwnerSelectListById(cancellationToken);
 
             return View(model);
         }

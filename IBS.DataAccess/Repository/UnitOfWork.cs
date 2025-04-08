@@ -4,6 +4,8 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.MasterFile;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
+using IBS.DataAccess.Repository.MMSI;
+using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.DataAccess.Repository.Mobility;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility.MasterFile;
@@ -98,6 +100,12 @@ namespace IBS.DataAccess.Repository
 
         #endregion
 
+        #region --MMSI
+
+        public IMsapRepository Msap { get; private set; }
+
+        #endregion
+
         public UnitOfWork(ApplicationDbContext db)
         {
             _db = db;
@@ -170,6 +178,13 @@ namespace IBS.DataAccess.Repository
             #endregion
 
             #endregion
+
+            #region --MMSI
+
+            Msap = new MsapRepository(_db);
+
+            #endregion
+
         }
 
         public async Task SaveAsync(CancellationToken cancellationToken = default)

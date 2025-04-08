@@ -1,6 +1,6 @@
 using System.Globalization;
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.MMSI;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
@@ -16,13 +16,13 @@ namespace IBSWeb.Areas.MMSI
     public class DispatchTicketController : Controller
     {
         public readonly ApplicationDbContext _db;
-        private readonly DispatchTicketRepository _dispatchRepo;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
 
-        public DispatchTicketController(ApplicationDbContext db, DispatchTicketRepository dispatchRepo, UserManager<IdentityUser> userManager)
+        public DispatchTicketController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
         {
             _db = db;
-            _dispatchRepo = dispatchRepo;
+            _unitOfWork = unitOfWork;
             _userManager = userManager;
         }
 
@@ -181,7 +181,7 @@ namespace IBSWeb.Areas.MMSI
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            model.Customers = await _dispatchRepo.GetMMSICustomersById(cancellationToken);
+            model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
 
             return View(model);
         }
@@ -258,7 +258,7 @@ namespace IBSWeb.Areas.MMSI
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            model.Customers = await _dispatchRepo.GetMMSICustomersById(cancellationToken);
+            model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
 
             return View(model);
         }

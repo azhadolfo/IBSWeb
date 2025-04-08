@@ -1,5 +1,5 @@
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.MMSI;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
@@ -15,13 +15,13 @@ namespace IBSWeb.Areas.MMSI
     public class ServiceRequestController : Controller
     {
         public readonly ApplicationDbContext _db;
-        private readonly DispatchTicketRepository _dispatchRepo;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
 
-        public ServiceRequestController(ApplicationDbContext db, DispatchTicketRepository dispatchRepo, UserManager<IdentityUser> userManager)
+        public ServiceRequestController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
         {
             _db = db;
-            _dispatchRepo = dispatchRepo;
+            _unitOfWork = unitOfWork;
             _userManager = userManager;
         }
 
@@ -56,11 +56,11 @@ namespace IBSWeb.Areas.MMSI
         {
             MMSIDispatchTicket model = new()
             {
-                ActivitiesServices = await _dispatchRepo.GetMMSIActivitiesServicesById(cancellationToken),
-                Ports = await _dispatchRepo.GetMMSIPortsById(cancellationToken),
-                Tugboats = await _dispatchRepo.GetMMSITugboatsById(cancellationToken),
-                TugMasters = await _dispatchRepo.GetMMSITugMastersById(cancellationToken),
-                Vessels = await _dispatchRepo.GetMMSIVesselsById(cancellationToken)
+                ActivitiesServices = await _unitOfWork.Msap.GetMMSIActivitiesServicesById(cancellationToken),
+                Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken),
+                Tugboats = await _unitOfWork.Msap.GetMMSITugboatsById(cancellationToken),
+                TugMasters = await _unitOfWork.Msap.GetMMSITugMastersById(cancellationToken),
+                Vessels = await _unitOfWork.Msap.GetMMSIVesselsById(cancellationToken)
             };
 
             ViewData["PortId"] = 0;
@@ -76,7 +76,7 @@ namespace IBSWeb.Areas.MMSI
 
             try
             {
-                model = await _dispatchRepo.GetDispatchTicketLists(model, cancellationToken);
+                model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
 
                 if (ModelState.IsValid)
                 {
@@ -138,7 +138,7 @@ namespace IBSWeb.Areas.MMSI
                     else
                     {
                         TempData["error"] = "Time of departure should be earlier than the time of arrival!";
-                        model = await _dispatchRepo.GetDispatchTicketLists(model, cancellationToken);
+                        model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
                         ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
                         return View(model);
@@ -147,7 +147,7 @@ namespace IBSWeb.Areas.MMSI
                 else
                 {
                     TempData["error"] = "Can't create entry, please review your input.";
-                    model = await _dispatchRepo.GetDispatchTicketLists(model, cancellationToken);
+                    model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
                     return View(model);
@@ -156,7 +156,7 @@ namespace IBSWeb.Areas.MMSI
             catch (Exception ex)
             {
                 TempData["error"] = $"{ex.Message}";
-                model = await _dispatchRepo.GetDispatchTicketLists(model, cancellationToken);
+                model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
                 return View(model);
@@ -184,7 +184,7 @@ namespace IBSWeb.Areas.MMSI
                 .Where(dt => dt.DispatchTicketId == id)
                 .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
                 .FirstOrDefaultAsync(cancellationToken);
-            model = await _dispatchRepo.GetDispatchTicketLists(model, cancellationToken);
+            model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
             ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
             return View(model);
@@ -302,7 +302,7 @@ namespace IBSWeb.Areas.MMSI
                         .ThenInclude(t => t.Port)
                         .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
-                        model = await _dispatchRepo.GetDispatchTicketLists(model, cancellationToken);
+                        model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
 
                         ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
@@ -318,7 +318,7 @@ namespace IBSWeb.Areas.MMSI
                     .ThenInclude(t => t.Port)
                     .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
-                    model = await _dispatchRepo.GetDispatchTicketLists(model, cancellationToken);
+                    model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
 
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
@@ -334,7 +334,7 @@ namespace IBSWeb.Areas.MMSI
                 .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
                 .FirstOrDefaultAsync(cancellationToken);
 
-                model = await _dispatchRepo.GetDispatchTicketLists(model, cancellationToken);
+                model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
 
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 

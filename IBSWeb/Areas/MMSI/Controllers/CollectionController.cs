@@ -1,12 +1,10 @@
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.MMSI;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace IBSWeb.Areas.MMSI
 {
@@ -15,13 +13,13 @@ namespace IBSWeb.Areas.MMSI
     public class CollectionController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
-        private readonly DispatchTicketRepository _dispatchTicketRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
 
-        public CollectionController(ApplicationDbContext dbContext, DispatchTicketRepository dispatchTicketRepository, UserManager<IdentityUser> userManager)
+        public CollectionController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
         {
             _dbContext = dbContext;
-            _dispatchTicketRepository = dispatchTicketRepository;
+            _unitOfWork = unitOfWork;
             _userManager = userManager;
         }
 
@@ -34,8 +32,8 @@ namespace IBSWeb.Areas.MMSI
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
             var model = new MMSICollection();
-            model.Billings = await _dispatchTicketRepository.GetMMSIUncollectedBillingsById(cancellationToken);
-            model.Customers = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
+            model.Billings = await _unitOfWork.Msap.GetMMSIUncollectedBillingsById(cancellationToken);
+            model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
             return View(model);
         }
 
@@ -52,7 +50,7 @@ namespace IBSWeb.Areas.MMSI
 
                     if (model.IsDocumented == false)
                     {
-                        model.CollectionNumber = await _dispatchTicketRepository.GenerateCollectionNumber(cancellationToken);
+                        model.CollectionNumber = await _unitOfWork.Msap.GenerateCollectionNumber(cancellationToken);
                     }
 
                     await _dbContext.MMSICollections.AddAsync(model, cancellationToken);
@@ -101,8 +99,8 @@ namespace IBSWeb.Areas.MMSI
                 {
                     TempData["error"] = "There was an error creating the collection.";
 
-                    model.Billings = await _dispatchTicketRepository.GetMMSIUncollectedBillingsById(cancellationToken);
-                    model.Customers = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
+                    model.Billings = await _unitOfWork.Msap.GetMMSIUncollectedBillingsById(cancellationToken);
+                    model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
 
                     return View(model);
                 }
@@ -111,8 +109,8 @@ namespace IBSWeb.Areas.MMSI
             {
                 TempData["error"] = ex.Message;
 
-                model.Billings = await _dispatchTicketRepository.GetMMSIUncollectedBillingsById(cancellationToken);
-                model.Customers = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
+                model.Billings = await _unitOfWork.Msap.GetMMSIUncollectedBillingsById(cancellationToken);
+                model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
 
                 return View(model);
             }
@@ -128,9 +126,9 @@ namespace IBSWeb.Areas.MMSI
                 .Select(b => b.MMSIBillingId.ToString())
                 .ToListAsync(cancellationToken);
 
-            model.Customers = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
-            model.Billings = await _dispatchTicketRepository.GetMMSICollectedBillsById(model.MMSICollectionId, cancellationToken);
-            var uncollectedBills = await _dispatchTicketRepository.GetMMSIUncollectedBillingsById(cancellationToken);
+            model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+            model.Billings = await _unitOfWork.Msap.GetMMSICollectedBillsById(model.MMSICollectionId, cancellationToken);
+            var uncollectedBills = await _unitOfWork.Msap.GetMMSIUncollectedBillingsById(cancellationToken);
             model.Billings.AddRange(uncollectedBills);
 
             return View(model);
@@ -190,7 +188,7 @@ namespace IBSWeb.Areas.MMSI
                         if (!model.IsDocumented && currentModel.IsDocumented)
                         {
                             // if the old is doc but now is undoc, generate
-                            currentModel.CollectionNumber = await _dispatchTicketRepository.GenerateCollectionNumber(cancellationToken);
+                            currentModel.CollectionNumber = await _unitOfWork.Msap.GenerateCollectionNumber(cancellationToken);
                         }
                     }
 

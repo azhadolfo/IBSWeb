@@ -1,5 +1,5 @@
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.MMSI;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +12,12 @@ namespace IBSWeb.Areas.MMSI
     public class PrincipalController : Controller
     {
         private readonly ApplicationDbContext _db;
-        private readonly DispatchTicketRepository _dispatchTicketRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PrincipalController(ApplicationDbContext db, DispatchTicketRepository dispatchTicketRepository)
+        public PrincipalController(ApplicationDbContext db, IUnitOfWork unitOfWork)
         {
             _db = db;
-            _dispatchTicketRepository = dispatchTicketRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
@@ -33,7 +33,7 @@ namespace IBSWeb.Areas.MMSI
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             MMSIPrincipal model = new MMSIPrincipal();
-            model.CustomerSelectList = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
+            model.CustomerSelectList = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
 
             return View(model);
         }
@@ -112,7 +112,7 @@ namespace IBSWeb.Areas.MMSI
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var model = await _db.MMSIPrincipals.FindAsync(id, cancellationToken);
-            model.CustomerSelectList = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
+            model.CustomerSelectList = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
 
             return View(model);
         }

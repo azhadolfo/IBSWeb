@@ -2,7 +2,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.Filpride;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.DataAccess.Repository.MMSI;
 using IBS.DataAccess.Repository.Mobility;
 using IBS.Services;
 using IBS.Utility;
@@ -91,7 +90,6 @@ builder.Services.AddQuartz(q =>
 
 // Add Quartz Hosted Service
 builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
-builder.Services.AddScoped<DispatchTicketRepository>();
 
 var app = builder.Build();
 

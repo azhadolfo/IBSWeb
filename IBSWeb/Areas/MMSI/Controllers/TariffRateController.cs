@@ -1,12 +1,11 @@
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.MMSI;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace IBSWeb.Areas.MMSI
 {
@@ -15,13 +14,13 @@ namespace IBSWeb.Areas.MMSI
     public class TariffRateController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
-        private readonly DispatchTicketRepository _dispatchTicketRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
 
-        public TariffRateController(ApplicationDbContext dbContext, DispatchTicketRepository dispatchTicketRepository, UserManager<IdentityUser> userManager)
+        public TariffRateController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
         {
             _dbContext = dbContext;
-            _dispatchTicketRepository = dispatchTicketRepository;
+            _unitOfWork = unitOfWork;
             _userManager = userManager;
         }
 
@@ -153,9 +152,9 @@ namespace IBSWeb.Areas.MMSI
 
         public async Task<MMSITariffRate> GetSelectLists(MMSITariffRate model, CancellationToken cancellationToken = default)
         {
-            model.Customers = await _dispatchTicketRepository.GetMMSICustomersById(cancellationToken);
-            model.Ports = await _dispatchTicketRepository.GetMMSIPortsById(cancellationToken);
-            model.ActivitiesServices = await _dispatchTicketRepository.GetMMSIActivitiesServicesById(cancellationToken);
+            model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+            model.Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken);
+            model.ActivitiesServices = await _unitOfWork.Msap.GetMMSIActivitiesServicesById(cancellationToken);
             if (model.TerminalId != default)
             {
                 var terminal = await _dbContext.MMSITerminals
@@ -163,7 +162,7 @@ namespace IBSWeb.Areas.MMSI
                     .Include(t => t.Port)
                     .FirstOrDefaultAsync(cancellationToken);
                 model.Terminal = terminal;
-                model.Terminals = await _dispatchTicketRepository.GetMMSITerminalsById(terminal.PortId, cancellationToken);
+                model.Terminals = await _unitOfWork.Msap.GetMMSITerminalsById(terminal.PortId, cancellationToken);
             }
 
             return model;
