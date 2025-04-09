@@ -66,7 +66,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     MobilityReceivingReport model = new()
                     {
-                        ReceivingReportNo = await _unitOfWork.MobilityReceivingReport.GenerateCodeAsync(stationCodeClaim, cancellationToken),
+                        ReceivingReportNo = await _unitOfWork.MobilityReceivingReport.GenerateCodeAsync(stationCodeClaim, String.Empty, cancellationToken),
                         Date = viewModel.Date,
                         Driver = viewModel.Driver,
                         PlateNo = viewModel.PlateNo,
