@@ -848,6 +848,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                var receivingReportNo = await _unitOfWork.MobilityReceivingReport
+                    .AutoGenerateReceivingReport(existingRecord, DateOnly.Parse(deliveredDate), cancellationToken);
+
                 existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
                 existingRecord.Status = nameof(DRStatus.ForInvoicing);
                 existingRecord.PostedBy = _userManager.GetUserName(User);
@@ -882,7 +885,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await transaction.CommitAsync(cancellationToken);
 
-                TempData["success"] = "Product has been delivered";
+                TempData["success"] = "Product has been delivered" +
+                                      $"RR#{receivingReportNo} has been generated.";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
