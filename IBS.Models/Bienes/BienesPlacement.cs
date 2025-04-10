@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Bienes.MasterFile;
 using IBS.Models.MasterFile;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
@@ -36,7 +37,7 @@ namespace IBS.Models.Bienes
         public string AccountName { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string Class { get; set; }
+        public string Class { get; set; } = "STP";
 
         [Column(TypeName = "varchar(100)")]
         public string SettlementAccountNumber { get; set; }
@@ -69,27 +70,29 @@ namespace IBS.Models.Bienes
 
         public int NumberOfYears { get; set; }
 
-        [Column(TypeName = "numeric(3,10)")]
+        [Column(TypeName = "numeric(13,10)")]
         public decimal InterestRate { get; set; }
 
         public bool HasEWT { get; set; }
 
-        [Column(TypeName = "numeric(3,4)")]
+        [Column(TypeName = "numeric(7,4)")]
         public decimal EWTRate { get; set; }
 
         public bool HasTrustFee { get; set; }
 
-        [Column(TypeName = "numeric(3,8)")]
+        [Column(TypeName = "numeric(11,8)")]
         public decimal TrustFeeRate { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         public decimal InterestDeposited { get; set; }
 
+        [Column(TypeName = "varchar(100)")]
         public string? InterestDepositedTo { get; set; }
 
         [Column(TypeName = "date")]
         public DateOnly? InterestDepositedDate { get; set; }
 
+        [Column(TypeName = "varchar(20)")]
         public string? FrequencyOfPayment { get; set; }
 
         [Column(TypeName = "varchar(100)")]

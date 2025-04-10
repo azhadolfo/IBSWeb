@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Bienes;
+using IBS.Models.Bienes.MasterFile;
 using IBS.Models.Filpride.Books;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;

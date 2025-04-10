@@ -63,8 +63,4 @@
     <AdditionalFiles Include="Areas\Bienes\Views\BankAccount\Index.cshtml" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Areas\Bienes\Views\Placement\" />
-  </ItemGroup>
-
 </Project>

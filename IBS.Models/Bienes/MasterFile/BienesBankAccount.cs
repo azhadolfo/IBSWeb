@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Utility.Helpers;
 
-namespace IBS.Models.Bienes
+namespace IBS.Models.Bienes.MasterFile
 {
     public class BienesBankAccount
     {

@@ -1,5 +1,6 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Bienes;
+using IBS.Models.Bienes.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.Bienes.IRepository

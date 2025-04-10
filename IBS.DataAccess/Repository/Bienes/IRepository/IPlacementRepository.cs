@@ -5,6 +5,6 @@ namespace IBS.DataAccess.Repository.Bienes.IRepository
 {
     public interface IPlacementRepository : IRepository<BienesPlacement>
     {
-        Task<string> GenerateControlNumberAsync(string company, CancellationToken cancellationToken = default);
+        Task<string> GenerateControlNumberAsync(int companyId, CancellationToken cancellationToken = default);
     }
 }
