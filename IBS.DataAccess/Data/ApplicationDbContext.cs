@@ -1,5 +1,6 @@
 ﻿using IBS.Models;
 using IBS.Models.Bienes;
+using IBS.Models.Bienes.MasterFile;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;

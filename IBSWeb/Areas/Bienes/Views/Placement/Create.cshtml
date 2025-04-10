@@ -1,0 +1,475 @@
+﻿@using IBS.Utility.Enums
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model IBS.Models.Bienes.ViewModels.PlacementViewModel
+
+@{
+    ViewData["Title"] = "Create Placement";
+}
+
+<link rel="stylesheet" href="~/css/form-style.css">
+
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Placement</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            @Html.AntiForgeryToken()
+            <div class="border-2 p-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                
+                <div class="row mb-3">
+                    <div class="form-group py-2 col-md-4">
+                        <label class="control-label">Company List<span class="required">*</span></label>
+                        <select asp-for="CompanyId" asp-items="@Model.Companies" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected>Select company</option>
+                        </select>
+                        <span asp-validation-for="CompanyId" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-md-2">
+                        <input asp-for="PrincipalAmount" class="form-control border-0 shadow" placeholder="" required min="0.01"/>
+                        <label asp-for="PrincipalAmount" class="ms-2">Principal Amount<span class="required">*</span></label>
+                        <span asp-validation-for="PrincipalAmount" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-md-2">
+                        <input asp-for="MaturityValue" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
+                        <label asp-for="MaturityValue" class="ms-2">Maturity Value</label>
+                        <span asp-validation-for="MaturityValue" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-md-4">
+                        <input asp-for="PrincipalDisposition" class="form-control border-0 shadow" placeholder=""/>
+                        <label asp-for="PrincipalDisposition" class="ms-2">Principal Disposition</label>
+                        <span asp-validation-for="PrincipalDisposition" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="form-group py-2 col-md-6">
+                        <label class="control-label">Bank List<span class="required">*</span></label>
+                        <select asp-for="BankId" asp-items="@Model.BankAccounts" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected>Select bank</option>
+                        </select>
+                        <span asp-validation-for="BankId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group py-2 col-md-6">
+                        <label class="control-label">Placement Type<span class="required">*</span></label>
+                        <select asp-for="PlacementType" class="form-select js-select2 border-0 shadow" style="width:100%">
+                            <option value="" selected>Select placement type</option>
+                            <option value="@PlacementType.HoldOut">Hold Out</option>
+                            <option value="@PlacementType.LongTerm">Long Term</option>
+                            <option value="@PlacementType.Others">Others</option>
+                            <option value="@PlacementType.ShortTerm">Short Term</option>
+                        </select>
+                        <span asp-validation-for="PlacementType" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="form-floating py-2 col-md-4">
+                        <input asp-for="Branch" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
+                        <label asp-for="Branch" class="ms-2">Branch</label>
+                        <span asp-validation-for="Branch" class="text-danger"></span>
+                    </div>
+                    <input type="hidden" asp-for="Bank"/>
+                    <div class="form-floating py-2 col-md-4">
+                        <input asp-for="NumberOfYears" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
+                        <label asp-for="NumberOfYears" class="ms-2">Number Of Years</label>
+                        <span asp-validation-for="NumberOfYears" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center mt-4">
+                            <label class="form-label mb-0 me-2">Interest Rate<span class="required">*</span></label>
+                            <input asp-for="InterestRate" class="form-control border-0 shadow w-50" required min="0.01" />
+                            <span class="ms-2">%</span>
+                            <span asp-validation-for="InterestRate" class="text-danger ms-2"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="form-floating py-2 col-md-4">
+                        <input asp-for="TDAccountNumber" class="form-control border-0 shadow" placeholder="" required/>
+                        <label asp-for="TDAccountNumber" class="ms-2">TD Account#<span class="required">*</span></label>
+                        <span asp-validation-for="TDAccountNumber" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-md-4">
+                        <input asp-for="EarnedGross" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
+                        <label asp-for="EarnedGross" class="ms-2">Earned (Gross)</label>
+                        <span asp-validation-for="EarnedGross" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-md-4">
+                        <input asp-for="Net" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
+                        <label asp-for="Net" class="ms-2">Net</label>
+                        <span asp-validation-for="Net" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="form-floating py-2 col-md-4">
+                        <input asp-for="AccountName" class="form-control border-0 shadow" placeholder="" required/>
+                        <label asp-for="AccountName" class="ms-2">Account Name<span class="required">*</span></label>
+                        <span asp-validation-for="AccountName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center mt-4">
+                            <div class="form-check me-2">
+                                <input type="checkbox" class="form-check-input" asp-for="HasEwt" />
+                            </div>
+                            <label class="form-label mb-0 me-2">EWT Rate</label>
+                            <input asp-for="EWTRate" class="form-control border-0 shadow w-50" readonly/>
+                            <span class="ms-2">%</span>
+                        </div>
+                        <span asp-validation-for="EWTRate" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-md-4">
+                        <input asp-for="EWTAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
+                        <label asp-for="EWTAmount" class="ms-2">EWT Amount</label>
+                        
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="form-floating py-2 col-md-4">
+                        <input asp-for="SettlementAccountNumber" class="form-control border-0 shadow" placeholder="" required/>
+                        <label asp-for="SettlementAccountNumber" class="ms-2">Settlement Account<span class="required">*</span></label>
+                        <span asp-validation-for="SettlementAccountNumber" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center mt-4">
+                            <div class="form-check me-2">
+                                <input type="checkbox" class="form-check-input" asp-for="HasTrustFee" />
+                            </div>
+                            <label class="form-label mb-0 me-2">Trust Fee</label>
+                            <input asp-for="TrustFeeRate" class="form-control border-0 shadow w-50" readonly />
+                            <span class="ms-2">%</span>
+                        </div>
+                        <span asp-validation-for="TrustFeeRate" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-md-4">
+                        <input asp-for="TrustFeeAmount" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
+                        <label asp-for="TrustFeeAmount" class="ms-2">Trust Fee Amount</label>
+                        <span asp-validation-for="TrustFeeAmount" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <input type="hidden" asp-for="Term"/>
+                        <div class="d-flex align-items-center">
+                            <label class="form-label mb-0 me-1">From</label>
+                            <input asp-for="FromDate" type="date" class="form-control border-0 shadow" placeholder="" value=""/>
+                            <label class="form-label mb-0 mx-1">To</label>
+                            <input asp-for="ToDate" type="date" class="form-control border-0 shadow" placeholder="" value=""/>
+                        </div>
+                        <small id="nDays" class="fst-italic"></small>
+                        <span asp-validation-for="FromDate" class="text-danger"></span>
+                        <span asp-validation-for="ToDate" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-8" id="frequencyPayment" style="display: none">
+                        <label class="form-label">Frequency of Interest Payment</label>
+                        <div class="d-flex justify-content-between">
+                            <div class="form-check">
+                                <input type="radio" asp-for="FrequencyOfPayment" value="Monthly" class="form-check-input" checked />
+                                <label class="form-check-label">Monthly</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" asp-for="FrequencyOfPayment" value="Quarterly" class="form-check-input" />
+                                <label class="form-check-label">Quarterly</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" asp-for="FrequencyOfPayment" value="Semi-Annual" class="form-check-input" />
+                                <label class="form-check-label">Semi-Annual</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" asp-for="FrequencyOfPayment" value="Annual" class="form-check-input" />
+                                <label class="form-check-label">Annual</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" asp-for="FrequencyOfPayment" value="Upon Maturity" class="form-check-input" />
+                                <label class="form-check-label">Upon Maturity</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="form-floating py-2 col-12">
+                        <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
+                        <label asp-for="Remarks" class="control-label ms-2">Remarks<span class="required">*</span></label>
+                        <span asp-validation-for="Remarks" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="form-floating py-2 col-md-6">
+                        <input asp-for="ChequeNumber" class="form-control border-0 shadow" placeholder="" required/>
+                        <label asp-for="ChequeNumber" class="ms-2">Cheque#<span class="required">*</span></label>
+                        <span asp-validation-for="ChequeNumber" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating py-2 col-md-6">
+                        <input asp-for="CVNo" class="form-control border-0 shadow" placeholder="" required/>
+                        <label asp-for="CVNo" class="ms-2">CV#<span class="required">*</span></label>
+                        <span asp-validation-for="CVNo" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button id="createPlacement" type="submit" class="btn btn-primary form-control">Create</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Bienes" asp-controller="Placement" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function (){
+            // Get the checkboxes and corresponding input fields
+            const ewtCheckbox = document.querySelector('input[name="HasEwt"]');
+            const ewtRateInput = document.querySelector('input[name="EWTRate"]');
+
+            const trustFeeCheckbox = document.querySelector('input[name="HasTrustFee"]');
+            const trustFeeRateInput = document.querySelector('input[name="TrustFeeRate"]');
+
+            // Set up event listener for EWT checkbox
+            ewtCheckbox.addEventListener('change', function () {
+                if (this.checked) {
+                    ewtRateInput.removeAttribute('readonly');
+                    ewtRateInput.setAttribute('required', '');
+                    ewtRateInput.setAttribute('min', '0.01');
+                    ewtRateInput.value = 0.00;
+                    ewtRateInput.focus();
+                } else {
+                    ewtRateInput.setAttribute('readonly', '');
+                    ewtRateInput.removeAttribute('required');
+                    ewtRateInput.removeAttribute('min');
+                    ewtRateInput.value = 0.00;
+                }
+            });
+
+            // Set up event listener for Trust Fee checkbox
+            trustFeeCheckbox.addEventListener('change', function () {
+                if (this.checked) {
+                    trustFeeRateInput.removeAttribute('readonly');
+                    trustFeeRateInput.setAttribute('required', '');
+                    trustFeeRateInput.setAttribute('min', '0.01');
+                    trustFeeRateInput.value = 0.00;
+                    trustFeeRateInput.focus();
+                } else {
+                    trustFeeRateInput.setAttribute('readonly', '');
+                    trustFeeRateInput.removeAttribute('required');
+                    trustFeeRateInput.removeAttribute('min');
+                    trustFeeRateInput.value = 0.00;
+                }
+            });
+        });
+    </script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function (){
+            // Get references to the elements
+            const fromDateInput = document.querySelector('input[name="FromDate"]');
+            const toDateInput = document.querySelector('input[name="ToDate"]');
+            const term = document.querySelector('input[name="Term"]');
+            const nDaysSpan = document.getElementById('nDays');
+            const submitButton = document.getElementById('createPlacement');
+
+            // Function to validate dates and calculate days
+            function validateDates() {
+                const fromDate = new Date(fromDateInput.value);
+                const toDate = new Date(toDateInput.value);
+
+                // Check if both dates are valid
+                if (fromDate && toDate && !isNaN(fromDate) && !isNaN(toDate)) {
+                    // Check if "to" date is earlier than "from" date
+                    if (toDate <= fromDate) {
+                        nDaysSpan.textContent = "Error: To date cannot be earlier or equal than From date";
+                        nDaysSpan.classList.add("text-danger");
+                        submitButton.disabled = true;
+                        return false;
+                    }
+
+                    // Calculate the difference in days
+                    const diffTime = Math.abs(toDate - fromDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    // Update the span text
+                    term.value = diffDays;
+                    nDaysSpan.textContent = `Number of days: ${diffDays}`;
+                    nDaysSpan.classList.remove("text-danger");
+                    submitButton.disabled = false;
+                    return true;
+                } else {
+                    if (fromDateInput.value || toDateInput.value) {
+                        nDaysSpan.textContent = "Please select both dates";
+                        nDaysSpan.classList.remove("text-danger");
+                    } else {
+                        nDaysSpan.textContent = "";
+                    }
+                    submitButton.disabled = false;
+                    return true;
+                }
+            }
+
+            // Add event listeners for date changes
+            fromDateInput.addEventListener('change', validateDates);
+            toDateInput.addEventListener('change', validateDates);
+
+            // Run initial validation in case there are pre-filled values
+            validateDates();
+        });
+    </script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function (){
+            // Get references to the elements using jQuery
+            const $placementTypeSelect = $('select[name="PlacementType"]');
+            const $numberOfYearsInput = $('input[name="NumberOfYears"]');
+            const $frequencyOfPaymentSection = $('#frequencyPayment');
+
+            // Function to handle placement type changes
+            function handlePlacementTypeChange() {
+                // Check if the selected value is LongTerm
+                if ($placementTypeSelect.val() === "@PlacementType.LongTerm") {
+                    // Remove readonly attribute and tabindex for NumberOfYears
+                    $numberOfYearsInput.prop('readonly', false);
+                    $numberOfYearsInput.prop('tabindex', 0);
+                    $numberOfYearsInput.prop('required', true);
+                    $numberOfYearsInput.prop('min', 1);
+
+                    // Show the frequency of payment section
+                    $frequencyOfPaymentSection.show();
+                } else {
+                    // Set readonly and tabindex for NumberOfYears
+                    $numberOfYearsInput.prop('readonly', true);
+                    $numberOfYearsInput.prop('tabindex', -1);
+                    $numberOfYearsInput.prop('required', false);
+                    $numberOfYearsInput.prop('min', 0);
+
+                    // Hide the frequency of payment section
+                    $frequencyOfPaymentSection.hide();
+                }
+            }
+
+            // Add event listener for placement type changes
+            $placementTypeSelect.on('change', function() {
+                handlePlacementTypeChange();
+            });
+
+            // Run the function initially to set the correct state
+            handlePlacementTypeChange();
+        });
+    </script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function (){
+
+            const principalAmount = document.getElementById('PrincipalAmount');
+            const ewtRateInput = document.getElementById('EWTRate');
+            const ewtAmount = document.getElementById('EWTAmount');
+            const trustFeeRateInput = document.getElementById('TrustFeeRate');
+            const trustFeeAmount = document.getElementById('TrustFeeAmount');
+            const interestRateInput = document.getElementById('InterestRate');
+            const earnedGross = document.getElementById('EarnedGross');
+            const netAmount = document.getElementById('Net');
+            const maturityValue = document.getElementById('MaturityValue');
+            const fromDate = document.getElementById('FromDate');
+            const toDate = document.getElementById('ToDate');
+            const term = document.getElementById('Term');
+            const ewtCheckbox = document.getElementById('HasEwt');
+            const trustFeeCheckbox = document.getElementById('HasTrustFee');
+            const placementTypeSelect = $('select[name="PlacementType"]');
+            
+            function compute() {
+
+                let principal = parseNumber(principalAmount.value);
+                let trustFeeRate = parseNumber(trustFeeRateInput.value);
+                let interestRate = parseNumber(interestRateInput.value);
+                let ewtRate = parseNumber(ewtRateInput.value);
+                let termValue = parseNumber(term.value);
+                
+                let trustFee = 0;
+                let interest = 0;
+                let ewt = 0;
+                let maturity = 0;
+                let net = 0;
+                
+                if (principalAmount.value > 0) {
+
+                    if (placementTypeSelect.val() !== "@PlacementType.LongTerm") {
+                        trustFee = principal * (trustFeeRate / 100);
+                        interest = principal * (interestRate / 100) * (termValue / 360);
+                        ewt = interest * (ewtRate / 100);
+                        maturity = principal + interest - ewt - trustFee;
+                        net = interest - ewt - trustFee;
+                    }
+                    else{
+                        trustFee = principal * (trustFeeRate / 100);
+                        interest = principal * (interestRate / 100);
+                        ewt = interest * (ewtRate / 100);
+                        maturity = principal + interest - ewt - trustFee;
+                        net = interest - ewt - trustFee;
+                    }
+                }
+                
+                trustFeeAmount.value = formatNumber(trustFee);
+                earnedGross.value = formatNumber(interest);
+                ewtAmount.value = formatNumber(ewt);
+                maturityValue.value = formatNumber(maturity);
+                netAmount.value = formatNumber(net);
+            }
+
+            [principalAmount, interestRateInput, fromDate, toDate, ewtRateInput, ewtCheckbox, trustFeeCheckbox, trustFeeRateInput].forEach(element => {
+                if (element) element.addEventListener('change', compute);
+                if (element) element.addEventListener('input', compute);
+            });
+            
+            placementTypeSelect.on('change', compute);
+            
+        });
+    </script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function (){
+            const bankId = $('select[name="BankId"]');
+            const branch = document.getElementById('Branch');
+            const bank = document.getElementById('Bank');
+            
+            bankId.on('change', function () {
+               const selectedBankId = this.value;
+               
+               fetch(`/Bienes/Placement/GetBankBranchById?bankId=${selectedBankId}`)
+                   .then(response => {
+                       if (!response.ok){
+                           throw new Error('Network response was not ok');
+                       }
+                       return response.json();
+                   })
+                   .then(data => {
+                       branch.value = data.branch;
+                       bank.value = data.bank;
+                   })
+                   .catch(error => {
+                       console.error('Error fetching branch data:', error);
+                   });
+            });
+        });
+    </script>
+}

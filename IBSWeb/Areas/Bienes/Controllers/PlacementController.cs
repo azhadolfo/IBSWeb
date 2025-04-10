@@ -2,10 +2,17 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Bienes;
+using IBS.Models.Bienes.ViewModels;
+using IBS.Models.Filpride.Books;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.Bienes.Controllers
 {
@@ -30,6 +37,29 @@ namespace IBSWeb.Areas.Bienes.Controllers
             _dbContext = dbContext;
             _userManager = userManager;
             _logger = logger;
+        }
+
+        private async Task<List<SelectListItem>> GetCompanies(CancellationToken cancellationToken)
+        {
+            return await _dbContext.Companies
+                .Where(c => c.IsActive)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CompanyId.ToString(),
+                    Text = c.CompanyName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        private async Task<List<SelectListItem>> GetBanks(CancellationToken cancellationToken)
+        {
+            return await _dbContext.BienesBankAccounts
+                .Select(c => new SelectListItem
+                {
+                    Value = c.BankAccountId.ToString(),
+                    Text = c.Bank
+                })
+                .ToListAsync(cancellationToken);
         }
 
         public IActionResult Index()
@@ -101,6 +131,108 @@ namespace IBSWeb.Areas.Bienes.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Create(CancellationToken cancellationToken)
+        {
+            PlacementViewModel viewModel = new()
+            {
+                Companies = await GetCompanies(cancellationToken),
+                BankAccounts = await GetBanks(cancellationToken)
+            };
 
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(PlacementViewModel viewModel, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                viewModel.Companies = await GetCompanies(cancellationToken);
+                viewModel.BankAccounts = await GetBanks(cancellationToken);
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+
+                BienesPlacement model = new()
+                {
+                    ControlNumber = await _unitOfWork.BienesPlacement.GenerateControlNumberAsync(viewModel.CompanyId, cancellationToken),
+                    CompanyId = viewModel.CompanyId,
+                    BankId = viewModel.BankId,
+                    Bank = viewModel.Bank,
+                    Branch = viewModel.Branch,
+                    TDAccountNumber = viewModel.TDAccountNumber,
+                    AccountName = viewModel.AccountName,
+                    SettlementAccountNumber = viewModel.SettlementAccountNumber,
+                    DateFrom = viewModel.FromDate,
+                    DateTo = viewModel.ToDate,
+                    Remarks = viewModel.Remarks,
+                    ChequeNumber = viewModel.ChequeNumber,
+                    CVNo = viewModel.CVNo,
+                    PrincipalAmount = viewModel.PrincipalAmount,
+                    PrincipalDisposition = viewModel.PrincipalDisposition,
+                    PlacementType = viewModel.PlacementType,
+                    InterestRate = viewModel.InterestRate / 100,
+                    HasEWT = viewModel.HasEwt,
+                    EWTRate = viewModel.EWTRate / 100,
+                    HasTrustFee = viewModel.HasTrustFee,
+                    TrustFeeRate = viewModel.TrustFeeRate / 100,
+                    CreatedBy = User.Identity.Name,
+                    LockedDate = viewModel.ToDate.AddDays(2).ToDateTime(TimeOnly.MinValue),
+                };
+
+                if (model.PlacementType == PlacementType.LongTerm)
+                {
+                    model.NumberOfYears = viewModel.NumberOfYears;
+                    model.FrequencyOfPayment = viewModel.FrequencyOfPayment;
+                }
+
+                await _unitOfWork.BienesPlacement.AddAsync(model, cancellationToken);
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new placement# {model.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                TempData["success"] = "Placement created successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to create placement. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+
+                await transaction.RollbackAsync(cancellationToken);
+                viewModel.Companies = await GetCompanies(cancellationToken);
+                viewModel.BankAccounts = await GetBanks(cancellationToken);
+                return View(viewModel);
+            }
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetBankBranchById(int bankId)
+        {
+            var bank = await _unitOfWork.BienesBankAccount
+                .GetAsync(b => b.BankAccountId == bankId);
+
+            if (bank == null)
+            {
+                return NotFound();
+            }
+
+            return Json(new
+            {
+                branch = bank.Branch,
+                bank = bank.Bank,
+            });
+        }
     }
 }

@@ -15,9 +15,25 @@ namespace IBS.DataAccess.Repository.Bienes
             _db = db;
         }
 
-        public Task<string> GenerateControlNumberAsync(string company, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateControlNumberAsync(int companyId, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var company = await _db.Companies.FindAsync(companyId, cancellationToken);
+
+            var lastRecord = await _db.BienesPlacements
+                .Where(p => p.CompanyId == companyId)
+                .OrderByDescending(p => p.ControlNumber)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (lastRecord == null)
+            {
+                return $"{company.CompanyName.ToUpper()}-000001";
+            }
+
+            string lastSeries = lastRecord.ControlNumber;
+            string numericPart = lastSeries.Substring(company.CompanyName.Length + 1);
+            int incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, company.CompanyName.Length) + "-" + incrementedNumber.ToString("D6");
         }
 
         public override async Task<BienesPlacement> GetAsync(Expression<Func<BienesPlacement, bool>> filter,
