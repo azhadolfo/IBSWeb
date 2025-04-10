@@ -140,7 +140,7 @@ namespace IBSWeb.Areas.MMSI
                     }
                     else
                     {
-                        TempData["error"] = "Time of departure should be earlier than the time of arrival!";
+                        TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
                         model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
                         ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
