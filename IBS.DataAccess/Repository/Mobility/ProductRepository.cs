@@ -18,7 +18,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task<bool> IsProductExist(string product, CancellationToken cancellationToken = default)
         {
-            return await _db.Products
+            return await _db.MobilityProducts
                 .AnyAsync(p => p.ProductName == product, cancellationToken);
         }
 
