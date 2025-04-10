@@ -151,7 +151,10 @@
                                         <div class="dropdown align-content-center">
                                             <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                                <li><a class="dropdown-item" href="@Url.Action("Edit", "ServiceRequest", new { id = item.DispatchTicketId })"><i class="bi bi-pencil-square"></i> Edit</a></li>
+                                                @if (item.Status != "Cancelled")
+                                                {
+                                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "ServiceRequest", new { id = item.DispatchTicketId })"><i class="bi bi-pencil-square"></i> Edit</a></li>
+                                                }
                                                 <li><a class="dropdown-item view-upload" href="#" data-uploadname="@item.SignedUrl"><i class="bi bi-eye"></i> View File</a></li>
                                             </ul>
                                         </div>
