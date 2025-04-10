@@ -51,6 +51,11 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityOffline> MobilityOfflines { get; set; }
         public DbSet<MobilityCustomerOrderSlip> MobilityCustomerOrderSlips { get; set; }
         public DbSet<MobilityCustomerPurchaseOrder> MobilityCustomerPurchaseOrders { get; set; }
+
+        public DbSet<MobilityMainCOS> MobilityMainCOS { get; set; }
+
+        public DbSet<MobilityCOSAppointedSupplier> MobilityCOSAppointedSuppliers { get; set; }
+
         #endregion
 
         #region--Purchase Entity
@@ -247,6 +252,45 @@ namespace IBS.DataAccess.Data
             #endregion
 
             #region--Mobility
+
+            builder.Entity<MobilityMainCOS>(cos =>
+            {
+                cos.HasIndex(cos => cos.CustomerOrderSlipNo);
+                cos.HasIndex(cos => cos.Date);
+
+                cos.HasOne(cos => cos.PurchaseOrder)
+                    .WithMany()
+                    .HasForeignKey(cos => cos.PurchaseOrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                cos.HasOne(cos => cos.Customer)
+                    .WithMany()
+                    .HasForeignKey(cos => cos.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                cos.HasOne(cos => cos.Commissionee)
+                    .WithMany()
+                    .HasForeignKey(cos => cos.CommissioneeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<MobilityCOSAppointedSupplier>(a =>
+            {
+                a.HasOne(a => a.PurchaseOrder)
+                    .WithMany()
+                    .HasForeignKey(a => a.PurchaseOrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                a.HasOne(a => a.CustomerOrderSlip)
+                    .WithMany(cos => cos.AppointedSuppliers)
+                    .HasForeignKey(a => a.CustomerOrderSlipId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                a.HasOne(a => a.Supplier)
+                    .WithMany()
+                    .HasForeignKey(a => a.SupplierId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
             #region-- Sales
 
