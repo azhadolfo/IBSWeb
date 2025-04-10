@@ -187,7 +187,10 @@ namespace IBSWeb.Areas.MMSI
                 .Where(dt => dt.DispatchTicketId == id)
                 .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
                 .FirstOrDefaultAsync(cancellationToken);
+
             model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+            await GenerateSignedUrl(model);
+
             ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
             return View(model);
@@ -208,6 +211,13 @@ namespace IBSWeb.Areas.MMSI
 
                         if (file != null)
                         {
+                            // delete existing before replacing
+                            if (!string.IsNullOrEmpty(model.UploadName))
+                            {
+                                await _cloudStorageService.DeleteFileAsync(model.UploadName);
+                                model.UploadName = null;
+                            }
+
                             model.UploadName = GenerateFileNameToSave(file.FileName);
                             model.SavedUrl = await _cloudStorageService.UploadFileAsync(file, model.UploadName);
 
@@ -401,12 +411,15 @@ namespace IBSWeb.Areas.MMSI
             try
             {
                 var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
-                string filePath = Path.Combine("wwwroot/Dispatch_Ticket_Uploads", model.UploadName);
 
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                }
+                await _cloudStorageService.DeleteFileAsync(model.UploadName);
+
+                // string filePath = Path.Combine("wwwroot/Dispatch_Ticket_Uploads", model.UploadName);
+                //
+                // if (System.IO.File.Exists(filePath))
+                // {
+                //     System.IO.File.Delete(filePath);
+                // }
 
                 model.UploadName = null;
                 await _db.SaveChangesAsync(cancellationToken);
